@@ -2745,7 +2745,10 @@ issues:
       reasoning: The bucketer groups by component and priority only; MCP-SETUP-PROMPT already has a session and a plan, and the two share no file or test.
   notes: 'Resolved 2026-10-17 by Session 31b amendment A-1 (row 0a). The re-port fix in blast_radius was overturned: Mat ruled D-90 (keep the pre-MEU-662 palette, Zorivest 61243baf) and D-91 A (remove every
     dependency on the Zorivest checkout). AC-41.3 now reads av-kit''s copy _inspiration/zorivest/globals.css (PROVENANCE.md), and 10-queue-card-ui.md makes av-kit the owner of its pill palette, so a Zorivest
-    change no longer reaches av-kit except as an av-kit change. Adopting darker light-theme hexes is a separate product decision if it is ever wanted.'
+    change no longer reaches av-kit except as an av-kit change. Adopting darker light-theme hexes is a separate product decision if it is ever wanted.
+    2026-10-26: Mat took that decision as a direct change, not a session (branch claude/pill-palette-darker). The copy was replaced with Zorivest 1f254832 and its PROVENANCE.md row together; the eight
+    light pill tokens in styles.css (status pending/filled/rejected, accent cyan/yellow/purple/orange/red) follow it; contrast-matrix.json was re-baselined (labels 80/80, worst 6.61; light icons all >=
+    3.0, icon_below_advisory 12 -> 4) and the AC-43.3 same-token oracle moved from light Paused to light Cancelled, whose hue is unchanged. The status stays resolved.'
 - id: GUI-CONVERT-OUTPUT-NO-BROWSE
   title: Convert Output folder is a free-text field with no Browse; path fields bypass the PathRow standard
   severity: medium

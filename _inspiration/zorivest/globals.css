@@ -131,19 +131,19 @@
   --color-fg-muted: #475569;
 
   /* Accents — slightly deeper for light backgrounds */
-  --color-accent-cyan: #0e7490;
-  --color-accent-green: #16a34a;
-  --color-accent-purple: #7c3aed;
+  --color-accent-cyan: #155e75;
+  --color-accent-green: #166534;
+  --color-accent-purple: #6d28d9;
   --color-accent-pink: #db2777;
-  --color-accent-orange: #ea580c;
-  --color-accent-blue: #2563eb;
-  --color-accent-red: #dc2626;
-  --color-accent-yellow: #ca8a04;
+  --color-accent-orange: #9a3412;
+  --color-accent-blue: #1d4ed8;
+  --color-accent-red: #991b1b;
+  --color-accent-yellow: #854d0e;
 
   /* Unified Interaction Layer — light */
-  --color-accent: #0e7490;
+  --color-accent: #155e75;
   --color-accent-fg: #ffffff;
-  --color-accent-hover: #155e75;
+  --color-accent-hover: #164e63;
   --color-accent-ring: color-mix(in oklab, var(--color-accent) 35%, transparent);
   --color-neutral: #94a3b8;
   --color-border: #d1d5db;
@@ -158,14 +158,14 @@
   --radius-control: 6px;
 
   /* Trading semantic — adjusted for readability on light */
-  --color-pnl-profit: #16a34a;
-  --color-pnl-loss: #dc2626;
+  --color-pnl-profit: #166534;
+  --color-pnl-loss: #991b1b;
   --color-pnl-neutral: #64748b;
-  --color-status-pending: #ea580c;
-  --color-status-filled: #16a34a;
+  --color-status-pending: #9a3412;
+  --color-status-filled: #166534;
   --color-status-canceled: #64748b;
-  --color-status-rejected: #dc2626;
-  --color-error: #dc2626;
+  --color-status-rejected: #991b1b;
+  --color-error: #991b1b;
 
   /* Modal / Overlay — light */
   --color-overlay: rgba(0, 0, 0, 0.45);
@@ -173,12 +173,12 @@
   --shadow-elevated: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
 
   /* P&L semantic — light */
-  --color-pnl-positive: #16a34a;
-  --color-pnl-negative: #dc2626;
+  --color-pnl-positive: #166534;
+  --color-pnl-negative: #991b1b;
 
   /* Accent aliases — light */
   --color-accent-amber: #92400e;
-  --color-accent-teal: #0d9488;
+  --color-accent-teal: #115e59;
 }
 
 /* ── Reduced Motion ── */

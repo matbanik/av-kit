@@ -444,11 +444,13 @@ describe('MEU-43 queue primitives', () => {
     const sameTokenLabel = computeMatrix(maps, STATUS_PILL_TOKENS, {
       labelToken: (_status, entry) => entry.token,
     })
-    const lightPaused = sameTokenLabel.label.filter(
-      (row) => row.theme === 'light' && row.status === 'Paused',
+    // Cancelled: its hue is the same in both palettes, so the oracle does not move when the
+    // other light hues are re-ported (the darker light Paused label clears 4.5 on its own hue).
+    const lightCancelled = sameTokenLabel.label.filter(
+      (row) => row.theme === 'light' && row.status === 'Cancelled',
     )
-    expect(lightPaused.length).toBe(4)
-    expect(Math.min(...lightPaused.map((row) => row.ratio))).toBeLessThan(SETS.CONTRAST_MIN)
+    expect(lightCancelled.length).toBe(4)
+    expect(Math.min(...lightCancelled.map((row) => row.ratio))).toBeLessThan(SETS.CONTRAST_MIN)
   })
 
   it('AC-43.4 every pill token exists in both theme blocks and binds to its own classes', async () => {

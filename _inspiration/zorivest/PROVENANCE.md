@@ -16,10 +16,10 @@ amendment A-1 (decisions D-89 to D-91, Mat 2026-10-17) made them.
 
 | File | Source path | Commit | Date | Blob | sha256 | Bytes |
 |------|-------------|--------|------|------|--------|-------|
-| `globals.css` | `ui/src/renderer/src/globals.css` | `61243baff0c141aee318257df2ad844e52e4e83c` | 2026-10-16 | `f12b4614baee11f07eb4512dde34727c1a5e6b81` | `cee4f7dea9d4cbe31b31a75e35c426042c963f6668474f90766d971fd154404b` | 14513 |
+| `globals.css` | `ui/src/renderer/src/globals.css` | `1f25483294b375a557e1972981be6aa152b1309e` | 2026-10-16 | `746a7093808e859a5e811aa7dfd01e36c4165b6d` | `dabc229aeb9f331c7db5914a6a90d19c64de84601dfc59121c8bbcc4cb26415f` | 14513 |
 
 ## Why each copy exists
 
 | File | Cited by | Use |
 |------|----------|-----|
-| `globals.css` | `ui/tests/unit/queue-canon.test.ts` (AC-41.3 `PILL_TOKEN_SOURCE`); `docs/build-plan/10-queue-card-ui.md` §Status token table | The palette av-kit's queue pills were seeded from (D-90: the commit before Zorivest MEU-662, which equals what av-kit ships) |
+| `globals.css` | `ui/tests/unit/queue-canon.test.ts` (AC-41.3 `PILL_TOKEN_SOURCE`); `docs/build-plan/10-queue-card-ui.md` §Status token table | The palette av-kit's queue pills follow. Seeded at `61243baf` (D-90); bumped to `1f254832` (Zorivest MEU-662, the darker light hexes) by Mat's ruling of 2026-10-26, with the eight light pill tokens in `styles.css` |

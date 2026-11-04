@@ -40,9 +40,9 @@ const SUPERSEDE_POINTER = 'Superseded for queue surfaces by docs/build-plan/10-q
 
 /** PORTED_TOKENS — dark/light hexes copied verbatim from PILL_TOKEN_SOURCE. */
 const PORTED_TOKENS: Record<string, { dark: string; light: string }> = {
-  '--color-status-pending': { dark: '#ffb86c', light: '#ea580c' },
-  '--color-status-filled': { dark: '#50fa7b', light: '#16a34a' },
-  '--color-status-rejected': { dark: '#ff5555', light: '#dc2626' },
+  '--color-status-pending': { dark: '#ffb86c', light: '#9a3412' },
+  '--color-status-filled': { dark: '#50fa7b', light: '#166534' },
+  '--color-status-rejected': { dark: '#ff5555', light: '#991b1b' },
   '--color-status-canceled': { dark: '#6272a4', light: '#64748b' },
 }
 

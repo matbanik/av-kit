@@ -7,7 +7,7 @@
     "label_worst": 6.61,
     "icon_note": "icon ratios are token-vs-backdrop and ADVISORY, not gating: the status icon is aria-hidden and redundant with the pill text, so WCAG 2.2 1.4.11 Decorative applies. Recorded so the number is visible, not hidden.",
     "icon_min_advisory": 3.0,
-    "icon_below_advisory": 12,
+    "icon_below_advisory": 4,
     "icon_worst": 1.94,
     "rounding": "composite channels and the final ratio are rounded half-up (JS Math.round), matching AC-43.3 and browser 8-bit compositing. The MEU-41 planning capture used a half-to-even generator, which moved 10 label ratios by <=0.08; none crossed CONTRAST_MIN."
   },
@@ -297,196 +297,196 @@
       "status": "Pending",
       "backdrop": "card",
       "token": "--color-status-pending",
-      "ratio": 12.03
+      "ratio": 11.61
     },
     {
       "theme": "light",
       "status": "Pending",
       "backdrop": "hover",
       "token": "--color-status-pending",
-      "ratio": 12.93
+      "ratio": 12.48
     },
     {
       "theme": "light",
       "status": "Pending",
       "backdrop": "checkbox-selected",
       "token": "--color-status-pending",
-      "ratio": 11.43
+      "ratio": 10.95
     },
     {
       "theme": "light",
       "status": "Pending",
       "backdrop": "detail-open",
       "token": "--color-status-pending",
-      "ratio": 10.78
+      "ratio": 10.4
     },
     {
       "theme": "light",
       "status": "Processing",
       "backdrop": "card",
       "token": "--color-accent-cyan",
-      "ratio": 11.85
+      "ratio": 11.7
     },
     {
       "theme": "light",
       "status": "Processing",
       "backdrop": "hover",
       "token": "--color-accent-cyan",
-      "ratio": 12.74
+      "ratio": 12.57
     },
     {
       "theme": "light",
       "status": "Processing",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-cyan",
-      "ratio": 11.28
+      "ratio": 11.04
     },
     {
       "theme": "light",
       "status": "Processing",
       "backdrop": "detail-open",
       "token": "--color-accent-cyan",
-      "ratio": 10.65
+      "ratio": 10.5
     },
     {
       "theme": "light",
       "status": "Downloading",
       "backdrop": "card",
       "token": "--color-accent-cyan",
-      "ratio": 11.85
+      "ratio": 11.7
     },
     {
       "theme": "light",
       "status": "Downloading",
       "backdrop": "hover",
       "token": "--color-accent-cyan",
-      "ratio": 12.74
+      "ratio": 12.57
     },
     {
       "theme": "light",
       "status": "Downloading",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-cyan",
-      "ratio": 11.28
+      "ratio": 11.04
     },
     {
       "theme": "light",
       "status": "Downloading",
       "backdrop": "detail-open",
       "token": "--color-accent-cyan",
-      "ratio": 10.65
+      "ratio": 10.5
     },
     {
       "theme": "light",
       "status": "Paused",
       "backdrop": "card",
       "token": "--color-accent-yellow",
-      "ratio": 12.34
+      "ratio": 11.71
     },
     {
       "theme": "light",
       "status": "Paused",
       "backdrop": "hover",
       "token": "--color-accent-yellow",
-      "ratio": 13.25
-    },
-    {
-      "theme": "light",
-      "status": "Paused",
-      "backdrop": "checkbox-selected",
-      "token": "--color-accent-yellow",
-      "ratio": 11.74
-    },
-    {
-      "theme": "light",
-      "status": "Paused",
-      "backdrop": "detail-open",
-      "token": "--color-accent-yellow",
-      "ratio": 11.09
-    },
-    {
-      "theme": "light",
-      "status": "Done",
-      "backdrop": "card",
-      "token": "--color-status-filled",
-      "ratio": 12.21
-    },
-    {
-      "theme": "light",
-      "status": "Done",
-      "backdrop": "hover",
-      "token": "--color-status-filled",
-      "ratio": 13.12
-    },
-    {
-      "theme": "light",
-      "status": "Done",
-      "backdrop": "checkbox-selected",
-      "token": "--color-status-filled",
-      "ratio": 11.55
-    },
-    {
-      "theme": "light",
-      "status": "Done",
-      "backdrop": "detail-open",
-      "token": "--color-status-filled",
-      "ratio": 11.0
-    },
-    {
-      "theme": "light",
-      "status": "Failed",
-      "backdrop": "card",
-      "token": "--color-status-rejected",
-      "ratio": 11.64
-    },
-    {
-      "theme": "light",
-      "status": "Failed",
-      "backdrop": "hover",
-      "token": "--color-status-rejected",
-      "ratio": 12.52
-    },
-    {
-      "theme": "light",
-      "status": "Failed",
-      "backdrop": "checkbox-selected",
-      "token": "--color-status-rejected",
-      "ratio": 11.05
-    },
-    {
-      "theme": "light",
-      "status": "Failed",
-      "backdrop": "detail-open",
-      "token": "--color-status-rejected",
-      "ratio": 10.42
-    },
-    {
-      "theme": "light",
-      "status": "Skipped",
-      "backdrop": "card",
-      "token": "--color-accent-purple",
-      "ratio": 11.72
-    },
-    {
-      "theme": "light",
-      "status": "Skipped",
-      "backdrop": "hover",
-      "token": "--color-accent-purple",
       "ratio": 12.59
     },
     {
       "theme": "light",
+      "status": "Paused",
+      "backdrop": "checkbox-selected",
+      "token": "--color-accent-yellow",
+      "ratio": 11.13
+    },
+    {
+      "theme": "light",
+      "status": "Paused",
+      "backdrop": "detail-open",
+      "token": "--color-accent-yellow",
+      "ratio": 10.5
+    },
+    {
+      "theme": "light",
+      "status": "Done",
+      "backdrop": "card",
+      "token": "--color-status-filled",
+      "ratio": 11.72
+    },
+    {
+      "theme": "light",
+      "status": "Done",
+      "backdrop": "hover",
+      "token": "--color-status-filled",
+      "ratio": 12.6
+    },
+    {
+      "theme": "light",
+      "status": "Done",
+      "backdrop": "checkbox-selected",
+      "token": "--color-status-filled",
+      "ratio": 11.07
+    },
+    {
+      "theme": "light",
+      "status": "Done",
+      "backdrop": "detail-open",
+      "token": "--color-status-filled",
+      "ratio": 10.53
+    },
+    {
+      "theme": "light",
+      "status": "Failed",
+      "backdrop": "card",
+      "token": "--color-status-rejected",
+      "ratio": 11.39
+    },
+    {
+      "theme": "light",
+      "status": "Failed",
+      "backdrop": "hover",
+      "token": "--color-status-rejected",
+      "ratio": 12.25
+    },
+    {
+      "theme": "light",
+      "status": "Failed",
+      "backdrop": "checkbox-selected",
+      "token": "--color-status-rejected",
+      "ratio": 10.81
+    },
+    {
+      "theme": "light",
+      "status": "Failed",
+      "backdrop": "detail-open",
+      "token": "--color-status-rejected",
+      "ratio": 10.19
+    },
+    {
+      "theme": "light",
+      "status": "Skipped",
+      "backdrop": "card",
+      "token": "--color-accent-purple",
+      "ratio": 11.5
+    },
+    {
+      "theme": "light",
+      "status": "Skipped",
+      "backdrop": "hover",
+      "token": "--color-accent-purple",
+      "ratio": 12.45
+    },
+    {
+      "theme": "light",
       "status": "Skipped",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-purple",
-      "ratio": 11.13
+      "ratio": 10.94
     },
     {
       "theme": "light",
       "status": "Skipped",
       "backdrop": "detail-open",
       "token": "--color-accent-purple",
-      "ratio": 10.51
+      "ratio": 10.32
     },
     {
       "theme": "light",
@@ -521,56 +521,56 @@
       "status": "QualityBlocked",
       "backdrop": "card",
       "token": "--color-accent-orange",
-      "ratio": 12.03
+      "ratio": 11.61
     },
     {
       "theme": "light",
       "status": "QualityBlocked",
       "backdrop": "hover",
       "token": "--color-accent-orange",
-      "ratio": 12.93
+      "ratio": 12.48
     },
     {
       "theme": "light",
       "status": "QualityBlocked",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-orange",
-      "ratio": 11.43
+      "ratio": 10.95
     },
     {
       "theme": "light",
       "status": "QualityBlocked",
       "backdrop": "detail-open",
       "token": "--color-accent-orange",
-      "ratio": 10.78
+      "ratio": 10.4
     },
     {
       "theme": "light",
       "status": "AgeRestricted",
       "backdrop": "card",
       "token": "--color-accent-red",
-      "ratio": 11.64
+      "ratio": 11.39
     },
     {
       "theme": "light",
       "status": "AgeRestricted",
       "backdrop": "hover",
       "token": "--color-accent-red",
-      "ratio": 12.52
+      "ratio": 12.25
     },
     {
       "theme": "light",
       "status": "AgeRestricted",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-red",
-      "ratio": 11.05
+      "ratio": 10.81
     },
     {
       "theme": "light",
       "status": "AgeRestricted",
       "backdrop": "detail-open",
       "token": "--color-accent-red",
-      "ratio": 10.42
+      "ratio": 10.19
     }
   ],
   "icon": [
@@ -859,196 +859,196 @@
       "status": "Pending",
       "backdrop": "card",
       "token": "--color-status-pending",
-      "ratio": 3.3
+      "ratio": 6.77
     },
     {
       "theme": "light",
       "status": "Pending",
       "backdrop": "hover",
       "token": "--color-status-pending",
-      "ratio": 3.56
+      "ratio": 7.31
     },
     {
       "theme": "light",
       "status": "Pending",
       "backdrop": "checkbox-selected",
       "token": "--color-status-pending",
-      "ratio": 3.12
+      "ratio": 6.39
     },
     {
       "theme": "light",
       "status": "Pending",
       "backdrop": "detail-open",
       "token": "--color-status-pending",
-      "ratio": 2.94
+      "ratio": 6.04
     },
     {
       "theme": "light",
       "status": "Processing",
       "backdrop": "card",
       "token": "--color-accent-cyan",
-      "ratio": 4.96
+      "ratio": 6.73
     },
     {
       "theme": "light",
       "status": "Processing",
       "backdrop": "hover",
       "token": "--color-accent-cyan",
-      "ratio": 5.36
+      "ratio": 7.27
     },
     {
       "theme": "light",
       "status": "Processing",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-cyan",
-      "ratio": 4.69
+      "ratio": 6.36
     },
     {
       "theme": "light",
       "status": "Processing",
       "backdrop": "detail-open",
       "token": "--color-accent-cyan",
-      "ratio": 4.43
+      "ratio": 6.01
     },
     {
       "theme": "light",
       "status": "Downloading",
       "backdrop": "card",
       "token": "--color-accent-cyan",
-      "ratio": 4.96
+      "ratio": 6.73
     },
     {
       "theme": "light",
       "status": "Downloading",
       "backdrop": "hover",
       "token": "--color-accent-cyan",
-      "ratio": 5.36
+      "ratio": 7.27
     },
     {
       "theme": "light",
       "status": "Downloading",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-cyan",
-      "ratio": 4.69
+      "ratio": 6.36
     },
     {
       "theme": "light",
       "status": "Downloading",
       "backdrop": "detail-open",
       "token": "--color-accent-cyan",
-      "ratio": 4.43
+      "ratio": 6.01
     },
     {
       "theme": "light",
       "status": "Paused",
       "backdrop": "card",
       "token": "--color-accent-yellow",
-      "ratio": 2.72
+      "ratio": 6.34
     },
     {
       "theme": "light",
       "status": "Paused",
       "backdrop": "hover",
       "token": "--color-accent-yellow",
-      "ratio": 2.94
+      "ratio": 6.85
     },
     {
       "theme": "light",
       "status": "Paused",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-yellow",
-      "ratio": 2.57
+      "ratio": 6.0
     },
     {
       "theme": "light",
       "status": "Paused",
       "backdrop": "detail-open",
       "token": "--color-accent-yellow",
-      "ratio": 2.43
+      "ratio": 5.67
     },
     {
       "theme": "light",
       "status": "Done",
       "backdrop": "card",
       "token": "--color-status-filled",
-      "ratio": 3.05
+      "ratio": 6.6
     },
     {
       "theme": "light",
       "status": "Done",
       "backdrop": "hover",
       "token": "--color-status-filled",
-      "ratio": 3.3
+      "ratio": 7.13
     },
     {
       "theme": "light",
       "status": "Done",
       "backdrop": "checkbox-selected",
       "token": "--color-status-filled",
-      "ratio": 2.88
+      "ratio": 6.24
     },
     {
       "theme": "light",
       "status": "Done",
       "backdrop": "detail-open",
       "token": "--color-status-filled",
-      "ratio": 2.73
+      "ratio": 5.9
     },
     {
       "theme": "light",
       "status": "Failed",
       "backdrop": "card",
       "token": "--color-status-rejected",
-      "ratio": 4.47
+      "ratio": 7.69
     },
     {
       "theme": "light",
       "status": "Failed",
       "backdrop": "hover",
       "token": "--color-status-rejected",
-      "ratio": 4.83
+      "ratio": 8.31
     },
     {
       "theme": "light",
       "status": "Failed",
       "backdrop": "checkbox-selected",
       "token": "--color-status-rejected",
-      "ratio": 4.23
+      "ratio": 7.27
     },
     {
       "theme": "light",
       "status": "Failed",
       "backdrop": "detail-open",
       "token": "--color-status-rejected",
-      "ratio": 3.99
+      "ratio": 6.87
     },
     {
       "theme": "light",
       "status": "Skipped",
       "backdrop": "card",
       "token": "--color-accent-purple",
-      "ratio": 5.28
+      "ratio": 6.58
     },
     {
       "theme": "light",
       "status": "Skipped",
       "backdrop": "hover",
       "token": "--color-accent-purple",
-      "ratio": 5.7
+      "ratio": 7.1
     },
     {
       "theme": "light",
       "status": "Skipped",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-purple",
-      "ratio": 4.99
+      "ratio": 6.22
     },
     {
       "theme": "light",
       "status": "Skipped",
       "backdrop": "detail-open",
       "token": "--color-accent-purple",
-      "ratio": 4.71
+      "ratio": 5.88
     },
     {
       "theme": "light",
@@ -1083,56 +1083,56 @@
       "status": "QualityBlocked",
       "backdrop": "card",
       "token": "--color-accent-orange",
-      "ratio": 3.3
+      "ratio": 6.77
     },
     {
       "theme": "light",
       "status": "QualityBlocked",
       "backdrop": "hover",
       "token": "--color-accent-orange",
-      "ratio": 3.56
+      "ratio": 7.31
     },
     {
       "theme": "light",
       "status": "QualityBlocked",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-orange",
-      "ratio": 3.12
+      "ratio": 6.39
     },
     {
       "theme": "light",
       "status": "QualityBlocked",
       "backdrop": "detail-open",
       "token": "--color-accent-orange",
-      "ratio": 2.94
+      "ratio": 6.04
     },
     {
       "theme": "light",
       "status": "AgeRestricted",
       "backdrop": "card",
       "token": "--color-accent-red",
-      "ratio": 4.47
+      "ratio": 7.69
     },
     {
       "theme": "light",
       "status": "AgeRestricted",
       "backdrop": "hover",
       "token": "--color-accent-red",
-      "ratio": 4.83
+      "ratio": 8.31
     },
     {
       "theme": "light",
       "status": "AgeRestricted",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-red",
-      "ratio": 4.23
+      "ratio": 7.27
     },
     {
       "theme": "light",
       "status": "AgeRestricted",
       "backdrop": "detail-open",
       "token": "--color-accent-red",
-      "ratio": 3.99
+      "ratio": 6.87
     }
   ]
 }

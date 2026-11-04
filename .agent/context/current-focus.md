@@ -16,7 +16,7 @@ Session 40 `gui-theme-path-fields` (MEU-94 theme-reactive selects, MEU-93 path f
   - Every AC-93/94 test passed in all four runs. Each run had one non-baseline failure (AC-81.11, then AC-19.17, AC-67.24 and AC-67.35), each an environment or host-load miss, and no run passed whole.
   - The H1-2 fresh gate and H1-6b were waived, not run. The H1-7 Codex execution review approved in round 2 (`.agent/context/handoffs/2026-10-24-gui-theme-path-fields-implementation-critical-review.md`).
 - Resolved: `GUI-LIGHT-THEME-SELECT-STALE-DARK`, `GUI-CONVERT-OUTPUT-NO-BROWSE`. Opened: `CAPTURE-E2E-LAUNCH-TEARDOWN-HANG` (the gate's Electron hangs) and `PACKAGING-MCP-SNIPPET-TOKEN-STALE` (AC-25.7).
-- After the commit: merge `claude/pill-palette-darker` (worktree `P:/av-kit-wt/pill-palette-darker`, uncommitted). It re-ports Zorivest `1f254832`'s darker light pill hexes on Mat's ruling of 2026-10-26.
+- Landed on `main` on 2026-11-03: Zorivest `1f254832`'s darker light pill hexes, on Mat's ruling of 2026-10-26.
 
 Repository state (2026-10-24):
 - Git history was squashed to one root commit, `7b29fcd` ("Initial commit: av-kit as of 2026-10-24"), and force-pushed. The 286 earlier commits are in `P:/av-kit-backup/full-history-20261024-3da69a1.bundle`; commit hashes cited in handoffs, plans, receipts and `baseline.sha` files resolve only there, so old `validate-task.ps1` scripts that read a pinned baseline do not re-run on `main`.

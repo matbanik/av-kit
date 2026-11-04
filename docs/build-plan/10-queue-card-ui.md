@@ -114,7 +114,8 @@ so a stored reason can never contradict the row it sits on.
 ## Status token table
 
 Every pill hue is an av-kit token in `ui/src/renderer/src/styles.css`. av-kit owns these values;
-they were seeded verbatim from Zorivest's `globals.css` at commit `61243baf`, which av-kit keeps as
+they follow Zorivest's `globals.css` at commit `1f254832` (seeded at `61243baf`; the light hexes were
+re-ported on 2026-10-26), which av-kit keeps as
 `_inspiration/zorivest/globals.css` (see its `PROVENANCE.md`). The Zorivest checkout is never read,
 and a later Zorivest change reaches av-kit only as an av-kit change. A pill that introduces a colour
 outside this table is a defect. Fill and label are deliberately different tokens: the fill
@@ -139,9 +140,9 @@ is the status hue at 10%, the label is `text-fg`, which clears the 4.5:1 contras
 
 | Token | Dark | Light |
 |---|---|---|
-| `--color-status-pending` | `#ffb86c` | `#ea580c` |
-| `--color-status-filled` | `#50fa7b` | `#16a34a` |
-| `--color-status-rejected` | `#ff5555` | `#dc2626` |
+| `--color-status-pending` | `#ffb86c` | `#9a3412` |
+| `--color-status-filled` | `#50fa7b` | `#166534` |
+| `--color-status-rejected` | `#ff5555` | `#991b1b` |
 | `--color-status-canceled` | `#6272a4` | `#64748b` |
 
 Status is never colour-alone: the pill states it in words (SC 1.4.1), and the left-edge status
