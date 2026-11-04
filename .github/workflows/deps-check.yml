@@ -1,0 +1,75 @@
+name: Dependency check
+
+# Weekly and read-only: nothing here changes a dependency or opens a pull request. Updates
+# are made locally on main (docs/distribution/dependency-updates.md). The report replaces
+# the body of one rolling issue. A scanner that fails turns this run red, and the issue says
+# so instead of showing zero findings.
+
+on:
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deps-check-rolling-issue
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  report:
+    name: Report
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          version: "0.12.5"
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .node-version
+      # The exit code is saved so the issue is updated before the run goes red.
+      - name: Run the scanners
+        id: report
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set +e
+          python3 tools/deps_report.py --out "$RUNNER_TEMP/report.md" --run-url "$RUN_URL"
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+      - name: Update the rolling issue
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          report="$RUNNER_TEMP/report.md"
+          if [ ! -f "$report" ]; then
+            printf '# Dependency report\n\n> **The scanners did not run.** See %s\n' "$RUN_URL" > "$report"
+          fi
+          cat "$report" >> "$GITHUB_STEP_SUMMARY"
+          gh label create dependency-report --color 0E8A16 \
+            --description "Weekly dependency report" --force
+          number=$(gh issue list --label dependency-report --state open --limit 1 \
+            --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body-file "$report"
+          else
+            gh issue create --title "Dependency report" --label dependency-report \
+              --body-file "$report"
+          fi
+      - name: Fail if a scanner failed
+        run: exit ${{ steps.report.outputs.code || '2' }}

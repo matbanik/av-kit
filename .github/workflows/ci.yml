@@ -1,0 +1,147 @@
+name: CI
+
+# Static checks and test suites on every code change. The everyday loop stays local: this is
+# the clean-machine check. Tests that need local TTS models, a GPU or a real F2 capture, and
+# the Electron suite, stay local too (.agent/docs/commands.md).
+
+on:
+  push:
+    branches: [main]
+    paths: &code-paths
+      - '**'
+      - '!**.md'
+      - '!docs/**'
+      - '!.agent/**'
+      - '!_inspiration/**'
+      # Tests pin these, even though the folders above would skip them.
+      - 'docs/distribution/**'
+      - 'packaging/**'
+  pull_request:
+    paths: *code-paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  python:
+    name: Python
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          version: "0.12.5"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - name: Set up Python
+        run: uv python install
+      - name: Install dependencies
+        run: uv sync --locked --all-packages
+      - name: Ruff
+        run: uv run --locked --no-sync ruff check packages/ tests/ tools/deps_report.py
+      - name: Pyright
+        run: uv run --locked --no-sync pyright packages/
+      # These two read the packaged backend and FFmpeg, which only a build produces.
+      - name: Tests
+        run: >-
+          uv run --locked --no-sync pytest tests/ --tb=short -q
+          --deselect "tests/unit/test_packaging_backend.py::test_pack_dist_onedir_layout[AC-24.10]"
+          --deselect "tests/unit/test_packaging_installer.py::test_nsis_pack_check_script[AC-25.10]"
+      - name: OpenAPI matches the committed file
+        run: uv run --locked --no-sync python tools/export_openapi.py --check openapi.committed.json
+      - name: Rendered project state is current
+        run: uv run --locked --no-sync python tools/meu_status.py render --check
+
+  ui:
+    name: UI
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: |
+            ui/package-lock.json
+            mcp-server/package-lock.json
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      # AC-71.10 starts the built MCP server through the real Electron binary.
+      - name: Install the Electron binary
+        run: node node_modules/electron/install.js
+      - name: Build the MCP server
+        working-directory: mcp-server
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+      - name: Types
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Tests
+        run: npm run test
+      - name: Build
+        run: npm run build
+
+  mcp-server:
+    name: MCP server
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: mcp-server
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: mcp-server/package-lock.json
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+      - name: Types
+        run: npm run typecheck
+      # The tests start the built server and its bundle.
+      - name: Build
+        run: |
+          npm run build
+          npm run bundle
+      - name: Tests
+        run: npm run test
+
+  native:
+    name: Region picker
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Set up .NET
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5.4.0
+        with:
+          global-json-file: global.json
+      - name: Tests
+        run: dotnet test native/region-picker-tests -c Release
