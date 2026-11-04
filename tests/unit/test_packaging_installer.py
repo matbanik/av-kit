@@ -63,11 +63,11 @@ def test_nsis_keep_appdata(ac_id: str) -> None:
 
 @pytest.mark.parametrize("ac_id", ["AC-25.7"], ids=["AC-25.7"])
 def test_mcp_snippet_keys(ac_id: str) -> None:
-    """AC-25.7 MCP_SNIPPET has token + app data only."""
+    """AC-25.7 MCP_SNIPPET names the app data folder, with no token or API base."""
     assert ac_id == "AC-25.7"
     assert MCP_SNIPPET.is_file()
     text = MCP_SNIPPET.read_text(encoding="utf-8")
-    assert "AVKIT_API_TOKEN" in text
+    assert "AVKIT_API_TOKEN" not in text
     assert "AVKIT_APP_DATA" in text
     assert "AVKIT_API_BASE" not in text
 

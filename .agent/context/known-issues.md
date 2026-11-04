@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 73** — Active: 19 | Mitigated: 1 | Resolved: 52
+**Total: 73** — Active: 18 | Mitigated: 1 | Resolved: 53
 
 ## Active Issues
 
@@ -26,7 +26,6 @@
 | 🟢 | `NOTICES-SPACY-TRANSITIVE` | THIRD_PARTY_NOTICES omits most bundled backend dependencies (spaCy's tr… | infrastructure | ⬜ open | 2026-10-15 |
 | 🟢 | `TOOLING-TRIAGE-CLI-CP1252` | issue_triage.py bucket and --help crash with UnicodeEncodeError when ou… | infrastructure | ⬜ open | 2026-10-17 |
 | 🟢 | `CAPTURE-E2E-LAUNCH-TEARDOWN-HANG` | capture-inbox Electron specs occasionally hang in launch or close under… | ui | ⬜ open | 2026-10-25 |
-| 🟢 | `PACKAGING-MCP-SNIPPET-TOKEN-STALE` | test_mcp_snippet_keys (AC-25.7) still requires AVKIT_API_TOKEN in mcp.j… | infrastructure | ⬜ open | 2026-10-25 |
 | 🟢 | `CAPTURE-HINT-TEST-PRESENCE-ONLY` | Capture's AC-97.4 hint test checks that the shortcut props exist, not t… | ui | ⬜ open | 2026-10-26 |
 
 ## Mitigated / Workaround
@@ -35,9 +34,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (52)
+## Resolved (53)
 
-52 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+53 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

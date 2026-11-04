@@ -3157,7 +3157,7 @@ issues:
   title: test_mcp_snippet_keys (AC-25.7) still requires AVKIT_API_TOKEN in mcp.json.example, which Session 31b made token-free
   severity: low
   component: infrastructure
-  status: open
+  status: resolved
   discovered: '2026-10-25'
   root_cause: tests/unit/test_packaging_installer.py::test_mcp_snippet_keys[AC-25.7] asserts 'AVKIT_API_TOKEN' in docs/distribution/mcp.json.example.
     Session 31b (D-79, EXAMPLE_CONFIG) rewrote the example to the generic block with no token, so its env holds only ELECTRON_RUN_AS_NODE
@@ -3168,6 +3168,7 @@ issues:
     last_checked: '2026-10-26'
     method: Session 40 baseline row 0 (s40-base-py.txt, s40-base-py-fail.txt) and gate runs 1-4
     result: '1 failed, 936 passed: AC-25.7 only, AssertionError on AVKIT_API_TOKEN, on HEAD and in every gate run'
+  resolution_path: 'Fixed 2026-11-03. The test now asserts the token is absent from the example, matching D-79. Mat approved the fix on 2026-11-03 so it would not keep CI red.'
   category: TECH-DEBT
   priority: P3
   related:
