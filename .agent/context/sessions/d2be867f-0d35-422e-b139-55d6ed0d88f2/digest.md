@@ -27,7 +27,7 @@
 ## Blockers & Open Questions
 
 - Transcript is not verified end to end while YouTube blocks captions from this machine (`YOUTUBE-CAPTIONS-IP-BLOCK`). The gate reads INCOMPLETE VERIFICATION, and the audit's own verdict stays non-pass.
-- The clean-machine install on DUPER, the real F2 check, the first-model check and the Transcript recheck are waived until public. Mat runs them from the release, and I remind Mat when it's out.
+- The clean-machine install on DUPER, the real F2 check, the first-model check and the Transcript recheck are waived until public. The release is public now, Mat runs them from it, and the final report reminds Mat.
 - Not confirmed: the two email settings at https://github.com/settings/emails.
 - Removing the pill worktree and its branch waits on Mat.
 - `.agent/fleet.json` appeared during the session, isn't this session's work, and is excluded locally. It waits on Mat.
@@ -49,7 +49,8 @@
 | Handoff validators, five handoffs | Pass | Rerun after the review's pointer lines went in; no plan AC missing from every handoff |
 | Task rows | 45 of 45 `[x]` | Row 12 stayed `[/]` after an S8 rerun until a preflight count found it; its receipt was already exit 0, so it was marked on that receipt and not rerun (ECN-5) |
 | Closeout rows H2-1 to H2-5 | Pass | Reflection validator OK with 37 Decisions Log rows; `render --check` OK; `layout-canon` and `queue-canon` 14 passed; task lint 45 rows |
-| Git commit | Follows closeout | Draft: `C:/Temp/av-kit/commit-draft.txt` |
+| Git commit | Pushed | `9280275` on `main`; CI run 41891363498 green; a small second commit removes the README note |
+| Tag and release | Published | Tag `v0.1.0-rc.1` at `9280275`; pre-release since 2026-11-04T18:58:41Z with 3 assets, GitHub's digests matching the local hashes: https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.1 |
 
 H2-2's status writes move `tested_state` after the gate, from `24e2735...+025862f4...` to `24e2735...+ca2fe9d2...`, as row H2-2 expects. Of the files changed since the approved round was dispatched, only `meu-status.yaml`, `meu-registry.md` and `BUILD_PLAN.md` count toward that hash. No code, test or build input changed after the gate.
 

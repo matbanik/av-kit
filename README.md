@@ -46,9 +46,6 @@ av-kit does all of that in one window.
 
 ## Quick start
 
-> **No installer yet.** The first release candidate is being prepared. Until it's out,
-> you can [build from source](#build-from-source).
-
 1. Download **`av-kit-Setup-<version>.exe`** from the [Releases page](https://github.com/matbanik/av-kit/releases).
    It runs on Windows 10 and 11 (64-bit).
 2. Run it. The installer is not code-signed yet, so Windows SmartScreen may ask:
