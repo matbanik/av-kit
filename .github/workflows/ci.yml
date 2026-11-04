@@ -1,8 +1,8 @@
 name: CI
 
 # Static checks and test suites on every code change. The everyday loop stays local: this is
-# the clean-machine check. Tests that need local TTS models, a GPU or a real F2 capture, and
-# the Electron suite, stay local too (.agent/docs/commands.md).
+# the clean-machine check. Tests that need local TTS models, a GPU or a real F2 capture, the
+# Electron suite and the agent tooling tests stay local too (.agent/docs/commands.md).
 
 on:
   push:
@@ -53,10 +53,12 @@ jobs:
         run: uv run --locked --no-sync ruff check packages/ tests/ tools/deps_report.py
       - name: Pyright
         run: uv run --locked --no-sync pyright packages/
-      # These two read the packaged backend and FFmpeg, which only a build produces.
+      # tests/tooling needs P:/.agent and rtk, which only a maintainer's machine has. The two
+      # deselected tests read the packaged backend and FFmpeg, which only a build produces.
       - name: Tests
         run: >-
           uv run --locked --no-sync pytest tests/ --tb=short -q
+          --ignore=tests/tooling
           --deselect "tests/unit/test_packaging_backend.py::test_pack_dist_onedir_layout[AC-24.10]"
           --deselect "tests/unit/test_packaging_installer.py::test_nsis_pack_check_script[AC-25.10]"
       - name: OpenAPI matches the committed file
