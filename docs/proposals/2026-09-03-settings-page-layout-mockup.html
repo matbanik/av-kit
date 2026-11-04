@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings Page Layout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f3f5f8; --paper: #ffffff; --ink: #1c2530; --ink-muted: #5b6b7a;
+    --accent: #0891b2; --accent-soft: rgba(8, 145, 178, 0.10); --line: #d9e0e7; --code-bg: #eaeff3;
+    --good: #16a34a; --bad: #dc2626; --warn: #b45309;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #1d1f27; --paper: #262935; --ink: #edeef2; --ink-muted: #9aa6b8;
+      --accent: #8be9fd; --accent-soft: rgba(139,233,253,.10); --line: #3a3e4f;
+      --code-bg: #2e3240; --good: #50fa7b; --bad: #ff6e6e; --warn: #ffb86c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #1d1f27; --paper: #262935; --ink: #edeef2; --ink-muted: #9aa6b8;
+    --accent: #8be9fd; --accent-soft: rgba(139,233,253,.10); --line: #3a3e4f;
+    --code-bg: #2e3240; --good: #50fa7b; --bad: #ff6e6e; --warn: #ffb86c;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--ink); font-family: "Source Sans 3", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 16px; line-height: 1.55; margin: 0; padding: 0 20px 96px; }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  header.masthead { padding: 52px 0 6px; }
+  .eyebrow { font-family: "JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: clamp(30px, 4.5vw, 40px); font-weight: 700; letter-spacing: -.02em; line-height: 1.1; margin: 8px 0 10px; text-wrap: balance; }
+  .lede { font-size: 17.5px; color: var(--ink-muted); max-width: 64ch; margin: 0 0 18px; }
+  h2 { font-size: 22px; font-weight: 700; letter-spacing: -.01em; margin: 56px 0 6px; text-wrap: balance; }
+  h2 .sec { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: 13px; color: var(--accent); margin-right: 10px; font-weight: 500; }
+  p, li { max-width: 70ch; }
+  p.note { color: var(--ink-muted); font-size: 14.5px; }
+  code { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: .86em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  a { color: var(--accent); }
+  ul.tight, ol.tight { padding-left: 22px; margin: 6px 0; }
+  ul.tight li, ol.tight li { margin: 5px 0; }
+  .tldr { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 22px 0 8px; }
+  .tldr .cell { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; font-size: 14.5px; }
+  .tldr .cell b { display: block; margin-bottom: 3px; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+  table.inv { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+  table.inv th, table.inv td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.inv th { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-muted); font-weight: 600; }
+  table.inv td:first-child { white-space: nowrap; }
+  .tblwrap { overflow-x: auto; }
+  .tag { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 999px; font-weight: 600; letter-spacing: .02em; white-space: nowrap; }
+  .tag.keep { background: rgba(22,163,74,.12); color: var(--good); }
+  .tag.move { background: var(--accent-soft); color: var(--accent); }
+  .tag.change { background: rgba(180,83,9,.12); color: var(--warn); }
+
+  /* ---------- Mock frames: pinned to av-kit's dark app palette (ui/src/renderer/src/styles.css @theme) ---------- */
+  .mock {
+    --m-bg: #282a36; --m-el: #44475a; --m-sub: #6272a4; --m-border: #44475a; --m-fg: #f8f8f2; --m-muted: #bae6fd;
+    --m-accent: #8be9fd; --m-accent-fg: #282a36; --m-green: #50fa7b; --m-red: #ff5555; --m-red-soft: #ffa0a0; --m-orange: #ffb86c; --m-purple: #bd93f9;
+    background: var(--m-bg); color: var(--m-fg); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 16px 0;
+    font-family: "Segoe UI", system-ui, sans-serif; font-size: 13.5px; overflow-x: auto;
+  }
+  .mock, .mock * { line-height: 1.4; }
+  .mock .frame-label { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--m-sub); margin: 0 0 12px; }
+  .mock .frame-label b { color: var(--m-accent); font-weight: 500; }
+  .page { min-width: 760px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer; border-radius: 6px; font-size: 12.5px; font-weight: 500; white-space: nowrap; padding: 0 12px; height: 28px; background: rgba(139,233,253,.12); color: var(--m-accent); font-family: inherit; }
+  .btn:hover { background: rgba(139,233,253,.22); }
+  .btn.md { height: 36px; font-size: 13.5px; padding: 0 18px; }
+  .btn.primary { background: var(--m-accent); color: var(--m-accent-fg); font-weight: 600; }
+  .btn.ghost { background: transparent; color: var(--m-muted); }
+  .btn.ghost:hover { background: var(--m-el); }
+  .btn.outline { background: transparent; border: 1px solid var(--m-border); color: var(--m-fg); }
+  .btn.dim { opacity: .5; cursor: default; }
+  .btn:focus-visible, .field:focus-visible, .chk:focus-visible { outline: 2px solid rgba(139,233,253,.5); outline-offset: 1px; }
+  .field { height: 28px; border-radius: 6px; border: 1px solid var(--m-border); background: var(--m-el); color: var(--m-fg); padding: 0 8px; font-size: 12.5px; font-family: inherit; }
+  .field.mono { font-family: Consolas, ui-monospace, monospace; }
+  .field.num { width: 84px; text-align: right; font-variant-numeric: tabular-nums; }
+  .field.full { width: 100%; }
+  .lbl { font-size: 12px; color: var(--m-muted); }
+  .lbl.fg { color: var(--m-fg); }
+  .chk { width: 15px; height: 15px; accent-color: var(--m-accent); cursor: pointer; margin: 0; }
+  .divider { width: 1px; height: 18px; background: var(--m-border); flex: none; }
+  .spacer { flex: 1; }
+  .help { display: flex; align-items: center; gap: 8px; border: 1px solid var(--m-border); border-radius: 6px; padding: 7px 12px; font-size: 13px; font-weight: 600; }
+  .help .plus { margin-left: auto; color: var(--m-muted); font-weight: 400; }
+  .help .i { display: inline-flex; width: 16px; height: 16px; border-radius: 3px; background: #82aaff; color: #282a36; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-style: italic; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .chip.warn { background: rgba(255,184,108,.14); color: var(--m-orange); }
+  .chip.ok { background: rgba(80,250,123,.14); color: var(--m-green); }
+  .chip.red { background: rgba(255,85,85,.14); color: var(--m-red-soft); }
+  .chip.gray { background: var(--m-el); color: var(--m-muted); }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .seg { display: inline-flex; border: 1px solid var(--m-border); border-radius: 6px; overflow: hidden; height: 28px; }
+  .seg button { border: none; background: transparent; color: var(--m-muted); padding: 0 12px; font-size: 12.5px; cursor: pointer; border-right: 1px solid var(--m-border); font-family: inherit; }
+  .seg button:last-child { border-right: none; }
+  .seg button[aria-pressed="true"] { background: rgba(139,233,253,.14); color: var(--m-accent); font-weight: 600; }
+
+  /* ---- BEFORE ---- */
+  .before { display: flex; flex-direction: column; gap: 10px; max-width: 720px; }
+  .before h1 { font-size: 20px; margin: 0; color: var(--m-fg); letter-spacing: 0; }
+  .before .box { border: 1px solid var(--m-border); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .before .box h2 { font-size: 15px; margin: 0; color: var(--m-fg); letter-spacing: 0; }
+  .before .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .before-wrap { padding-left: 34px; }
+  .zone-note { position: relative; }
+  .zone-note::before { content: attr(data-n); position: absolute; left: -32px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--m-red); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-family: Consolas, ui-monospace, monospace; }
+  .scrollhint { text-align: center; color: var(--m-sub); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 0; border-top: 1px dashed var(--m-sub); }
+  .fold { color: var(--m-sub); font-size: 12px; text-align: center; padding: 6px; }
+
+  /* ---- AFTER ---- */
+  .after { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 20px; align-items: start; max-width: 960px; }
+  .rail { position: sticky; top: 0; display: flex; flex-direction: column; gap: 2px; padding-top: 4px; }
+  .rail .grp { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--m-sub); padding: 10px 10px 4px; font-weight: 600; }
+  .rail a { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 6px; color: var(--m-muted); text-decoration: none; font-size: 13px; }
+  .rail a:hover { background: var(--m-el); }
+  .rail a.on { background: rgba(139,233,253,.12); color: var(--m-accent); font-weight: 600; }
+  .rail a .dot { width: 6px; height: 6px; border-radius: 50%; margin-left: auto; }
+  .rail a .dot.warn { background: var(--m-orange); }
+  .content { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .sec-h { display: flex; align-items: baseline; gap: 10px; border-bottom: 1px solid var(--m-border); padding-bottom: 6px; }
+  .sec-h h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .sec-h .mode { font-size: 11.5px; color: var(--m-sub); }
+  .sec-h .mode.dirty { color: var(--m-orange); }
+  .form { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 9px 14px; align-items: center; padding-top: 10px; }
+  .form .k { font-size: 12.5px; color: var(--m-fg); }
+  .form .v { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .form .v .field { flex: 1; min-width: 120px; }
+  .form .v .field.num, .form .v select.field:not(.full) { flex: none; }
+  .form .v .field.short { flex: none; width: 160px; }
+  .form .hint { font-size: 11.5px; color: var(--m-sub); grid-column: 2; margin-top: -4px; }
+  .form .sub { grid-column: 2; display: grid; grid-template-columns: 120px 1fr; gap: 8px 12px; align-items: center; border-left: 2px solid var(--m-border); padding-left: 12px; margin: 2px 0 4px; }
+  .form .sub .k { color: var(--m-muted); }
+  .form .foot { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; padding-top: 4px; }
+  .nums { display: grid; grid-template-columns: repeat(2, 168px 84px); gap: 9px 14px; align-items: center; padding-top: 10px; }
+  .nums .k { font-size: 12.5px; color: var(--m-fg); }
+  .nums .u { font-size: 11px; color: var(--m-sub); margin-left: 4px; }
+  .nums .k small { display: block; color: var(--m-sub); font-size: 11px; }
+  .list { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; }
+  .list .r { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+  .list .r .what { flex: 1; }
+  .list .r .what small { color: var(--m-sub); margin-left: 6px; font-family: Consolas, ui-monospace, monospace; font-size: 11px; }
+  .card { border: 1px solid var(--m-border); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; background: rgba(68,71,90,.18); }
+  .zonemap { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  .zonemap .z { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; font-size: 14.5px; }
+  .zonemap .z b { display: block; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  @media (max-width: 720px) { .zonemap { grid-template-columns: 1fr; } }
+  .callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 14.5px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="masthead">
+  <div class="eyebrow">av-kit · proposal · 2026-09-03 · companion to the Downloader page mockup</div>
+  <h1>Settings page: a rail, a form grid, and an honest save model</h1>
+  <p class="lede">Settings is nine bordered boxes stacked in one column with every control stretched to full width. Some sections save as you type, two need a Save button, and one applies instantly, but nothing on the page says which is which. This mockup adds a sticky rail so any section is one click away, sets every section in the same label-and-control grid, gives paths their Browse button on the same line, and puts the save behaviour in each section’s header where the user can see it.</p>
+  <div class="tldr">
+    <div class="cell"><b>Rail</b>Sticky left column with anchors in three groups: Pages (Download, Transcript, TTS, Convert, Capture), App (Console &amp; logging, Appearance, Startup), Setup (Dependencies, Readiness, MCP access). A dot marks sections that need attention.</div>
+    <div class="cell"><b>Form grid</b>168 px label · control. Paths become [field][Browse]; numbers become 84 px right-aligned inputs in a two-column grid; cookie mode becomes a segment with its sub-fields indented.</div>
+    <div class="cell"><b>Save model</b>Each section header states it: “Saves as you type”, “Save required” with the button in the section footer, or “Applies immediately”. Unchanged behaviour, made visible.</div>
+    <div class="cell"><b>Scope</b>Composition only. Same leaf keys, same debounce and PUT paths, same readiness and MCP mutations. §05 lists all 70 test ids as keep / move / change.</div>
+  </div>
+</header>
+
+<h2><span class="sec">01</span>Before: nine boxes, one column</h2>
+<p>Numbered against <code>SettingsPage.tsx</code> as it renders today (first two sections shown; the remaining seven follow the same shape).</p>
+<div class="mock">
+  <p class="frame-label">Today — top of the page at 1080p</p>
+  <div class="page before-wrap">
+    <div class="before">
+      <h1>Settings</h1>
+      <div class="help"><span class="i">i</span> How it works <span class="plus">+</span></div>
+      <div class="box zone-note" data-n="1">
+        <h2>Download</h2>
+        <div class="zone-note" data-n="2"><div class="lbl fg">Download path</div><input class="field full" value="D:\Video\downloads" readonly aria-label="Download path"></div>
+        <button class="btn" style="align-self:flex-start">Browse</button>
+        <div><div class="lbl fg">Quality</div><select class="field full" aria-label="Quality"><option>1080p</option></select></div>
+        <div class="row"><input type="checkbox" class="chk" aria-label="Audio only"><span class="lbl fg">Audio only</span></div>
+        <div><div class="lbl fg">Audio format</div><select class="field full" aria-label="Audio format"><option>mp3</option></select></div>
+        <div><div class="lbl fg">FFmpeg path</div><input class="field full" value="" placeholder="auto" aria-label="FFmpeg path"></div>
+        <button class="btn" style="align-self:flex-start">Browse</button>
+        <fieldset style="border:1px solid var(--m-border);border-radius:6px;padding:8px 10px;margin:0" class="zone-note" data-n="3"><legend class="lbl fg">Cookie mode</legend>
+          <div class="row"><label class="row"><input type="radio" name="cm" checked class="chk"> None</label><label class="row"><input type="radio" name="cm" class="chk"> Browser</label><label class="row"><input type="radio" name="cm" class="chk"> File</label></div>
+        </fieldset>
+        <div class="row"><input type="checkbox" class="chk" checked aria-label="Archive tracking"><span class="lbl fg">Archive tracking</span></div>
+        <div class="row"><input type="checkbox" class="chk" aria-label="yt-dlp debug"><span class="lbl fg">yt-dlp debug</span></div>
+        <button class="btn" style="align-self:flex-start">Apply defaults</button>
+      </div>
+      <div class="scrollhint">≈ fold at 1080p</div>
+      <div class="box zone-note" data-n="4">
+        <h2>Transcript</h2>
+        <div><div class="lbl fg">Output dir</div><input class="field full" value="D:\Transcripts" readonly aria-label="Output dir"></div>
+        <button class="btn" style="align-self:flex-start">Browse</button>
+        <div><div class="lbl fg">Requests per hour</div><input class="field full" type="number" value="60" aria-label="Requests per hour"></div>
+        <div><div class="lbl fg">Delay between requests</div><input class="field full" type="number" value="2" aria-label="Delay between requests"></div>
+        <div><div class="lbl fg">Max retries</div><input class="field full" type="number" value="3" aria-label="Max retries"></div>
+        <div class="fold">… five more full-width number inputs …</div>
+      </div>
+      <div class="fold zone-note" data-n="5">TTS · Convert (Save) · Capture (Save) · Console · Appearance · Startup (login item; MEU-61) · Dependencies · Setup readiness · MCP access — each a full-width bordered box below</div>
+    </div>
+  </div>
+</div>
+<ol class="tight">
+  <li><strong>No navigation.</strong> Nine sections, ~2,400 px tall; reaching MCP access means scrolling past everything.</li>
+  <li><strong>Every control stretches</strong> to the 768 px column, and each path is two rows: the field, then a Browse button underneath.</li>
+  <li><strong>Cookie mode</strong> is a bordered fieldset inside a bordered section; its browser/file sub-fields appear as more full-width rows.</li>
+  <li><strong>Eight numeric settings</strong> in Transcript are eight full-width rows for values two digits long.</li>
+  <li><strong>Three save models, no signal.</strong> Download, Transcript, TTS, Console autosave with a debounce; Convert and Capture require a Save click; Appearance applies instantly. Nothing indicates which applies until a change silently persists or silently does not.</li>
+</ol>
+
+<h2><span class="sec">02</span>After: rail + form grid</h2>
+<p>Interactive: click rail entries to highlight, change the cookie mode segment to reveal sub-fields, edit a Convert field to see the dirty state.</p>
+
+<div class="mock">
+  <p class="frame-label"><b>Proposed</b> — Download and Transcript sections, rail on the left</p>
+  <div class="page after" id="after-working">
+    <nav class="rail" aria-label="Settings sections" data-role="rail">
+      <div class="grp">Pages</div>
+      <a href="#s-download" class="on">Download</a>
+      <a href="#s-transcript">Transcript</a>
+      <a href="#s-tts">TTS</a>
+      <a href="#s-convert">Convert</a>
+      <a href="#s-capture">Capture</a>
+      <div class="grp">App</div>
+      <a href="#s-console">Console &amp; logging</a>
+      <a href="#s-appearance">Appearance</a>
+      <a href="#s-startup">Startup</a>
+      <div class="grp">Setup</div>
+      <a href="#s-deps">Dependencies</a>
+      <a href="#s-readiness">Readiness <span class="dot warn" title="1 item needs attention"></span></a>
+      <a href="#s-mcp">MCP access</a>
+    </nav>
+
+    <div class="content">
+      <div class="help"><span class="i">i</span> How it works <span class="plus">+</span></div>
+
+      <section id="s-download" title="download-settings">
+        <div class="sec-h"><h3>Download</h3><span class="mode">Saves as you type</span></div>
+        <div class="form">
+          <span class="k">Download folder</span><span class="v"><input class="field" value="D:\Video\downloads" readonly aria-label="Download folder" title="settings-leaf-path"><button class="btn ghost" title="browse-download-path-btn">Browse</button></span>
+          <span class="k">Quality</span><span class="v"><select class="field short" aria-label="Quality" title="settings-leaf-quality"><option>best</option><option selected>1080p</option><option>720p</option><option>480p</option></select></span>
+          <span class="k">Audio only</span><span class="v"><input type="checkbox" class="chk" aria-label="Audio only" title="settings-leaf-audio_only"><select class="field short" aria-label="Audio format" title="settings-leaf-audio_format" disabled style="opacity:.5"><option>mp3</option><option>m4a</option><option>opus</option></select><span class="lbl">format</span></span>
+          <span class="k">FFmpeg path</span><span class="v"><input class="field mono" placeholder="auto-detect" aria-label="FFmpeg path" title="settings-leaf-ffmpeg_path"><button class="btn ghost" title="browse-ffmpeg-btn">Browse</button></span>
+          <span class="k">Cookies</span><span class="v"><span class="seg" role="radiogroup" aria-label="Cookie mode" title="settings-leaf-cookie_mode" data-role="cookie"><button aria-pressed="true" data-v="none" title="settings-leaf-cookie_mode-none">None</button><button aria-pressed="false" data-v="browser" title="settings-leaf-cookie_mode-browser">Browser</button><button aria-pressed="false" data-v="file" title="settings-leaf-cookie_mode-file">File</button></span></span>
+          <div class="sub" data-role="cookie-browser" hidden>
+            <span class="k">Browser</span><select class="field short" aria-label="Cookie browser" title="settings-leaf-cookie_browser"><option>chrome</option><option>firefox</option><option>edge</option></select>
+            <span class="k">Profile</span><input class="field short" placeholder="Default" aria-label="Cookie browser profile" title="settings-leaf-cookie_browser_profile">
+          </div>
+          <div class="sub" data-role="cookie-file" hidden>
+            <span class="k">Cookie file</span><span class="v"><input class="field mono" placeholder="cookies.txt" aria-label="Cookie file" title="settings-leaf-cookie_file_path"><button class="btn ghost" title="browse-cookie-file-btn">Browse</button></span>
+          </div>
+          <span class="k">Archive tracking</span><span class="v"><input type="checkbox" class="chk" checked aria-label="Archive tracking" title="settings-leaf-archive_tracking"><span class="lbl">skip videos already in the download archive</span></span>
+          <span class="k">yt-dlp debug</span><span class="v"><input type="checkbox" class="chk" aria-label="yt-dlp debug" title="settings-leaf-yt_dlp_debug"><span class="lbl">verbose logging in the console</span></span>
+          <div class="foot"><button class="btn ghost" title="apply-defaults-btn">Apply defaults</button></div>
+        </div>
+      </section>
+
+      <section id="s-transcript" title="transcript-settings">
+        <div class="sec-h"><h3>Transcript</h3><span class="mode">Saves as you type</span></div>
+        <div class="form">
+          <span class="k">Output folder</span><span class="v"><input class="field" value="D:\Transcripts" readonly aria-label="Output folder" title="settings-leaf-output_dir"><button class="btn ghost" title="browse-transcript-dir-btn">Browse</button></span>
+        </div>
+        <div class="nums">
+          <span class="k">Requests per hour</span><input class="field num" type="number" value="60" aria-label="Requests per hour" title="settings-leaf-requests_per_hour">
+          <span class="k">Batch size</span><input class="field num" type="number" value="10" aria-label="Batch size" title="settings-leaf-batch_size">
+          <span class="k">Delay between requests <small>seconds</small></span><input class="field num" type="number" value="2" aria-label="Delay between requests" title="settings-leaf-delay_between_requests">
+          <span class="k">Pause between batches <small>seconds</small></span><input class="field num" type="number" value="30" aria-label="Pause between batches" title="settings-leaf-pause_between_batches">
+          <span class="k">Max retries</span><input class="field num" type="number" value="3" aria-label="Max retries" title="settings-leaf-max_retries">
+          <span class="k">Playlist end <small>0 = all</small></span><input class="field num" type="number" value="0" aria-label="Playlist end" title="settings-leaf-playlist_end">
+          <span class="k">Retry delay <small>seconds</small></span><input class="field num" type="number" value="5" aria-label="Retry delay" title="settings-leaf-retry_delay">
+          <span class="k">Max words per document</span><input class="field num" type="number" value="50000" aria-label="Max words per document" title="settings-leaf-max_words_per_document">
+        </div>
+      </section>
+
+      <section id="s-convert" title="convert-settings">
+        <div class="sec-h"><h3>Convert</h3><span class="mode" data-role="convert-mode">Save required</span></div>
+        <div class="form">
+          <span class="k">Output folder</span><span class="v"><input class="field" value="D:\Video\converted" readonly aria-label="Output folder" title="settings-leaf-converter-output_dir"><button class="btn ghost" title="browse-convert-path-btn">Browse</button></span>
+          <span class="k">Default preset</span><span class="v"><select class="field short" aria-label="Default preset" title="settings-leaf-default_preset" data-role="convert-field"><option>small</option><option selected>balanced</option><option>quality</option></select></span>
+          <span class="k">Skip existing</span><span class="v"><input type="checkbox" class="chk" checked aria-label="Skip existing" title="settings-leaf-skip_existing" data-role="convert-field"><span class="lbl">do not re-encode when the output file exists</span></span>
+          <span class="k">GPU preference</span><span class="v"><select class="field short" aria-label="GPU preference" title="settings-leaf-gpu_preference" data-role="convert-field"><option selected>auto</option><option>nvenc</option><option>amf</option><option>qsv</option><option>software</option></select></span>
+          <div class="foot"><button class="btn primary dim" title="convert-settings-save" data-role="convert-save">Save</button></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="mock">
+  <p class="frame-label"><b>Proposed</b> — App and Setup groups (Console, Appearance, Startup, Dependencies, Readiness, MCP)</p>
+  <div class="page after">
+    <nav class="rail" aria-label="Settings sections">
+      <div class="grp">Pages</div><a href="#">Download</a><a href="#">Transcript</a><a href="#">TTS</a><a href="#">Convert</a><a href="#">Capture</a>
+      <div class="grp">App</div><a href="#" class="on">Console &amp; logging</a><a href="#">Appearance</a><a href="#">Startup</a>
+      <div class="grp">Setup</div><a href="#">Dependencies</a><a href="#">Readiness <span class="dot warn"></span></a><a href="#">MCP access</a>
+    </nav>
+    <div class="content">
+      <section title="console-settings">
+        <div class="sec-h"><h3>Console &amp; logging</h3><span class="mode">Saves as you type</span></div>
+        <div class="form">
+          <span class="k">Log level</span><span class="v"><select class="field short" aria-label="Log level" title="settings-leaf-log_level"><option>debug</option><option selected>info</option><option>warning</option><option>error</option></select></span>
+          <span class="k">Log to file</span><span class="v"><input type="checkbox" class="chk" checked aria-label="Log to file" title="settings-leaf-log_to_file"><span class="lbl mono" style="font-family:Consolas,monospace" title="settings-log-file-path">%LOCALAPPDATA%\av-kit\logs\av-kit.log</span><button class="btn ghost" title="settings-copy-log-path">Copy path</button></span>
+          <span class="hint">The log file location is fixed; it cannot be changed here.</span>
+          <span class="k">Console panel</span><span class="v"><input type="checkbox" class="chk" checked aria-label="Console visible" title="settings-leaf-console_visible"><span class="lbl">show the console drawer at the bottom of the window</span></span>
+        </div>
+      </section>
+      <section title="appearance-settings">
+        <div class="sec-h"><h3>Appearance</h3><span class="mode">Applies immediately</span></div>
+        <div class="form">
+          <span class="k">Theme</span><span class="v"><span class="seg" role="radiogroup" aria-label="Theme"><button aria-pressed="true" title="theme-dark-btn">Dark</button><button aria-pressed="false" title="theme-light-btn">Light</button></span></span>
+        </div>
+      </section>
+      <section id="s-startup" title="start-at-sign-in-panel">
+        <div class="sec-h"><h3>Startup</h3><span class="mode">Applies immediately (OS)</span></div>
+        <div class="form">
+          <span class="k">Start when I sign in</span><span class="v"><input type="checkbox" class="chk" aria-label="Start av-kit when I sign in" title="start-at-sign-in-checkbox"><span class="lbl">per-user Startup entry; not a Windows service</span></span>
+          <span class="k">Start minimized</span><span class="v"><input type="checkbox" class="chk" aria-label="Start minimized" title="start-minimized-checkbox" disabled><span class="lbl">shown only while the parent is on; tray + F2</span></span>
+        </div>
+      </section>
+      <section title="dependencies-section">
+        <div class="sec-h"><h3>Dependencies</h3><span class="mode">Checked at startup</span></div>
+        <div class="list">
+          <div class="r"><span class="chip ok"><span class="dot"></span>available</span><span class="what">yt-dlp <small>2026.08.30</small></span></div>
+          <div class="r"><span class="chip ok"><span class="dot"></span>available</span><span class="what">FFmpeg <small>7.1 · C:\ffmpeg\bin\ffmpeg.exe</small></span></div>
+          <div class="r"><span class="spacer"></span><button class="btn ghost" title="check-deps-btn">Check again</button></div>
+        </div>
+      </section>
+      <section title="readiness-card">
+        <div class="sec-h"><h3>Readiness</h3><span class="mode">3 of 4 ready</span></div>
+        <div class="list">
+          <div class="r"><span class="chip ok"><span class="dot"></span>ok</span><span class="what">MCP descriptor written</span></div>
+          <div class="r"><span class="chip ok"><span class="dot"></span>ok</span><span class="what">API port reachable <small>127.0.0.1:8765</small></span></div>
+          <div class="r"><span class="chip warn"><span class="dot"></span>missing</span><span class="what">Kokoro model downloaded</span><button class="btn" title="readiness-models-link">Fix</button></div>
+          <div class="r"><span class="chip ok"><span class="dot"></span>ok</span><span class="what">FFmpeg on PATH</span></div>
+        </div>
+      </section>
+      <section title="mcp-access-card">
+        <div class="sec-h"><h3>MCP access</h3><span class="mode">For Claude Desktop and other MCP clients</span></div>
+        <div class="card">
+          <span class="chip ok" title="mcp-token-present"><span class="dot"></span>Token present</span>
+          <span class="lbl">Paste the server entry into your client’s MCP config, or pin the token so it survives restarts.</span>
+          <span class="spacer"></span>
+          <button class="btn" title="copy-mcp-btn">Copy config</button>
+          <button class="btn ghost" title="pin-mcp-btn">Pin token</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="zonemap">
+  <div class="z"><b>Rail</b>176 px, sticky. Three labelled groups. The active entry follows scroll position (IntersectionObserver) and clicking scrolls to the section. A warn dot appears on Readiness when any item is not ok, and on Convert/Capture when they have unsaved changes.</div>
+  <div class="z"><b>Section</b>Header: title + mode caption on the same baseline, underlined. Body: 168 px label / control grid. Path rows are [field flex][Browse ghost sm]. Selects are 160 px unless the value is a path. Booleans are checkbox + one-line explanation. Sections needing Save get a right-aligned footer with the button; it turns dirty (“Save •”) when a field changes.</div>
+</div>
+<div class="callout">The TTS and Capture sections (not drawn) follow the same grid: TTS = models folder + Browse, voice select, speed range with value, output format select, output folder + Browse, device select, chunk max chars number, “Saves as you type”. Capture = inbox folder + Browse, hotkey mono field, copy to clipboard and close to tray checkboxes, “Save required” footer.</div>
+
+<h2><span class="sec">03</span>Why these moves</h2>
+<ul class="tight">
+  <li><strong>A rail turns a 2,400 px scroll into a click</strong> and gives the page a map. Grouping Pages / App / Setup mirrors how the user thinks: “the Convert page’s defaults” vs “the app” vs “is it wired up”.</li>
+  <li><strong>One grid for every section</strong> lets the eye scan labels in a column and stops controls from stretching. A 60-value number in an 84 px box reads better than in a 700 px box.</li>
+  <li><strong>Path + Browse on one line</strong> is the pattern used in every other page mockup; here it also halves the row count in five sections.</li>
+  <li><strong>The save model is stated, not discovered.</strong> “Saves as you type” / “Save required” / “Applies immediately” costs nothing and answers the question every user asks on this page. The Save button’s dirty state and the rail dot reinforce it.</li>
+  <li><strong>Diagnostics look like diagnostics.</strong> Dependencies, Readiness and MCP are lists with status chips, not forms. Readiness moves from a card of prose to a checklist with a Fix button per failing row.</li>
+  <li><strong>Cookie mode as a segment</strong> with indented sub-fields makes the None/Browser/File choice and its consequences visible in one glance.</li>
+</ul>
+
+<h2><span class="sec">04</span>Sizing and tokens</h2>
+<ul class="tight">
+  <li>Layout: <code>grid-template-columns: 176px minmax(0,1fr)</code>, gap 20 px, max 960 px (content ~760 px). Below ~760 px the rail becomes a horizontal scrolling chip row above the content.</li>
+  <li>Form grid: <code>168px minmax(0,1fr)</code>, row gap 9 px. All fields <code>sm</code> (28 px). Selects 160 px; number inputs 84 px, right-aligned, <code>tabular-nums</code>; path fields flex.</li>
+  <li>Section header: 15 px semibold title, 11.5 px <code>bg-subtle</code>-colored mode caption, 1 px <code>bg-elevated</code> rule. Dirty caption and rail dot use <code>accent-orange</code>.</li>
+  <li>Save buttons <code>primary sm</code>; dim (50 %) when clean; label “Save •” with <code>btn-save-dirty</code> when dirty. Apply defaults, Browse, Copy path, Check again, Pin token are <code>ghost sm</code>; Fix and Copy config are <code>secondary sm</code>.</li>
+  <li>Status chips: ok <code>accent-green</code>, missing <code>accent-orange</code>, error <code>error</code>; the same chip vocabulary as the queue pages.</li>
+  <li>Motion (G33): rail active-state and dirty-state changes on <code>duration-fast</code>; anchor scrolling uses <code>scroll-behavior: smooth</code>, disabled under <code>prefers-reduced-motion</code>.</li>
+  <li>Tokens only (G32); heights per G34.</li>
+</ul>
+
+<h2><span class="sec">05</span>Element inventory (test ids)</h2>
+<div class="tblwrap">
+<table class="inv">
+  <tr><th>Element / test id</th><th>Today</th><th>Proposed</th><th></th></tr>
+  <tr><td><code>settings-page</code></td><td>max-w-3xl column</td><td>Two-column grid: rail + content; same root</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>h1 “Settings”, HelpCard (settings), error p</td><td>Top of column</td><td>Top of content column; error p stays under the HelpCard</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td>Section rail</td><td>—</td><td>New nav, proposed id <code>settings-rail</code>, entries <code>settings-rail-{section}</code></td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>download-settings</code> … <code>mcp-access-card</code> (9 section ids)</td><td>Bordered boxes</td><td>Same ids on unbordered sections with header rule; gain an <code>id</code> anchor for the rail</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>Section save-mode caption</td><td>—</td><td>New span per section header, proposed id <code>settings-mode-{section}</code></td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-path</code> + <code>browse-download-path-btn</code></td><td>Field row, Browse below</td><td>One grid row: field flex + Browse ghost sm</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-quality</code></td><td>Full-width select</td><td>160 px select</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-audio_only</code> + <code>settings-leaf-audio_format</code></td><td>Checkbox row, then full-width select</td><td>One row: checkbox + 160 px format select (disabled until audio only is on)</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-ffmpeg_path</code> + <code>browse-ffmpeg-btn</code></td><td>Field, Browse below</td><td>One row, mono field + Browse</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-cookie_mode</code> + <code>-none</code> / <code>-browser</code> / <code>-file</code></td><td>Bordered fieldset of radios</td><td>Segment (radiogroup) with the three ids on the buttons; see §06</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-cookie_browser</code> / <code>settings-leaf-cookie_browser_profile</code></td><td>Full-width rows when mode = browser</td><td>Indented sub-grid under Cookies when mode = browser</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-cookie_file_path</code> + <code>browse-cookie-file-btn</code></td><td>Full-width row + Browse when mode = file</td><td>Indented sub-row, field + Browse, when mode = file</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-archive_tracking</code> / <code>settings-leaf-yt_dlp_debug</code></td><td>Checkbox rows</td><td>Grid rows with a one-line explanation</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>apply-defaults-btn</code></td><td>Secondary sm at section end</td><td>Ghost sm in the section footer, right-aligned</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-output_dir</code> + <code>browse-transcript-dir-btn</code></td><td>Field, Browse below</td><td>One row</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>Transcript numbers (8): <code>requests_per_hour</code>, <code>delay_between_requests</code>, <code>max_retries</code>, <code>retry_delay</code>, <code>batch_size</code>, <code>pause_between_batches</code>, <code>playlist_end</code>, <code>max_words_per_document</code></td><td>Eight full-width rows</td><td>Two-column number grid, 84 px inputs, unit hints; same ids and min/max/step</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-models_directory</code> + <code>browse-models-dir-btn</code>, <code>settings-leaf-output_path</code> + <code>browse-tts-output-btn</code></td><td>Field, Browse below</td><td>One row each</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-voice</code> / <code>settings-leaf-output_format</code> / <code>settings-leaf-device</code></td><td>Full-width selects</td><td>160 px selects</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-speed</code></td><td>Full-width range</td><td>Range ~220 px with the value shown beside it</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-chunk_max_chars</code></td><td>Full-width number</td><td>84 px number</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-converter-output_dir</code> + <code>browse-convert-path-btn</code></td><td>Field, Browse below</td><td>One row</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-default_preset</code> / <code>settings-leaf-gpu_preference</code></td><td>Full-width selects</td><td>160 px selects</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-skip_existing</code></td><td>Checkbox row</td><td>Grid row with explanation</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-settings-save</code> / <code>capture-settings-save</code></td><td>Primary button at section end; “Save Changes •” when dirty</td><td>Primary sm in the section footer, dim when clean; keep <code>saveLabel</code>/<code>saveClass</code></td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-capture-inbox_dir</code> + <code>browse-capture-path-btn</code></td><td>Field, Browse below</td><td>One row</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-hotkey</code></td><td>Full-width text</td><td>80 px mono field</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-copy_to_clipboard</code> / <code>settings-leaf-close_to_tray</code></td><td>Checkbox rows</td><td>Grid rows with explanation</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-log_level</code></td><td>Full-width select</td><td>160 px select</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-log_to_file</code> + <code>settings-log-file-path</code> + <code>settings-copy-log-path</code></td><td>Checkbox, “Persist to {path}” line, fixed-path note, Copy button</td><td>One row: checkbox · mono path · Copy path; fixed-path note as a hint line under it</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>settings-leaf-console_visible</code></td><td>Checkbox row</td><td>Grid row with explanation</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>theme-dark-btn</code> / <code>theme-light-btn</code></td><td>Two buttons</td><td>Two-button segment with <code>aria-pressed</code>; same ids</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>start-at-sign-in-panel</code> / <code>start-at-sign-in-checkbox</code> / <code>start-minimized-checkbox</code></td><td>MEU-61 lands these on today’s stacked Settings after Appearance</td><td>App-rail Startup section; same ids; Start minimized only while parent is on</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td>Dependencies rows + <code>check-deps-btn</code></td><td>Text lines + button</td><td>Status chip · name · version/path; Check again ghost sm, right-aligned</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>readiness-descriptor-link</code> / <code>readiness-port-link</code> / <code>readiness-models-link</code> / <code>readiness-ffmpeg-link</code></td><td>Rows with Fix buttons</td><td>Checklist rows; chip ok/missing; Fix (secondary sm) only on rows not ok; header shows “n of 4 ready”</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>mcp-token-present</code> / <code>copy-mcp-btn</code> / <code>pin-mcp-btn</code></td><td>Card with text + two buttons</td><td>Card: token chip · one-line explanation · Copy config · Pin token</td><td><span class="tag change">change</span></td></tr>
+</table>
+</div>
+
+<h2><span class="sec">06</span>Decisions to lock before implementation</h2>
+<ol class="tight">
+  <li><strong>Cookie mode control.</strong> Segment of buttons (proposed) or keep native radios styled as a segment? Tests use the <code>-none/-browser/-file</code> ids with <code>click</code>, which works either way; radios keep form semantics for free.</li>
+  <li><strong>Unify the save model?</strong> This mockup keeps three models and labels them. The alternative is autosave everywhere (drop the two Save buttons) or explicit Save everywhere. Keeping behaviour is the smallest change; unifying is a product decision.</li>
+  <li><strong>Rail active-state tracking.</strong> IntersectionObserver on scroll (proposed) or only on click? Observer is nicer; click-only is simpler to test.</li>
+  <li><strong>Number field explanations.</strong> Unit hints (“seconds”, “0 = all”) are inferred from the leaf names and the transcript service; confirm each before shipping.</li>
+  <li><strong>Boolean explanations.</strong> The one-line descriptions next to each checkbox are new copy; confirm wording or drop them and rely on the HelpCard.</li>
+  <li><strong>Audio format disabled until Audio only is checked</strong> is new behaviour (today both are always enabled). Confirm or keep both enabled.</li>
+  <li><strong>Readiness header count</strong> (“3 of 4 ready”) and the rail warn dot depend on readiness state being available at page level; confirm it already is.</li>
+</ol>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('after-working');
+  if (!root) return;
+  const links = [...root.querySelectorAll('[data-role="rail"] a')];
+  links.forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); links.forEach((x) => x.classList.toggle('on', x === a)); const t = root.querySelector(a.getAttribute('href')); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }));
+  const cookie = root.querySelector('[data-role="cookie"]');
+  cookie.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+    cookie.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    root.querySelector('[data-role="cookie-browser"]').hidden = b.dataset.v !== 'browser';
+    root.querySelector('[data-role="cookie-file"]').hidden = b.dataset.v !== 'file';
+  }));
+  const save = root.querySelector('[data-role="convert-save"]');
+  const mode = root.querySelector('[data-role="convert-mode"]');
+  root.querySelectorAll('[data-role="convert-field"]').forEach((f) => f.addEventListener('change', () => { save.classList.remove('dim'); save.textContent = 'Save •'; mode.textContent = 'Unsaved changes'; mode.classList.add('dirty'); }));
+  save.addEventListener('click', () => { save.classList.add('dim'); save.textContent = 'Save'; mode.textContent = 'Save required'; mode.classList.remove('dirty'); });
+})();
+</script>
+</body>
+</html>

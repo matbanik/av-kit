@@ -1,0 +1,84 @@
+---
+project: "2026-09-20-p6-gui-login-item"
+source: "docs/execution/plans/2026-09-20-p6-gui-login-item/implementation-plan.md"
+meus: ["MEU-61"]
+status: "approved"
+template_version: "2.1"
+---
+
+# Task — GUI login item (Start when I sign in)
+
+> **Project:** `2026-09-20-p6-gui-login-item`
+> **Type:** GUI
+> **Estimate:** ~16 files (login-item + startup-mode + control, ipc/preload/index, nsh, tests)
+> **Named sets:** [`named-sets.json`](named-sets.json) — cite names; do not restate literals.
+
+## Context Tool Decision
+
+```yaml
+context_tool_decision:
+  phase: planning_and_execution
+  eligible_tools: []
+  decision: not_applicable
+  eligibility_basis: "Glob 0 for graphify-out/graph.json and graphify-out-research/graph.json. GetDynamicTools catalog has no graphify/headroom namespaces. Work is Electron main + Settings TSX internals — graphify.md would require direct file search. Headroom has no approved disposition; receipts are exact-evidence bypass class."
+  human_message_reference: null
+```
+
+## Task Table
+
+> Classify every validation command through [`.agent/docs/output-evidence-policy.md`](../../../../.agent/docs/output-evidence-policy.md).
+>
+> **Handoff set:** `HANDOFFS`. Rolling review: `EXEC_REVIEW_FILE`.
+>
+> `fresh_worker: none` → every non-shared row is `compact_continue` (including H1-7). Never emit `isolated`.
+>
+> `ABSENT_VALIDATOR_RULE`: do not call `tools/validate_closeout_artifacts.py`.
+>
+> create-plan §4A **applies**.
+>
+> Do not start MEU-50. Do not add `NO_NEW_PACKAGES`. Do not add a Windows service.
+
+| # | Task | Owner | Deliverable | Validation | Depends on | Context strategy | Durable outputs | builder_model | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | MEU-61 Red UI: write tests for `RED_AC_IDS_UI` in `UI_TEST_FILES` **before** production edits. Titles embed one AC id. `G36_RULE`. `G37_RULE`. | coder | Red vitest | `rtk proxy npm --prefix ui run test -- --reporter=json --outputFile=C:/Temp/av-kit/fail-to-pass-meu-61-ui.json *> C:/Temp/av-kit/fail-to-pass-meu-61-ui.txt; $code=$LASTEXITCODE; if ($code -eq 0) { Write-Error 'UI Red unexpectedly green'; exit 1 }; rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-red-oracle.ps1 -Kind ui -Receipt C:/Temp/av-kit/fail-to-pass-meu-61-ui.txt -JsonReceipt C:/Temp/av-kit/fail-to-pass-meu-61-ui.json; exit $LASTEXITCODE` | — | compact_continue | `RED_RECEIPT_UI`; `RED_JSON_UI`; compact then re-read `task.md` | `cursor-grok-4.6-xhigh` | `[x]` |
+| 2 | MEU-61 E2E wire: write a Playwright `test(` whose title contains `E2E_GREP` in `E2E_SPEC`; the **named block** must contain `PANEL_TESTID` plus `E2E_BODY_TOKENS`; register `PANEL_TESTID`, `ENABLED_TESTID`, and `MINIMIZED_TESTID` in `test-ids.ts`. Census must pass **before** production edit. Do **not** require assertion-red: unpackaged Settings already omits the panel (the AC-61.17 contract). Named run is row 6 via `E2E_NAMED`. | tester | Wired E2E case | `rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-e2e-census.ps1 *> C:/Temp/av-kit/meu61-e2e-census.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/meu61-e2e-census.txt; exit $code` | 1 | compact_continue | `E2E_SPEC`; compact then re-read `task.md` | `cursor-grok-4.6-xhigh` | `[x]` |
+| 3 | Green `LOGIN_ITEM_MODULE` + `STARTUP_MODE_MODULE` + `IPC_FILE`/`PRELOAD_FILE`/`INDEX_FILE`/`ENV_DTS`/`IPC_TEST_CHANNELS`. Do not neutralize tests. Keep existing IPC census green at `IPC_CHANNEL_COUNT`. | coder | Main + IPC | `rtk proxy npm --prefix ui run test *> C:/Temp/av-kit/meu61-ui-main.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/meu61-ui-main.txt \| Select-Object -Last 40; exit $code` | 2 | compact_continue | `LOGIN_ITEM_MODULE`; `IPC_FILE`; compact then re-read `task.md` | `cursor-grok-4.6-xhigh` | `[x]` |
+| 4 | Green `CONTROL_FILE` + `PAGE_FILE` + `HELP_FILE` + `MOCK_API_SITES` stubs. Native checkboxes. No `PUT /settings`. | coder | Settings card | `rtk proxy npm --prefix ui run test *> C:/Temp/av-kit/meu61-ui-settings.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/meu61-ui-settings.txt \| Select-Object -Last 40; exit $code` | 3 | compact_continue | `CONTROL_FILE`; `PAGE_FILE`; compact then re-read `task.md` | `cursor-grok-4.6-xhigh` | `[x]` |
+| 5 | Green `NSH_FILE` with exactly two executable `NSH_DELETE` `NSH_HKCU` lines (`NSH_RUN_KEY`+`LOGIN_ITEM_NAME`, `NSH_APPROVED_KEY`+`LOGIN_ITEM_NAME`) and `BUILDER_YML` `nsis.include` value `NSH_INCLUDE`. `MEU_SCANS` embeds the comment-token negative fixture. | coder | NSIS uninstall | `rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-meu-scans.ps1 *> C:/Temp/av-kit/meu61-nsh-scan.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/meu61-nsh-scan.txt; exit $code` | 4 | compact_continue | `NSH_FILE`; `BUILDER_YML`; compact then re-read `task.md` | `cursor-grok-4.6-xhigh` | `[x]` |
+| 6 | Named E2E after GUI Green via `E2E_NAMED` `-Mode named` (census, then Playwright using `E2E_SPEC`/`E2E_GREP`, then classify). Writes `E2E_PASS_RECEIPT` or `E2E_NAMED_BLOCKED_RECEIPT`. AC failure dominates infra. | tester | Named Playwright | `rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-e2e-named.ps1 -Mode named *> C:/Temp/av-kit/meu61-e2e-named-run.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/meu61-e2e-named-run.txt \| Select-Object -Last 40; exit $code` | 5 | compact_continue | `E2E_SPEC`; `E2E_PASS_RECEIPT` or `E2E_NAMED_BLOCKED_RECEIPT`; compact then re-read `task.md` | `cursor-grok-4.6-xhigh` | `[x]` |
+| 7 | MEU-61 gate: typecheck, lint, vitest, OpenAPI `--check`, E2E census, `E2E_CLASSIFY` `-Mode gate`, `MEU_SCANS`. No Python/MCP production edits expected. No handoff write here (H1). | tester | Gate receipts | `rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-meu-gate.ps1 *> C:/Temp/av-kit/meu61-gate.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/meu61-gate.txt \| Select-Object -Last 40; exit $code` | 6 | compact_continue | `C:/Temp/av-kit/meu61-gate.txt`; compact then re-read `task.md` | `cursor-grok-4.6-xhigh` | `[x]` |
+| 8 | BUILD_PLAN.md audit: `meu_status.py update` MEU-61 with `--plan PLAN_FOLDER`; keep `PRIOR_PLAN_SLASHES`; rewrite `HUB_NEXT_FIELD` so its remainder starts with `HUB_NEXT_AFTER`. Do not hand-edit AUTOGEN tables. Do not mark grouping complete here (H2). Validator is `HUB_CHECK`. | orchestrator | Hub + SSOT bound | `rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-hub-next.ps1 *> C:/Temp/av-kit/build-plan-audit.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/build-plan-audit.txt; exit $code` | 7 | shared | `docs/BUILD_PLAN.md`; `.agent/context/meu-status.yaml` | `cursor-grok-4.6-xhigh` | `[x]` |
+
+| | **📋 Phase H1 — Pre-Review Closeout** — continuation of implementation; do not stop at this divider. | | | | | | | | |
+| H1-1 | Re-read this `task.md` and prove no numeric implementation row remains `[ ]`. | coder | Exact unchecked-row receipt | `rtk proxy pwsh -NoProfile -Command { $rows=@(Select-String -Path 'docs/execution/plans/2026-09-20-p6-gui-login-item/task.md' -Pattern '^\| [0-9]+ \|'); $open=@($rows \| Where-Object { $_.Line -match '`\[ \]`' -and $_.Line -notmatch 'Pattern' }); if ($open.Count -ne 0) { $open.Line; exit 1 }; 'PASS: no open implementation rows' } *> C:/Temp/av-kit/task-unchecked.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/task-unchecked.txt; exit $code` | 8 | shared | `task.md`; `C:/Temp/av-kit/task-unchecked.txt` | `cursor-grok-4.6-xhigh` | `[x]` |
+| H1-2 | Re-run MEU-61 gate (`MEU_GATE`). | tester | All blocking checks pass | `rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-meu-gate.ps1 *> C:/Temp/av-kit/full-verify-gate.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/full-verify-gate.txt \| Select-Object -Last 40; exit $code` | H1-1 | shared | Gate receipts | `cursor-grok-4.6-xhigh` | `[x]` |
+| H1-3 | Set MEU-61 `ready_for_review` with `--plan PLAN_FOLDER`; `render --check`; refresh `current-focus.md` (<30 lines). | orchestrator | SSOT ready_for_review | `rtk proxy uv run python tools/meu_status.py render --check *> C:/Temp/av-kit/drift-check.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/drift-check.txt; exit $code` | H1-2 | shared | `.agent/context/meu-status.yaml` | `cursor-grok-4.6-xhigh` | `[x]` |
+| H1-4 | OpenAPI `--check`. `-o` only on FAIL. Skip basis if `packages/api/` untouched: still run `--check`. | tester | OpenAPI receipt | `rtk proxy uv run python tools/export_openapi.py --check openapi.committed.json *> C:/Temp/av-kit/openapi-check.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/openapi-check.txt; exit $code` | H1-3 | shared | `C:/Temp/av-kit/openapi-check.txt` | `cursor-grok-4.6-xhigh` | `[x]` |
+| H1-5 | Read `HANDOFF_TEMPLATE` and latest peer handoff; write `HANDOFF_SOURCE_READ`. | orchestrator | Source-read receipt | `rtk proxy pwsh -NoProfile -Command { $tpl='.agent/context/handoffs/TEMPLATE.md'; if (-not (Test-Path $tpl)) { Write-Error 'missing HANDOFF_TEMPLATE'; exit 1 }; $peers=@(Get-ChildItem '.agent/context/handoffs' -Filter '*-handoff.md' \| Where-Object { $_.Name -notmatch 'critical-review' } \| Sort-Object LastWriteTime -Descending); $out='C:/Temp/av-kit/handoff-source-read-meu-61.txt'; @(('TEMPLATE='+$tpl),('PEER='+$peers[0].FullName),'PASS: HANDOFF_SOURCE_READ') \| Set-Content $out; Get-Content $out } *> C:/Temp/av-kit/handoff-source-read-h1.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/handoff-source-read-h1.txt; exit $code` | H1-4 | compact_continue | `HANDOFF_SOURCE_READ` | `cursor-grok-4.6-xhigh` | `[x]` |
+| H1-6 | Finalise `HANDOFF_61` with evidence bundle + AC-61 table + FAIL_TO_PASS paths. | orchestrator | Canonical handoff | `rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-handoff-markers.ps1 *> C:/Temp/av-kit/handoff-check.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/handoff-check.txt; exit $code` | H1-5 | compact_continue | `HANDOFF_61` | `cursor-grok-4.6-xhigh` | `[x]` |
+| H1-6a | Prove every plan AC-61.* appears in the handoff. | tester | Complete AC set | `rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-handoff-acs.ps1 *> C:/Temp/av-kit/handoff-ac-check.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/handoff-ac-check.txt; exit $code` | H1-6 | shared | `C:/Temp/av-kit/handoff-ac-check.txt` | `cursor-grok-4.6-xhigh` | `[x]` |
+| | **🔎 Execution Critical Review** — blocking independent-review region; the implementer never authors the verdict. | | | | | | | | |
+| H1-7 | Dispatch `REVIEWER_AGENT` via `tools/Invoke-CodexDispatch.ps1`; loop to `approved` or `EXEC_REVIEW_MAX_ROUND`. Prove with `assert-exec-review-dispatch.ps1` then `check_exec_review.py`. | reviewer dispatch / coder corrections | Rolling implementation review | `rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-exec-review-dispatch.ps1 *> C:/Temp/av-kit/exec-review-dispatch.txt; $code=$LASTEXITCODE; if ($code -ne 0) { Get-Content C:/Temp/av-kit/exec-review-dispatch.txt; exit $code }; rtk proxy uv run python tools/check_exec_review.py --review-file .agent/context/handoffs/2026-09-20-p6-gui-login-item-implementation-critical-review.md --expected-mode implementation --expected-target docs/execution/plans/2026-09-20-p6-gui-login-item/implementation-plan.md --max-round 6 *> C:/Temp/av-kit/exec-review.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/exec-review.txt; exit $code` | H1-6a | compact_continue | `EXEC_REVIEW_FILE` | — | `[x]` |
+| | **📋 Phase H2 — Post-Review Closeout** — continue immediately after approval; first re-read `task.md`. | | | | | | | | |
+| H2-1 | Read `REFLECTION_TEMPLATE`, `REFLECTION_SCHEMA`, latest peer reflection. | orchestrator | Source-read receipt | `rtk proxy pwsh -NoProfile -Command { $tpl='docs/execution/reflections/TEMPLATE.md'; $schema='.agent/schemas/reflection.v1.yaml'; if (-not (Test-Path $tpl)) { exit 1 }; if (-not (Test-Path $schema)) { exit 1 }; $peers=@(Get-ChildItem 'docs/execution/reflections' -Filter '*-reflection.md' \| Where-Object { $_.Name -ne 'TEMPLATE.md' } \| Sort-Object LastWriteTime -Descending); $out='C:/Temp/av-kit/reflection-source-read-p6-gui-login-item.txt'; @(('TEMPLATE='+$tpl),('SCHEMA='+$schema),('PEER='+$peers[0].FullName),'PASS: REFLECTION_SOURCE_READ') \| Set-Content $out; Get-Content $out } *> C:/Temp/av-kit/reflection-source-read-h2.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/reflection-source-read-h2.txt; exit $code` | H1-7 | shared | reflection source receipt | `cursor-grok-4.6-xhigh` | `[x]` |
+| H2-2 | Write `REFLECTION_FILE` with Instruction Coverage YAML. Mark MEU-61 `approved`. Grouping session complete. | orchestrator | Reflection | `rtk proxy pwsh -NoProfile -Command { $sets=Get-Content 'docs/execution/plans/2026-09-20-p6-gui-login-item/named-sets.json' -Raw \| ConvertFrom-Json; $path=$sets.REFLECTION_FILE; foreach ($pattern in @($sets.REFLECTION_MARKERS)) { if (-not (Select-String -Path $path -Pattern $pattern -Quiet)) { Write-Error ('missing '+$pattern); exit 1 } }; 'PASS: reflection markers' } *> C:/Temp/av-kit/reflection-check.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/reflection-check.txt; exit $code` | H2-1 | compact_continue | `REFLECTION_FILE` | `cursor-grok-4.6-xhigh` | `[x]` |
+| H2-3 | Append `METRICS_SLUG` row in `METRICS_FILE`. | orchestrator | Metrics row | `rtk proxy pwsh -NoProfile -Command { $sets=Get-Content 'docs/execution/plans/2026-09-20-p6-gui-login-item/named-sets.json' -Raw \| ConvertFrom-Json; if (-not (Select-String -Path 'docs/execution/metrics.md' -Pattern $sets.METRICS_SLUG -Quiet)) { Write-Error 'missing metrics row'; exit 1 }; 'PASS: metrics row' } *> C:/Temp/av-kit/metrics-check.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/metrics-check.txt; exit $code` | H2-2 | shared | `docs/execution/metrics.md` | `cursor-grok-4.6-xhigh` | `[x]` |
+| H2-4 | Closeout: handoff markers + ACs + dispatch + `check_exec_review.py` + reflection markers + metrics + `render --check` via `CLOSEOUT_H24_SCRIPT`. | tester | Closeout receipt | `rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-09-20-p6-gui-login-item/assert-closeout-h24.ps1 *> C:/Temp/av-kit/closeout-check-p6-gui-login-item.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/closeout-check-p6-gui-login-item.txt; exit $code` | H2-3 | shared | `CLOSEOUT_H24_RECEIPT` | `cursor-grok-4.6-xhigh` | `[x]` |
+| H2-5 | Conventional commit-message draft; **never commit** without human approval. | orchestrator | Nonempty draft | `rtk proxy pwsh -NoProfile -Command { $p='C:/Temp/av-kit/commit-draft-p6-gui-login-item.txt'; @('feat(ui): add per-user Start when I sign in login item','docs: record p6-gui-login-item closeout') \| Set-Content $p; Get-Content $p } *> C:/Temp/av-kit/commit-draft.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/commit-draft.txt; exit $code` | H2-4 | shared | `COMMIT_DRAFT` | `cursor-grok-4.6-xhigh` | `[x]` |
+
+### Status Legend
+
+| Symbol | Meaning |
+|--------|---------|
+| `[ ]` | Not started |
+| `[/]` | In progress |
+| `[x]` | Complete |
+| `[B]` | Blocked — evidence-gated (closed reason list + pasted error; must link follow-up) |
+
+### Evidence-First & Sequencing Rules (v2.1)
+
+- A row is `[x]` only with an evidence bundle (AGENTS.md §Execution Contract).
+- Handoff before review; reflection after `approved`.
+- Self-review prohibition: dispatch H1-7; never author `approved`.
+- `[B]` only for reproduced external error, missing dependency/permission, or human-decision gate.
+- H1-7 is not a turn boundary. `plan_to_exec_gate` is `reviewer-auto` for this Cursor override.

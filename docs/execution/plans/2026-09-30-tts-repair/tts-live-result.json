@@ -1,0 +1,74 @@
+{
+  "schema": "s27-tts-live.v1",
+  "tested_commit": "407db192a9fbc80ecb9358c9a00e7cc5788c075c",
+  "clean_tree": true,
+  "models_directory": "C:\\Temp\\av-kit\\s27-live\\models",
+  "python": "3.12.12",
+  "started": "2026-10-01T10:53:18-0400",
+  "steps": [
+    {
+      "id": "fresh-rows",
+      "ok": true,
+      "observed": {
+        "tts_onnx_vocab": "missing",
+        "tts_spacy_model": "missing",
+        "site_spacy": false
+      },
+      "error": null
+    },
+    {
+      "id": "variant-download",
+      "ok": true,
+      "observed": {
+        "runtime": "Idle",
+        "vocab_valid": true,
+        "listed": true
+      },
+      "error": null
+    },
+    {
+      "id": "spacy-autoload",
+      "ok": true,
+      "observed": {
+        "before": "missing",
+        "after": "ready"
+      },
+      "error": null
+    },
+    {
+      "id": "generate-wav",
+      "ok": true,
+      "observed": {
+        "status": "Done",
+        "error_message": null,
+        "steps": [
+          "punctuation",
+          "symbols",
+          "numbers",
+          "currency",
+          "all_caps",
+          "urls_emails",
+          "page_numbers",
+          "whitespace",
+          "chunk",
+          "kokoro"
+        ],
+        "duration_s": 2.075,
+        "rms": 3619.9,
+        "bytes": 99644
+      },
+      "error": null
+    },
+    {
+      "id": "console-events",
+      "ok": true,
+      "observed": {
+        "tts.generate": true,
+        "tts.generate_done": true
+      },
+      "error": null
+    }
+  ],
+  "site_spacy": false,
+  "finished": "2026-10-01T10:53:28-0400"
+}

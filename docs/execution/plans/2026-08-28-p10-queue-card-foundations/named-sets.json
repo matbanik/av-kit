@@ -1,0 +1,729 @@
+{
+  "_meta": {
+    "plan": "2026-08-28-p10-queue-card-foundations",
+    "purpose": "Single-statement definitions. Any set, threshold, path, or enumeration referenced by more than one AC or task row is defined here once and cited by name. Keys whose name begins with '_' are documentation context, not contract input, and are exempt from the named-set consumption census.",
+    "template_version": "2.1",
+    "_context": {
+      "PROJECT_SLUG": "p10-queue-card-foundations",
+      "PHASE": 10,
+      "MEU_ROW_KEYS": [
+        "meu-41",
+        "meu-42",
+        "meu-43",
+        "meu-44"
+      ],
+      "PROPOSAL": "docs/proposals/2026-08-27-queue-card-ui-proposal.md",
+      "MOCKUP": "docs/proposals/2026-08-27-queue-card-ui-mockup.html",
+      "RED_TOTAL": 52,
+      "STANDARDS_IN_SCOPE": [
+        "G2",
+        "G7",
+        "G11",
+        "G16",
+        "G20",
+        "G23",
+        "G26",
+        "G27",
+        "G30",
+        "G31",
+        "G32",
+        "G33",
+        "G34",
+        "G35",
+        "G36",
+        "G37",
+        "E2"
+      ],
+      "G35_RULE": "feedback tiers T0-T4; partial bulk results surface a summary toast",
+      "SESSION19_STATUS_AT_PLAN": "in_progress",
+      "EXEC_REVIEW_TARGET": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md",
+      "PLAN_REVIEW_TARGET": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md",
+      "PLAN_REVIEW_MODE": "plan",
+      "MCP_CHANGE_REQUIRED": false
+    }
+  },
+  "BAND": "P2",
+  "MEUS": [
+    "MEU-41",
+    "MEU-42",
+    "MEU-43",
+    "MEU-44"
+  ],
+  "GROUPING_FILE": ".agent/context/grouping/2026-08-28-p10-queue-card-ui-session-grouping.md",
+  "PHASE10_SPEC": "docs/build-plan/10-queue-card-ui.md",
+  "MATRIX": "docs/build-plan/build-priority-matrix.md",
+  "SSOT": ".agent/context/meu-status.yaml",
+  "BUILD_PLAN": "docs/BUILD_PLAN.md",
+  "GUI_SPEC": "docs/build-plan/06-gui.md",
+  "RECEIPT_DIR": "C:/Temp/av-kit",
+  "DISPATCH_DIR": "C:/Temp/av-kit/dispatch",
+  "DISPATCH_STATUS_SCHEMA": "dispatch-status.v1",
+  "DISPATCH_ID_FIELD": "dispatch_id",
+  "REVIEWER_AGENT": "gpt-5.6-sol",
+  "PLAN_REVIEW_MAX_ROUND": 6,
+  "EXEC_REVIEW_MODE": "implementation",
+  "EXEC_REVIEW_APPROVED": "approved",
+  "EXEC_REVIEW_MAX_ROUND": 6,
+  "PLAN_TO_EXEC_GATE": "human",
+  "HANDOFF_DIR": ".agent/context/handoffs",
+  "HANDOFF_TEMPLATE": ".agent/context/handoffs/TEMPLATE.md",
+  "HANDOFF_BUNDLE_MARKERS": [
+    "Acceptance Criteria",
+    "CACHE BOUNDARY",
+    "FAIL_TO_PASS",
+    "Changed Files",
+    "Quality Gate Results",
+    "Commands Executed",
+    "## Evidence"
+  ],
+  "PLAN_REVIEW_FILE": ".agent/context/handoffs/2026-08-28-p10-queue-card-foundations-plan-critical-review.md",
+  "EXEC_REVIEW_FILE": ".agent/context/handoffs/2026-08-28-p10-queue-card-foundations-implementation-critical-review.md",
+  "REFLECTION_FILE": "docs/execution/reflections/2026-08-28-p10-queue-card-foundations-reflection.md",
+  "REFLECTION_TEMPLATE": "docs/execution/reflections/TEMPLATE.md",
+  "REFLECTION_SCHEMA": ".agent/schemas/reflection.v1.yaml",
+  "REFLECTION_MARKERS": [
+    "Friction Log",
+    "Execution Trace",
+    "Pattern Extraction",
+    "Patterns to KEEP",
+    "Next Session Design Rules",
+    "RULE-",
+    "Efficiency Metrics",
+    "Rule Adherence",
+    "Instruction Coverage",
+    "schema: v1",
+    "sections:",
+    "loaded:",
+    "decisive_rules:"
+  ],
+  "RED_PREFIX_41": "AC-41",
+  "RED_COUNT_41": 8,
+  "RED_KIND_41": "ui",
+  "RED_PREFIX_42": "AC-42",
+  "RED_COUNT_42": 15,
+  "RED_KIND_42": "py",
+  "RED_PREFIX_43": "AC-43",
+  "RED_COUNT_43": 13,
+  "RED_KIND_43": "ui",
+  "RED_PREFIX_44": "AC-44",
+  "RED_COUNT_44": 16,
+  "RED_KIND_44": "ui",
+  "REQUEUEABLE_DOWNLOAD_STATUSES": [
+    "Failed",
+    "Cancelled",
+    "QualityBlocked",
+    "AgeRestricted"
+  ],
+  "NON_REQUEUEABLE_DOWNLOAD_STATUSES": [
+    "Pending",
+    "Downloading",
+    "Done",
+    "Skipped"
+  ],
+  "REQUEUEABLE_CONVERSION_STATUSES": [
+    "Failed",
+    "Cancelled"
+  ],
+  "NON_REQUEUEABLE_CONVERSION_STATUSES": [
+    "Pending",
+    "Processing",
+    "Done",
+    "Skipped"
+  ],
+  "REQUEUE_RESET_FIELDS": {
+    "status": "Pending",
+    "error_message": null,
+    "progress": 0.0
+  },
+  "REQUEUE_CONFLICT_CODE": 409,
+  "REQUEUE_NOTFOUND_CODE": 404,
+  "REQUEUE_ROUTE_DOCSTRING": "Re-queue a job from a re-queueable state.",
+  "DOWNLOAD_STATUSES": [
+    "Pending",
+    "Downloading",
+    "Done",
+    "Failed",
+    "Skipped",
+    "QualityBlocked",
+    "AgeRestricted",
+    "Cancelled"
+  ],
+  "CONVERSION_STATUSES": [
+    "Pending",
+    "Processing",
+    "Done",
+    "Failed",
+    "Cancelled",
+    "Skipped"
+  ],
+  "TOKEN_FILE": "ui/src/renderer/src/styles.css",
+  "THEME_BLOCK_DARK": "@theme",
+  "THEME_BLOCK_LIGHT": ":root:not(.dark)",
+  "FORBIDDEN_SELECTION_FILL": "bg-bg-subtle",
+  "SELECTION_FILL_ALLOWED": [
+    "bg-accent/5",
+    "bg-accent/10"
+  ],
+  "SELECTION_FILL_SOURCE": "PILL_TOKEN_SOURCE's own card list (TradePlanPage.tsx:835-840) renders selected as `border-accent bg-accent/10` and default as `bg-bg hover:bg-bg-elevated` -- byte-identical to CARD_STATE_CLASSES. No --color-bg-selected token exists in either repo and none is authored: selection is an accent alpha over the existing background. DIVERGENCE, disclosed not silent: Zorivest's checkbox-selected step is `border-accent/50 bg-bg-subtle`, which is exactly FORBIDDEN_SELECTION_FILL under proposal 11 conflict 5 (--color-bg-subtle is #6272a4 dark vs #d1d5db light, so it inverts between themes). av-kit keeps the accent-alpha idiom at bg-accent/5 for that step. This is the one place USER_LOCKS.pill_palette and the proposal disagree; it is a class choice, not a hue -- no colour value is av-kit-authored either way.",
+  "CONTRAST_MIN": 4.5,
+  "UI_ROOT": "ui/src/renderer/src",
+  "UI_PRIMITIVES_DIR": "ui/src/renderer/src/components/ui",
+  "UI_QUEUE_LIB_DIR": "ui/src/renderer/src/lib/queue",
+  "UI_QUEUE_COMPONENTS_DIR": "ui/src/renderer/src/components/queue",
+  "TESTID_REGISTRY": "ui/tests/e2e/test-ids.ts",
+  "E2E_DIR": "ui/tests/e2e",
+  "E2E_BASELINE_COUNT": 59,
+  "E2E_NEW_WAVES_THIS_SESSION": 0,
+  "E2E_LOCATOR_FORM": "literal getByTestId('<kebab-id>') single quotes",
+  "E2E_SANDBOX": "un-run E2E in agent sandbox -> [B] + CI follow-up; tests stay written and wired",
+  "NEW_TESTIDS": [
+    "status-badge",
+    "progress-bar",
+    "selection-checkbox",
+    "confirm-modal",
+    "confirm-modal-confirm",
+    "confirm-modal-cancel",
+    "queue-list",
+    "queue-card",
+    "queue-card-position",
+    "queue-card-status-icon",
+    "queue-card-title",
+    "queue-card-meta",
+    "queue-card-primary-action",
+    "queue-card-kebab",
+    "queue-card-menu",
+    "empty-drop-zone",
+    "empty-drop-zone-browse",
+    "queue-drop-overlay"
+  ],
+  "PRESERVED_TESTIDS": [
+    "queue-table",
+    "queue-row",
+    "start-btn",
+    "pause-btn",
+    "resume-btn",
+    "cancel-btn",
+    "up-btn",
+    "down-btn",
+    "top-btn",
+    "bottom-btn",
+    "reset-btn",
+    "remove-btn",
+    "clear-all-btn",
+    "queue-summary",
+    "processor-indicator",
+    "open-file-btn",
+    "open-folder-btn",
+    "remove-confirm-btn",
+    "remove-confirm-cancel",
+    "channel-card",
+    "channel-progress",
+    "convert-queue",
+    "convert-queue-row",
+    "convert-queue-summary",
+    "convert-processor",
+    "convert-start",
+    "convert-pause",
+    "convert-resume",
+    "convert-cancel",
+    "convert-up",
+    "convert-down",
+    "convert-top",
+    "convert-bottom",
+    "convert-reset",
+    "convert-remove",
+    "convert-clear-all",
+    "convert-open-file",
+    "convert-open-folder",
+    "convert-remove-confirm",
+    "convert-remove-confirm-cancel",
+    "convert-clear-confirm",
+    "convert-clear-confirm-cancel"
+  ],
+  "QUEUE_CARD_ZONE_ORDER": [
+    "checkbox",
+    "position",
+    "status-icon",
+    "title-meta",
+    "progress",
+    "status-pill",
+    "primary-action",
+    "kebab"
+  ],
+  "CARD_STATE_PRECEDENCE": [
+    "detail-open",
+    "checkbox-selected",
+    "default"
+  ],
+  "CARD_STATE_CLASSES": {
+    "detail-open": "border-accent bg-accent/10",
+    "checkbox-selected": "border-accent/50 bg-accent/5",
+    "default": "border-border bg-bg hover:bg-bg-elevated"
+  },
+  "PRIMARY_ACTION_MAP": {
+    "requeueable": "retry",
+    "Done": "open-file",
+    "in-flight": "cancel",
+    "otherwise": "none"
+  },
+  "PRIMARY_ACTION_MAX_PER_CARD": 1,
+  "KEBAB_MENU_ORDER": [
+    "open-file",
+    "open-folder",
+    "copy-location",
+    "move-up",
+    "move-down",
+    "move-top",
+    "move-bottom",
+    "remove"
+  ],
+  "DRAG_STATES": [
+    "idle",
+    "window-drag",
+    "direct-hover",
+    "invalid"
+  ],
+  "VIRTUALIZATION_THRESHOLD": 200,
+  "VIRTUALIZATION_DECISION": "none this phase; no new dependency added",
+  "USER_LOCKS": {
+    "bulk_bar_placement": "sticky above the list (Zorivest parity)",
+    "remove_confirm": "light verb-labeled confirm modal; undo-toast deferred until the API can restore",
+    "drag_and_drop": "deferred to MEU-49; keyboard/menu reorder ships in MEU-45",
+    "density_toggle": "none; single density",
+    "per_card_cancel": "rendered only on the in-flight row, wired to queue-level POST /{queue}/cancel; no per-item cancel API",
+    "clear_finished": "client fan-out of DELETE /{id} over Done jobs only; files stay on disk; G35 partial-result toast",
+    "retry_scope": "widen reset to Cancelled + QualityBlocked + AgeRestricted; Skipped stays excluded",
+    "exec_gate": "human - pause after Codex approves, wait for explicit proceed",
+    "pill_palette": "colour is whatever PILL_TOKEN_SOURCE (P:/zorivest) has; av-kit authors no hue of its own. Supersedes 06-gui.md's AgeRestricted Brown and every --color-pill-*-fg token an earlier round invented. See PILL_CLASS_RULE, PORTED_TOKENS, CONTRAST_AA_DEBT.",
+    "plan_review_rounds": "cap raised 3 -> 6 (PLAN_REVIEW_MAX_ROUND), or sooner if an approved verdict lands first"
+  },
+  "PAUSE_SCOPE": "queue-level only (06-gui.md:503-524); no per-item pause control",
+  "BULK_ENDPOINT_POLICY": "client-side fan-out only; no POST /{queue}/bulk endpoint exists or may be invented",
+  "OUT_OF_SCOPE": [
+    "Capture inbox (thumbnail filmstrip, not a work queue)",
+    "New REST endpoints or bulk endpoints",
+    "Per-item cancel or per-item pause API",
+    "Page migration (deferred to MEU-45 convert, MEU-46 downloader)",
+    "Selection model / BulkActionBar (MEU-47)",
+    "dnd-kit drag reorder (MEU-49)",
+    "Undo-toast for Remove",
+    "List virtualization"
+  ],
+  "OPENAPI_COMMITTED": "openapi.committed.json",
+  "OPENAPI_EXPORT": "tools/export_openapi.py",
+  "ROUTE_COUNT_AFTER": 71,
+  "ACTION_INDEX_AFTER": 67,
+  "MCP_CHANGE_BASIS": "mcp-server desc() builds descriptions formulaically from method+path; it does not embed FastAPI docstrings",
+  "G32_RULE": "CSS var tokens only; zero raw hex outside styles.css",
+  "G33_RULE": "motion tokens only; never animate width/height/geometry - use transform: scaleX",
+  "G34_RULE": "Button variant grid 5 variants x 3 sizes; no new variants",
+  "G36_RULE": "no silent test guards (test.skip/.only/.todo, conditional early returns)",
+  "G37_RULE": "userEvent over fireEvent in component tests",
+  "G20_RULE": "portal confirm modal; never window.confirm",
+  "ERROR_SURFACE": "422/409/ApiError shown in-page (G15); never swallow",
+  "BUILDER_PIN": "-",
+  "PLAN_FOLDER": "docs/execution/plans/2026-08-28-p10-queue-card-foundations",
+  "PLAN_FOLDER_SLASH": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/",
+  "PRIOR_PLAN_SLASHES": [],
+  "HUB_NEXT_BEFORE": "All registered MEUs approved; no next /create-plan.",
+  "HUB_NEXT_AFTER": "p10-queue-card-migration (MEU-45-47)",
+  "METRICS_SLUG": "p10-queue-card-foundations",
+  "METRICS_FILE": "docs/execution/metrics.md",
+  "HANDOFF_COUNT": 4,
+  "HANDOFF_FILES": [
+    ".agent/context/handoffs/2026-08-28-p10-queue-card-foundations-MEU-41-handoff.md",
+    ".agent/context/handoffs/2026-08-28-p10-queue-card-foundations-MEU-42-handoff.md",
+    ".agent/context/handoffs/2026-08-28-p10-queue-card-foundations-MEU-43-handoff.md",
+    ".agent/context/handoffs/2026-08-28-p10-queue-card-foundations-MEU-44-handoff.md"
+  ],
+  "HANDOFF_MARKER_CHECK": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-handoff-markers.ps1",
+  "HANDOFF_AC_CHECK": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-handoff-acs.ps1",
+  "RED_ORACLE": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-red-oracle.ps1",
+  "EXEC_DISPATCH_CHECK": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-exec-review-dispatch.ps1",
+  "CHECK_EXEC_REVIEW": "tools/check_exec_review.py",
+  "RED_TEST_TITLE": "every Red test title starts with its own single AC id, e.g. 'AC-43.3 ...'; multi-id titles are rejected",
+  "RED_JSON": "C:/Temp/av-kit/fail-to-pass-meu-<n>-<kind>.json",
+  "RED_TXT": "C:/Temp/av-kit/fail-to-pass-meu-<n>-<kind>.txt",
+  "UNIT_TEST_DIR_UI": "ui/tests/unit",
+  "UNIT_TEST_DIR_PY": "tests/unit",
+  "E2E_TEST_DIR_PY": "tests/e2e",
+  "GROUPING_DONE_MARK": "mark Session 20 row as complete in GROUPING_FILE at H2-2 only; Sessions 21-22 stay pending",
+  "PHASE10_SECTIONS": [
+    "Scope and non-goals",
+    "QueueCard anatomy",
+    "Status token table",
+    "Card state precedence",
+    "Primary action model",
+    "Kebab menu",
+    "Selection and bulk model",
+    "Toolbar reduction",
+    "Reorder model",
+    "Empty state and drop targets",
+    "Re-queue contract",
+    "Supersession of 06-gui.md"
+  ],
+  "GUI_SPEC_SUPERSEDE_ANCHORS": {
+    "DataTable": "06-gui.md:1090-1143 shared DataTable/ProgressBar/StatusBadge spec",
+    "GlyphControls": "06-gui.md:526-542 text-glyph queue control labels"
+  },
+  "SUPERSEDE_POINTER": "Superseded for queue surfaces by docs/build-plan/10-queue-card-ui.md",
+  "MATRIX_ROWS": {
+    "10.1": "MEU-41 canon-queue-cards",
+    "10.2": "MEU-42 svc-requeue-widening",
+    "10.3": "MEU-43 gui-queue-primitives",
+    "10.4": "MEU-44 gui-queue-card",
+    "10.5": "MEU-45 gui-convert-queue",
+    "10.6": "MEU-46 gui-downloader-queue",
+    "10.7": "MEU-47 gui-queue-bulk",
+    "10.8": "MEU-48 gui-queue-convergence",
+    "10.9": "MEU-49 gui-queue-dnd"
+  },
+  "PHASE10_MEU_IDS": [
+    "MEU-41",
+    "MEU-42",
+    "MEU-43",
+    "MEU-44",
+    "MEU-45",
+    "MEU-46",
+    "MEU-47",
+    "MEU-48",
+    "MEU-49"
+  ],
+  "DEDUP_TARGETS": {
+    "formatFileSize": [
+      "ui/src/renderer/src/features/converter",
+      "ui/src/renderer/src/features/downloader"
+    ],
+    "buildReorderBody": [
+      "ui/src/renderer/src/features/converter/convert-controls.ts",
+      "ui/src/renderer/src/features/downloader/download-controls.ts"
+    ]
+  },
+  "STATUS_CONFIG_FEATURES": [
+    "download",
+    "convert",
+    "transcript",
+    "tts"
+  ],
+  "STATUS_CONFIG_POLICY": "one parameterized config per feature keyed by that feature's own JOB_STATUSES; no unified cross-feature status enum",
+  "HANDOFFS": [
+    "2026-08-28-p10-queue-card-foundations-MEU-41-handoff.md",
+    "2026-08-28-p10-queue-card-foundations-MEU-42-handoff.md",
+    "2026-08-28-p10-queue-card-foundations-MEU-43-handoff.md",
+    "2026-08-28-p10-queue-card-foundations-MEU-44-handoff.md"
+  ],
+  "HANDOFF_FILTER": "2026-08-28-p10-queue-card-foundations-MEU-*-handoff.md",
+  "HANDOFF_SOURCE_READ_41": "C:/Temp/av-kit/handoff-source-read-meu-41.txt",
+  "HANDOFF_SOURCE_READ_42": "C:/Temp/av-kit/handoff-source-read-meu-42.txt",
+  "HANDOFF_SOURCE_READ_43": "C:/Temp/av-kit/handoff-source-read-meu-43.txt",
+  "HANDOFF_SOURCE_READ_44": "C:/Temp/av-kit/handoff-source-read-meu-44.txt",
+  "HANDOFF_SOURCE_READ": "C:/Temp/av-kit/handoff-source-read-meu-<n>.txt",
+  "HUB_NEXT_FIELD": "the unique Next: `...` field in docs/BUILD_PLAN.md",
+  "CLOSEOUT_H24_RECEIPT": "C:/Temp/av-kit/closeout-check.txt",
+  "UI_ESLINT": "npx eslint src/ tests/ --max-warnings 0",
+  "VITEST_ALLOW_ONLY": "--allowOnly=false",
+  "MEU_SCOPED_GATE_UI": "ui tsc + vitest VITEST_ALLOW_ONLY + eslint UI_ESLINT + build + anti-placeholder + G36 + PAGE_ISOLATION + HANDOFF_MARKER_CHECK + this MEU AC set",
+  "MEU_SCOPED_GATE_PY": "pytest unit+integration+e2e + pyright packages/ + ruff packages/ tests/ + OpenAPI --check + anti-placeholder + HANDOFF_MARKER_CHECK + AC-42.*",
+  "PAGE_ISOLATION_CHECK": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1",
+  "PAGE_ISOLATION_RULE": "capture-then-verify content baseline (this tree is not a git work tree): FROZEN_GLOBS byte-identical with no adds/deletes; CARVE_OUT_FILES limited to CARVE_OUT_RULE; no file under REACHABILITY_SCAN_ROOT outside NEW_SURFACE_EXEMPT may reference any NEW_SURFACE_MODULES string (this also closes barrel/re-export bypass); E2E title SET identity preserved and count == E2E_BASELINE_COUNT; every PRESERVED_TESTIDS id still present in TESTID_REGISTRY",
+  "PLACEHOLDER_PATHS_41": [
+    "docs/build-plan/10-queue-card-ui.md",
+    "ui/src/renderer/src/styles.css",
+    "ui/src/renderer/src/features/downloader/download-controls.ts"
+  ],
+  "PLACEHOLDER_PATHS_42": [
+    "packages/core/src/avkit_core/domain/download.py",
+    "packages/core/src/avkit_core/domain/conversion.py",
+    "packages/api/src/avkit_api/routes/downloads.py",
+    "packages/api/src/avkit_api/routes/conversions.py"
+  ],
+  "PLACEHOLDER_PATHS_43": [
+    "ui/src/renderer/src/lib/queue",
+    "ui/src/renderer/src/components/ui"
+  ],
+  "PLACEHOLDER_PATHS_44": [
+    "ui/src/renderer/src/components/queue"
+  ],
+  "G36_TEST_PATHS_UI": [
+    "ui/tests/unit",
+    "ui/tests/e2e"
+  ],
+  "G36_TEST_PATHS_PY": [
+    "tests/unit",
+    "tests/integration",
+    "tests/e2e"
+  ],
+  "STATUS_PILL_TABLE": {
+    "Pending": {
+      "slug": "pending",
+      "token": "--color-status-pending",
+      "fillAlpha": 0.1,
+      "fillClass": "bg-status-pending/10",
+      "labelClass": "text-fg",
+      "iconClass": "text-status-pending"
+    },
+    "Processing": {
+      "slug": "processing",
+      "token": "--color-accent-cyan",
+      "fillAlpha": 0.1,
+      "fillClass": "bg-accent-cyan/10",
+      "labelClass": "text-fg",
+      "iconClass": "text-accent-cyan"
+    },
+    "Downloading": {
+      "slug": "downloading",
+      "token": "--color-accent-cyan",
+      "fillAlpha": 0.1,
+      "fillClass": "bg-accent-cyan/10",
+      "labelClass": "text-fg",
+      "iconClass": "text-accent-cyan"
+    },
+    "Paused": {
+      "slug": "paused",
+      "token": "--color-accent-yellow",
+      "fillAlpha": 0.1,
+      "fillClass": "bg-accent-yellow/10",
+      "labelClass": "text-fg",
+      "iconClass": "text-accent-yellow"
+    },
+    "Done": {
+      "slug": "done",
+      "token": "--color-status-filled",
+      "fillAlpha": 0.1,
+      "fillClass": "bg-status-filled/10",
+      "labelClass": "text-fg",
+      "iconClass": "text-status-filled"
+    },
+    "Failed": {
+      "slug": "failed",
+      "token": "--color-status-rejected",
+      "fillAlpha": 0.1,
+      "fillClass": "bg-status-rejected/10",
+      "labelClass": "text-fg",
+      "iconClass": "text-status-rejected"
+    },
+    "Skipped": {
+      "slug": "skipped",
+      "token": "--color-accent-purple",
+      "fillAlpha": 0.1,
+      "fillClass": "bg-accent-purple/10",
+      "labelClass": "text-fg",
+      "iconClass": "text-accent-purple"
+    },
+    "Cancelled": {
+      "slug": "cancelled",
+      "token": "--color-status-canceled",
+      "fillAlpha": 0.1,
+      "fillClass": "bg-status-canceled/10",
+      "labelClass": "text-fg",
+      "iconClass": "text-status-canceled"
+    },
+    "QualityBlocked": {
+      "slug": "qualityblocked",
+      "token": "--color-accent-orange",
+      "fillAlpha": 0.1,
+      "fillClass": "bg-accent-orange/10",
+      "labelClass": "text-fg",
+      "iconClass": "text-accent-orange"
+    },
+    "AgeRestricted": {
+      "slug": "agerestricted",
+      "token": "--color-accent-red",
+      "fillAlpha": 0.1,
+      "fillClass": "bg-accent-red/10",
+      "labelClass": "text-fg",
+      "iconClass": "text-accent-red"
+    }
+  },
+  "CONTRAST_BACKDROPS": {
+    "default": {
+      "expr": "--color-bg",
+      "note": "CARD_STATE_CLASSES.default bg-bg"
+    },
+    "hover": {
+      "expr": "--color-bg-elevated",
+      "note": "CARD_STATE_CLASSES.default hover:bg-bg-elevated"
+    },
+    "checkbox-selected": {
+      "expr": "--color-accent @ 0.05 over --color-bg",
+      "note": "CARD_STATE_CLASSES bg-accent/5"
+    },
+    "detail-open": {
+      "expr": "--color-accent @ 0.10 over --color-bg",
+      "note": "CARD_STATE_CLASSES bg-accent/10"
+    }
+  },
+  "CONTRAST_RULE": "for every STATUS_PILL_TABLE entry, in BOTH theme blocks of TOKEN_FILE, composite the entry's hue token at fillAlpha over each CONTRAST_BACKDROPS entry and measure WCAG 2.2 SC 1.4.3 ratio(--color-fg, composite). ALL 80 label pairings must be >= CONTRAST_MIN -- there is no debt set and no exemption -- and the measured matrix must equal CONTRAST_MEASURED exactly. Token hexes are copied from PILL_TOKEN_SOURCE, never authored here.",
+  "CONTRAST_THEME_SOURCE": "ui/src/renderer/src/styles.css parsed at test time; no hex duplicated in test fixtures (G32)",
+  "E2E_GLOBS": [
+    "*.test.ts",
+    "*.spec.ts"
+  ],
+  "E2E_BASELINE_BASIS": "53 test( calls in ui/tests/e2e/*.test.ts + 6 in *.spec.ts, recounted 2026-09-02. Was 55 (49+6) when counted 2026-08-28; the concurrent 2026-08-27-p9-capture-native-picker session landed ui/tests/e2e/capture-picker.test.ts (4 tests, MEU-40 AC-40.18) on 2026-09-01, after this plan was written. Concurrent-session drift in a planning constant, not a Phase 10 change: PAGE_ISOLATION check 4 compares E2E title SET identity against the row-1 content baseline and that comparison passed clean; this constant is the second tripwire against capturing a baseline on an already-mutated tree.",
+  "PAGE_BASELINE": "C:/Temp/av-kit/page-isolation-baseline.json",
+  "FROZEN_GLOBS": [
+    "ui/src/renderer/src/features/**/*.tsx",
+    "ui/src/renderer/src/router.tsx",
+    "ui/src/renderer/src/main.tsx",
+    "mcp-server/src/**/*.ts",
+    "ui/package.json",
+    "ui/package-lock.json"
+  ],
+  "CARVE_OUT_FILES": [
+    "ui/src/renderer/src/features/converter/ConvertQueueTable.tsx",
+    "ui/src/renderer/src/features/downloader/DownloadQueueTable.tsx"
+  ],
+  "CARVE_OUT_ALLOWED_IMPORT": "lib/queue/format",
+  "CARVE_OUT_REMOVABLE_SYMBOL": "formatFileSize",
+  "CARVE_OUT_RULE": "the only permitted delta in CARVE_OUT_FILES is: added lines must be import lines containing CARVE_OUT_ALLOWED_IMPORT, removed lines must fall inside the local CARVE_OUT_REMOVABLE_SYMBOL definition block, and the data-testid multiset must be unchanged",
+  "NEW_SURFACE_MODULES": [
+    "components/queue/",
+    "lib/queue/",
+    "components/ui/StatusBadge",
+    "components/ui/ProgressBar"
+  ],
+  "NEW_SURFACE_EXEMPT": [
+    "ui/src/renderer/src/components/queue",
+    "ui/src/renderer/src/lib/queue",
+    "ui/src/renderer/src/components/ui"
+  ],
+  "REACHABILITY_SCAN_ROOT": "ui/src/renderer/src",
+  "ENVELOPE_UNKNOWN_KEY_POLICY": "reject: Zod .strict() on the wrapper; an unknown top-level key fails parse and surfaces via ERROR_SURFACE. Supersedes any \"ignore unknown keys\" wording. Basis: AGENTS.md Boundary Input Contract item 4 (extra-field policy) - no source-backed exception documented.",
+  "REQUEUE_STATUS_EXHAUSTIVENESS": "AC-42 asserts REQUEUEABLE_DOWNLOAD_STATUSES + NON_REQUEUEABLE_DOWNLOAD_STATUSES == DOWNLOAD_STATUSES and REQUEUEABLE_CONVERSION_STATUSES + NON_REQUEUEABLE_CONVERSION_STATUSES == CONVERSION_STATUSES, so no status is silently uncovered",
+  "RED_SELFTEST": "pwsh -File RED_ORACLE -SelfTest  (11 hermetic fixtures under RECEIPT_DIR/red-oracle-selftest)",
+  "FROZEN_RATIONALE": "FROZEN_GLOBS absorbs the three \"git diff --quiet\" guards that cannot run here (this tree is not a git work tree): mcp-server sources and the ui dependency manifests are byte-frozen for the whole session, proving MCP_CHANGE_BASIS and the no-new-dependency rule by content, not by VCS.",
+  "SELFTEST_DIR": "C:/Temp/av-kit/page-iso-selftest",
+  "PAGE_ISOLATION_SELFTEST": "rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1 -SelfTest -- 19 hermetic cases under SELFTEST_DIR. Proves the gate REJECTS: frozen page edit/add/delete, mcp-server edit, dependency-manifest edit, illegal carve-out add/remove/testid-rename, carve-out deletion, carve-out reaching any new-surface module other than CARVE_OUT_ALLOWED_IMPORT, direct/barrel-re-export/alias reachability, E2E title rename at constant count, E2E addition, dropped PRESERVED_TESTIDS entry, missing baseline; and ACCEPTS the clean tree plus the one legal carve-out shared-import edit. Reads/writes only SELFTEST_DIR.",
+  "SSOT_READY": "assertion printing \"PASS: SSOT_READY\" -- phase 10 lists PLAN_FOLDER_SLASH in execution_plans, every MEUS entry has status ready_for_review, and docs/BUILD_PLAN.md carries exactly one \"Next:\" field whose value is HUB_NEXT_AFTER. Exit non-zero names the first offending MEU or the wrong hub value.",
+  "SSOT_APPROVED": "assertion printing \"PASS: SSOT_APPROVED\" -- every MEUS entry has execution_plan == PLAN_FOLDER and status approved. Exit non-zero names the first MEU that is not. Run only after the execution-review verdict is approved.",
+  "PILL_TOKEN_SOURCE": "P:/zorivest/ui/src/renderer/src/globals.css (USER_LOCKS.pill_palette). av-kit pill colour IS Zorivest's -- no av-kit-authored hue. Verified 2026-09-01: all 30 --color-* tokens the two repos share hold byte-identical values in BOTH theme blocks, 0 mismatches, so adopting Zorivest is a port and not a repaint.",
+  "PILL_CLASS_RULE": "A pill renders `fillClass` (the PILL_TOKEN_SOURCE status hue at 10%) with `labelClass` (`text-fg`) for the LABEL. Fill and label are deliberately DIFFERENT tokens. Both values come from PILL_TOKEN_SOURCE -- `--color-fg` is one of the 30 tokens the two repos hold byte-identically -- so USER_LOCKS.pill_palette is satisfied in full: av-kit still authors no hue. This diverges from Zorivest's own same-token chip class, on reviewer finding R4-F1 and on the proposal's OWN mockup, which already decouples them (`.pill.red { background: rgba(255,85,85,.18); color: #ff9e9e; }` at mockup:151). Measured: same-token labels cleared CONTRAST_MIN in only 28 of 80 pairings (light Paused 2.23, Done 2.47); `text-fg` clears all 80, worst 6.61. `/20` on an accent hue remains forbidden (Zorivest MEU-389). No pill may introduce a hue of its own.",
+  "PORTED_TOKENS": {
+    "--color-status-pending": {
+      "dark": "#ffb86c",
+      "light": "#ea580c",
+      "state": "dark present, light MISSING in av-kit"
+    },
+    "--color-status-filled": {
+      "dark": "#50fa7b",
+      "light": "#16a34a",
+      "state": "absent in both themes"
+    },
+    "--color-status-rejected": {
+      "dark": "#ff5555",
+      "light": "#dc2626",
+      "state": "absent in both themes"
+    },
+    "--color-status-canceled": {
+      "dark": "#6272a4",
+      "light": "#64748b",
+      "state": "absent in both themes"
+    }
+  },
+  "CONTRAST_MEASURED": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/contrast-matrix.json -- the measured baseline. `label` is the gated 80-row matrix; `icon` is advisory per STATUS_ICON_RULE. AC-43.3 recomputes both from TOKEN_FILE and requires an exact match.",
+  "STATUS_ICON_RULE": "The status hue also renders on the card's left-edge status icon (`iconClass`), which is the fastest-scanning position (proposal mockup:286). That icon carries `aria-hidden=\"true\"` and duplicates the adjacent pill text, so it is Decorative under WCAG 2.2 SC 1.4.11 and is NOT contrast-gated; status is never colour-alone because the pill states it in words (SC 1.4.1). contrast-matrix.json records the icon ratios anyway (worst 1.94, 12 of 80 below the 3.0 advisory) so the number is visible rather than hidden.",
+  "CONTRAST_WORST_MEASURED": 6.61,
+  "CANCEL_CONTROL_LABEL": "Cancel queue",
+  "CANCEL_CONTROL_TITLE": "Cancel queue - this is the in-flight item",
+  "CANCEL_LABEL_FORBIDDEN": [
+    "Cancel",
+    "Cancel item",
+    "Cancel download",
+    "Stop"
+  ],
+  "CANCEL_SCOPE_RULE": "USER_LOCKS.per_card_cancel puts the control on the in-flight row, but the endpoint is queue-level (POST /{queue}/cancel). The user-visible accessible name MUST therefore be CANCEL_CONTROL_LABEL and the title CANCEL_CONTROL_TITLE; any CANCEL_LABEL_FORBIDDEN string as the accessible name is a defect, because a row-local control that reads `Cancel` lets a person stop the whole queue believing they stopped one item (reviewer R4-F3). The mockup's own tooltip was already scope-bearing; the AC now matches it. The disclosure lives entirely in the label and title -- see CANCEL_CONFIRM_POLICY, which forbids gating the action behind a dialog.",
+  "REQUEUE_BLOCKER_POLICY": "Re-queue from a BLOCKER state is not a generic reset. QualityBlocked -> Pending MUST first apply the current downloader defaults to the job (the apply_defaults_to_pending mapping: quality, audio_format, audio_only) and then re-evaluate `_incompatible(job)` against the live SABR snapshot; if the job is still incompatible while SABR mode is Active the job stays QualityBlocked and the route answers REQUEUE_BLOCKER_CONFLICT_CODE naming BLOCKER_REMEDIATION[QualityBlocked]. Without this, a reset re-enters the Pending pool that the worker drains, and `_run_one` does not re-run apply_lock -- so Retry would defeat the very quality guard that created the block (reviewer R4-F2, confirmed against services/download.py apply_lock/_run_one). AgeRestricted -> Pending is unconditional: cookie/auth options are read at execution time, so a settings change is enough. Cancelled and Failed -> Pending stay unconditional.",
+  "REQUEUE_BLOCKER_CONFLICT_CODE": 409,
+  "BLOCKER_STATUSES": [
+    "QualityBlocked",
+    "AgeRestricted"
+  ],
+  "BLOCKER_REMEDIATION": {
+    "QualityBlocked": "Settings > Downloader > Quality (choose a lower quality, or a supported audio format for audio-only jobs)",
+    "AgeRestricted": "Settings > Cookies & Authentication (sign-in required for this video)"
+  },
+  "BLOCKER_META_RULE": "A card in a BLOCKER_STATUSES state MUST render, in its meta zone, both the blocker reason (the job's error_message) and BLOCKER_REMEDIATION[status] -- the setting the user has to change. Retry on a blocker row without that copy looks broken when it legitimately refuses (reviewer R4-F2).",
+  "CLEAR_FINISHED_SEMANTICS": {
+    "snapshot": "take the Done id set once, before the first request; jobs that finish mid-run are not swept",
+    "independence": "issue DELETE /{id} per snapshotted id, each attempt independent",
+    "continue_on_failure": "a failed or 404 DELETE never aborts the fan-out; every snapshotted id is attempted exactly once",
+    "successes_are_kept": "confirmed deletions are never rolled back",
+    "files": "never delete media from disk - the API removes the queue record only",
+    "reconcile": "exactly one list refetch after the fan-out settles; the refetch, not the local optimistic state, is what the list renders",
+    "report": "G35 partial-result toast states removed count, failed-or-skipped count, and the reason per failure",
+    "_why": "reviewer R4-F4: \"G35 partial-result toast\" alone permitted an implementation that stops on the third failure, leaves later Done jobs unattempted, and still claims a partial result"
+  },
+  "KEBAB_MENU_ORDER_SEMANTICS": "KEBAB_MENU_ORDER is a list of ACTION IDS fixing the RELATIVE ORDER of the actions that are both supplied as callbacks and applicable under KEBAB_AVAILABILITY -- it is not a required membership list. An action is omitted entirely (never rendered disabled, never a no-op) when its callback is not supplied or when KEBAB_AVAILABILITY excludes it for the row's state/position; the reviewer confirmed absence is the right interaction, because disabled rows add keyboard stops without helping. The surviving actions render in KEBAB_MENU_ORDER order, each with its KEBAB_ACTION_LABELS entry (copy-location's label is state-dependent per R5-F4). Availability is evaluated PER ACTION, never per group: a first-but-not-last row still offers move-down and move-bottom, and only a single-item queue drops all four move actions (reviewer R5-F2, which caught an expected set that would have silently removed two promised operations from the top row of every multi-item queue).",
+  "KEBAB_AVAILABILITY": {
+    "open-file": "status is Done AND the job has an output path on disk",
+    "open-folder": "status is Done AND the job has an output path on disk",
+    "copy-location": "always",
+    "move-up": "the row is not first in the list",
+    "move-down": "the row is not last in the list",
+    "move-top": "the row is not first in the list",
+    "move-bottom": "the row is not last in the list",
+    "remove": "always"
+  },
+  "BLOCKER_REASON_TEMPLATE": {
+    "QualityBlocked": "YouTube is limiting which formats this video will serve right now, so the requested quality or audio format is not available.",
+    "AgeRestricted": "video is age-restricted"
+  },
+  "BLOCKER_REASON_RULE": "Every job that ENTERS a BLOCKER_STATUSES state must carry a human-readable reason in error_message at the moment of the transition, rendered from BLOCKER_REASON_TEMPLATE[status], and BLOCKER_REASON_INVARIANT must then hold for the rest of that job's life. AgeRestricted already satisfies entry: services/download.py:506-507 catches AgeRestrictedError and calls _finish(..., error=str(exc)), and adapter.py:392/446 raises it with the template text. QualityBlocked does not, at entry or afterwards -- see BLOCKER_REASON_PRODUCERS for the exact sites in each of the three phases. Without entry coverage the reason BLOCKER_META_RULE requires does not exist in production data, so AC-44.15 could only ever pass against a fabricated component prop while a real blocked user sees an empty explanation (reviewer R5-F1); without the invariant the reason exists but drifts or outlives its own status (reviewer R6-F1).",
+  "BLOCKER_REASON_PRODUCERS": {
+    "_note": "Kept as the map of the WRITE PATHS this invariant has to survive, for review and for the AC-42.12 case list. It is no longer a list of sites to patch: every entry below flows through SqlAlchemyDownloadRepository.add/.save, so BLOCKER_REASON_ENFORCEMENT['boundary-normalizer'] covers all of them at once.",
+    "QualityBlocked": {
+      "enters": [
+        "services/download.py enqueue - the branch that assigns DownloadStatus.QualityBlocked before constructing the DownloadJob (error_message=None today, :228-247) -> repo.add",
+        "services/download.py apply_lock - the Pending -> QualityBlocked transition (:351-365) -> repo.save"
+      ],
+      "persists-while-blocked": [
+        "services/download.py apply_lock - the already-QualityBlocked branch, which today matches the loop and then falls through with no write at all",
+        "services/download.py apply_defaults_to_pending - rewrites quality/audio_format/audio_only on QualityBlocked rows (:369-391) -> repo.save",
+        "services/download.py reset_failed - the AC-42.10 refusal path, which now saves before raising (BLOCKER_REASON_ENFORCEMENT['refusal-canonicalization'])",
+        "NO SERVICE CALL AT ALL - a row blocked before this release, read straight off disk by GET /downloads. Only the migration reaches this one (reviewer R7-F1)"
+      ],
+      "leaves": [
+        "services/download.py clear_sabr - QualityBlocked -> Pending (:335-348) -> repo.save",
+        "domain/download.py reset_failed - already clears error_message; asserted, not changed"
+      ]
+    },
+    "AgeRestricted": {
+      "enters": [
+        "services/download.py _run_one - the AgeRestrictedError handler (already conforms; asserted, not changed) -> _finish -> repo.save"
+      ],
+      "persists-while-blocked": [],
+      "leaves": [
+        "domain/download.py reset_failed - already clears error_message"
+      ]
+    }
+  },
+  "KEBAB_ACTION_LABELS": {
+    "open-file": "Open file",
+    "open-folder": "Open folder",
+    "copy-location": {
+      "withOutputPath": "Copy path",
+      "withoutOutputPath": "Copy URL",
+      "_why": "reviewer R5-F4: one canonical action id and one order slot, but the visible label must name what actually lands on the clipboard. Before an output path exists the action copies the source URL, so a menu item reading 'Copy path' would lie about its own result. The proposal writes the action as 'Copy path/URL' (proposal:78) and the mockup renders it 'Copy URL' (mockup:287) - the state-dependent label is the reading that satisfies both."
+    },
+    "move-up": "Move up",
+    "move-down": "Move down",
+    "move-top": "Move to top",
+    "move-bottom": "Move to bottom",
+    "remove": "Remove"
+  },
+  "CANCEL_CONFIRM_POLICY": "Queue-level Cancel takes NO confirmation dialog. proposal:146-149 places it on the destructive-action ladder explicitly as 'queue-level Cancel of a re-queueable job -> no dialog (re-queue is cheap)'; ConfirmModal is reserved for Remove and Clear. Round 5 briefly required a confirm step as part of the cancel-wording fix; the reviewer rejected that (R5-F3) because it adds unchosen friction to a time-sensitive stop and contradicts the presentational onCancelQueue contract. Scope is disclosed by CANCEL_CONTROL_LABEL and CANCEL_CONTROL_TITLE at the affordance itself, which is the whole point of locking those two strings.",
+  "BLOCKER_REASON_COPY_RULE": "BLOCKER_REASON_TEMPLATE strings are QUALITY-INDEPENDENT and acronym-free: they interpolate no job field, so no persisted reason can contradict the row it sits on, and they name no internal term the user has never seen. Round 6's QualityBlocked template did both wrong -- it formatted {quality} into the sentence and it exposed 'SABR' (reviewer R6-F1). Formatting a mutable job field into a stored sentence is what made the reason go stale, because apply_defaults_to_pending rewrites quality/audio_format/audio_only on an already-blocked row without touching error_message (services/download.py:369-391). Removing the interpolation collapses the whole maintenance problem from 'recompute the reason at every mutation' to 'ensure the reason is present' -- which is why BLOCKER_REASON_INVARIANT is an ensure-present invariant, not a recompute-on-write rule. The job-specific detail the user needs is already on the card: the quality is in the meta zone and the fix is in BLOCKER_REMEDIATION.",
+  "BLOCKER_REASON_INVARIANT": "PERSISTED-STATE INVARIANT, not a per-callsite patch: (1) every DownloadJob persisted with status QualityBlocked carries a non-empty error_message equal to BLOCKER_REASON_TEMPLATE['QualityBlocked']; (2) no job persisted OUT of a BLOCKER_STATUSES state retains a blocker reason. Clause (1) must hold for rows that were already blocked before this MEU shipped, not only for rows created after it -- a legacy reasonless row is exactly the row a user is looking at when they wonder why nothing is downloading. Clause (2) is the mirror: DownloadJob.transition is `replace(self, status=...)` and preserves error_message verbatim (domain/download.py:111-119), so without it a cleared SABR lock leaves every un-blocked job displaying the reason it was blocked for. ENFORCEMENT is the three mechanisms in BLOCKER_REASON_ENFORCEMENT, not a list of service callsites: Round 7 stated this invariant while enforcing it only in apply_lock and apply_defaults_to_pending, which an upgrading user may never trigger -- so the promise outran its enforcer and a legacy row reached the card blank, including immediately after a refused Retry (reviewer R7-F1). An invariant over persisted state has to be enforced where state is persisted.",
+  "CARD_INTERACTIVE_ZONES": [
+    "selection-checkbox",
+    "primary-action",
+    "kebab-trigger"
+  ],
+  "CLICKABLE_REGION_RULE": "The card's role=\"button\" open-region contains NO interactive descendant. Every id in CARD_INTERACTIVE_ZONES renders as a SIBLING of that region inside the card container, never inside it, and activating any of them never invokes onOpen. The mockup's markup does not satisfy this on its own: it nests the primary action and the kebab trigger inside <div class=\"body\"> (mockup:261-277), which proposal SS4 is what carries role=\"button\" -- only the checkbox is already a sibling, and only the checkbox had an AC proving it (AC-44.2). The mockup's own zone strip (mockup:278) already lays out 'action' and the kebab as separate right-edge columns, so hoisting them out of the open-region is layout-neutral: the visual design is unchanged and only the DOM ancestry differs. Nesting them would give a keyboard or screen-reader user a Retry that also opens the item through bubbling, and would strip the descendants of independent name/role/value -- the axe `nested-interactive` failure, WCAG 2.2 SC 4.1.2, and the reason the HTML spec forbids interactive content inside <button> (reviewer R6-F2).",
+  "BLOCKER_REASON_ENFORCEMENT": {
+    "boundary-normalizer": "domain/download.py gains BLOCKER_REASONS (status -> reason text, the code-side home of BLOCKER_REASON_TEMPLATE) and a pure normalize_blocker_reason(job) -> DownloadJob that returns the job with BLOCKER_REASON_INVARIANT satisfied: it fills a blank error_message when the status is in BLOCKER_REASONS, and clears error_message when the status is NOT a blocker state AND the current message is exactly one of the BLOCKER_REASONS values. That second condition is deliberately narrow -- an unconditional clear would erase a Failed job's real traceback. infrastructure/.../repositories.py calls it in SqlAlchemyDownloadRepository.add and .save, which are the ONLY two write paths into download_jobs (reorder touches queue_position, delete removes rows, bulk reset_failed selects Failed only). Enforcing there rather than at service callsites is the whole point: no future service, route, or MCP handler can persist a reasonless blocked row by forgetting to, and the four per-callsite writes Round 7 planned in services/download.py are DELETED as redundant (reviewer R7-F1: 'centralize future DownloadJob add/save validation or normalization at the domain/persistence boundary').",
+    "upgrade-backfill": "infrastructure/.../migrations.py appends one idempotent UPDATE that fills error_message for existing QualityBlocked rows with a NULL or blank message. MIGRATIONS is an append-only list run by apply_migrations() at engine init, before any route can list a job, so an upgrading user's queue is repaired before they ever see it -- which the boundary normalizer alone cannot do, because a legacy row is never re-saved until something happens to touch it. Re-running matches zero rows, so it is idempotent in the same way the CREATE IF NOT EXISTS statements around it are. The SQL literal is built from BLOCKER_REASONS at import, never retyped, per the single-statement rule.",
+    "refusal-canonicalization": "the AC-42.10 still-incompatible Retry path persists the job through the normalizing save before answering REQUEUE_BLOCKER_CONFLICT_CODE, instead of writing nothing. Belt-and-braces behind the migration, and it closes the reviewer's sharpest case: the blank card surviving the one action a confused user actually takes."
+  },
+  "BLOCKER_REASON_MIGRATION_PREDICATE": "status = 'QualityBlocked' AND (error_message IS NULL OR TRIM(error_message) = '')"
+}

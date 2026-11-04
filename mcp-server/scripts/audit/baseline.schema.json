@@ -1,0 +1,41 @@
+{
+  "$id": "mcp-audit-baseline.v1",
+  "description": "MEU-68 committed audit baseline (.agent/skills/mcp-tool-audit/resources/baseline-snapshot.json). Written only by an authoritative run under BASELINE_UPDATE_RULE; later edits may only set `issue` (BASELINE_ANNOTATION_RULE).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "recorded_commit", "mode", "recorded_at", "entries", "findings"],
+  "properties": {
+    "schema": { "const": "mcp-audit-baseline.v1" },
+    "recorded_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "mode": { "const": "authoritative" },
+    "recorded_at": { "type": "string" },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["tool", "action", "status"],
+        "properties": {
+          "tool": { "type": "string" },
+          "action": { "type": "string" },
+          "status": { "enum": ["pass", "fail", "skip_env", "blocked"] },
+          "issue": { "type": "string" }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "tool", "detail"],
+        "properties": {
+          "code": { "type": "string" },
+          "tool": { "type": "string" },
+          "detail": { "type": "string" },
+          "issue": { "type": "string" }
+        }
+      }
+    }
+  }
+}

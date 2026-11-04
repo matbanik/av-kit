@@ -1,0 +1,749 @@
+{
+  "$schema-note": "Single-statement rule (create-plan Step 4): any set, threshold, label, or policy referenced more than once in implementation-plan.md or task.md is named HERE once and referenced by name everywhere else. A literal repeated in two places is a defect.",
+  "INHERITED_NAMES": {
+    "value": {
+      "BULK_REORDER_ALGORITHM": "docs/execution/plans/2026-09-02-p10-queue-card-migration/named-sets.json",
+      "COMMAND_MODULE_RULE": "docs/execution/plans/2026-09-02-p10-queue-card-migration/named-sets.json",
+      "DEAD_REGION_RULE": "docs/execution/plans/2026-09-02-p10-queue-card-migration/named-sets.json",
+      "FROZEN_GLOBS": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/named-sets.json",
+      "MOUNT_GATE_PHASE_SCOPES": "docs/execution/plans/2026-09-02-p10-queue-card-migration/named-sets.json",
+      "PAGE_ISOLATION_RULE": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/named-sets.json",
+      "RETIRED_TOOLBAR_CONTROLS": "docs/execution/plans/2026-09-02-p10-queue-card-migration/named-sets.json"
+    },
+    "contract": "These seven NAMEs are referenced by this plan but defined in an earlier Phase 10 project. They are NOT redefined here: copying a definition forward is how two copies drift apart, and the earlier project is the one whose code shipped them. Any reference to one of these names resolves against the file listed above. Every other capitalised NAME in implementation-plan.md and task.md is defined exactly once in THIS file, EXCEPT the tokens in non_set_token_list, which are capitalised but are not named sets at all. Both exception lists are machine-readable because CORRECTION_CENSUS -Gate S6 enforces this contract on every run: a capitalised token that is neither a key here, nor an inherited name, nor a listed non-set token is a census finding.",
+    "non_set_tokens": "Why each entry of non_set_token_list is not a named set: ELECTRON_RUN_AS_NODE is an Electron environment variable (see E2E_SANDBOX); PENDING is a literal list value passed to MOUNT_GATE_SCRIPT; BUILD_PLAN is part of the filename docs/BUILD_PLAN.md; FAIL_TO_PASS is AGENTS.md's term for Red-phase failure evidence; VITEST_EXIT is the shell variable a task row captures $LASTEXITCODE into; USER_EXPLICIT is GUARDRAILS.md's provenance tag for a direct human chat message, cited where this plan states which signal authorises the plan->execution transition. All six are deliberately absent from the key list.",
+    "source": "Local Canon - the single-statement rule in $schema-note, applied across project boundaries rather than only within one plan.",
+    "note": "Added in plan review round 2 self-review. The plan header asserts that every set is \"defined exactly once in named-sets.json\"; a reader chasing COMMAND_MODULE_RULE would have found nothing here and had no pointer to where it lives. Verified by diffing the set of `NAME`-quoted tokens in both plan files against this file's keys: 80 NAMEs referenced, 8 unresolved, 6 of them inherited and 2 not named sets at all. Round-3 correction R3-F7 then found that the round-2 diff was done by hand and had already gone stale: BUILD_PLAN, FAIL_TO_PASS and VITEST_EXIT were also unresolved and undeclared. That is why the check is now a script (CORRECTION_CENSUS -Gate S6) rather than a one-off manual diff, and why the header sentence in task.md is qualified rather than universal.",
+    "non_set_token_list": [
+      "BUILD_PLAN",
+      "ELECTRON_RUN_AS_NODE",
+      "FAIL_TO_PASS",
+      "PENDING",
+      "USER_EXPLICIT",
+      "VITEST_EXIT"
+    ]
+  },
+  "project": "2026-09-03-p10-queue-card-dnd",
+  "carried_forward_from": "docs/execution/plans/2026-09-02-p10-queue-card-migration/named-sets.json",
+  "carry_forward_note": "Only the keys MEU-49 actually cites are carried. Keys that described the migration's retired-toolbar bookkeeping (RETIRED_TOOLBAR_CONTROLS, MOUNT_COMPLETENESS_RULE, PRIMARY_ACTION_MAP, CLEAR_FINISHED_SEMANTICS, SELECTION_MODEL, ...) are deliberately NOT copied: they are settled facts of a closed MEU, and re-stating them here would create a second, unverified copy of a value whose owner is the migration plan. Where MEU-49 must not regress one of them, the assertion cites the live source file, not a stale copy.",
+  "PLAN_TO_EXEC_GATE": {
+    "value": "human",
+    "source": "Human-approved (carried forward from p10-queue-card-foundations, where the user resolved the harness conflict explicitly).",
+    "note": ".agent/context/harness.local.md declares plan_to_exec_gate: reviewer-auto with driver: Cursor IDE. This session runs in Claude Code, whose profile is `human` (.agent/docs/harness-profiles.md). The conservative value wins. See OQ-1."
+  },
+  "FRESH_WORKER": {
+    "value": "available",
+    "source": ".agent/skills/subagent-delegation/SKILL.md + .claude/agents/av-kit-builder.md and .claude/agents/av-kit-verifier.md (both present, verified 2026-09-03).",
+    "note": "CHANGE FROM THE PRIOR PROJECT. In 2026-09-02-p10-queue-card-migration every `isolated` row degraded to compact_continue because the driver was assumed to have no subagent surface. Claude Code does: rows marked context_strategy `isolated` in this task table ARE dispatchable to av-kit-builder / av-kit-verifier. Never-delegate categories (decision gates, the review dispatch, closeout authoring) still apply."
+  },
+  "REVIEWER_AGENT": {
+    "value": "gpt-5.6-sol",
+    "source": ".agent/docs/model-routing.md",
+    "note": "Dispatched via tools/Invoke-CodexDispatch.ps1 - never bare `codex exec`."
+  },
+  "PLAN_REVIEW_ROUND_CAP": {
+    "value": 3,
+    "source": ".agent/workflows/create-plan.md section 5"
+  },
+  "EXEC_REVIEW_ROUND_CAP": {
+    "value": 6,
+    "source": "AGENTS.md section Execution Contract"
+  },
+  "VALIDATION_RECEIPT_DIR": {
+    "value": "C:/Temp/av-kit/",
+    "source": "AGENTS.md section PRIORITY 0"
+  },
+  "USER_LOCKS": {
+    "value": [
+      "No density toggle (no compact/comfortable switch) is to be built in Phase 10.",
+      "`Cancel queue` appears ONLY on the in-flight row's primary action - never in the toolbar, never on a Pending row.",
+      "The bulk action bar is STICKY ABOVE THE LIST while any row is selected - never a floating viewport-bottom bar, never inline per row."
+    ],
+    "source": "Human-approved, 2026-08-28 session; re-confirmed 2026-09-02.",
+    "note": "Only the three locks that MEU-49 could plausibly violate are carried (a drag handle is a per-row affordance and a density-adjacent temptation). The full five-lock set remains owned by the migration named-sets. Any AC that contradicts a lock is invalid."
+  },
+  "DND_PACKAGES": {
+    "value": [
+      "@dnd-kit/core@^6.3.1",
+      "@dnd-kit/sortable@^10.0.0",
+      "@dnd-kit/utilities@^3.2.2"
+    ],
+    "source": "Research-backed - npm registry, 2026-09-03. @dnd-kit/core 6.3.1 (MIT, peer react >=16.8), @dnd-kit/sortable 10.0.0 (peer @dnd-kit/core ^6.3.0), @dnd-kit/utilities 3.2.2 (CSS.Transform.toString helper).",
+    "note": "The pre-1.0 `@dnd-kit/react` line (0.5.x) is explicitly REJECTED: it is the unreleased next-generation package, its API is unstable, and the sortable preset this plan depends on is only complete on the core/sortable line. These are the only three RUNTIME dependencies this MEU adds, and the only three that belong in `dependencies` — Test-Deps fails an entry found in devDependencies. MEU-49 also adds four DEV dependencies (TESTING_LIBRARY_PACKAGES, round-5 correction R4-F5); the two sets are registered and gated separately so a package can never drift into the wrong section. docs/build-plan/10-queue-card-ui.md:47 continues to forbid a virtualization dependency."
+  },
+  "DND_DEP_GUARD_SUPERSESSION": {
+    "value": "ui/tests/unit/queue-card.test.ts:807 currently asserts `expect(names.filter((name) => /dnd-kit|react-virtual/.test(name))).toEqual([])`. MEU-49 NARROWS the regex to /react-virtual/ and leaves an in-place supersession comment naming MEU-49 and citing docs/build-plan/10-queue-card-ui.md:254-256. The virtualization half of the guard stays armed.",
+    "source": "Local Canon - the same in-place supersession pattern already used at queue-card.test.ts:813-818 for MEU-45.",
+    "note": "This is spec supersession, not test-weakening (G36_RULE): the spec that created the guard is the same spec that schedules its retirement at MEU-49. Deleting the assertion outright would be a violation; narrowing it and keeping the still-true half is not. DND_DEP_GUARD_CHECK is the executable form of this rule."
+  },
+  "DND_DEP_GUARD_CHECK": {
+    "value": {
+      "file": "ui/tests/unit/queue-card.test.ts",
+      "retired": "/dnd-kit|react-virtual/",
+      "narrowed": "/react-virtual/.test(name)",
+      "armed": ".toEqual([])",
+      "marker": "MEU-49",
+      "citation": "10-queue-card-ui.md:254-256",
+      "comment_window": 12
+    },
+    "source": "Local Canon - the executable form of DND_DEP_GUARD_SUPERSESSION, whose prose the round-6 gate did not read.",
+    "note": "Added round 7 (R6-F1). Every field is a LITERAL substring, never a regex, so the guard cannot be satisfied by a lookalike that merely mentions react-virtual somewhere. `retired` must be absent; `narrowed` and `armed` present; and a comment line within `comment_window` lines of the narrowed assertion must carry both `marker` and `citation`. The window is what makes in-place executable - the MEU-45 precedent comment sits 6 lines from the assertion it supersedes, so a comment parked at the top of a 900-line file is not the pattern this cites. Test-Deps asserts this in BOTH modes because row 2, not row 2a, owns AC-49.2."
+  },
+  "REORDER_WIRE_CONTRACT": {
+    "value": "PUT /downloads/reorder (packages/api/src/avkit_api/routes/downloads.py:210-217) and PUT /conversions/reorder (routes/conversions.py:232-239) accept `{ job_ids: string[] }` - a COMPLETE permutation of the queue - and 422 on any other body. There is no `{id, direction}` shape.",
+    "source": "Local Canon - direct file read, re-verified 2026-09-03.",
+    "note": "MEU-49 adds NO new write surface and NO backend change. A drag produces the same absolute permutation the keyboard path already produces; only the function that computes it gains a second entry point (REORDER_BODY_MODULE)."
+  },
+  "REORDER_SCHEMA_OWNER": {
+    "value": "packages/api/src/avkit_api/schemas/downloads.py:79 `ReorderIn(ApiModel)` and schemas/conversions.py:61 `ConversionReorderIn(ApiModel)`; both inherit `model_config = ConfigDict(extra=\"forbid\")` from schemas/common.py:8-11.",
+    "source": "Local Canon - direct file read 2026-09-03. Satisfies AGENTS.md section Boundary Input Contract items 2, 4 and 5 with no code change."
+  },
+  "REORDER_BODY_MODULE": {
+    "value": "ui/src/renderer/src/lib/queue/reorder-body.ts - NEW module, sole owner of the permutation builders. Exports `buildReorderBody(ids, selectedId, 'up'|'down'|'top'|'bottom')` (moved verbatim from convert-controls.ts:112) and `buildReorderBodyToIndex(ids, movedId, targetIndex)` (new). convert-controls.ts and download-controls.ts each re-export `buildReorderBody` from this module so every existing import site and the command palette keep working unchanged.",
+    "source": "Local Canon - AGENTS.md section Code Quality (single owner). Today the function is duplicated byte-for-byte at convert-controls.ts:112 and download-controls.ts:104; a drag needs a third variant, and tripling a triplicate is the defect.",
+    "note": "Negative oracle for the de-duplication: a unit test asserts `convertControls.buildReorderBody === downloadControls.buildReorderBody` (reference identity). Two copies that merely behave alike would fail it."
+  },
+  "MOVE_TO_INDEX_CONTRACT": {
+    "value": "`buildReorderBodyToIndex(ids, movedId, targetIndex)` returns `{ job_ids }` = `arrayMove(ids, oldIndex, targetIndex)` where `oldIndex = ids.indexOf(movedId)` and `targetIndex` is the FINAL index the moved row must occupy, resolved against the PRE-MOVE array as `targetIndex = ids.indexOf(over.id)` (dnd-kit's standard sortable pattern: both indices are found in the original item array and handed to arrayMove unchanged). The implementation removes then re-inserts, but `targetIndex` is NOT an index into the post-removal array - it is the final index. WORKED EXAMPLES, both mandatory as unit assertions: forward `[A,B,C,D]`, move A over C -> oldIndex 0, targetIndex 2 -> `[B,C,A,D]` (NOT `[B,A,C,D]`); backward `[A,B,C,D]`, move D over B -> oldIndex 3, targetIndex 1 -> `[A,D,B,C]`; adjacent forward `[A,B,C]`, move A over B -> `[B,A,C]`. Out-of-range targetIndex clamps to [0, len-1]. An unknown movedId returns `{ job_ids: [...ids] }` unchanged - the same defensive shape buildReorderBody already uses for an unknown selectedId. targetIndex === current index returns the identity permutation, and the caller MUST NOT issue a PUT for an identity permutation.",
+    "source": "Research-backed - dnd-kit sortable's own arrayMove(items, oldIndex, newIndex) semantics, reconciled with the existing buildReorderBody unknown-id branch (convert-controls.ts:112-118).",
+    "note": "The existing 4-value direction union cannot express an arbitrary drop target, which is why a second builder exists rather than a fifth direction. The earlier wording ('an index into the array after removal') was ambiguous enough to admit `[B,A,C,D]` for the forward example and was corrected in plan review round 1 (F2)."
+  },
+  "DND_OPT_IN_RULE": {
+    "value": "Drag is opt-in per QueueList consumer via a single new optional prop `onMoveToIndex?: (id: string, targetIndex: number) => void`. When it is undefined QueueList renders NO DndContext, NO SortableContext, NO drag handle and NO live region - byte-for-byte the current DOM. When it is defined, all four appear.",
+    "source": "Local Canon - docs/build-plan/10-queue-card-ui.md:254 (\"Drag is an enhancement layered on the keyboard path, never the only path\") + the existing QueueList optional-affordance pattern (onDropFiles/onBrowse gate the drop strip at QueueList.tsx:125).",
+    "note": "This is what lets MEU-55 (Transcript) inherit reorder by adopting QueueList and passing one prop (.agent/context/grouping/2026-09-03-p11-page-layout-session-grouping.md:134-136 assigns the QueueList adoption to MEU-55 and :84 names MEU-49 as its dependency; MEU-56/TTS inherits the shared ProgressBar, not QueueList (.agent/context/meu-registry.md:150), so no TTS reorder inheritance is claimed here). It is also why the transcript/tts E2E specs must stay green untouched."
+  },
+  "DND_HANDLE_CONTRACT": {
+    "value": "The handle is the canonical `Button` component (ui/src/renderer/src/components/ui/Button.tsx) rendered as the FIRST child inside the QueueCard container, used as `<Button variant=\"ghost\" size=\"sm\" icon ref={setActivatorNodeRef} {...attributes} {...listeners} />` - Button already forwards its ref to the underlying `<button>` (Button.tsx:37-50) and spreads `...rest` onto it (Button.tsx:62-68), so no bare `<button>` and no sixth variant is needed. It carries: data-testid from DND_TESTIDS, an accessible name of `Reorder <job title>`, and `touch-action: none` via the `touch-none` utility class (DND_TOUCH_ACTION_RULE). It is a SIBLING of the card's other zones, never an ancestor and never a descendant of the activatable title region.",
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:254 (\"a 6-dot drag handle at the far left on hover\") + Research-backed (dnd-kit useSortable docs: setActivatorNodeRef on the handle is what gives dnd-kit automatic focus restoration after a keyboard drag) + Local Canon (QueueCard.tsx:1-13 sibling-not-descendant rule, WCAG 2.2 SC 4.1.2).",
+    "note": "The icon is lucide-react `GripVertical` (6 dots), already a dependency. A div with listeners would be unreachable by keyboard and would make the spec's own live-region announcements unreachable by the users they exist for. Plan review round 1 (F6) corrected an earlier bare-`<button>` design that waived G34 without a source-backed exception; Button's existing ghost/sm/icon surface covers the handle exactly."
+  },
+  "DND_HOVER_REVEAL_RULE": {
+    "value": "\"On hover\" is implemented as an OPACITY-ONLY reveal: the handle is always mounted, always focusable and always in the accessibility tree; it is `opacity-0` and becomes `opacity-100` on `group-hover:`, `group-focus-within:` and its own `focus-visible:`. It is NEVER `aria-hidden`, NEVER `display:none`, NEVER `hidden`, and its width never animates.",
+    "source": "Spec - 10-queue-card-ui.md:254 (\"on hover\") reconciled with G33_RULE (animate transform/opacity only) and WCAG 2.2 SC 2.4.7 Focus Visible.",
+    "note": "A display-toggled handle is invisible to keyboard and touch users, who are exactly the population WCAG_DRAG_RULE protects. Opacity also keeps layout stable, so no row reflows on hover."
+  },
+  "DND_TOUCH_ACTION_RULE": {
+    "value": "The drag handle MUST carry `touch-action: none` (Tailwind `touch-none`). Asserted twice: a unit assertion that the handle className contains `touch-none` and none of `touch-auto`/`touch-pan-y`, and an E2E assertion that `getComputedStyle(handle).touchAction === 'none'` on the rendered Electron page.",
+    "source": "Research-backed - dnd-kit PointerSensor documentation: under Pointer Events a touch drag inside a scrollable list is claimed by the browser's native scroll gesture unless touch-action is disabled on the activator, and preventDefault on the initiating touchmove is not reliable. dnd-kit recommends touch-action: none on a dedicated activator rather than a TouchSensor + delay constraint.",
+    "note": "Added in plan review round 1 (F3). Without it the mouse E2E passes while touch drag scrolls the list instead of reordering - a failure the planned pointer driver cannot expose, which is why the contract is asserted structurally (class + computed style) rather than by simulating a touch drag."
+  },
+  "DND_SENSOR_CONFIG": {
+    "value": "PointerSensor with `activationConstraint: { distance: 5 }`, plus KeyboardSensor with `coordinateGetter: sortableKeyboardCoordinates`. TouchSensor is NOT configured: PointerSensor covers touch through pointer events, but ONLY in combination with DND_TOUCH_ACTION_RULE on the activator - the two are a single contract and neither ships without the other.",
+    "source": "Research-backed - dnd-kit docs recommend a distance/delay activation constraint so a click on a control inside a draggable is not stolen by drag activation; `sortableKeyboardCoordinates` is the sortable preset's required coordinate getter.",
+    "note": "dnd-kit does NOT use the HTML5 drag-and-drop API - it is pointer-events only. That fact is what makes DRAG_STATE_ISOLATION_RULE testable."
+  },
+  "DND_AUTOSCROLL_CONFIG": {
+    "value": "DndContext is given `autoScroll={{ threshold: { x: 0, y: 0.05 }, acceleration: 5 }}`. The library default (`threshold {x:0.2,y:0.2}`, `acceleration: 10`) treats the outer fifth of the nearest scroll ancestor as a trigger band; when that ancestor is the page shell's `<main>` and the queue sits at its bottom, a 20px pointer nudge drives `scrollTop` to its maximum before the pointer reaches the next row.",
+    "source": "Research-backed - dnd-kit auto-scroller options (`threshold`, `acceleration`) are the documented control surface; issue #1414 records that the relative default is too aggressive on large containers. Measured 2026-09-11: `scrollTop` went 0 -> 100 -> 149 (max) within two 10px pointer steps; after this config, probe PUT body was exactly AC-49.25 (`dl-2,dl-3,dl-1,dl-4`).",
+    "note": "Execution-phase correction X3 (with QUEUE_SCROLL_CONTAINER_RULE). This is the pointer half; it cannot reach KeyboardSensor.handleKeyDown's clamp."
+  },
+  "QUEUE_SCROLL_CONTAINER_RULE": {
+    "value": "The nearest scroll ancestor dnd-kit measures must be a bounded box whose rows start at its top, not the page shell's `<main>`. Concretely: (1) the page `<section>` carries `h-full min-h-0` so it fills `<main>` and `<main>` stops overflowing; (2) `download-queue-region` / `convert-queue-region` carries `flex-1 min-h-[20rem]`; (3) `overflow-auto` lives on a per-page wrapper around `QueueList` only, NEVER on QueueList `listClasses` (that node is `relative` and is the containing block for the file-drop overlay at `absolute inset-0`; scrolling it parks the overlay in the overflow, and changing `listClasses` also breaches DND_OPT_IN_RULE's byte-for-byte non-drag DOM); (4) the controls above the queue (help card, SABR/task block, add form, status and error banners) sit in ONE `flex min-h-0 flex-col gap-4 overflow-auto` pane, and the summary + processor + toolbar footer sits in ONE `flex shrink-0 flex-col gap-4` wrapper. Clause (4) decides WHICH pane absorbs the column's height deficit. The page column is oversubscribed at the app's own default window, so some pane must yield; with every child at the flex default `shrink: 1` the deficit is split by content height and the queue is squeezed to ~92px, which re-arms the very clamp clauses (1)-(3) exist to disarm. QueueSelectionHeader, BulkActionBar and BulkResultToast stay OUTSIDE the scroller (USER_LOCKS lock 1). KeyboardSensor.handleKeyDown scrolls-and-returns when `canScrollY && clamped !== requested`; for ArrowDown-by-one on a 62px pitch the wrapper clientHeight must be >= ~124px or AC-49.27 stays red one level down.",
+    "source": "Local Canon - measured 2026-09-11 in Electron (MAIN rect 40-739, rows 548-788, all below midpoint 389.5); KeyboardSensor.handleKeyDown in @dnd-kit/core clamps then scrollTo. Human-approved 2026-09-11 (proceed with Opus-refined option 1) and 2026-09-16 (proceed with X4 rather than defer). Re-measured 2026-09-16 after clause (4): downloader scroller clientHeight 280 == scrollHeight 280 and `<main>` 699 == 699, so BOTH ancestors report maxScroll 0, `canScrollY` is false at every level, and an instrumented keyboard drag recorded zero `scrollTo` calls.",
+    "note": "Execution-phase corrections X3 (clauses 1-3) and X4 (clause 4). Not an AC: the post-Red unit assertions in downloader-page.test.ts and convert-page.test.ts lock the class strings so MEU-52 cannot paste the mockup's old §04 string without failing the suite. Phase 11 grouping names this chain as an input, not a subject. The 20rem floor is sized so all four seeded rows fit without scrolling (240px downloader / 278px convert content in a 280px box) and still clears 2x pitch once BulkActionBar mounts."
+  },
+  "DND_ANNOUNCEMENT_CONTRACT": {
+    "value": "DndContext receives an `announcements` object with all four handlers (onDragStart, onDragOver, onDragEnd, onDragCancel) plus `screenReaderInstructions`. Every announcement is POSITION-based and 1-INDEXED (\"Moved Foo to position 3 of 7\"), never index-based, and always names the job title. onDragCancel announces that the item returned to its starting position.",
+    "source": "Spec - 10-queue-card-ui.md:255 (\"with ARIA live-region announcements\") + Research-backed (dnd-kit accessibility docs explicitly recommend position-based over index-based wording for screen-reader users).",
+    "note": "The four handlers are the spec's deliverable, not an implementation detail: omitting onDragCancel leaves a screen-reader user with no confirmation that Escape undid the drag."
+  },
+  "DND_LIVE_REGION_LOCATOR": {
+    "value": "page.locator('[id^=\"DndLiveRegion\"]')",
+    "source": "Research-backed - @dnd-kit/accessibility <LiveRegion> renders a visually-hidden element whose id comes from useUniqueId('DndLiveRegion') and whose role is `status`.",
+    "note": "MUST NOT be located by role=status. QueueList already renders `data-testid=\"queue-drop-overlay\"` with role=\"status\" (QueueList.tsx:166-177), so a role-based locator would be ambiguous the moment file-drop and drag coexist on the downloader page. This collision is the single most likely source of a flaky E2E in this MEU."
+  },
+  "DRAG_STATE_ISOLATION_RULE": {
+    "value": "A row drag must NOT put the list into the file-drop state: while a card is being dragged, the QueueList container's `data-drag-state` attribute stays `idle` and `data-testid=\"queue-drop-overlay\"` is absent from the DOM. Conversely a file drag over the list must not start a row drag.",
+    "source": "Local Canon - QueueList.tsx:120,130 (useDropZone spreads {...handlers} and data-drag-state onto the same container that must now host DndContext) + Research-backed (dnd-kit uses pointer events, the drop zone uses native HTML5 dragenter/dragover/drop, so the two event families do not overlap).",
+    "note": "Testable BECAUSE the two use different event families - this AC proves the isolation rather than assuming it. DndContext is placed as a WRAPPER around the drop-zone container, not merged into it, so neither prop set is displaced."
+  },
+  "REORDER_SINGLE_FLIGHT_RULE": {
+    "value": "EVERY queue permutation mutation on a queue - kebab Move up/down/top/bottom, Alt+Arrow, drag drop, and the WHOLE bulk reorder fold - passes through ONE synchronous gate before it reads the current order or builds a body. New module `ui/src/renderer/src/lib/queue/reorder-single-flight.ts` exports TWO things: (1) `createSingleFlight(): { tryAcquire(): boolean; release(): void; readonly held: boolean }`, a closure over a plain boolean (NOT React state); and (2) `acquireQueueReorder(key: ReorderQueueKey): (() => void) | null`, the queue-scoped registry the pages and useQueueBulk actually call - a MODULE-LEVEL Map keyed by REORDER_QUEUE_KEYS holding one createSingleFlight() instance per queue, returning a one-shot release callback on acquire and `null` when that queue's gate is already held. LIFETIME: the registry is module-level, NOT a per-page `useRef`. A route unmount does not cancel an in-flight PUT, so a ref-held gate is destroyed on navigation while the request it was guarding is still on the wire, and the remounted page immediately grants a second permutation computed from a pre-mutation order - exactly the last-write-wins overwrite this rule exists to prevent. Module scope outlives the component; keying by queue keeps the two queues independent. OWNERSHIP OF THE BULK FOLD: `useQueueBulk.moveSelected()` is the only caller that can see the whole fold - bulkReorder's N sequential requests, the single refetch and the selection release all live inside its `run()` closure and `moveSelected` returns `void` (use-queue-bulk.ts:93, :96-107) - so no page-level caller can wrap it from outside. The gate is therefore acquired INSIDE useQueueBulk, which takes a new required `queueKey` option, and released in a `finally` after the refetch. That is why `ui/src/renderer/src/lib/queue/use-queue-bulk.ts` is a modified file of this MEU. CONTRACT: an entry point calls `acquireQueueReorder(key)` FIRST; on `null` it returns immediately without reading `items`, without building a body and without issuing a PUT; on a release callback it proceeds and invokes that callback in a `finally` that runs after the reconcile completes or the request rejects. Feedback while the gate is held is EQUAL across every entry point per REORDER_FEEDBACK_TIER - no path is silently inert. REACTIVE READ SURFACE (round-5, R4-F3): a gate that only exposes tryAcquire/release can be OBEYED by the pages but cannot be RENDERED, so REORDER_FEEDBACK_TIER clause (4) would be unimplementable — nothing tells a mounted card that the queue's gate was taken by some other card's kebab. The module therefore also exports (3) `isQueueReorderHeld(key): boolean` and (4) `subscribeQueueReorder(key, listener): () => void`, which invokes every listener synchronously on each acquire and release. Those two are the external-store pair `useSyncExternalStore` consumes. THE HOOK ITSELF DOES NOT LIVE HERE: `reorder-single-flight.ts` has NO React import, because `download-commands.ts` and `convert-commands.ts` are plain-TS command modules with no React import of their own and they call `acquireQueueReorder` directly - putting `useSyncExternalStore` in the store would drag React into the command layer purely so a component could subscribe. The hook is REORDER_HELD_HOOK, its own tiny module, which is the standard split for this pattern: a framework-free store plus a one-line React binding. `getSnapshot` returns a boolean, so it is referentially stable by construction and cannot cause the infinite re-render loop useSyncExternalStore throws on for freshly-allocated snapshots. Because the store is the same module-level Map the acquire path writes, a component that unmounts and remounts re-subscribes to the LIVE gate state rather than to a fresh false — which is the same reason the registry is module-level in the first place.",
+    "source": "Local Canon - forced by REORDER_WIRE_CONTRACT: every reorder PUT is an ABSOLUTE permutation computed from the order the caller can see. Two overlapping mutations therefore both compute a valid permutation from the same pre-mutation order, and whichever response lands last silently overwrites the other. Verified against the live pages: `run()` sets `busy` via React state (DownloaderPage.tsx:293-304, ConvertPage.tsx:354-365) which is asynchronous and is never consulted by `reorder()` (DownloaderPage.tsx:312-322), so nothing today serializes these paths. The module-level lifetime and the useQueueBulk ownership are forced by a direct read of ui/src/renderer/src/lib/queue/use-queue-bulk.ts:80-110 (the void-returning fold), re-verified 2026-09-03.",
+    "note": "Added in plan review round 1 (F1); lifetime and bulk-fold ownership corrected in round 4 (R3-F1). The round-1 wording said 'each page holds one instance in a ref' and named the bulk fold without saying who acquires for it - two gaps the round-3 reviewer was right to reject: a ref does not survive unmount, and no page-level wrapper of a void-returning hook callback exists. ALT_ARROW_SUPPRESSION_RULE is NOT sufficient on its own: it only silences Alt+Arrow on the card that is locally dragging, and does nothing about an already in-flight keyboard/kebab/bulk PUT whose response lands after a drag PUT. Suppression handles the input-time collision; this gate handles the request-time race. Both ship. Proved by AC-49.31-49.35 and AC-49.37. Round-5 (R4-F3): the reactive surface is added because round 4 asserted a rendered consequence (AC-49.35, AC-49.38) of a state no component could observe. Round-6 (R5-F1): round 5 put the HOOK in this module too, which contradicted task row 4a's \"the module is pure and has no React import\" - one artifact forbade the very export another required, so following either one broke the other. The store/hook split resolves it in the direction that keeps the command layer React-free, and every artifact now names REORDER_HELD_HOOK for the binding and this rule for the store. Adding it here rather than in a page-local useState is deliberate: page-local state dies on unmount and reintroduces exactly the remount hole AC-49.37 exists to close."
+  },
+  "REORDER_FEEDBACK_TIER": {
+    "value": "A drag drop is a state-changing mutation and is assigned the SAME feedback tier the existing kebab/Alt+Arrow reorder already uses on both pages: (1) the page `busy` flag is set for the duration via `run()`, (2) a rejection surfaces through the page's existing `error` banner and the list is NOT left optimistically reordered, (3) the list reconciles once from the PUT response, and (4) while REORDER_SINGLE_FLIGHT_RULE's gate is held for that queue, EVERY competing reorder entry point presents the same unavailable state rather than a silent no-op - each drag handle renders `disabled`, every kebab reorder item that is PRESENT renders `disabled` (on a middle card that is all four — Move up / Move down / Move to top / Move to bottom; on the first or last card it is the two that exist, and the other two stay ABSENT), and Alt+Arrow is inert on the same guard ALT_ARROW_SUPPRESSION_RULE already uses for the dragging case.",
+    "source": "Local Canon - docs/gui-element-reference.md (the T0-T4 tier table G35 cites) DOES NOT EXIST in this tree; see GUI_ENFORCEMENT_FALLBACK. The tier is therefore assigned by the live precedent for the same mutation class: DownloaderPage.tsx:293-322 and ConvertPage.tsx:354-385.",
+    "note": "Added in plan review round 1 (F6/G35); clause (4) widened from drag handles to full entry-point parity in round 4 (R3-F1). The earlier plan text waived G35 on the ground that a drag is a single mutation; G35 applies to every state-changing action regardless of cardinality, so the tier is assigned explicitly instead of waived. Parity is the point: an affordance that stays enabled while the gate is held and swallows the click is precisely the dead control NO_DEAD_CONTROL_RULE forbids, and having it true for the handle but false for the kebab is the same defect on a different path. Clause (4) is the visible half of the F1/R3-F1 fix and is proved by AC-49.38. Round-5 (R4-F3): clause (4) said 'each kebab reorder item ... renders disabled', which on a boundary row is impossible AND contradicts the component it constrains. QueueCardMenu.tsx:1-13 rule 1 is 'Unavailable actions are absent, never disabled' and the builder pushes move-up/move-top only `if (!isFirst && handler !== undefined)` and move-down/move-bottom only `if (!isLast && ...)`, so the first card has two reorder items and never four. The clause now binds to the items that are present, which keeps the menu's length an honest signal of what is possible while still leaving no live-looking control that swallows a click."
+  },
+  "ALT_ARROW_SUPPRESSION_RULE": {
+    "value": "While `isDragging` is true for a card, that card's onCardKeyDown must not act on Alt+ArrowUp / Alt+ArrowDown - it returns without calling onMoveUp/onMoveDown.",
+    "source": "Research-backed - the keyboard reorder path issues a PUT computed from the LAST COMMITTED order (REORDER_WIRE_CONTRACT). During a drag the visible order is uncommitted, so an Alt+Arrow fired mid-drag would fold a permutation from a stale base and clobber the drop that follows. Same class of defect as the reconciling-reorder finding fixed in exec review round 1 of the migration project.",
+    "note": "Suppression, not removal. Alt+Arrow remains the equal reorder path (10-queue-card-ui.md:57) whenever no drag is in flight."
+  },
+  "WCAG_DRAG_RULE": {
+    "value": "WCAG 2.2 SC 2.5.7 Dragging Movements (AA): any function operable by a dragging movement must have a single-pointer alternative. The alternative here already exists and must remain reachable after this MEU: the kebab menu's Move up / Move down / Move to top / Move to bottom items, and the Alt+Arrow keyboard path.",
+    "source": "Research-backed - W3C WCAG 2.2 SC 2.5.7 (AA); the drag-handle-plus-menu pattern is the canonical list-reorder conformance technique.",
+    "note": "This is why MEU-49 may not replace, hide or reorder the existing kebab reorder items. An AC asserts they are still present and still functional on a page that also has drag."
+  },
+  "JSDOM_RECT_RULE": {
+    "value": "jsdom returns an all-zero getBoundingClientRect, and the sortable preset's keyboard coordinate getter reads rects to compute the next position. Unit tests therefore assert the DOM CONTRACT (handle present, focusable, correct accessible name, aria attributes, announcement strings produced by the exported announcement factory) and the PURE builders, and they do NOT attempt to simulate a completed drag in jsdom.",
+    "source": "Research-backed - known jsdom layout limitation; patching getBoundingClientRect per test is possible but produces a test that proves the patch, not the product.",
+    "note": "The real drag is proved once, in Playwright against real Electron, per E2E_DRAG_DRIVER. This split is deliberate and must be stated in the handoff so a reviewer does not read it as missing coverage."
+  },
+  "E2E_DRAG_DRIVER": {
+    "value": "Playwright drives the drag with page.mouse.down() / page.mouse.move(x, y, { steps: 10 }) / page.mouse.up() against the handle's bounding box. locator.dragTo() is NOT used.",
+    "source": "Research-backed - dnd-kit's PointerSensor needs intermediate pointermove events to cross DND_SENSOR_CONFIG's 5px activation distance; dragTo() emits too few and is widely reported unreliable against dnd-kit.",
+    "note": "At least one move step must occur before the pointer reaches the target, or activation never fires and the test silently asserts nothing."
+  },
+  "DND_TESTIDS": {
+    "value": [
+      "queue-card-drag-handle"
+    ],
+    "source": "Local Canon - ui/tests/e2e/test-ids.ts registry; naming follows the existing queue-card-* family.",
+    "note": "One new id. The live region is NOT given a testid - it is dnd-kit-owned DOM and is located by DND_LIVE_REGION_LOCATOR."
+  },
+  "CANON_CLAUSE_NON_CHANGE": {
+    "value": "ui/tests/unit/queue-canon.test.ts:257 asserts the clause ['OUT_OF_SCOPE dnd', /dnd-kit/i] against docs/build-plan/10-queue-card-ui.md. It is NOT modified by this MEU and requires no spec edit: the regex is satisfied by spec lines 34 and 254-256, which name dnd-kit as MEU-49's own deliverable, independently of the non-goal row at line 45.",
+    "source": "Local Canon - direct read of queue-canon.test.ts:243-257 and 10-queue-card-ui.md:34,45,254-256, verified 2026-09-03.",
+    "note": "Recorded explicitly so the reviewer does not read the untouched clause as an overlooked landmine. Its label is now stale prose, but the build-plan file is a DATED SPEC, not a status tracker - completion status is owned by .agent/context/meu-status.yaml. Rewriting spec history to match a shipped MEU is the drift the MEU SSOT exists to prevent."
+  },
+  "TESTING_LIBRARY_ADOPTION": {
+    "value": "MEU-49 ADOPTS the standard Testing Library stack and DELETES the hand-rolled shim. Concretely: (1) add TESTING_LIBRARY_PACKAGES to ui/package.json devDependencies and ui/package-lock.json; (2) DELETE ui/tests/unit/helpers/user-event.ts outright — it is not kept as a re-export shim, because two userEvent surfaces in one suite is the fork this change exists to prevent; (3) recode the TL_MIGRATION_FILES onto `render`/`screen` from @testing-library/react, replacing the hand-rolled `createRoot` + `act` mount blocks; and (4) in the TL_INTERACTION_FILES subset, drive every interaction through `userEvent.setup()` from @testing-library/user-event with every call awaited. THE OBSERVABLE OUTCOME, stated so the gate can BE the contract rather than a proxy for it (round-6, R5-F3) - after row 2a, every TL_MIGRATION_FILES entry (a) imports @testing-library/react, (b) calls `render(`, (c) queries through `screen`, (d) contains NO `react-dom/client` specifier and NO `createRoot`, and (e) does not import `act` from 'react' (RTL's own `act` re-export is fine; the point is that the retired manual-mount surface is gone, not that the identifier is banned); and every TL_INTERACTION_FILES entry additionally (f) imports @testing-library/user-event and (g) calls `userEvent.setup()`. `createElement` stays ALLOWED and is not part of the retired surface: these are `.test.ts` files with no JSX, so `render(createElement(Component, props))` is the idiomatic RTL form in this suite, and all 14 files use it today. After this MEU, `rg \"helpers/user-event\" ui/` returns no hits, `rg \"react-dom/client\" ui/tests/unit` returns no hits, and G37_RULE is satisfied LITERALLY rather than by intent. No exception is claimed and none is needed.",
+    "source": "Human-approved — user direction, 2026-09-04, verbatim: \"G37 / OQ-5 - No splits, web search and find out what would be the most optimal approach by way of what others have done in similar situation. There is no legacy, everything is net new, if the code needs to be replaced it can simply be removed and recoded into better shape.\" This is a USER_EXPLICIT chat message, the only provenance AGENTS.md accepts for that label; the round-2 use of the label had no such anchor and was correctly rejected as R3-F3. Research-backed on the HOW: the React Testing Library docs, the user-event v14 docs and the dnd-kit maintainers' testing guidance all converge on the same stack — @testing-library/react + user-event with `userEvent.setup()` per test, every method awaited, and no explicit act() wrapper (v14 handles it). This is what everyone else in this situation does; there is no second mainstream option to weigh.",
+    "note": "Supersedes the round-4 deferral entirely; OQ-5 is CLOSED, not carried. Three facts killed the deferral: (a) the helper's own docstring (ui/tests/unit/helpers/user-event.ts:4-7) says it exists ONLY because ui/package.json was byte-frozen by PAGE_ISOLATION_RULE's FROZEN_GLOBS in MEU-45–47 — and MEU-49 already unfreezes both manifests to add DND_PACKAGES (PACKAGE_FREEZE_EXPIRY), so the stated reason has expired on its own terms; (b) the blast radius is 14 files, not 54 (TL_MIGRATION_FILES); (c) the human directed no split. Round-6 (R5-F3): clauses (a)-(g) above replace a value that described the recode in prose while AC-49.39 and Test-Deps checked only the user-event import and setup call - so a file that kept its `createRoot` mount and gained one no-op `userEvent.setup()` satisfied both the gate and the exactly-439 count while delivering nothing. A migration gate that cannot see the migration is the false-pass, not a strictness question. Deferring would also have shipped MEU-49's own new drag/keyboard interaction tests on the shim and then rewritten them one session later — writing code to be replaced."
+  },
+  "PACKAGE_FREEZE_EXPIRY": {
+    "value": "PAGE_ISOLATION_RULE / FROZEN_GLOBS (2026-08-28-p10-queue-card-foundations/named-sets.json:428,564) byte-froze ui/package.json and ui/package-lock.json FOR THAT SESSION. That freeze expired with the foundations project and does not bind MEU-49, whose spec-mandated deliverable is a dependency addition.",
+    "source": "Local Canon - direct read of the foundations named-sets, 2026-09-03; the rule's own text scopes it to \"the whole session\".",
+    "note": "Round-5 (R4-F5) rewrote this note, which previously read \"Adopting @testing-library/user-event ... remains OUT OF SCOPE ... Only DND_PACKAGES are added.\" MEU-49 now adds DND_PACKAGES to `dependencies` AND TESTING_LIBRARY_PACKAGES to `devDependencies`, and DELETES ui/tests/unit/helpers/user-event.ts. The connection is direct rather than incidental: that helper's own docstring (:4-7) names this very freeze as the reason it exists instead of the real package. The freeze is gone, so the reason is gone, so the helper goes. See TESTING_LIBRARY_ADOPTION."
+  },
+  "E2E_RUN_COMMAND": {
+    "value": "`npm --prefix ui run test:e2e` (full run) and `npm --prefix ui run test:e2e -- --list` (case listing). `npm --prefix ui run <script>` executes the script with cwd = ui/, which is where playwright.config.ts lives. `npx --prefix ui playwright test` MUST NOT be used: --prefix changes package resolution but NOT the working directory, so Playwright loads no config, scans the Vitest unit files, exits 1 with 'Vitest failed to access its internal state' and reports 0 tests. Every E2E row also requires `ELECTRON_RUN_AS_NODE` cleared (E2E_SANDBOX).",
+    "source": "Live measurement 2026-09-03 on the unstarted tree: `npm --prefix ui run test:e2e -- --list` from the repository root exits 0 and prints 'Total: 73 tests in 12 files'; the npx --prefix form exits 1 with 0 tests. Script definition at ui/package.json:19.",
+    "note": "Added in plan review round 1 (F4) - the previously registered npx form could not have produced E2E evidence from the repository root at all, so every AC depending on it was unprovable."
+  },
+  "RED_PHASE_TEST_FILES": {
+    "value": [
+      "ui/tests/unit/reorder-body.test.ts",
+      "ui/tests/unit/reorder-single-flight.test.ts",
+      "ui/tests/unit/queue-dnd.test.ts",
+      "ui/tests/unit/queue-card.test.ts",
+      "ui/tests/unit/queue-primitives.test.ts",
+      "ui/tests/unit/downloader-page.behavior.test.ts",
+      "ui/tests/unit/convert-page.behavior.test.ts"
+    ],
+    "source": "The Vitest files task row 3 writes or extends. reorder-body.test.ts, reorder-single-flight.test.ts and queue-dnd.test.ts are NEW; the other four exist and gain MEU-49 cases. The E2E suites are excluded because their cases never appear in the Vitest report the Red oracle reads.",
+    "note": "queue-dnd.test.ts is new in plan review round 4 (R3-F2). The AC-49.16/49.17 announcement cases were previously appended to the EXISTING queue-primitives.test.ts; because they import the not-yet-created src/renderer/src/components/queue/queue-dnd.ts, that import kills collection for the whole file and would have removed its already-counted passing tests from numTotalTests, making RED_PHASE_ORACLE clause (b) (numTotalTests > VITEST_BASELINE_COUNT) unsatisfiable. Housing them in a NEW file means every uncollected file contributes 0 to the 439 baseline instead of subtracting from it. See VITEST_COLLECTION_FAILURE_SHAPE. Read by assert-red-phase.ps1 -Census, which requires every RED_PHASE_REQUIRED_ACS id to appear in one of these files and no .skip/.only/.todo anywhere in them (G36_RULE)."
+  },
+  "RED_PHASE_REQUIRED_ACS": {
+    "value": [
+      "AC-49.3",
+      "AC-49.4",
+      "AC-49.5",
+      "AC-49.6",
+      "AC-49.7",
+      "AC-49.8",
+      "AC-49.9",
+      "AC-49.10",
+      "AC-49.12",
+      "AC-49.13",
+      "AC-49.15",
+      "AC-49.16",
+      "AC-49.17",
+      "AC-49.18",
+      "AC-49.19",
+      "AC-49.20",
+      "AC-49.21",
+      "AC-49.22",
+      "AC-49.24",
+      "AC-49.31",
+      "AC-49.32",
+      "AC-49.33",
+      "AC-49.34",
+      "AC-49.35",
+      "AC-49.37",
+      "AC-49.38"
+    ],
+    "source": "Every unit-type AC task row 3 owns that must be RED — i.e. must be PROVEN to fail in the Red phase. 26 ids: AC-49.3-49.24 minus RED_PHASE_PRESERVATION_ACS, plus AC-49.31-49.35 and AC-49.37-49.38. The integration ACs AC-49.25-49.30 and AC-49.36 are excluded because Playwright cases do not appear in the Vitest report the oracle reads, and AC-49.1/49.2 are owned by task row 2, which lands before the Red phase.",
+    "note": "Narrowed from 27 to 24 in round 4 (R3-F2) by moving the three preservation ACs out; widened to 27 in round 5 (R4-F2) by adding AC-49.37, AC-49.38 and AC-49.39, which round 4 introduced as full ACs but never registered here — so the oracle would have passed a Red phase in which none of them was written. The self-test now asserts RED_PHASE_AC_OWNERSHIP's union == this set + RED_PHASE_PRESERVATION_ACS, which is what makes that class of omission impossible rather than merely fixed once. 'RED' does NOT mean 'appears among the failing assertions' for all 27: the oracle splits this set by RED_PHASE_AC_OWNERSHIP into ids in collecting files (clause e, must appear among failures) and ids in RED_PHASE_UNCOLLECTED_FILES (clause b2, proven by the whole file failing to collect for its own missing specifier). See RED_PHASE_AC_OWNERSHIP. Read by assert-red-phase.ps1 as the default -RequiredAcIds; -RequiredAcIds @() disables clause (e). EXECUTION-PHASE CORRECTION X1 (2026-09-04, task row 3): AC-49.39 was moved OUT of this set and into RED_PHASE_PRESERVATION_ACS, narrowing it to 26. AC-49.39 is the OUTCOME check of the G37 migration that task rows 2 and 2a deliver, and those rows land BEFORE row 3 by this set's own source note — so on the tree row 3 writes its tests against, all four of AC-49.39's clauses already hold (helper absent and unimported, 14/14 TL_MIGRATION_FILES on the RTL mount surface, 13/13 TL_INTERACTION_FILES on user-event, all four TESTING_LIBRARY_PACKAGES in devDependencies at their registered ranges — measured 2026-09-04). Demanding it fail is the R3-F2 defect one more time: the only way to satisfy clause (e) for AC-49.39 would be to un-migrate a file, i.e. to author a regression so an oracle could watch it. It stays fully enforced — written as a test, scanned by -Census, and green-gated at row 7."
+  },
+  "RED_PHASE_ORACLE": {
+    "value": "The Red-phase row is FAIL-CLOSED and may never `exit 0` unconditionally. Procedure: run `npm --prefix ui run test -- --reporter=json --outputFile=C:/Temp/av-kit/meu49-red.json` capturing $LASTEXITCODE, then assert ALL of: (a) the captured vitest exit code is NON-ZERO; (b) `numTotalTests` > VITEST_BASELINE_COUNT, proving the new tests were collected rather than silently skipped; (c) `numFailedTests` > 0; (d) EVERY failing test's `fullName` contains an `AC-49.` token - so a pre-existing unrelated failure or a dependency-guard failure cannot satisfy the checkpoint; (e) the set of AC ids appearing among the failures covers every unit AC in HANDOFF_AC_PATTERNS' MEU-49 range that row 3 is responsible for. The row exits non-zero if any assertion fails. `meu49-red.json` is retained as the FAIL_TO_PASS evidence artifact.",
+    "source": "Local Canon - AGENTS.md TDD protocol step 4 ('confirm they FAIL ... save failure output for FAIL_TO_PASS evidence') read together with the Execution Contract's evidence-first rule; enforceability requires an oracle, not a receipt.",
+    "note": "Added in plan review round 1 (F5). Clause (d) is why every new test's name MUST embed its own AC id (e.g. `AC-49.8 handle is the first child`) - the oracle reads test names, so the naming convention is load-bearing, not cosmetic."
+  },
+  "PLAN_GATE_SCRIPT": {
+    "value": "docs/execution/plans/2026-09-03-p10-queue-card-dnd/assert-plan-gates.ps1",
+    "gates": {
+      "Deps": "TWO modes, because two rows own two halves (round-6 R5-F2). `-Gate DepsPackages` (Mode Packages) is row 2: every DND_PACKAGES entry declared in ui/package.json `dependencies` at its REGISTERED range (JSON parsed, not substring-matched) and resolved in ui/package-lock.json as a node_modules/<name> entry whose major matches the range; every TESTING_LIBRARY_PACKAGES entry the same in `devDependencies`; a DND entry found in devDependencies or a TL entry in dependencies is a NAMED failure either way; the rejected @dnd-kit/react and react-virtual absent from every dependency section; @testing-library/jest-dom/vitest imported from a setup file; and DND_DEP_GUARD_CHECK satisfied in ui/tests/unit/queue-card.test.ts (round-7 R6-F1 - row 2 owns AC-49.2, and without this the gate passed a tree whose named guard deliverable was absent). `-Gate Deps` (Mode Full) is row 2a: all of the above PLUS the TESTING_LIBRARY_ADOPTION half - shim deleted and unimported, the TL_INTERACTION_FILES / TL_MOUNT_ONLY_FILES partition of TL_MIGRATION_FILES, the per-file mount predicates and the retired-surface rejections.",
+      "E2eCensus": "row 9 - every E2E_REQUIRED_CASES AC id appears inside a `test(` title in its NAMED spec file; static `test(` count across ui/tests/e2e/*.test.ts at or above E2E_POST_MEU_STATIC_FLOOR; every DND_TESTIDS id registered in ui/tests/e2e/test-ids.ts; zero `dragTo(` uses (E2E_DRAG_DRIVER).",
+      "BuildPlanAudit": "row 11 - PHASE_EXIT_ASSERTIONS landed: .agent/context/meu-status.yaml carries MEU-49 with status complete, no stale pending/remaining prose survives in the status YAML or either generated file, docs/BUILD_PLAN.md's Phase 10 row reads Completed, and its Next pointer names Phase 11 / MEU-50.",
+      "Unchecked": "H1-1 - every task.md row ABOVE the H1-1 row is `[x]` or a valid `[B]`; `[ ]` and `[/]` both fail; a `[B]` row must carry a VALIDATION_RECEIPT_DIR receipt path or a named follow-up. Scoped above its own row because H1-1 and every later closeout row are legitimately open while it runs.",
+      "ApiSkip": "H1-4 - `git status --porcelain -- packages/api` is empty, with stderr captured SEPARATELY so a git warning can never be read as a modified file, and each surviving line validated against the porcelain v1 shape; the -ReceiptPath pytest receipt records no non-zero failure/error count. `0 failed` does not trip it.",
+      "Reflection": "H2-2 - every REFLECTION_MARKERS entry appears in REFLECTION_FILE.",
+      "Metrics": "H2-3 - METRICS_FILE contains a table row for METRICS_SLUG and that row carries every METRICS_ROW_MARKERS entry.",
+      "CommitDraft": "H2-5 - the COMMIT_DRAFT_MARKERS path exists and is non-empty, its subject line is within max_subject_chars, it carries every `required` marker and none of the `forbidden` ones. It does NOT commit and does not authorise a commit."
+    },
+    "source": "Local Canon - ABSENT_VALIDATOR_RULE: no repo-level equivalent exists for any of these eight checks. Each gate reads its literals (package names and ranges, floors, AC-to-file maps, marker lists, paths) from this file rather than restating them.",
+    "note": "Added in plan review round 1 self-review; six gates hardened and two added in round 4 (R3-F4/R3-F5). These rows previously carried their validation as an inline `pwsh -NoProfile -Command \"$var=...\"` payload, which is not executable - see SHELL_EXPANSION_RULE. Round 3 found that five of the six then-existing gates were satisfied by the UNSTARTED tree - substring-matching a package name, asserting a PRE-MEU floor, grepping only the two generated status files, scanning task.md rows that cannot yet be checked, and merging git's stderr into its porcelain output - so passing them proved nothing. Each is now a predicate the unstarted tree FAILS. The -SelfTest fixture is what proves each gate passes on a well-formed tree and fails on each defect shape; task row 12 runs it before first live use."
+  },
+  "SHELL_EXPANSION_RULE": {
+    "value": "No task row may embed a $-variable inside a `pwsh -NoProfile -Command \"...\"` payload. The OUTER shell expands $var inside the double-quoted argument before the inner pwsh parses it, so the child receives `=@(Select-String ...)` and dies with `The term '=@' is not recognized` - identical under a PowerShell outer shell and a bash outer shell. Multi-statement or variable-bearing logic goes in a plan-local `-File` script instead; `-Command` is reserved for a single variable-free expression. The outer `$code=$LASTEXITCODE; ...; exit $code` tail is unaffected because the outer shell is the one that evaluates it.",
+    "source": "Research-backed - reproduced 2026-09-03 with a direct probe under both outer shells; the observed failures were `The term '=@' is not recognized as a name of a cmdlet` and `ParserError: Missing statement after '=' in hash literal`.",
+    "note": "A gate that always fails for the wrong reason is as useless as one that always passes; both hide the condition they were written to detect. AGENTS.md PRIORITY 0 mandates the `*>` redirect and the immediate $LASTEXITCODE capture but says nothing about the inner payload, which is why the pattern survived three plans."
+  },
+  "CORRECTION_CENSUS": {
+    "value": "docs/execution/plans/2026-09-03-p10-queue-card-dnd/run-correction-census.ps1",
+    "contract": "Every literal, term, count, set, threshold and predicate changed by a review-correction pass is swept over BOTH plan files as a fixed string, in BOTH directions (old value and new value), plus hand-declared semantic variants: rg -F -n --no-heading --with-filename -e <value> -- <plan> <task>. -e and the -- separator are mandatory because several swept values start with a dash and would otherwise be parsed as rg flags. rg exit 0 = matched, 1 = no match (both valid results); only exit > 1 aborts. Every receipt is untruncated - no head, no Select-Object -First, no tee.",
+    "receipts": "C:/Temp/av-kit/census/census-<slug>-{old,new,variantN}.txt, one per sweep, plus the consolidated C:/Temp/av-kit/census/census-index.txt.",
+    "source": "Local Canon - .agent/workflows/plan-corrections.md:170-220 (Step 5c) and .agent/workflows/plan-critical-review.md:256 (PR-6), which makes the census receipt plus a per-hit disposition log a pre-verdict precondition on review round 2 and later.",
+    "note": "Plan-review-time tool, NOT an execution gate: no task row depends on its census output. Task row 12 nevertheless runs its -SelfTest with the other five plan-local scripts (round-3 correction: excluding it left the only unverified script in the folder). It earned its cost on its first run by catching S4 - the F8 correction had been applied in the Goal but not in the Out of Scope table three hundred lines below - and again in round 4, when -Gate S6 caught three capitalised tokens the round-2 hand diff had missed. A prose correction summary cannot surface that class of defect; only sweeping the old value can.",
+    "universal_claim_sweep": "Round 4 adds -Gate S6, which enforces the two universal claims this plan makes about its own name inventory rather than merely restating them. (a) Claim qualification: any line in either plan file matching a universal-quantifier pattern about NAMEs (for example \"every capitalised NAME\", \"defined there once\") must also carry a qualifier token (except / unless / other than / apart from / excluding / INHERITED_NAMES); an unqualified one is a finding. (b) Inventory resolution: every backticked SCREAMING_SNAKE token in implementation-plan.md and task.md must resolve to a key in this file, to INHERITED_NAMES.value, or to INHERITED_NAMES.non_set_token_list. Unlike the fixed-string sweeps, S6 is fail-closed: an unqualified claim or an unresolved token exits 1."
+  },
+  "MEU_GATE": {
+    "value": "npm --prefix ui run typecheck; npm --prefix ui run lint; npm --prefix ui run test",
+    "source": ".agent/docs/commands.md (registered scoped validation receipt).",
+    "note": "Three SEPARATE receipts under VALIDATION_RECEIPT_DIR, never chained through a pipe (AGENTS.md PRIORITY 0). tools/run-meu-gate.ps1 does not exist - see ABSENT_VALIDATOR_RULE."
+  },
+  "MOUNT_GATE_SCRIPT": {
+    "value": "docs/execution/plans/2026-09-02-p10-queue-card-migration/assert-mount-completeness.ps1 -Scope all",
+    "source": "Local Canon - created by the migration project; run IN PLACE from its own folder so it reads its own sibling named-sets.json.",
+    "note": "NOT copied here. It proves a one-time migration property (every retired toolbar control has a live home). MEU-49 runs it once at phase exit as a no-regression check. See OQ-3 for its retirement."
+  },
+  "ABSENT_VALIDATOR_RULE": {
+    "value": "`tools/validate_codebase.py`, `tools/run-meu-gate.ps1` and `tools/validate_closeout_artifacts.py` do NOT exist in this tree (re-verified 2026-09-03: tools/ holds check_exec_review.py, meu_status.py, export_openapi.py, issue_triage.py, package_backend.py, fetch_ffmpeg_windows.ps1 and the Invoke-CodexDispatch scripts). No task row may invoke them. Every check below is either a real repository tool or a plan-local script this task table copies in before its first use.",
+    "source": "Local Canon - carried forward from the two prior Phase 10 plans; re-verified by direct listing."
+  },
+  "G32_RULE": {
+    "value": "All className colour references use CSS variable tokens (bg-bg, text-fg, bg-accent, ...) that auto-swap with the theme. Raw hex in a className or an arbitrary value is forbidden; the only exception is the G30 <select> inline styles, which must come from the theme-aware getG30Styles() helper.",
+    "source": ".agent/docs/emerging-standards.md G32 - CSS Variable Tokens Only (No Raw Hex in className), verbatim rule text.",
+    "note": "Carried forward WITH the correction made in migration exec review round 1: G32 is the no-raw-hex token rule. It is NOT a 44px hit-target rule, and no repository document states one."
+  },
+  "G33_RULE": {
+    "value": "Never animate width/height/top/left/margin/box-shadow geometry; animate transform/opacity only.",
+    "source": "emerging-standards.md G33",
+    "note": "Binding twice in this MEU: the handle reveal is opacity (DND_HOVER_REVEAL_RULE), and the dragged row's displacement must come from dnd-kit's transform/transition via CSS.Transform.toString(), never from a top/left offset."
+  },
+  "G34_RULE": {
+    "value": "The Button component exposes 5 variants x 3 sizes (h-7 sm / h-9 md / h-11 lg).",
+    "source": "emerging-standards.md G34",
+    "note": "The drag handle is a bare <button>, NOT the Button component - it carries no variant chrome and must not introduce a sixth variant."
+  },
+  "G36_RULE": {
+    "value": "No silent test guards - no test.skip/.only/.todo, no conditional early return in a test. Never modify or neutralize a test to make it pass.",
+    "source": "emerging-standards.md G36 + AGENTS.md section Testing.",
+    "note": "The one sanctioned edit to an existing assertion in this MEU is DND_DEP_GUARD_SUPERSESSION, which is spec supersession under the file's own established pattern."
+  },
+  "G37_RULE": {
+    "value": "Use `userEvent.setup()` for keyboard, click, and typing interactions. `fireEvent` is acceptable only for events `userEvent` doesn't support (scroll, resize, custom events).",
+    "source": ".agent/docs/emerging-standards.md:1212-1218 (G37), quoted verbatim.",
+    "note": "Round-2 registered this as 'Prefer @testing-library userEvent over fireEvent', which WEAKENED canon's 'Use' to 'Prefer'; round-3 (R3-F3) was right to reject that and the verbatim text has been restored. Round-4 then satisfied the restored rule only by INTENT, through ui/tests/unit/helpers/user-event.ts, and deferred literal compliance to OQ-5. Round 5 closes that gap: MEU-49 installs @testing-library/user-event, deletes the shim and recodes the 14 TL_MIGRATION_FILES, so `userEvent.setup()` in this rule now has a real referent in this package and every interaction call site is the canonical one. See TESTING_LIBRARY_ADOPTION. The rule is no longer waived, softened, re-sourced or carried — it is met. AC-49.39 and the Deps gate make a half-migration fail."
+  },
+  "E2_RULE": {
+    "value": "Every plan that creates or modifies interactive GUI elements must include E2E test assertions; GUI changes without E2E coverage cannot be marked complete in task.md.",
+    "source": "emerging-standards.md E2"
+  },
+  "GUI_ENFORCEMENT_FALLBACK": {
+    "value": ".agent/docs/gui-standards-enforcement.md, docs/gui-element-reference.md and docs/gui-button-index.md DO NOT EXIST (re-verified 2026-09-03). Local Canon fallback: apply docs/build-plan/06-gui.md + G30-G37 + docs/build-plan/gui-actions-index.md, and record the create-plan section 4A mapping table inline in this plan.",
+    "source": "Local Canon - established by eight prior Phase 6-10 plans; confirmed a non-finding by prior reviewers."
+  },
+  "GUI_ACTIONS_INDEX_NON_CHANGE": {
+    "value": "docs/build-plan/gui-actions-index.md ALREADY registers the drag affordance: line 25 `download:reorder ... Drag row`, line 63 `convert:reorder ... Drag / up-down`, line 41 `transcript:reorder`. No new index row is added by MEU-49; the rows are satisfied, not created.",
+    "source": "Local Canon - direct read, 2026-09-03. Cross-checked by the existing ui/tests/unit/gui-actions-audit.test.ts."
+  },
+  "NO_DEAD_CONTROL_RULE": {
+    "value": "A control may not be mounted in an earlier task row than the one that wires it. The drag handle and its executor land in the same row, and the MEU gate includes an E2E assertion that a completed drag produces the expected PUT.",
+    "source": "Local Canon - AGENTS.md section Execution Contract; carried forward from the migration plan, where a two-MEU gap left a dead Clear finished button at two boundaries."
+  },
+  "E2E_BASELINE_COUNT": {
+    "value": 73,
+    "source": "Playwright runtime pass count at the close of session 21 (.agent/context/current-focus.md:8 - 73 passed, floor 59).",
+    "note": "PRE-MEU runtime floor - the suite may not fall below this. It is NOT a sufficient post-MEU assertion: MEU-49 adds cases, so `>= 73` is satisfied by doing nothing (round-3 finding R3-F5). Post-MEU assertions use E2E_POST_MEU_RUNTIME_FLOOR."
+  },
+  "E2E_STATIC_CASE_FLOOR": {
+    "value": 67,
+    "source": "Static count of `test(` declarations across ui/tests/e2e/*.test.ts, measured 2026-09-03 (7+4+8+3+12+14+4+3+6+6).",
+    "note": "PRE-MEU floor - the count on the unstarted tree. It is the regression floor only; a gate that asserts it AFTER the MEU is satisfied by the unstarted tree and proves nothing (round-3 finding R3-F5). Post-MEU assertions use E2E_POST_MEU_STATIC_FLOOR. The static and runtime counts differ because some specs expand at runtime; both floors are recorded so a static gate and a runtime receipt each have a true baseline."
+  },
+  "E2E_LOCATOR_FORM": {
+    "value": "page.locator('[data-testid=\"<id>\"]') with ids drawn from ui/tests/e2e/test-ids.ts",
+    "source": "Local Canon - ui/tests/e2e/test-ids.ts",
+    "note": "DND_LIVE_REGION_LOCATOR is the single sanctioned exception: the live region is dnd-kit-owned DOM with no testid."
+  },
+  "E2E_SANDBOX": {
+    "value": "Playwright + Electron runs locally. ELECTRON_RUN_AS_NODE must be UNSET in the shell and the bundle rebuilt (npm --prefix ui run build) before launch.",
+    "source": "Known-issue E2E-ELECTRON-LAUNCH-FLAG.",
+    "note": "Not a [B] class. An E2E failure in this MEU is a real failure."
+  },
+  "VITEST_BASELINE_COUNT": {
+    "value": 439,
+    "source": "Live measurement 2026-09-03 on the unstarted tree: `npm --prefix ui run test` -> 439 passed, 54 files. Supersedes the 438 recorded at .agent/context/current-focus.md:8 (corrected in plan review round 1, F8).",
+    "note": "Floor: the unit suite may not fall below this. MEU-49 adds tests, so the post-MEU count must strictly exceed it."
+  },
+  "PHASE_EXIT_UPDATES": {
+    "value": [
+      ".agent/context/meu-status.yaml - MEU-49 pending -> complete, via `uv run python tools/meu_status.py update`, then `render --check`",
+      ".agent/context/meu-registry.md:135 - regenerated by meu_status.py render, never hand-edited",
+      "docs/BUILD_PLAN.md:36, :54, :72 - Phase 10 In Progress -> Complete; remove the 'MEU-49 remains' / 'MEU-49 pending session 22' prose; repoint Next to Phase 11 / MEU-50",
+      ".agent/context/current-focus.md - replaced with session 22's outcome (target < 30 lines)",
+      ".agent/context/known-issues.md - unchanged unless MEU-49 files or resolves an issue"
+    ],
+    "source": "Local Canon - AGENTS.md section Session Discipline (context file hygiene) + .agent/skills/meu-status/SKILL.md.",
+    "note": "MEU-49 is the LAST MEU of Phase 10, so this project owns the phase-exit status sweep. meu-registry.md and the BUILD_PLAN status table are GENERATED from meu-status.yaml - edit the YAML and render."
+  },
+  "HANDOFFS": {
+    "value": [
+      "2026-09-03-p10-queue-card-dnd-MEU-49-handoff.md"
+    ],
+    "source": "Local Canon - .agent/docs/artifact-naming.md"
+  },
+  "HANDOFF_COUNT": {
+    "value": 1,
+    "source": "One per MEU in this project; this project is a single MEU."
+  },
+  "HANDOFF_FILTER": {
+    "value": "2026-09-03-p10-queue-card-dnd-MEU-*-handoff.md",
+    "source": "Glob used by HANDOFF_MARKER_CHECK."
+  },
+  "HANDOFF_BUNDLE_MARKERS": {
+    "value": [
+      "Acceptance Criteria",
+      "CACHE BOUNDARY",
+      "FAIL_TO_PASS",
+      "Changed Files",
+      "Quality Gate Results",
+      "Commands Executed",
+      "## Evidence"
+    ],
+    "source": ".agent/context/handoffs/TEMPLATE.md; carried forward from 2026-09-02-p10-queue-card-migration."
+  },
+  "HANDOFF_AC_PATTERNS": {
+    "value": {
+      "MEU-49": "AC-49\\.[0-9]+[a-z]?"
+    },
+    "source": "Plan AC ids; the trailing [a-z]? admits a mid-review AC-49.4a."
+  },
+  "PLAN_REVIEW_FILE": {
+    "value": ".agent/context/handoffs/2026-09-03-p10-queue-card-dnd-plan-critical-review.md",
+    "source": "Rolling plan review - AGENTS.md section Handoff continuity."
+  },
+  "EXEC_REVIEW_FILE": {
+    "value": ".agent/context/handoffs/2026-09-03-p10-queue-card-dnd-implementation-critical-review.md",
+    "source": "Rolling implementation review - AGENTS.md section Handoff continuity."
+  },
+  "EXEC_REVIEW_MODE": {
+    "value": "implementation",
+    "source": "check_exec_review.py --expected-mode"
+  },
+  "EXEC_REVIEW_APPROVED": {
+    "value": "approved",
+    "source": "check_exec_review.py verdict token"
+  },
+  "REFLECTION_FILE": {
+    "value": "docs/execution/reflections/2026-09-03-p10-queue-card-dnd-reflection.md",
+    "source": "Local Canon - .agent/docs/artifact-naming.md"
+  },
+  "REFLECTION_TEMPLATE": {
+    "value": "docs/execution/reflections/TEMPLATE.md",
+    "source": "Local Canon"
+  },
+  "REFLECTION_SCHEMA": {
+    "value": ".agent/schemas/reflection.v1.yaml",
+    "source": "Local Canon"
+  },
+  "REFLECTION_MARKERS": {
+    "value": [
+      "Friction Log",
+      "Execution Trace",
+      "Pattern Extraction",
+      "Patterns to KEEP",
+      "Next Session Design Rules",
+      "RULE-",
+      "Efficiency Metrics",
+      "Rule Adherence",
+      "Instruction Coverage",
+      "schema: v1",
+      "sections:",
+      "loaded:",
+      "decisive_rules:"
+    ],
+    "source": "TEMPLATE.md + reflection.v1.yaml; carried forward from 2026-09-02-p10-queue-card-migration."
+  },
+  "METRICS_FILE": {
+    "value": "docs/execution/metrics.md",
+    "source": "Local Canon"
+  },
+  "METRICS_SLUG": {
+    "value": "p10-queue-card-dnd",
+    "source": "Row key in METRICS_FILE."
+  },
+  "HANDOFF_MARKER_CHECK": {
+    "value": "docs/execution/plans/2026-09-03-p10-queue-card-dnd/assert-handoff-markers.ps1",
+    "source": "Copied verbatim from the migration plan folder by task row 12 - the script is $PSScriptRoot-relative and reads THIS named-sets.json, so no edit is required. Sole executable owner of HANDOFF_BUNDLE_MARKERS."
+  },
+  "HANDOFF_AC_CHECK": {
+    "value": "docs/execution/plans/2026-09-03-p10-queue-card-dnd/assert-handoff-acs.ps1",
+    "source": "Copied verbatim by task row 12. Proves each HANDOFFS entry carries its plan AC set per HANDOFF_AC_PATTERNS."
+  },
+  "EXEC_DISPATCH_CHECK": {
+    "value": "docs/execution/plans/2026-09-03-p10-queue-card-dnd/assert-exec-review-dispatch.ps1",
+    "source": "Copied verbatim by task row 12. Proves EXEC_REVIEW_FILE was produced by a REVIEWER_AGENT dispatch, not self-authored."
+  },
+  "DISPATCH_DIR": {
+    "value": "C:/Temp/av-kit/dispatch",
+    "source": "tools/Invoke-CodexDispatch.ps1 writes <DISPATCH_DIR>/<dispatch_id>/{status.json,final.md,prompt_temp.txt}."
+  },
+  "DISPATCH_STATUS_SCHEMA": {
+    "value": "dispatch-status.v1",
+    "source": "schema_version emitted by tools/Invoke-CodexDispatch.ps1"
+  },
+  "DISPATCH_ID_FIELD": {
+    "value": "dispatch_id",
+    "source": "Frontmatter key on EXEC_REVIEW_FILE that must equal Invoke-CodexDispatch -DispatchId."
+  },
+  "CHECK_EXEC_REVIEW": {
+    "value": "tools/check_exec_review.py",
+    "source": "Real repository tool (verified present 2026-09-03). Flags: --review-file, --expected-mode, --expected-target, --max-round, --self-test."
+  },
+  "CLOSEOUT_H24_RECEIPT": {
+    "value": "C:/Temp/av-kit/closeout-check.txt",
+    "source": "H2-4 receipt path under VALIDATION_RECEIPT_DIR."
+  },
+  "RED_PHASE_PRESERVATION_ACS": {
+    "value": [
+      "AC-49.11",
+      "AC-49.14",
+      "AC-49.23",
+      "AC-49.39"
+    ],
+    "source": "The unit ACs that assert PRESERVATION of behaviour already present on the tree row 3 writes against, rather than new behaviour: AC-49.11 (the kebab reorder items keep working unchanged), AC-49.14 (Alt+Arrow keyboard reorder keeps working unchanged), AC-49.23 (no existing queue testid is renamed or removed) and AC-49.39 (the G37 migration delivered by task rows 2/2a is complete). All four pass on the tree as it stands when row 3 begins.",
+    "note": "Added in plan review round 4 (R3-F2). These are NOT excused from testing - each still gets a test in a RED_PHASE_TEST_FILES file and is enforced by assert-red-phase.ps1 -Census's source scan and by the row 7 Green gate. They are excluded ONLY from clause (e)'s required-failure set, because a test that is green by construction cannot be found among failures. Requiring them there is the definition of an unsatisfiable oracle. EXECUTION-PHASE CORRECTION X1 (2026-09-04, task row 3): AC-49.39 joined this set for exactly that reason. Round 5 (R4-F2) added it to RED_PHASE_REQUIRED_ACS alongside AC-49.37 and AC-49.38 on the ground that all three were unregistered - true, but 49.37 and 49.38 describe behaviour row 3 has not built yet, whereas 49.39 describes work rows 2/2a land BEFORE row 3. The first three ids here are preservation by SUBJECT (they guard existing product behaviour); AC-49.39 is preservation by SEQUENCE (it guards a migration this same MEU has already completed). Both kinds are green when row 3 runs, which is the only property clause (e) cares about."
+  },
+  "RED_PHASE_UNCOLLECTED_FILES": {
+    "value": {
+      "ui/tests/unit/reorder-body.test.ts": "src/renderer/src/lib/queue/reorder-body",
+      "ui/tests/unit/reorder-single-flight.test.ts": "src/renderer/src/lib/queue/reorder-single-flight",
+      "ui/tests/unit/queue-dnd.test.ts": "src/renderer/src/components/queue/queue-dnd"
+    },
+    "source": "Derived, not asserted by fiat: these are exactly the RED_PHASE_TEST_FILES entries whose import graph reaches a module task rows 4/4a create, and that therefore does not exist during the Red phase. Each value is the module specifier whose absence is expected.",
+    "note": "Added in plan review round 4 (R3-F2). Consumed by assert-red-phase.ps1 clause (b2): each of these files MUST appear in the Vitest report with status=failed, zero assertionResults, and a top-level `message` matching VITEST_UNRESOLVED_MODULE_PATTERN AND naming its expected-absent specifier. That turns a collection failure from an untracked hole in the evidence into a POSITIVELY ASSERTED Red-phase fact - a typo'd import path or a genuinely broken test file produces a different message and fails the oracle. The other four RED_PHASE_TEST_FILES entries import only existing modules and MUST collect normally (clause b3)."
+  },
+  "VITEST_COLLECTION_FAILURE_SHAPE": {
+    "value": "In Vitest's --reporter=json output a MISSING MODULE and a MISSING NAMED EXPORT produce different shapes, and the Red oracle depends on the difference. (1) Missing module: collection for the whole file fails, the file's testResults entry has status=failed, assertionResults=[] and a non-empty top-level `message` naming the unresolved specifier; NONE of that file's tests are counted in numTotalTests. (2) Missing NAMED export from an existing module: the file COLLECTS and runs, `message` is empty, and the individual assertion fails normally with a populated failureMessages array. Consequence: appending a test that imports a not-yet-created module to an EXISTING green test file SUBTRACTS that file's passing tests from numTotalTests. (3) The `message` WORDING is not single-valued: two different layers report the same fact, and which one wins depends on how far the file got before the missing specifier was reached. Vite's import-analysis plugin says `Failed to resolve import \"<specifier>\" from \"<file>\". Does the file exist?` and the Node ESM loader says `Cannot find module '<specifier>' imported from '<absolute file>'`. Both name the specifier, which is the part clause (b2) actually needs; neither wording may be hard-coded. See VITEST_UNRESOLVED_MODULE_PATTERN.",
+    "source": "Empirical measurement 2026-09-03 on this tree, not inference. Two throwaway probe specs were added under ui/tests/unit/ - one importing a nonexistent module, one importing a nonexistent named export from the existing download-controls module - and `npm --prefix ui run test -- --reporter=json` was captured to C:/Temp/av-kit/probe-collect.json. Result: numTotalTests=9, numTotalTestSuites=5, numFailedTestSuites=3; the missing-module file reported assertionResults=0 with the \"Cannot find module\" message, the missing-export file reported assertionResults=1 with an ordinary AssertionError and an empty message. Both probe files were deleted and their removal verified with `git status --porcelain -- ui/tests/unit/`. Clause (3) was measured later, on 2026-09-04, from the FIRST real Red-phase run of this MEU (C:/Temp/av-kit/meu49-red.json): in one single run reorder-body.test.ts reported the Vite import-analysis wording while reorder-single-flight.test.ts and queue-dnd.test.ts reported the Node loader wording, all three for statically imported, genuinely absent relative specifiers. That run is what falsified the round-4 assumption of one fixed wording.",
+    "note": "Added in plan review round 4 (R3-F2). This measurement is the reason RED_PHASE_TEST_FILES now routes the AC-49.16/49.17 announcement tests into a NEW queue-dnd.test.ts rather than into the existing queue-primitives.test.ts, and the reason RED_PHASE_ORACLE clause (b) survives unchanged: every uncollected Red-phase file is NEW, so it contributes 0 to VITEST_BASELINE_COUNT rather than subtracting from it, while the collected new cases in the four existing files push numTotalTests strictly above 439."
+  },
+  "VITEST_UNRESOLVED_MODULE_PATTERN": {
+    "value": "Cannot find module|Failed to resolve import",
+    "source": "Both alternatives were observed in a single real run - C:/Temp/av-kit/meu49-red.json, the MEU-49 Red-phase capture of 2026-09-04. reorder-body.test.ts produced 'Failed to resolve import \"../../src/renderer/src/lib/queue/reorder-body\" from \"tests/unit/reorder-body.test.ts\". Does the file exist?' (Vite import-analysis) while reorder-single-flight.test.ts and queue-dnd.test.ts produced \"Cannot find module '<specifier>' imported from '<absolute path>'\" (Node ESM loader). Nothing about the three files differs in import STYLE - all three are plain static relative imports of an absent module - so the wording is not selectable by writing the test differently, and the oracle must accept either.",
+    "note": "Added as execution-phase correction X2. RED_PHASE_ORACLE clause (b2) originally hard-coded the string 'Cannot find module', which made the oracle FAIL on a genuinely, correctly red suite - the strongest possible kind of oracle defect, because it punishes the exact state the Red phase is supposed to reach. Clause (b2) now matches this alternation for the KIND of failure and, independently, [regex]::Escape(<expected specifier>) for the IDENTITY of the missing module; the two checks are no longer chained through an elseif, so a wrong-module failure is still caught when the wording is the unexpected one. Widening the KIND check is safe precisely because the specifier check is what discriminates a typo'd import from an expected-absent one. Proven by assert-red-phase.ps1 -SelfTest case18."
+  },
+  "REORDER_QUEUE_KEYS": {
+    "value": [
+      "download",
+      "convert"
+    ],
+    "source": "The two queues that mount QueueList in this MEU: DownloaderPage.tsx and ConvertPage.tsx. Transcript and TTS are out of scope (DND_OPT_IN_RULE).",
+    "note": "Added in plan review round 4 (R3-F1). This is the key space of REORDER_SINGLE_FLIGHT_RULE's module-level registry. Keying by queue is what preserves AC-49.31's independence - a held download gate must never block a convert reorder - while still letting a single queue's gate outlive a route unmount."
+  },
+  "E2E_REQUIRED_CASES": {
+    "value": {
+      "AC-49.25": "ui/tests/e2e/download-queue.test.ts",
+      "AC-49.26": "ui/tests/e2e/download-queue.test.ts",
+      "AC-49.27": "ui/tests/e2e/download-queue.test.ts",
+      "AC-49.28": "ui/tests/e2e/download-queue.test.ts",
+      "AC-49.36": "ui/tests/e2e/download-queue.test.ts",
+      "AC-49.29": "ui/tests/e2e/convert-queue.test.ts"
+    },
+    "source": "The six integration ACs that are individual Playwright cases, each mapped to the spec file that owns it, read off implementation-plan.md:310-316. AC-49.30 is excluded because it is a whole-suite assertion (both floors), not a case.",
+    "note": "Added in plan review round 4 (R3-F5). Consumed by assert-plan-gates.ps1 -Gate E2eCensus, which requires each id to appear inside a `test(` title in its NAMED file - not merely somewhere in the tree. The round-3 census gate asserted only a static count >= the PRE-MEU floor, one testid registration and the absence of `dragTo(`, all three of which the unstarted tree already satisfies; it could not distinguish a completed MEU from an untouched one."
+  },
+  "E2E_POST_MEU_STATIC_FLOOR": {
+    "value": 73,
+    "source": "E2E_STATIC_CASE_FLOOR (67) + the six E2E_REQUIRED_CASES this MEU adds (five in download-queue.test.ts, one in convert-queue.test.ts). Derived, not guessed.",
+    "note": "Added in plan review round 4 (R3-F5). This is what task rows 9-10 and the E2eCensus gate assert AFTER the MEU; asserting the pre-MEU 67 there is a no-op. A seventh added case raises the real count above this floor and still passes - the floor forbids UNDER-delivery, it does not cap the suite."
+  },
+  "E2E_POST_MEU_RUNTIME_FLOOR": {
+    "value": 79,
+    "source": "E2E_BASELINE_COUNT (73) + the same six added cases. None of the six is a parameterised or otherwise expanding spec, so the runtime delta equals the static delta.",
+    "note": "Added in plan review round 4 (R3-F5). Asserted against the `npm --prefix ui run test:e2e` receipt (E2E_RUN_COMMAND); an un-runnable sandbox is E2E_SANDBOX's [B] path, which does not license lowering the floor."
+  },
+  "PHASE_EXIT_ASSERTIONS": {
+    "value": {
+      "status_file": ".agent/context/meu-status.yaml",
+      "meu_id": "MEU-49",
+      "status_field_pattern": "^\\s*status:\\s*approved\\s*$",
+      "stale_prose_pattern": "MEU-49\\s+(remains|pending)|pending\\s+session\\s+22",
+      "stale_prose_files": [
+        "docs/BUILD_PLAN.md",
+        ".agent/context/meu-registry.md",
+        ".agent/context/meu-status.yaml"
+      ],
+      "next_pointer_file": "docs/BUILD_PLAN.md",
+      "next_pointer_patterns": [
+        "Phase 11",
+        "MEU-50"
+      ],
+      "phase_row_pattern": "\\|\\s*10\\s*.{0,40}Queue card UI.*\\|.*Completed"
+    },
+    "source": "Machine-checkable restatement of PHASE_EXIT_UPDATES. The status YAML is the SOURCE - meu-registry.md and the BUILD_PLAN status table are generated from it by tools/meu_status.py - so asserting only the two generated files can pass while the YAML they are rendered from still says pending. On-disk state confirming each pattern is real today: .agent/context/meu-status.yaml:113 ('MEU-49 pending session 22'), docs/BUILD_PLAN.md:36 ('MEU-49 remains'), :54 ('In Progress'), :72 ('Next: p10-queue-card-dnd (MEU-49)').",
+    "note": "Added in plan review round 4 (R3-F4). The round-3 BuildPlanAudit gate grepped only for the ABSENCE of the stale prose in the two GENERATED files plus the presence of the string MEU-49 - so hand-deleting one sentence passed it while meu-status.yaml still carried `pending` and the Next pointer still aimed at MEU-49. MEU-49 is the LAST MEU of Phase 10, so the phase-exit sweep is this project's to own and its gate has to be able to fail. Execution-phase correction X5: `status_field_pattern` was written as `complete`, which is not in the SSOT's vocabulary - `tools/meu_status.py update` accepts only {approved, changes_required, closed, deferred, in_progress, pending, ready_for_review}, and every completed MEU on disk carries `approved` (MEU-47 at meu-status.yaml:1275). The gate was therefore unsatisfiable except by a hand-edit that `meu_status.py render --check` would then reject, so the pattern now reads `approved`. Deliberately NOT widened to `(approved|complete)`: accepting a value the tool cannot emit is what would re-license that hand-edit."
+  },
+  "COMMIT_DRAFT_MARKERS": {
+    "value": {
+      "path": "C:/Temp/av-kit/commit-draft-p10-queue-card-dnd.txt",
+      "required": [
+        "feat(ui)",
+        "MEU-49"
+      ],
+      "forbidden": [
+        "Co-Authored-By",
+        "Generated with",
+        "Co-authored-by"
+      ],
+      "max_subject_chars": 72
+    },
+    "source": "AGENTS.md section Commits: conventional-commit prefixes, and NEVER auto-commit - the draft is prepared FOR the human, who is the only party that may run `git commit`. The forbidden list is this project's standing no-AI-attribution-trailer rule, matching every prior Phase 8-10 commit draft.",
+    "note": "Added in plan review round 4 (R3-F4). Task row H2-5 previously validated with a bare `Get-Content` of the draft - adjacent text, not an assertion: it exits 0 on an empty or absent file. The CommitDraft gate asserts the file exists, is non-empty, carries every `required` marker, carries none of the `forbidden` ones, and has a subject line within `max_subject_chars`. It does NOT commit anything and does not authorise a commit."
+  },
+  "METRICS_ROW_MARKERS": {
+    "value": [
+      "MEU-49",
+      "vitest",
+      "Playwright",
+      "No commit"
+    ],
+    "source": "The shape every existing docs/execution/metrics.md row already carries: the MEU ids delivered, the unit and E2E counts, and the explicit no-commit statement (AGENTS.md forbids auto-commit, and every Phase 1-10 row records that the session ended without one).",
+    "note": "Added in plan review round 4 (R3-F4). Task row H2-3 previously validated with `Get-Content metrics.md -Tail 3` - adjacent text, not an assertion: it prints whatever is there and exits 0 even if the row was never appended. The Metrics gate locates the METRICS_SLUG row and requires every marker in it."
+  },
+  "TESTING_LIBRARY_PACKAGES": {
+    "value": [
+      "@testing-library/dom@^10.4.1",
+      "@testing-library/jest-dom@^7.0.1",
+      "@testing-library/react@^16.3.3",
+      "@testing-library/user-event@^14.6.7"
+    ],
+    "source": "Research-backed — npm registry, verified 2026-09-04. @testing-library/react@16.3.3 (peers: react ^18||^19, react-dom ^18||^19, and @testing-library/dom ^10.0.0), @testing-library/user-event@14.6.7 (peer @testing-library/dom >=7.21.4), @testing-library/dom@10.4.1, @testing-library/jest-dom@7.0.1. Cross-checked against the ui/ stack: React 19.2, Vitest 3, jsdom 25 — every peer is satisfied by what is already installed.",
+    "note": "ALL FOUR go in devDependencies (test-only; DND_PACKAGES are the runtime three and go in dependencies — Test-Deps enforces both placements separately). @testing-library/dom is declared EXPLICITLY rather than left to hoisting: @testing-library/react@16 lists it as a PEER, not a dependency, and @testing-library/user-event lists it as a peer too, so an undeclared dom package is an unpinned transitive that npm may or may not place at the root. @testing-library/jest-dom supplies the matchers (toBeDisabled, toHaveFocus, toBeInTheDocument) the migrated assertions read; it is wired through a Vitest setupFiles entry importing '@testing-library/jest-dom/vitest'. WHY THIS IS IN MEU-49 RATHER THAN DEFERRED: see TESTING_LIBRARY_ADOPTION."
+  },
+  "TL_MIGRATION_FILES": {
+    "value": [
+      "ui/tests/unit/app-shell-wiring.test.ts",
+      "ui/tests/unit/bulk-action-bar.test.ts",
+      "ui/tests/unit/capture-page.behavior.test.ts",
+      "ui/tests/unit/chrome-zorivest.test.ts",
+      "ui/tests/unit/console-polish.test.ts",
+      "ui/tests/unit/convert-page.behavior.test.ts",
+      "ui/tests/unit/downloader-page.behavior.test.ts",
+      "ui/tests/unit/help-card.test.ts",
+      "ui/tests/unit/queue-card.test.ts",
+      "ui/tests/unit/queue-list.test.ts",
+      "ui/tests/unit/queue-primitives.test.ts",
+      "ui/tests/unit/queue-toolbar.test.ts",
+      "ui/tests/unit/settings-page.test.ts",
+      "ui/tests/unit/use-queue-selection.test.ts"
+    ],
+    "source": "Measured, not estimated (2026-09-04): `ls ui/tests/unit/*.test.ts*` = 54 files; `grep -l \"createRoot\\|from 'react-dom/client'\"` = 14; `grep -l \"helpers/user-event\"` = 5; `grep -l fireEvent` = 0. The union of the files that mount a React tree or simulate an interaction is these 14. The other 40 are pure logic (reducers, builders, id derivation, index audits) and import no DOM surface at all, so they need no migration and are not touched.",
+    "note": "Round-5 correction (R4-F5). The round-4 text claimed all 54 files use the local helper; 5 do. That false number was the entire load-bearing argument for deferring G37, and it collapsed with it — the reviewer was right to reject the recommendation built on it. The real blast radius is 14 files, which fits inside MEU-49; the human has directed no split. Read by Test-Deps (the helper must be gone and unimported) and by AC-49.39. Round-6 (R5-F3): this set carries the MOUNT obligation - every entry must import @testing-library/react, call `render(`, query through `screen`, and retain none of the retired mount surface. The INTERACTION obligation (user-event) binds to TL_INTERACTION_FILES, which with TL_MOUNT_ONLY_FILES partitions this set exactly."
+  },
+  "RED_PHASE_AC_OWNERSHIP": {
+    "value": {
+      "ui/tests/unit/reorder-body.test.ts": [
+        "AC-49.3",
+        "AC-49.4",
+        "AC-49.5",
+        "AC-49.6",
+        "AC-49.7"
+      ],
+      "ui/tests/unit/reorder-single-flight.test.ts": [
+        "AC-49.31"
+      ],
+      "ui/tests/unit/queue-dnd.test.ts": [
+        "AC-49.16",
+        "AC-49.17"
+      ],
+      "ui/tests/unit/queue-card.test.ts": [
+        "AC-49.8",
+        "AC-49.9",
+        "AC-49.10",
+        "AC-49.11",
+        "AC-49.12",
+        "AC-49.13"
+      ],
+      "ui/tests/unit/queue-primitives.test.ts": [
+        "AC-49.14",
+        "AC-49.15",
+        "AC-49.18",
+        "AC-49.19",
+        "AC-49.20"
+      ],
+      "ui/tests/unit/downloader-page.behavior.test.ts": [
+        "AC-49.21",
+        "AC-49.22",
+        "AC-49.23",
+        "AC-49.24",
+        "AC-49.32",
+        "AC-49.33",
+        "AC-49.34",
+        "AC-49.35",
+        "AC-49.37",
+        "AC-49.38",
+        "AC-49.39"
+      ],
+      "ui/tests/unit/convert-page.behavior.test.ts": [
+        "AC-49.21",
+        "AC-49.22",
+        "AC-49.23",
+        "AC-49.32",
+        "AC-49.33",
+        "AC-49.34",
+        "AC-49.35",
+        "AC-49.37",
+        "AC-49.38"
+      ]
+    },
+    "source": "Derived from task.md row 3, which is the single place that assigns AC ids to test files; every id and every file here is a transcription of that row, and the oracle's self-test asserts the union equals RED_PHASE_REQUIRED_ACS + RED_PHASE_PRESERVATION_ACS exactly, so a future AC cannot fall outside the map unnoticed. Keys are exactly RED_PHASE_TEST_FILES. AC-49.24 and AC-49.39 are single-owner (downloader) because they assert repo-wide facts — the testid registry and the shim's absence — which are not per-page.",
+    "note": "Added in plan review round 5 (R4-F1). WHY IT IS LOAD-BEARING: three of the seven files are RED_PHASE_UNCOLLECTED_FILES, and an uncollected file reports zero assertionResults (VITEST_COLLECTION_FAILURE_SHAPE), so NO test name from it can ever appear among the failures clause (e) reads. Eight required ids live in those three files — AC-49.3-49.7, AC-49.16, AC-49.17, AC-49.31 — so the round-4 oracle demanded that eight ids appear in a place they provably cannot, which is the same unsatisfiability R3-F2 fixed one level up. Clause (e) is now scoped by DERIVATION: required-and-owned-by-a-collecting-file. The eight are NOT excused — they are proven Red by clause (b2), which requires their file to fail for its own missing specifier, a strictly stronger fact than one failing assertion. The oracle computes the split itself from this map and RED_PHASE_UNCOLLECTED_FILES; it is never hand-listed, so it cannot drift when an AC moves between files."
+  },
+  "BUILD_PLAN_NEXT_POINTER": {
+    "value": {
+      "file": "docs/BUILD_PLAN.md",
+      "segment_start": "Next:",
+      "segment_end": ". ",
+      "must_match": [
+        "Phase 11",
+        "MEU-50"
+      ],
+      "must_not_match": [
+        "MEU-49",
+        "p10-queue-card-dnd"
+      ]
+    },
+    "source": "Local Canon — AGENTS.md Session Discipline (context file hygiene) and the PHASE_EXIT_UPDATES row for docs/BUILD_PLAN.md:72. The pointer is a SENTENCE inside a long paragraph line, not a line of its own, so the gate extracts the segment running from the literal `Next:` to the first following '. ' (period-space) or end of line — on the pre-MEU tree that segment is \"Next: `p10-queue-card-dnd (MEU-49)`, then Phase 11 sessions 23–26.\"",
+    "note": "Added in round 5 (R4-F4). Test-BuildPlanAudit previously applied its -notmatch predicates to the WHOLE FILE, and 'Phase 11' occurs 4 times and 'MEU-50' twice in docs/BUILD_PLAN.md for unrelated reasons, so the audit passed while the Next: pointer still read `p10-queue-card-dnd (MEU-49)` — it tested adjacent text rather than the deliverable, the same class of defect as R3-F6. Both directions are required: the segment must NAME the successor (MEU-50, Phase 11) and must NOT still name this MEU. Self-test case F4-neg feeds a fixture whose body carries Phase 11 and MEU-50 elsewhere while the segment is stale, and requires a FAIL."
+  },
+  "REORDER_HELD_HOOK": {
+    "value": "NEW module `ui/src/renderer/src/lib/queue/use-queue-reorder-held.ts`, the ONLY React binding over REORDER_SINGLE_FLIGHT_RULE's store. It exports one hook: `useQueueReorderHeld(key: ReorderQueueKey): boolean`, implemented as `useSyncExternalStore((cb) => subscribeQueueReorder(key, cb), () => isQueueReorderHeld(key))`. `getSnapshot` returns a BOOLEAN, so it is referentially stable by construction and cannot trigger the \"The result of getSnapshot should be cached\" infinite-loop React throws for freshly-allocated snapshots. Because it reads the same module-level Map the acquire path writes, a component that unmounts and remounts re-subscribes to the LIVE gate state rather than to a fresh `false` - the same reason the registry is module-level at all (AC-49.37). QueueCard and QueueList import THIS module, never `useSyncExternalStore` directly, so there is exactly one subscription shape to reason about.",
+    "source": "Local Canon - forced by the file contracts already in this plan: download-commands.ts and convert-commands.ts import the single-flight registry and have no React import (verified 2026-09-03), so the store must stay framework-free. Research-backed on the shape: the React docs' own useSyncExternalStore guidance is a plain store exposing subscribe/getSnapshot plus a separate hook, and a primitive snapshot to avoid the cached-snapshot loop.",
+    "note": "Added in plan review round 6 (R5-F1). This is the resolution of a contradiction, not new scope: round 5 already required exactly this hook, it was just declared in a module that task row 4a forbade React in. Delivered by task row 4b and proved through the rendered assertions AC-49.35 and AC-49.38 - a three-line binding gets no separate unit file, because a test that mounted it in isolation would assert the React API rather than this plan's behaviour."
+  },
+  "TL_INTERACTION_FILES": {
+    "value": [
+      "ui/tests/unit/app-shell-wiring.test.ts",
+      "ui/tests/unit/bulk-action-bar.test.ts",
+      "ui/tests/unit/capture-page.behavior.test.ts",
+      "ui/tests/unit/chrome-zorivest.test.ts",
+      "ui/tests/unit/console-polish.test.ts",
+      "ui/tests/unit/convert-page.behavior.test.ts",
+      "ui/tests/unit/downloader-page.behavior.test.ts",
+      "ui/tests/unit/help-card.test.ts",
+      "ui/tests/unit/queue-card.test.ts",
+      "ui/tests/unit/queue-list.test.ts",
+      "ui/tests/unit/queue-primitives.test.ts",
+      "ui/tests/unit/queue-toolbar.test.ts",
+      "ui/tests/unit/settings-page.test.ts"
+    ],
+    "source": "Measured, not estimated (2026-09-04): of the 14 TL_MIGRATION_FILES, these 13 both mount a React tree AND simulate an interaction (they import the shim, or dispatch/click/keyDown directly). Command: `grep -l \"createRoot|react-dom/client\" ui/tests/unit/*.test.ts*` intersected with `grep -l \"helpers/user-event|\\.click\\(|\\.keyDown\\(|dispatchEvent\"`.",
+    "note": "The user-event half of TESTING_LIBRARY_ADOPTION binds to THIS set, not to all 14. Round-5 demanded `userEvent.setup()` in every migration file, which would have forced a no-op setup() call into the one file that simulates nothing - manufacturing exactly the unused-ceremony line R5-F3 says a gate must not be satisfiable by. Test-Deps asserts TL_INTERACTION_FILES and TL_MOUNT_ONLY_FILES PARTITION TL_MIGRATION_FILES exactly, in both directions, so the exempt bucket cannot be quietly grown to dodge the check."
+  },
+  "TL_MOUNT_ONLY_FILES": {
+    "value": [
+      "ui/tests/unit/use-queue-selection.test.ts"
+    ],
+    "source": "Measured 2026-09-04 and independently confirmed by the round-5 reviewer: use-queue-selection.test.ts owns a hand-rolled React mount (createRoot + act + createElement) but simulates no user interaction. It therefore belongs in the RTL MOUNT migration and not in the user-event one.",
+    "note": "Registered as an explicit set rather than left as \"the 14 minus the 13\", because an exemption that exists only as a subtraction is invisible to review. Adding a file here is a visible diff that removes a user-event obligation, which is what it should look like."
+  }
+}

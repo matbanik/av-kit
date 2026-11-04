@@ -1,0 +1,436 @@
+{
+  "items": [
+    {
+      "voice_id": "af_heart",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "heart",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "af_alloy",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "alloy",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "af_aoede",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "aoede",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "af_bella",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "bella",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "af_jessica",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "jessica",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "af_kore",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "kore",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "af_nicole",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "nicole",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "af_nova",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "nova",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "af_river",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "river",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "af_sarah",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "sarah",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "af_sky",
+      "language": "American English",
+      "gender": "Female",
+      "style_description": "sky",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "am_adam",
+      "language": "American English",
+      "gender": "Male",
+      "style_description": "adam",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "am_echo",
+      "language": "American English",
+      "gender": "Male",
+      "style_description": "echo",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "am_eric",
+      "language": "American English",
+      "gender": "Male",
+      "style_description": "eric",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "am_fenrir",
+      "language": "American English",
+      "gender": "Male",
+      "style_description": "fenrir",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "am_liam",
+      "language": "American English",
+      "gender": "Male",
+      "style_description": "liam",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "am_michael",
+      "language": "American English",
+      "gender": "Male",
+      "style_description": "michael",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "am_onyx",
+      "language": "American English",
+      "gender": "Male",
+      "style_description": "onyx",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "am_puck",
+      "language": "American English",
+      "gender": "Male",
+      "style_description": "puck",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "am_santa",
+      "language": "American English",
+      "gender": "Male",
+      "style_description": "santa",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "bf_alice",
+      "language": "British English",
+      "gender": "Female",
+      "style_description": "alice",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "bf_emma",
+      "language": "British English",
+      "gender": "Female",
+      "style_description": "emma",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "bf_isabella",
+      "language": "British English",
+      "gender": "Female",
+      "style_description": "isabella",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "bf_lily",
+      "language": "British English",
+      "gender": "Female",
+      "style_description": "lily",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "bm_daniel",
+      "language": "British English",
+      "gender": "Male",
+      "style_description": "daniel",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "bm_fable",
+      "language": "British English",
+      "gender": "Male",
+      "style_description": "fable",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "bm_george",
+      "language": "British English",
+      "gender": "Male",
+      "style_description": "george",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "bm_lewis",
+      "language": "British English",
+      "gender": "Male",
+      "style_description": "lewis",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "jf_alpha",
+      "language": "Japanese",
+      "gender": "Female",
+      "style_description": "alpha",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "jf_gongitsune",
+      "language": "Japanese",
+      "gender": "Female",
+      "style_description": "gongitsune",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "jf_nezumi",
+      "language": "Japanese",
+      "gender": "Female",
+      "style_description": "nezumi",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "jf_tebukuro",
+      "language": "Japanese",
+      "gender": "Female",
+      "style_description": "tebukuro",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "jm_kumo",
+      "language": "Japanese",
+      "gender": "Male",
+      "style_description": "kumo",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "zf_xiaobei",
+      "language": "Mandarin Chinese",
+      "gender": "Female",
+      "style_description": "xiaobei",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "zf_xiaoni",
+      "language": "Mandarin Chinese",
+      "gender": "Female",
+      "style_description": "xiaoni",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "zf_xiaoxiao",
+      "language": "Mandarin Chinese",
+      "gender": "Female",
+      "style_description": "xiaoxiao",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "zf_xiaoyi",
+      "language": "Mandarin Chinese",
+      "gender": "Female",
+      "style_description": "xiaoyi",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "zm_yunjian",
+      "language": "Mandarin Chinese",
+      "gender": "Male",
+      "style_description": "yunjian",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "zm_yunxi",
+      "language": "Mandarin Chinese",
+      "gender": "Male",
+      "style_description": "yunxi",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "zm_yunxia",
+      "language": "Mandarin Chinese",
+      "gender": "Male",
+      "style_description": "yunxia",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "zm_yunyang",
+      "language": "Mandarin Chinese",
+      "gender": "Male",
+      "style_description": "yunyang",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "ef_dora",
+      "language": "Spanish",
+      "gender": "Female",
+      "style_description": "dora",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "em_alex",
+      "language": "Spanish",
+      "gender": "Male",
+      "style_description": "alex",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "em_santa",
+      "language": "Spanish",
+      "gender": "Male",
+      "style_description": "santa",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "ff_siwis",
+      "language": "French",
+      "gender": "Female",
+      "style_description": "siwis",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "hf_alpha",
+      "language": "Hindi",
+      "gender": "Female",
+      "style_description": "alpha",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "hf_beta",
+      "language": "Hindi",
+      "gender": "Female",
+      "style_description": "beta",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "hm_omega",
+      "language": "Hindi",
+      "gender": "Male",
+      "style_description": "omega",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "hm_psi",
+      "language": "Hindi",
+      "gender": "Male",
+      "style_description": "psi",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "if_sara",
+      "language": "Italian",
+      "gender": "Female",
+      "style_description": "sara",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "im_nicola",
+      "language": "Italian",
+      "gender": "Male",
+      "style_description": "nicola",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "pf_dora",
+      "language": "Brazilian Portuguese",
+      "gender": "Female",
+      "style_description": "dora",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "pm_alex",
+      "language": "Brazilian Portuguese",
+      "gender": "Male",
+      "style_description": "alex",
+      "available": true,
+      "reason": null
+    },
+    {
+      "voice_id": "pm_santa",
+      "language": "Brazilian Portuguese",
+      "gender": "Male",
+      "style_description": "santa",
+      "available": true,
+      "reason": null
+    }
+  ]
+}

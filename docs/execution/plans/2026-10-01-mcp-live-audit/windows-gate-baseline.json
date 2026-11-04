@@ -1,0 +1,390 @@
+{
+  "schema": "mcp-audit-baseline.v1",
+  "recorded_commit": "65bfa42605a253a46eca92881777c6901da88c98",
+  "mode": "authoritative",
+  "recorded_at": "2026-10-01T21:40:36.779Z",
+  "entries": [
+    {
+      "tool": "avkit_settings",
+      "action": "get",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_settings",
+      "action": "set",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_health",
+      "action": "liveness",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_health",
+      "action": "dependencies",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_models",
+      "action": "available",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_models",
+      "action": "downloaded",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_models",
+      "action": "download",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_models",
+      "action": "download_runtime",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_models",
+      "action": "download_asset",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_models",
+      "action": "load",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_models",
+      "action": "status",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_tts",
+      "action": "voices",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_tts",
+      "action": "prepare",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_tts",
+      "action": "generate",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_tts",
+      "action": "get",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_tts",
+      "action": "cancel",
+      "status": "fail"
+    },
+    {
+      "tool": "avkit_models",
+      "action": "unload",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "list",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "sabr_get",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "cookies_test",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "sabr_force",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "sabr_check",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "sabr_clear",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "add",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "apply_defaults",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "reorder",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "get",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "start",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "cancel",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "reset",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "pause",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "resume",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "stop",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "remove",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_download",
+      "action": "clear",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "list",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "add",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "get",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "reorder",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "start",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "pause",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "resume",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "stop",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "requeue",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "retry",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "compile",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_transcript",
+      "action": "remove",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "list",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "gpu",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "gpu_refresh",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "add",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "get",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "start",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "cancel",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "reset",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "reorder",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "pause",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "resume",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "remove",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
+      "action": "clear",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "list",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "capture",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "get",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "image",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "annotate",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "capture_interactive",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "list_requests",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "remove",
+      "status": "pass"
+    }
+  ],
+  "findings": [
+    {
+      "code": "schema_not_advertised",
+      "tool": "avkit_download",
+      "detail": "tools/list inputSchema exposes no action values; _meta lists 18 actions"
+    },
+    {
+      "code": "schema_not_advertised",
+      "tool": "avkit_transcript",
+      "detail": "tools/list inputSchema exposes no action values; _meta lists 12 actions"
+    },
+    {
+      "code": "schema_not_advertised",
+      "tool": "avkit_tts",
+      "detail": "tools/list inputSchema exposes no action values; _meta lists 5 actions"
+    },
+    {
+      "code": "schema_not_advertised",
+      "tool": "avkit_models",
+      "detail": "tools/list inputSchema exposes no action values; _meta lists 8 actions"
+    },
+    {
+      "code": "schema_not_advertised",
+      "tool": "avkit_settings",
+      "detail": "tools/list inputSchema exposes no action values; _meta lists 2 actions"
+    },
+    {
+      "code": "schema_not_advertised",
+      "tool": "avkit_health",
+      "detail": "tools/list inputSchema exposes no action values; _meta lists 2 actions"
+    },
+    {
+      "code": "schema_not_advertised",
+      "tool": "avkit_convert",
+      "detail": "tools/list inputSchema exposes no action values; _meta lists 13 actions"
+    },
+    {
+      "code": "schema_not_advertised",
+      "tool": "avkit_capture",
+      "detail": "tools/list inputSchema exposes no action values; _meta lists 8 actions"
+    }
+  ]
+}

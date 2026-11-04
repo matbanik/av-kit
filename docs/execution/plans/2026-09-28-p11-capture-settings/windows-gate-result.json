@@ -1,0 +1,127 @@
+{
+  "schema": "s26-windows-gate.v1",
+  "tested_commit": "cb864f3b3706e7fe5d2dc0f516e74297ee12f600",
+  "clean_tree": true,
+  "lockfile_sha256": "A86D9A42C6CBD98705E1720EDBD7666FED573581C07E21EA0F56379DC7332980",
+  "mcp_lockfile_sha256": "62147DE51AFE855992D9BCA14364AFC03B493E8B02C478BA0F890B957DCA5095",
+  "electron": "`-- electron@42.9.3",
+  "node": "v24.19.0",
+  "started": "2026-09-29T20:55:47.1535859-04:00",
+  "stages": [
+    {
+      "id": "npm-ci",
+      "argv": "npm --prefix ui ci",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-npm-ci.txt"
+    },
+    {
+      "id": "mcp-npm-ci",
+      "argv": "npm --prefix mcp-server ci",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-mcp-npm-ci.txt"
+    },
+    {
+      "id": "py-types",
+      "argv": "uv run pyright packages/",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-py-types.txt"
+    },
+    {
+      "id": "py-lint",
+      "argv": "uv run ruff check packages/ tests/",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-py-lint.txt"
+    },
+    {
+      "id": "ui-types",
+      "argv": "npm --prefix ui run typecheck",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-ui-types.txt"
+    },
+    {
+      "id": "ui-lint",
+      "argv": "npm --prefix ui run lint",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-ui-lint.txt"
+    },
+    {
+      "id": "mcp-types",
+      "argv": "npm --prefix mcp-server run typecheck",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-mcp-types.txt"
+    },
+    {
+      "id": "py-tests",
+      "argv": "uv run pytest tests/ -x --tb=short -q",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-py-tests.txt"
+    },
+    {
+      "id": "ui-tests",
+      "argv": "npm --prefix ui run test -- --reporter=json --outputFile=C:/Temp/av-kit/s26-win-vitest.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-ui-tests.txt"
+    },
+    {
+      "id": "ui-build",
+      "argv": "npm --prefix ui run build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-ui-build.txt"
+    },
+    {
+      "id": "ui-harness-build",
+      "argv": "pwsh -NoProfile -Command $env:AVKIT_PRIMITIVE_HARNESS_BUILD='1'; npm --prefix ui run build -- --outDir 'P:\\av-kit\\ui/out-e2e'; exit $LASTEXITCODE",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-ui-harness-build.txt"
+    },
+    {
+      "id": "mcp-build",
+      "argv": "npm --prefix mcp-server run build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-mcp-build.txt"
+    },
+    {
+      "id": "mcp-tests",
+      "argv": "npm --prefix mcp-server run test",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-mcp-tests.txt"
+    },
+    {
+      "id": "openapi",
+      "argv": "uv run python tools/export_openapi.py --check openapi.committed.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-openapi.txt"
+    },
+    {
+      "id": "state-render",
+      "argv": "uv run python tools/meu_status.py render --check",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-state-render.txt"
+    },
+    {
+      "id": "ui-electron",
+      "argv": "npm --prefix ui run test:e2e -- --reporter=json --outputFile=C:/Temp/av-kit/s26-win-e2e.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-ui-electron.txt"
+    },
+    {
+      "id": "source-audit",
+      "argv": "rg -n -e TODO -e FIXME -e NotImplementedError -e transition-all -e bg-\\[# ui/src/renderer/src/features/capture/CapturePage.tsx ui/src/renderer/src/features/capture/CaptureViewport.tsx ui/src/renderer/src/features/capture/CaptureFilmstrip.tsx ui/src/renderer/src/features/capture/capture-filmstrip-label.ts ui/src/renderer/src/features/settings/SettingsPage.tsx ui/src/renderer/src/features/settings/SettingsRail.tsx ui/src/renderer/src/features/settings/settings-sections.ts ui/src/renderer/src/features/settings/StartAtSignInControl.tsx ui/src/renderer/src/components/ui/PathRow.tsx",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s26-win-source-audit.txt",
+      "note": "rg exit 1 (1 = no hits)"
+    }
+  ],
+  "vitest": {
+    "passed": 675,
+    "failed": 0,
+    "total": 675
+  },
+  "e2e": {
+    "expected": 110,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "finished": "2026-09-29T21:12:36.3159972-04:00"
+}

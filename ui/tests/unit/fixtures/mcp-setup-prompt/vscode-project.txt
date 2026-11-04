@@ -1,0 +1,29 @@
+Set up the av-kit MCP server for VS Code (project scope: this project only).
+
+Follow the steps in order. The server reads its own token from the app data folder, so no token goes in any config.
+
+1. Find: the config file is .vscode/mcp.json in the repository root.
+2. Back up: if .vscode/mcp.json exists, copy it to .vscode/mcp.json.avkit-backup-<UTC yyyyMMddTHHmmssZ> before changing it, with the current UTC time in that name. If it does not exist yet, skip the backup.
+3. Merge: change only the avkit entry and keep every other entry. Add or replace the "avkit" key inside "servers" with the one below and keep every other key. If the file does not exist, create it with exactly this content.
+
+```json
+{
+  "servers": {
+    "avkit": {
+      "type": "stdio",
+      "command": "C:\\Program Files\\av-kit\\av-kit.exe",
+      "args": [
+        "C:\\Program Files\\av-kit\\resources\\mcp-server\\index.mjs"
+      ],
+      "env": {
+        "ELECTRON_RUN_AS_NODE": "1",
+        "AVKIT_APP_DATA": "C:\\Users\\Test User\\AppData\\Local\\av-kit"
+      }
+    }
+  }
+}
+```
+
+4. Restart: If the tools do not appear, quit and reopen VS Code, then reply Ready.
+5. Verify: call the avkit_health tool with action: "dependencies". It must return successfully. A "liveness" result never counts as verified.
+6. Result: end your reply with exactly one line, either RESULT: connected or RESULT: failed (<step>, <error>), where <step> is backup, merge, restart or verify. When the verify call returns an error whose text starts with "<code>:", <error> is that code: an error starting "token_missing:" gives RESULT: failed (verify, token_missing).

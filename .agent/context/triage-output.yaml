@@ -1,0 +1,2009 @@
+# Auto-generated. Do not edit. Regenerate with `issue_triage.py triage`
+archived:
+- id: TTS-MODEL-MANAGE-AFFORDANCE
+  title: TTS 'Manage' disclosure hides model selection; Get/Load/Unload should follow a selected model's state
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-1
+      stage: triage
+      question: How should model management be surfaced?
+      resolution: human
+      class: product-preference
+      chosen: Model picker first; one state-driven Get / Load / Unload button
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified this behaviour directly; no fork remains.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'this should be selection of a model after which Get Load or Unload button will appear depending on the state of the model'
+    - id: D-2
+      stage: triage
+      question: Picker control and button state machine
+      resolution: autonomous
+      class: two-way
+      chosen: Native SelectInput (G30) listing the four variants with state suffix; one primary button whose label/action follows is_downloaded / loaded_variant_id; Device stays beside it
+      source_tag: Research-backed
+      precedents:
+      - docs/build-plan/11-page-layout.md TT rows — SelectInput already canon on the TTS page
+      - ui/src/renderer/src/features/tts/tts-controls.ts getEnabled/loadEnabled — existing predicates reused
+      research:
+        engine: web_search
+        sources:
+        - https://docs.voicebox.sh/developer/model-management — states Not installed / Installed / Active drive one action
+        - https://www.mintlify.com/yocxy2/RCLI/commands/model-management — single-action switch unloads then loads
+      reasoning: Sources converge on a state machine with one action per state; a select keeps the page within existing G30 controls. Two-way UI arrangement.
+- id: TTS-GENERATE-FAILED-SILENT
+  title: TTS Generate shows 'Failed' with no reason in the UI and nothing in the console
+  severity: high
+  component: core
+  status: resolved
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked:
+    - How should the spaCy en_core_web_sm model and the ONNX vocab file be provisioned on a user machine?
+    answers:
+    - Managed downloads inside the model-manager flow + Dependencies/readiness rows (D-22 recommendation)
+    decided_by: human
+    decision_log:
+    - id: D-3
+      stage: triage
+      question: How is a failed generation surfaced?
+      resolution: autonomous
+      class: two-way
+      chosen: Log tts.generate / tts.generate_failed with job_id and error in services/tts.py; render job.error_message in the run-bar error slot; regression test for Failed-with-error_message
+      source_tag: Local Canon
+      precedents:
+      - AGENTS.md §Code Quality — structured logging, handle all errors
+      - .agent/docs/emerging-standards.md G25 — status codes are not proof of behaviour
+      research:
+        engine: web_search
+        sources: []
+      reasoning: Local canon already mandates both; no fork.
+    - id: D-22
+      stage: triage
+      question: How do the TTS engine runtime assets (ONNX config.json vocab, spaCy en_core_web_sm) get onto a user machine?
+      resolution: human
+      class: one-way-door
+      chosen: 'Managed downloads: ONNX vocab fetched from hexgrad/Kokoro-82M with each ONNX variant and passed as KokoroAdapter(onnx_vocab_path=...) in wiring.py; spaCy en_core_web_sm fetched on first PyTorch
+        load; both shown as Settings > Dependencies readiness rows with a Get action; nothing bundled in the installer'
+      source_tag: Human-approved
+      precedents:
+      - packages/core/src/avkit_core/services/models.py download — single-flight user-triggered model downloads
+      - docs/build-plan/06-gui.md Dependencies / readiness card
+      research:
+        engine: web_search
+        sources:
+        - https://docs.voicebox.sh/developer/model-management — runtime assets as installable states, not installer payload
+      reasoning: Recommended over bundling (installer size, version pinning) and a pip extra (packaged app cannot add wheels); the vocab wiring fix in wiring.py:167 is needed under every option.
+      human_message_reference: 'USER_EXPLICIT 2026-09-30 ''D-22: follow you recommendation'''
+- id: HEADER-CONSOLE-SETTINGS-BUTTON-STATE
+  title: 'Header ''Console'' and ''Settings: Ctrl+K'' read as text, and Console has no active/pressed state'
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-4
+      stage: triage
+      question: Should Console show an active state and read as a button?
+      resolution: human
+      class: product-preference
+      chosen: 'Yes: toggle button with pressed state; both header controls styled as buttons'
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified this behaviour directly; no fork remains.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'When Console is opened the Console button on the top right corner should change to indicate it is active ... Same goes for the setting'
+    - id: D-5
+      stage: triage
+      question: Which active-state idiom, and the palette label
+      resolution: autonomous
+      class: two-way
+      chosen: aria-pressed toggle, constant label, tinted background + terminal icon; palette button becomes 'Commands Ctrl+K' with a command icon
+      source_tag: Research-backed
+      precedents:
+      - ui/src/renderer/src/components/layout/Header.tsx — palette button opens CommandPalette, not Settings
+      research:
+        engine: web_search
+        sources: &id001
+        - https://w3.org/WAI/ARIA/apg/patterns/button — toggle = aria-pressed, constant label
+        - https://lightningdesignsystem.com/accessibility/patterns/togglebutton — pressed state via background + aria-pressed
+      reasoning: APG/SLDS/EUI agree on aria-pressed + background; the label fix removes a wrong affordance. Two-way.
+- id: TTS-CLEANUP-PREVIEW-REDUNDANT
+  title: 'TTS Cleanup: ''Preview cleanup'' looks like text and the two preview panes duplicate the main text area'
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-6
+      stage: triage
+      question: Keep the two preview panes?
+      resolution: human
+      class: product-preference
+      chosen: Remove preview-raw; show the cleaned preview only after Preview runs
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified this behaviour directly; no fork remains.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'there is redundant text areas for preview. We see what it is on top, do not need to see also on the bottom two text areas'
+- id: TTS-CLEANUP-APPLY-MISSING
+  title: TTS Cleanup has Preview but no 'Apply cleanup' to replace the main text with the cleaned result
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-7
+      stage: triage
+      question: Add Apply cleanup?
+      resolution: human
+      class: product-preference
+      chosen: 'Yes: Apply replaces the main text with cleaned_text'
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified this behaviour directly; no fork remains.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'Apply Cleanup is missing so text in the main area gets replaced'
+- id: TTS-LANGUAGE-VOICE-PICKER-SPACE
+  title: TTS Language select + voice listbox consume most of the Voice panel height
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-8
+      stage: triage
+      question: Compact the language/voice block?
+      resolution: human
+      class: product-preference
+      chosen: Yes; agent to research and pick a compact pattern
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified this behaviour directly; no fork remains.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'Language options are taking up way too much space on the screen ... Web search what would be more compact and retain the functionality'
+    - id: D-9
+      stage: triage
+      question: Which compact pattern
+      resolution: autonomous
+      class: two-way
+      chosen: Searchable voice combobox (filters id/name/language, chip for the selection, grouped by language) replacing the full-width select + 236px listbox; keep role=listbox semantics inside the popup
+      source_tag: Research-backed
+      precedents:
+      - ui/src/renderer/src/features/tts/TTSPage.tsx voice-grid listbox and keyboard handler — reuse
+      research:
+        engine: web_search
+        sources:
+        - https://design.visa.com/components/multiselect/usage/ — input + listbox for fast find
+        - https://www.setproduct.com/blog/dropdown-ui-design — searchable dropdown for long lists
+        - https://cieden.com/book/atoms/checkbox/chip-components-or-checkboxes — chips aid review of a selection
+      reasoning: Sources converge on a searchable combobox for long filterable lists; user delegated the choice. Two-way.
+- id: CAPTURE-VIEWPORT-ZOOM
+  title: 'Capture page has no zoom: mouse-wheel and +/- buttons for the image'
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-10
+      stage: triage
+      question: Add zoom?
+      resolution: human
+      class: product-preference
+      chosen: Mouse-wheel zoom plus +/- buttons
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified this behaviour directly; no fork remains.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'Capture page should have zoom in zoom out function for the image with the mouse wheel and + and - buttons somewhere intuitive'
+    - id: D-11
+      stage: triage
+      question: Zoom mechanics
+      resolution: autonomous
+      class: two-way
+      chosen: Wheel over the image zooms about the cursor (Ctrl+wheel too); steps fit/25-400%; +/-/Fit buttons in the viewport corner; pan by drag/scroll when zoomed; FIT_MAP gains scale+offset so MEU-59/60
+        mapping stays exact
+      source_tag: Local Canon
+      precedents:
+      - ui/src/renderer/src/features/capture/capture-fit-map.ts — single mapping point to extend
+      - docs/build-plan/09-screenshot-capture.md §Hit-test — CSS/image projection must stay exact
+      research:
+        engine: web_search
+        sources: []
+      reasoning: Windows Photos/IrfanView convention matches the user's words; mapping change is internal. Two-way.
+- id: CAPTURE-TOOLBAR-ICONS
+  title: Capture toolbar overflows horizontally; buttons should be icons with tooltips
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-12
+      stage: triage
+      question: Icons instead of labels?
+      resolution: human
+      class: product-preference
+      chosen: Icon buttons with tooltips so the row no longer scrolls
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified this behaviour directly; no fork remains.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'Tool bar needs to have icons and tool tips instead of full function names so the left right scroll does not need to be used'
+    - id: D-13
+      stage: triage
+      question: Where the per-tool options go
+      resolution: autonomous
+      class: two-way
+      chosen: Icon buttons with title/aria-label and aria-pressed for the active tool; Color/Apply/Cancel/Sample/font/Bg/stroke move to a contextual second row shown only for the active tool; no-horizontal-scroll
+        E2E assertion at default width
+      source_tag: Research-backed
+      precedents:
+      - ui/src/renderer/src/features/capture/CaptureViewport.tsx capture-chrome-tools — overflow-x-auto row
+      research:
+        engine: web_search
+        sources: *id001
+      reasoning: Contextual options bars are the image-editor norm; removes overflow without hiding functions. Two-way.
+- id: CAPTURE-FLATTEN-WITH-BACKUP
+  title: 'Capture: no way to permanently apply (flatten) annotations to the image with an automatic backup'
+  severity: medium
+  component: core
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-14
+      stage: triage
+      question: Flatten annotations into the image?
+      resolution: human
+      class: one-way-door
+      chosen: 'Yes: permanent apply with an automatic backup in a backup folder, both governed by a setting'
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: Overwriting original_path is one-way for the file; the user chose it with a mandatory backup, which restores reversibility.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'there needs to be option to permanently apply to image but also save the backup of the image in case user will want to revert, in a backup folder.
+        This needs to be also a setting'
+    - id: D-15
+      stage: triage
+      question: Backup location, naming, revert
+      resolution: autonomous
+      class: two-way
+      chosen: POST /captures/{id}/flatten copies original to {inbox}/.avkit-backup/{stem}.{YYYYMMDD-HHMMSS}.png, bakes over original_path, clears annotated_path + sidecar; POST .../revert restores the newest
+        backup; settings capture.flatten_backup (default on) and capture.backup_dir (default {inbox}/.avkit-backup); no retention cap (the user prunes) so no governance number is introduced; MCP mirrors
+        both actions
+      source_tag: Research-backed
+      precedents:
+      - packages/core/src/avkit_core/services/capture.py annotate_and_save — sibling-file convention
+      - docs/build-plan/09-screenshot-capture.md — sidecar + .annotated.png contract
+      research:
+        engine: web_search
+        sources:
+        - https://pspdfkit.com/pdf-sdk/image-documents/ — flattened preview written out, original + annotations kept for re-edit
+        - https://help.kamiapp.com/kami-help-center/flattening-annotations — flatten = merge, no longer editable
+      reasoning: Keeps the existing sidecar model as the editable source and adds a flatten step with a backup, matching the sources. Two-way given the backup.
+- id: CAPTURE-SETTINGS-BUTTON-LABEL
+  title: Capture page 'Settings' toggle should be 'Options' and look like a button
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-16
+      stage: triage
+      question: Rename and restyle the Capture 'Settings' toggle?
+      resolution: human
+      class: product-preference
+      chosen: Rename to Options; render as a recognisable button
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified this behaviour directly; no fork remains.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'it should be called Options and also as button issue where it does not look like button. Web search and pick the most adopted UI experience'
+    - id: D-17
+      stage: triage
+      question: Which affordance
+      resolution: autonomous
+      class: two-way
+      chosen: Secondary button 'Options' with a sliders/gear icon and chevron, aria-expanded bound to the disclosure; keep capture-settings-toggle
+      source_tag: Research-backed
+      precedents:
+      - ui/src/renderer/src/features/capture/CapturePage.tsx:1133 — Disclosure title='Settings'
+      research:
+        engine: web_search
+        sources:
+        - https://learn.microsoft.com/en-us/previous-versions/visualstudio/visual-studio-2013/31d796hd(v=vs.120) — tool options live in an options bar, not Settings
+        - https://help.syncfusion.com/xamarin/image-editor/toolbarcustomization — toolbar options as icon buttons
+      reasoning: Gear/sliders + 'Options' is the editor convention; two-way.
+- id: SETTINGS-ACTIVE-SECTION-HIGHLIGHT
+  title: 'Settings page: the visible section has no active emphasis on the right-hand panel (rail highlight shipped in MEU-58)'
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-18
+      stage: triage
+      question: Highlight the active settings section?
+      resolution: human
+      class: product-preference
+      chosen: Yes, in the rail (shipped by MEU-58) and on the right-hand panel
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified this behaviour directly; no fork remains.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'Settings page should have highlighting effect of area that is active to make clear which settings are being looked at on the left navigation and
+        as background on the right panel'
+    - id: D-19
+      stage: triage
+      question: Verify before building
+      resolution: autonomous
+      class: two-way
+      chosen: Verify on the target that MEU-58's SettingsRail aria-current works; then only the right-panel emphasis remains (subtle surface-raised background driven by the same observer state)
+      source_tag: Local Canon
+      precedents:
+      - ui/src/renderer/src/features/settings/SettingsRail.tsx:190 — aria-current shipped
+      - docs/build-plan/11-page-layout.md ST3
+      research:
+        engine: web_search
+        sources: []
+      reasoning: Half of the ask is already on main; scope to the remainder after a local check. Two-way.
+- id: MCP-LIVE-AUDIT-WORKFLOW
+  title: No MCP audit workflow exercises every tool action against the live local API from the IDE
+  severity: medium
+  component: mcp-server
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-20
+      stage: triage
+      question: Build an MCP audit workflow?
+      resolution: human
+      class: product-preference
+      chosen: 'Yes: execute every MCP call from the IDE against the local API; adapt the Zorivest skill'
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified this behaviour directly; no fork remains.
+      human_message_reference: USER_EXPLICIT 2026-09-30 'we need to create mcp audit workflow that will execute each MCP call in IDE to ensure everything works via local API as it should'
+    - id: D-21
+      stage: triage
+      question: Home and harness
+      resolution: autonomous
+      class: two-way
+      chosen: Product MEU under Phase 5 (05-mcp-server.md), delivering .agent/workflows/mcp-audit.md + .agent/skills/mcp-tool-audit/SKILL.md + a runner that drives the built server as a real stdio client
+        (MCP Inspector CLI or the SDK client) with a committed baseline-snapshot.json; authoritative run is a local Windows stage per cloud-local-collaboration.md
+      source_tag: Research-backed
+      precedents:
+      - .agent/context/meu-registry.md MEU-23 — the gui-actions-index audit shipped as a product MEU
+      - _inspiration/_zorivest_mcp_tool_audit_skill.md — phases and cleanup contract
+      research:
+        engine: web_search
+        sources:
+        - 'https://codex.danielvaughan.com/2026/05/26/mcp-server-testing-quality-assurance-unit-integration-inspector/ — three layers: unit (in-memory), integration flows, Inspector'
+        - https://glama.ai/mcp/servers/@roychri/mcp-server-asana/blob/2f29224b1a409dc01eb2f3dd25480695f55232cc/HOW-TO-TEST-MCP-ON-CLI.md — Inspector --cli --method tools/call for pipelines
+      reasoning: Precedent (MEU-23) and sources converge; two-way.
+- id: TTS-PACKAGED-RUNTIME-EXCLUDED
+  title: 'Packaged app cannot synthesize TTS: torch excluded, KPipeline is None'
+  severity: high
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-41
+      stage: triage
+      question: How does the packaged app synthesize TTS without torch?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Torch stays out of the installer (07:227, 07:322). The ONNX path must not depend on kokoro.KPipeline/torch: it drives the G2P directly and runs onnxruntime; PyInstaller hiddenimports cover
+        the G2P stack; a packaged smoke generate becomes an acceptance row. The exact G2P wiring is fixed and proven at plan time'
+      source_tag: Local Canon
+      precedents:
+      - docs/build-plan/07-distribution.md:225-227,322 — ONNX with bundled onnxruntime; torch not in the installer
+      research:
+        engine: native
+        sources:
+        - https://pypi.org/project/kokoro-onnx/ (google_search 2026-10-09) — runs on onnxruntime with no torch; text-to-phoneme comes from misaki/espeak
+      reasoning: Spec forbids torch in the 500 MB budget and promises ONNX with bundled onnxruntime (07:225); kokoro-onnx shows Kokoro ONNX runs without torch. Bundling torch was the only alternative and
+        it breaks the size budget. Two-way at code level.
+- id: TTS-VOICE-PACK-LAZY-FETCH
+  title: Kokoro voice packs are fetched lazily from Hugging Face during generate
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-42
+      stage: triage
+      question: Should Kokoro voice packs become managed assets?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Yes: voices/<id>.pt is fetched through the existing managed-download path (on first selection or with the model), shown as ready/missing, and a generate with a missing pack fails fast with
+        a named reason instead of fetching mid-run'
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/known-issues.yaml TTS-GENERATE-FAILED-SILENT D-22 — managed downloads + readiness rows
+      research:
+        engine: none
+        sources: []
+      reasoning: Direct extension of the human-approved D-22 rule (runtime assets are managed downloads, nothing bundled). Two-way.
+- id: TTS-NON-ENGLISH-G2P-DEPS
+  title: Non-English Kokoro voices need G2P runtime pieces that are not provisioned
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked:
+    - How should non-English Kokoro voices get their G2P runtime (espeak-ng is GPL-3.0; av-kit is MIT-shaped and forbids GPL code)?
+    answers:
+    - Never bundle espeak-ng (GPL-3.0). Detect a user-installed espeak-ng at runtime as a readiness row with install guidance; when absent, non-English voices stay listed but disabled with the reason. misaki[ja]/[zh]
+      extras are assessed for licence and size at plan time
+    decided_by: human
+    decision_log:
+    - id: D-61
+      stage: triage
+      question: How do non-English Kokoro voices get their G2P runtime?
+      resolution: human
+      class: one-way-door
+      chosen: Never bundle espeak-ng (GPL-3.0). Detect a user-installed espeak-ng at runtime as a readiness row with install guidance; when absent, non-English voices stay listed but disabled with the reason.
+        misaki[ja]/[zh] extras are assessed for licence and size at plan time
+      source_tag: Human-approved
+      precedents:
+      - docs/build-plan/09-screenshot-capture.md:734-742 — GPL code forbidden, av-kit stays MIT-shaped
+      - known-issues TTS-GENERATE-FAILED-SILENT D-22 — runtime assets are managed, nothing bundled
+      research:
+        engine: native
+        sources:
+        - google_search 2026-10-09 — espeak-ng is GPL-3.0; misaki uses espeak-ng for non-English, English works without it
+      reasoning: 'Recommended in the triage brief: keeps the shipped app free of GPL code (09:734-742) and follows D-22 (nothing bundled). Bundling conflicts with the licence; English-only drops seven languages;
+        status quo fails jobs. Loading a user-installed GPL library in-process is a legal grey area, flagged to the user (not legal advice).'
+      human_message_reference: USER_EXPLICIT 2026-10-09 'All recommendations accpeted as proposed'
+- id: GUI-STARTUP-RELOAD-HIDDEN-WINDOW
+  title: A reload during startup leaves the main window hidden and skips the rest of boot
+  severity: medium
+  component: ui
+  status: resolved
+  category: null
+  priority: null
+  enrichment: null
+- id: SETTINGS-TTS-ASSET-ROW-STALE
+  title: Settings Dependencies TTS asset rows stay 'Downloading' after the download finishes until the page is revisited
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-43
+      stage: triage
+      question: How does the Settings Dependencies card learn that an asset download finished?
+      resolution: autonomous
+      class: two-way
+      chosen: Invalidate the dependency-health query when the shared download runtime leaves Downloading, the same mechanism the TTS page already uses (Session 27 D-28)
+      source_tag: Local Canon
+      precedents:
+      - Session 27 execution review F1 and D-28 — TTS page invalidation on runtime transition
+      research:
+        engine: none
+        sources: []
+      reasoning: Precedent on the TTS page; no fork. Two-way.
+- id: TTS-SPACY-SYSPATH-PREPEND
+  title: activate_spacy_dir prepends the user-writable models dir to sys.path; appending would suffice
+  severity: low
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: MCP-TOOLS-LIST-EMPTY-INPUT-SCHEMA
+  title: tools/list advertises an empty inputSchema for all 8 compound tools, so IDE clients see no parameters (not even action)
+  severity: high
+  component: mcp-server
+  status: resolved
+  category: BLOCKED
+  priority: P2
+  enrichment: null
+- id: API-UNHANDLED-ERROR-OPAQUE
+  title: Unhandled backend exceptions (e.g. yt-dlp extract failure on download add) return a bare 500 internal_error and log no cause
+  severity: medium
+  component: api
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-45
+      stage: triage
+      question: How should unmapped backend failures surface?
+      resolution: autonomous
+      class: two-way
+      chosen: Log every unhandled exception with request_id and traceback; map yt-dlp extract failures on download add to a typed DomainError whose message reaches the client (status chosen at plan time
+        against the errors.py table); keep 500 for true bugs, now logged
+      source_tag: Local Canon
+      precedents:
+      - packages/api/src/avkit_api/errors.py:34-37,96-106 — status table and the silent unhandled handler
+      - .agent/docs/emerging-standards.md G15
+      - known-issues TTS-GENERATE-FAILED-SILENT D-3
+      research:
+        engine: none
+        sources: []
+      reasoning: AGENTS §Code Quality (structured logging, handle all errors), G15 (errors must surface in UI) and the D-3 precedent from TTS-GENERATE-FAILED-SILENT converge. Two-way.
+    - id: D-67
+      stage: triage
+      question: How does an unhandled 500 reach the renderer readably?
+      resolution: autonomous
+      class: two-way
+      chosen: Unhandled errors are caught inside the CORS layer (a middleware inside CORSMiddleware converts them to the internal_error envelope with request_id and logs the traceback), so the 500 carries
+        CORS headers and the GUI shows the request id
+      source_tag: Local Canon
+      precedents:
+      - packages/api/src/avkit_api/main.py:86-93 — CORSMiddleware then register_exception_handlers
+      - .agent/docs/emerging-standards.md G15 — API errors must surface in the UI
+      research:
+        engine: none
+        sources: []
+      reasoning: Reproduced locally; G15 requires the error to surface. Two-way.
+- id: MCP-INSTRUCTIONS-CAPTURE-REMOVE-FILES
+  title: MCP server instructions say 'Files on disk are not deleted' but avkit_capture.remove deletes the original, annotated and sidecar files
+  severity: medium
+  component: mcp-server
+  status: resolved
+  category: BLOCKED
+  priority: P3
+  enrichment: null
+- id: MCP-TTS-GENERATE-SYNCHRONOUS
+  title: avkit_tts.generate blocks until synthesis ends; MCP's 30 s timeout turns longer texts into fetch_failed while the job keeps running, and a running job cannot be cancelled
+  severity: high
+  component: mcp-server
+  status: resolved
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-44
+      stage: triage
+      question: How should TTS generation be exposed so long texts do not time out and can be cancelled?
+      resolution: autonomous
+      class: two-way
+      chosen: POST /tts/generate queues the job and returns it at once (Queued/Running); synthesis runs in the background; clients poll the job and DELETE /tts/{id} cancels a running job between segments;
+        MCP generate returns the job id and the GUI run bar polls
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/conversion.py — queued jobs with polling and cancel
+      - mcp-server/src/client.ts:14 — 30 s DEFAULT_TIMEOUT_MS
+      research:
+        engine: none
+        sources: []
+      reasoning: Downloads, transcripts and conversions already follow queue-and-poll; TTS is the only inline long operation. Local API with in-repo clients only, so the contract change is two-way at ordinary
+        cost.
+- id: CAPTURE-BAKE-ARROW-THIN
+  title: Arrow is jagged when baked and its tip is drawn wrong (shaft runs through the head) in bake and preview
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-53
+      stage: triage
+      question: Where does the arrow shaft end?
+      resolution: human
+      class: product-preference
+      chosen: At the back of the head, not at its tip, in both bake and preview
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: Tester requirement from the user; no fork.
+      human_message_reference: USER_EXPLICIT 2026-10-03 FLATTEN_LOOK F1, relayed by the local agent (known-issues root_cause) — 'the line must start at the back of the triangle, not end at its tip'
+    - id: D-54
+      stage: triage
+      question: How is the baked arrow anti-aliased?
+      resolution: autonomous
+      class: two-way
+      chosen: Draw arrow marks at 4x and LANCZOS-downscale; shaft ends at tip - head*cos(angle) with a small overlap; head size/angle set at plan time within the 09 stroke contract
+      source_tag: Research-backed
+      precedents: []
+      research:
+        engine: native
+        sources:
+        - google_search 2026-10-09 (Pillow docs/Stack Overflow) — ImageDraw line/polygon have no anti-aliasing; draw at 2-4x and resize with LANCZOS
+      reasoning: Supersampling is the standard Pillow route (ImageDraw has no AA for polygons/lines). Two-way.
+- id: CAPTURE-AUTO-SELECT-AFTER-DRAW
+  title: Decide whether Capture keeps auto-Select after drawing a mark
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked:
+    - Keep auto-Select after drawing (Human-approved MEU-60 rule), switch to sticky tools, or keep auto-Select and add a tool lock?
+    answers:
+    - Keep auto-Select as the default (AC-60.4 unchanged) and add a tool lock that keeps the current tool after each mark
+    decided_by: human
+    decision_log:
+    - id: D-63
+      stage: triage
+      question: Keep auto-Select after drawing a mark?
+      resolution: human
+      class: product-preference
+      chosen: Keep auto-Select as the default (AC-60.4 unchanged) and add a tool lock that keeps the current tool after each mark
+      source_tag: Human-approved
+      precedents:
+      - docs/build-plan/09-screenshot-capture.md §Annotation edit until Save — AC-60.4 auto-Select (Human-approved)
+      research:
+        engine: native
+        sources:
+        - google_search 2026-10-09 (Excalidraw, tldraw docs) — revert to select after drawing, with a tool lock; Snagit keeps the tool selected
+      reasoning: 'Recommended in the triage brief: removes one click per extra mark without reversing the Human-approved default. Sticky tools everywhere would reverse AC-60.4; keeping as is leaves the
+        complaint.'
+      human_message_reference: USER_EXPLICIT 2026-10-09 'All recommendations accpeted as proposed'
+- id: CAPTURE-ERASER-TOOL
+  title: 'Capture Eraser mark: remove a selected rectangle on Save overlay / Apply to image'
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked:
+    - 'What does the Eraser fill the removed rectangle with: colour sampled from its border, transparency, or the current colour?'
+    answers:
+    - Colour sampled from the rectangle's border (ShareX Smart Eraser style); works for PNG, JPEG and WebP; no extra button
+    decided_by: human
+    decision_log:
+    - id: D-62
+      stage: triage
+      question: What does the Eraser fill the removed rectangle with?
+      resolution: human
+      class: product-preference
+      chosen: Colour sampled from the rectangle's border (ShareX Smart Eraser style); works for PNG, JPEG and WebP; no extra button
+      source_tag: Human-approved
+      precedents:
+      - known-issues CAPTURE-SAMPLE-ORIGINAL-UNLABELED D-51 — the user removed the manual eyedropper, so no new sampling button
+      research:
+        engine: native
+        sources:
+        - google_search 2026-10-09 (techsmith.com, getsharex.com) — Snagit erases to transparency; ShareX Smart Eraser fills with sampled surrounding colour; Greenshot/Flameshot have no eraser
+      reasoning: 'Recommended in the triage brief: format-independent and needs no control. Transparency fails for JPEG and shows a checkerboard/black in many viewers; the current colour duplicates a filled
+        Box.'
+      human_message_reference: USER_EXPLICIT 2026-10-09 'All recommendations accpeted as proposed'
+- id: CAPTURE-PIXELATE-TOOL
+  title: 'Capture Pixelate mark: mosaic a rectangle on bake, with editor preview'
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-60
+      stage: triage
+      question: Default pixelate block size
+      resolution: autonomous
+      class: two-way
+      chosen: 10 px blocks by default, adjustable with the existing size control; bake = downscale + nearest-neighbour upscale; live preview
+      source_tag: Research-backed
+      precedents: []
+      research:
+        engine: native
+        sources:
+        - google_search 2026-10-09 (getsharex.com, getgreenshot.org) — both expose an adjustable pixel size, around 10 px by default
+      reasoning: ShareX and Greenshot default to about 10 px with a slider; a UI default, not a governance number. Two-way.
+- id: CAPTURE-FILMSTRIP-CONTEXT-MENU
+  title: 'Capture filmstrip right-click menu: Copy full path, Copy image, Delete'
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-58
+      stage: triage
+      question: Filmstrip right-click menu scope
+      resolution: autonomous
+      class: two-way
+      chosen: Copy full path (clipboard.writeText) and Copy image (clipboard.writeImage) in the main process via preload IPC; Delete reuses the existing delete confirm; new actions go into gui-actions-index
+      source_tag: Local Canon
+      precedents:
+      - .agent/docs/emerging-standards.md G27 — preload bridge
+      research:
+        engine: none
+        sources: []
+      reasoning: The user specified the three items; IPC through preload follows G27. Two-way.
+- id: CAPTURE-FILMSTRIP-MULTISELECT
+  title: Capture filmstrip Shift multi-select with batch Delete
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-59
+      stage: triage
+      question: Multi-select semantics
+      resolution: autonomous
+      class: two-way
+      chosen: Shift-click selects a range from the current shot; with more than one selected the context menu shows only Delete with one confirm for the batch; the editor shows the last-clicked shot. A
+        Ctrl toggle is a plan-time option, not in scope by default
+      source_tag: Local Canon
+      precedents:
+      - known-issues CAPTURE-FILMSTRIP-MULTISELECT root_cause — the user's request (Shift select, batch Delete)
+      research:
+        engine: none
+        sources: []
+      reasoning: Matches the user's request literally; nothing beyond it is added silently. Two-way.
+- id: CAPTURE-ACTION-ROW-ICONS
+  title: Capture action row overflows at 1280x800; switch to icon buttons and drop the nudge and Body/Tail/Head buttons
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-49
+      stage: triage
+      question: What goes in the second chrome row?
+      resolution: human
+      class: product-preference
+      chosen: Icon buttons via ToolbarIconButton for the per-shot and per-mark actions with aria-label and a visible tooltip; Delete shot red at the far right after a separator; remove Body/Tail/Head and
+        the four nudge buttons for every mark type; arrow keys nudge the selected mark or the focused endpoint
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user amended the proposal directly; no fork remains. Needs Human-approved amendments to the affected MEU-57/60/65 ACs at plan time.
+      human_message_reference: USER_EXPLICIT 2026-10-03 FLATTEN_LOOK attempt 2, relayed by the local agent (docs/execution/plans/2026-10-02-capture-flatten-backup/walkthrough.md) — 'Body, Tail, Head and
+        the arrow nudge buttons are all useless and must be removed for every mark type'
+- id: CAPTURE-HOTKEY-BANNER-GAP
+  title: Empty ~48px band between the Capture header row and the filmstrip
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked:
+    - 'Remove the reserved ~48px hotkey-banner band (amends AC-57.3)? Options: header-row inline status, mount only when a message exists, keep.'
+    answers:
+    - 'Show the hotkey status inline in the Capture header row: no reserved band and no layout shift (Human-approved amendment of AC-57.3)'
+    decided_by: human
+    decision_log:
+    - id: D-64
+      stage: triage
+      question: Remove the reserved hotkey-banner band?
+      resolution: human
+      class: product-preference
+      chosen: 'Show the hotkey status inline in the Capture header row: no reserved band and no layout shift (Human-approved amendment of AC-57.3)'
+      source_tag: Human-approved
+      precedents:
+      - AC-57.3 — banner height reserved to avoid layout shift
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Recommended in the triage brief: keeps AC-57.3''s no-shift intent while removing the empty band. Mount-on-message brings back the shift AC-57.3 prevents; keep leaves the band.'
+      human_message_reference: USER_EXPLICIT 2026-10-09 'All recommendations accpeted as proposed'
+- id: CAPTURE-SAMPLE-ORIGINAL-UNLABELED
+  title: Remove the redundant, confusing 'Sample original' eyedropper button from Capture
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-51
+      stage: triage
+      question: Relabel or remove the 'Sample original' eyedropper?
+      resolution: human
+      class: product-preference
+      chosen: Remove it; the hex field and the Named list cover colour choice
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user ruled after the explanation; the AC-60 sampling ACs need a Human-approved amendment at plan time.
+      human_message_reference: USER_EXPLICIT 2026-10-03 FLATTEN_LOOK attempt 2, relayed by the local agent (docs/execution/plans/2026-10-02-capture-flatten-backup/walkthrough.md) — 'the button is redundant
+        and confusing and must be removed, not relabelled'
+- id: CAPTURE-STALE-ANNOTATED-PATH
+  title: scan_inbox never clears an annotated_path whose file is gone
+  severity: low
+  component: core
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-55
+      stage: triage
+      question: What should scan_inbox do with a missing annotated copy or sidecar?
+      resolution: autonomous
+      class: two-way
+      chosen: Clear annotated_path / sidecar_path when the file is gone, exactly as it already drops rows whose original is gone
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/capture.py scan_inbox — drops rows with a missing original
+      research:
+        engine: none
+        sources: []
+      reasoning: Same reconciliation rule already applied to originals. Two-way.
+- id: CAPTURE-TOOLTIPS-NOT-SHOWN
+  title: No hover tooltip appears on any Capture button in the dev app
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-48
+      stage: triage
+      question: How are hover hints made reliable?
+      resolution: autonomous
+      class: two-way
+      chosen: First reproduce on the target (focused window, after tray hide/show, packaged build, another page). Unless the cause is a one-line environment fix, adopt one renderer Tooltip primitive (portaled,
+        works on disabled controls, keyboard focus) for icon-only buttons app-wide, generalising Session 30's A-10 wrapper
+      source_tag: Local Canon
+      precedents:
+      - docs/execution/plans/2026-10-02-capture-flatten-backup/human-gate-decision.md A-10 — rendered role=tooltip
+      research:
+        engine: none
+        sources: []
+      reasoning: A-10 already proved a rendered tooltip works where native title does not; icon-only buttons (CAPTURE-ACTION-ROW-ICONS) need it. Two-way UI infrastructure.
+    - id: D-69
+      stage: triage
+      question: Which controls need hover hints?
+      resolution: human
+      class: product-preference
+      chosen: Only icon-only function buttons (image, no words) app-wide; labelled controls such as nav-rail items are out of scope
+      source_tag: Human-approved
+      precedents:
+      - D-48 — renderer tooltip primitive generalising Session 30 A-10
+      research:
+        engine: none
+        sources: []
+      reasoning: The user ruled the scope directly; with native tooltips absent app-wide, D-48's renderer primitive applies to icon-only buttons.
+      human_message_reference: USER_EXPLICIT 2026-10-09 local check (trusted chat, screenshots attached) — 'i don't care about tool tips on navigation only on function buttons that have images and no words'
+- id: CAPTURE-TEXT-BG-PREVIEW-OFFSET
+  title: Live preview draws the text background plate about half a line below the text
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-52
+      stage: triage
+      question: How do preview, plate and bake share one text anchor?
+      resolution: autonomous
+      class: two-way
+      chosen: Position the SVG text on the alphabetic baseline at y + ascent(font_size) from the same Segoe metrics the bake uses; add a preview-vs-bake pixel comparison test
+      source_tag: Local Canon
+      precedents:
+      - 09-screenshot-capture.md §Annotation geometry — preview matches bake
+      research:
+        engine: none
+        sources: []
+      reasoning: The bake is correct and the preview drifts because of dominant-baseline=hanging; matching the bake restores WYSIWYG. Two-way.
+- id: CAPTURE-SIZE-MOUSE-CONTROL
+  title: Stroke width and font size can only be changed by retyping the number
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-56
+      stage: triage
+      question: How are stroke width and font size changed with the mouse?
+      resolution: autonomous
+      class: two-way
+      chosen: Keep the number field; add scrub-on-label drag (Shift x10, Alt fine), wheel over the field and Up/Down keys, with a live preview and one undo step per gesture
+      source_tag: Research-backed
+      precedents: []
+      research:
+        engine: native
+        sources:
+        - google_search 2026-10-09 (Base UI NumberField.ScrubArea, design-tool scrub pattern) — drag the label to scrub, the field stays typeable, modifiers change step
+      reasoning: The user asked for mouse control; design-tool practice (Figma/Blender scrubbing) converges. Two-way.
+- id: CAPTURE-NAMED-COLOR-SWATCHES
+  title: Named colour dropdown shows plain names with no colour swatch
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-57
+      stage: triage
+      question: How does the Named list show colours?
+      resolution: autonomous
+      class: two-way
+      chosen: Each option uses its colour as background with contrast-picked text (Chromium on Windows honours option background); fall back to a swatch popover only if the target ignores it
+      source_tag: Local Canon
+      precedents:
+      - .agent/docs/emerging-standards.md G30 — native dropdown styling in Chromium/Electron
+      research:
+        engine: none
+        sources: []
+      reasoning: Smallest change that meets the request; G30 native select remains. Two-way.
+- id: CAPTURE-MARKS-ROW-SQUEEZED
+  title: Capture marks/actions row is sometimes squeezed vertically
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-50
+      stage: triage
+      question: Fix for the squeezed marks row
+      resolution: autonomous
+      class: two-way
+      chosen: 'Fold into the action-row icon MEU: the row gets shrink-0 and no horizontal scroll at the default window (AC-65.4 style NO_OVERFLOW assertion)'
+      source_tag: Local Canon
+      precedents:
+      - AC-65.4 NO_OVERFLOW — Session 29
+      research:
+        engine: none
+        sources: []
+      reasoning: Root cause is overflow-x-auto without shrink-0; the icon row removes the overflow. Two-way.
+- id: FFMPEG-RESOLUTION-DIVERGENCE
+  title: 'FFmpeg is resolved three different ways: Settings/Convert/TTS share a startup-cached adapter, the Downloader ignores the setting, and the Dependencies path echoes the raw setting'
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-40
+      stage: triage
+      question: How should ffmpeg be resolved across Settings, Convert, TTS and the Downloader?
+      resolution: autonomous
+      class: two-way
+      chosen: 'One resolver for every consumer: the same configured -> bundled -> PATH chain feeds yt-dlp via ffmpeg_location; the resolver re-resolves when downloader.ffmpeg_path changes (no latched None);
+        the Dependencies card reports the resolved binary and checks ffprobe beside it'
+      source_tag: Local Canon
+      precedents:
+      - packages/api/src/avkit_api/wiring.py:160-161 — single adapter for health/convert/TTS
+      - docs/build-plan/03-service-layer.md:424 — divergence recorded as a separate issue
+      - .venv yt_dlp/postprocessor/ffmpeg.py:105-107 — yt-dlp reads ffmpeg_location, else bare PATH names
+      research:
+        engine: none
+        sources: []
+      reasoning: The setting already exists and the adapter already holds the right chain; the defect is three consumers disagreeing. Leaving the Downloader on PATH-only contradicts its own setting. Two-way,
+        internal wiring.
+- id: CAPTURE-OPEN-FILE-VARIANT
+  title: Capture 'Open file' always opens the original, even when the Annotated view and {stem}.annotated.png exist
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked:
+    - 'Which file should Capture ''Open file'' open: the one the viewport shows, the annotated copy when it exists, or always the original?'
+    answers:
+    - 'The file the viewport shows: Annotated view opens {stem}.annotated.png, Original view opens the original; Open folder reveals the same file (Human-approved amendment of AC-39.12)'
+    decided_by: human
+    decision_log:
+    - id: D-65
+      stage: triage
+      question: Which file does Capture 'Open file' open?
+      resolution: human
+      class: product-preference
+      chosen: 'The file the viewport shows: Annotated view opens [stem].annotated.png, Original view opens the original; Open folder reveals the same file (Human-approved amendment of AC-39.12)'
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-08-27-p9-capture-gui/implementation-plan.md:195 — AC-39.12 'selected original (fallback annotated)'
+      - docs/build-plan/09-screenshot-capture.md:368 — variant=annotated is for inspection
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Recommended in the triage brief: opens what the user sees. Prefer-annotated ignores the toggle; original-only keeps the reported gap until Apply to image. Research not run: the choice
+        concerns av-kit''s own two views.'
+      human_message_reference: USER_EXPLICIT 2026-10-09 'All recommendations accpeted as proposed'
+- id: TTS-MODEL-FLOW-GAPS
+  title: 'Loading the PyTorch model on ''cuda'' fails with ''Failed to fetch'': the Device list offers cuda without CUDA torch, and the load error is an unlogged 500 with no CORS header'
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-66
+      stage: triage
+      question: What happens when the requested device is not available to the runtime?
+      resolution: autonomous
+      class: two-way
+      chosen: The PyTorch path falls back to CPU like the ONNX path, logs the downgrade and reports the actual device in the model status; the Device list only offers devices the runtime reports (auto and
+        cpu always)
+      source_tag: Local Canon
+      precedents:
+      - packages/infrastructure/src/avkit_infra/tts/adapter.py:179-183 — ONNX already falls back to CPU
+      - docs/build-plan/07-distribution.md:149 — detect CUDA/MPS at runtime
+      research:
+        engine: none
+        sources: []
+      reasoning: Matches the existing ONNX behaviour and the runtime-detection rule; an explicit error was the alternative and the status chip already shows the actual device. Two-way.
+- id: TTS-MODEL-ROW-LAYOUT
+  title: 'TTS Voice panel controls are irregular: Model and Device selects differ in height, labels misalign, Load wraps alone, Format is styled differently'
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-68
+      stage: triage
+      question: How should the Voice panel controls be laid out?
+      resolution: autonomous
+      class: two-way
+      chosen: One aligned grid row for Model (flexes), Device (fixed) and the model action, sharing one control height with labels top-aligned and no wrap at the default window; Format, Speed and the voice
+        search use the same control height and field style; an Electron geometry assertion at DEFAULT_WINDOW pins it
+      source_tag: Local Canon
+      precedents:
+      - docs/build-plan/11-page-layout.md — shared control sizes and DEFAULT_WINDOW geometry assertions (AC-64.6 precedent)
+      research:
+        engine: none
+        sources: []
+      reasoning: The user reported the irregularity; alignment to one control height is the existing layout canon. Two-way.
+actionable:
+- id: E2E-ELECTRON-LAUNCH-FLAG
+  title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: TOOLING-SHARED-REGISTRY-COUPLING
+  title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
+  severity: medium
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-70
+      stage: triage
+      question: Does the third recurrence change this issue's priority?
+      resolution: autonomous
+      class: two-way
+      chosen: Raise to P2 and recommend the debt batch (fixture registry home) right after Session 31
+      source_tag: Local Canon
+      precedents:
+      - .agent/docs/verification-principles.md V30 — the third instance of one defect class means the defect is the mechanism
+      - Session 26 A17 and Session 30 A-12 — two earlier revalidations
+      research:
+        engine: none
+        sources: []
+      reasoning: Three recurrences in three weeks, each blocking a gate or a dispatch for reasons outside av-kit. Two-way.
+- id: TOOLING-ADOPTION-FIXTURE-LIVE-GOVERNANCE
+  title: Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the 2026-09-26 postimage
+  severity: low
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: UI-ELECTRON-LAZY-INSTALL-RACE
+  title: Electron 42 binary installs lazily on first require; parallel Vitest workers race the extraction after npm ci
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: DOWNLOAD-QUEUE-DRAG-OVER-MISS
+  title: Download-queue drag-over (A16 committed-over wait) occasionally misses on Windows
+  severity: low
+  component: ui
+  status: open
+  category: MONITORING
+  priority: P4
+  enrichment: null
+- id: CAPTURE-ZOOM-PAN-ORIGIN-FLAKE
+  title: Capture viewport AC-66.14 middle-button pan origin occasionally off under full Electron suite load
+  severity: low
+  component: ui
+  status: open
+  category: MONITORING
+  priority: P4
+  enrichment: null
+- id: MCP-PACKAGED-ENTRY-UNREACHABLE
+  title: 'Installed MCP server likely never serves: entry guard misses resources/mcp-server/index.js and dist ships without node_modules'
+  severity: medium
+  component: mcp-server
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment: null
+- id: MCP-AUDIT-CENSUS-PROBE-SINGLE-SHOT
+  title: MCP audit container census network proofs are single-shot, so YouTube's per-moment wall can fail a container run
+  severity: low
+  component: mcp-server
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: MCP-SETUP-PROMPT
+  title: Settings MCP setup is a hidden env-only clipboard copy; needs a viewable, universal IDE/TUI setup prompt
+  severity: medium
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-46
+      stage: triage
+      question: Replace the hidden env-only copy with a viewable setup prompt?
+      resolution: human
+      class: product-preference
+      chosen: 'Yes: a prompt shown in Settings that follows Claude Code practice and that other agents can apply to other IDE/TUI clients'
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user stated the requirement; no fork remains.
+      human_message_reference: 'USER_EXPLICIT 2026-10-03 FLATTEN_LOOK F8, relayed by the local agent (known-issues root_cause: ''a prompt shown in Settings that follows Claude Code best practice and that
+        other agents can apply to other IDE and TUI platforms'')'
+    - id: D-47
+      stage: triage
+      question: Shape of the prompt
+      resolution: autonomous
+      class: two-way
+      chosen: Settings MCP card shows the prompt with the server command/path and per-client placement (project .mcp.json mcpServers for Claude Code/Cursor/Claude Desktop/Windsurf; .vscode/mcp.json servers+type
+        stdio for VS Code) using ${AVKIT_API_TOKEN} expansion; the real token is injected only by the main process on Copy and never enters the renderer
+      source_tag: Local Canon
+      precedents:
+      - ui/src/main/ipc.ts copy-mcp-config — token stays out of the renderer
+      - known-issues MCP-SETUP-PROMPT root_cause — Claude Code docs research 2026-10-03 (.mcp.json scope, mcpServers vs servers shapes, ${VAR} expansion)
+      research:
+        engine: none
+        sources: []
+      reasoning: Research in the issue converges on project .mcp.json + ${VAR}; keeping the token in main preserves the existing security boundary. Two-way.
+    - id: D-48
+      stage: triage
+      question: Which config scope does the setup prompt write by default?
+      resolution: human
+      class: source-conflict
+      chosen: User scope by default (claude mcp add --scope user, and each other client's global config); a project .mcp.json block is offered as a 'this repo only' option. Supersedes the project-scope
+        part of D-47.
+      source_tag: Human-approved
+      precedents:
+      - known-issues MCP-SETUP-PROMPT root_cause — F8 failure was a local-scope entry keyed to 'P:/av-kit' read as 'p:/av-kit'
+      - ~/.claude.json probe 2026-10-16 (C:/Temp/av-kit/mcp71-hdp/l1-claude-json-scopes.txt) — separate 'p:/av-kit' and 'P:/av-kit' project keys; the VS Code extension session loaded serena, zorivest and
+        pomera, which exist only in top-level mcpServers
+      - p:/zorivest MEU-747 / synthesis Band A — chose user scope
+      research:
+        engine: tavily
+        sources:
+        - https://code.claude.com/docs/en/mcp-quickstart — use --scope user for a server that is not tied to a project
+        - https://github.com/anthropics/claude-code/issues/18122 — drive-letter case creates duplicate project keys, so MCP servers do not load
+        - https://github.com/anthropics/claude-code/issues/46586 — the VS Code extension and the CLI disagree on drive-letter case
+      reasoning: av-kit is a desktop tool, not a repo artifact. User scope cannot hit the path-case bug, and a committed .mcp.json would carry machine-specific absolute paths. The root_cause (a) claim that
+        the extension ignores user scope did not reproduce (local probe). Local scope reproduces F8. Accepted cost - av-kit tools load in every project.
+      human_message_reference: USER_EXPLICIT 2026-10-16 'accept all'
+    - id: D-49
+      stage: triage
+      question: Does any setup-prompt block carry the token or a ${AVKIT_API_TOKEN} expansion?
+      resolution: autonomous
+      class: two-way
+      chosen: No token in any block; the server reads {app_data}/mcp-token.txt itself; AVKIT_APP_DATA is emitted only when not the default; a regex test with a fixture token. The existing Copy MCP config
+        and Pin buttons are unchanged. Supersedes the ${VAR}/inject-on-Copy part of D-47 for the prompt only.
+      source_tag: Research-backed
+      precedents:
+      - mcp-server/src/config.ts:162-170 — the token falls back to mcp-token.txt when the env var is unset
+      - docs/build-plan/06-gui.md:112 — the renderer never receives the token
+      - p5 reflection RULE-1 — public MCP text redacts every token source
+      - docs/build-plan/05-mcp-server.md:298 — the audit runner consumes copyMcpConfig env, so the button stays
+      research:
+        engine: tavily
+        sources:
+        - https://www.gmicloud.ai/en/blog/mcp-server-security-why-api-keys-in-config-files-are-a-liability — plaintext keys in config files are readable by agents
+        - https://scalar.com/learn/mcp/mcp-server-configuration — read credentials from the environment; never commit literals
+        - p:/zorivest AC-747.7 / A-11 — tokens never pass through chat
+      reasoning: A file the server already reads beats both a literal token and ${VAR} expansion (which still needs the user to set an env var). Two-way.
+    - id: D-50
+      stage: triage
+      question: What command does the prompt emit to start the MCP server?
+      resolution: human
+      class: product-preference
+      chosen: The app's own executable (process.execPath) with ELECTRON_RUN_AS_NODE=1 in env and the server path in args, in dev and packaged modes; MEU-71 also fixes the mcp-server/src/index.ts:31-34 entry
+        guard. The brief's clause 'MEU-72 keeps the dependency fix' was void when accepted (MEU-72 closed 2026-10-16 with that fix out of scope, 2026-10-14-tts-engine-runtime implementation-plan.md:418);
+        the owner of packaged dependency presence is grouping D-56 (open).
+      source_tag: Human-approved
+      precedents:
+      - known-issues MCP-PACKAGED-ENTRY-UNREACHABLE — Session 32 MCP_ENTRY_PROBE unreachable (ERR_MODULE_NOT_FOUND)
+      - p:/zorivest L-5 / A-13 — app executable + ELECTRON_RUN_AS_NODE; no npx or bare node
+      research:
+        engine: tavily
+        sources:
+        - https://github.com/wanderingstan/vibeconf-app/issues/27 — bare node in a packaged app's MCP config fails silently on machines without Node; fixed with process.execPath + ELECTRON_RUN_AS_NODE,
+          verified under a minimal PATH
+        - https://github.com/modelcontextprotocol/mcpb/issues/89 — Claude Desktop extensions bundle their runtime; system Node cannot be assumed
+        - https://forum.cursor.com/t/mcp-stdio-command-with-spaces-in-path-broken-on-windows-cmd-splits-at-space-same-mcp-json-works-in-vs-code/160842 — keep the path in args, not in command
+      reasoning: One code path, no system Node, a Windows-proven precedent. ui/ configures no Electron fuses, so RunAsNode is on by default; a test pins it.
+      human_message_reference: USER_EXPLICIT 2026-10-16 'accept all'
+    - id: D-51
+      stage: triage
+      question: Which clients get blocks, in what shape?
+      resolution: autonomous
+      class: two-way
+      chosen: Claude Code, Codex (~/.codex/config.toml [mcp_servers.avkit]), Cursor, VS Code (servers + type stdio), Claude Desktop (with the MSIX path note), Windsurf (labelled community), generic last;
+        absolute command, server path in args.
+      source_tag: Research-backed
+      precedents:
+      - p:/zorivest/docs/build-plan/05n-agent-connect.md:708 — AC-747.1 harness selector with golden tests
+      - p:/zorivest synthesis A-9, A-5 — per-client shapes, MSIX-virtualized Claude Desktop path
+      research:
+        engine: tavily
+        sources:
+        - https://www.nxcode.io/resources/news/cursor-mcp-servers-complete-guide-2026 — ~/.cursor/mcp.json global, .cursor/mcp.json project
+        - https://forum.cursor.com/t/mcp-stdio-command-with-spaces-in-path-broken-on-windows-cmd-splits-at-space-same-mcp-json-works-in-vs-code/160842 — empty args splits command on spaces on Windows
+      reasoning: Shapes are documented facts; sources and zorivest canon agree. Two-way.
+    - id: D-52
+      stage: triage
+      question: How does the prompt prove the connection?
+      resolution: autonomous
+      class: two-way
+      chosen: 'The agent calls avkit_health, reports api_base and app_data, and ends with exactly one ''RESULT: connected <api_base>'' or ''RESULT: failed (<step>, <error>)'' line; no new instance_id.'
+      source_tag: Local Canon
+      precedents:
+      - p:/zorivest AC-747.4/.6, A-6 — done means a diagnose against the intended instance
+      research:
+        engine: none
+        sources: []
+      reasoning: avkit_health already exists; an instance_id would be new API surface with no av-kit need (one instance per app_data). Two-way.
+    - id: D-53
+      stage: triage
+      question: Write safety and restart wording
+      resolution: autonomous
+      class: two-way
+      chosen: Back up to <file>.avkit-backup-<UTC> and merge, never overwrite; conditional restart line ('If the tools do not appear, quit and reopen <client>, then reply Ready').
+      source_tag: Local Canon
+      precedents:
+      - p:/zorivest AC-747.2/.3, A-10, A-12 — backup-and-merge, client-specific conditional restart
+      research:
+        engine: none
+        sources: []
+      reasoning: Directly portable; nothing av-kit-specific differs. Two-way.
+    - id: D-54
+      stage: triage
+      question: Where does the prompt live in the UI?
+      resolution: autonomous
+      class: two-way
+      chosen: Settings MCP card gets a client selector, a read-only prompt viewer and Copy prompt; copy-mcp-btn and pin-mcp-btn move under an Advanced disclosure with testids and gui-actions-index rows
+        unchanged.
+      source_tag: Local Canon
+      precedents:
+      - ui/src/renderer/src/features/settings/SettingsPage.tsx:1091-1105 — current MCP card
+      - docs/build-plan/11-page-layout.md:329 — ST row 35 testids
+      - docs/build-plan/gui-actions-index.md:92-93 — settings:copy_mcp, settings:pin_mcp
+      research:
+        engine: none
+        sources: []
+      reasoning: Keeps the D-46 viewable-prompt ruling and existing testids (regression baseline, as in AC-747.10). Two-way.
+    - id: D-57
+      stage: plan-review
+      question: Does the prompt omit AVKIT_APP_DATA when it is the default (amends D-49)?
+      resolution: autonomous
+      class: two-way
+      chosen: No. Every block emits the app's resolved AVKIT_APP_DATA (not a secret). The rest of D-49 (no token in any block) stands.
+      source_tag: Local Canon
+      precedents:
+      - ui/src/main/index.ts:150-151 — the app falls back to LOCALAPPDATA ?? <home>/AppData/Local, then av-kit
+      - mcp-server/src/config.ts:36-42 — the server uses LOCALAPPDATA only when non-blank, else ~/.avkit
+      - Codex gpt-6-astra review 2026-10-16 F1 (C:/Temp/av-kit/dispatch/mcp71-decisions-r1/final.json, not ledger-recorded) — reproduced the divergence when LOCALAPPDATA is absent
+      research:
+        engine: none
+        sources: []
+      reasoning: The two defaults diverge when a client launches the server without LOCALAPPDATA, so omission could point the server at a different descriptor and token. Emitting the path removes the dependency
+        on client env; aligning the two resolvers would also work but leaves the prompt fragile to future drift. D-49's original reasoning is kept above.
+    - id: D-58
+      stage: plan-review
+      question: Which health call proves the connection, and what does the RESULT line carry (amends D-52)?
+      resolution: autonomous
+      class: two-way
+      chosen: 'avkit_health action=dependencies must return successfully (it needs the token; any dependency availability values count). liveness alone never yields connected. The prompt ends with exactly
+        one ''RESULT: connected'' or ''RESULT: failed (<step>, <error>)'' line, where <error> is the server''s error code (for example token_missing, app_not_running). No api_base/app_data reporting: no
+        health response carries them.'
+      source_tag: Local Canon
+      precedents:
+      - packages/api/src/avkit_api/routes/health.py:27-39 — /health is unauthenticated; /health/dependencies requires the bearer token
+      - mcp-server/src/toolsets/health.ts:6 — liveness needs no token; dependencies need a token
+      - packages/api/src/avkit_api/schemas/health.py:12-54 — neither response has api_base or app_data
+      - Codex gpt-6-astra review 2026-10-16 F2 (same receipt) — liveness ok while dependencies returns token_missing
+      research:
+        engine: none
+        sources: []
+      reasoning: Only an authenticated call proves the configured entry can use the tools; reporting fields no response carries would invite the agent to invent them. D-52's original reasoning is kept above.
+- id: TTS-VOICE-SELECT-LAYOUT-JUMP
+  title: TTS voice selection made the page layout jump (2026-09-30 report; recheck after MEU-64's voice combobox)
+  severity: low
+  component: ui
+  status: dismissed
+  category: null
+  priority: null
+  enrichment: null
+- id: TTS-JA-ZH-G2P-EXTRAS
+  title: Japanese and Mandarin Kokoro voices are listed but unavailable (no misaki[ja]/[zh] G2P)
+  severity: low
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P4
+  enrichment: null
+- id: FFMPEG-GPL-BUILD
+  title: The installer ships a GPL-3.0 BtbN FFmpeg build (libx264/libx265)
+  severity: medium
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment: null
+- id: TTS-ESPEAK-LIVE-PATH-UNVERIFIED
+  title: Non-English voices via the real espeak-ng CLI were never run end to end (AC-74.11)
+  severity: medium
+  component: infrastructure
+  status: open
+  category: MEU-EXPAND
+  priority: P3
+  enrichment: null
+- id: FFMPEG-PIN-URL-404
+  title: The pinned BtbN FFmpeg release URL returns 404
+  severity: low
+  component: infrastructure
+  status: open
+  category: BLOCKED
+  priority: P3
+  enrichment: null
+- id: INSTALLER-SHIPS-FFMPEG-ZIP
+  title: The installer ships the 168 MB ffmpeg-pin.zip download archive
+  severity: low
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: MODEL-SIDELOAD-LOAD-500
+  title: A sideloaded TTS variant is listed as downloaded but cannot be loaded (422 'model weight file is missing')
+  severity: medium
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-86
+      stage: triage
+      question: Which build-plan section and MEU should own the sideload load failure?
+      resolution: autonomous
+      class: two-way
+      chosen: 'New MEU-98 `svc-tts-sideload-load` as matrix row 3.11 under 03 §TTSService (models) and 02 §Model manager (Sideload): persist the sideloaded path when it is detected (mark downloaded), resolve
+        it in load, and log the failure at warning level'
+      source_tag: Spec
+      precedents:
+      - 'docs/build-plan/02-infrastructure.md:447 — Sideload: detect a dropped .pth/.onnx and mark it downloaded'
+      - docs/build-plan/03-service-layer.md:342 — list_available() unions the sideload scan
+      - docs/build-plan/build-priority-matrix.md:34-37 — TTS service residuals land as Phase 3 rows (MEU-62, 73, 74, 75)
+      research:
+        engine: none
+        sources: []
+      reasoning: 'The spec already decides the behaviour (mark downloaded), so this is a residual defect, not PLAN-NEW or an architecture decision. No pending MEU covers TTS models (only MEU-71 is pending).
+        Row corrected from 3.9 to 3.11 at /session-grouping 2026-10-17: meu-status.yaml already gives 3.9 and 3.10 to MEU-77 and MEU-78. Log level refined at the same step: the adapter already logs tts.load_failed
+        at error level for its other load failures (adapter.py:123-124), so the sideload failure joins that event rather than a new warning.'
+- id: TTS-SPACY-SYSPATH-STALE-DIR
+  title: A stale spaCy sys.path entry survives a models_directory change
+  severity: low
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: FETCH-FFMPEG-EXIT-CODES
+  title: fetch_ffmpeg_windows.ps1 exit codes 2 to 5 are never returned (Write-Error exits 1 first)
+  severity: low
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: NOTICES-SPACY-TRANSITIVE
+  title: THIRD_PARTY_NOTICES omits most bundled backend dependencies (spaCy's transitive set, yt-dlp, FastAPI, numpy and others)
+  severity: low
+  component: infrastructure
+  status: open
+  category: DOCUMENTATION
+  priority: P3
+  enrichment: null
+- id: GUI-AUDIT-CLIPBOARD-RESOLVER
+  title: gui-actions-audit cannot resolve a writeClipboardText settings action
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: QUEUE-PILL-TOKEN-DRIFT
+  title: Zorivest MEU-662 darkened three light status-pill hexes; av-kit AC-41.3 fails until they are re-ported
+  severity: medium
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked:
+    - QUEUE-PILL-TOKEN-DRIFT is MEU-NEW; full lifecycle, a light lane with one review, or a direct fix?
+    - AC-41.3 reads P:/zorivest globals.css live. Pin it per Session 37 RULE-3?
+    answers:
+    - Full session (Recommended)
+    - Pin to a Zorivest commit (Recommended)
+    decided_by: human
+    decision_log:
+    - id: D-71
+      stage: triage
+      question: Which lane does the QUEUE-PILL-TOKEN-DRIFT re-port take?
+      resolution: human
+      class: governance
+      chosen: 'Full session: new MEU-92, create-plan with Codex plan review, execution with Codex execution review, H2'
+      source_tag: Human-approved
+      precedents:
+      - AGENTS.md:49-52 (Planning Contract) and .agent/workflows/issue-triage.md:36 (MEU-NEW creates an MEU)
+      - docs/execution/reflections/2026-10-16-capture-editor-options-reflection.md:182 (Mat scheduled the re-port as the next fix after the Session 37 merge)
+      research:
+        engine: none
+        sources: []
+      reasoning: Governance lane, not a product question; the cheaper lanes depart from the MEU-NEW route, so the choice was Mat's. He took the standard path.
+      human_message_reference: USER_EXPLICIT 2026-10-17 'commit and merge, then the QUEUE-PILL-TOKEN-DRIFT fix'; AskUserQuestion answer 'Full session (Recommended)'
+    - id: D-72
+      stage: triage
+      question: Does AC-41.3 keep reading the Zorivest working tree live?
+      resolution: human
+      class: architecture
+      chosen: Pin PILL_TOKEN_SOURCE to Zorivest commit 1f254832 (git show <sha>:ui/src/renderer/src/globals.css); re-porting becomes a deliberate bump of the sha and the hexes together
+      source_tag: Human-approved
+      precedents:
+      - 'docs/execution/reflections/2026-10-16-capture-editor-options-reflection.md:171-173 (RULE-3: a test that reads another repository reads a pinned commit or a vendored copy)'
+      - ui/tests/unit/queue-canon.test.ts:11-12 (PILL_TOKEN_SOURCE is the live P:/zorivest path)
+      research:
+        engine: none
+        sources: []
+      reasoning: A pinned commit stops a Zorivest commit from turning av-kit red mid-gate (Session 37 A-4) while keeping Zorivest as the single source; a vendored copy is a second copy to sync; the live
+        read keeps the coupling.
+      human_message_reference: USER_EXPLICIT 2026-10-17 AskUserQuestion answer 'Pin to a Zorivest commit (Recommended)'
+    - id: D-73
+      stage: triage
+      question: Where does the new MEU live?
+      resolution: autonomous
+      class: two-way
+      chosen: Phase 10 queue-card UI (docs/build-plan/10-queue-card-ui.md), new MEU-92 after MEU-91
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/meu-status.yaml phase 10 (MEU-41 owns queue-canon AC-41.3)
+      - 'tools/meu_status.py: MEU-91 is the highest registered id'
+      research:
+        engine: none
+        sources: []
+      reasoning: AC-41.3 and the ported pill tokens are MEU-41's queue-card canon, so the residual belongs in the same phase; no other phase owns the queue pill palette.
+    - id: D-74
+      stage: triage
+      question: Which light hexes does av-kit carry?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Zorivest 1f254832 verbatim: --color-status-pending #9a3412, -filled #166534, -rejected #991b1b; dark unchanged'
+      source_tag: Local Canon
+      precedents:
+      - ui/tests/unit/queue-canon.test.ts:11 (the queue pill palette is Zorivest's; av-kit authors no hue)
+      - P:/zorivest ui/src/renderer/src/globals.css:164-167 at 1f254832
+      research:
+        engine: none
+        sources: []
+      reasoning: av-kit authors no pill hue, so the re-port copies Zorivest exactly; the light-theme contrast check named in blast_radius becomes a plan AC, not a hue choice.
+    - id: D-75
+      stage: triage
+      question: issue_triage.py bucket pairs QUEUE-PILL-TOKEN-DRIFT with MCP-SETUP-PROMPT (both P2 ui); one batch?
+      resolution: autonomous
+      class: two-way
+      chosen: No; MEU-92 is its own batch
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/grouping/2026-10-09-triage-residuals-session-grouping.md:79 (MEU-71 / MCP-SETUP-PROMPT is Session 31b, its own plan, grouping D-55)
+      - docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/ (that plan exists)
+      research:
+        engine: none
+        sources: []
+      reasoning: The bucketer groups by component and priority only; MCP-SETUP-PROMPT already has a session and a plan, and the two share no file or test.
+- id: GUI-CONVERT-OUTPUT-NO-BROWSE
+  title: Convert Output folder is a free-text field with no Browse; path fields bypass the PathRow standard
+  severity: medium
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-76
+      stage: triage
+      question: How should the Convert output folder (and other page path fields) be standardised?
+      resolution: autonomous
+      class: two-way
+      chosen: Use the PathRow primitive with a Browse button everywhere a page edits a folder path (Convert output folder; TTS output path as PathRow readOnly)
+      source_tag: Local Canon
+      precedents:
+      - ui/src/renderer/src/features/settings/SettingsPage.tsx:806 — the same converter.output_dir already uses PathRow + showDirectoryDialog
+      - ui/src/renderer/src/features/capture/CapturePage.tsx:1477 — Capture inbox uses PathRow + Browse
+      research:
+        engine: none
+        sources: []
+      reasoning: A shared primitive already exists and two pages use it for the same kind of field; reusing it is reversible and changes no API. A one-off Browse button on Convert would add a fourth variant.
+    - id: D-80
+      stage: triage
+      question: Which build-plan section and MEU should own this issue?
+      resolution: autonomous
+      class: two-way
+      chosen: New MEU-93 `gui-path-fields` as matrix row 6.8 under 06 §DirectoryPicker (Shared Components); batched with MEU-93 to MEU-97 as one GUI shell session
+      source_tag: Local Canon
+      precedents: &id002
+      - 'docs/build-plan/build-priority-matrix.md:52 — row 6.7 MEU-69 gui-header-toggle-state: shell residuals land as Phase 6 rows against an 06 (residual) section'
+      - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-74 — a residual goes to the phase whose build-plan file owns the behaviour, as a new MEU after the highest registered
+      - docs/build-plan/06-gui.md:304-314 — palette, registry and shortcut wiring are specified in 06; 06-gui.md:1192 specifies DirectoryPicker (input + Browse)
+      research:
+        engine: none
+        sources: []
+      reasoning: 06-gui.md already specifies the behaviour, so this is a residual MEU, not PLAN-NEW; no planned (pending) MEU covers the shell, palette or path fields (MEU-19/23/69 are approved), so not
+        MEU-EXPAND. One MEU per issue keeps each FIC reviewable; the shortcut and palette MEUs share commandRegistry.ts and AppShell.tsx, so they share a session.
+- id: GUI-LIGHT-THEME-SELECT-STALE-DARK
+  title: 'Light theme: native dropdowns keep the dark G30 colours (#1a1a2e bg) across the app'
+  severity: medium
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-77
+      stage: triage
+      question: Where should the light-theme dropdown fix live?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Fix the G30 primitive: one reactive theme hook (subscribe to THEME_CHANGED_EVENT) behind getG30Styles/SelectInput, remove the ConsolePanel copy, make the option-menu pair theme-aware, and
+        apply the persisted theme before first paint; add a both-theme Electron test'
+      source_tag: Local Canon
+      precedents:
+      - .agent/docs/emerging-standards.md G30 — selects must be theme-aware; prefer SelectInput/getG30Styles over per-page styling
+      - ui/src/renderer/src/lib/theme.ts:27 — the event exists precisely so mounted G30 selects re-render; it does not reach route children
+      research:
+        engine: tavily
+        sources:
+        - https://textslashplain.com/2021/10/17/spooky-enhancing-dark-mode-in-chromium — colours computed once in JS go stale on theme change; CSS variables update live
+        - https://electronjs.org/docs/latest/api/native-theme — nativeTheme.themeSource drives prefers-color-scheme for Chromium-drawn UI
+      reasoning: The defect is one shared mechanism, so a per-page patch would leave the other consumers broken. Keeping G30's inline-style rule but making it reactive stays inside local canon; whether
+        to also adopt CSS variables is left to the plan.
+    - id: D-81
+      stage: triage
+      question: Which build-plan section and MEU should own this issue?
+      resolution: autonomous
+      class: two-way
+      chosen: New MEU-94 `gui-theme-reactive-selects` as matrix row 6.9 under 06 §App Shell Architecture (theme) + emerging-standards G30; batched with MEU-93 to MEU-97 as one GUI shell session
+      source_tag: Local Canon
+      precedents: *id002
+      research:
+        engine: none
+        sources: []
+      reasoning: 06-gui.md already specifies the behaviour, so this is a residual MEU, not PLAN-NEW; no planned (pending) MEU covers the shell, palette or path fields (MEU-19/23/69 are approved), so not
+        MEU-EXPAND. One MEU per issue keeps each FIC reviewable; the shortcut and palette MEUs share commandRegistry.ts and AppShell.tsx, so they share a session.
+- id: GUI-SHORTCUTS-ADVERTISED-UNBOUND
+  title: Ctrl+1/2/3, Ctrl+, and Ctrl+B are shown in the palette and rail but do nothing
+  severity: medium
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-78
+      stage: triage
+      question: Bind the advertised but dead shortcuts?
+      resolution: autonomous
+      class: two-way
+      chosen: Bind them as specified and generate the keydown map from the registry so label and binding cannot drift again
+      source_tag: Local Canon
+      precedents:
+      - docs/build-plan/06-gui.md:309 — Nav shortcuts stay on the rail (Ctrl+1..5, Ctrl+,)
+      - docs/build-plan/gui-actions-index.md:9-15 — Ctrl+1..5, Ctrl+, Ctrl+B specified
+      research:
+        engine: none
+        sources: []
+      reasoning: The spec already decided these; this is a defect, not a choice.
+    - id: D-82
+      stage: triage
+      question: Which build-plan section and MEU should own this issue?
+      resolution: autonomous
+      class: two-way
+      chosen: New MEU-95 `gui-shortcut-binding` as matrix row 6.10 under 06 §Command palette and action registry; batched with MEU-93 to MEU-97 as one GUI shell session
+      source_tag: Local Canon
+      precedents: *id002
+      research:
+        engine: none
+        sources: []
+      reasoning: 06-gui.md already specifies the behaviour, so this is a residual MEU, not PLAN-NEW; no planned (pending) MEU covers the shell, palette or path fields (MEU-19/23/69 are approved), so not
+        MEU-EXPAND. One MEU per issue keeps each FIC reviewable; the shortcut and palette MEUs share commandRegistry.ts and AppShell.tsx, so they share a session.
+    - id: D-85
+      stage: triage
+      question: The GUI shell batch proposes five new MEUs (MEU-93 to MEU-97); run the Step 5.5 Codex scoping review now?
+      resolution: autonomous
+      class: two-way
+      chosen: 'No: run it on the /session-grouping draft for this batch, and keep MCP-SETUP-PROMPT (D-55) and QUEUE-PILL-TOKEN-DRIFT (D-75) out of it although bucket groups all seven ui issues'
+      source_tag: Human-approved
+      precedents:
+      - '.agent/context/grouping/2026-10-09-triage-residuals-session-grouping.md:225 D-6 — scoping review runs on the grouping draft, not during triage: the review ledger needs an acceptance-criteria source
+        that exists only once MEUs have build-plan homes (USER_EXPLICIT 2026-10-09)'
+      - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-75 — MEU-92 is its own batch
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Same situation as D-6: MEU-93 to MEU-97 have no 06 residual sections yet, so a reviewer has nothing to score them against.'
+- id: GUI-COMMAND-PALETTE-CURATION
+  title: 'Commands palette: 40 static entries, no Appearance commands, and Clear/Cancel run without the page''s confirm'
+  severity: medium
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked:
+    - 'How should the palette be reduced: context-aware (global + current page, hide unavailable), a static trim, or keep all 40 with fixed labels?'
+    - 'How should Appearance appear in the palette and which shortcut: two explicit commands Dark (Ctrl+Shift+D) / Light (Ctrl+Shift+L), one toggle, or palette-only?'
+    answers:
+    - Context-aware (Recommended)
+    - Dark + Light, 2 keys (Recommended)
+    decided_by: human
+    decision_log:
+    - id: D-79
+      stage: triage
+      question: Should palette Clear/Cancel keep running without confirmation?
+      resolution: autonomous
+      class: two-way
+      chosen: 'No: palette destructive commands open the same ConfirmModal the page uses'
+      source_tag: Local Canon
+      precedents:
+      - docs/build-plan/10-queue-card-ui.md:12 — NN/g destructive-action ladder (Research-backed) governs queue clear
+      - ui/src/renderer/src/components/queue/QueueToolbar.tsx:70 — Clear the whole queue, behind a confirm the host owns
+      research:
+        engine: none
+        sources: []
+      reasoning: The same action has a confirm on the page; a second entry point without one is an inconsistency, not a product choice.
+    - id: D-83
+      stage: triage
+      question: Which build-plan section and MEU should own this issue?
+      resolution: autonomous
+      class: two-way
+      chosen: New MEU-96 `gui-command-palette-curation` as matrix row 6.11 under 06 §Command palette and action registry + gui-actions-index.md; depends on MEU-95; batched with MEU-93 to MEU-97 as one GUI
+        shell session
+      source_tag: Local Canon
+      precedents: *id002
+      research:
+        engine: none
+        sources: []
+      reasoning: 06-gui.md already specifies the behaviour, so this is a residual MEU, not PLAN-NEW; no planned (pending) MEU covers the shell, palette or path fields (MEU-19/23/69 are approved), so not
+        MEU-EXPAND. One MEU per issue keeps each FIC reviewable; the shortcut and palette MEUs share commandRegistry.ts and AppShell.tsx, so they share a session.
+    - id: D-87
+      stage: triage
+      question: 'How should the palette be reduced: context-aware (global + current page, hide unavailable), a static trim, or keep all 40 with fixed labels?'
+      resolution: human
+      class: product-preference
+      chosen: 'Context-aware palette: global commands always (navigation, Appearance, console, rail, help, settings); the current page''s commands first; commands that cannot run now hidden; Pause/Resume
+        merged into one state-aware entry; jargon labels renamed'
+      source_tag: Human-approved
+      precedents:
+      - 'None: D-7 and D-12 (2026-09-30 grouping) ruled only on the Commands button label and accessible name'
+      research:
+        engine: tavily
+        sources:
+        - uxpatterns.dev command palette pattern — surface frequent, context-relevant commands; avoid a long flat list
+        - setproduct.com notes on Vercel's palette — commands scoped to the current context
+      reasoning: Reduces the list per page without removing actions; a static trim still shows other pages' commands, keeping all 40 does not reduce.
+      human_message_reference: AskUserQuestion 2026-10-17 'Context-aware (Recommended)'
+    - id: D-88
+      stage: triage
+      question: 'How should Appearance appear in the palette and which shortcut: two explicit commands Dark (Ctrl+Shift+D) / Light (Ctrl+Shift+L), one toggle, or palette-only?'
+      resolution: human
+      class: product-preference
+      chosen: 'Two palette commands, ''Appearance: Dark'' (Ctrl+Shift+D) and ''Appearance: Light'' (Ctrl+Shift+L), each setting one theme through the same ui.theme setting as the Settings buttons'
+      source_tag: Human-approved
+      precedents:
+      - ui/src/renderer/src/features/settings/SettingsPage.tsx:1037-1063 — theme-dark-btn/theme-light-btn set ui.theme
+      research:
+        engine: tavily
+        sources:
+        - zimmergren.net on Auto Dark Mode — Ctrl+Shift+D dark, Ctrl+Shift+L light
+        - github.com/desktop/desktop issue 7128 — theme shortcut request (Alt+Shift+D / Ctrl+Shift+T proposed); no common standard
+      reasoning: Explicit and idempotent; a toggle's result depends on hidden state; palette-only misses the requested shortcut.
+      human_message_reference: AskUserQuestion 2026-10-17 'Dark + Light, 2 keys (Recommended)'
+- id: GUI-KEYBOARD-SHORTCUTS-COMMON
+  title: Most-used actions have no keyboard shortcut (only Ctrl+K, Ctrl+4, Ctrl+5 work today)
+  severity: low
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked:
+    - 'Which shortcut set: recommended core set (Ctrl+L focus URL, Ctrl+O add files, Ctrl+Enter primary action, Ctrl+J console, F1 help, Ctrl+S save capture), a minimal set, or a user-remappable keymap?'
+    answers:
+    - Core set (Recommended)
+    decided_by: human
+    decision_log:
+    - id: D-84
+      stage: triage
+      question: Which build-plan section and MEU should own this issue?
+      resolution: autonomous
+      class: two-way
+      chosen: New MEU-97 `gui-common-shortcuts` as matrix row 6.12 under 06 §Command palette and action registry + gui-actions-index.md; depends on MEU-95, MEU-96; batched with MEU-93 to MEU-97 as one GUI
+        shell session
+      source_tag: Local Canon
+      precedents: *id002
+      research:
+        engine: none
+        sources: []
+      reasoning: 06-gui.md already specifies the behaviour, so this is a residual MEU, not PLAN-NEW; no planned (pending) MEU covers the shell, palette or path fields (MEU-19/23/69 are approved), so not
+        MEU-EXPAND. One MEU per issue keeps each FIC reviewable; the shortcut and palette MEUs share commandRegistry.ts and AppShell.tsx, so they share a session.
+    - id: D-89
+      stage: triage
+      question: 'Which shortcut set: recommended core set (Ctrl+L focus URL, Ctrl+O add files, Ctrl+Enter primary action, Ctrl+J console, F1 help, Ctrl+S save capture), a minimal set, or a user-remappable
+        keymap?'
+      resolution: human
+      class: product-preference
+      chosen: 'Core set: Ctrl+L focus URL (Downloader, Transcript), Ctrl+Enter page primary action, Ctrl+O Browse files (Convert), Ctrl+S save capture (Capture), Ctrl+J console, F1 help, plus D-88''s Ctrl+Shift+D/L;
+        shown in tooltips and aria-keyshortcuts; must not collide with Capture Ctrl+=/-/0 or the F2 capture hotkey'
+      source_tag: Human-approved
+      precedents:
+      - docs/build-plan/06-gui.md:309 — nav shortcuts Ctrl+1..5, Ctrl+,
+      - docs/build-plan/gui-actions-index.md — Capture zoom Ctrl+= / Ctrl+- / Ctrl+0
+      research:
+        engine: tavily
+        sources:
+        - VS Code default keybindings — Ctrl+J toggles the panel
+        - Browser convention — Ctrl+L focuses the address bar
+      reasoning: Covers each page's most-used action with conventional keys; minimal leaves console/help/Browse unbound; a remappable keymap is a large feature that can follow.
+      human_message_reference: AskUserQuestion 2026-10-17 'Core set (Recommended)'
+- id: TOOLING-TRIAGE-CLI-CP1252
+  title: issue_triage.py bucket and --help crash with UnicodeEncodeError when output is redirected on Windows
+  severity: low
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+deferred:
+- id: CAPTURE-JOURNAL-VOLATILE
+  title: Interactive capture completion journal is in-memory only
+  severity: low
+  component: ui
+  status: open
+  category: DEFER
+  priority: P4
+  enrichment: null
+- id: MCP-ELICITATION-VSCODE-AUTO-DECLINE
+  title: Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM never reaches the person
+  severity: high
+  component: mcp-server
+  status: mitigated
+  category: UPSTREAM
+  priority: P3
+  enrichment: null
+proposed_batches:
+- slug: mcp-server-mcp-packaged-entry-unreachable
+  issues:
+  - MCP-PACKAGED-ENTRY-UNREACHABLE
+  component: mcp-server
+  priority_band: P2
+  complexity: S
+  has_duplicates: false
+- slug: ui-mcp-setup-prompt-queue-pill-token-drift-gui-convert-output-no-browse
+  issues:
+  - MCP-SETUP-PROMPT
+  - QUEUE-PILL-TOKEN-DRIFT
+  - GUI-CONVERT-OUTPUT-NO-BROWSE
+  - GUI-LIGHT-THEME-SELECT-STALE-DARK
+  - GUI-SHORTCUTS-ADVERTISED-UNBOUND
+  - GUI-COMMAND-PALETTE-CURATION
+  - GUI-KEYBOARD-SHORTCUTS-COMMON
+  component: ui
+  priority_band: P2
+  complexity: L
+  has_duplicates: true
+- slug: infrastructure-tts-ja-zh-g2p-extras-ffmpeg-gpl-build-tts-espeak-live-path-unverified
+  issues:
+  - TTS-JA-ZH-G2P-EXTRAS
+  - FFMPEG-GPL-BUILD
+  - TTS-ESPEAK-LIVE-PATH-UNVERIFIED
+  - MODEL-SIDELOAD-LOAD-500
+  component: infrastructure
+  priority_band: P3
+  complexity: L
+  has_duplicates: true

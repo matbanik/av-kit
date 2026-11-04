@@ -1,0 +1,531 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Colors: Dracula Foundation ── */
+  --color-bg: #282a36;
+  --color-bg-elevated: #44475a;
+  --color-bg-subtle: #6272a4;
+  --color-fg: #f8f8f2;
+  --color-fg-muted: #bae6fd;
+
+  /* ── Colors: Accents ── */
+  --color-accent-cyan: #8be9fd;
+  --color-accent-green: #50fa7b;
+  --color-accent-purple: #bd93f9;
+  --color-accent-pink: #ff79c6;
+  --color-accent-orange: #ffb86c;
+  --color-accent-amber: #ffb86c;
+  --color-accent-teal: #14b8a6;
+  /* MEU-389 / exec-review R1-F1: blue chips (AccountTypeBadge Broker, EmailTemplate
+   * Default, TradePlan executed/Active) require a real theme token — Tailwind v4
+   * only emits bg-accent-blue/* when --color-accent-blue exists. */
+  --color-accent-blue: #82aaff;
+  /* AC-4/AC-5: ≥4.5:1 on --color-bg-elevated (#44475a); was #ff5555 @ 2.91:1 */
+  --color-accent-red: #ffa0a0;
+  --color-accent-yellow: #f1fa8c;
+
+  /* ── Colors: Semantic ── */
+  --color-error: #ff5555;
+  /* Solid fill for white-on-error controls (destructive Button). #ff5555 @ 3.14:1
+   * fails WCAG AA with white; #c42b2b is ≥4.5:1. Keep --color-error for text/borders. */
+  --color-error-fill: #c42b2b;
+  --color-error-fill-hover: #a82424;
+
+  /* ── Colors: Modal / Overlay ── */
+  --color-overlay: rgba(0, 0, 0, 0.65);
+  --color-border-subtle: #44475a;
+  --shadow-elevated: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+
+  /* ── Colors: Trading Semantic ── */
+  --color-pnl-positive: #50fa7b;
+  --color-pnl-negative: #ff5555;
+  --color-pnl-profit: #50fa7b;
+  --color-pnl-loss: #ff5555;
+  --color-pnl-neutral: #6272a4;
+  --color-status-pending: #ffb86c;
+  --color-status-filled: #50fa7b;
+  --color-status-canceled: #6272a4;
+  --color-status-rejected: #ff5555;
+
+  /* ── Fonts: GitHub Primer System Stacks ── */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
+    Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* ── Spacing: Compact Trading Scale ── */
+  --spacing-2xs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 48px;
+
+  /* ── Border Radius ── */
+  --radius-none: 0px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  --radius-control: 6px;
+
+  /* ── Colors: Unified Interaction Layer ── */
+  --color-accent: #8be9fd;
+  --color-accent-fg: #282a36;
+  --color-accent-hover: #a6f0ff;
+  --color-accent-ring: color-mix(in oklab, var(--color-accent) 35%, transparent);
+  --color-neutral: #6272a4;
+  --color-border: #44475a;
+  --color-border-hover: #6272a4;
+  --color-surface-0: #282a36;
+  --color-error-hover: #ff6e6e;
+  --color-error-border: #ff5555;
+  --color-error-ring: color-mix(in oklab, var(--color-error) 30%, transparent);
+  --color-success-ring: #50fa7b;
+
+  /* ── Motion: Duration Tokens (§5.1) ── */
+  --duration-instant: 0ms;
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 320ms;
+
+  /* ── Motion: Easing Tokens (§5.2) ── */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Mira-inspired compact density ── */
+:root {
+  --radius: 0.375rem;
+}
+
+/* ── Pointer affordance for clickable controls ──
+ * Tailwind v4 removed `cursor: pointer` from buttons in Preflight to match
+ * native browser behaviour, so after the v4 upgrade every button in this app
+ * hovered with an arrow unless it spelled out `cursor-pointer` — reported from
+ * the clean VM against "Or download the installer from GitHub".
+ *
+ * Declared in @layer base so `cursor-*` utilities still win where a control
+ * needs `wait` or `not-allowed`. `[role="button"]` is matched on aria-disabled
+ * because non-form elements have no `:disabled` state.
+ *
+ * Ref: Tailwind CSS v4 upgrade guide, "Buttons use the default cursor".
+ */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}
+
+/* ── Light Theme Overrides ──
+ * Dark theme is the default (defined in @theme above).
+ * When useTheme removes the `dark` class, these light values take effect.
+ */
+:root:not(.dark) {
+  --color-bg: #f5f6fa;
+  --color-bg-elevated: #ffffff;
+  --color-bg-subtle: #d1d5db;
+  --color-fg: #1e293b;
+  --color-fg-muted: #475569;
+
+  /* Accents — slightly deeper for light backgrounds */
+  --color-accent-cyan: #0e7490;
+  --color-accent-green: #16a34a;
+  --color-accent-purple: #7c3aed;
+  --color-accent-pink: #db2777;
+  --color-accent-orange: #ea580c;
+  --color-accent-blue: #2563eb;
+  --color-accent-red: #dc2626;
+  --color-accent-yellow: #ca8a04;
+
+  /* Unified Interaction Layer — light */
+  --color-accent: #0e7490;
+  --color-accent-fg: #ffffff;
+  --color-accent-hover: #155e75;
+  --color-accent-ring: color-mix(in oklab, var(--color-accent) 35%, transparent);
+  --color-neutral: #94a3b8;
+  --color-border: #d1d5db;
+  --color-border-hover: #9ca3af;
+  --color-surface-0: #ffffff;
+  --color-error-hover: #b91c1c;
+  --color-error-border: #dc2626;
+  --color-error-fill: #b91c1c;
+  --color-error-fill-hover: #991b1b;
+  --color-error-ring: color-mix(in oklab, var(--color-error) 30%, transparent);
+  --color-success-ring: #16a34a;
+  --radius-control: 6px;
+
+  /* Trading semantic — adjusted for readability on light */
+  --color-pnl-profit: #16a34a;
+  --color-pnl-loss: #dc2626;
+  --color-pnl-neutral: #64748b;
+  --color-status-pending: #ea580c;
+  --color-status-filled: #16a34a;
+  --color-status-canceled: #64748b;
+  --color-status-rejected: #dc2626;
+  --color-error: #dc2626;
+
+  /* Modal / Overlay — light */
+  --color-overlay: rgba(0, 0, 0, 0.45);
+  --color-border-subtle: #e2e8f0;
+  --shadow-elevated: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+
+  /* P&L semantic — light */
+  --color-pnl-positive: #16a34a;
+  --color-pnl-negative: #dc2626;
+
+  /* Accent aliases — light */
+  --color-accent-amber: #92400e;
+  --color-accent-teal: #0d9488;
+}
+
+/* ── Reduced Motion ── */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Keyframes: Interaction Feedback (§5.5) ── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%      { transform: translateX(-4px); }
+  40%      { transform: translateX(4px); }
+  60%      { transform: translateX(-3px); }
+  80%      { transform: translateX(3px); }
+}
+
+@keyframes flashSuccess {
+  0%   { box-shadow: 0 0 0 0 var(--color-success-ring); }
+  50%  { box-shadow: 0 0 0 4px var(--color-success-ring); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ── Utility Classes: Interaction Animations ── */
+.shake {
+  animation: shake 300ms var(--ease-out);
+}
+
+.flash-success {
+  animation: flashSuccess 600ms var(--ease-in-out);
+}
+
+/* ── Tabular Numbers for Financial Data ── */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+}
+
+/* ── Selection ── */
+::selection {
+  background: var(--color-accent-purple);
+  color: var(--color-fg);
+}
+
+/* ── Focus Ring ── */
+:focus-visible {
+  outline: 2px solid var(--color-accent-cyan);
+  outline-offset: 2px;
+}
+
+/* ── Skip Link ── */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background: var(--color-bg-elevated);
+  color: var(--color-fg);
+  border-radius: var(--radius-sm);
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
+/* ── Outline Button Variant ── */
+/* Uses --color-border-hover (brighter) instead of --color-border
+   so the border is visible in both dark and light themes. */
+.outline-btn {
+  border: 1px solid var(--color-border-hover);
+  background: color-mix(in oklab, var(--color-bg-subtle) 20%, transparent);
+  color: var(--color-fg);
+}
+
+.outline-btn:hover {
+  background: color-mix(in oklab, var(--color-bg-subtle) 35%, transparent);
+  border-color: var(--color-fg-muted);
+}
+
+/* ── Destructive Outline Button ── */
+/* Used in modals for discard/delete actions — red-tinted outline */
+.destructive-outline-btn {
+  border: 1px solid var(--color-error-border);
+  background: color-mix(in oklab, var(--color-error) 15%, transparent);
+  color: var(--color-error);
+}
+
+.destructive-outline-btn:hover {
+  background: color-mix(in oklab, var(--color-error) 25%, transparent);
+}
+
+/* ── Accent Outline Button ── */
+/* Used in modals for save/primary-outline actions — accent-tinted outline */
+.accent-outline-btn {
+  border: 1px solid var(--color-accent);
+  background: color-mix(in oklab, var(--color-accent) 15%, transparent);
+  color: var(--color-accent);
+}
+
+.accent-outline-btn:hover {
+  background: color-mix(in oklab, var(--color-accent) 25%, transparent);
+}
+
+/* ── Legacy button variants ──
+ * Predate the shared <Button> component and are still referenced by
+ * ImportPreview. They had no rules at all until
+ * 2026-08-13, so those buttons rendered as bare unstyled text in the packaged
+ * app. Colors come from theme variables so both themes stay readable.
+ */
+.btn-primary {
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-control);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.btn-secondary {
+  background: color-mix(in oklab, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--color-accent) 22%, transparent);
+}
+
+/* ── Portable self-install notification ──
+ * A floating, dismissible toast — deliberately NOT a modal and NOT in document
+ * flow. The previous in-flow markup pushed the whole app down and added a
+ * scrollbar to the main view on every portable launch.
+ */
+.self-install-toast {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  width: min(560px, calc(100vw - 32px));
+  pointer-events: auto;
+}
+
+.self-install-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg, 10px);
+  background: var(--color-bg-elevated);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border-hover);
+  box-shadow: var(--shadow-elevated, 0 18px 40px -12px rgba(0, 0, 0, 0.45));
+}
+
+.self-install-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.self-install-description {
+  margin-top: 2px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-fg-muted);
+}
+
+.self-install-status {
+  margin-top: 8px;
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+}
+
+.self-install-error {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-control);
+  font-size: 0.8125rem;
+  background: color-mix(in oklab, var(--color-error) 14%, transparent);
+  border: 1px solid var(--color-error-border);
+  color: var(--color-error);
+}
+
+.self-install-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.self-install-close {
+  flex: none;
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: var(--radius-control);
+  line-height: 1;
+  background: transparent;
+  color: var(--color-fg-muted);
+}
+
+.self-install-close:hover {
+  background: color-mix(in oklab, var(--color-bg-subtle) 40%, transparent);
+  color: var(--color-fg);
+}
+
+/* ── Close-app confirmation ──
+ * Replaces the native message box, which renders plain text only and so could
+ * not emphasise the one non-obvious consequence of closing: the MCP server the
+ * user's editor is connected to goes down with the app.
+ */
+.close-prompt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in oklab, var(--color-bg) 62%, transparent);
+}
+
+.close-prompt-card {
+  width: min(440px, 100%);
+  padding: 18px 20px;
+  border-radius: var(--radius-lg, 10px);
+  background: var(--color-bg-elevated);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border-hover);
+  box-shadow: var(--shadow-elevated, 0 18px 40px -12px rgba(0, 0, 0, 0.45));
+}
+
+.close-prompt-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-fg);
+}
+
+.close-prompt-description {
+  margin-top: 4px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-fg-muted);
+}
+
+/* Red and bold, per the explicit request. --color-error carries the theme's own
+ * red so the warning stays legible in both light and dark. */
+.close-prompt-mcp-warning {
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius-control);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--color-error);
+  background: color-mix(in oklab, var(--color-error) 12%, transparent);
+  border: 1px solid var(--color-error-border);
+}
+
+.close-prompt-remember {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 14px;
+  font-size: 0.8125rem;
+  color: var(--color-fg-muted);
+}
+
+.close-prompt-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+/* ── Global compact spacing for data-dense UI ── */
+.btn {
+  @apply px-3 py-1.5 text-sm;
+}
+
+.input {
+  @apply h-8 px-2 text-sm;
+}
+
+.card {
+  @apply p-3;
+}
+
+/* ── Nav Rail ── */
+.nav-rail {
+  width: 200px;
+  min-width: 200px;
+  border-right: 1px solid var(--color-bg-elevated);
+  background: var(--color-bg);
+  display: flex;
+  flex-direction: column;
+  transition: width 150ms ease, min-width 150ms ease;
+}
+
+.nav-rail--collapsed {
+  width: 56px;
+  min-width: 56px;
+}
+
+/* ── Header Breadcrumb ── */
+.header-breadcrumb {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 40px;
+  border-bottom: 1px solid var(--color-bg-elevated);
+  background: var(--color-bg);
+}
+
+.header-breadcrumb__nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-breadcrumb__brand {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-fg-muted);
+  letter-spacing: 0.01em;
+  opacity: 0.7;
+}
+
+.header-breadcrumb__separator {
+  display: flex;
+  align-items: center;
+  opacity: 0.6;
+}
+
+.header-breadcrumb__page {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-fg);
+  letter-spacing: 0.01em;
+}

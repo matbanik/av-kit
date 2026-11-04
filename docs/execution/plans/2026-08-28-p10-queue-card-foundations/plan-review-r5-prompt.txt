@@ -1,0 +1,160 @@
+Perform /plan-critical-review for p10-queue-card-foundations (Round 5).
+
+## READ THIS FIRST - what the human actually wants from you
+
+The human's words, verbatim:
+
+  "Refocus the reviewer to the plan's substance and stress that Human requires more attention
+   on intent then procedure and protocols or any other beurocratic load since that can be
+   dealth with with AI reasoning pretty esily in the momement and tokens should not be wasted
+   on it."
+
+That instruction stands for this round too, and Round 4 honoured it well - five product
+findings, zero procedural findings. Keep doing exactly that:
+
+1. **Judge the plan on whether it builds the right thing.** Will executing this plan produce a
+   queue UI a person actually wants to use, with correct behaviour, honest accessibility, and
+   no silent scope loss? That is the review.
+2. **Do not spend tokens auditing process compliance.** Template sections, YAML ordering,
+   artifact naming, receipt-path spelling, whether a rule cites the blessed document - an agent
+   resolves all of that in the moment. One-line fix-note at most; never a finding, never a
+   verdict gate.
+3. **A finding must name a way the delivered product is wrong**, with the case where a user
+   sees it. If you cannot write the failure case, it is not a finding.
+4. Rounds 1-3 spent themselves on control mechanics; Round 4 judged the design. **Round 5 is
+   about whether the five Round 4 remedies are actually right** - and whether they introduced
+   anything new that is wrong.
+
+## Write scope (non-negotiable)
+
+Write ONLY:
+`.agent/context/handoffs/2026-08-28-p10-queue-card-foundations-plan-critical-review.md`
+
+ROLLING file - APPEND a `## Round 5` section after the existing
+`## Round 5 Corrections - Reviewer F1-F5 (corrections agent)` section, and update the YAML
+frontmatter in place. Do NOT create a `-r5`, `-recheck`, or `-final` variant. Do NOT edit
+product code, tests, docs outside that review file, or the plan files.
+
+YAML frontmatter MUST include:
+- date: "2026-08-28"
+- review_mode: "plan"
+- target_plan: "docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md"
+- verdict: "approved" or "changes_required"
+- findings_count: <integer, Round 5 findings only>
+- round: 5
+- template_version: "2.1"
+- requested_verbosity: "standard"
+- agent: "gpt-5.6-sol"
+- dispatch_id: "p10-queue-card-foundations-plan-r5"
+
+## Review targets
+
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/task.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/named-sets.json
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/contrast-matrix.json
+- docs/proposals/2026-08-27-queue-card-ui-proposal.md (DRAFT rev 2) + the mockup HTML
+- P:/zorivest/ui/src/renderer/src/globals.css (the palette source of truth - read it; do not
+  take the plan's summary on faith)
+- packages/core/src/avkit_core/services/download.py and
+  packages/core/src/avkit_core/domain/download.py (the F2 remedy's factual basis)
+- Your own Round 4 findings, and the `## Round 5 Corrections` section above.
+
+## What changed since Round 4 - all five findings accepted, none argued down
+
+**F1 (pill contrast).** Taken as you recommended: the lock is read as Zorivest's *hues*, not its
+class combination. The hue stays on the fill and on the status icon; the **label** now comes from
+`--color-fg`. Measured across all 80 pairings from the two real stylesheets:
+
+  fill token as label (R4 rule) ..... 28/80, worst 1.82
+  --color-fg-muted .................. 80/80, worst 5.31
+  --color-fg (chosen) ............... 80/80, worst 6.61
+
+Two supporting facts, both verifiable: `--color-fg` is byte-identical between the repos
+(`#f8f8f2` / `#1e293b`), so no av-kit hue is authored; and the proposal's own mockup already
+decouples fill from foreground (`.pill.red { background: rgba(255,85,85,.18); color: #ff9e9e; }`,
+mockup:151). No shared token value is repointed - the app-wide blast radius you warned about is
+avoided. The **entire debt apparatus is deleted**, not re-tuned: `CONTRAST_AA_PASS`,
+`CONTRAST_AA_DEBT`, `CONTRAST_DEBT_*`, `KNOWN_ISSUES_*`, and the `QUEUE-PILL-AA-DEBT` issue task
+row 3 would have opened. The status icon's own 80 ratios are kept as **advisory** (12 below 3.0,
+worst 1.94) under WCAG 1.4.11's Decorative exception - the icon is `aria-hidden` and redundant
+with the pill's text.
+
+**F2 (blocker re-queue).** Your claim was checked in source. `apply_lock()` only ever moves
+Pending -> QualityBlocked, and `_run_one` never re-runs it - confirmed. `REQUEUE_BLOCKER_POLICY` +
+new **AC-41.10** now require QualityBlocked -> Pending to apply current downloader defaults and
+re-evaluate `_incompatible(job)` against the live SABR snapshot, answering 409 with
+`BLOCKER_REMEDIATION['QualityBlocked']` when still incompatible. AgeRestricted re-queues
+unconditionally. New **AC-43.15** requires the blocker card to render the reason and the
+remediation.
+
+**F3 (cancel scope).** `CANCEL_CONTROL_LABEL` = "Cancel queue", `CANCEL_CONTROL_TITLE` =
+"Cancel queue - this is the in-flight item", `CANCEL_LABEL_FORBIDDEN` = the four bare strings.
+New **AC-43.14** asserts the accessible name by equality and requires the same scope wording in
+the confirm step.
+
+**F4 (clear finished).** `CLEAR_FINISHED_SEMANTICS` - seven clauses (snapshot, independence,
+continue-on-failure, successes kept, never delete files, exactly one refetch, reported counts +
+per-failure reasons) - is required in canon by **AC-40.6**, so the deferred MEU-46 inherits a
+complete contract.
+
+**F5 (kebab).** `KEBAB_MENU_ORDER` is now a relative order over applicable supplied actions;
+`KEBAB_AVAILABILITY` gives a condition per label; inapplicable actions are absent from the DOM,
+never disabled. **AC-43.8** asserts three cases including a first-row Pending job.
+
+`RED_COUNT_41` 9 -> 10, `RED_COUNT_43` 13 -> 15; predicates MATCH. Binding census
+185/185 bound, 0 dangling. Correction census: 30 values, 189 literals, 345 sites, PASS.
+
+## What this round is really for
+
+1. **Is the F1 remedy the right reading of the human's lock?** The user said "colour should be
+   whatever it is in p:/zorivest repo." The plan reads that as Zorivest's *token values*, not
+   Zorivest's *class combination*, and that interpretive call is disclosed in the Spec
+   Sufficiency table for the human to overrule at the Step 5c gate. Is the disclosure honest and
+   is the reading defensible? Separately: is `--color-fg` on a 10%-alpha hue fill a pill a person
+   would actually want to look at, or does it read as a flat grey chip with a coloured wash?
+2. **Does the F2 remedy actually close the hole, or move it?** AC-41.10 makes the *service* do
+   the revalidation. Is there a path - MCP action, direct repository write, bulk operation, the
+   existing `clear_sabr()` - that still reaches Pending from QualityBlocked without it? Is 409
+   the right answer, or should the reset succeed and re-block?
+3. **Did the remedies introduce new wrongness?** Especially: AC-43.8's "absent, never disabled"
+   rule (does a menu whose contents change shape between rows confuse more than a disabled item
+   would?), and AC-43.15's requirement that the card restate the remediation copy (does that
+   duplicate the 409 body in a way that will drift?).
+4. **Anything still wrong that four rounds have not caught.** Scope honesty for MEU-40..43,
+   the USER_LOCKS, the reduced control model, the re-queue widening.
+
+Answer with a recommendation, not a survey.
+
+## SIGN 1 - no project tests
+
+Do NOT run pytest, vitest, npm test, playwright, tools/meu_status.py, tools/export_openapi.py,
+tools/issue_triage.py, or any product test/generator - including --check and --dry-run forms.
+
+You MAY run the plan-local hermetic oracles and the census driver (they build synthetic fixtures
+under C:/Temp/av-kit and touch no project file):
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-red-oracle.ps1 -SelfTest *> C:/Temp/av-kit/r5-red-selftest.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r5-red-selftest.txt; exit $code
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1 -SelfTest *> C:/Temp/av-kit/r5-iso-selftest.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r5-iso-selftest.txt; exit $code
+
+Do NOT run `assert-page-isolation.ps1 -Capture` against the real tree - that is task row 1's
+first action during execution, and a pre-seeded baseline would corrupt it.
+P0: redirect every process to C:/Temp/av-kit/ (`*>`), capture $LASTEXITCODE immediately.
+
+## Harness
+
+`.agent/context/harness.local.md` declares `plan_to_exec_gate: reviewer-auto`, but the driving
+harness is Claude Code and the user explicitly chose `human` (`USER_LOCKS.exec_gate`). Your
+`approved` verdict does NOT authorize execution; the user's next explicit message does. Do not
+flag the Step 5c pause as a premature stop.
+
+## Verdict rules
+
+If approved, findings_count must be 0. If changes_required, list findings with file:line, most
+severe first, and each one must name the wrong product behaviour it causes.
+
+Round 5 of a maximum of 6 (`PLAN_REVIEW_MAX_ROUND` = 6). Round 6 is the last; a Round 6 that
+still returns `changes_required` is a HARD STOP requiring the human. Do not withhold approval
+over procedural or documentation nits - if the plan builds the right thing, approve it and put
+your remaining doubts under Residual Risk.

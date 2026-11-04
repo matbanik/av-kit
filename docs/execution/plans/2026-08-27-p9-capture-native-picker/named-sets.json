@@ -1,0 +1,318 @@
+{
+  "PLAN_FOLDER": "docs/execution/plans/2026-08-27-p9-capture-native-picker",
+  "PLAN_FOLDER_SLASH": "docs/execution/plans/2026-08-27-p9-capture-native-picker/",
+  "PLAN_FILE": "docs/execution/plans/2026-08-27-p9-capture-native-picker/implementation-plan.md",
+  "TASK_FILE": "docs/execution/plans/2026-08-27-p9-capture-native-picker/task.md",
+  "PRIOR_PLAN_SLASHES": [
+    "docs/execution/plans/2026-08-26-p9-capture-engine/",
+    "docs/execution/plans/2026-08-27-p9-capture-api-mcp/",
+    "docs/execution/plans/2026-08-27-p9-capture-gui/"
+  ],
+  "PICKER_MIN_EDGE_PX": 8,
+  "PICKER_EXIT_CONFIRM": 0,
+  "PICKER_EXIT_ERROR": 1,
+  "PICKER_EXIT_CANCEL": 2,
+  "PICKER_READY_MARKER": "ready",
+  "PICKER_EXE_REL": "native/region-picker/publish/avkit-region-picker.exe",
+  "PICKER_PUBLISH_DIR": "native/region-picker/publish",
+  "PICKER_PROJECT_DIR": "native/region-picker",
+  "PICKER_TESTS_DIR": "native/region-picker-tests",
+  "PICKER_BUILD_SCRIPT": "build:picker",
+  "PICKER_PREP_SCRIPT": "dist:prep",
+  "PICKER_DIST_SCRIPT": "dist",
+  "PICKER_DIST_REQUIRED_SEGMENT": "npm run dist:prep",
+  "PICKER_SEGMENT_SEPARATOR": "&&",
+  "SCRIPT_SEGMENT_SPLIT_PATTERN": "&&|\\|\\||;|\\|",
+  "SCRIPT_ALLOWED_PREFIXES": [
+    "npx ",
+    "cross-env "
+  ],
+  "SCRIPT_HOLLOW_HEADS": [
+    "echo",
+    "@echo",
+    "printf",
+    "rem",
+    "true",
+    "exit",
+    "type",
+    "cd",
+    ":",
+    "#"
+  ],
+  "RUN_STAMPS": {
+    "e2e-capture": {
+      "artifact": "C:/Temp/av-kit/e2e-capture-results.json",
+      "stamp": "C:/Temp/av-kit/e2e-capture-run.stamp"
+    },
+    "packaging-installed": {
+      "artifact": "C:/Temp/av-kit/packaging-installed.txt",
+      "stamp": "C:/Temp/av-kit/packaging-installed-run.stamp"
+    }
+  },
+  "FOLLOWUP_SOURCES": [
+    ".agent/context/known-issues.md",
+    ".agent/context/known-issues-archive.md",
+    ".agent/context/meu-status.yaml"
+  ],
+  "PICKER_EXTRARESOURCE_FROM": "../native/region-picker/publish",
+  "PICKER_EXTRARESOURCE_TO": "region-picker",
+  "PICKER_STAGING_PREFIX": ".avkit-staging-",
+  "PICKER_PATH_ENV": "AVKIT_REGION_PICKER_PATH",
+  "OVERLAY_DELETED_FILES": [
+    "ui/src/main/capture-overlay.ts",
+    "ui/src/main/overlay-preload.ts",
+    "ui/src/main/overlay-freeze-buffer.ts",
+    "ui/src/main/overlay-page-target.ts",
+    "ui/src/main/overlay-rect.ts",
+    "ui/src/renderer/overlay.html",
+    "ui/src/renderer/src/overlay.ts",
+    "ui/src/renderer/src/overlay-interaction.ts"
+  ],
+  "OVERLAY_FORBIDDEN_TOKEN": "desktopCapturer",
+  "HUB_FILE": "docs/BUILD_PLAN.md",
+  "HUB_FORBIDDEN_TOKENS": [
+    "desktopCapturer",
+    "overlay"
+  ],
+  "HUB_REQUIRED_TOKENS": [
+    "region picker"
+  ],
+  "E2E_SPEC_FILE": "ui/tests/e2e/capture-picker.test.ts",
+  "E2E_PLAYWRIGHT_CONFIG": "ui/playwright.config.ts",
+  "E2E_TESTDIR": "./tests/e2e",
+  "E2E_SCRIPT": "test:e2e",
+  "E2E_CAPTURE_SCRIPT": "test:e2e:capture",
+  "E2E_CAPTURE_REQUIRED_SEGMENTS": [
+    "playwright test",
+    "tests/e2e/capture-picker.test.ts",
+    "--reporter=json"
+  ],
+  "E2E_PLAYWRIGHT_HEAD": "playwright test",
+  "E2E_JSON_ENV": "PLAYWRIGHT_JSON_OUTPUT_NAME",
+  "E2E_EXECUTED_RECEIPT": "C:/Temp/av-kit/e2e-capture-results.json",
+  "E2E_DISPOSITION_FILE": "C:/Temp/av-kit/e2e-capture-disposition.txt",
+  "E2E_DISPOSITION_MARKERS": [
+    "BLOCKED=",
+    "REASON=",
+    "CLASS=",
+    "FOLLOWUP=",
+    "RECEIPT=",
+    "ERROR_SIGNATURE="
+  ],
+  "E2E_BLOCKED_RECEIPT": "C:/Temp/av-kit/ui-e2e-capture.txt",
+  "E2E_REQUIRED_CASES": [
+    "region picker confirm publishes and registers the capture",
+    "region picker cancel leaves the inbox unchanged",
+    "region picker all-black capture is rejected"
+  ],
+  "E2E_STUB_PROJECT_DIR": "native/region-picker-stub",
+  "E2E_STUB_EXE_REL": "native/region-picker-stub/publish/avkit-region-picker-stub.exe",
+  "E2E_STUB_BUILD_SCRIPT": "build:picker-stub",
+  "E2E_STUB_PROJECT_FILE": "native/region-picker-stub/avkit-region-picker-stub.csproj",
+  "E2E_STUB_BUILD_REQUIRED_SEGMENT": "dotnet publish",
+  "E2E_STUB_EXIT_ENV": "AVKIT_STUB_EXIT",
+  "E2E_STUB_PIXEL_ENV": "AVKIT_STUB_PIXEL",
+  "E2E_FORBIDDEN_MARKERS": [
+    ".skip(",
+    ".only(",
+    ".fixme("
+  ],
+  "E2E_REQUIRED_MARKERS": [
+    "AVKIT_REGION_PICKER_PATH",
+    "AC-40.18"
+  ],
+  "E2E_SHORTCIRCUIT_ENV": "AVKIT_E2E",
+  "SMOKE_RECEIPT_FILE": "C:/Temp/av-kit/live-smoke.txt",
+  "SMOKE_LATENCY_KEY": "LATENCY_MS",
+  "RED_DOTNET_RECEIPT": "C:/Temp/av-kit/dotnet-test-red.txt",
+  "RED_DOTNET_SIGNATURES": [
+    "RectMathTests",
+    "PickerControllerTests",
+    "ProgramExitTests",
+    "Failed!"
+  ],
+  "RED_VITEST_RECEIPT": "C:/Temp/av-kit/ui-test-red.txt",
+  "RED_VITEST_SIGNATURES": [
+    "capture-picker",
+    "AC-40.5",
+    "FAIL"
+  ],
+  "ROW_BOUNDARY_H1": "H1-1",
+  "ROW_BOUNDARY_CLOSEOUT": "H2-4",
+  "AC_PREFIX": "AC-40",
+  "AC_COUNT": 29,
+  "AC_IDS": [
+    "AC-40.1",
+    "AC-40.2",
+    "AC-40.3",
+    "AC-40.4",
+    "AC-40.5",
+    "AC-40.6",
+    "AC-40.7",
+    "AC-40.8",
+    "AC-40.9",
+    "AC-40.10",
+    "AC-40.11",
+    "AC-40.12",
+    "AC-40.13",
+    "AC-40.14",
+    "AC-40.15",
+    "AC-40.16",
+    "AC-40.18",
+    "AC-40.19",
+    "AC-40.21",
+    "AC-40.24",
+    "AC-40.25",
+    "AC-40.26",
+    "AC-40.27",
+    "AC-40.28",
+    "AC-40.29",
+    "AC-40.30",
+    "AC-40.31",
+    "AC-40.32",
+    "AC-40.33"
+  ],
+  "RETIRED_ACS": [
+    "AC-40.17",
+    "AC-40.20",
+    "AC-40.22",
+    "AC-40.23"
+  ],
+  "HANDOFF_COUNT": 1,
+  "HANDOFF_FILTER": "2026-08-27-p9-capture-native-picker-MEU-*-handoff.md",
+  "HANDOFFS": [
+    "2026-08-27-p9-capture-native-picker-MEU-40-handoff.md"
+  ],
+  "HANDOFF_40": ".agent/context/handoffs/2026-08-27-p9-capture-native-picker-MEU-40-handoff.md",
+  "HANDOFF_TEMPLATE": ".agent/context/handoffs/TEMPLATE.md",
+  "HANDOFF_BUNDLE_MARKERS": [
+    "Acceptance Criteria",
+    "CACHE BOUNDARY",
+    "FAIL_TO_PASS",
+    "Changed Files",
+    "Quality Gate Results",
+    "Retired MEU-39 ACs"
+  ],
+  "EXEC_REVIEW_FILE": ".agent/context/handoffs/2026-08-27-p9-capture-native-picker-implementation-critical-review.md",
+  "EXEC_REVIEW_MAX_ROUND": 6,
+  "EXEC_REVIEW_TARGET": "docs/execution/plans/2026-08-27-p9-capture-native-picker/implementation-plan.md",
+  "EXEC_REVIEW_DISPATCH_ID": "exec-review-p9-native-picker",
+  "REFLECTION_FILE": "docs/execution/reflections/2026-08-27-p9-capture-native-picker-reflection.md",
+  "REFLECTION_TEMPLATE": "docs/execution/reflections/TEMPLATE.md",
+  "REFLECTION_SCHEMA": ".agent/schemas/reflection.v1.yaml",
+  "METRICS_SLUG": "2026-08-27-p9-capture-native-picker",
+  "REVIEWER_AGENT": "gpt-5.6-sol",
+  "DISPATCH_DIR": "C:/Temp/av-kit/dispatch",
+  "DISPATCH_STATUS_SCHEMA": "dispatch-status.v1",
+  "DISPATCH_ID_FIELD": "dispatch_id",
+  "EXEC_REVIEW_MODE": "implementation",
+  "EXEC_REVIEW_APPROVED": "approved",
+  "NAMED_SETS_FILE": "docs/execution/plans/2026-08-27-p9-capture-native-picker/named-sets.json",
+  "HUB_RETIREMENT_MARKERS": [
+    "replaced",
+    "replaces",
+    "retired",
+    "removed",
+    "deleted",
+    "no longer"
+  ],
+  "HUB_REQUIRED_LINES": [
+    "| 9 | Screenshot capture | F2 native region picker (WinForms sidecar), inbox filmstrip, annotate; tray + MCP | Phase 1–6 (ports, chrome) | [09-screenshot-capture.md](build-plan/09-screenshot-capture.md) |",
+    "| Capture GUI | Rail **Capture** below Convert (`/capture`, Ctrl+5); filmstrip + viewport; tray + F2 region picker | Phase 9 |",
+    "| [09-screenshot-capture.md](build-plan/09-screenshot-capture.md) | CaptureShot, tray/F2 region picker, `/captures`, `avkit_capture`, Capture page |",
+    "| [09-screenshot-capture.md](build-plan/09-screenshot-capture.md) ShareX source map | Capture | Tray + F2 + native region picker sidecar + save-to-folder; rewrite, do not paste GPL-3.0 C# |"
+  ],
+  "TASK_ROW_REQUIRED_TOKENS": {
+    "4a": {
+      "Validation": [
+        "dotnet"
+      ]
+    },
+    "7a": {
+      "Validation": [
+        "arm-run.ps1",
+        "assert-e2e-wired.ps1"
+      ]
+    },
+    "7c": {
+      "Validation": [
+        "assert-overlay-deleted.ps1"
+      ]
+    },
+    "9a": {
+      "Validation": [
+        "assert-packaging-clean.ps1"
+      ]
+    }
+  },
+  "TASK_ROW_INVOCATION_PARAMS": [
+    "-File"
+  ],
+  "VALIDATION_ALLOWED_PREFIXES": [
+    "rtk proxy ",
+    "npx ",
+    "cross-env "
+  ],
+  "E2E_REPORT_FAILED_STATUSES": [
+    "failed",
+    "timedOut",
+    "interrupted",
+    "unexpected",
+    "crashed"
+  ],
+  "BLOCKED_CLASSES": [
+    "external-error",
+    "missing-dependency",
+    "human-decision"
+  ],
+  "BLOCKED_ERROR_CLASSES": [
+    "external-error",
+    "missing-dependency"
+  ],
+  "FOLLOWUP_PATTERN": "^(MEU-[0-9]+|[A-Z0-9]+(-[A-Z0-9]+)+)$",
+  "OVERLAY_SCAN_ROOTS": [
+    "ui/src",
+    "ui/out"
+  ],
+  "OVERLAY_FORBIDDEN_NAME_PATTERN": "overlay*",
+  "DIST_CLEAN_DIRS": [
+    "ui/out",
+    "native/region-picker/publish"
+  ],
+  "PICKER_PREP_REQUIRED_SEGMENTS": [
+    "npm run clean:out",
+    "npm run build",
+    "npm run build:picker"
+  ],
+  "PICKER_CLEAN_SCRIPT": "clean:out",
+  "PICKER_PUBLISH_REQUIRED_SEGMENTS": [
+    "dotnet publish",
+    "native/region-picker",
+    "-c Release",
+    "-r win-x64",
+    "--self-contained true",
+    "native/region-picker/publish"
+  ],
+  "GLOBAL_JSON_FILE": "global.json",
+  "DOTNET_SDK_BAND": "8.0.4",
+  "PACKAGING_INSTALLED_RECEIPT": "C:/Temp/av-kit/packaging-installed.txt",
+  "PACKAGING_DISPOSITION_FILE": "C:/Temp/av-kit/packaging-installed-disposition.txt",
+  "INSTALLED_PICKER_REL": "resources/region-picker/avkit-region-picker.exe",
+  "NSIS_OUTPUT_DIR": "ui/dist",
+  "REALDESKTOP_TEST_FILE": "native/region-picker-tests/RealDesktopCaptureTests.cs",
+  "REALDESKTOP_TRAIT": "Category=RealDesktop",
+  "REALDESKTOP_RECEIPT": "C:/Temp/av-kit/dotnet-realdesktop.txt",
+  "REALDESKTOP_DISPOSITION_FILE": "C:/Temp/av-kit/realdesktop-disposition.txt",
+  "CAPTURE_SOURCE_FILE": "native/region-picker/ScreenCaptureSource.cs",
+  "PICKER_STARTUP_TIMEOUT_MS": 5000,
+  "PICKER_INTERACTION_TIMEOUT_MS": 120000,
+  "PICKER_KILL_GRACE_MS": 2000,
+  "PICKER_LOG_MAX_BYTES": 65536,
+  "PICKER_COLLISION_SUFFIX_START": 2,
+  "CAPTURE_SERVICE_FILE": "packages/core/src/avkit_core/services/capture.py",
+  "CAPTURE_SERVICE_TEST_FILE": "tests/unit/test_capture_service.py",
+  "ELECTRON_BUILDER_FILE": "ui/electron-builder.yml",
+  "PICKER_PATH_PROBE_FLAG": "--avkit-picker-path",
+  "PICKER_PATH_PROBE_PREFIX": "PICKER_PATH=",
+  "PACKAGING_INSTALLED_ARM_NAME": "packaging-installed"
+}

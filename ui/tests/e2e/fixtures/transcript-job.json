@@ -1,0 +1,15 @@
+{
+  "id": "e2e-1",
+  "channel_url": "https://www.youtube.com/@e2e-invalid",
+  "channel_name": "E2E",
+  "status": "Pending",
+  "output_dir": "C:/out/e2e",
+  "video_count": 10,
+  "transcripts_done": 4,
+  "word_count": 100,
+  "zip_path": "C:/out/e2e/e2e_raw.zip",
+  "last_title": "E2E last",
+  "last_item_status": "Done",
+  "queue_position": 1,
+  "compiled_path": "C:/out/e2e/compiled/e2e_vol1.md"
+}

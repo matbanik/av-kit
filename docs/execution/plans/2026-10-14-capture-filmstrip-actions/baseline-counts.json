@@ -1,0 +1,9 @@
+{
+  "vitest_passed": 800,
+  "vitest_failed": 0,
+  "e2e_expected": 137,
+  "e2e_skipped": 0,
+  "e2e_unexpected": 0,
+  "e2e_flaky": 0,
+  "vitest_baseline_red": 0
+}

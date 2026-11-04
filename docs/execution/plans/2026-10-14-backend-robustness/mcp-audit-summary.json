@@ -1,0 +1,1903 @@
+{
+  "schema": "mcp-audit-summary.v1",
+  "mode": "authoritative",
+  "agent": "local-windows-gate",
+  "date": "2026-10-16T12:29:46.010Z",
+  "commit": "ddd11171ceb3ce307a6a735a5b77094b7d456d39",
+  "server": "P:\\av-kit-wt\\backend-robustness\\mcp-server\\dist\\index.js",
+  "backend_version": "0.1.0",
+  "out_dir": "C:\\Temp\\av-kit\\s33-audit",
+  "launch": {
+    "command": "node",
+    "args": [
+      "P:\\av-kit-wt\\backend-robustness\\mcp-server\\dist\\index.js"
+    ],
+    "env_keys": [
+      "AVKIT_API_TOKEN",
+      "AVKIT_APP_DATA",
+      "HOME",
+      "PATH",
+      "SystemRoot",
+      "TEMP",
+      "TMP",
+      "USERPROFILE"
+    ],
+    "initialized": true
+  },
+  "isolation": {
+    "root": "C:\\Users\\Mat\\AppData\\Local\\Temp\\avkit-mcp-audit-OcDf6s",
+    "paths": {
+      "downloader.path": "C:\\Users\\Mat\\AppData\\Local\\Temp\\avkit-mcp-audit-OcDf6s\\out\\downloads",
+      "transcript.output_dir": "C:\\Users\\Mat\\AppData\\Local\\Temp\\avkit-mcp-audit-OcDf6s\\out\\transcripts",
+      "tts.models_directory": "C:\\Users\\Mat\\AppData\\Local\\Temp\\avkit-mcp-audit-OcDf6s\\out\\models",
+      "tts.output_path": "C:\\Users\\Mat\\AppData\\Local\\Temp\\avkit-mcp-audit-OcDf6s\\out\\tts",
+      "converter.output_dir": "C:\\Users\\Mat\\AppData\\Local\\Temp\\avkit-mcp-audit-OcDf6s\\out\\convert",
+      "capture.inbox_dir": "C:\\Users\\Mat\\AppData\\Local\\Temp\\avkit-mcp-audit-OcDf6s\\out\\captures",
+      "capture.backup_dir": "C:\\Users\\Mat\\AppData\\Local\\Temp\\avkit-mcp-audit-OcDf6s\\out\\capture_backups"
+    },
+    "ok": true,
+    "error": null
+  },
+  "discovery": {
+    "status": "pass",
+    "tools": 8,
+    "actions": 70,
+    "findings": [],
+    "new": [],
+    "removed": [],
+    "ghost": []
+  },
+  "steps": [
+    {
+      "id": "settings.get",
+      "tool": "avkit_settings",
+      "action": "get",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 220,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST for 7 namespaces",
+      "error": null
+    },
+    {
+      "id": "settings.set",
+      "tool": "avkit_settings",
+      "action": "set",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 310,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "7 leaves persisted per REST",
+      "error": null
+    },
+    {
+      "id": "settings.set.restore",
+      "tool": "avkit_settings",
+      "action": "set",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 202,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "7 leaves restored per REST",
+      "error": null
+    },
+    {
+      "id": "health.liveness",
+      "tool": "avkit_health",
+      "action": "liveness",
+      "phase": "functional",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST /health -> 200 {\"status\":\"ok\"}",
+      "error": null
+    },
+    {
+      "id": "health.dependencies",
+      "tool": "avkit_health",
+      "action": "dependencies",
+      "phase": "functional",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 116,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /health/dependencies",
+      "error": null
+    },
+    {
+      "id": "models.available",
+      "tool": "avkit_models",
+      "action": "available",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 27,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /models/available",
+      "error": null
+    },
+    {
+      "id": "models.downloaded.before",
+      "tool": "avkit_models",
+      "action": "downloaded",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /models/downloaded",
+      "error": null
+    },
+    {
+      "id": "models.download",
+      "tool": "avkit_models",
+      "action": "download",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 2679,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST downloaded kokoro-onnx-int8; model_quantized.onnx 92360543 B",
+      "error": null
+    },
+    {
+      "id": "models.download_runtime",
+      "tool": "avkit_models",
+      "action": "download_runtime",
+      "phase": "functional",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 28,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /models/download-runtime",
+      "error": null
+    },
+    {
+      "id": "models.downloaded.after",
+      "tool": "avkit_models",
+      "action": "downloaded",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 35,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /models/downloaded",
+      "error": null
+    },
+    {
+      "id": "models.download_asset.vocab",
+      "tool": "avkit_models",
+      "action": "download_asset",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 110,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": true,
+      "observable": "tts_onnx_vocab already ready: 409 contract true; state after ready",
+      "error": null
+    },
+    {
+      "id": "models.download_asset.spacy",
+      "tool": "avkit_models",
+      "action": "download_asset",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 109,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": true,
+      "observable": "tts_spacy_model already ready: 409 contract true; state after ready",
+      "error": null
+    },
+    {
+      "id": "models.load",
+      "tool": "avkit_models",
+      "action": "load",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 594,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST status is_loaded=true variant=kokoro-onnx-int8",
+      "error": null
+    },
+    {
+      "id": "models.status",
+      "tool": "avkit_models",
+      "action": "status",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /models/status",
+      "error": null
+    },
+    {
+      "id": "tts.voices",
+      "tool": "avkit_tts",
+      "action": "voices",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /tts/voices ids=54",
+      "error": null
+    },
+    {
+      "id": "tts.prepare",
+      "tool": "avkit_tts",
+      "action": "prepare",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 32,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "prepare cleaned_text 28 chars; REST 200",
+      "error": null
+    },
+    {
+      "id": "tts.generate",
+      "tool": "avkit_tts",
+      "action": "generate",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 2690,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "job Done; a86d1cec-2fec-4e26-a172-37051e517563.mp3 60044 B; audio header ok",
+      "error": null
+    },
+    {
+      "id": "tts.get",
+      "tool": "avkit_tts",
+      "action": "get",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 30,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /tts/a86d1cec-2fec-4e26-a172-37051e517563",
+      "error": null
+    },
+    {
+      "id": "tts.cancel",
+      "tool": "avkit_tts",
+      "action": "cancel",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 14946,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "attempt 1/3; before=false after=true",
+      "error": null,
+      "refusal": {
+        "refusal_omit": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_tts: Invalid literal value, expected true at confirm"
+        },
+        "refusal_false": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_tts: Invalid literal value, expected true at confirm"
+        },
+        "user_confirm": false,
+        "confirmed": {
+          "isError": false,
+          "changed": true
+        }
+      }
+    },
+    {
+      "id": "models.unload",
+      "tool": "avkit_models",
+      "action": "unload",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 62,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST status is_loaded=false",
+      "error": null
+    },
+    {
+      "id": "models.status.after",
+      "tool": "avkit_models",
+      "action": "status",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 30,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /models/status",
+      "error": null
+    },
+    {
+      "id": "download.list.empty",
+      "tool": "avkit_download",
+      "action": "list",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /downloads ids=0",
+      "error": null
+    },
+    {
+      "id": "download.sabr_get",
+      "tool": "avkit_download",
+      "action": "sabr_get",
+      "phase": "functional",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 32,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /downloads/sabr",
+      "error": null
+    },
+    {
+      "id": "download.cookies_test",
+      "tool": "avkit_download",
+      "action": "cookies_test",
+      "phase": "functional",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 30,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP ok=true REST ok=true",
+      "error": null
+    },
+    {
+      "id": "download.sabr_force",
+      "tool": "avkit_download",
+      "action": "sabr_force",
+      "phase": "functional",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 15,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST sabr active/forced",
+      "error": null
+    },
+    {
+      "id": "download.sabr_check",
+      "tool": "avkit_download",
+      "action": "sabr_check",
+      "phase": "functional",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1281,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST sabr active checked_at=2026-10-16T12:29:11.650891+00:00",
+      "error": null
+    },
+    {
+      "id": "download.sabr_clear",
+      "tool": "avkit_download",
+      "action": "sabr_clear",
+      "phase": "functional",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST sabr inactive",
+      "error": null
+    },
+    {
+      "id": "download.setup",
+      "tool": "avkit_settings",
+      "action": "set",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 33,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST /settings/downloader == {\"quality\":\"lowest\"}",
+      "error": null
+    },
+    {
+      "id": "download.add.a",
+      "tool": "avkit_download",
+      "action": "add",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 939,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST /downloads/0318993c-440d-49d1-971a-a179aee1001e -> 200 Pending",
+      "error": null
+    },
+    {
+      "id": "download.add.b",
+      "tool": "avkit_download",
+      "action": "add",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1338,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST /downloads/208c5abe-b6c9-44c1-986c-c5a8de0c0560 -> 200 Pending",
+      "error": null
+    },
+    {
+      "id": "download.add.c",
+      "tool": "avkit_download",
+      "action": "add",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 980,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST /downloads/6b89ee4e-fcc9-4e3b-850b-83a97671b762 -> 200 Pending",
+      "error": null
+    },
+    {
+      "id": "download.apply_defaults",
+      "tool": "avkit_download",
+      "action": "apply_defaults",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 30,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "updated=3; REST qualities lowest,lowest,lowest",
+      "error": null
+    },
+    {
+      "id": "download.reorder",
+      "tool": "avkit_download",
+      "action": "reorder",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 33,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST order 6b89ee4e,0318993c,208c5abe",
+      "error": null
+    },
+    {
+      "id": "download.list",
+      "tool": "avkit_download",
+      "action": "list",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 17,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /downloads ids=3",
+      "error": null
+    },
+    {
+      "id": "download.get",
+      "tool": "avkit_download",
+      "action": "get",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 28,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /downloads/0318993c-440d-49d1-971a-a179aee1001e",
+      "error": null
+    },
+    {
+      "id": "download.start",
+      "tool": "avkit_download",
+      "action": "start",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 52,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST c Downloading",
+      "error": null
+    },
+    {
+      "id": "download.cancel",
+      "tool": "avkit_download",
+      "action": "cancel",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1638,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST c Cancelled, processor Idle",
+      "error": null
+    },
+    {
+      "id": "download.reset",
+      "tool": "avkit_download",
+      "action": "reset",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST c Pending",
+      "error": null
+    },
+    {
+      "id": "download.reorder.back",
+      "tool": "avkit_download",
+      "action": "reorder",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 33,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST order 0318993c,6b89ee4e,208c5abe",
+      "error": null
+    },
+    {
+      "id": "download.start.again",
+      "tool": "avkit_download",
+      "action": "start",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 44,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST a Downloading",
+      "error": null
+    },
+    {
+      "id": "download.pause",
+      "tool": "avkit_download",
+      "action": "pause",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1611,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST processor Paused",
+      "error": null
+    },
+    {
+      "id": "download.resume",
+      "tool": "avkit_download",
+      "action": "resume",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 47,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST processor Processing",
+      "error": null
+    },
+    {
+      "id": "download.stop",
+      "tool": "avkit_download",
+      "action": "stop",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1637,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST processor Idle",
+      "error": null
+    },
+    {
+      "id": "download.get.done",
+      "tool": "avkit_download",
+      "action": "get",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST a Done; Me at the zoo.mp4 629172 B",
+      "error": null
+    },
+    {
+      "id": "download.remove",
+      "tool": "avkit_download",
+      "action": "remove",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 62,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "before=200 after=404",
+      "error": null,
+      "refusal": {
+        "refusal_omit": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_download: Invalid literal value, expected true at confirm"
+        },
+        "refusal_false": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_download: Invalid literal value, expected true at confirm"
+        },
+        "user_confirm": false,
+        "confirmed": {
+          "isError": false,
+          "changed": true
+        }
+      }
+    },
+    {
+      "id": "download.clear",
+      "tool": "avkit_download",
+      "action": "clear",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 78,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "before=2 after=0",
+      "error": null,
+      "refusal": {
+        "refusal_omit": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_download: Invalid literal value, expected true at confirm"
+        },
+        "refusal_false": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_download: Invalid literal value, expected true at confirm"
+        },
+        "user_confirm": false,
+        "confirmed": {
+          "isError": false,
+          "changed": true
+        }
+      }
+    },
+    {
+      "id": "download.setup.restore",
+      "tool": "avkit_settings",
+      "action": "set",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 23,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST /settings/downloader == {\"quality\":\"1080p\"}",
+      "error": null
+    },
+    {
+      "id": "transcript.list.empty",
+      "tool": "avkit_transcript",
+      "action": "list",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 24,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /transcripts ids=0",
+      "error": null
+    },
+    {
+      "id": "transcript.setup",
+      "tool": "avkit_settings",
+      "action": "set",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 32,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST /settings/transcript == {\"delay_between_requests\":3,\"max_retries\":0}",
+      "error": null
+    },
+    {
+      "id": "transcript.add",
+      "tool": "avkit_transcript",
+      "action": "add",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 8200,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Pending video_count=9 output_dir in root=true",
+      "error": null
+    },
+    {
+      "id": "transcript.list",
+      "tool": "avkit_transcript",
+      "action": "list",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 20,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /transcripts ids=1",
+      "error": null
+    },
+    {
+      "id": "transcript.get",
+      "tool": "avkit_transcript",
+      "action": "get",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /transcripts/089737f2-99ee-4081-ab2a-64172e7e8c56",
+      "error": null
+    },
+    {
+      "id": "transcript.reorder",
+      "tool": "avkit_transcript",
+      "action": "reorder",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 33,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST order 1 job(s)",
+      "error": null
+    },
+    {
+      "id": "transcript.start",
+      "tool": "avkit_transcript",
+      "action": "start",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Processing (want Processing)",
+      "error": null
+    },
+    {
+      "id": "transcript.pause",
+      "tool": "avkit_transcript",
+      "action": "pause",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1623,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Paused (want Paused)",
+      "error": null
+    },
+    {
+      "id": "transcript.resume",
+      "tool": "avkit_transcript",
+      "action": "resume",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1606,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Processing (want Processing), transcripts_done 1, last_item_status Done",
+      "error": null
+    },
+    {
+      "id": "transcript.pause.again",
+      "tool": "avkit_transcript",
+      "action": "pause",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 2687,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Paused (want Paused)",
+      "error": null
+    },
+    {
+      "id": "transcript.stop",
+      "tool": "avkit_transcript",
+      "action": "stop",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Cancelled (want Cancelled)",
+      "error": null
+    },
+    {
+      "id": "transcript.requeue",
+      "tool": "avkit_transcript",
+      "action": "requeue",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 19,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Pending",
+      "error": null
+    },
+    {
+      "id": "transcript.requeue.conflict",
+      "tool": "avkit_transcript",
+      "action": "requeue",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 28,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": true,
+      "observable": "409 contract: ConflictError: illegal transcript transition Pending -> Pending; REST job Pending",
+      "error": null
+    },
+    {
+      "id": "transcript.retry.conflict",
+      "tool": "avkit_transcript",
+      "action": "retry",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": true,
+      "observable": "409 contract: ConflictError: illegal transcript transition Pending -> Pending; REST job Pending",
+      "error": null
+    },
+    {
+      "id": "transcript.start.again",
+      "tool": "avkit_transcript",
+      "action": "start",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 32,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Processing (want Processing)",
+      "error": null
+    },
+    {
+      "id": "transcript.pause.third",
+      "tool": "avkit_transcript",
+      "action": "pause",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1093,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Paused (want Paused)",
+      "error": null
+    },
+    {
+      "id": "transcript.stop.again",
+      "tool": "avkit_transcript",
+      "action": "stop",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 30,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Cancelled (want Cancelled)",
+      "error": null
+    },
+    {
+      "id": "transcript.retry",
+      "tool": "avkit_transcript",
+      "action": "retry",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST job Pending",
+      "error": null
+    },
+    {
+      "id": "transcript.compile",
+      "tool": "avkit_transcript",
+      "action": "compile",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "live-rigging-snow_vol1.md 112681 B; 1 section(s), transcripts_done 1",
+      "error": null
+    },
+    {
+      "id": "transcript.remove",
+      "tool": "avkit_transcript",
+      "action": "remove",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 63,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "before=200 after=404",
+      "error": null,
+      "refusal": {
+        "refusal_omit": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_transcript: Invalid literal value, expected true at confirm"
+        },
+        "refusal_false": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_transcript: Invalid literal value, expected true at confirm"
+        },
+        "user_confirm": false,
+        "confirmed": {
+          "isError": false,
+          "changed": true
+        }
+      }
+    },
+    {
+      "id": "transcript.setup.restore",
+      "tool": "avkit_settings",
+      "action": "set",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 33,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST /settings/transcript == {\"delay_between_requests\":6,\"max_retries\":3}",
+      "error": null
+    },
+    {
+      "id": "convert.list.empty",
+      "tool": "avkit_convert",
+      "action": "list",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /conversions ids=0",
+      "error": null
+    },
+    {
+      "id": "convert.gpu",
+      "tool": "avkit_convert",
+      "action": "gpu",
+      "phase": "functional",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 513,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /conversions/gpu",
+      "error": null
+    },
+    {
+      "id": "convert.gpu_refresh",
+      "tool": "avkit_convert",
+      "action": "gpu_refresh",
+      "phase": "functional",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 419,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST checked_at=2026-10-16T12:29:37.041665+00:00",
+      "error": null
+    },
+    {
+      "id": "convert.add.long1",
+      "tool": "avkit_convert",
+      "action": "add",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 576,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST Pending output in root=true",
+      "error": null
+    },
+    {
+      "id": "convert.add.short",
+      "tool": "avkit_convert",
+      "action": "add",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 124,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST Pending output in root=true",
+      "error": null
+    },
+    {
+      "id": "convert.add.long2",
+      "tool": "avkit_convert",
+      "action": "add",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 575,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST Pending output in root=true",
+      "error": null
+    },
+    {
+      "id": "convert.list",
+      "tool": "avkit_convert",
+      "action": "list",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /conversions ids=3",
+      "error": null
+    },
+    {
+      "id": "convert.get",
+      "tool": "avkit_convert",
+      "action": "get",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 20,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /conversions/b450923a-b2cc-4cb7-ae92-def34211f2cb",
+      "error": null
+    },
+    {
+      "id": "convert.start",
+      "tool": "avkit_convert",
+      "action": "start",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 29,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "long1 Processing; processor Processing",
+      "error": null
+    },
+    {
+      "id": "convert.cancel",
+      "tool": "avkit_convert",
+      "action": "cancel",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 547,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "long1 Cancelled; processor Idle",
+      "error": null
+    },
+    {
+      "id": "convert.reset",
+      "tool": "avkit_convert",
+      "action": "reset",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST long1 Pending",
+      "error": null
+    },
+    {
+      "id": "convert.reorder",
+      "tool": "avkit_convert",
+      "action": "reorder",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST order matches=true",
+      "error": null
+    },
+    {
+      "id": "convert.start.again",
+      "tool": "avkit_convert",
+      "action": "start",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 33,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "short started; processor Processing",
+      "error": null
+    },
+    {
+      "id": "convert.pause",
+      "tool": "avkit_convert",
+      "action": "pause",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 561,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "processor Paused; processor Paused",
+      "error": null
+    },
+    {
+      "id": "convert.resume",
+      "tool": "avkit_convert",
+      "action": "resume",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "processor Processing; processor Processing",
+      "error": null
+    },
+    {
+      "id": "convert.cancel.again",
+      "tool": "avkit_convert",
+      "action": "cancel",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 549,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "a job Cancelled, processor Idle; processor Idle",
+      "error": null
+    },
+    {
+      "id": "convert.get.done",
+      "tool": "avkit_convert",
+      "action": "get",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 14,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST short Done; short_compress.mp4 54223 B",
+      "error": null
+    },
+    {
+      "id": "convert.remove",
+      "tool": "avkit_convert",
+      "action": "remove",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 63,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "before=200 after=404",
+      "error": null,
+      "refusal": {
+        "refusal_omit": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_convert: Invalid input"
+        },
+        "refusal_false": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_convert: Invalid input"
+        },
+        "user_confirm": false,
+        "confirmed": {
+          "isError": false,
+          "changed": true
+        }
+      }
+    },
+    {
+      "id": "convert.clear",
+      "tool": "avkit_convert",
+      "action": "clear",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 78,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "before=2 after=0",
+      "error": null,
+      "refusal": {
+        "refusal_omit": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_convert: Invalid input"
+        },
+        "refusal_false": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_convert: Invalid input"
+        },
+        "user_confirm": false,
+        "confirmed": {
+          "isError": false,
+          "changed": true
+        }
+      }
+    },
+    {
+      "id": "capture.list.empty",
+      "tool": "avkit_capture",
+      "action": "list",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 18,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /captures ids=0",
+      "error": null
+    },
+    {
+      "id": "capture.capture",
+      "tool": "avkit_capture",
+      "action": "capture",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 596,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST shot 200; 2026-10-16_12-29-40.png 847734 B",
+      "error": null
+    },
+    {
+      "id": "capture.list",
+      "tool": "avkit_capture",
+      "action": "list",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 157,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /captures ids=1",
+      "error": null
+    },
+    {
+      "id": "capture.get",
+      "tool": "avkit_capture",
+      "action": "get",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 30,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /captures/8dcad55f-3335-497b-9276-157f1f968176",
+      "error": null
+    },
+    {
+      "id": "capture.image",
+      "tool": "avkit_capture",
+      "action": "image",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 32,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP image 847734 B == REST 847734 B: true; PNG true",
+      "error": null
+    },
+    {
+      "id": "capture.annotate",
+      "tool": "avkit_capture",
+      "action": "annotate",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 374,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "annotated 2026-10-16_12-29-40.annotated.png 847802 B; sidecar 2026-10-16_12-29-40.ann.json 131 B",
+      "error": null
+    },
+    {
+      "id": "capture.image.annotated",
+      "tool": "avkit_capture",
+      "action": "image",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 28,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "annotated MCP 847802 B == REST: true",
+      "error": null
+    },
+    {
+      "id": "capture.flatten",
+      "tool": "avkit_capture",
+      "action": "flatten",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1563,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "before={\"status\":200,\"original_sha256\":\"b95084940267203c2842d253a0b3d3c3a303cb8c980adafa3f3426ee61d2515d\",\"annotated_exists\":true,\"backup_count\":0} after={\"status\":200,\"original_sha256\":\"a9d00dfe9b93619d333bad79a554a5a62a62008ecbd329b19da99a0764a03b71\",\"annotated_exists\":false,\"backup_count\":1}",
+      "error": null,
+      "refusal": {
+        "refusal_omit": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_capture: Invalid input"
+        },
+        "refusal_false": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_capture: Invalid input"
+        },
+        "refusal_declined": {
+          "isError": true,
+          "changed": false,
+          "text": "user_confirmation_refused: avkit_capture.flatten was not run: the user confirmation outcome was decline"
+        },
+        "user_confirm": true,
+        "confirmed": {
+          "isError": false,
+          "changed": true
+        }
+      }
+    },
+    {
+      "id": "capture.revert",
+      "tool": "avkit_capture",
+      "action": "revert",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1186,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "before={\"status\":200,\"original_sha256\":\"a9d00dfe9b93619d333bad79a554a5a62a62008ecbd329b19da99a0764a03b71\"} after={\"status\":200,\"original_sha256\":\"b95084940267203c2842d253a0b3d3c3a303cb8c980adafa3f3426ee61d2515d\"}",
+      "error": null,
+      "refusal": {
+        "refusal_omit": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_capture: Invalid input"
+        },
+        "refusal_false": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_capture: Invalid input"
+        },
+        "refusal_declined": {
+          "isError": true,
+          "changed": false,
+          "text": "user_confirmation_refused: avkit_capture.revert was not run: the user confirmation outcome was decline"
+        },
+        "user_confirm": true,
+        "confirmed": {
+          "isError": false,
+          "changed": true
+        }
+      }
+    },
+    {
+      "id": "capture.capture_interactive",
+      "tool": "avkit_capture",
+      "action": "capture_interactive",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 28,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "REST pending requests include 29443355-bc1f-4a5f-a128-69dfcb5a0865: true",
+      "error": null
+    },
+    {
+      "id": "capture.list_requests",
+      "tool": "avkit_capture",
+      "action": "list_requests",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 31,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "MCP == REST /captures/requests?status=pending ids=1",
+      "error": null
+    },
+    {
+      "id": "capture.remove",
+      "tool": "avkit_capture",
+      "action": "remove",
+      "phase": "lifecycle",
+      "blocked_by": null,
+      "env_bound": null,
+      "ms": 1122,
+      "verdict": "pass",
+      "reason": null,
+      "is_error": false,
+      "observable": "before={\"status\":200,\"present\":1} after={\"status\":404,\"present\":0}",
+      "error": null,
+      "refusal": {
+        "refusal_omit": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_capture: Invalid input"
+        },
+        "refusal_false": {
+          "isError": true,
+          "changed": false,
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool avkit_capture: Invalid input"
+        },
+        "refusal_declined": {
+          "isError": true,
+          "changed": false,
+          "text": "user_confirmation_refused: avkit_capture.remove was not run: the user confirmation outcome was decline"
+        },
+        "user_confirm": true,
+        "confirmed": {
+          "isError": false,
+          "changed": true
+        }
+      }
+    }
+  ],
+  "counts": {
+    "pass": 99,
+    "fail": 0,
+    "skip_env": 0,
+    "blocked": 0,
+    "total": 99
+  },
+  "deltas": [
+    {
+      "key": "avkit_settings.get",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_settings.set",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_health.liveness",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_health.dependencies",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_models.available",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_models.downloaded",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_models.download",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_models.download_runtime",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_models.download_asset",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_models.load",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_models.status",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_tts.voices",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_tts.prepare",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_tts.generate",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_tts.get",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_tts.cancel",
+      "delta": "FIXED"
+    },
+    {
+      "key": "avkit_models.unload",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.list",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.sabr_get",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.cookies_test",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.sabr_force",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.sabr_check",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.sabr_clear",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.add",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.apply_defaults",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.reorder",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.get",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.start",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.cancel",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.reset",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.pause",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.resume",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.stop",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.remove",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_download.clear",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.list",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.add",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.get",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.reorder",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.start",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.pause",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.resume",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.stop",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.requeue",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.retry",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.compile",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_transcript.remove",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.list",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.gpu",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.gpu_refresh",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.add",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.get",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.start",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.cancel",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.reset",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.reorder",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.pause",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.resume",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.remove",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_convert.clear",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_capture.list",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_capture.capture",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_capture.get",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_capture.image",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_capture.annotate",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_capture.flatten",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_capture.revert",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_capture.capture_interactive",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_capture.list_requests",
+      "delta": "UNCHANGED"
+    },
+    {
+      "key": "avkit_capture.remove",
+      "delta": "UNCHANGED"
+    }
+  ],
+  "cleanup": {
+    "ok": true,
+    "residuals": [],
+    "backend_exited": true,
+    "root_removed": true
+  },
+  "consolidation": "n/a",
+  "exit_code": 0
+}

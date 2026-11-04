@@ -1,0 +1,9 @@
+chore(governance): adopt framework validation and local routing updates
+
+Add durable evidence, staged validation with live input identity, and
+target-bound review ledger/v2 dispatch handling. Preserve local model
+bindings with project classes and consolidate governance without losing
+existing controls or changing protected product state.
+
+Validated with 91 migration tests, 21 pipeline tests plus 11 subtests,
+tooling selftests, Ruff/Pyright, and independent Astra review Round 2.

@@ -1,0 +1,55 @@
+Perform /plan-critical-review for p9-capture-gui (Round 1).
+
+Read and follow `.agent/workflows/plan-critical-review.md` for the protocol.
+Use the handoff template at `.agent/context/handoffs/REVIEW-TEMPLATE.md`.
+
+## Write scope (non-negotiable)
+
+Write ONLY:
+`.agent/context/handoffs/2026-08-27-p9-capture-gui-plan-critical-review.md`
+
+Do NOT edit product code, tests, docs outside that review file, or the plan files.
+
+YAML frontmatter MUST include:
+- date: "2026-08-27"
+- review_mode: "plan"
+- target_plan: "docs/execution/plans/2026-08-27-p9-capture-gui/implementation-plan.md"
+- verdict: "approved" or "changes_required"
+- findings_count: <integer>
+- round: 1
+- template_version: "2.1"
+- requested_verbosity: "standard"
+- agent: "gpt-5.6-sol"
+- dispatch_id: "p9-capture-gui-plan-r1"
+
+The `dispatch_id` value MUST equal this dispatch's `-DispatchId` exactly (`p9-capture-gui-plan-r1`).
+
+## Review targets
+
+- docs/execution/plans/2026-08-27-p9-capture-gui/implementation-plan.md
+- docs/execution/plans/2026-08-27-p9-capture-gui/task.md
+- docs/execution/plans/2026-08-27-p9-capture-gui/named-sets.json
+- docs/execution/plans/2026-08-27-p9-capture-gui/assert-red-oracle.ps1
+- docs/execution/plans/2026-08-27-p9-capture-gui/assert-handoff-markers.ps1
+- docs/execution/plans/2026-08-27-p9-capture-gui/assert-handoff-acs.ps1
+- docs/execution/plans/2026-08-27-p9-capture-gui/assert-e2e-control-census.ps1
+- docs/execution/plans/2026-08-27-p9-capture-gui/assert-exec-review-dispatch.ps1
+
+Authority for the FIC: docs/build-plan/09-screenshot-capture.md (§Capture Page, §Electron OS surface, §GUI implementation notes, named deferrals, MEU-39), docs/build-plan/06-gui.md Wave 9, docs/build-plan/gui-actions-index.md.
+
+Analog: docs/execution/plans/2026-08-26-p8-conversion-gui/ (MEU-33 GUI + Wave 8).
+
+## SIGN 1 — no project tests
+
+Do NOT run pytest, vitest, npm test, playwright, or any product test suite.
+Static evidence only: Read, Test-Path, rg. P0: redirect shell to C:/Temp/av-kit/ (`*>`).
+
+## What this plan claims
+
+Session 18 / MEU-39 only: Capture GUI (lazy /capture, 5th rail after Convert, filmstrip, four tools, Settings Capture card, tray, F2 globalShortcut, overlay BrowserWindow, Wave 9). Do not pack MEU-27. Do not edit packages/api or mcp-server. ROUTE_COUNT_AFTER 71 and ACTION_INDEX_AFTER 67 stay.
+
+Harness: `.agent/context/harness.local.md` plan_to_exec_gate: reviewer-auto (wins over Cursor default human).
+
+Apply PR-5/7/8/9, Boundary Input Contract, C2 Out of Scope, referenced-artifact existence (Sweep 8), and control-binding (observable + call chain + negative oracle) on every control AC.
+
+If approved, findings_count must be 0. If changes_required, list High findings first with file:line.

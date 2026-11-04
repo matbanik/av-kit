@@ -1,0 +1,76 @@
+{
+  "schema": "s28-windows-gate.v1",
+  "tested_commit": "65bfa42605a253a46eca92881777c6901da88c98",
+  "clean_tree": true,
+  "mcp_lockfile_sha256": "62147DE51AFE855992D9BCA14364AFC03B493E8B02C478BA0F890B957DCA5095",
+  "uv_lock_sha256": "DA452C3481BC2C7B00BE49AB8DAA9747CC90CB27F17CCDD8EAE49D19063E7D20",
+  "node": "v24.19.0",
+  "uv": "uv 0.12.5 (210d1f678 2026-08-14 x86_64-pc-windows-msvc)",
+  "started": "2026-10-01T17:39:08.3346209-04:00",
+  "preflight": {
+    "quiet_machine": true,
+    "quiet_machine_attested": true,
+    "busy_processes": [],
+    "rtk": "rtk 0.42.2",
+    "agentic_framework_head": "4033418f66d2d2085f989e27bf2823d9c55332b6",
+    "agent_registry_sha256": "B06D7CDA110CC3979594C2DBB9BA17F21CB747A82BDCBB39937D24E91B1C2C78"
+  },
+  "stages": [
+    {
+      "id": "preflight",
+      "argv": "quiet machine + rtk + clean tree",
+      "exit": 0,
+      "receipt": ""
+    },
+    {
+      "id": "mcp-npm-ci",
+      "argv": "npm --prefix mcp-server ci",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s28-win-mcp-npm-ci.txt"
+    },
+    {
+      "id": "uv-sync",
+      "argv": "uv sync --frozen --all-packages",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s28-win-uv-sync.txt"
+    },
+    {
+      "id": "mcp-types",
+      "argv": "npm --prefix mcp-server run typecheck",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s28-win-mcp-types.txt"
+    },
+    {
+      "id": "mcp-build",
+      "argv": "npm --prefix mcp-server run build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s28-win-mcp-build.txt"
+    },
+    {
+      "id": "mcp-tests",
+      "argv": "npm --prefix mcp-server run test -- --reporter=json --outputFile=C:/Temp/av-kit/s28-win-mcp-tests.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s28-win-mcp-tests.txt"
+    },
+    {
+      "id": "mcp-audit",
+      "argv": "npm --prefix mcp-server run audit -- --mode authoritative --no-baseline --update-baseline --baseline P:/av-kit/.agent/skills/mcp-tool-audit/resources/baseline-snapshot.json --report P:/av-kit/.agent/context/MCP/mcp-tool-audit-report.md --out C:/Temp/av-kit/s28-audit --agent local-windows-gate",
+      "exit": 1,
+      "receipt": "C:/Temp/av-kit/s28-win-mcp-audit.txt",
+      "note": "exit 1 = findings recorded (allowed); 2/3/4 = runner refused or errored"
+    }
+  ],
+  "mcp_tests": {
+    "passed": 334,
+    "failed": 0,
+    "total": 334
+  },
+  "audit": {
+    "mode": "authoritative",
+    "steps": 97,
+    "cleanup_ok": true,
+    "summary_sha256": "26C3A3D6DA9C49B1EB137073DE7BF6454CE7CFB8808EACBB560EE8C969FB1235"
+  },
+  "packaged_probe": null,
+  "finished": "2026-10-01T17:40:36.8826266-04:00"
+}

@@ -1,0 +1,141 @@
+{
+  "schema": "s34-gate.v2",
+  "tested_commit": "5493b14e8f9d310e49eb52a8d10e9aa5a24f40bf",
+  "vitest_json": "C:/Temp/av-kit/s34-gate-vitest.json",
+  "vitest_txt": "C:/Temp/av-kit/s34-gate-ui-tests.txt",
+  "e2e_json": "C:/Temp/av-kit/s34-gate-e2e.json",
+  "lockfile_sha256": "A86D9A42C6CBD98705E1720EDBD7666FED573581C07E21EA0F56379DC7332980",
+  "mcp_lockfile_sha256": "D9570466713091B2F67B0BCEFC5FE12050BC8761CCC9532500714898516189A6",
+  "uv_lock_sha256": "B4AECCB195D4D0B9DB101D73A0241165B26EB4A0998A574812E8D8FDEF584352",
+  "node": "v24.19.0",
+  "identity_before": "304F53FCD0D7FF9B5C769E431A1390B25835D58B28BD3BDFDBFC8E6CACA3621E",
+  "started": "2026-10-15T18:23:21.8870029-04:00",
+  "stages": [
+    {
+      "id": "ui-ci",
+      "argv": "pwsh -NoProfile -Command npm --prefix ui ci; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; node ui/node_modules/electron/install.js; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; if (-not (Test-Path ui/node_modules/electron/path.txt)) { exit 3 }; exit 0",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-ui-ci.txt"
+    },
+    {
+      "id": "mcp-ci",
+      "argv": "npm --prefix mcp-server ci",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-mcp-ci.txt"
+    },
+    {
+      "id": "py-types",
+      "argv": "uv run pyright packages/",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-py-types.txt"
+    },
+    {
+      "id": "py-lint",
+      "argv": "uv run ruff check packages/ tests/",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-py-lint.txt"
+    },
+    {
+      "id": "ui-types",
+      "argv": "npm --prefix ui run typecheck",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-ui-types.txt"
+    },
+    {
+      "id": "ui-lint",
+      "argv": "npm --prefix ui run lint",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-ui-lint.txt"
+    },
+    {
+      "id": "mcp-types",
+      "argv": "npm --prefix mcp-server run typecheck",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-mcp-types.txt"
+    },
+    {
+      "id": "py-tests",
+      "argv": "uv run pytest tests/ -x --tb=short -q",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-py-tests.txt"
+    },
+    {
+      "id": "ui-tests",
+      "argv": "npm --prefix ui run test -- --reporter=default --reporter=json --outputFile.json=C:/Temp/av-kit/s34-gate-vitest.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-ui-tests.txt",
+      "raw_exit": 0,
+      "note": "exit = plan_checks.py vitest-ok --meu 81 (receipt s34-gate-ui-tests-verdict.txt)"
+    },
+    {
+      "id": "ui-build",
+      "argv": "npm --prefix ui run build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-ui-build.txt"
+    },
+    {
+      "id": "ui-harness-build",
+      "argv": "pwsh -NoProfile -Command $env:AVKIT_PRIMITIVE_HARNESS_BUILD='1'; npm --prefix ui run build -- --outDir 'P:\\av-kit-wt\\s34-capture-chrome\\ui/out-e2e'; exit $LASTEXITCODE",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-ui-harness-build.txt"
+    },
+    {
+      "id": "mcp-build",
+      "argv": "npm --prefix mcp-server run build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-mcp-build.txt"
+    },
+    {
+      "id": "mcp-tests",
+      "argv": "npm --prefix mcp-server run test",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-mcp-tests.txt"
+    },
+    {
+      "id": "openapi",
+      "argv": "uv run python tools/export_openapi.py --check openapi.committed.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-openapi.txt"
+    },
+    {
+      "id": "state-render",
+      "argv": "uv run python tools/meu_status.py render --check",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-state-render.txt"
+    },
+    {
+      "id": "ui-electron",
+      "argv": "npm --prefix ui run test:e2e -- --reporter=json --outputFile=C:/Temp/av-kit/s34-gate-e2e.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-ui-electron.txt"
+    },
+    {
+      "id": "source-audit",
+      "argv": "rg -n -e TODO|FIXME|transition-all|bg-\\[#|console\\.log\\(|@ts-ignore|@ts-expect-error|: any\\b ui/src/renderer/src/components/ui/Tooltip.tsx ui/src/renderer/src/features/capture/ToolbarIconButton.tsx ui/src/renderer/src/features/capture/CaptureViewport.tsx ui/src/renderer/src/features/capture/CapturePage.tsx ui/src/renderer/src/features/capture/capture-toolbar.ts ui/src/renderer/src/components/layout/ConsolePanel.tsx ui/src/renderer/src/components/queue/BulkResultToast.tsx ui/src/renderer/src/components/queue/QueueCard.tsx ui/src/renderer/src/components/queue/QueueCardMenu.tsx ui/src/renderer/src/features/transcript/TranscriptPage.tsx ui/src/renderer/src/features/converter/ConvertPage.tsx",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s34-gate-source-audit.txt",
+      "note": "rg exit 1 (1 = no hits)"
+    }
+  ],
+  "pytest": {
+    "passed": 655,
+    "failed": 0
+  },
+  "vitest": {
+    "passed": 824,
+    "failed": 0,
+    "total": 824
+  },
+  "e2e": {
+    "expected": 142,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "identity_after": "304F53FCD0D7FF9B5C769E431A1390B25835D58B28BD3BDFDBFC8E6CACA3621E",
+  "check": "gate",
+  "vitest_json_sha256": "7A1F68E5DA0BCF80C9FB7383F08C0D6A9FC8D1C380E03963329FAD3E9C5DFB19",
+  "vitest_txt_sha256": "587526B380D587401E2B1AE60F848B0C05123D8928E0BB0BD0D5D269F6456D44",
+  "e2e_json_sha256": "126CB3821F41787D44C44EC65085D90059B3CA9A87E5EEF3B63334E4B10186BC",
+  "finished": "2026-10-15T18:28:45.1297430-04:00"
+}

@@ -1,0 +1,162 @@
+{
+  "schema": "s33-windows-gate.v1",
+  "head": "ddd11171ceb3ce307a6a735a5b77094b7d456d39",
+  "baseline_sha": "ddd11171ceb3ce307a6a735a5b77094b7d456d39",
+  "fingerprint_before": "300cc234644b17997d1e6e7f2c3a7e6ffc3d0a41bb37b9e6252db41799b26f80",
+  "fingerprint_after": "300cc234644b17997d1e6e7f2c3a7e6ffc3d0a41bb37b9e6252db41799b26f80",
+  "lockfile_sha256": "A86D9A42C6CBD98705E1720EDBD7666FED573581C07E21EA0F56379DC7332980",
+  "mcp_lockfile_sha256": "D9570466713091B2F67B0BCEFC5FE12050BC8761CCC9532500714898516189A6",
+  "uv_lock_sha256": "B4AECCB195D4D0B9DB101D73A0241165B26EB4A0998A574812E8D8FDEF584352",
+  "electron": "`-- electron@42.9.3",
+  "node": "v24.19.0",
+  "preflight": {
+    "agentic_framework_head": "e387decb45e5106efbb1c55747131e7ca45918c4",
+    "agent_registry_sha256": "A7C95972C1E83885AA339873BDBF35CD5A6DAF3FB593F0D894F658BBFB80EBFA",
+    "drift": false
+  },
+  "pytest_floor": 655,
+  "started": "2026-10-16T08:30:00.6219816-04:00",
+  "stages": [
+    {
+      "id": "npm-ci",
+      "argv": "pwsh -NoProfile -Command npm --prefix ui ci; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; node ui/node_modules/electron/install.js; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; if (-not (Test-Path ui/node_modules/electron/path.txt)) { exit 3 }; exit 0",
+      "exit": 0,
+      "seconds": 8.2,
+      "receipt": "C:/Temp/av-kit/s33-win-npm-ci.txt"
+    },
+    {
+      "id": "mcp-npm-ci",
+      "argv": "npm --prefix mcp-server ci",
+      "exit": 0,
+      "seconds": 1.7,
+      "receipt": "C:/Temp/av-kit/s33-win-mcp-npm-ci.txt"
+    },
+    {
+      "id": "py-types",
+      "argv": "uv run pyright packages/",
+      "exit": 0,
+      "seconds": 3.5,
+      "receipt": "C:/Temp/av-kit/s33-win-py-types.txt"
+    },
+    {
+      "id": "py-lint",
+      "argv": "uv run ruff check packages/ tests/",
+      "exit": 0,
+      "seconds": 0.1,
+      "receipt": "C:/Temp/av-kit/s33-win-py-lint.txt"
+    },
+    {
+      "id": "ui-types",
+      "argv": "npm --prefix ui run typecheck",
+      "exit": 0,
+      "seconds": 3.8,
+      "receipt": "C:/Temp/av-kit/s33-win-ui-types.txt"
+    },
+    {
+      "id": "ui-lint",
+      "argv": "npm --prefix ui run lint",
+      "exit": 0,
+      "seconds": 3.7,
+      "receipt": "C:/Temp/av-kit/s33-win-ui-lint.txt"
+    },
+    {
+      "id": "mcp-types",
+      "argv": "npm --prefix mcp-server run typecheck",
+      "exit": 0,
+      "seconds": 2.6,
+      "receipt": "C:/Temp/av-kit/s33-win-mcp-types.txt"
+    },
+    {
+      "id": "py-tests",
+      "argv": "uv run pytest tests/ -x --tb=short -q",
+      "exit": 0,
+      "seconds": 84.8,
+      "receipt": "C:/Temp/av-kit/s33-win-py-tests.txt"
+    },
+    {
+      "id": "ui-tests",
+      "argv": "npm --prefix ui run test -- --reporter=json --outputFile=C:/Temp/av-kit/s33-win-vitest.json",
+      "exit": 0,
+      "seconds": 23.6,
+      "receipt": "C:/Temp/av-kit/s33-win-ui-tests.txt"
+    },
+    {
+      "id": "ui-build",
+      "argv": "npm --prefix ui run build",
+      "exit": 0,
+      "seconds": 4.3,
+      "receipt": "C:/Temp/av-kit/s33-win-ui-build.txt"
+    },
+    {
+      "id": "ui-harness-build",
+      "argv": "pwsh -NoProfile -Command $env:AVKIT_PRIMITIVE_HARNESS_BUILD='1'; npm --prefix ui run build -- --outDir 'P:\\av-kit-wt\\backend-robustness\\ui/out-e2e'; exit $LASTEXITCODE",
+      "exit": 0,
+      "seconds": 4.6,
+      "receipt": "C:/Temp/av-kit/s33-win-ui-harness-build.txt"
+    },
+    {
+      "id": "mcp-build",
+      "argv": "npm --prefix mcp-server run build",
+      "exit": 0,
+      "seconds": 1.2,
+      "receipt": "C:/Temp/av-kit/s33-win-mcp-build.txt"
+    },
+    {
+      "id": "mcp-tests",
+      "argv": "npm --prefix mcp-server run test -- --reporter=json --outputFile=C:/Temp/av-kit/s33-win-mcp.json",
+      "exit": 0,
+      "seconds": 8.4,
+      "receipt": "C:/Temp/av-kit/s33-win-mcp-tests.txt"
+    },
+    {
+      "id": "openapi",
+      "argv": "uv run python tools/export_openapi.py --check openapi.committed.json",
+      "exit": 0,
+      "seconds": 4.1,
+      "receipt": "C:/Temp/av-kit/s33-win-openapi.txt"
+    },
+    {
+      "id": "state-render",
+      "argv": "uv run python tools/meu_status.py render --check",
+      "exit": 0,
+      "seconds": 0.2,
+      "receipt": "C:/Temp/av-kit/s33-win-state-render.txt"
+    },
+    {
+      "id": "ui-electron",
+      "argv": "npm --prefix ui run test:e2e -- --reporter=json --outputFile=C:/Temp/av-kit/s33-win-e2e.json",
+      "exit": 0,
+      "seconds": 170.6,
+      "receipt": "C:/Temp/av-kit/s33-win-ui-electron.txt"
+    },
+    {
+      "id": "source-audit",
+      "argv": "rg -n -e TODO|FIXME|transition-all|bg-\\[#|console\\.log\\(|@ts-ignore|@ts-expect-error|: any\\b mcp-server/scripts/audit/census.ts mcp-server/scripts/audit/fixtures.ts mcp-server/scripts/audit/plan.ts mcp-server/src/index.ts mcp-server/src/toolsets/tts.ts packages/api/src/avkit_api/errors.py packages/api/src/avkit_api/main.py packages/api/src/avkit_api/routes/health.py packages/api/src/avkit_api/routes/tts.py packages/api/src/avkit_api/schemas/health.py packages/api/src/avkit_api/wiring.py packages/core/src/avkit_core/domain/conversion.py packages/core/src/avkit_core/domain/errors.py packages/core/src/avkit_core/domain/health.py packages/core/src/avkit_core/ports/media.py packages/core/src/avkit_core/ports/storage.py packages/core/src/avkit_core/services/health.py packages/core/src/avkit_core/services/tts.py packages/infrastructure/src/avkit_infra/database/repositories.py packages/infrastructure/src/avkit_infra/media/adapter.py packages/infrastructure/src/avkit_infra/tts/adapter.py packages/infrastructure/src/avkit_infra/youtube/adapter.py ui/src/renderer/src/features/settings/SettingsPage.tsx ui/src/renderer/src/features/settings/useSettingsPage.ts ui/src/renderer/src/lib/api.ts",
+      "exit": 0,
+      "seconds": 0.0,
+      "receipt": "C:/Temp/av-kit/s33-win-source-audit.txt",
+      "note": "rg exit 1 (1 = no hits)"
+    }
+  ],
+  "pytest": {
+    "passed": 724,
+    "failed": 0
+  },
+  "vitest": {
+    "passed": 804,
+    "failed": 0,
+    "total": 804
+  },
+  "e2e": {
+    "expected": 139,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "mcp": {
+    "passed": 423,
+    "failed": 0,
+    "total": 423
+  },
+  "finished": "2026-10-16T08:35:26.3575107-04:00"
+}

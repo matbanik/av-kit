@@ -1,0 +1,118 @@
+{
+  "classes": {
+    "avkit_builder": {
+      "bindings": {
+        "claude-code-agents": {
+          "effort": "medium",
+          "slug": "claude-sonnet-5-5"
+        },
+        "cursor-task": {
+          "effort": "xhigh",
+          "slug": "cursor-grok-4.6"
+        }
+      },
+      "contract": {
+        "capabilities": [
+          "agentic_exec",
+          "bulk_edit"
+        ],
+        "effort_default": "medium",
+        "forbid": [
+          "claude-fable-5-1"
+        ],
+        "inherit_allowed": false,
+        "not_a_reviewer": true,
+        "price_ceiling_band": "high"
+      }
+    },
+    "avkit_coordinator": {
+      "bindings": {
+        "claude-p": {
+          "effort": "high",
+          "slug": "claude-opus-5"
+        },
+        "cursor-task": {
+          "effort": "xhigh",
+          "slug": "cursor-grok-4.6"
+        }
+      },
+      "contract": {
+        "capabilities": [
+          "orchestration",
+          "deep_reasoning",
+          "agentic_exec"
+        ],
+        "effort_default": "high",
+        "forbid": [
+          "claude-fable-5-1"
+        ]
+      }
+    },
+    "avkit_independent_reviewer": {
+      "bindings": {
+        "codex-cli": {
+          "effort_map": {
+            "risk_path": "high",
+            "routine": "medium"
+          },
+          "slug": "gpt-6.1-sol"
+        }
+      },
+      "contract": {
+        "auth_mode": "chatgpt-plan",
+        "capabilities": [
+          "code_review",
+          "agentic_exec",
+          "read_only_sandbox"
+        ],
+        "effort_default": "high",
+        "effort_floor": "medium",
+        "price_ceiling_band": "high",
+        "vendor_distinct_from": "author"
+      }
+    },
+    "avkit_router": {
+      "bindings": {
+        "claude-code-agents": {
+          "effort": "low",
+          "slug": "claude-haiku-5-5"
+        }
+      },
+      "contract": {
+        "capabilities": [
+          "classification"
+        ],
+        "effort_default": "low",
+        "not_a_reviewer": true,
+        "price_ceiling_band": "low"
+      }
+    },
+    "avkit_verifier": {
+      "bindings": {
+        "claude-code-agents": {
+          "effort": "medium",
+          "slug": "claude-sonnet-5-5"
+        },
+        "cursor-task": {
+          "effort": "medium",
+          "slug": "composer-2.5-fast"
+        }
+      },
+      "contract": {
+        "capabilities": [
+          "agentic_exec",
+          "bulk_edit"
+        ],
+        "effort_default": "medium",
+        "forbid": [
+          "claude-fable-5-1"
+        ],
+        "inherit_allowed": false,
+        "not_a_reviewer": true,
+        "price_ceiling_band": "high"
+      }
+    }
+  },
+  "extends": "global",
+  "validated_against": "7097dc5bb0f07978436ece4ba6c4b1f8d2a10affcdfbc16bbfa968f826bf0437"
+}

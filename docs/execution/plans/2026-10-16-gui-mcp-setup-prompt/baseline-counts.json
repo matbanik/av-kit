@@ -1,0 +1,10 @@
+{
+  "ui_vitest_passed": 975,
+  "ui_vitest_failed": 0,
+  "mcp_vitest_passed": 428,
+  "mcp_vitest_failed": 0,
+  "e2e_expected": 157,
+  "e2e_skipped": 0,
+  "e2e_unexpected": 0,
+  "e2e_flaky": 0
+}

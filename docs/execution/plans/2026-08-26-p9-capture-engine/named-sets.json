@@ -1,0 +1,209 @@
+{
+  "RED_PREFIX_34": "AC-34",
+  "RED_COUNT_34": 13,
+  "RED_PREFIX_35": "AC-35",
+  "RED_COUNT_35": 14,
+  "RED_PREFIX_36": "AC-36",
+  "RED_COUNT_36": 14,
+  "HANDOFF_COUNT": 3,
+  "HANDOFF_FILTER": "2026-08-26-p9-capture-engine-MEU-*-handoff.md",
+  "HANDOFFS": [
+    "2026-08-26-p9-capture-engine-MEU-34-handoff.md",
+    "2026-08-26-p9-capture-engine-MEU-35-handoff.md",
+    "2026-08-26-p9-capture-engine-MEU-36-handoff.md"
+  ],
+  "HUB_NEXT_AFTER": "/create-plan p9-capture-api-mcp",
+  "SETTING_NS": "capture",
+  "FORBIDDEN_QUEUE_NAME": "captures",
+  "CAPTURE_SOURCE_MEMBERS": [
+    "Hotkey",
+    "Gui",
+    "McpFullscreen",
+    "McpRegion",
+    "McpInteractive",
+    "Scan"
+  ],
+  "CAPTURE_REQUEST_STATUS_MEMBERS": [
+    "Pending",
+    "Completed",
+    "Cancelled",
+    "Expired"
+  ],
+  "ANNOTATION_TYPE_MEMBERS": ["Arrow", "Rect", "Highlight", "Text"],
+  "ANNOTATION_WIRE": {
+    "Arrow": "arrow",
+    "Rect": "rect",
+    "Highlight": "highlight",
+    "Text": "text"
+  },
+  "NAMED_COLORS": ["red", "orange", "yellow", "green", "blue", "white", "black"],
+  "TEXT_MAX_CHARS": 500,
+  "HIGHLIGHT_OPACITY_MIN": 0,
+  "HIGHLIGHT_OPACITY_MAX": 1,
+  "ANNOTATION_CLAMP_MIN": 0,
+  "CAPTURE_MIN_EDGE_PX": 8,
+  "REQUEST_TTL_S": 120,
+  "TIMESTAMP_FORMAT": "%Y-%m-%d_%H-%M-%S",
+  "SCAN_EXTENSIONS": [".png", ".jpg", ".jpeg", ".webp"],
+  "ANNOTATED_SUFFIX": ".annotated.png",
+  "SIDECAR_SUFFIX": ".ann.json",
+  "SIDECAR_VERSION": 1,
+  "GRAB_BACKEND": "mss",
+  "MSS_VIRTUAL_INDEX": 0,
+  "BLACK_LUM_MAX": 2.0,
+  "ARROWHEAD_LENGTH_FACTOR": 4,
+  "ARROWHEAD_MIN_PX": 10,
+  "ARROWHEAD_ANGLE_RAD": 0.4,
+  "FONT_CANDIDATES": ["segoeui.ttf", "arial.ttf"],
+  "PIL_FORBIDDEN": ["PIL", "mss"],
+  "CAPTURE_KEYS": ["inbox_dir", "hotkey", "copy_to_clipboard", "close_to_tray"],
+  "CAPTURE_DEFAULTS": {
+    "inbox_dir": "~/Pictures/av-kit",
+    "hotkey": "F2",
+    "copy_to_clipboard": false,
+    "close_to_tray": true
+  },
+  "CAPTURE_SHOT_COLUMNS": [
+    "id",
+    "original_path",
+    "annotated_path",
+    "sidecar_path",
+    "display_name",
+    "width",
+    "height",
+    "file_size",
+    "source",
+    "created_at",
+    "updated_at"
+  ],
+  "CAPTURE_REQUEST_COLUMNS": [
+    "id",
+    "status",
+    "shot_id",
+    "created_at",
+    "expires_at"
+  ],
+  "UOW_CAPTURE_ATTRS": ["capture_shots", "capture_requests"],
+  "INFRA_CAPTURE_REL": "capture/adapter.py",
+  "API_TREE": "packages/api",
+  "API_BASELINE": "C:/Temp/av-kit/p9-engine-api-tree-baseline.txt",
+  "TEST_DOMAIN_CAP": "tests/unit/test_domain_capture.py",
+  "TEST_INFRA_CAP": "tests/unit/test_capture_adapter.py",
+  "TEST_SVC_CAP": "tests/unit/test_capture_service.py",
+  "TEST_DOMAIN": "tests/unit/test_domain.py",
+  "TEST_SQLITE": "tests/integration/test_sqlite_uow.py",
+  "TEST_SERVICES": "tests/unit/test_services.py",
+  "TEST_SVC_CONV": "tests/unit/test_conversion_service.py",
+  "LOG_MODULE": "capture",
+  "REVIEWER_AGENT": "gpt-5.6-sol",
+  "EXEC_REVIEW_FILE": ".agent/context/handoffs/2026-08-26-p9-capture-engine-implementation-critical-review.md",
+  "DISPATCH_DIR": "C:/Temp/av-kit/dispatch",
+  "DISPATCH_STATUS_SCHEMA": "dispatch-status.v1",
+  "REFLECTION_FILE": "docs/execution/reflections/2026-08-26-p9-capture-engine-reflection.md",
+  "METRICS_SLUG": "p9-capture-engine",
+  "DISPATCH_ID_FIELD": "dispatch_id",
+  "EXEC_REVIEW_MODE": "implementation",
+  "EXEC_REVIEW_APPROVED": "approved",
+  "REFLECTION_MARKERS": [
+    "Friction Log",
+    "Execution Trace",
+    "Pattern Extraction",
+    "Patterns to KEEP",
+    "Next Session Design Rules",
+    "RULE-",
+    "Efficiency Metrics",
+    "Rule Adherence",
+    "Instruction Coverage",
+    "schema: v1",
+    "sections:",
+    "loaded:",
+    "decisive_rules:"
+  ],
+  "PLACEHOLDER_PATHS_34": [
+    "packages/core/src/avkit_core/domain/enums.py",
+    "packages/core/src/avkit_core/domain/capture.py",
+    "packages/core/src/avkit_core/domain/settings.py",
+    "packages/core/src/avkit_core/domain/errors.py",
+    "packages/core/src/avkit_core/ports/capture.py",
+    "tests/unit/test_domain_capture.py",
+    "tests/unit/test_domain.py"
+  ],
+  "PLACEHOLDER_PATHS_35": [
+    "packages/infrastructure/pyproject.toml",
+    "packages/infrastructure/src/avkit_infra/database/models.py",
+    "packages/infrastructure/src/avkit_infra/database/migrations.py",
+    "packages/infrastructure/src/avkit_infra/database/mappers.py",
+    "packages/infrastructure/src/avkit_infra/database/repositories.py",
+    "packages/infrastructure/src/avkit_infra/database/unit_of_work.py",
+    "packages/core/src/avkit_core/ports/storage.py",
+    "packages/infrastructure/src/avkit_infra/capture",
+    "tests/unit/test_capture_adapter.py",
+    "tests/integration/test_sqlite_uow.py",
+    "tests/unit/test_services.py",
+    "tests/unit/test_conversion_service.py"
+  ],
+  "PLACEHOLDER_PATHS_36": [
+    "packages/core/src/avkit_core/services/capture.py",
+    "packages/core/src/avkit_core/services/settings.py",
+    "tests/unit/test_capture_service.py"
+  ],
+  "G36_TEST_PATHS_34": [
+    "tests/unit/test_domain_capture.py",
+    "tests/unit/test_domain.py"
+  ],
+  "G36_TEST_PATHS_35": [
+    "tests/unit/test_capture_adapter.py",
+    "tests/integration/test_sqlite_uow.py",
+    "tests/unit/test_services.py",
+    "tests/unit/test_conversion_service.py"
+  ],
+  "G36_TEST_PATHS_36": [
+    "tests/unit/test_capture_service.py"
+  ],
+  "GATE_PYTEST_34": [
+    "tests/unit/test_domain_capture.py",
+    "tests/unit/test_domain.py"
+  ],
+  "GATE_PYTEST_35": [
+    "tests/unit/test_capture_adapter.py",
+    "tests/integration/test_sqlite_uow.py",
+    "tests/unit/test_services.py",
+    "tests/unit/test_conversion_service.py"
+  ],
+  "GATE_PYTEST_36": [
+    "tests/unit/test_capture_service.py",
+    "tests/unit/test_services.py",
+    "tests/unit/test_conversion_service.py"
+  ],
+  "GATE_PYTEST_ALL": ["tests/unit", "tests/integration"],
+  "GATE_RUFF_34": [
+    "packages/core/src/avkit_core/domain",
+    "packages/core/src/avkit_core/ports/capture.py",
+    "tests/unit/test_domain_capture.py"
+  ],
+  "GATE_RUFF_35": [
+    "packages/infrastructure",
+    "packages/core/src/avkit_core/ports/storage.py",
+    "tests/unit/test_capture_adapter.py",
+    "tests/integration/test_sqlite_uow.py",
+    "tests/unit/test_conversion_service.py"
+  ],
+  "GATE_RUFF_36": [
+    "packages/core/src/avkit_core/services/capture.py",
+    "packages/core/src/avkit_core/services/settings.py",
+    "tests/unit/test_capture_service.py"
+  ],
+  "GATE_RUFF_ALL": [
+    "packages/core",
+    "packages/infrastructure",
+    "tests/unit/test_domain_capture.py",
+    "tests/unit/test_capture_adapter.py",
+    "tests/integration/test_sqlite_uow.py",
+    "tests/unit/test_conversion_service.py",
+    "tests/unit/test_capture_service.py"
+  ],
+  "GATE_PYRIGHT_34": ["packages/core"],
+  "GATE_PYRIGHT_35": ["packages/infrastructure", "packages/core"],
+  "GATE_PYRIGHT_36": ["packages/core"],
+  "GATE_PYRIGHT_ALL": ["packages/core", "packages/infrastructure"]
+}

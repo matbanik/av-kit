@@ -1,0 +1,23 @@
+feat(capture): icon toolbar, Options toggle, and image zoom and pan
+
+MEU-65 turns the Capture tools row into icon buttons with tooltips and
+accessible names, and moves the per-tool options into a contextual second
+row that shows only what the active tool uses. At the default window
+neither row scrolls sideways. The header's "Settings" toggle is now an
+Options button with an icon and a chevron, and it stays in place when its
+panel opens.
+
+MEU-66 lets the image zoom with the mouse wheel (about the cursor), the
+- / + / Fit buttons and Ctrl+= / Ctrl+- / Ctrl+0 (about the centre), on
+Chromium's 25-500 % ladder plus Fit. Space+drag and middle-drag pan the
+image without creating marks, and a mouse click on a tool hands focus to
+the image so Space can pan right away. One view transform maps pointers,
+handles and the content box; at Fit it equals the MEU-59 mapping, and
+stored annotations never change. The Capture page now fills the window so
+the image frame uses the available height.
+
+W1-8 (Downloader queue E2E) gets a longer budget and polled seam reads so
+heavy host load no longer times it out.
+
+Authoritative Windows gate (attempt 4, quiet): pytest 629/0, Vitest
+748/748, Playwright 127/0/0. Manual look L1-L6 pass.

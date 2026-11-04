@@ -1,0 +1,1065 @@
+{
+  "_meta": {
+    "purpose": "Blast-radius census input for every correction round: R1->R2 (findings F1-F7), R3 (the variant-sweep defect), R4 (the USER_LOCKS.pill_palette rewire), R5 (reviewer findings F1-F5), R6 (reviewer findings R5-F1..F4), R7 (reviewer findings R6-F1..F2), and R8 (reviewer finding R7-F1). One entry per value a correction changed. 'old' = the pre-correction phrasing(s); 'new' = the post-correction phrasing(s). 'variants' names every OTHER form the same value plausibly takes in this plan, because a fixed-string sweep cannot find a rephrasing for you.",
+    "receipts": "C:/Temp/av-kit/census/census-{slug}-{old|new|variant}-{i}.txt, untruncated, one per swept literal; index at C:/Temp/av-kit/census/INDEX.txt",
+    "scope": "implementation-plan.md + task.md (the two plan files). Assert scripts and named-sets.json are swept separately where a value crosses into them.",
+    "variants": "Each variant is a searchable LITERAL plus a note saying which other form of the same value it is. The driver sweeps old, new, AND variants -- three directions, one untruncated receipt per literal. Two values declare no variant: row1-deliverable is a single unique sentence, and red-counts is structural (covered by the predicate census, which counts AC rows rather than matching a fixed string).",
+    "round4": "The R4 entries below (slugs prefixed r4-) cover the palette rewire the user's colour lock forced: av-kit authors no pill hue, so ten invented --color-pill-*-fg tokens, --color-age-restricted, --color-bg-selected and the 4.60 design margin were all deleted. An OLD literal returning rc=1 is the pass condition for those.",
+    "round5": "The R5 entries (slugs prefixed r5-) cover the five Round 4 findings. F1 is the largest: the same-token pill label measured 28/80 against CONTRAST_MIN, so the label moved to --color-fg (80/80, worst CONTRAST_WORST_MEASURED) and the whole pass/debt apparatus -- CONTRAST_AA_PASS, CONTRAST_AA_DEBT, the QUEUE-PILL-AA-DEBT known-issue and its two file keys -- was deleted rather than re-tuned. Those OLD literals returning rc=1 is the pass condition. r5-red-counts is structural and declares no variant; the predicate census covers it by counting AC rows.",
+    "round6": "The R6 entries (slugs prefixed r6-) cover Round 5's four findings. Two of them corrected R5's own remedies rather than the original plan: R5-F2 caught an expected kebab set that would have stripped move-down/move-bottom from the top row of every multi-item queue, and R5-F3 caught a confirmation dialog invented against proposal:146-149. r6-services-file-set is self-caught, not reviewer-raised: AC-42.10 and AC-42.11 contradicted the plan's standing claim that services are unchanged. r6-red-counts is structural and declares no variant.",
+    "round7": "The R7 entries (slugs prefixed r7-) cover Round 6's two findings, both High, in an extra round the human authorised after Round 6 hit the configured cap. R6-F1 was again a defect in the previous round's remedy: interpolating {quality} into the stored reason is what made it go stale under apply_defaults_to_pending. The fix removes the interpolation rather than adding recomputation, which turns the obligation into an ensure-present invariant. r7-reason-exit-edge is self-caught, not reviewer-raised: clear_sabr moves QualityBlocked -> Pending through transition(), which preserves error_message, so the R6 reason would have outlived its own status. R6-F2 is the first finding in seven rounds that is not a remedy defect - AC-44.2 only ever proved the checkbox. r7-red-counts is structural and declares no variant.",
+    "round8": "The R8 entries (slugs prefixed r8-) cover Round 7's single finding. No Round 8 review was dispatched: the human read the Round 7 verdict, directed that the finding be fixed, and approved execution in the same message (USER_EXPLICIT), which is what authorises the plan -> execution transition under plan_to_exec_gate == human. The fix is the reviewer's own first recommendation - centralize at the domain/persistence boundary - which also DELETES the four per-callsite service writes Round 7 had planned, so the net service diff shrinks. r8-clear-narrowness is self-derived: moving the clear to the boundary makes it run on every save, so it had to be narrowed to an exact BLOCKER_REASONS match or it would have erased real Failed tracebacks. r8-red-counts is structural and declares no variant."
+  },
+  "values": [
+    {
+      "slug": "red-oracle-key",
+      "finding": "F1/F6",
+      "changed": "duplicate named-set key RED_ORACLE_CHECK deleted in favour of RED_ORACLE",
+      "old": [
+        "RED_ORACLE_CHECK"
+      ],
+      "new": [
+        "RED_ORACLE"
+      ],
+      "variants": [
+        {
+          "literal": "assert-red-oracle.ps1",
+          "note": "the path the key resolves to; legal inside runnable validation cells, not in prose"
+        }
+      ]
+    },
+    {
+      "slug": "red-selftest",
+      "finding": "F1",
+      "changed": "row 1 gained the Red oracle self-test as a precondition",
+      "old": [
+        "both must pass before row 2"
+      ],
+      "new": [
+        "RED_SELFTEST",
+        "All three must pass before row 2",
+        "red-oracle-selftest.txt"
+      ],
+      "variants": [
+        {
+          "literal": "11 cases",
+          "note": "the Red self-test's own case count"
+        }
+      ]
+    },
+    {
+      "slug": "page-iso-selftest",
+      "finding": "F2",
+      "changed": "page-isolation oracle gained a -SelfTest mode, run before -Capture",
+      "old": [
+        "and run `RED_SELFTEST`; both must pass"
+      ],
+      "new": [
+        "PAGE_ISOLATION_SELFTEST",
+        "-SelfTest",
+        "SELFTEST_DIR",
+        "page-iso-selftest.txt"
+      ],
+      "variants": [
+        {
+          "literal": "19 cases",
+          "note": "the isolation self-test's own case count"
+        }
+      ]
+    },
+    {
+      "slug": "row1-deliverable",
+      "finding": "F1/F2",
+      "changed": "row 1 deliverable now names both self-tests",
+      "old": [
+        "hub bound; `PAGE_BASELINE` captured"
+      ],
+      "new": [
+        "both oracle self-tests green"
+      ],
+      "variants": []
+    },
+    {
+      "slug": "e2e-count",
+      "finding": "F2 (E2E baseline)",
+      "changed": "E2E test count corrected 61 -> 55 and rebased on a title SET, not a scalar",
+      "old": [
+        "61"
+      ],
+      "new": [
+        "55",
+        "E2E_COUNT",
+        "E2E_BASELINE_BASIS",
+        "E2E_TITLE_SET"
+      ],
+      "variants": [
+        {
+          "literal": "49",
+          "note": "the *.test.ts half of the 49 + 6 split that sums to 55"
+        },
+        {
+          "literal": "*.spec.ts",
+          "note": "the file glob owning the other 6"
+        }
+      ]
+    },
+    {
+      "slug": "envelope-policy",
+      "finding": "F3",
+      "changed": "envelope unknown-key behaviour resolved from two contracts to one named policy",
+      "old": [
+        "ignores unknown wrapper keys",
+        "ignore unknown wrapper keys"
+      ],
+      "new": [
+        "ENVELOPE_UNKNOWN_KEY_POLICY",
+        ".strict()"
+      ],
+      "variants": [
+        {
+          "literal": "extra=\"forbid\"",
+          "note": "the Pydantic spelling of the same unknown-key rule on the Python side of the Boundary Input Contract"
+        }
+      ]
+    },
+    {
+      "slug": "contrast-binding",
+      "finding": "F4",
+      "changed": "contrast oracle rebound from a single hex pair to the resolved foreground/fill/backdrop tokens",
+      "old": [
+        "hexDark",
+        "hexLight"
+      ],
+      "new": [
+        "STATUS_PILL_TABLE",
+        "CONTRAST_BACKDROPS",
+        "--color-pill-"
+      ],
+      "variants": [
+        {
+          "literal": "textClass",
+          "note": "the rendered foreground class the fg token resolves to"
+        },
+        {
+          "literal": "fillClass",
+          "note": "the rendered fill class the fill token resolves to"
+        },
+        {
+          "literal": "composite",
+          "note": "the alpha-compositing step the oracle performs before measuring"
+        }
+      ]
+    },
+    {
+      "slug": "contrast-threshold",
+      "finding": "F4",
+      "changed": "threshold itself UNCHANGED (4.5:1); swept to prove it is still stated once and the new worst-case does not contradict it",
+      "old": [
+        "4.5:1"
+      ],
+      "new": [
+        "4.60",
+        "CONTRAST_MIN"
+      ],
+      "variants": [
+        {
+          "literal": "1.4.3",
+          "note": "the WCAG success-criterion reference form of the same threshold"
+        }
+      ]
+    },
+    {
+      "slug": "red-redirect",
+      "finding": "F5",
+      "changed": "every Red oracle invocation moved inside a redirected sequence",
+      "old": [
+        "assert-red-oracle.ps1 -Kind"
+      ],
+      "new": [
+        "red-oracle-meu-41.txt",
+        "red-oracle-meu-42.txt",
+        "red-oracle-meu-43.txt",
+        "red-oracle-meu-44.txt"
+      ],
+      "variants": [
+        {
+          "literal": "$LASTEXITCODE",
+          "note": "the immediate exit-code capture that makes a redirect P0-compliant"
+        }
+      ]
+    },
+    {
+      "slug": "scope-labels",
+      "finding": "F7",
+      "changed": "two C2 rows relabeled out-of-scope -> deferred; MEU-45+ replaced by concrete owners",
+      "old": [
+        "MEU-45+"
+      ],
+      "new": [
+        "deferred",
+        "MEU-45",
+        "MEU-46"
+      ],
+      "variants": [
+        {
+          "literal": "out-of-scope",
+          "note": "the label the two relabeled rows no longer carry; every surviving use must be a genuinely out-of-scope row"
+        }
+      ]
+    },
+    {
+      "slug": "frozen-rationale",
+      "finding": "F2/F6",
+      "changed": "the VCS-substitute rationale was stated twice (named-set value + plan prose); now stated once and cited",
+      "old": [
+        "byte-frozen for the whole session, proving"
+      ],
+      "new": [
+        "FROZEN_RATIONALE",
+        "byte-freezes"
+      ],
+      "variants": [
+        {
+          "literal": "git diff --quiet",
+          "note": "the VCS guard form this replaces"
+        },
+        {
+          "literal": "FROZEN_GLOBS",
+          "note": "the executable set that enforces it"
+        }
+      ]
+    },
+    {
+      "slug": "openapi-export",
+      "finding": "F6",
+      "changed": "the generator path was inlined in prose; now cited as a named key",
+      "old": [
+        "MEU-42 regenerates (`-o`) because"
+      ],
+      "new": [
+        "OPENAPI_EXPORT"
+      ],
+      "variants": [
+        {
+          "literal": "tools/export_openapi.py",
+          "note": "the literal path; legal inside runnable validation cells, not in prose"
+        }
+      ]
+    },
+    {
+      "slug": "handoff-dir",
+      "finding": "F6",
+      "changed": "H1-6 now names HANDOFF_DIR",
+      "old": [
+        "MEU handoffs (first created"
+      ],
+      "new": [
+        "HANDOFF_DIR"
+      ],
+      "variants": [
+        {
+          "literal": ".agent/context/handoffs",
+          "note": "the literal path the key resolves to"
+        }
+      ]
+    },
+    {
+      "slug": "requeue-exhaustiveness",
+      "finding": "F6",
+      "changed": "AC-42.1 gained the status-partition exhaustiveness assertion",
+      "old": [
+        "Chain: import the constants. Negative: the set is inlined in the guard, or duplicated"
+      ],
+      "new": [
+        "REQUEUE_STATUS_EXHAUSTIVENESS"
+      ],
+      "variants": [
+        {
+          "literal": "DOWNLOAD_STATUSES",
+          "note": "the download enum the partition must cover"
+        },
+        {
+          "literal": "CONVERSION_STATUSES",
+          "note": "the conversion enum the partition must cover"
+        },
+        {
+          "literal": "NON_REQUEUEABLE_",
+          "note": "the complement half of the partition"
+        }
+      ]
+    },
+    {
+      "slug": "ssot-receipts",
+      "finding": "F6",
+      "changed": "SSOT_READY / SSOT_APPROVED promoted from bare prose citations to defined assertion receipts",
+      "old": [
+        "prove `SSOT_READY`"
+      ],
+      "new": [
+        "SSOT_READY",
+        "SSOT_APPROVED"
+      ],
+      "variants": [
+        {
+          "literal": "PASS: SSOT_READY",
+          "note": "the string the H1-3 assertion prints"
+        },
+        {
+          "literal": "PASS: SSOT_APPROVED",
+          "note": "the string the H2-2 assertion prints"
+        }
+      ]
+    },
+    {
+      "slug": "carve-out-doorway",
+      "finding": "F2",
+      "changed": "reachability narrowed to a single sanctioned import doorway for the two carve-out files",
+      "old": [
+        "may contain any `NEW_SURFACE_MODULES` string"
+      ],
+      "new": [
+        "CARVE_OUT_ALLOWED_IMPORT",
+        "resolved suffix"
+      ],
+      "variants": [
+        {
+          "literal": "re-export",
+          "note": "the bypass class the doorway must not reopen"
+        },
+        {
+          "literal": "NEW_SURFACE_EXEMPT",
+          "note": "the directory set the scan skips"
+        }
+      ]
+    },
+    {
+      "slug": "red-counts",
+      "finding": "F1/F3/F4 blast radius",
+      "changed": "AC text was rewritten under F3 and F4; the per-MEU AC counts must still equal RED_COUNT_41/42/43/44",
+      "old": [
+        "8/9/13/13"
+      ],
+      "new": [
+        "RED_COUNT_41",
+        "RED_COUNT_42",
+        "RED_COUNT_43",
+        "RED_COUNT_44"
+      ],
+      "variants": []
+    },
+    {
+      "slug": "r4-pill-fg-tokens",
+      "finding": "R4 palette lock",
+      "changed": "ten invented --color-pill-*-fg tokens withdrawn; foreground is now the fill token itself",
+      "old": [
+        "--color-pill-",
+        "fgToken",
+        "fillToken",
+        "NEW_TOKENS"
+      ],
+      "new": [
+        "PILL_TOKEN_SOURCE",
+        "PILL_CLASS_RULE",
+        "PORTED_TOKENS",
+        "USER_LOCKS.pill_palette"
+      ],
+      "variants": [
+        {
+          "literal": "bg-accent-red/10",
+          "note": "the rendered fill class the single token resolves to under PILL_CLASS_RULE"
+        },
+        {
+          "literal": "text-accent-red",
+          "note": "the rendered foreground class -- same token as the fill, which is the whole point of the rule"
+        },
+        {
+          "literal": "on an accent hue is forbidden",
+          "note": "the Zorivest MEU-389 prohibition stated once in the source table (plan:360); AC-43.4 is its executable form. Must be PRESENT (rc=0). The earlier literal \"/20 on an accent\" returned rc=1 only because the plan backticks the alpha (`/20`), which -F cannot match through"
+        },
+        {
+          "literal": "accent-cyan/20",
+          "note": "forbidden 20%% alpha on the accent-cyan hue; rc=1 (no hit) is the pass condition. Bare \"/20\" was tried first and matched 32 date paths (/2026-...), which is why the sweep names each STATUS_PILL_TABLE token explicitly instead"
+        },
+        {
+          "literal": "accent-yellow/20",
+          "note": "forbidden 20%% alpha on the accent-yellow hue; rc=1 (no hit) is the pass condition. Bare \"/20\" was tried first and matched 32 date paths (/2026-...), which is why the sweep names each STATUS_PILL_TABLE token explicitly instead"
+        },
+        {
+          "literal": "accent-purple/20",
+          "note": "forbidden 20%% alpha on the accent-purple hue; rc=1 (no hit) is the pass condition. Bare \"/20\" was tried first and matched 32 date paths (/2026-...), which is why the sweep names each STATUS_PILL_TABLE token explicitly instead"
+        },
+        {
+          "literal": "accent-orange/20",
+          "note": "forbidden 20%% alpha on the accent-orange hue; rc=1 (no hit) is the pass condition. Bare \"/20\" was tried first and matched 32 date paths (/2026-...), which is why the sweep names each STATUS_PILL_TABLE token explicitly instead"
+        },
+        {
+          "literal": "accent-red/20",
+          "note": "forbidden 20%% alpha on the accent-red hue; rc=1 (no hit) is the pass condition. Bare \"/20\" was tried first and matched 32 date paths (/2026-...), which is why the sweep names each STATUS_PILL_TABLE token explicitly instead"
+        },
+        {
+          "literal": "status-pending/20",
+          "note": "forbidden 20%% alpha on the status-pending hue; rc=1 (no hit) is the pass condition. Bare \"/20\" was tried first and matched 32 date paths (/2026-...), which is why the sweep names each STATUS_PILL_TABLE token explicitly instead"
+        },
+        {
+          "literal": "status-filled/20",
+          "note": "forbidden 20%% alpha on the status-filled hue; rc=1 (no hit) is the pass condition. Bare \"/20\" was tried first and matched 32 date paths (/2026-...), which is why the sweep names each STATUS_PILL_TABLE token explicitly instead"
+        },
+        {
+          "literal": "status-rejected/20",
+          "note": "forbidden 20%% alpha on the status-rejected hue; rc=1 (no hit) is the pass condition. Bare \"/20\" was tried first and matched 32 date paths (/2026-...), which is why the sweep names each STATUS_PILL_TABLE token explicitly instead"
+        },
+        {
+          "literal": "status-canceled/20",
+          "note": "forbidden 20%% alpha on the status-canceled hue; rc=1 (no hit) is the pass condition. Bare \"/20\" was tried first and matched 32 date paths (/2026-...), which is why the sweep names each STATUS_PILL_TABLE token explicitly instead"
+        }
+      ]
+    },
+    {
+      "slug": "r4-age-restricted",
+      "finding": "R4 palette lock",
+      "changed": "AgeRestricted hue moved from an invented --color-age-restricted to the shared --color-accent-red",
+      "old": [
+        "--color-age-restricted",
+        "#c4a882"
+      ],
+      "new": [
+        "--color-accent-red",
+        "bg-accent-red/10"
+      ],
+      "variants": [
+        {
+          "literal": "Brown",
+          "note": "06-gui.md's superseded colour name; every surviving use must be a supersession note, not a live rule"
+        }
+      ]
+    },
+    {
+      "slug": "r4-bg-selected",
+      "finding": "R4 palette lock",
+      "changed": "the invented --color-bg-selected / bg-bg-selected fill deleted; selection is an accent alpha",
+      "old": [
+        "--color-bg-selected",
+        "bg-bg-selected"
+      ],
+      "new": [
+        "SELECTION_FILL_SOURCE",
+        "bg-accent/10"
+      ],
+      "variants": [
+        {
+          "literal": "bg-accent/5",
+          "note": "the checkbox-selected step -- av-kit's one disclosed divergence from PILL_TOKEN_SOURCE"
+        },
+        {
+          "literal": "FORBIDDEN_SELECTION_FILL",
+          "note": "the proposal 11 conflict 5 prohibition that forces that divergence"
+        }
+      ]
+    },
+    {
+      "slug": "r4-contrast-baseline",
+      "finding": "R4 palette lock",
+      "changed": "contrast gate moved from a designed 4.60 worst-case margin to a measured 80-pairing baseline with an explicit pass/debt partition",
+      "old": [
+        "4.60",
+        "CONTRAST_DESIGN_MARGIN"
+      ],
+      "new": [
+        "CONTRAST_MEASURED",
+        "CONTRAST_AA_PASS",
+        "CONTRAST_AA_DEBT"
+      ],
+      "variants": [
+        {
+          "literal": "contrast-matrix.json",
+          "note": "the file CONTRAST_MEASURED resolves to"
+        },
+        {
+          "literal": "80 pairings",
+          "note": "the exhaustiveness count assertion (3) partitions"
+        },
+        {
+          "literal": "CONTRAST_MIN",
+          "note": "the threshold itself, unchanged at 4.5 -- swept to prove it was not quietly lowered to fit the debt"
+        }
+      ]
+    },
+    {
+      "slug": "r4-debt-followup",
+      "finding": "R4 palette lock",
+      "changed": "the AA debt is tracked as a real generated issue rather than prose",
+      "old": [
+        "known-issues.md entry"
+      ],
+      "new": [
+        "CONTRAST_DEBT_ISSUE_ID",
+        "CONTRAST_DEBT_ISSUE_CMD",
+        "KNOWN_ISSUES_YAML",
+        "KNOWN_ISSUES_MD"
+      ],
+      "variants": [
+        {
+          "literal": "QUEUE-PILL-AA-DEBT",
+          "note": "the literal issue id CONTRAST_DEBT_ISSUE_ID resolves to"
+        },
+        {
+          "literal": "CONTRAST_DEBT_FOLLOWUP",
+          "note": "the narrative key that names the issue; must not restate its id in plan prose"
+        }
+      ]
+    },
+    {
+      "slug": "r4-round-cap",
+      "finding": "R4 palette lock",
+      "changed": "PLAN_REVIEW_MAX_ROUND raised 3 -> 6 per USER_LOCKS.plan_review_rounds",
+      "old": [
+        "\"PLAN_REVIEW_MAX_ROUND\": 3"
+      ],
+      "new": [
+        "\"PLAN_REVIEW_MAX_ROUND\": 6"
+      ],
+      "variants": [
+        {
+          "literal": "maximum of 3",
+          "note": "the prose form of the cap; rc=1 in both plan files is the pass condition -- the cap must be stated once, in named-sets.json, and cited by key everywhere else"
+        },
+        {
+          "literal": "PLAN_REVIEW_MAX_ROUND",
+          "note": "the key the plan cites instead of the number"
+        }
+      ]
+    },
+    {
+      "slug": "r5-pill-label-fg",
+      "finding": "R5 reviewer F1-F5",
+      "changed": "F1: the pill label is decoupled from the fill token and taken from --color-fg; textClass is gone",
+      "old": [
+        "textClass",
+        "carrying **both** fill and foreground"
+      ],
+      "new": [
+        "labelClass",
+        "iconClass",
+        "text-fg"
+      ],
+      "variants": [
+        {
+          "literal": "the Tailwind form of the **same** `token`",
+          "note": "the R4 same-token binding sentence in AC-43.4; rc=1 in both plan files is the pass condition"
+        },
+        {
+          "literal": "`--color-fg`",
+          "note": "the label colour the decoupled rule names; must appear in AC-43.3/43.4 prose"
+        },
+        {
+          "literal": "PILL_CLASS_RULE",
+          "note": "the key every pill-class statement cites instead of restating the classes"
+        }
+      ]
+    },
+    {
+      "slug": "r5-contrast-all-pass",
+      "finding": "R5 reviewer F1-F5",
+      "changed": "F1: the 28/80 pass-plus-debt partition is withdrawn; all 80 label pairings now clear CONTRAST_MIN",
+      "old": [
+        "CONTRAST_AA_PASS",
+        "CONTRAST_AA_DEBT",
+        "CONTRAST_DEBT_FOLLOWUP",
+        "CONTRAST_DEBT_ISSUE_ID",
+        "CONTRAST_DEBT_ISSUE_CMD",
+        "KNOWN_ISSUES_YAML",
+        "KNOWN_ISSUES_MD",
+        "28 of 80",
+        "QUEUE-PILL-AA-DEBT"
+      ],
+      "new": [
+        "CONTRAST_WORST_MEASURED",
+        "STATUS_ICON_RULE",
+        "80 of 80"
+      ],
+      "variants": [
+        {
+          "literal": "52 do not",
+          "note": "the R4 debt claim; rc=1 in both plan files is the pass condition"
+        },
+        {
+          "literal": "pass/debt partition",
+          "note": "the R4 mechanism name; may survive only inside a retraction sentence"
+        },
+        {
+          "literal": "CONTRAST_MEASURED",
+          "note": "the exact-match baseline key, retained and still cited by AC-43.3"
+        },
+        {
+          "literal": "advisory",
+          "note": "the icon ratios are recorded but not gated, per the WCAG 1.4.11 Decorative exception"
+        }
+      ]
+    },
+    {
+      "slug": "r5-blocker-requeue",
+      "finding": "R5 reviewer F1-F5",
+      "changed": "F2: QualityBlocked re-queue revalidates against live SABR instead of dropping into the Pending pool",
+      "old": [
+        "reset_failed is only valid from Failed"
+      ],
+      "new": [
+        "REQUEUE_BLOCKER_POLICY",
+        "REQUEUE_BLOCKER_CONFLICT_CODE",
+        "BLOCKER_STATUSES",
+        "BLOCKER_REMEDIATION",
+        "BLOCKER_META_RULE",
+        "AC-42.10",
+        "AC-44.15"
+      ],
+      "variants": [
+        {
+          "literal": "_incompatible",
+          "note": "the service predicate the policy re-evaluates"
+        },
+        {
+          "literal": "apply_lock",
+          "note": "the guard _run_one does not re-run, which is why the policy exists"
+        },
+        {
+          "literal": "_run_one",
+          "note": "the worker entry point that proves the laundering path"
+        }
+      ]
+    },
+    {
+      "slug": "r5-cancel-wording",
+      "finding": "R5 reviewer F1-F5",
+      "changed": "F3: the row-local cancel control must disclose queue scope in its accessible name",
+      "old": [],
+      "new": [
+        "CANCEL_CONTROL_LABEL",
+        "CANCEL_CONTROL_TITLE",
+        "CANCEL_LABEL_FORBIDDEN",
+        "CANCEL_SCOPE_RULE",
+        "AC-44.14"
+      ],
+      "variants": [
+        {
+          "literal": "Cancel queue",
+          "note": "the locked accessible name; stated once in named-sets.json"
+        },
+        {
+          "literal": "per-item cancel",
+          "note": "the non-goal the wording protects; must still be denied in AC-44.5"
+        },
+        {
+          "literal": "isInFlight` is true, and clicking it invokes",
+          "note": "AC-44.5 wiring sentence, RETAINED by design - AC-44.14 adds the wording requirement on top rather than replacing it. Mis-declared as an `old` literal on the first R5 pass and reclassified here rather than silently dropped; rc=0 is the pass condition"
+        }
+      ]
+    },
+    {
+      "slug": "r5-clear-finished",
+      "finding": "R5 reviewer F1-F5",
+      "changed": "F4: clear-finished partial-failure behaviour is spelled out clause by clause in canon",
+      "old": [
+        "Done-only Clear finished with files retained. Chain"
+      ],
+      "new": [
+        "CLEAR_FINISHED_SEMANTICS"
+      ],
+      "variants": [
+        {
+          "literal": "snapshot",
+          "note": "the first clause: the Done id set is frozen before the first request"
+        },
+        {
+          "literal": "continue_on_failure",
+          "note": "the clause that forbids aborting the fan-out"
+        },
+        {
+          "literal": "G35_RULE",
+          "note": "the partial-result toast standard the report clause builds on"
+        }
+      ]
+    },
+    {
+      "slug": "r5-kebab-applicability",
+      "finding": "R5 reviewer F1-F5",
+      "changed": "F5: KEBAB_MENU_ORDER is a relative order over applicable supplied actions, not a membership list",
+      "old": [
+        "with exactly `KEBAB_MENU_ORDER` in that order"
+      ],
+      "new": [
+        "KEBAB_MENU_ORDER_SEMANTICS",
+        "KEBAB_AVAILABILITY"
+      ],
+      "variants": [
+        {
+          "literal": "never rendered disabled",
+          "note": "the omission rule that replaces dead menu items"
+        },
+        {
+          "literal": "KEBAB_MENU_ORDER",
+          "note": "the order key itself, retained and still cited"
+        }
+      ]
+    },
+    {
+      "slug": "r5-red-counts",
+      "finding": "R5 reviewer F1-F5",
+      "changed": "AC-42.10, AC-44.14 and AC-44.15 raise the declared red counts",
+      "old": [
+        "\"RED_COUNT_42\": 9",
+        "\"RED_COUNT_44\": 13"
+      ],
+      "new": [
+        "\"RED_COUNT_42\": 10",
+        "\"RED_COUNT_44\": 15"
+      ],
+      "variants": []
+    },
+    {
+      "slug": "r6-blocker-reason",
+      "finding": "R6 reviewer R5-F1..F4",
+      "changed": "R5-F1: QualityBlocked gets a real reason producer at both transitions; the card no longer relies on a fabricated prop",
+      "old": [],
+      "new": [
+        "BLOCKER_REASON_RULE",
+        "BLOCKER_REASON_TEMPLATE",
+        "BLOCKER_REASON_PRODUCERS",
+        "AC-42.11"
+      ],
+      "variants": [
+        {
+          "literal": "error_message",
+          "note": "the field the reason is written into; must appear in AC-42.11 and AC-44.15"
+        },
+        {
+          "literal": "never a hand-built `DownloadJob`",
+          "note": "the clause that forces the assertion onto persisted/serialized data"
+        },
+        {
+          "literal": "apply_lock",
+          "note": "one of the two QualityBlocked producers; already swept in R5 for a different reason"
+        }
+      ]
+    },
+    {
+      "slug": "r6-services-file-set",
+      "finding": "R6 reviewer R5-F1..F4",
+      "changed": "AC-42.10/42.11 make services/download.py a changed file; the plan previously asserted services were unchanged",
+      "old": [
+        "Services are unchanged in code"
+      ],
+      "new": [
+        "packages/core/src/avkit_core/services/download.py"
+      ],
+      "variants": [
+        {
+          "literal": "services/conversion.py` is unchanged in code",
+          "note": "the narrowed claim that survives; conversion services really are untouched"
+        },
+        {
+          "literal": "no new module, no signature change",
+          "note": "the containment clause bounding the service edit inside this MEU"
+        }
+      ]
+    },
+    {
+      "slug": "r6-kebab-action-ids",
+      "finding": "R6 reviewer R5-F1..F4",
+      "changed": "R5-F2 + R5-F4: KEBAB_MENU_ORDER becomes action ids, labels move to KEBAB_ACTION_LABELS, copy label is state-dependent",
+      "old": [
+        "\"Open file\",",
+        "Copy path` and `Remove"
+      ],
+      "new": [
+        "KEBAB_ACTION_LABELS",
+        "copy-location",
+        "move-bottom"
+      ],
+      "variants": [
+        {
+          "literal": "per action, never per group",
+          "note": "the R5-F2 rule that keeps move-down/move-bottom on a first-but-not-last row"
+        },
+        {
+          "literal": "Copy URL",
+          "note": "the label before an output path exists"
+        },
+        {
+          "literal": "one-item queue",
+          "note": "the only case that drops all four move actions"
+        },
+        {
+          "literal": "KEBAB_MENU_ORDER",
+          "note": "the order key itself, retained with a changed element type"
+        }
+      ]
+    },
+    {
+      "slug": "r6-cancel-no-confirm",
+      "finding": "R6 reviewer R5-F1..F4",
+      "changed": "R5-F3: the Round 5 confirm requirement on Cancel is withdrawn; the Spec assigns queue-level Cancel no dialog",
+      "old": [
+        "the same scope wording appears in whatever confirm step"
+      ],
+      "new": [
+        "CANCEL_CONFIRM_POLICY"
+      ],
+      "variants": [
+        {
+          "literal": "no** confirmation dialog",
+          "note": "the withdrawn requirement, restated as its negation in AC-44.14"
+        },
+        {
+          "literal": "re-queue is cheap",
+          "note": "the proposal's own justification, quoted at proposal:146-149"
+        },
+        {
+          "literal": "CANCEL_CONTROL_LABEL",
+          "note": "the locked name that carries the disclosure instead of a dialog"
+        }
+      ]
+    },
+    {
+      "slug": "r6-red-counts",
+      "finding": "R6 reviewer R5-F1..F4",
+      "changed": "AC-42.11 raises RED_COUNT_42 again",
+      "old": [
+        "\"RED_COUNT_42\": 10"
+      ],
+      "new": [
+        "\"RED_COUNT_42\": 11"
+      ],
+      "variants": []
+    },
+    {
+      "slug": "r7-reason-copy",
+      "finding": "R7 reviewer R6-F1..F2",
+      "changed": "R6-F1: the QualityBlocked reason drops its {quality} interpolation and the SABR acronym",
+      "old": [
+        "formatted with that job's `quality`",
+        "SABR restrictions are active for this video"
+      ],
+      "new": [
+        "BLOCKER_REASON_COPY_RULE",
+        "quality-independent"
+      ],
+      "variants": [
+        {
+          "literal": "**verbatim**",
+          "note": "the replacement clause in AC-42.11 - the template interpolates nothing"
+        },
+        {
+          "literal": "YouTube is limiting which formats",
+          "note": "the new plain-language reason text"
+        },
+        {
+          "literal": "regains a `{quality}`-style placeholder",
+          "note": "the negative oracle that prevents the interpolation coming back"
+        }
+      ]
+    },
+    {
+      "slug": "r7-reason-invariant",
+      "finding": "R7 reviewer R6-F1..F2",
+      "changed": "R6-F1: reason presence becomes a persisted-state invariant covering legacy rows and Apply Defaults",
+      "old": [],
+      "new": [
+        "BLOCKER_REASON_INVARIANT",
+        "AC-42.12",
+        "persists-while-blocked"
+      ],
+      "variants": [
+        {
+          "literal": "apply_defaults_to_pending",
+          "note": "the mutation the reviewer named; must appear in the invariant, the AC and the producer list"
+        },
+        {
+          "literal": "legacy row",
+          "note": "the pre-release persisted shape clause (1) has to cover"
+        },
+        {
+          "literal": "falls through with no write",
+          "note": "the apply_lock already-blocked branch's current behaviour, cited in the AC's negative"
+        },
+        {
+          "literal": "BLOCKER_REASON_PRODUCERS",
+          "note": "the producer map, retained with a three-phase structure"
+        }
+      ]
+    },
+    {
+      "slug": "r7-reason-exit-edge",
+      "finding": "R7 reviewer R6-F1..F2",
+      "changed": "Self-caught: clear_sabr left the blocker reason on a job it had just moved back to Pending",
+      "old": [],
+      "new": [
+        "AC-42.13",
+        "clear_sabr"
+      ],
+      "variants": [
+        {
+          "literal": "replace(self, status=...)",
+          "note": "why transition() alone does not clear the field - the factual basis for clause (2)"
+        },
+        {
+          "literal": "reset_failed` is asserted to **already** conform",
+          "note": "the domain path that needs no change, asserted rather than edited"
+        }
+      ]
+    },
+    {
+      "slug": "r7-nested-interactive",
+      "finding": "R7 reviewer R6-F1..F2",
+      "changed": "R6-F2: all three interactive zones must be siblings of the role=button open-region, not descendants",
+      "old": [],
+      "new": [
+        "CLICKABLE_REGION_RULE",
+        "CARD_INTERACTIVE_ZONES",
+        "AC-44.16"
+      ],
+      "variants": [
+        {
+          "literal": "nested-interactive",
+          "note": "the axe rule id naming the failure"
+        },
+        {
+          "literal": "kebab-trigger",
+          "note": "the zone id AC-44.2 never covered"
+        },
+        {
+          "literal": "layout-neutral",
+          "note": "the claim that hoisting the controls does not change the mockup's visual zones"
+        },
+        {
+          "literal": "AC-44.16 extends this ancestry proof",
+          "note": "the cross-reference added to AC-44.2 so the partial proof is not mistaken for a whole one"
+        }
+      ]
+    },
+    {
+      "slug": "r7-red-counts",
+      "finding": "R7 reviewer R6-F1..F2",
+      "changed": "AC-42.12, AC-42.13 and AC-44.16 raise two red counts",
+      "old": [
+        "\"RED_COUNT_42\": 11",
+        "\"RED_COUNT_44\": 15"
+      ],
+      "new": [
+        "\"RED_COUNT_42\": 13",
+        "\"RED_COUNT_44\": 16"
+      ],
+      "variants": []
+    },
+    {
+      "slug": "r8-boundary-enforcement",
+      "finding": "R8 reviewer R7-F1",
+      "changed": "R7-F1: the invariant is enforced at repository add/save instead of at four service callsites",
+      "old": [
+        "All four edits are `BLOCKER_REASON_INVARIANT` in one file"
+      ],
+      "new": [
+        "BLOCKER_REASON_ENFORCEMENT",
+        "normalize_blocker_reason",
+        "AC-42.14"
+      ],
+      "variants": [
+        {
+          "literal": "boundary-normalizer",
+          "note": "the enforcement mechanism key"
+        },
+        {
+          "literal": "repositories.py",
+          "note": "the file that gains the enforcement point"
+        },
+        {
+          "literal": "BLOCKER_REASONS",
+          "note": "the code-side home of the reason text"
+        },
+        {
+          "literal": "**No reason-writing code**",
+          "note": "the explicit deletion of the Round 7 service writes in the file-set row"
+        }
+      ]
+    },
+    {
+      "slug": "r8-upgrade-backfill",
+      "finding": "R8 reviewer R7-F1",
+      "changed": "R7-F1: an idempotent migration repairs rows blocked before this release, before they can be listed",
+      "old": [],
+      "new": [
+        "AC-42.15",
+        "BLOCKER_REASON_MIGRATION_PREDICATE",
+        "upgrade-backfill"
+      ],
+      "variants": [
+        {
+          "literal": "apply_migrations",
+          "note": "the runner that makes the backfill precede any listing"
+        },
+        {
+          "literal": "no service call of any kind",
+          "note": "the clause that makes AC-42.15 test the upgrading user's actual path"
+        },
+        {
+          "literal": "migrations.py",
+          "note": "the file that gains the appended UPDATE"
+        },
+        {
+          "literal": "idempotent",
+          "note": "the property that lets it live in an append-only list"
+        }
+      ]
+    },
+    {
+      "slug": "r8-refusal-canonicalization",
+      "finding": "R8 reviewer R7-F1",
+      "changed": "R7-F1: the still-incompatible Retry path saves through the boundary instead of writing nothing",
+      "old": [],
+      "new": [
+        "refusal-canonicalization",
+        "AC-42.12c"
+      ],
+      "variants": [
+        {
+          "literal": "the 409 path writes nothing and leaves the row blank",
+          "note": "the negative oracle for the case the reviewer called sharpest"
+        },
+        {
+          "literal": "**(c) the refused Retry**",
+          "note": "the added AC-42.12 case"
+        }
+      ]
+    },
+    {
+      "slug": "r8-clear-narrowness",
+      "finding": "R8 reviewer R7-F1",
+      "changed": "Clause (2) clears only an exact BLOCKER_REASONS value, so a Failed traceback survives the boundary",
+      "old": [],
+      "new": [
+        "preserved untouched"
+      ],
+      "variants": [
+        {
+          "literal": "erase a Failed",
+          "note": "the failure mode an unconditional clear would cause"
+        },
+        {
+          "literal": "exactly one of the `BLOCKER_REASONS` values",
+          "note": "the narrow condition itself"
+        }
+      ]
+    },
+    {
+      "slug": "r8-red-counts",
+      "finding": "R8 reviewer R7-F1",
+      "changed": "AC-42.14 and AC-42.15 raise RED_COUNT_42 again",
+      "old": [
+        "\"RED_COUNT_42\": 13"
+      ],
+      "new": [
+        "\"RED_COUNT_42\": 15"
+      ],
+      "variants": []
+    }
+  ]
+}

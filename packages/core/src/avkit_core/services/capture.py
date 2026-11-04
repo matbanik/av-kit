@@ -1,0 +1,958 @@
+"""CaptureService — inbox scan, register, grab, request, annotate, flatten, revert, remove."""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import shutil
+import threading
+from collections.abc import Callable, Sequence
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from uuid import uuid4
+
+import structlog
+
+from avkit_core.domain.capture import (
+    ANNOTATED_EXT,
+    ANNOTATED_FORMATS,
+    ANNOTATED_SUFFIXES,
+    CAPTURE_REQUEST_TRANSITIONS,
+    AnnotatedFormat,
+    Annotation,
+    ArrowAnnotation,
+    BBox,
+    CaptureRequest,
+    CaptureShot,
+    EraserAnnotation,
+    HighlightAnnotation,
+    ImageProbe,
+    PixelateAnnotation,
+    RectAnnotation,
+    TextAnnotation,
+)
+from avkit_core.domain.enums import AnnotationType, CaptureRequestStatus, CaptureSource
+from avkit_core.domain.errors import (
+    AnnotationValidationError,
+    CaptureFlattenConflictError,
+    CaptureRequestConflictError,
+    ConflictError,
+    InboxPathError,
+    NotFoundError,
+    ValidationError,
+)
+from avkit_core.ports.capture import ImageAnnotatePort, ScreenCapturePort
+from avkit_core.ports.storage import UnitOfWork
+from avkit_core.services.settings import SettingsService
+
+UoWFactory = Callable[[], UnitOfWork]
+Clock = Callable[[], datetime]
+log = structlog.get_logger(module="capture")
+
+SCAN_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp")
+TIMESTAMP_FORMAT = "%Y-%m-%d_%H-%M-%S"
+REQUEST_TTL_S = 120
+SIDECAR_SUFFIX = ".ann.json"
+SIDECAR_VERSION = 1
+ANNOTATION_CLAMP_MIN = 0
+# MEU-67 flatten with backup (plan 2026-10-02-capture-flatten-backup §Single-statement contracts).
+BACKUP_DIR_DEFAULT_NAME = ".avkit-backup"
+TMP_SUFFIX = ".avkit-tmp"
+BACKUP_TIMESTAMP_FORMAT = "%Y%m%d-%H%M%S"
+FLATTEN_PNG_SUFFIX = ".png"
+CONVERTIBLE_SUFFIXES = frozenset({".jpg", ".jpeg", ".webp"})
+CONVERT_STEM_TAG = "-converted"
+# CAPTURE_FILE_LOCK: one process lock over every capture file mutation and the scan's row pruning.
+# The API is a single uvicorn process; this lock is not reentrant, so a held section never calls
+# another locked public method.
+CAPTURE_FILE_LOCK = threading.Lock()
+
+
+def resolve_backup_dir(raw: str, inbox: Path) -> Path:
+    """BACKUP_DIR_RULE: '' derives {inbox}/.avkit-backup; else absolute after ~, never the inbox."""
+    text = raw.strip()
+    if text == "":
+        return inbox / BACKUP_DIR_DEFAULT_NAME
+    candidate = Path(text).expanduser()
+    if not candidate.is_absolute():
+        raise CaptureFlattenConflictError("capture.backup_dir must be an absolute folder path")
+    resolved = candidate.resolve()
+    if resolved == inbox.resolve():
+        raise CaptureFlattenConflictError("capture.backup_dir must not be the inbox folder itself")
+    return resolved
+
+
+def _backup_pattern(stem: str) -> re.Pattern[str]:
+    return re.compile(rf"^{re.escape(stem)}\.(\d{{8}}-\d{{6}})(?:_(\d+))?\.png$")
+
+
+def latest_backup_in(backup_dir: Path, stem: str) -> Path | None:
+    """LATEST_BACKUP: newest `{stem}.{YYYYMMDD-HHMMSS}[_n].png` by (timestamp, n), not mtime."""
+    if not backup_dir.is_dir():
+        return None
+    pattern = _backup_pattern(stem)
+    best: Path | None = None
+    best_key: tuple[str, int] | None = None
+    for child in backup_dir.iterdir():
+        match = pattern.match(child.name)
+        if match is None or not child.is_file():
+            continue
+        key = (match.group(1), int(match.group(2) or 1))
+        if best_key is None or key > best_key:
+            best, best_key = child, key
+    return best
+
+
+def backup_path_for(backup_dir: Path, stem: str, stamp: datetime) -> Path:
+    """BACKUP_NAME: `{stem}.{YYYYMMDD-HHMMSS}.png`, then `_2`, `_3` … when that name is taken."""
+    base = stamp.strftime(BACKUP_TIMESTAMP_FORMAT)
+    candidate = backup_dir / f"{stem}.{base}.png"
+    index = 2
+    while candidate.exists():
+        candidate = backup_dir / f"{stem}.{base}_{index}.png"
+        index += 1
+    return candidate
+
+
+def annotated_path_for(original: Path, output_format: AnnotatedFormat) -> Path:
+    """The Save overlay sibling for `output_format` (ANNOTATED_FORMATS)."""
+    return original.with_name(f"{original.stem}.annotated{ANNOTATED_EXT[output_format]}")
+
+
+def _annotated_siblings(original: Path) -> list[Path]:
+    return [original.with_name(f"{original.stem}{suffix}") for suffix in ANNOTATED_SUFFIXES]
+
+
+def _sidecar_for(original: Path) -> Path:
+    return original.with_name(f"{original.stem}{SIDECAR_SUFFIX}")
+
+
+def parse_sidecar_document(payload: object) -> list[object]:
+    """Return sidecar annotation objects, ignoring unknown top-level keys."""
+    if not isinstance(payload, dict):
+        raise AnnotationValidationError("sidecar must be an object")
+    annotations = payload.get("annotations", [])
+    if not isinstance(annotations, list):
+        raise AnnotationValidationError("annotations must be a list")
+    parsed: list[object] = []
+    for item in annotations:
+        if not isinstance(item, dict):
+            raise AnnotationValidationError("annotation must be an object")
+        parsed.append(item)
+    return parsed
+
+
+def _wire_point(value: object, field: str) -> tuple[object, object]:
+    if not isinstance(value, (list, tuple)) or len(value) != 2:
+        raise AnnotationValidationError(f"{field} must be a pair")
+    return (value[0], value[1])
+
+
+def _annotation_from_wire(item: object) -> Annotation:
+    if not isinstance(item, dict):
+        raise AnnotationValidationError("annotation must be an object")
+    kind = item.get("type")
+    try:
+        if kind == AnnotationType.Arrow.to_wire():
+            return ArrowAnnotation(
+                from_xy=_wire_point(item["from"], "from"),  # type: ignore[arg-type]
+                to_xy=_wire_point(item["to"], "to"),  # type: ignore[arg-type]
+                color=item["color"],
+                stroke_width=item["stroke_width"],
+            )
+        if kind == AnnotationType.Rect.to_wire():
+            return RectAnnotation(
+                x=item["x"],
+                y=item["y"],
+                width=item["width"],
+                height=item["height"],
+                color=item["color"],
+                stroke_width=item["stroke_width"],
+            )
+        if kind == AnnotationType.Highlight.to_wire():
+            return HighlightAnnotation(
+                x=item["x"],
+                y=item["y"],
+                width=item["width"],
+                height=item["height"],
+                color=item["color"],
+                opacity=item["opacity"],
+            )
+        if kind == AnnotationType.Text.to_wire():
+            return TextAnnotation(
+                x=item["x"],
+                y=item["y"],
+                text=item["text"],
+                color=item["color"],
+                font_size=item["font_size"],
+                bg_color=item.get("bg_color"),
+            )
+        if kind == AnnotationType.Pixelate.to_wire():
+            return PixelateAnnotation(
+                x=item["x"],
+                y=item["y"],
+                width=item["width"],
+                height=item["height"],
+                block_size=item["block_size"],
+            )
+        if kind == AnnotationType.Eraser.to_wire():
+            return EraserAnnotation(
+                x=item["x"],
+                y=item["y"],
+                width=item["width"],
+                height=item["height"],
+            )
+    except KeyError as exc:
+        raise AnnotationValidationError(f"missing annotation field: {exc}") from exc
+    raise AnnotationValidationError(f"unsupported annotation type: {kind!r}")
+
+
+def annotations_from_sidecar(payload: object) -> list[Annotation]:
+    """Parse sidecar JSON into domain annotations. Unknown types are 422, not []."""
+    return [_annotation_from_wire(item) for item in parse_sidecar_document(payload)]
+
+
+def annotations_to_wire(items: Sequence[Annotation]) -> list[dict[str, object]]:
+    """Serialize domain annotations to the annotate/GET-detail wire list."""
+    return [_annotation_to_wire(item) for item in items]
+
+
+def _clamp_int(value: int, lo: int, hi: int) -> int:
+    if value < lo:
+        return lo
+    if value > hi:
+        return hi
+    return value
+
+
+def _annotation_to_wire(annotation: Annotation) -> dict[str, object]:
+    if isinstance(annotation, ArrowAnnotation):
+        return {
+            "type": AnnotationType.Arrow.to_wire(),
+            "from": [annotation.from_xy[0], annotation.from_xy[1]],
+            "to": [annotation.to_xy[0], annotation.to_xy[1]],
+            "color": annotation.color,
+            "stroke_width": annotation.stroke_width,
+        }
+    if isinstance(annotation, RectAnnotation):
+        return {
+            "type": AnnotationType.Rect.to_wire(),
+            "x": annotation.x,
+            "y": annotation.y,
+            "width": annotation.width,
+            "height": annotation.height,
+            "color": annotation.color,
+            "stroke_width": annotation.stroke_width,
+        }
+    if isinstance(annotation, HighlightAnnotation):
+        return {
+            "type": AnnotationType.Highlight.to_wire(),
+            "x": annotation.x,
+            "y": annotation.y,
+            "width": annotation.width,
+            "height": annotation.height,
+            "color": annotation.color,
+            "opacity": annotation.opacity,
+        }
+    if isinstance(annotation, TextAnnotation):
+        payload: dict[str, object] = {
+            "type": AnnotationType.Text.to_wire(),
+            "x": annotation.x,
+            "y": annotation.y,
+            "text": annotation.text,
+            "color": annotation.color,
+            "font_size": annotation.font_size,
+        }
+        if annotation.bg_color is not None:
+            payload["bg_color"] = annotation.bg_color
+        return payload
+    if isinstance(annotation, PixelateAnnotation):
+        return {
+            "type": AnnotationType.Pixelate.to_wire(),
+            "x": annotation.x,
+            "y": annotation.y,
+            "width": annotation.width,
+            "height": annotation.height,
+            "block_size": annotation.block_size,
+        }
+    if isinstance(annotation, EraserAnnotation):
+        return {
+            "type": AnnotationType.Eraser.to_wire(),
+            "x": annotation.x,
+            "y": annotation.y,
+            "width": annotation.width,
+            "height": annotation.height,
+        }
+    raise AnnotationValidationError(f"unsupported annotation type: {type(annotation)!r}")
+
+
+class CaptureService:
+    """Synchronous capture inbox and annotation service. Not a processor queue."""
+
+    def __init__(
+        self,
+        uow_factory: UoWFactory,
+        *,
+        capture: ScreenCapturePort,
+        annotate: ImageAnnotatePort,
+        settings: SettingsService,
+        clock: Clock | None = None,
+    ) -> None:
+        self._uow_factory = uow_factory
+        self._capture = capture
+        self._annotate = annotate
+        self._settings = settings
+        self._clock = clock if clock is not None else (lambda: datetime.now(UTC))
+
+    def scan_inbox(self) -> list[CaptureShot]:
+        """Upsert inbox images, drop rows whose original vanished, and clear stale derived paths."""
+        inbox = self._inbox()
+        with CAPTURE_FILE_LOCK, self._uow_factory() as uow:
+            if inbox.is_dir():
+                for child in inbox.iterdir():
+                    if not child.is_file():
+                        continue
+                    if child.suffix.lower() not in SCAN_EXTENSIONS:
+                        continue
+                    if child.name.lower().endswith(ANNOTATED_SUFFIXES):
+                        continue
+                    resolved = child.resolve()
+                    probe = self._annotate.probe(resolved)
+                    now = self._now()
+                    existing = uow.capture_shots.get_by_path(resolved)
+                    if existing is None:
+                        uow.capture_shots.add(
+                            CaptureShot(
+                                id=str(uuid4()),
+                                original_path=resolved,
+                                annotated_path=None,
+                                sidecar_path=None,
+                                display_name=resolved.name,
+                                width=probe.width,
+                                height=probe.height,
+                                file_size=probe.file_size,
+                                source=CaptureSource.Scan,
+                                created_at=now,
+                                updated_at=now,
+                            )
+                        )
+                    elif existing.file_size != probe.file_size:
+                        uow.capture_shots.save(
+                            replace(
+                                existing,
+                                width=probe.width,
+                                height=probe.height,
+                                file_size=probe.file_size,
+                                updated_at=now,
+                            )
+                        )
+            for shot in list(uow.capture_shots.list()):
+                if not shot.original_path.is_file():
+                    uow.capture_shots.delete(shot.id)
+                    continue
+                # RECONCILE (MEU-84, D-15): clear each derived path whose file is gone, per
+                # field, and save only when one changed.
+                annotated = shot.annotated_path
+                if annotated is not None and not annotated.is_file():
+                    annotated = None
+                sidecar = shot.sidecar_path
+                if sidecar is not None and not sidecar.is_file():
+                    sidecar = None
+                if (annotated, sidecar) != (shot.annotated_path, shot.sidecar_path):
+                    uow.capture_shots.save(
+                        replace(
+                            shot,
+                            annotated_path=annotated,
+                            sidecar_path=sidecar,
+                            updated_at=self._now(),
+                        )
+                    )
+            return list(uow.capture_shots.list())
+
+    def list_shots(self) -> list[CaptureShot]:
+        """Expire stale requests, scan the inbox, return newest first."""
+        self.expire_stale_requests()
+        self.scan_inbox()
+        with self._uow_factory() as uow:
+            shots = list(uow.capture_shots.list())
+        return sorted(
+            shots,
+            key=lambda shot: (-shot.created_at.timestamp(), shot.display_name.lower()),
+        )
+
+    def get_shot(self, shot_id: str) -> CaptureShot:
+        """Return one shot or raise NotFoundError."""
+        self.expire_stale_requests()
+        with self._uow_factory() as uow:
+            shot = uow.capture_shots.get(shot_id)
+        if shot is None:
+            raise NotFoundError(f"capture shot {shot_id} not found")
+        return shot
+
+    def load_shot_annotations(self, shot_id: str) -> list[Annotation]:
+        """Read sidecar annotations for a shot. Missing file is []. Malformed is 422."""
+        shot = self.get_shot(shot_id)
+        sidecar = shot.original_path.with_name(f"{shot.original_path.stem}{SIDECAR_SUFFIX}")
+        if not sidecar.is_file():
+            return []
+        try:
+            payload = json.loads(sidecar.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise AnnotationValidationError("sidecar is malformed") from exc
+        return annotations_from_sidecar(payload)
+
+    def register_shot(self, path: Path, source: CaptureSource) -> CaptureShot:
+        """Insert or return the existing row for an inbox original."""
+        inbox = self._inbox()
+        resolved = self._require_inbox_file(path, inbox)
+        probe = self._annotate.probe(resolved)
+        now = self._now()
+        with self._uow_factory() as uow:
+            return self._upsert_shot(uow, resolved, probe, now, source)
+
+    def capture_fullscreen(self) -> CaptureShot:
+        """Grab the virtual desktop into the inbox and register it."""
+        dest = self._unique_png(self._inbox())
+        self._capture.capture_fullscreen(dest)
+        return self.register_shot(dest, CaptureSource.McpFullscreen)
+
+    def capture_region(self, bbox: BBox) -> CaptureShot:
+        """Grab a rectangle into the inbox and register it."""
+        dest = self._unique_png(self._inbox())
+        self._capture.capture_region(dest, bbox)
+        return self.register_shot(dest, CaptureSource.McpRegion)
+
+    def request_interactive(self) -> CaptureRequest:
+        """Insert a Pending overlay wait, or conflict if one already exists."""
+        self.expire_stale_requests()
+        now = self._now()
+        with self._uow_factory() as uow:
+            if uow.capture_requests.get_pending_request() is not None:
+                raise CaptureRequestConflictError("a pending capture request already exists")
+            request = CaptureRequest(
+                id=str(uuid4()),
+                status=CaptureRequestStatus.Pending,
+                shot_id=None,
+                created_at=now,
+                expires_at=now + timedelta(seconds=REQUEST_TTL_S),
+            )
+            uow.capture_requests.add(request)
+            return request
+
+    def complete_request(self, request_id: str, path: Path) -> CaptureRequest:
+        """Register the overlay path and mark the request Completed in one UoW."""
+        self.expire_stale_requests()
+        inbox = self._inbox()
+        resolved = self._require_inbox_file(path, inbox)
+        probe = self._annotate.probe(resolved)
+        now = self._now()
+        with self._uow_factory() as uow:
+            request = uow.capture_requests.get(request_id)
+            if request is None:
+                raise NotFoundError(f"capture request {request_id} not found")
+            allowed = CAPTURE_REQUEST_TRANSITIONS[request.status]
+            if CaptureRequestStatus.Completed not in allowed:
+                raise ConflictError(
+                    f"cannot transition capture request from {request.status.name}"
+                )
+            shot = self._upsert_shot(
+                uow, resolved, probe, now, CaptureSource.McpInteractive
+            )
+            updated = replace(
+                request, status=CaptureRequestStatus.Completed, shot_id=shot.id
+            )
+            uow.capture_requests.save(updated)
+            return updated
+
+    def cancel_request(self, request_id: str) -> CaptureRequest:
+        """Mark the request Cancelled without a shot."""
+        self.expire_stale_requests()
+        return self._transition_request(
+            request_id,
+            CaptureRequestStatus.Cancelled,
+            shot_id=None,
+        )
+
+    def expire_stale_requests(self) -> None:
+        """Pending rows whose ttl has elapsed become Expired."""
+        now = self._now()
+        with self._uow_factory() as uow:
+            pending = uow.capture_requests.get_pending_request()
+            if pending is None:
+                return
+            if self._as_utc(pending.expires_at) <= self._as_utc(now):
+                uow.capture_requests.save(
+                    replace(pending, status=CaptureRequestStatus.Expired)
+                )
+
+    def list_requests(
+        self, status: CaptureRequestStatus | None = None
+    ) -> list[CaptureRequest]:
+        """Expire stale rows, then return requests optionally filtered by status."""
+        self.expire_stale_requests()
+        with self._uow_factory() as uow:
+            rows = list(uow.capture_requests.list())
+        if status is not None:
+            rows = [item for item in rows if item.status is status]
+        return rows
+
+    def annotate_and_save(
+        self,
+        shot_id: str,
+        annotations: Sequence[Annotation],
+    ) -> CaptureShot:
+        """Bake annotations in the configured format and write the sidecar.
+
+        Empty annotations clear both.
+        """
+        output_format = self._annotated_format()
+        with CAPTURE_FILE_LOCK, self._uow_factory() as uow:
+            shot = uow.capture_shots.get(shot_id)
+            if shot is None:
+                raise NotFoundError(f"capture shot {shot_id} not found")
+            now = self._now()
+            annotated_path = annotated_path_for(shot.original_path, output_format)
+            sidecar_path = _sidecar_for(shot.original_path)
+            siblings = _annotated_siblings(shot.original_path)
+            if len(annotations) == 0:
+                for sibling in siblings:
+                    self._unlink_if_file(sibling)
+                self._unlink_if_file(sidecar_path)
+                updated = replace(
+                    shot,
+                    annotated_path=None,
+                    sidecar_path=None,
+                    updated_at=now,
+                )
+                uow.capture_shots.save(updated)
+                return updated
+            clamped = [
+                self._clamp_annotation(item, shot.width, shot.height) for item in annotations
+            ]
+            self._annotate.bake(shot.original_path, clamped, annotated_path, output_format)
+            for sibling in siblings:
+                if sibling != annotated_path:
+                    self._unlink_if_file(sibling)
+            sidecar_path.write_text(
+                json.dumps(
+                    {
+                        "version": SIDECAR_VERSION,
+                        "annotations": [_annotation_to_wire(item) for item in clamped],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            updated = replace(
+                shot,
+                annotated_path=annotated_path,
+                sidecar_path=sidecar_path,
+                updated_at=now,
+            )
+            uow.capture_shots.save(updated)
+            return updated
+
+    def read_image(self, shot_id: str, variant: str) -> bytes:
+        """Return original or annotated file bytes."""
+        shot = self.get_shot(shot_id)
+        if variant == "original":
+            if not shot.original_path.is_file():
+                raise NotFoundError("original image is missing")
+            return shot.original_path.read_bytes()
+        if variant == "annotated":
+            if shot.annotated_path is None or not shot.annotated_path.is_file():
+                raise NotFoundError("annotated image is missing")
+            return shot.annotated_path.read_bytes()
+        raise ValidationError("variant must be original or annotated")
+
+    def remove(self, shot_id: str) -> None:
+        """Delete original, sidecar, and annotated files, then the row."""
+        with CAPTURE_FILE_LOCK, self._uow_factory() as uow:
+            shot = uow.capture_shots.get(shot_id)
+            if shot is None:
+                raise NotFoundError(f"capture shot {shot_id} not found")
+            self._unlink_if_file(shot.original_path)
+            self._unlink_if_file(shot.annotated_path)
+            for sibling in _annotated_siblings(shot.original_path):
+                self._unlink_if_file(sibling)
+            self._unlink_if_file(shot.sidecar_path)
+            uow.capture_shots.delete(shot_id)
+
+    def latest_backup(self, shot_id: str) -> Path | None:
+        """LATEST_BACKUP for a shot, or None (non-PNG shot, no backup, or an invalid backup dir)."""
+        return self._latest_backup_for(self.get_shot(shot_id))
+
+    def flatten(self, shot_id: str) -> CaptureShot:
+        """Bake saved marks into the original after a backup.
+
+        JPEG/WebP shots get a new PNG copy instead.
+        """
+        with CAPTURE_FILE_LOCK:
+            shot = self.get_shot(shot_id)
+            marks = self.load_shot_annotations(shot_id)
+            if not marks:
+                raise CaptureFlattenConflictError("this capture has no saved marks to apply")
+            suffix = shot.original_path.suffix.lower()
+            if suffix != FLATTEN_PNG_SUFFIX and suffix not in CONVERTIBLE_SUFFIXES:
+                raise CaptureFlattenConflictError(
+                    f"{suffix or 'extensionless'} files cannot be flattened"
+                )
+            backup_dir = self._backup_dir_if_enabled()
+            if suffix == FLATTEN_PNG_SUFFIX:
+                return self._flatten_png_locked(shot, marks, backup_dir)
+            return self._convert_and_flatten_locked(shot, marks, backup_dir)
+
+    def revert(self, shot_id: str) -> CaptureShot:
+        """Restore the newest backup over the original (the backup is kept); re-bake saved marks."""
+        with CAPTURE_FILE_LOCK:
+            shot = self.get_shot(shot_id)
+            marks = self.load_shot_annotations(shot_id)
+            source = self._latest_backup_for(shot)
+            if source is None:
+                raise NotFoundError("no backup for this capture")
+            original = shot.original_path
+            tmp = original.with_name(original.name + TMP_SUFFIX)
+            try:
+                shutil.copyfile(source, tmp)
+                os.replace(tmp, original)
+            except OSError as exc:
+                self._unlink_if_file(tmp)
+                log.warning("capture.revert_failed", shot_id=shot.id, error=str(exc))
+                raise CaptureFlattenConflictError(f"could not restore the backup: {exc}") from exc
+            probe = self._annotate.probe(original)
+            annotated_path, sidecar_path = self._rebake_annotated(original, marks)
+            now = self._now()
+            with self._uow_factory() as uow:
+                current = uow.capture_shots.get(shot.id) or shot
+                updated = replace(
+                    current,
+                    width=probe.width,
+                    height=probe.height,
+                    file_size=probe.file_size,
+                    annotated_path=annotated_path,
+                    sidecar_path=sidecar_path,
+                    updated_at=now,
+                )
+                uow.capture_shots.save(updated)
+            log.info("capture.reverted", shot_id=shot.id, backup=str(source))
+            return updated
+
+    def _flatten_png_locked(
+        self,
+        shot: CaptureShot,
+        marks: Sequence[Annotation],
+        backup_dir: Path | None,
+    ) -> CaptureShot:
+        """FLATTEN_SEQUENCE steps 3-8; the caller holds CAPTURE_FILE_LOCK."""
+        original = shot.original_path
+        tmp = original.with_name(original.name + TMP_SUFFIX)
+        backup: Path | None = None
+        step = 3
+        try:
+            if backup_dir is not None:
+                self._annotate.ensure_dir(backup_dir)
+                backup = backup_path_for(backup_dir, original.stem, self._now())
+                shutil.copyfile(original, backup)
+            step = 4
+            self._annotate.bake(original, marks, tmp, "png")
+            step = 5
+            os.replace(tmp, original)
+        except Exception as exc:
+            # FLATTEN_ROLLBACK: nothing written by this call survives; the original is untouched.
+            self._unlink_if_file(tmp)
+            self._unlink_if_file(backup)
+            log.warning("capture.flatten_failed", shot_id=shot.id, step=step, error=str(exc))
+            if isinstance(exc, OSError):
+                raise CaptureFlattenConflictError(f"flatten failed at step {step}: {exc}") from exc
+            raise
+        for sibling in _annotated_siblings(original):
+            self._unlink_if_file(sibling)
+        self._unlink_if_file(_sidecar_for(original))
+        probe = self._annotate.probe(original)
+        now = self._now()
+        with self._uow_factory() as uow:
+            current = uow.capture_shots.get(shot.id) or shot
+            updated = replace(
+                current,
+                annotated_path=None,
+                sidecar_path=None,
+                width=probe.width,
+                height=probe.height,
+                file_size=probe.file_size,
+                updated_at=now,
+            )
+            uow.capture_shots.save(updated)
+        log.info("capture.flattened", shot_id=shot.id, backup=str(backup) if backup else "none")
+        return updated
+
+    def _convert_and_flatten_locked(
+        self,
+        shot: CaptureShot,
+        marks: Sequence[Annotation],
+        backup_dir: Path | None,
+    ) -> CaptureShot:
+        """CONVERT_ON_APPLY: a new PNG copy carries the marks and is flattened; source untouched."""
+        source = shot.original_path
+        target = self._convert_target(source)
+        target_tmp = target.with_name(target.name + TMP_SUFFIX)
+        sidecar = _sidecar_for(target)
+        new_id: str | None = None
+        # Backups of the target stem that predate this call; any other one it leaves is an orphan.
+        prior_backups = self._target_backups(backup_dir, target)
+        try:
+            self._annotate.bake(source, [], target_tmp, "png")
+            os.replace(target_tmp, target)
+            probe = self._annotate.probe(target)
+            with self._uow_factory() as uow:
+                new_shot = self._upsert_shot(uow, target, probe, self._now(), shot.source)
+            new_id = new_shot.id
+            sidecar.write_text(
+                json.dumps({"version": SIDECAR_VERSION, "annotations": annotations_to_wire(marks)}),
+                encoding="utf-8",
+            )
+            result = self._flatten_png_locked(new_shot, marks, backup_dir)
+        except Exception as exc:
+            self._unlink_if_file(target_tmp)
+            self._unlink_if_file(target)
+            self._unlink_if_file(sidecar)
+            for orphan in self._target_backups(backup_dir, target) - prior_backups:
+                self._unlink_if_file(orphan)
+            if new_id is not None:
+                with self._uow_factory() as uow:
+                    uow.capture_shots.delete(new_id)
+            log.warning(
+                "capture.convert_failed", shot_id=shot.id, target=str(target), error=str(exc)
+            )
+            if isinstance(exc, OSError):
+                raise CaptureFlattenConflictError(f"could not convert to PNG: {exc}") from exc
+            raise
+        log.info(
+            "capture.converted",
+            shot_id=shot.id,
+            from_path=str(source),
+            to_path=str(target),
+            new_id=result.id,
+        )
+        return result
+
+    @staticmethod
+    def _target_backups(backup_dir: Path | None, target: Path) -> set[Path]:
+        """Backups in `backup_dir` that belong to `target`'s stem (BACKUP_NAME)."""
+        if backup_dir is None or not backup_dir.is_dir():
+            return set()
+        pattern = _backup_pattern(target.stem)
+        return {p for p in backup_dir.iterdir() if p.is_file() and pattern.fullmatch(p.name)}
+
+    def _convert_target(self, source: Path) -> Path:
+        """CONVERT_NAME: `{stem}-converted.png`, then `_2`, `_3` … when the file or a row exists."""
+        stem = f"{source.stem}{CONVERT_STEM_TAG}"
+        candidate = source.with_name(f"{stem}.png")
+        index = 2
+        with self._uow_factory() as uow:
+            while candidate.exists() or uow.capture_shots.get_by_path(candidate) is not None:
+                candidate = source.with_name(f"{stem}_{index}.png")
+                index += 1
+        return candidate
+
+    def _rebake_annotated(
+        self,
+        original: Path,
+        marks: Sequence[Annotation],
+    ) -> tuple[Path | None, Path | None]:
+        """ANNOTATED_CONSISTENCY after a revert; never calls the locked annotate_and_save."""
+        siblings = _annotated_siblings(original)
+        if not marks:
+            for sibling in siblings:
+                self._unlink_if_file(sibling)
+            # The row reports no sidecar, so a stale (empty-list) one must not stay on disk.
+            self._unlink_if_file(_sidecar_for(original))
+            return None, None
+        output_format = self._annotated_format()
+        target = annotated_path_for(original, output_format)
+        self._annotate.bake(original, marks, target, output_format)
+        for sibling in siblings:
+            if sibling != target:
+                self._unlink_if_file(sibling)
+        return target, _sidecar_for(original)
+
+    def _latest_backup_for(self, shot: CaptureShot) -> Path | None:
+        # Backups are only ever made for PNG originals, so another format never offers one.
+        if shot.original_path.suffix.lower() != FLATTEN_PNG_SUFFIX:
+            return None
+        try:
+            backup_dir = resolve_backup_dir(self._backup_dir_raw(), self._inbox())
+        except CaptureFlattenConflictError:
+            return None
+        return latest_backup_in(backup_dir, shot.original_path.stem)
+
+    def _backup_dir_if_enabled(self) -> Path | None:
+        enabled = self._settings.get("capture", "flatten_backup")
+        if not isinstance(enabled, bool):
+            raise ValidationError("capture.flatten_backup must be a boolean")
+        if not enabled:
+            return None
+        return resolve_backup_dir(self._backup_dir_raw(), self._inbox())
+
+    def _backup_dir_raw(self) -> str:
+        raw = self._settings.get("capture", "backup_dir")
+        if not isinstance(raw, str):
+            raise ValidationError("capture.backup_dir must be a string")
+        return raw
+
+    def _annotated_format(self) -> AnnotatedFormat:
+        raw = self._settings.get("capture", "annotated_format")
+        for candidate in ANNOTATED_FORMATS:
+            if raw == candidate:
+                return candidate
+        allowed = ", ".join(ANNOTATED_FORMATS)
+        raise ValidationError(f"capture.annotated_format must be one of {allowed}")
+
+    def _now(self) -> datetime:
+        return self._as_utc(self._clock())
+
+    @staticmethod
+    def _as_utc(stamp: datetime) -> datetime:
+        if stamp.tzinfo is None:
+            return stamp.replace(tzinfo=UTC)
+        return stamp.astimezone(UTC)
+
+    def _inbox(self) -> Path:
+        raw = self._settings.get("capture", "inbox_dir")
+        if not isinstance(raw, str) or raw.strip() == "":
+            raise ValidationError("capture.inbox_dir must be a non-empty string")
+        path = Path(raw).expanduser().resolve()
+        return path
+
+    def _require_inbox_file(self, path: Path, inbox: Path) -> Path:
+        if not isinstance(path, Path):
+            raise InboxPathError("path must be a Path")
+        if not path.is_absolute():
+            raise InboxPathError("path must be an absolute Path")
+        try:
+            resolved = path.resolve()
+            resolved.relative_to(inbox)
+        except (ValueError, OSError) as exc:
+            raise InboxPathError("path is outside the capture inbox") from exc
+        if not resolved.is_file():
+            raise InboxPathError(f"{resolved} is not a file")
+        return resolved
+
+    def _unique_png(self, inbox: Path) -> Path:
+        stem = self._now().strftime(TIMESTAMP_FORMAT)
+        candidate = inbox / f"{stem}.png"
+        if not candidate.exists():
+            return candidate
+        index = 2
+        while True:
+            candidate = inbox / f"{stem}_{index}.png"
+            if not candidate.exists():
+                return candidate
+            index += 1
+
+    def _upsert_shot(
+        self,
+        uow: UnitOfWork,
+        resolved: Path,
+        probe: ImageProbe,
+        now: datetime,
+        source: CaptureSource,
+    ) -> CaptureShot:
+        existing = uow.capture_shots.get_by_path(resolved)
+        if existing is not None:
+            # The registering source wins over whatever the row already carries. The
+            # region picker writes its PNG into the inbox and registers it a moment
+            # later, so the inbox scanner can reach the file first and insert the row
+            # as CaptureSource.Scan; returning that row unchanged would leave every
+            # captured shot indistinguishable from a file the user dropped in by hand.
+            if existing.file_size == probe.file_size and existing.source == source:
+                return existing
+            updated = replace(
+                existing,
+                width=probe.width,
+                height=probe.height,
+                file_size=probe.file_size,
+                source=source,
+                updated_at=now,
+            )
+            uow.capture_shots.save(updated)
+            return updated
+        shot = CaptureShot(
+            id=str(uuid4()),
+            original_path=resolved,
+            annotated_path=None,
+            sidecar_path=None,
+            display_name=resolved.name,
+            width=probe.width,
+            height=probe.height,
+            file_size=probe.file_size,
+            source=source,
+            created_at=now,
+            updated_at=now,
+        )
+        uow.capture_shots.add(shot)
+        log.info("capture.registered", shot_id=shot.id, source=source.name)
+        return shot
+
+    def _transition_request(
+        self,
+        request_id: str,
+        next_status: CaptureRequestStatus,
+        *,
+        shot_id: str | None,
+    ) -> CaptureRequest:
+        with self._uow_factory() as uow:
+            request = uow.capture_requests.get(request_id)
+            if request is None:
+                raise NotFoundError(f"capture request {request_id} not found")
+            allowed = CAPTURE_REQUEST_TRANSITIONS[request.status]
+            if next_status not in allowed:
+                raise ConflictError(
+                    f"cannot transition capture request from {request.status.name}"
+                )
+            updated = replace(request, status=next_status, shot_id=shot_id)
+            uow.capture_requests.save(updated)
+            return updated
+
+    def _clamp_annotation(
+        self,
+        annotation: Annotation,
+        width: int,
+        height: int,
+    ) -> Annotation:
+        lo = ANNOTATION_CLAMP_MIN
+        if isinstance(annotation, ArrowAnnotation):
+            return replace(
+                annotation,
+                from_xy=(
+                    _clamp_int(annotation.from_xy[0], lo, width),
+                    _clamp_int(annotation.from_xy[1], lo, height),
+                ),
+                to_xy=(
+                    _clamp_int(annotation.to_xy[0], lo, width),
+                    _clamp_int(annotation.to_xy[1], lo, height),
+                ),
+            )
+        if isinstance(
+            annotation, (RectAnnotation, HighlightAnnotation, PixelateAnnotation, EraserAnnotation)
+        ):
+            return replace(
+                annotation,
+                x=_clamp_int(annotation.x, lo, width),
+                y=_clamp_int(annotation.y, lo, height),
+            )
+        if isinstance(annotation, TextAnnotation):
+            return replace(
+                annotation,
+                x=_clamp_int(annotation.x, lo, width),
+                y=_clamp_int(annotation.y, lo, height),
+            )
+        raise AnnotationValidationError(
+            f"unsupported annotation type: {type(annotation)!r}"
+        )
+
+    def _unlink_if_file(self, path: Path | None) -> None:
+        if path is None:
+            return
+        if path.is_file():
+            path.unlink()

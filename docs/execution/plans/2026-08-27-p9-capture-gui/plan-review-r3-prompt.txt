@@ -1,0 +1,41 @@
+Perform /plan-critical-review for p9-capture-gui (Round 3 of 3 — plan-review cap).
+
+Read and follow `.agent/workflows/plan-critical-review.md`.
+Use `.agent/context/handoffs/REVIEW-TEMPLATE.md`.
+
+## Write scope
+
+Update ONLY:
+`.agent/context/handoffs/2026-08-27-p9-capture-gui-plan-critical-review.md`
+
+Keep Round 1 findings and Round 2 text. Append a **Round 3** section. Frontmatter:
+
+- date: "2026-08-27"
+- review_mode: "plan"
+- target_plan: "docs/execution/plans/2026-08-27-p9-capture-gui/implementation-plan.md"
+- verdict: "approved" or "changes_required"
+- findings_count: <integer; 0 if approved>
+- round: 3
+- template_version: "2.1"
+- requested_verbosity: "standard"
+- agent: "gpt-5.6-sol"
+- dispatch_id: "p9-capture-gui-plan-r3"
+
+`dispatch_id` MUST equal `-DispatchId` `p9-capture-gui-plan-r3`.
+
+Do NOT edit product code, tests, or plan files. SIGN 1: no pytest/vitest/npm/playwright. Static evidence only.
+
+## Round 2 blocker P-1 — claimed fixed
+
+The correction log now contains a one-to-one `updated` / `confirmed-consistent` row for every `file:line` in `C:/Temp/av-kit/plan-r1-blast-radius.txt` (47 hits + F5 zero-hit). Duplicate: `C:/Temp/av-kit/plan-r1-per-hit-dispositions.md`. See `## Corrections Applied — 2026-08-27 (Round 2 → Round 3)` in the review file.
+
+**PR-6 must pass this round.** Then independently re-verify Round 1 High findings 1–5 against live plan artifacts (do not skip substantive review because Round 2 was procedural-only).
+
+## Review targets
+
+- docs/execution/plans/2026-08-27-p9-capture-gui/implementation-plan.md
+- docs/execution/plans/2026-08-27-p9-capture-gui/task.md
+- docs/execution/plans/2026-08-27-p9-capture-gui/named-sets.json
+- all five assert-*.ps1 in that folder
+
+If approved, findings_count must be 0.

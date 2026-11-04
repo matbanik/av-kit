@@ -1,0 +1,31 @@
+{
+  "route": "machine",
+  "loop_id": "p11q-execution-review-2026-09-26",
+  "producer": "codex-api-p11q-implementer",
+  "target_plan": "docs/execution/plans/2026-09-26-p11-queue-pages/implementation-plan.md",
+  "round": 3,
+  "verdict": "approved",
+  "plan_sha256": "36fa3e8122ef111bdc07ae28b3be2ee9eac0d14d2f59e2493e5bbac5acfdc6ec",
+  "report_path": ".agent/context/handoffs/2026-09-26-p11-queue-pages-implementation-critical-review.md",
+  "report_sha256": "f832906b495310b160f2d1835201308f865dd6fed4581ea834965d225a474ee4",
+  "raw_verdict_path": "C:/Temp/av-kit/dispatch/p11q-astra-r3/final.md",
+  "raw_verdict_sha256": "8342faa06bfcc8aa77303722064343f382eb863dfcaefd0440d5919bd402fe58",
+  "status_path": "C:/Temp/av-kit/dispatch/p11q-astra-r3/status.json",
+  "status_sha256": "00fef07a61588274d8cf7e219f2c1d363a5379ff8003a3e4bc76b466269c1667",
+  "effective_cap": 6,
+  "author_vendor": "openai",
+  "reviewer_vendor": "openai",
+  "goal_anchor": "Deliver Session 24 queue-page composition for MEU-52, MEU-53, and MEU-54 while preserving existing queue behavior, caller IDs, request contracts, and scroll geometry.",
+  "vendor_exception": {
+    "source": "USER_EXPLICIT",
+    "decision_path": "docs/execution/plans/2026-09-26-p11-queue-pages/human-review-decision.md",
+    "decision_sha256": "929b00bf2e2bdccb7f565524d40bbc631dda94f4a0bd5ea25ab6d08eeb482f74",
+    "trusted_user_message_reference": "human approved review by codex cli gpt-6-astra high model",
+    "target_plan": "docs/execution/plans/2026-09-26-p11-queue-pages/implementation-plan.md",
+    "loop_id": "p11q-execution-review-2026-09-26",
+    "model": "gpt-6-astra",
+    "effort": "high",
+    "author_vendor": "openai",
+    "reviewer_vendor": "openai"
+  }
+}

@@ -1,0 +1,369 @@
+---
+description: Structured execution + meta-reflection workflow for daily build sessions. Ensures TDD discipline, handoff quality, and iterative prompt improvement.
+---
+
+# Execution Session Workflow
+
+Executable examples follow `.agent/docs/output-evidence-policy.md`; that file is the
+sole authority for native RTK versus exact `rtk proxy` routing.
+
+Use this workflow at the start of each build session. It orchestrates three phases: **Plan → Execute → Reflect** — creating a feedback loop that makes each successive session faster and higher quality.
+
+**EGRESS_PRECEDENCE.** External review dispatch is mandatory unless PROFILE C1/C2/C3b or E5 forbids sending work to an external provider; then stop for B4's named human reviewer. That stop is **not** SIGN 1. Self-review remains prohibited. `plan_to_exec_gate: human` is a separate post-`approved` pause. Missing CLI (`can_dispatch_external_reviewer == no`) is **not** the same as forbidden egress: when egress is forbidden, do not prepare a provider web-prompt and do not request manual external submission.
+
+Artifact naming conventions:
+
+- `docs/execution/plans/{YYYY-MM-DD}-{project-slug}/implementation-plan.md`
+- `docs/execution/plans/{YYYY-MM-DD}-{project-slug}/task.md`
+- If a project is replanned on the same day, append `-v2`, `-v3`, etc. to the folder name.
+
+// turbo-all
+// NOTE: turbo-all sets SafeToAutoRun=true for non-destructive commands (rg, Get-Content, etc.).
+// It does NOT override AGENTS.md §Authority and Approval: "Never auto-commit." Git commit/push still requires explicit user direction.
+
+## Prerequisites
+
+- Read `PROJECT-PROFILE.md` first. Apply EGRESS_PRECEDENCE, D9_NO_BRANCH, and D6_ADOPTER_ARGV from those answers.
+- Read `AGENTS.md`
+- Read `.agent/context/current-focus.md` for active phase (D9=yes; optional when D9=no)
+- Read `.agent/context/meu-status.yaml` for MEU scope when D9=yes (see `.agent/skills/meu-status/SKILL.md`)
+
+## Context Tool Decision Gate (Before Planning or Execution)
+
+Before Step 1, follow `.agent/docs/context-tool-decision-gate.md`. Inventory Graphify,
+Graphify Research, and Headroom, flag eligible token-savings opportunities, and obtain
+the direct human decision before planning starts. Before Step 4, re-evaluate the
+execution scope; reuse the planning decision only when its recorded phase explicitly
+covers execution and eligibility has not changed. Otherwise obtain a new
+`USER_EXPLICIT` `use` or `accepted_loss` decision. Record `not_applicable` when no tool
+is eligible.
+
+## Steps
+
+### 1. Create Project Plan
+
+Run the `/create-plan` workflow (`.agent/workflows/create-plan.md`). This replaces per-session prompt drafting — the agent discovers what's done, identifies what's next, runs a spec-sufficiency gate, resolves thin specs via research when needed, and scopes a coherent project.
+
+### 2. Check Previous Reflections
+
+Read the most recent reflection file from `docs/execution/reflections/` (sort by `LastWriteTime` descending to find the latest, since multiple same-day reflections sort by slug). Apply any rules from its "Next Session Design Rules" section to today's planning. Call out which rules you're applying so the human can verify.
+
+### 3. Planning Phase (PLANNING Mode)
+
+> Steps 1-3 happen as part of the `/create-plan` workflow.
+> Tool names below are capability placeholders — see `.agent/docs/harness-profiles.md` for the per-harness substitution table (`read_tool`, `shell_tool`, `end_turn_signal`).
+
+The orchestrating agent will:
+
+1. Enter **PLANNING mode** (mode marker only — a `task_boundary` call on harnesses that have one, otherwise track mode in your own working notes; see harness-profiles.md)
+2. Discover progress from handoffs + the MEU status SSOT using the canonical exact-receipt form for the `tools/meu_status.py stats` argv
+3. Scope the next project from pending build-plan MEUs
+4. Resolve under-specified requirements via local canonical docs + targeted web research before finalizing the FIC
+5. Generate `implementation-plan.md` and `task.md` in the project folder
+6. Auto-dispatch `/plan-critical-review` via the independent-reviewer chain (configured vendor-distinct reviewer → Mat (PROFILE B; no second machine rung); `.agent/docs/model-routing.md`)
+7. Loop corrections until APPROVED (or HARD STOP at the 3-round cap, presented as a Decision Brief — recommendation first — per `create-plan.md` §5 round-cap block and `.agent/docs/human-decision-protocol.md` §5)
+8. On `approved`: continue to Step 4 per your harness's `plan_to_exec_gate` flag (`.agent/docs/harness-profiles.md`) — `reviewer-auto` continues immediately; `plan_to_exec_gate: human` (the primary-driver default) ends the turn and waits for the user's explicit next chat message before Step 4 (`create-plan.md` §5c, `GUARDRAILS.md` SIGN 1)
+
+> **Note:** The `/create-plan` workflow now auto-dispatches plan critical review.
+> The human no longer needs to manually invoke `/plan-critical-review`.
+> See `create-plan.md` Step 5 for the auto-review loop details.
+
+**Plan Location** (established during `/create-plan` workflow):
+
+The `/create-plan` workflow writes `implementation-plan.md` and `task.md` directly to `docs/execution/plans/{YYYY-MM-DD}-{project-slug}/`. This is the single source of truth — all revisions happen here. No copy step is needed.
+
+> **Why here?** Brain folders are per-conversation and not version-controlled. Writing directly to `docs/execution/plans/` preserves plans in git and allows cross-session comparison of planning quality.
+
+### 4. Execute the Approved Plan
+
+Follow the plan **exactly**. The prompt contains:
+- **Session Goal** — what success looks like
+- **Phase A** — any scaffold or infrastructure setup
+- **Phase B** — MEU TDD work (FIC → Red → Green → Quality → Handoff)
+- **Phase C** — Auto-dispatched external-reviewer validation (Codex primary; chain in `.agent/docs/model-routing.md`)
+- **Guardrails** — hard scope limits
+
+Before each row, validate its `depends_on` IDs against completed task rows. Execute its
+`context_strategy` as follows: `shared` continues normally; `compact_continue` verifies
+the named durable output, compacts, then re-reads `task.md` followed by that output;
+`isolated` uses a fresh worker only when the resolved harness exposes an authorized
+`fresh_worker` mechanism. Otherwise it degrades to `compact_continue`. Metadata is not
+permission to spawn. Do not reload completed independent rows wholesale after recovery.
+
+> **In-harness delegation.** When `fresh_worker` resolves (Cursor `.cursor/agents/` or Claude Code
+> `.claude/agents/`), route the `isolated`/mechanical/verification decision through
+> [`.agent/skills/subagent-delegation/SKILL.md`](../skills/subagent-delegation/SKILL.md) — it owns
+> the detection, decision table (incl. the never-delegate categories), dispatch-prompt contract,
+> and result-acceptance rules for `av-kit-builder`/`av-kit-verifier`.
+
+#### After compaction
+
+1. Re-read the canonical project `task.md`.
+2. Read the current row's relevant durable output.
+3. Load only the next unchecked row's direct inputs; do not reconstruct state from the
+   transcript or reload completed independent rows wholesale.
+
+Key rules during execution:
+
+> ⚠️ **P0 Terminal Pre-Flight** — Before the first shell command (your harness `shell_tool`, e.g. `run_command`/`Bash`) in this phase, invoke
+> `.agent/skills/terminal-preflight/SKILL.md` and confirm all 4 checklist items.
+> See `AGENTS.md §Output and Evidence` for the redirect pattern.
+- Follow `.agent/workflows/tdd-implementation.md` for all TDD work
+- Follow `.agent/workflows/meu-handoff.md` for handoff creation
+- **Execute all MEUs in the approved project plan**, completing each MEU's TDD cycle before starting the next
+- **Keep the project handoff set explicit**: `implementation-plan.md` and `task.md`
+  list `.agent/context/handoffs/{date}-{project-slug}-{MEU-ID}-handoff.md` for each
+  product MEU. A non-product `meus: []` project lists one project handoff at
+  `.agent/context/handoffs/{date}-{project-slug}-handoff.md`. The execution review
+  loads that complete set instead of only the latest handoff.
+- **Keep review continuity explicit**: for a given project plan folder, maintain one rolling `-plan-critical-review.md` file for plan review passes and one rolling `-implementation-critical-review.md` file for project-level implementation critique/recheck passes
+- If a new spec gap appears mid-execution, stop coding, return to planning/research, update the plan with the source-backed resolution, and get approval on the revised plan before continuing
+- **Do not auto-commit** — propose conventional commit messages to the human instead; proposed messages must not include AI attribution trailers or generated-by statements such as `Co-Authored-By: Claude`
+- **Recite remaining work (anti-drift, Manus pattern):** after each MEU handoff AND at the start of the closeout (Step 5), re-read `task.md` and restate the still-unchecked (`[ ]`/`[/]`) rows in one line before starting the next item. This pushes the live task state into recent attention so the closeout list does not drift out of context as tool output accumulates.
+
+### 4b. Pre-Handoff Self-Review Protocol
+
+> **Why this step exists**: Analysis of 7 critical review handoffs (37+ review passes) revealed 10 recurring patterns that caused 4-11 passes per project. This protocol catches those patterns before submission, targeting 2-3 passes.
+
+Before declaring any MEU "ready for review" or writing completion claims in the handoff:
+
+1. **Claim-to-State Verification** (Pattern: claim-to-state drift, 7/7 reviews)
+   - For each AC marked "met", `rg` the actual code for the specific behavior. Quote file:line.
+   - If the handoff says "all N ACs covered", verify every single one against file state — not memory.
+   - If the residual risk section acknowledges known gaps, the conclusion MUST NOT say "implementation complete."
+
+2. **Evidence Freshness — MUST BE LAST** (Pattern: evidence staleness, 6/7 reviews)
+   - This step must be the LAST action before submitting the handoff. Running it before fix-generalization or cross-doc sweeps creates the staleness it aims to prevent.
+   - Run the selected D6 static checks, affected targeted checks, then one fresh full scoped gate after all input-changing corrections. Reuse only that final full run when complete input identity is independently unchanged; do not repeat it merely for a phase boundary.
+   - **Evidence Command Manifest**: Record the EXACT commands used (verbatim, including all flags and scope), not just results. Reject evidence from cached/partial runs (`--lf`, `-k`, unit-only markers when integration should also run).
+   - Paste the fresh output counts into the handoff. Counts from earlier in the session are stale.
+
+3. **Fix-General-Not-Specific** (Pattern: fix-specific-not-general, meta-pattern)
+   - When fixing any finding, categorize it (e.g., "missing error mapping", "stale evidence count").
+   - Run `rg` for the same pattern across all similar files/routes/modules.
+   - Document: "Checked N similar locations, found M additional instances, fixed all."
+
+4. **Error Mapping Sweep** (Pattern: error mapping gaps, 3/7 reviews)
+   - For API routes: verify every write-adjacent route maps `NotFoundError → 404`, `BusinessRuleError → 409`, `ValueError → 422`.
+   - For MCP tools: verify every handler maps domain exceptions to proper MCP error responses.
+
+5. **Cross-Reference Sweep** (Pattern: canonical doc contradiction, 3/7 reviews)
+   - If you changed an architectural pattern (e.g., token model, auth flow, DI wiring), use the canonical exact-evidence search receipt across `docs/build-plan/`, `docs/execution/`, and `.agent/`.
+   - All references must agree with the new pattern. Update any that don't.
+
+6. **Project Artifact Completeness** (Pattern: artifact incompleteness, 6/7 reviews)
+   - Verify `task.md` items match actual completion state.
+   - Verify the SSOT drift check passes by routing the `tools/meu_status.py render --check` argv through the canonical exact-receipt form.
+   - Do NOT create reflection/metrics artifacts until AFTER validation completes.
+
+7. **Pre-Completion Sweep** (Pattern: count-bearing string drift, meta-review RULE-2)
+   - Search all count-bearing strings (test counts, "passing", "FAIL_TO_PASS") across ALL touched handoffs/docs using an exact unfiltered receipt.
+   - Cross-check every file listed in the handoff evidence table exists on disk: `Test-Path <path>` for each.
+   - Run `pre-handoff-review` SKILL (`.agent/skills/pre-handoff-review/SKILL.md`) — 10-pattern self-check.
+   - Only after all three sub-steps pass: mark complete and set `corrections_applied`.
+
+> [!IMPORTANT]
+> **Compact at the MEU boundary (after the handoff is on disk).** Once this MEU's handoff is written and the self-review above passes — and *only* then — compact the transcript via your harness's `context_compaction` capability (`.agent/docs/harness-profiles.md`) before starting the next MEU. The handoff + `task.md` ARE the durable state, so compaction loses nothing that matters: **compaction is lossy, files are not.** Compact proactively here while headroom remains (good summary) rather than letting auto-compaction fire at the limit (degraded summary). Re-read `task.md` afterward before acting. If `context_compaction` is `none`, skip. See [`.agent/docs/context-compression.md`](../docs/context-compression.md) §Context Compaction.
+
+### 4c. Auto-Dispatch Execution Critical Review
+
+> [!IMPORTANT]
+> **After Step 4b completes, the agent auto-dispatches `/execution-critical-review`**
+> to an external CLI reviewer and loops until APPROVED or the review ledger stops it (then the
+> pause-and-`continue` protocol below applies). The human no longer needs to manually invoke
+> `/execution-critical-review`.
+
+Follow `.agent/skills/cli-dispatch/SKILL.md` to dispatch `/execution-critical-review`:
+
+**Reviewer:** the chain is defined in exactly one place — [`.agent/docs/model-routing.md`](../docs/model-routing.md) §Independent-reviewer chain — and is **not** restated here. A restatement is a second authority: this list previously carried a third machine rung (a headless same-vendor reviewer "flagged as same-vendor") for weeks after `model-routing.md` removed it and `GUARDRAILS.md` prohibited it, so an execution review that read only this file was routed into a self-review the other two files forbade. Read the chain there; the only rung-related fact that belongs to *this* workflow is the round cap below.
+
+When every machine rung is rate-limited or unavailable, this loop does not fall through to another model. It takes the human-handoff path in [`cli-dispatch/SKILL.md`](../skills/cli-dispatch/SKILL.md) §0: write the review prompt for manual external submission and stop at a human gate. Never self-review, and never substitute a reviewer on the author's own vendor.
+
+**Before the first round**, open the loop once (the wrapper never does this):
+`rtk proxy uv run python tools/review_ledger.py begin --loop-id exec-<plan-slug> --review-mode execution --producer <builder agent> --goal-anchor "<one sentence: what this execution was for>" --ac-file docs/execution/plans/<plan>/implementation-plan.md`
+— the goal sentence must also appear verbatim in every review prompt (the wrapper's `evaluate --payload` refuses a prompt that omits it, before inference), and the reviewer writes its rolling review file under `C:/Temp/av-kit/dispatch/<label>/`, which you copy into `handoffs/` after the dispatch (a repository write during a review dispatch is a conduct violation).
+
+**Correction Loop (pause-and-`continue` protocol, 2026-09-21):**
+- If `changes_required`: read findings, apply code/test corrections, re-run quality gates, re-dispatch
+  with the same `--LoopId` — the ledger numbers the rounds; nothing to refresh or abort.
+- If `approved`: **continue immediately to Step 5 in the same turn** — the 4c→5 boundary is NOT a stop point
+- **If the wrapper exits 9 (the ledger refused the round)**: a stop fired — round budget
+  (`ROUND_BUDGETS`, execution = 6), token budget (`TOKEN_BUDGETS`), a mechanism at `MECHANISM_LIMIT`,
+  scaffolding, or instrument drift. The ledger printed `STOP_READOUT`: intent first, the exact
+  `continue` command last. What happens next depends only on who is present:
+  - **attended** — a human is in this chat: show the `STOP_READOUT` verbatim, then frame it as a
+    Decision Brief per `.agent/docs/human-decision-protocol.md` §5 — the recommendation first
+    (`continue` with the rounds the readout needs, stop the loop, or hand the blocking finding to
+    the human as its own decision), the alternatives compared against it, reversibility, and the
+    default if unanswered — **end the turn**, and wait for the human's sentence. The readout text
+    itself is never edited (`review_ledger.py` prints it; the brief is the agent's framing around
+    it). Then record it — their words, never a paraphrase — and re-dispatch:
+    `rtk proxy uv run python tools/review_ledger.py continue --loop-id <loop-id> --rounds 1 [--tokens N] [--relieve-mechanism SLUG] --said "<the human's sentence, 20+ non-ws chars>" --by <name> --at <ISO8601>`
+    `continue` is **uncapped** and lifts every stop active at that moment; the loop then runs until
+    `approved` or the next stop, where the same exchange happens again. One human sentence per stop.
+  - **unattended** — no human turn is available (an automated or scheduled run, a session that cannot
+    ask): the run **ends** with the `STOP_READOUT` as its last output. That is the protection working:
+    the stops exist so an unattended loop cannot spend API budget forever, and nothing else. Never
+    synthesize a `continue`, never edit the ledger, never open a fresh loop to route around a stop.
+
+> [!CAUTION]
+> **Steps 4 → 4b → 4c → 5 → 6 → 7 are ONE continuous turn — there is no seam.** The `approved` verdict and writing the reflection/metrics belong to the same pass; the boundary between them is NOT a stopping point, NOT a "natural pause", and NOT a place to offer the user a choice. The reflection and metrics are reversible work inside an already-approved plan and need no permission (`AGENTS.md` §Authority and Approval). **The following are VIOLATIONS, not courtesies** — if you catch yourself composing any of them, that urge is the bug:
+> - ❌ "Want me to continue with the reflection/closeout, or handle it in a separate session?"
+> - ❌ "Implementation is approved — shall I proceed to the reflection?"
+> - ❌ "This looks like a good stopping point. Let me know if you'd like me to continue."
+> - ❌ Any hand-back after a milestone (review approved, gate passed) that is not one of the four sanctioned outcomes.
+>
+> The ONLY sanctioned turn-enders are the four outcomes in `AGENTS.md` §Execution Contract: DONE, review cap, reviewer unavailable, human decision; compaction continues, and a necessary hand-back without compaction belongs to human decision.
+
+> [!CAUTION]
+> **Do NOT auto-commit after execution review approval.** Present proposed commit
+> messages to the human and wait for explicit commit direction. Do not include
+> AI attribution trailers or generated-by statements in proposed commit text.
+
+**Edge cases** (same as `create-plan.md` §5e):
+- Reviewer asks questions → `human-decision-protocol.md` §2–§4 (precedent sweep, research, obviousness test): auto-answer and log, or HARD STOP with a Decision Brief (recommendation first) for the human
+- Rate limit mid-loop → fallback reviewer or HARD STOP with timer
+- Session crash → review file on disk is the resumption checkpoint
+
+### 5. Meta-Reflection (Post-Execution)
+
+After validation has completed for the project's MEU handoff set, create the reflection file at `docs/execution/reflections/{YYYY-MM-DD}-{project-slug}-reflection.md`.
+
+> **Start from** [`docs/execution/reflections/TEMPLATE.md`](file:///P:/av-kit/docs/execution/reflections/TEMPLATE.md) (v2.0)
+
+Structure the reflection with these sections:
+
+#### 5a. Execution Trace
+Answer 12 structured questions across three logs:
+- **Friction Log** (5 questions): What was slow, ambiguous, unnecessary, missing, improvised?
+- **Quality Signal Log** (3 questions): Which tests caught real bugs, which were trivial, did static analysis add value?
+- **Workflow Signal Log** (4 questions): Was the FIC useful, was the handoff right-sized, how many tool calls, and which rows were delegated to a subagent (harness + model) and did any delegated result need rework?
+
+#### 5b. Pattern Extraction
+From the friction log, categorize findings into:
+- **Patterns to KEEP** — 2–3 practices that worked well
+- **Patterns to DROP** — 1–2 practices that were ceremony without payoff
+- **Patterns to ADD** — 1–2 gaps that caused problems
+- **Calibration Adjustment** — was the time estimate accurate?
+
+#### 5c. Next Session Design Rules
+Write 3–5 concrete rules for the next session's plan, formatted as:
+```
+RULE-{N}: {description}
+SOURCE: {which signal led to this}
+EXAMPLE: {before/after}
+```
+
+#### 5d. Next Session Outline
+Write a 10-line outline for the next session's plan:
+- Which MEUs to target
+- What scaffold changes are needed
+- Which patterns from today's reflection to bake in
+- Codex validation scope
+
+#### 5e. Update Metrics
+
+Append a row to `docs/execution/metrics.md` using the existing table format:
+
+```markdown
+| {YYYY-MM-DD} | MEU-{N} | {count} | {duration} | {count} | {count} | {X}/7 | {N}% | {duration} | {notes} |
+```
+
+The columns are: Date, MEU(s), Tool Calls, Time to First Green, Tests Added, Codex Findings, Handoff Score (X/7), Rule Adherence (%), Prompt→Commit (min), Notes.
+
+### 6. Notify Human
+
+> [!CAUTION]
+> **Completion gate + recency anchor.** Before notifying, read (your harness `read_tool`) `task.md` and verify every row is `[x]` (or a valid `[B]`). If any row is `[ ]` or `[/]`, complete it first — do not skip, do not defer to "a separate session". Reaching this step with unchecked rows does NOT authorize a stop; it authorizes *finishing them*. The only sanctioned turn-enders remain the four outcomes in `AGENTS.md` §Execution Contract.
+
+Present the human with:
+1. Completion summary (MEUs done, tests passing, proposed commit messages)
+2. Link to the reflection file for review
+3. Draft outline for the next session (used by `/create-plan` workflow)
+
+> [!NOTE]
+> **Prose is probabilistic; a hook is deterministic.** This gate and the Step 4c anti-stop rule *shift* the model's stop/continue choice but cannot guarantee it — the RLHF deference prior will sometimes win the sampling roll regardless of wording. The durable backstop is a **harness-level Stop hook** that blocks end-of-turn until `task.md` has no `[ ]`/`[/]` rows and the closeout artifacts exist on disk. That hook lives in the harness config (e.g. Antigravity's stop-hook, or Claude Code's `settings.json` hook — see `.agent/docs/harness-profiles.md` for your harness's mechanism), NOT in this workflow file — out of scope here, but the recommended complement. Guard it with a consecutive-block / `stop_hook_active` loop-breaker so a genuinely-blocked turn can still end.
+
+### 8. Completion Timestamp (Mandatory Exit Gate)
+
+> [!IMPORTANT]
+> **Context-rot guard.** Re-read this workflow file before proceeding.
+> If you are resuming after context truncation, this step will not exist in your context unless you re-read.
+
+The **very last line** of the agent's chat response must be the timestamp skill output, copied verbatim.
+
+This is a hard exit requirement for every `/execution-session` response, including checkpoints, Codex-validation handoffs, and final completion summaries.
+
+Required sequence:
+
+1. Re-read this workflow file to confirm all prior steps are complete.
+2. Invoke the timestamp skill by reading `.agent/skills/timestamp/SKILL.md`.
+3. Run the stamp script with the Windows redirect-to-file pattern:
+
+```powershell
+# // turbo
+rtk proxy uv run python .agent/skills/timestamp/scripts/stamp.py *> C:/Temp/av-kit/stamp.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/stamp.txt; exit $code
+```
+
+4. Read `C:/Temp/av-kit/stamp.txt` with the file viewer.
+5. Copy the file's single output line verbatim as the final chat line.
+
+No text, bullets, caveats, or sign-off may appear after the timestamp line.
+
+Compressed variant for checkpoints:
+
+```text
+Checkpoint saved for <project-slug>. Status: <blocked|ready-for-review|complete>. Key evidence: <one sentence>.
+🕐 Completed: YYYY-MM-DD HH:MM (TZ)
+```
+
+The compressed variant still requires invoking the timestamp skill and copying its real output verbatim for the last line.
+
+## Session Lifecycle Summary
+
+```
+┌─────────────────────────────────────────────────────┐
+│  /create-plan workflow                              │
+│  → reads handoffs, meu-status SSOT, build-plan      │
+│  → scopes project, generates plan                   │
+│  → auto-dispatches /plan-critical-review            │
+│  → loops corrections until APPROVED                 │
+└───────────┬─────────────────────────────────────────┘
+            ▼
+┌─────────────────────────────────────────────────────┐
+│  EXECUTION Mode (per MEU)                           │
+│  → TDD cycle → handoff → registry update            │
+│  → auto-dispatches /execution-critical-review       │
+│  → loops corrections until APPROVED                 │
+└───────────┬─────────────────────────────────────────┘
+            ▼
+┌─────────────────────────────────────────────────────┐
+│  Meta-reflection + session digest                   │
+│  → friction/quality/workflow logs                   │
+│  → pattern extraction → design rules                │
+│  → reflection saved to docs/execution/reflections/  │
+│  → session digest at .agent/context/sessions/       │
+│  → metrics updated                                  │
+└─────────────────────────────────────────────────────┘
+```
+
+## Exit Criteria
+
+- [ ] Plan archived to `docs/execution/plans/{YYYY-MM-DD}-{project-slug}/`
+- [ ] All project plan steps completed
+- [ ] Handoff artifact(s) created at `.agent/context/handoffs/`
+- [ ] MEU-status indexes updated for completed MEUs using canonical exact receipts for the target-bound `tools/meu_status.py update MEU-{N} approved` and `tools/meu_status.py render` argv, plus `.agent/context/current-focus.md`
+- [ ] Reflection file created at `docs/execution/reflections/`
+- [ ] Metrics table updated
+- [ ] Session digest created at `.agent/context/sessions/{conversation-id}/digest.md`
+- [ ] Proposed commit messages presented to human (do NOT auto-commit; no AI attribution trailers)
+
+## Final validation and evidence binding
+
+At H1, complete input-changing updates, run the D6 static/targeted ladder and one fresh
+full gate on the final review state, then promote evidence.v1 observations into the
+handoff. Existing fresh full evidence avoids a redundant run only when independently
+verified complete input identity is unchanged. Corrections changing those inputs require
+fresh full validation before re-review. Partial, cached and snapshot-only results do not
+count. Completion-preflight checks full evidence, all artifacts and independent approval;
+the four outcomes are done, review cap, reviewer unavailable and human decision.

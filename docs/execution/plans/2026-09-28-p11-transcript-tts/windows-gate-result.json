@@ -1,0 +1,79 @@
+{
+  "schema": "s25-windows-gate.v1",
+  "tested_commit": "c315640d05cc7ddf8293c8f0b64733c209bb0028",
+  "clean_tree": true,
+  "lockfile_sha256": "A86D9A42C6CBD98705E1720EDBD7666FED573581C07E21EA0F56379DC7332980",
+  "electron": "`-- electron@42.9.3",
+  "node": "v24.19.0",
+  "started": "2026-09-28T11:20:53.7703053-04:00",
+  "stages": [
+    {
+      "id": "npm-ci",
+      "argv": "npm --prefix ui ci",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s25-win-npm-ci.txt"
+    },
+    {
+      "id": "ui-types",
+      "argv": "npm --prefix ui run typecheck",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s25-win-ui-types.txt"
+    },
+    {
+      "id": "ui-lint",
+      "argv": "npm --prefix ui run lint",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s25-win-ui-lint.txt"
+    },
+    {
+      "id": "ui-tests",
+      "argv": "npm --prefix ui run test -- --reporter=json --outputFile=C:/Temp/av-kit/s25-win-vitest.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s25-win-ui-tests.txt"
+    },
+    {
+      "id": "ui-build",
+      "argv": "npm --prefix ui run build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s25-win-ui-build.txt"
+    },
+    {
+      "id": "ui-harness-build",
+      "argv": "pwsh -NoProfile -Command $env:AVKIT_PRIMITIVE_HARNESS_BUILD='1'; npm --prefix ui run build -- --outDir 'P:\\av-kit\\ui/out-e2e'; exit $LASTEXITCODE",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s25-win-ui-harness-build.txt"
+    },
+    {
+      "id": "ui-electron",
+      "argv": "npm --prefix ui run test:e2e -- --reporter=json --outputFile=C:/Temp/av-kit/s25-win-e2e.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s25-win-ui-electron.txt"
+    },
+    {
+      "id": "source-audit",
+      "argv": "rg -n -e TODO -e FIXME -e NotImplementedError -e transition-all -e bg-\\[# ui/src/renderer/src/features/transcript/TranscriptPage.tsx ui/src/renderer/src/features/tts/TTSPage.tsx ui/src/renderer/src/features/transcript/transcript-card.ts ui/src/renderer/src/features/transcript/TranscriptToolbar.tsx ui/src/renderer/src/features/tts/tts-run-bar.ts ui/src/renderer/src/components/queue/QueueCard.tsx ui/src/renderer/src/components/queue/QueueCardMenu.tsx ui/src/renderer/src/components/queue/QueueList.tsx ui/src/renderer/src/components/queue/QueueHeaderRow.tsx ui/src/renderer/src/components/ui/ProgressBar.tsx",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s25-win-source-audit.txt",
+      "note": "rg exit 1 (1 = no hits)"
+    },
+    {
+      "id": "width-audit",
+      "argv": "rg -n -e width: -e style=\\{\\{\\s*width ui/src/renderer/src/features/transcript/TranscriptPage.tsx ui/src/renderer/src/features/tts/TTSPage.tsx",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s25-win-width-audit.txt",
+      "note": "rg exit 1 (1 = no hits)"
+    }
+  ],
+  "vitest": {
+    "passed": 631,
+    "failed": 0,
+    "total": 631
+  },
+  "e2e": {
+    "expected": 103,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "finished": "2026-09-28T11:35:19.0475462-04:00"
+}

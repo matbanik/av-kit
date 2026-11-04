@@ -1,0 +1,135 @@
+{
+  "$id": "mcp-audit-summary.v1",
+  "description": "MEU-68 audit run summary (mcp-audit-summary.json). steps[].tool is pinned to the 8 COMPOUND_TOOLS.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "mode", "agent", "date", "commit", "server", "backend_version", "out_dir", "launch", "isolation", "discovery", "steps", "counts", "deltas", "cleanup", "consolidation", "exit_code"],
+  "properties": {
+    "schema": { "const": "mcp-audit-summary.v1" },
+    "mode": { "enum": ["container", "authoritative"] },
+    "agent": { "type": "string" },
+    "date": { "type": "string" },
+    "commit": { "type": "string" },
+    "server": { "type": "string" },
+    "backend_version": { "type": ["string", "null"] },
+    "out_dir": { "type": "string" },
+    "launch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "args", "env_keys", "initialized"],
+      "properties": {
+        "command": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "env_keys": { "type": "array", "items": { "type": "string" } },
+        "initialized": { "type": "boolean" }
+      }
+    },
+    "isolation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "paths", "ok", "error"],
+      "properties": {
+        "root": { "type": "string" },
+        "paths": { "type": "object", "additionalProperties": { "type": "string" } },
+        "ok": { "type": "boolean" },
+        "error": { "type": ["string", "null"] }
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "tools", "actions", "findings", "new", "removed", "ghost"],
+      "properties": {
+        "status": { "enum": ["pass", "fail"] },
+        "tools": { "type": "integer", "minimum": 0 },
+        "actions": { "type": "integer", "minimum": 0 },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "tool", "detail"],
+            "properties": {
+              "code": { "type": "string" },
+              "tool": { "type": "string" },
+              "detail": { "type": "string" },
+              "issue": { "type": "string" }
+            }
+          }
+        },
+        "new": { "type": "array", "items": { "type": "string" } },
+        "removed": { "type": "array", "items": { "type": "string" } },
+        "ghost": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "tool", "action", "phase", "verdict", "reason", "is_error", "observable", "error", "blocked_by", "env_bound", "ms"],
+        "properties": {
+          "id": { "type": "string" },
+          "tool": { "enum": ["avkit_download", "avkit_transcript", "avkit_tts", "avkit_models", "avkit_settings", "avkit_health", "avkit_convert", "avkit_capture"] },
+          "action": { "type": "string" },
+          "phase": { "enum": ["lifecycle", "functional"] },
+          "verdict": { "enum": ["pass", "fail", "skip_env", "blocked"] },
+          "reason": { "type": ["string", "null"] },
+          "is_error": { "type": ["boolean", "null"] },
+          "observable": { "type": ["string", "null"] },
+          "error": { "type": ["string", "null"] },
+          "blocked_by": { "type": ["string", "null"] },
+          "env_bound": {
+            "type": ["object", "null"],
+            "additionalProperties": false,
+            "properties": {
+              "member": { "type": "boolean" },
+              "signature_matched": { "type": "boolean" },
+              "env_proof": { "type": "boolean" }
+            }
+          },
+          "refusal": { "type": "object" },
+          "ms": { "type": "number", "minimum": 0 }
+        }
+      }
+    },
+    "counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pass", "fail", "skip_env", "blocked", "total"],
+      "properties": {
+        "pass": { "type": "integer", "minimum": 0 },
+        "fail": { "type": "integer", "minimum": 0 },
+        "skip_env": { "type": "integer", "minimum": 0 },
+        "blocked": { "type": "integer", "minimum": 0 },
+        "total": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "deltas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "delta"],
+        "properties": {
+          "key": { "type": "string" },
+          "delta": { "enum": ["REGRESSION", "KNOWN", "FIXED", "NEW", "REMOVED", "UNCHANGED"] },
+          "issue": { "type": "string" }
+        }
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ok", "residuals", "backend_exited", "root_removed"],
+      "properties": {
+        "ok": { "type": "boolean" },
+        "residuals": { "type": "array", "items": { "type": "string" } },
+        "backend_exited": { "type": "boolean" },
+        "root_removed": { "type": "boolean" }
+      }
+    },
+    "consolidation": { "const": "n/a" },
+    "exit_code": { "type": "integer", "minimum": 0 }
+  }
+}

@@ -1,0 +1,21 @@
+Set up the av-kit MCP server for Codex (project scope: this project only).
+
+Follow the steps in order. The server reads its own token from the app data folder, so no token goes in any config.
+
+1. Find: the config file is .codex/config.toml in the repository root.
+2. Back up: if .codex/config.toml exists, copy it to .codex/config.toml.avkit-backup-<UTC yyyyMMddTHHmmssZ> before changing it, with the current UTC time in that name. If it does not exist yet, skip the backup.
+3. Merge: change only the avkit entry and keep every other entry. Replace the [mcp_servers.avkit] and [mcp_servers.avkit.env] tables with the block below (add them if they are missing) and keep every other table.
+
+```toml
+[mcp_servers.avkit]
+command = "C:\\Program Files\\av-kit\\av-kit.exe"
+args = ["C:\\Program Files\\av-kit\\resources\\mcp-server\\index.mjs"]
+
+[mcp_servers.avkit.env]
+ELECTRON_RUN_AS_NODE = "1"
+AVKIT_APP_DATA = "C:\\Users\\Test User\\AppData\\Local\\av-kit"
+```
+
+4. Restart: If the tools do not appear, quit and reopen Codex, then reply Ready.
+5. Verify: call the avkit_health tool with action: "dependencies". It must return successfully. A "liveness" result never counts as verified.
+6. Result: end your reply with exactly one line, either RESULT: connected or RESULT: failed (<step>, <error>), where <step> is backup, merge, restart or verify. When the verify call returns an error whose text starts with "<code>:", <error> is that code: an error starting "token_missing:" gives RESULT: failed (verify, token_missing).

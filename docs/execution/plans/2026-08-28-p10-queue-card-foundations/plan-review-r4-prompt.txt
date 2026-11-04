@@ -1,0 +1,158 @@
+Perform /plan-critical-review for p10-queue-card-foundations (Round 4).
+
+## READ THIS FIRST — what the human actually wants from you
+
+The human's words, verbatim:
+
+  "Refocus the reviewer to the plan's substance and stress that Human requires more attention
+   on intent then procedure and protocols or any other beurocratic load since that can be
+   dealth with with AI reasoning pretty esily in the momement and tokens should not be wasted
+   on it."
+
+Read that as a direct instruction about how to spend this round:
+
+1. **Judge the plan on whether it builds the right thing.** Will executing this plan produce a
+   queue UI a person actually wants to use, with correct behaviour, honest accessibility, and no
+   silent scope loss? That is the review.
+2. **Do not spend tokens auditing process compliance.** Template section presence, YAML field
+   ordering, artifact-naming conventions, whether a receipt path is spelled the blessed way,
+   whether a rule cites the right document — an agent resolves all of that in the moment with
+   ordinary reasoning. It is not worth your effort or the human's reading time. If you notice a
+   procedural nit, fix-note it in one line at most; do not open a finding for it and do not let
+   it gate the verdict.
+3. **A finding must name a way the delivered product is wrong.** Not "this is unsourced" but
+   "this ships the wrong behaviour, and here is the case where a user sees it." If you cannot
+   write the failure case, it is not a finding this round.
+4. Rounds 1–3 already spent themselves heavily on control mechanics (oracles, censuses, binding).
+   Those are in place. **Round 4 is where the design gets judged.**
+
+## Write scope (non-negotiable)
+
+Write ONLY:
+`.agent/context/handoffs/2026-08-28-p10-queue-card-foundations-plan-critical-review.md`
+
+ROLLING file — APPEND a `## Round 4` section after the existing
+`## Round 4 Corrections - Palette Lock (corrections agent)` section, and update the YAML
+frontmatter in place. Do NOT create a `-r4`, `-recheck`, or `-final` variant. Do NOT edit
+product code, tests, docs outside that review file, or the plan files.
+
+YAML frontmatter MUST include:
+- date: "2026-08-28"
+- review_mode: "plan"
+- target_plan: "docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md"
+- verdict: "approved" or "changes_required"
+- findings_count: <integer, Round 4 findings only>
+- round: 4
+- template_version: "2.1"
+- requested_verbosity: "standard"
+- agent: "gpt-5.6-sol"
+- dispatch_id: "p10-queue-card-foundations-plan-r4"
+
+## Review targets
+
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/task.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/named-sets.json
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/contrast-matrix.json
+- docs/proposals/2026-08-27-queue-card-ui-proposal.md (DRAFT rev 2) + the mockup HTML
+- P:/zorivest/ui/src/renderer/src/globals.css and
+  P:/zorivest/ui/src/renderer/src/features/planning/TradePlanPage.tsx (the palette source of
+  truth this round adopts — read them, do not take the plan's summary on faith)
+- Your own Round 3 section, and the `## Round 4 Corrections` section above it.
+
+## What changed since Round 3
+
+Round 3's single finding (the census driver never swept declared `variants`) is fixed and
+documented; the false claim was retracted in place. That is closed — do not re-litigate it.
+
+Since then the human answered the two questions the corrections escalated:
+
+- **Q1: "colour should be whatever it is in p:/zorivest repo."** The plan no longer authors any
+  pill hue. Ten invented `--color-pill-*-fg` tokens, `--color-age-restricted`, and
+  `--color-bg-selected` were deleted. Colour is ported from Zorivest verbatim.
+- **Q2:** `PLAN_REVIEW_MAX_ROUND` raised 3 → **6**.
+
+## The one thing this round is really about
+
+Adopting Zorivest's palette verbatim, under Zorivest's own pill rule (`bg-<token>/10
+text-<token>` — the fill and the text are the SAME token, tinted 10%), produces a measured
+result:
+
+**28 of 80 status-pill / backdrop / theme pairings clear 4.5:1. 52 do not.** Light theme is
+worst (`Paused` 2.23, `Done` 2.47). The baseline is in `contrast-matrix.json`.
+
+The plan's position: this is *inherited* debt, not a regression av-kit introduces — those are
+the values Zorivest ships today — and the only real remedy is repointing shared token **values**
+app-wide (which is what Zorivest itself did once: `--color-accent-red: #ff5555 → #ffa0a0`,
+commented "was #ff5555 @ 2.91:1"). That is neither queue-local nor an av-kit-local call. So
+AC-42.3 gates on an exact-match measured baseline plus an exhaustive pass/debt partition plus a
+required open `QUEUE-PILL-AA-DEBT` issue, rather than on a blanket ≥4.5 the chosen palette
+cannot meet.
+
+**Tell us whether that is the right call.** Concretely:
+
+- Is shipping 52 sub-AA pairings acceptable for a local desktop tool, given the user's explicit
+  instruction to use Zorivest's colour, or should the plan instead repoint the offending token
+  values now and accept the app-wide blast radius?
+- Is "one token for fill and foreground at 10% alpha" a defensible pill design at all, or is the
+  honest answer that light theme needs a darker foreground and the lock should be read as
+  "Zorivest's hues" rather than "Zorivest's classes"?
+- Does the pass/debt partition actually prevent laundering, or can a future agent move a pairing
+  from debt to pass without the ratio improving?
+
+Answer with a recommendation, not a survey.
+
+## Also worth your attention (substance, in priority order)
+
+1. **Does the plan build a usable queue?** The reduced control model (13 toolbar buttons → 4 +
+   overflow), `PRIMARY_ACTION_MAP` (one primary action per card), `KEBAB_MENU_ORDER`,
+   `CARD_STATE_PRECEDENCE`. Is anything a user needs now unreachable? Is anything ambiguous
+   enough that two agents would build it differently?
+2. **The USER_LOCKS.** Eight product decisions the human made this session (bulk bar placement,
+   remove confirm, no density toggle, per-card cancel wired to a *queue-level* endpoint,
+   clear-finished as a client fan-out of `DELETE /{id}`, retry widened to Cancelled +
+   QualityBlocked + AgeRestricted). Do the ACs actually implement what the human chose, or has
+   an AC drifted from the lock? **Per-card cancel and clear-finished are the two with real
+   product risk** — cancel affects the whole queue but renders on one row, and clear-finished is
+   an N-request fan-out with partial-failure semantics.
+3. **The re-queue widening (MEU-41).** Adding Cancelled/QualityBlocked/AgeRestricted to the
+   re-queueable set changes backend state-machine behaviour. Is the transition set correct? Can
+   a job re-enter the queue from a state where re-entry is actually wrong?
+4. **Scope honesty.** MEU-40..43 is supposed to deliver canon + tokens + primitives +
+   presentational components, wiring nothing to a page. Is the plan quietly delivering less than
+   it claims, or quietly reaching into migration work it says is deferred?
+5. **The one disclosed divergence.** Zorivest's checkbox-selected fill is `bg-bg-subtle`, which
+   av-kit's proposal §11 conflict 5 forbids (that token inverts between themes: `#6272a4` dark
+   vs `#d1d5db` light). av-kit uses `bg-accent/5` instead. Right call or not?
+
+## SIGN 1 — no project tests
+
+Do NOT run pytest, vitest, npm test, playwright, tools/meu_status.py, tools/export_openapi.py,
+tools/issue_triage.py, or any product test/generator — including --check and --dry-run forms.
+
+You MAY run the plan-local hermetic oracles and the census driver (they build synthetic fixtures
+under C:/Temp/av-kit and touch no project file):
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-red-oracle.ps1 -SelfTest *> C:/Temp/av-kit/r4-red-selftest.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r4-red-selftest.txt; exit $code
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1 -SelfTest *> C:/Temp/av-kit/r4-iso-selftest.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r4-iso-selftest.txt; exit $code
+
+Do NOT run `assert-page-isolation.ps1 -Capture` against the real tree — that is task row 1's
+first action during execution, and a pre-seeded baseline would corrupt it.
+P0: redirect every process to C:/Temp/av-kit/ (`*>`), capture $LASTEXITCODE immediately.
+
+## Harness
+
+`.agent/context/harness.local.md` declares `plan_to_exec_gate: reviewer-auto`, but the driving
+harness is Claude Code and the user explicitly chose `human` (`USER_LOCKS.exec_gate`). Your
+`approved` verdict does NOT authorize execution; the user's next explicit message does. Do not
+flag the Step 5c pause as a premature stop.
+
+## Verdict rules
+
+If approved, findings_count must be 0. If changes_required, list findings with file:line, most
+severe first, and each one must name the wrong product behaviour it causes.
+
+Round 4 of a maximum of 6 (`PLAN_REVIEW_MAX_ROUND` = 6, raised this round by the user), or fewer
+if `approved` lands sooner. Do not withhold approval over procedural or documentation nits —
+if the plan builds the right thing, approve it and put your remaining doubts under Residual Risk.

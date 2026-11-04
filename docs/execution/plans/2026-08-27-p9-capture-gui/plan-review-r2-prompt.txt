@@ -1,0 +1,47 @@
+Perform /plan-critical-review for p9-capture-gui (Round 2).
+
+Read and follow `.agent/workflows/plan-critical-review.md`.
+Use `.agent/context/handoffs/REVIEW-TEMPLATE.md`.
+
+## Write scope
+
+Update ONLY:
+`.agent/context/handoffs/2026-08-27-p9-capture-gui-plan-critical-review.md`
+
+Keep the Round 1 findings table (do not delete it). Append a **Round 2** section. Update YAML frontmatter to this dispatch:
+
+- date: "2026-08-27"
+- review_mode: "plan"
+- target_plan: "docs/execution/plans/2026-08-27-p9-capture-gui/implementation-plan.md"
+- verdict: "approved" or "changes_required"
+- findings_count: <integer; 0 if approved>
+- round: 2
+- template_version: "2.1"
+- requested_verbosity: "standard"
+- agent: "gpt-5.6-sol"
+- dispatch_id: "p9-capture-gui-plan-r2"
+
+`dispatch_id` MUST equal `-DispatchId` `p9-capture-gui-plan-r2`.
+
+Do NOT edit product code, tests, or plan files. SIGN 1: do NOT run pytest/vitest/npm test/playwright. Static evidence only (Read, Test-Path, rg). P0 redirect to C:/Temp/av-kit/.
+
+## Round 1 findings — claimed resolved by corrector
+
+Read the `Corrections Applied` section in the existing review file. Independently re-verify each High finding against live plan artifacts:
+
+1. Boundary Input Contract: `OVERLAY_RECT_SCHEMA`, `COMPLETE_BODY`, `CANCEL_BODY`, AC-39.29, AC-39.30, RED_COUNT_39=30
+2. Overlay build chain: `OVERLAY_FILES`, `ELECTRON_VITE_CONFIG`, `PRELOAD_ENTRY_FILE_NAMES`, `OVERLAY_BUILD_ORACLE`, Test-Path in green/H1-2/row 4
+3. `QUIT_INTENT` jointly with close-to-tray (AC-39.16 + AC-39.17)
+4. `WAVE9_POST_ZERO_ORACLE` / `Assert-PostZero` no longer false-passes on `expect(0).toBe(0)`
+5. `EXEC_REVIEW_MAX_ROUND` owns the cap; no leftover `--max-round 6` in the plan folder
+
+PR-6: require untruncated blast-radius census. Corrector receipt: `C:/Temp/av-kit/plan-r1-blast-radius.txt`.
+
+## Review targets
+
+- docs/execution/plans/2026-08-27-p9-capture-gui/implementation-plan.md
+- docs/execution/plans/2026-08-27-p9-capture-gui/task.md
+- docs/execution/plans/2026-08-27-p9-capture-gui/named-sets.json
+- all five assert-*.ps1 in that folder
+
+If approved, findings_count must be 0. If any High remains, verdict changes_required.

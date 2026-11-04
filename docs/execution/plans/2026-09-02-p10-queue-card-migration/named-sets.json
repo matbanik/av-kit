@@ -1,0 +1,820 @@
+{
+  "$schema-note": "Single-statement rule (create-plan Step 4): any set, threshold, label, or policy referenced more than once in implementation-plan.md or task.md is named HERE once and referenced by name everywhere else. A literal repeated in two places is a defect.",
+  "project": "2026-09-02-p10-queue-card-migration",
+  "carried_forward_from": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/named-sets.json",
+  "PLAN_TO_EXEC_GATE": {
+    "value": "human",
+    "source": "Human-approved (carried forward from p10-queue-card-foundations, where the user resolved the harness conflict explicitly)",
+    "note": ".agent/context/harness.local.md declares plan_to_exec_gate: reviewer-auto with driver: Cursor IDE. This session runs in Claude Code, whose profile is `human`. The conservative value wins; the conflict is flagged in Open Questions."
+  },
+  "REVIEWER_AGENT": {
+    "value": "gpt-5.6-sol",
+    "source": ".agent/docs/model-routing.md",
+    "note": "Dispatched via tools/Invoke-CodexDispatch.ps1 - never bare `codex exec`."
+  },
+  "PLAN_REVIEW_ROUND_CAP": {
+    "value": 3,
+    "source": ".agent/workflows/create-plan.md section 5"
+  },
+  "EXEC_REVIEW_ROUND_CAP": {
+    "value": 6,
+    "source": "AGENTS.md section Execution Contract"
+  },
+  "USER_LOCKS": {
+    "value": [
+      "Bulk action bar is STICKY ABOVE THE LIST while any row is selected (Zorivest parity) - never a floating viewport-bottom bar, never inline per row.",
+      "The Remove confirmation is verb-labeled: the confirm button reads `Remove` / `Remove N items`, never `OK` / `Yes`.",
+      "`Cancel queue` appears ONLY on the in-flight row's primary action - never in the toolbar, never on a Pending row.",
+      "Retry availability is widened to that page's requeueable set (DOWNLOAD_REQUEUEABLE_STATUSES on the downloader, CONVERT_REQUEUEABLE_STATUSES on the converter) but must NOT include `Skipped`.",
+      "No density toggle (no compact/comfortable switch) is to be built in Phase 10."
+    ],
+    "source": "Human-approved, 2026-08-28 session; re-confirmed 2026-09-02 (\"I trust your approach is sound\" - delegation of judgment, not a change of lock).",
+    "note": "Carried forward verbatim; lock 1's placement gloss corrected in plan-review round 1 to match docs/build-plan/10-queue-card-ui.md:55 (\"sticky above the list ... never a floating bottom bar\"). Lock 4's set name was likewise repointed in round 1 (Finding 10) after REQUEUEABLE_UI_STATUSES was split per page. Any AC that contradicts a lock is invalid."
+  },
+  "TERMINAL_STATUSES": {
+    "value": [
+      "Done",
+      "Failed",
+      "Cancelled",
+      "Skipped"
+    ],
+    "source": "Spec - 10-queue-card-ui.md section Clear finished",
+    "note": "Used for card-state precedence and 'finished' display only. NOT the Clear finished snapshot set - see CLEAR_FINISHED_SNAPSHOT_STATUSES."
+  },
+  "TOOLBAR_CONTROLS": {
+    "value": [
+      "start",
+      "pause-resume",
+      "clear-finished",
+      "queue-overflow"
+    ],
+    "source": "Spec - 10-queue-card-ui.md section Toolbar reduction (Kept table), disambiguated by DEC-2.",
+    "note": "Exactly four interactive elements inside [data-testid=\"queue-toolbar\"]. `pause-resume` is ONE button whose label and testid suffix toggle. `queue-overflow` is the kebab trigger; its menu contains QUEUE_OVERFLOW_MENU."
+  },
+  "QUEUE_OVERFLOW_MENU": {
+    "value": [
+      "clear-all"
+    ],
+    "source": "Spec - 10-queue-card-ui.md section Toolbar reduction (overflow: Clear all...)",
+    "note": "Label ends in an ellipsis because it opens a confirm."
+  },
+  "TOOLBAR_LABEL_RULE": {
+    "value": "Every toolbar control renders an icon AND a persistent text label. Hover-only or title-only labels are forbidden.",
+    "source": "Spec - 10-queue-card-ui.md section Toolbar reduction"
+  },
+  "RETIRED_TOOLBAR_CONTROLS": {
+    "value": {
+      "downloader": {
+        "start-btn": [
+          {
+            "home": "queue-toolbar-start",
+            "meu": "MEU-46"
+          }
+        ],
+        "pause-btn": [
+          {
+            "home": "queue-toolbar-pause (half of the pause-resume toggle)",
+            "meu": "MEU-46"
+          }
+        ],
+        "resume-btn": [
+          {
+            "home": "queue-toolbar-resume (half of the pause-resume toggle)",
+            "meu": "MEU-46"
+          }
+        ],
+        "cancel-btn": [
+          {
+            "home": "in-flight card primary action CANCEL_CONTROL_LABEL",
+            "meu": "MEU-46"
+          }
+        ],
+        "up-btn": [
+          {
+            "home": "kebab move-up",
+            "meu": "MEU-46"
+          },
+          {
+            "home": "Alt+ArrowUp on a focused card",
+            "meu": "MEU-46"
+          }
+        ],
+        "down-btn": [
+          {
+            "home": "kebab move-down",
+            "meu": "MEU-46"
+          },
+          {
+            "home": "Alt+ArrowDown on a focused card",
+            "meu": "MEU-46"
+          }
+        ],
+        "top-btn": [
+          {
+            "home": "kebab move-top",
+            "meu": "MEU-46"
+          },
+          {
+            "home": "bulk-move-top",
+            "meu": "MEU-47"
+          }
+        ],
+        "bottom-btn": [
+          {
+            "home": "kebab move-bottom",
+            "meu": "MEU-46"
+          },
+          {
+            "home": "bulk-move-bottom",
+            "meu": "MEU-47"
+          }
+        ],
+        "reset-btn": [
+          {
+            "home": "card primary action Retry",
+            "meu": "MEU-46"
+          },
+          {
+            "home": "bulk-retry",
+            "meu": "MEU-47"
+          }
+        ],
+        "remove-btn": [
+          {
+            "home": "kebab remove",
+            "meu": "MEU-46"
+          },
+          {
+            "home": "bulk-remove",
+            "meu": "MEU-47"
+          }
+        ],
+        "clear-all-btn": [
+          {
+            "home": "queue-toolbar-overflow -> queue-toolbar-clear-all",
+            "meu": "MEU-46"
+          }
+        ],
+        "open-file-btn": [
+          {
+            "home": "kebab open-file",
+            "meu": "MEU-46"
+          },
+          {
+            "home": "card primary action Open file on a Done row",
+            "meu": "MEU-46"
+          }
+        ],
+        "open-folder-btn": [
+          {
+            "home": "kebab open-folder",
+            "meu": "MEU-46"
+          }
+        ]
+      },
+      "converter": {
+        "convert-start": [
+          {
+            "home": "queue-toolbar-start",
+            "meu": "MEU-45"
+          }
+        ],
+        "convert-pause": [
+          {
+            "home": "queue-toolbar-pause (half of the pause-resume toggle)",
+            "meu": "MEU-45"
+          }
+        ],
+        "convert-resume": [
+          {
+            "home": "queue-toolbar-resume (half of the pause-resume toggle)",
+            "meu": "MEU-45"
+          }
+        ],
+        "convert-cancel": [
+          {
+            "home": "in-flight card primary action CANCEL_CONTROL_LABEL",
+            "meu": "MEU-45"
+          }
+        ],
+        "convert-up": [
+          {
+            "home": "kebab move-up",
+            "meu": "MEU-45"
+          },
+          {
+            "home": "Alt+ArrowUp on a focused card",
+            "meu": "MEU-45"
+          }
+        ],
+        "convert-down": [
+          {
+            "home": "kebab move-down",
+            "meu": "MEU-45"
+          },
+          {
+            "home": "Alt+ArrowDown on a focused card",
+            "meu": "MEU-45"
+          }
+        ],
+        "convert-top": [
+          {
+            "home": "kebab move-top",
+            "meu": "MEU-45"
+          },
+          {
+            "home": "bulk-move-top",
+            "meu": "MEU-47"
+          }
+        ],
+        "convert-bottom": [
+          {
+            "home": "kebab move-bottom",
+            "meu": "MEU-45"
+          },
+          {
+            "home": "bulk-move-bottom",
+            "meu": "MEU-47"
+          }
+        ],
+        "convert-reset": [
+          {
+            "home": "card primary action Retry",
+            "meu": "MEU-45"
+          },
+          {
+            "home": "bulk-retry",
+            "meu": "MEU-47"
+          }
+        ],
+        "convert-remove": [
+          {
+            "home": "kebab remove",
+            "meu": "MEU-45"
+          },
+          {
+            "home": "bulk-remove",
+            "meu": "MEU-47"
+          }
+        ],
+        "convert-clear-all": [
+          {
+            "home": "queue-toolbar-overflow -> queue-toolbar-clear-all",
+            "meu": "MEU-45"
+          }
+        ],
+        "convert-open-file": [
+          {
+            "home": "kebab open-file",
+            "meu": "MEU-45"
+          },
+          {
+            "home": "card primary action Open file on a Done row",
+            "meu": "MEU-45"
+          }
+        ],
+        "convert-open-folder": [
+          {
+            "home": "kebab open-folder",
+            "meu": "MEU-45"
+          }
+        ]
+      }
+    },
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md section Toolbar reduction (\"Everything else moves onto the card\"), which explicitly supersedes docs/build-plan/06-gui.md section Queue Controls. Ids read directly from DownloaderPage.tsx:475-620 and ConvertPage.tsx:772-880 (2026-09-02).",
+    "note": "Two DIFFERENT id vocabularies: the downloader uses bare `*-btn` ids, the converter uses `convert-*`. Round 1 Finding 4: a single flat map made the mount gate search for downloader ids on the converter page, where they never existed, so every converter clause false-passed. Round 2 Finding F4: each value is now a LIST of {home, meu} rather than a prose string, because a prose \"kebab move-top + bulk-move-top\" reads as alternatives - one working home would satisfy the retired id while its sibling shipped dead. Every home is an independent obligation under MOUNT_GATE_PHASE_SCOPES. The downloader's 13 is the \"13 buttons\" the spec counts. EXECUTION CORRECTION 2026-09-02 (task row 2, pre-Red): the converter sub-map was recorded as 11 with the gloss \"no toolbar open-file / open-folder\", but ConvertPage.tsx:895-920 renders convert-open-file and convert-open-folder and the E2E asserts both (convert-queue.test.ts:319-320,409-410). Both are now listed with their kebab homes, making the converter 13. Leaving them out would have let the migration delete two asserted capabilities with no clause-4 obligation to rehome them - the exact failure MOUNT_GATE_CLAUSE_4 exists to catch. `queue-toolbar-clear-finished` is NEW, not a retired control's new home."
+  },
+  "E2E_REWRITE_RULE": {
+    "value": "An E2E assertion covering a retired control MAY be rewritten, but only by replacing it with an assertion that exercises the SAME user-visible capability at the new home named in RETIRED_TOOLBAR_CONTROLS. No assertion may be deleted without a replacement. Total test count may not decrease below E2E_BASELINE_COUNT.",
+    "source": "Local Canon - AGENTS.md section Testing (G36, never neutralize tests) reconciled with Spec section Toolbar reduction's explicit supersession of 06-gui.md section Queue Controls.",
+    "note": "This is spec supersession, not test-weakening. The distinction is enforced mechanically by MOUNT_COMPLETENESS_RULE clause 4."
+  },
+  "E2E_BASELINE_COUNT": {
+    "value": 59,
+    "source": "C:/Temp/av-kit/e2e-regression-rerun.txt - 59 passed / 0 failed, EXIT=0 (2026-09-02)",
+    "note": "Test-CASE floor only. The binding floor is E2E_ASSERTION_CENSUS_RULE."
+  },
+  "E2E_STATIC_CASE_FLOOR": {
+    "value": 53,
+    "source": "Static count of test( declarations across ui/tests/e2e/*.test.ts at the pre-migration commit bd57d37 (Local Canon, measured 2026-09-02).",
+    "note": "E2E_BASELINE_COUNT (59) is a Playwright RUNTIME pass count and is not statically reproducible - a static scan of the same commit yields 53. MOUNT_COMPLETENESS_RULE clause 8 is a static gate, so it floors against this value; E2E_BASELINE_COUNT remains the floor for the runtime E2E receipt. The binding floor for both is E2E_ASSERTION_CENSUS_RULE."
+  },
+  "E2E_LOCATOR_FORM": {
+    "value": "page.locator('[data-testid=\"<id>\"]') with ids drawn from ui/tests/e2e/test-ids.ts",
+    "source": "Local Canon - ui/tests/e2e/test-ids.ts"
+  },
+  "E2E_SANDBOX": {
+    "value": "Playwright + Electron runs locally. ELECTRON_RUN_AS_NODE must be UNSET in the shell and the bundle rebuilt before launch.",
+    "source": "Known-issue E2E-ELECTRON-LAUNCH-FLAG (re-filed 2026-09-02 against env leakage through ...process.env)",
+    "note": "Not a [B] class any more."
+  },
+  "PRESERVED_TESTIDS": {
+    "value": [
+      "convert-queue",
+      "convert-queue-row",
+      "convert-queue-summary",
+      "convert-processor",
+      "convert-add",
+      "queue-summary",
+      "processor-indicator",
+      "add-btn"
+    ],
+    "source": "Local Canon - ui/tests/e2e/test-ids.ts + the existing E2E suites",
+    "note": "These ids survive on the SAME semantic element (convert-queue moves from <table> to the QueueList container; convert-queue-row moves from <tr> to the card article). Summary / processor / add sit OUTSIDE [data-testid=\"queue-toolbar\"] and keep their per-page ids. `start-btn` and `clear-all-btn` were listed here in round 1 but are toolbar controls that adopt the canonical queue-toolbar-* ids - they moved into RETIRED_TOOLBAR_CONTROLS."
+  },
+  "RETIRED_TESTIDS": {
+    "value": {
+      "queue-table": "queue-list",
+      "queue-row": "queue-card",
+      "convert-remove-confirm": "confirm-modal",
+      "convert-remove-confirm-cancel": "confirm-modal-cancel",
+      "convert-clear-confirm": "confirm-modal",
+      "convert-clear-confirm-cancel": "confirm-modal-cancel"
+    },
+    "source": "Spec section QueueCard anatomy + Local Canon ui/src/renderer/src/components/ui/ConfirmModal.tsx (fixed testids, no override prop)",
+    "note": "Downloader adopts the canonical queue-list/queue-card ids; convert keeps its convert-* list and row ids (PRESERVED_TESTIDS) but adopts the canonical confirm-modal ids because ConfirmModal exposes no testId prop."
+  },
+  "NEW_TESTIDS": {
+    "value": [
+      "queue-toolbar",
+      "queue-toolbar-start",
+      "queue-toolbar-pause",
+      "queue-toolbar-resume",
+      "queue-toolbar-clear-finished",
+      "queue-toolbar-overflow",
+      "queue-toolbar-clear-all",
+      "queue-select-all",
+      "bulk-action-bar",
+      "bulk-selection-count",
+      "bulk-retry",
+      "bulk-move-top",
+      "bulk-move-bottom",
+      "bulk-remove",
+      "bulk-clear-selection",
+      "queue-empty-dropzone",
+      "queue-empty-browse",
+      "queue-drop-strip",
+      "queue-empty-invite",
+      "queue-empty-invite-action"
+    ],
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md section Toolbar reduction, section Selection and bulk model (BULK_BAR_ACTIONS), section Empty state and drop targets.",
+    "note": "Every new id is registered in ui/tests/e2e/test-ids.ts in the same MEU that introduces it. Round 1 Finding 2: bulk-move-up / bulk-move-down and bulk-select-all were removed - the spec's bar carries move-TOP / move-BOTTOM and no bar-level select-all; select-all is queue-select-all in the header per SELECTION_HEADER_CONTRACT. Round 2 Finding F12: queue-empty-dropzone / queue-drop-strip are CONVERTER-only; the downloader gets queue-empty-invite + queue-empty-invite-action instead, per EMPTY_STATE_CONTRACT."
+  },
+  "MOUNT_COMPLETENESS_RULE": {
+    "value": "The p10-queue-card-foundations PAGE_ISOLATION gate asserted the INVERSE contract (no page may mount the queue primitives). It is retired - not deleted - and replaced by assert-mount-completeness.ps1, which verifies:\n(1) each migrated page imports and renders QueueList;\n(2) the retired table components no longer exist and nothing references them;\n(3) no @tanstack/react-table import remains in ui/src AND the dependency is absent from BOTH ui/package.json and ui/package-lock.json;\n(4) MOUNT_GATE_CLAUSE_4 - the per-page capability matrix, below;\n(5) every id in PRESERVED_TESTIDS is still registered in test-ids.ts and every id in NEW_TESTIDS is registered there too;\n(6) no legacy STATUS_COLORS map survives in ui/src;\n(7) EMPTY_STATE_CONTRACT per page - the converter tree contains queue-empty-dropzone and queue-drop-strip, the downloader tree contains queue-empty-invite and NEITHER of the other two; and each of those ids satisfies MOUNT_GATE_CLAUSE_4 (c)+(d) in its own page's E2E spec, so a present-but-no-op Browse or invite button fails the clause;\n(8) the E2E suite meets E2E_ASSERTION_CENSUS_RULE.",
+    "source": "Local Canon - docs/execution/reflections/2026-08-28-p10-queue-card-foundations-reflection.md Next Day Outline item 2, strengthened by plan-review round 1 Findings 4 and 5.",
+    "note": "Each clause has a positive AND a negative self-test fixture (MOUNT_GATE_SCRIPT -SelfTest). Clause 4's fixtures include a sibling-home case: one home wired and asserted, its sibling rendered but dead - -Scope all must FAIL it (round 2 Finding F4)."
+  },
+  "MOUNT_GATE_SCRIPT": {
+    "value": "docs/execution/plans/2026-09-02-p10-queue-card-migration/assert-mount-completeness.ps1",
+    "source": "Local Canon - pattern from docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1",
+    "note": "Plan-local, like its predecessor. Modes: default verify, -SelfTest (hermetic positive AND negative fixtures per clause)."
+  },
+  "RETIRED_GATE_SCRIPT": {
+    "value": "docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1",
+    "source": "Local Canon",
+    "note": "Retained on disk as the executable record of the Session 20 contract; annotated as superseded by MOUNT_GATE_SCRIPT."
+  },
+  "META_SEGMENTS_CONTRACT": {
+    "value": "QueueCard gains an optional `metaSegments?: readonly string[]` prop. The card renders [resolveMeta(job), ...metaSegments], filters empties, and joins with META_SEPARATOR. QueueCard stays feature-agnostic; each page owns the copy for its own domain fields.",
+    "source": "Research-backed (DEC-1) - resolves Spec section QueueCard anatomy (\"job title plus the meta line: size, quality, duration, blocker reason + remediation\") without leaking downloader/convert fields into the shared component."
+  },
+  "DOWNLOAD_META_SEGMENTS": {
+    "value": [
+      "quality",
+      "speed (whenever non-null)",
+      "eta (whenever non-null)"
+    ],
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md section QueueCard anatomy + Local Canon: the Quality/Speed/ETA columns of the retired DownloadQueueTable.",
+    "note": "Speed/ETA are RETAINED by the backend after completion - the Done transition does not null speed_bps/eta_seconds (services/download.py:134-143,559-568) and the route serializes whatever is stored, so Done rows render them today. Gating on in-flight would drop persisted data at migration."
+  },
+  "CONVERT_META_SEGMENTS": {
+    "value": [
+      "kind label (Compress|Cut|Extract)",
+      "mode label (preset | in-out ms | a:index)",
+      "speed (whenever non-null)",
+      "eta (whenever non-null)"
+    ],
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md section QueueCard anatomy + Local Canon: the Kind/Mode/Speed/ETA columns of the retired ConvertQueueTable.",
+    "note": "Same retention rule as DOWNLOAD_META_SEGMENTS: ConversionRunner._finish does not clear speed_bps/eta_seconds (services/conversion.py:553-573) and routes/conversions.py:84-85 serializes them regardless of status."
+  },
+  "DEAD_REGION_RULE": {
+    "value": "When QueueCard receives no `onOpen` handler, the title/meta region renders as a plain container with NO role=\"button\", NO tabIndex and NO aria-label. A focusable control that does nothing is an accessibility defect.",
+    "source": "Research-backed - WAI-ARIA Authoring Practices: a widget role advertises an interaction that must exist. QueueCard.tsx currently renders role/tabIndex unconditionally."
+  },
+  "CANCEL_CONTROL_LABEL": {
+    "value": "Cancel queue",
+    "source": "Spec section Primary action model"
+  },
+  "CANCEL_LABEL_FORBIDDEN": {
+    "value": [
+      "Cancel",
+      "Cancel item",
+      "Cancel download",
+      "Stop"
+    ],
+    "source": "Spec section Primary action model"
+  },
+  "PRIMARY_ACTION_MAP": {
+    "value": {
+      "in-flight": "Cancel queue (no confirm)",
+      "Done": "Open file",
+      "<that page's requeueable set>": "Retry",
+      "Pending": "none",
+      "Skipped": "none"
+    },
+    "source": "Spec section Primary action model"
+  },
+  "KEBAB_MENU_ORDER": {
+    "value": [
+      "open-file",
+      "open-folder",
+      "copy-location",
+      "move-up",
+      "move-down",
+      "move-top",
+      "move-bottom",
+      "remove"
+    ],
+    "source": "Spec section Kebab menu",
+    "note": "Unavailable actions are ABSENT, never disabled. The copy-location label is `Copy path` when a file exists, else `Copy URL`."
+  },
+  "CLEAR_FINISHED_SEMANTICS": {
+    "value": [
+      "Snapshot: the id set of rows in CLEAR_FINISHED_SNAPSHOT_STATUSES is snapshotted ONCE before the first request; a job that reaches Done mid-run is not swept.",
+      "Independence: one DELETE /{id} per snapshotted id, each request independent of the others.",
+      "Continue on failure: a failed or 404 response never aborts the fan-out; every snapshotted id is attempted EXACTLY ONCE.",
+      "Successes kept: confirmed deletions are never rolled back.",
+      "Files: media files stay on disk - the API removes the queue record only.",
+      "Reconcile: EXACTLY ONE list refetch after the fan-out settles; the refetch, not local optimistic state, is what the list renders.",
+      "Report: the G35 partial-result toast states the removed count, the failed-or-skipped count, AND a reason per failure."
+    ],
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:62-74 (7-clause normative table), verbatim.",
+    "note": "All seven clauses are normative; each maps to at least one AC."
+  },
+  "BULK_ENDPOINT_POLICY": {
+    "value": "Client-side fan-out only. POST /{queue}/bulk DOES NOT EXIST and may not be invented. Every bulk action issues the existing per-id request N times under CLEAR_FINISHED_SEMANTICS.",
+    "source": "Spec - 10-queue-card-ui.md section Selection and bulk model"
+  },
+  "SELECTION_MODEL": {
+    "value": "Selection state is a Set<string> of job ids held by the page. Plain click toggles one; Shift+click selects the inclusive range from the last-clicked anchor in current render order; Ctrl/Cmd+A selects every row in the FILTERED list. Selection is cleared on queue identity change and after a bulk action completes.",
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:215-219 (Selection and bulk model)"
+  },
+  "ERROR_SURFACE": {
+    "value": "Every failed API call surfaces a user-visible message (G15). Silent catch is forbidden. Partial bulk failures use the G35 partial-result toast.",
+    "source": "Local Canon - .agent/docs/emerging-standards.md G15, G35"
+  },
+  "PAUSE_SCOPE": {
+    "value": "Pause/Resume act on the queue PROCESSOR, not on individual jobs. The toggle reflects ProcessorState (Idle | Processing | Paused).",
+    "source": "Spec section Toolbar reduction + Local Canon convert-controls.ts / download-controls.ts"
+  },
+  "G20_RULE": {
+    "value": "Confirmations use the in-app portal ConfirmModal. window.confirm is forbidden.",
+    "source": ".agent/docs/emerging-standards.md G20"
+  },
+  "G32_RULE": {
+    "value": "All className colour references use CSS variable tokens (bg-bg, text-fg, bg-accent, ...) that auto-swap with the theme. Raw hex in a className or an arbitrary value is forbidden; the only exception is the G30 <select> inline styles, which must come from the theme-aware getG30Styles() helper.",
+    "source": ".agent/docs/emerging-standards.md:1098 G32 - CSS Variable Tokens Only (No Raw Hex in className), verbatim rule text.",
+    "note": "Corrected during execution review round 1 (Finding 5). The plan originally recorded this entry's value as 'Interactive targets are at least 44x44 CSS px.', which is not what the cited source says and is not stated anywhere in the repo: emerging-standards.md G32 is the no-raw-hex token rule, and no G-standard, docs/build-plan/10-queue-card-ui.md, or ADR names a 44px hit target. Every AC that cites G32_RULE (AC-45.3, AC-45.10, AC-46.6, AC-47.4, AC-47.5, AC-47.5a, AC-45.19, AC-45.19a, AC-46.14) tests the token rule, as did MEU-43/44 before them; the value string was the only artefact carrying the 44px claim. Introducing a 44px minimum would also contradict G34_RULE, whose Button size vocabulary is frozen at h-7 (sm) / h-9 (md) / h-11 (lg)."
+  },
+  "G33_RULE": {
+    "value": "Never animate width/height/top/left/margin/box-shadow geometry; animate transform/opacity only. Progress uses transform: scaleX().",
+    "source": "emerging-standards.md G33"
+  },
+  "G34_RULE": {
+    "value": "The Button component exposes 5 variants x 3 sizes.",
+    "source": "emerging-standards.md G34"
+  },
+  "G35_RULE": {
+    "value": "Feedback tiers T0-T4; multi-item operations report partial results.",
+    "source": "emerging-standards.md G35"
+  },
+  "G36_RULE": {
+    "value": "No silent test guards - no test.skip/.only/.todo, no conditional early return in a test.",
+    "source": "emerging-standards.md G36"
+  },
+  "G37_RULE": {
+    "value": "Prefer @testing-library userEvent over fireEvent.",
+    "source": "emerging-standards.md G37"
+  },
+  "E2_RULE": {
+    "value": "Every plan that creates or modifies interactive GUI elements must include E2E test assertions; GUI changes without E2E coverage cannot be marked complete in task.md.",
+    "source": "emerging-standards.md E2"
+  },
+  "GUI_ENFORCEMENT_FALLBACK": {
+    "value": ".agent/docs/gui-standards-enforcement.md, docs/gui-element-reference.md and docs/gui-button-index.md DO NOT EXIST (verified 2026-09-02). Local Canon fallback: apply docs/build-plan/06-gui.md + G30-G35 + .agent/docs/gui-actions-index.md, and record the create-plan section 4A mapping table inline in this plan.",
+    "source": "Local Canon - established by eight prior Phase 6-10 plans; confirmed a non-finding by prior reviewers."
+  },
+  "COMMAND_MODULE_RULE": {
+    "value": "Per-id queue mutations live in the feature `*-commands.ts` module (one exported async function per operation), not inline in a page component's onClick. The kebab, the primary action, the toolbar and the bulk bar all call the same function. ui/src/renderer/src/features/converter/convert-commands.ts and ui/src/renderer/src/features/downloader/download-commands.ts ALREADY EXIST and are MODIFIED / EXTENDED here - never created, never rewritten from scratch.",
+    "source": "Local Canon - AGENTS.md section Code Quality (single owner, explicit error handling); module existence verified by direct read 2026-09-02. Resolves the ~100 lines of inline apiFetch in DownloaderPage.tsx:480-633 and the equivalent block in ConvertPage.tsx.",
+    "note": "Round 1 Finding 9: the plan described both modules as new. They are live production modules whose exports drive the command palette - see COMMAND_MODULE_PRESERVED_EXPORTS."
+  },
+  "VALIDATION_RECEIPT_DIR": {
+    "value": "C:/Temp/av-kit/",
+    "source": "AGENTS.md section PRIORITY 0"
+  },
+  "MEU_GATE": {
+    "value": "npm --prefix ui run typecheck; npm --prefix ui run lint; npm --prefix ui run test; MOUNT_GATE_SCRIPT (MEU-46 onward)",
+    "source": ".agent/docs/commands.md (registered scoped validation receipt)"
+  },
+  "DOWNLOAD_REQUEUEABLE_STATUSES": {
+    "value": [
+      "Failed",
+      "Cancelled",
+      "QualityBlocked",
+      "AgeRestricted"
+    ],
+    "complement": [
+      "Pending",
+      "Downloading",
+      "Done",
+      "Skipped"
+    ],
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:277-279 (Re-queue contract); domain set landed in MEU-42.",
+    "note": "`Skipped` deliberately excluded (USER_LOCKS). DownloaderPage controlEnabled('reset') currently gates on `Failed` only and is corrected here."
+  },
+  "CONVERT_REQUEUEABLE_STATUSES": {
+    "value": [
+      "Failed",
+      "Cancelled"
+    ],
+    "complement": [
+      "Pending",
+      "Processing",
+      "Done",
+      "Skipped"
+    ],
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:281-283 (Re-queue contract).",
+    "note": "NARROWER than DOWNLOAD_REQUEUEABLE_STATUSES: the conversion status enum has no QualityBlocked/AgeRestricted. Applying the download set to the converter would offer Retry on statuses the API answers 409 for."
+  },
+  "REQUEUE_EXHAUSTIVENESS_RULE": {
+    "value": "For each page, the requeueable set UNION its complement must equal that page's full status enum, asserted by a unit test that enumerates the enum - so no status is silently uncovered.",
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:283-284 (\"The two sets plus their complements must exhaust the respective status enums\")"
+  },
+  "CLEAR_FINISHED_SNAPSHOT_STATUSES": {
+    "value": [
+      "Done"
+    ],
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:60 (\"Client fan-out of DELETE /{id} over Done jobs only\") and :64-74 (clause table).",
+    "note": "Failed / Cancelled / Skipped rows are NOT swept. Sweeping TERMINAL_STATUSES would silently destroy failure evidence the user has not seen."
+  },
+  "SELECTION_HEADER_CONTRACT": {
+    "value": "A header SelectionCheckbox sits above the list at all times (independent of BULK_BAR_ACTIONS visibility). It is checked when every filtered row is selected, INDETERMINATE when some are, unchecked when none are, and carries an \"N items\" count. Toggling it selects/deselects the FILTERED list, not the unfiltered queue.",
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:215-217",
+    "note": "testid queue-select-all. Distinct from the bulk bar: the spec's bar action list contains no bar-level select-all."
+  },
+  "BULK_BAR_ACTIONS": {
+    "value": [
+      "retry",
+      "move-top",
+      "move-bottom",
+      "remove",
+      "clear-selection"
+    ],
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:220-223 (\"accent 'N selected' - Retry - Move to top - Move to bottom - Remove (destructive) - spacer - Clear selection\")",
+    "note": "Order is normative and Remove is the destructive variant. There is NO bulk move-up / move-down and NO bar-level select-all: single-step reorder stays on the kebab and the keyboard path; select-all lives in SELECTION_HEADER_CONTRACT."
+  },
+  "SELECTION_PRIMITIVE_EXTENSION": {
+    "value": "SelectionCheckbox.onChange is `(checked: boolean) => void` and its onClick calls stopPropagation (ui/src/renderer/src/components/ui/SelectionCheckbox.tsx:16,63-78), and QueueCard.onSelectChange is `(id, checked) => void` (QueueCard.tsx:93,282-289). Neither forwards modifier state, so SELECTION_MODEL's Shift+click range select has NO production path today. Both signatures are widened in this project to forward a `{ shiftKey: boolean }` modifiers object, and both files are in MEU-47's Files Modified inventory.",
+    "source": "Local Canon - direct file read, 2026-09-02 (plan-review round 1, Finding 2).",
+    "note": "Widening is additive: the modifiers argument is optional at the call site, so existing callers keep compiling."
+  },
+  "REORDER_WIRE_CONTRACT": {
+    "value": "PUT /conversions/reorder and PUT /downloads/reorder accept `{ job_ids: string[] }` - a COMPLETE permutation of the queue - and 422 on any other body (packages/api/src/avkit_api/routes/conversions.py:232-239, routes/downloads.py:210-217). There is no `{id, direction}` shape. The permutation is built by the EXISTING exported `buildReorderBody(ids, selectedId, 'up'|'down'|'top'|'bottom')` (convert-controls.ts:108-128, download-controls.ts:95-115), which is reused unchanged.",
+    "source": "Local Canon - direct file read, 2026-09-02 (plan-review round 1, Finding 3)."
+  },
+  "BULK_REORDER_ALGORITHM": {
+    "value": "Bulk Move to top / Move to bottom is a SEQUENTIAL fold under BULK_ENDPOINT_POLICY: starting from the current order, for each selected id in render order (reversed for move-top so relative order is preserved) compute the next permutation with buildReorderBody against the order produced by the PRECEDING SUCCESSFUL call, PUT it, and only then compute the next. A failed step does not abort the remainder (CLEAR_FINISHED_SEMANTICS clause 3 applies), but the next step folds from the last order the server actually accepted, never from the stale initial order.",
+    "source": "Research-backed (plan-review round 1, Finding 3) - the reorder endpoint takes an absolute permutation, so stale-based fan-out would clobber earlier steps.",
+    "note": "Asserted by a unit test that issues N requests and checks each body is the fold of the previous, plus a test where step 2 fails and step 3 still folds from step 1's accepted order."
+  },
+  "META_SEPARATOR": {
+    "value": " · ",
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:222 uses the middot as the queue-surface separator.",
+    "note": "Single-statement fix (plan-review round 1, Finding 11): the plan previously said ' - ' in META_SEGMENTS_CONTRACT and ' · ' in AC-45.1."
+  },
+  "EMPTY_STATE_CONTRACT": {
+    "value": "Per page, because the two queues have DIFFERENT intake contracts.\nCONVERTER (file intake): with items=[] QueueList renders EmptyDropZone (testid queue-empty-dropzone) - dashed drop target, the microcopy \"Drop video or audio files here - or\", and a prominent Browse... button (browseTestId queue-empty-browse, the EmptyDropZone prop at EmptyDropZone.tsx:190) as an equal path; with items it keeps the drag-over overlay PLUS the compact \"Drop files to add\" strip (testid queue-drop-strip). onBrowse and onDropFiles BOTH route to the page's EXISTING production intake - window.api.showFilesDialog(CONVERT_DIALOG_FILTERS) feeding the same `staging` state that backs the current convert-browse button (ConvertPage.tsx:470-484). No new picker, no no-op callback. The page's EXISTING staging drop zone and its convert-browse button are untouched - that is the pre-queue staging surface, a different surface from the queue's empty state; the two share the handler, not the testid.\nDOWNLOADER (URL intake): there is NO local-file intake path and Phase 10 adds no new REST surface, so the file drop/Browse invitation does NOT apply. With items=[] the page renders queue-empty-invite - the microcopy \"Paste a video link above to queue a download\" and a real button (queue-empty-invite-action) that focuses the existing url-input. That is an observable production outcome (document.activeElement is url-input, and typing + add-btn produces the normal POST /downloads), not a placeholder. No queue-empty-dropzone and no queue-drop-strip on this page.",
+    "source": "Spec - docs/build-plan/10-queue-card-ui.md:259-274 (Empty state and drop targets) for the converter; Local Canon for the downloader split - the same spec's Scope and non-goals says Phase 10 \"changes presentation and one service contract (re-queue widening); it adds no new REST surface\", and DownloaderPage's only intake is addFromForm() reading url-input (DownloaderPage.tsx:156-170), so a file Drop/Browse surface there could only be a no-op or an invented endpoint.",
+    "note": "Round 1 Finding 4: QueueList currently returns a bare <div> with only the hover overlay when items=[] (QueueList.tsx:77-104), and neither EmptyDropZone (built in MEU-44, still unmounted) nor the non-empty strip was scheduled by any AC - so the migration would have shipped a blank panel where both tables render an empty-state row today. Round 2 Finding F12: the round-1 correction generalised the converter's file-drop invitation to BOTH pages, which the downloader cannot honour - corrected to the per-page contract above. Widening the downloader to local-file intake would need a new REST surface and is out of scope for Phase 10; it is not deferred to a scheduled MEU because no build-plan row asks for it."
+  },
+  "MOUNT_GATE_CLAUSE_4": {
+    "value": "For EVERY (page, retired-id, HOME) triple in RETIRED_TOOLBAR_CONTROLS - iterating the per-page sub-maps and then every element of each id's home LIST, obligated per MOUNT_GATE_PHASE_SCOPES - the gate asserts all four of:\n  (a) the retired id does not appear anywhere under ui/src (asserted once per retired id);\n  (b) that home's testid appears in THAT page's rendered tree (the page component or a component it imports), not merely somewhere in ui/src;\n  (c) at least one test in THAT page's E2E spec file locates that home and PERFORMS the interaction (click / keypress), not merely asserts visibility; and\n  (d) that same test asserts an observable OUTCOME of the interaction - the intercepted request method+path+body, or the resulting DOM state - so a control that renders but is wired to nothing fails the gate.\n(b)-(d) are evaluated PER HOME. A retired id with two homes yields two independent pass/fail results.",
+    "source": "Research-backed (plan-review round 1, Finding 4).",
+    "note": "(a) alone passes trivially for a capability that was deleted rather than moved; (b) alone passes for a rendered-but-dead control; (c)+(d) are what actually prove the capability survived. Round 2 Finding F4: per-ID evaluation let one satisfied home cover a dead sibling, so evaluation is now per HOME. The reorder homes assert the REORDER_WIRE_CONTRACT body shape specifically."
+  },
+  "E2E_ASSERTION_CENSUS_RULE": {
+    "value": "Before the first E2E rewrite, record a census of every `expect(...)` in ui/tests/e2e/download-queue.test.ts and ui/tests/e2e/convert-queue.test.ts - count AND the capability each one covers - into C:/Temp/av-kit/e2e-assertion-census-before.txt. After the rewrite, the same census must show no capability with zero assertions, and the assertion count may not fall. The suite's test-CASE count may not fall below E2E_BASELINE_COUNT either.",
+    "source": "Local Canon - AGENTS.md section Testing (G36) + plan-review round 1 Finding 4: a case-count floor is satisfiable by a test whose assertions were all softened, so the floor must be at the assertion level.",
+    "note": "The two census files are evidence artifacts referenced by the handoff."
+  },
+  "COMMAND_MODULE_PRESERVED_EXPORTS": {
+    "value": {
+      "convert-commands.ts": [
+        "CONVERT_EVENTS",
+        "CONVERT_PALETTE_IDS",
+        "CONVERT_COMMANDS",
+        "ConvertFormSnapshot",
+        "getStagingPaths",
+        "setConvertFormSnapshot",
+        "isConvertHome",
+        "navigateAndDeliver",
+        "focusDropzone",
+        "postConversionCreate",
+        "snapshotCreateInput",
+        "startConversion",
+        "pauseConversion",
+        "resumeConversion",
+        "cancelConversion",
+        "clearConversions",
+        "deliverPaletteAdd",
+        "deliverPaletteStart",
+        "deliverPalettePause",
+        "deliverPaletteResume",
+        "deliverPaletteCancel",
+        "deliverPaletteClear"
+      ],
+      "download-commands.ts": [
+        "DOWNLOAD_EVENTS",
+        "DOWNLOAD_PALETTE_IDS",
+        "DOWNLOAD_COMMANDS",
+        "CreateDownloadInput",
+        "createDownloadBody",
+        "applyCreateItems",
+        "isDownloaderHome",
+        "navigateAndDeliver",
+        "focusUrlInput",
+        "postDownloadCreate",
+        "startDownload",
+        "pauseDownload",
+        "resumeDownload",
+        "cancelDownload",
+        "clearDownloads",
+        "checkSabr",
+        "forceSabr",
+        "clearSabr",
+        "deliverPaletteAdd",
+        "deliverPaletteStart",
+        "deliverPalettePause",
+        "deliverPaletteResume",
+        "deliverPaletteCancel",
+        "deliverPaletteClear",
+        "deliverPaletteSabrCheck"
+      ]
+    },
+    "consumers": [
+      "ui/src/renderer/src/components/layout/AppShell.tsx:3,5",
+      "ui/src/renderer/src/registry/commandRegistry.ts:2-3",
+      "ui/src/renderer/src/features/converter/ConvertPage.tsx:30",
+      "ui/src/renderer/src/features/downloader/DownloaderPage.tsx:36",
+      "ui/tests/unit/convert-page.test.ts:411,418",
+      "ui/tests/unit/downloader-page.test.ts:142,299,395",
+      "ui/tests/unit/downloader-page.behavior.test.ts:10"
+    ],
+    "source": "Local Canon - direct file read, 2026-09-02 (plan-review round 1, Finding 9).",
+    "note": "Every listed export must still exist with the same signature after this project. A regression test per module imports the module and asserts each name is defined, so a rewrite that drops the palette wiring fails in the Red phase."
+  },
+  "NO_DEAD_CONTROL_RULE": {
+    "value": "A control may not be MOUNTED in an earlier MEU than the one that wires it. Every task row that renders a member of TOOLBAR_CONTROLS or BULK_BAR_ACTIONS must land at or after the row that implements its executor, and the MEU gate for the mounting MEU includes an E2E assertion that clicking it produces the expected request (MOUNT_GATE_CLAUSE_4 (c)+(d)).",
+    "source": "Local Canon - AGENTS.md section Execution Contract (\"[B] is evidence-gated\"; a shipped no-op control is an unreported defect) + plan-review round 1 Finding 5.",
+    "note": "Round 1 Finding 5: `queue-toolbar-clear-finished` was mounted in MEU-45 and MEU-46 but its fan-out executor was not implemented until MEU-47, leaving a dead button at two MEU boundaries. The shared clear-finished executor now lands in MEU-45 before the first toolbar mount."
+  },
+  "ABSENT_VALIDATOR_RULE": {
+    "value": "`tools/validate_closeout_artifacts.py` does NOT exist in this tree (verified: tools/ holds check_exec_review.py, meu_status.py, export_openapi.py, issue_triage.py, package_backend.py and the dispatch scripts only). No row may invoke it. Every closeout check below is either a real repository tool or a plan-local script this task table creates before its first use.",
+    "source": "Plan-review round 1 Finding 6; same resolution as 2026-08-28-p10-queue-card-foundations."
+  },
+  "HANDOFFS": {
+    "value": [
+      "2026-09-02-p10-queue-card-migration-MEU-45-handoff.md",
+      "2026-09-02-p10-queue-card-migration-MEU-46-handoff.md",
+      "2026-09-02-p10-queue-card-migration-MEU-47-handoff.md"
+    ],
+    "source": "Local Canon - .agent/docs/artifact-naming.md"
+  },
+  "HANDOFF_COUNT": {
+    "value": 3,
+    "source": "One per MEU in this project."
+  },
+  "HANDOFF_FILTER": {
+    "value": "2026-09-02-p10-queue-card-migration-MEU-*-handoff.md",
+    "source": "Glob used by HANDOFF_MARKER_CHECK."
+  },
+  "HANDOFF_BUNDLE_MARKERS": {
+    "value": [
+      "Acceptance Criteria",
+      "CACHE BOUNDARY",
+      "FAIL_TO_PASS",
+      "Changed Files",
+      "Quality Gate Results",
+      "Commands Executed",
+      "## Evidence"
+    ],
+    "source": ".agent/context/handoffs/TEMPLATE.md; carried forward from 2026-08-28-p10-queue-card-foundations."
+  },
+  "HANDOFF_AC_PATTERNS": {
+    "value": {
+      "MEU-45": "AC-45\\.[0-9]+[a-z]?",
+      "MEU-46": "AC-46\\.[0-9]+[a-z]?",
+      "MEU-47": "AC-47\\.[0-9]+[a-z]?"
+    },
+    "source": "Plan AC ids; the trailing [a-z]? admits AC-45.4a / AC-46.1a / AC-47.1a."
+  },
+  "PLAN_REVIEW_FILE": {
+    "value": ".agent/context/handoffs/2026-09-02-p10-queue-card-migration-plan-critical-review.md",
+    "source": "Rolling plan review - AGENTS.md section Handoff continuity."
+  },
+  "EXEC_REVIEW_FILE": {
+    "value": ".agent/context/handoffs/2026-09-02-p10-queue-card-migration-implementation-critical-review.md",
+    "source": "Rolling implementation review - AGENTS.md section Handoff continuity."
+  },
+  "EXEC_REVIEW_MODE": {
+    "value": "implementation",
+    "source": "check_exec_review.py --expected-mode"
+  },
+  "EXEC_REVIEW_APPROVED": {
+    "value": "approved",
+    "source": "check_exec_review.py verdict token"
+  },
+  "REFLECTION_FILE": {
+    "value": "docs/execution/reflections/2026-09-02-p10-queue-card-migration-reflection.md",
+    "source": "Local Canon - .agent/docs/artifact-naming.md"
+  },
+  "REFLECTION_TEMPLATE": {
+    "value": "docs/execution/reflections/TEMPLATE.md",
+    "source": "Local Canon"
+  },
+  "REFLECTION_SCHEMA": {
+    "value": ".agent/schemas/reflection.v1.yaml",
+    "source": "Local Canon"
+  },
+  "REFLECTION_MARKERS": {
+    "value": [
+      "Friction Log",
+      "Execution Trace",
+      "Pattern Extraction",
+      "Patterns to KEEP",
+      "Next Session Design Rules",
+      "RULE-",
+      "Efficiency Metrics",
+      "Rule Adherence",
+      "Instruction Coverage",
+      "schema: v1",
+      "sections:",
+      "loaded:",
+      "decisive_rules:"
+    ],
+    "source": "TEMPLATE.md + reflection.v1.yaml; carried forward from 2026-08-28-p10-queue-card-foundations."
+  },
+  "METRICS_FILE": {
+    "value": "docs/execution/metrics.md",
+    "source": "Local Canon"
+  },
+  "METRICS_SLUG": {
+    "value": "p10-queue-card-migration",
+    "source": "Row key in METRICS_FILE."
+  },
+  "HANDOFF_MARKER_CHECK": {
+    "value": "docs/execution/plans/2026-09-02-p10-queue-card-migration/assert-handoff-markers.ps1",
+    "source": "Created by task row 9a. Sole executable owner of HANDOFF_BUNDLE_MARKERS; -Only <handoff filename> checks a single handoff, no argument checks all HANDOFF_COUNT."
+  },
+  "HANDOFF_AC_CHECK": {
+    "value": "docs/execution/plans/2026-09-02-p10-queue-card-migration/assert-handoff-acs.ps1",
+    "source": "Created by task row 9a. Proves each HANDOFFS entry carries its plan AC set per HANDOFF_AC_PATTERNS."
+  },
+  "DISPATCH_DIR": {
+    "value": "C:/Temp/av-kit/dispatch",
+    "source": "Carried forward from 2026-08-28-p10-queue-card-foundations/named-sets.json; verified live (tools/Invoke-CodexDispatch.ps1 writes <DISPATCH_DIR>/<dispatch_id>/{status.json,final.md,prompt_temp.txt})."
+  },
+  "DISPATCH_STATUS_SCHEMA": {
+    "value": "dispatch-status.v1",
+    "source": "schema_version emitted by tools/Invoke-CodexDispatch.ps1; carried forward from 2026-08-28-p10-queue-card-foundations."
+  },
+  "DISPATCH_ID_FIELD": {
+    "value": "dispatch_id",
+    "source": "Frontmatter key on EXEC_REVIEW_FILE that must equal Invoke-CodexDispatch -DispatchId; carried forward from 2026-08-28-p10-queue-card-foundations.",
+    "note": "Added by task row 9a: EXEC_DISPATCH_CHECK needs these three keys and the plan omitted them, so they are stated here exactly once rather than hard-coded in the script."
+  },
+  "EXEC_DISPATCH_CHECK": {
+    "value": "docs/execution/plans/2026-09-02-p10-queue-card-migration/assert-exec-review-dispatch.ps1",
+    "source": "Created by task row 9a. Proves EXEC_REVIEW_FILE was produced by a REVIEWER_AGENT dispatch, not self-authored."
+  },
+  "CHECK_EXEC_REVIEW": {
+    "value": "tools/check_exec_review.py",
+    "source": "Real repository tool (verified present). Flags: --review-file, --expected-mode, --expected-target, --max-round, --self-test."
+  },
+  "CLOSEOUT_H24_RECEIPT": {
+    "value": "C:/Temp/av-kit/closeout-check.txt",
+    "source": "H2-4 receipt path under VALIDATION_RECEIPT_DIR."
+  },
+  "MOUNT_GATE_PHASE_SCOPES": {
+    "value": "Which (page, retired-id, home) obligations each -Scope of MOUNT_GATE_SCRIPT enforces. A home is obligated once the MEU named in its `meu` field has shipped:\n  -Scope convert    (MEU-45 gate): every home whose meu is MEU-45. Homes whose meu is MEU-47 are PENDING - the gate prints them under a `PENDING (MEU-47)` heading and exits 0, but it may not silently omit them, and a MEU-45 home that fails still fails the gate.\n  -Scope downloader (MEU-46 gate): the same rule with MEU-46.\n  -Scope all        (MEU-47 gate and phase exit): EVERY home in RETIRED_TOOLBAR_CONTROLS is obligated independently, regardless of meu. There are no alternatives at this scope - a working `kebab move-top` does NOT satisfy `bulk-move-top`. The PENDING list must be empty; a non-empty PENDING list at -Scope all is a gate failure.",
+    "source": "Research-backed (plan-review round 2, Finding F4).",
+    "note": "Without the phase split, either the MEU-45/46 gates fail on controls that do not exist yet, or the final gate accepts a dead MEU-47 control because its sibling home works. Both were real: round 1's flat map produced the first, round 1's correction produced the second."
+  },
+  "BULK_CONTROL_E2E_OBLIGATION": {
+    "value": "Every control MEU-47 introduces gets its own E2E interaction + outcome assertion, on BOTH pages - none may rely on a sibling home or on registration alone: each of the five BULK_BAR_ACTIONS (bulk-retry -> asserts the intercepted re-queue requests; bulk-move-top and bulk-move-bottom -> assert the intercepted REORDER_WIRE_CONTRACT body and the resulting card order; bulk-remove -> confirm then assert the rows are gone; bulk-clear-selection -> asserts the bar disappears and every checkbox is unchecked), the queue-select-all header checkbox in all three SELECTION_HEADER_CONTRACT states, and the keyboard selection entry path (focus a card, toggle its SelectionCheckbox by keyboard, assert the bar appears).",
+    "source": "Research-backed (plan-review round 2, Finding F4) + Local Canon E2_RULE.",
+    "note": "Round 2 Finding F4: AC-47.10 exercised only bulk Remove and Clear finished, so bulk Retry, Move top, Move bottom and Clear selection had no required assertion anywhere - and the assertion census cannot protect a capability that never had one."
+  }
+}

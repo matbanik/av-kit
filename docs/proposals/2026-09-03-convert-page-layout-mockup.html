@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Convert Page Layout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f3f5f8; --paper: #ffffff; --ink: #1c2530; --ink-muted: #5b6b7a;
+    --accent: #0891b2; --accent-soft: rgba(8, 145, 178, 0.10); --line: #d9e0e7; --code-bg: #eaeff3;
+    --good: #16a34a; --bad: #dc2626; --warn: #b45309;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #1d1f27; --paper: #262935; --ink: #edeef2; --ink-muted: #9aa6b8;
+      --accent: #8be9fd; --accent-soft: rgba(139,233,253,.10); --line: #3a3e4f;
+      --code-bg: #2e3240; --good: #50fa7b; --bad: #ff6e6e; --warn: #ffb86c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #1d1f27; --paper: #262935; --ink: #edeef2; --ink-muted: #9aa6b8;
+    --accent: #8be9fd; --accent-soft: rgba(139,233,253,.10); --line: #3a3e4f;
+    --code-bg: #2e3240; --good: #50fa7b; --bad: #ff6e6e; --warn: #ffb86c;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--ink); font-family: "Source Sans 3", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 16px; line-height: 1.55; margin: 0; padding: 0 20px 96px; }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  header.masthead { padding: 52px 0 6px; }
+  .eyebrow { font-family: "JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: clamp(30px, 4.5vw, 40px); font-weight: 700; letter-spacing: -.02em; line-height: 1.1; margin: 8px 0 10px; text-wrap: balance; }
+  .lede { font-size: 17.5px; color: var(--ink-muted); max-width: 64ch; margin: 0 0 18px; }
+  h2 { font-size: 22px; font-weight: 700; letter-spacing: -.01em; margin: 56px 0 6px; text-wrap: balance; }
+  h2 .sec { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: 13px; color: var(--accent); margin-right: 10px; font-weight: 500; }
+  p, li { max-width: 70ch; }
+  p.note { color: var(--ink-muted); font-size: 14.5px; }
+  code { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: .86em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  a { color: var(--accent); }
+  ul.tight, ol.tight { padding-left: 22px; margin: 6px 0; }
+  ul.tight li, ol.tight li { margin: 5px 0; }
+  .tldr { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 22px 0 8px; }
+  .tldr .cell { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; font-size: 14.5px; }
+  .tldr .cell b { display: block; margin-bottom: 3px; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+  table.inv { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+  table.inv th, table.inv td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.inv th { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-muted); font-weight: 600; }
+  table.inv td:first-child { white-space: nowrap; }
+  .tblwrap { overflow-x: auto; }
+  .tag { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 999px; font-weight: 600; letter-spacing: .02em; white-space: nowrap; }
+  .tag.keep { background: rgba(22,163,74,.12); color: var(--good); }
+  .tag.move { background: var(--accent-soft); color: var(--accent); }
+  .tag.change { background: rgba(180,83,9,.12); color: var(--warn); }
+
+  /* ---------- Mock frames: pinned to av-kit's dark app palette (ui/src/renderer/src/styles.css @theme) ---------- */
+  .mock {
+    --m-bg: #282a36; --m-el: #44475a; --m-sub: #6272a4; --m-border: #44475a; --m-fg: #f8f8f2; --m-muted: #bae6fd;
+    --m-accent: #8be9fd; --m-accent-fg: #282a36; --m-green: #50fa7b; --m-red: #ff5555; --m-red-soft: #ffa0a0; --m-orange: #ffb86c; --m-purple: #bd93f9;
+    background: var(--m-bg); color: var(--m-fg); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 16px 0;
+    font-family: "Segoe UI", system-ui, sans-serif; font-size: 13.5px; overflow-x: auto;
+  }
+  .mock, .mock * { line-height: 1.4; }
+  .mock .frame-label { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--m-sub); margin: 0 0 12px; }
+  .mock .frame-label b { color: var(--m-accent); font-weight: 500; }
+  .page { min-width: 700px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer; border-radius: 6px; font-size: 12.5px; font-weight: 500; white-space: nowrap; padding: 0 12px; height: 28px; background: rgba(139,233,253,.12); color: var(--m-accent); font-family: inherit; }
+  .btn:hover { background: rgba(139,233,253,.22); }
+  .btn.md { height: 36px; font-size: 13.5px; padding: 0 18px; }
+  .btn.primary { background: var(--m-accent); color: var(--m-accent-fg); font-weight: 600; }
+  .btn.primary:hover { background: #a6f0ff; }
+  .btn.ghost { background: transparent; color: var(--m-muted); }
+  .btn.ghost:hover { background: var(--m-el); }
+  .btn.ghost.on { color: var(--m-accent); }
+  .btn.ghost:disabled { color: var(--m-sub); cursor: default; background: transparent; }
+  .btn.outline { background: transparent; border: 1px solid var(--m-border); color: var(--m-fg); }
+  .btn.danger { background: rgba(255,85,85,.15); color: var(--m-red-soft); }
+  .btn.dim { opacity: .5; cursor: default; }
+  .btn:focus-visible, .field:focus-visible, .chk:focus-visible { outline: 2px solid rgba(139,233,253,.5); outline-offset: 1px; }
+  .field { height: 28px; border-radius: 6px; border: 1px solid var(--m-border); background: var(--m-el); color: var(--m-fg); padding: 0 8px; font-size: 12.5px; font-family: inherit; }
+  .field.md { height: 36px; font-size: 14px; padding: 0 12px; }
+  .field.mono { font-family: Consolas, ui-monospace, monospace; }
+  .field::placeholder { color: var(--m-sub); }
+  .lbl { font-size: 12px; color: var(--m-muted); }
+  .lbl.fg { color: var(--m-fg); }
+  .chk { width: 15px; height: 15px; accent-color: var(--m-accent); cursor: pointer; margin: 0; }
+  .divider { width: 1px; height: 18px; background: var(--m-border); flex: none; }
+  .spacer { flex: 1; }
+  .help { display: flex; align-items: center; gap: 8px; border: 1px solid var(--m-border); border-radius: 6px; padding: 7px 12px; font-size: 13px; font-weight: 600; }
+  .help .plus { margin-left: auto; color: var(--m-muted); font-weight: 400; }
+  .help .i { display: inline-flex; width: 16px; height: 16px; border-radius: 3px; background: #82aaff; color: #282a36; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-style: italic; }
+
+  /* ---- BEFORE ---- */
+  .before { display: flex; flex-direction: column; gap: 10px; }
+  .before .row { display: flex; gap: 6px; align-items: center; }
+  .before .full { width: 100%; }
+  .before .radio { display: flex; gap: 12px; font-size: 12.5px; }
+  .before .summ { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; }
+  .before .box { border: 1px solid var(--m-border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .before .drop { border: 1px dashed var(--m-sub); border-radius: 6px; padding: 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .before-wrap { padding-left: 34px; }
+  .zone-note { position: relative; }
+  .zone-note::before { content: attr(data-n); position: absolute; left: -32px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--m-red); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-family: Consolas, ui-monospace, monospace; }
+
+  /* ---- AFTER ---- */
+  .after { display: flex; flex-direction: column; gap: 16px; max-width: 1000px; }
+  .panel { border: 1px solid var(--m-border); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; background: rgba(68,71,90,.18); }
+  .panel .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .status-line { font-size: 12.5px; color: var(--m-muted); min-height: 18px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .status-line b { color: var(--m-fg); font-weight: 500; }
+  .opt { display: inline-flex; align-items: center; gap: 7px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .chip.warn { background: rgba(255,184,108,.14); color: var(--m-orange); }
+  .chip.ok { background: rgba(80,250,123,.14); color: var(--m-green); }
+  .chip.live { background: rgba(139,233,253,.12); color: var(--m-accent); }
+  .chip.red { background: rgba(255,85,85,.14); color: var(--m-red-soft); }
+  .chip.gray { background: var(--m-el); color: var(--m-muted); }
+  .chip.count { background: transparent; color: var(--m-muted); font-weight: 500; padding: 0 4px; }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .chip.live .dot { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+  @media (prefers-reduced-motion: reduce) { .chip.live .dot { animation: none; } }
+  .disclosure { border-top: 1px solid var(--m-border); padding-top: 10px; display: none; flex-direction: column; gap: 10px; }
+  .disclosure.open { display: flex; }
+  .disclosure h4 { margin: 0; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--m-sub); font-weight: 600; }
+  .disclosure .grp { display: grid; grid-template-columns: 170px 1fr; gap: 10px 16px; align-items: center; }
+  .disclosure .grp .lbl { font-size: 12.5px; color: var(--m-fg); }
+  .disclosure .grp .lbl small { display: block; color: var(--m-sub); font-size: 11.5px; }
+  .seg { display: inline-flex; border: 1px solid var(--m-border); border-radius: 6px; overflow: hidden; height: 28px; position: relative; }
+  .seg.md { height: 36px; }
+  .seg label { display: inline-flex; align-items: center; padding: 0 12px; font-size: 12.5px; color: var(--m-muted); cursor: pointer; border-right: 1px solid var(--m-border); }
+  .seg.md label { font-size: 13.5px; padding: 0 16px; }
+  .seg label:last-child { border-right: none; }
+  .seg label.on { background: rgba(139,233,253,.14); color: var(--m-accent); font-weight: 600; }
+  .seg input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .sub-hidden { display: none !important; }
+  .sub-shown { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .qhead { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .qhead .title { font-size: 14px; font-weight: 600; }
+  .qhead .chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .qhead .toolbar { display: flex; align-items: center; gap: 4px; margin-left: auto; position: relative; }
+  .toolbar .menu { position: absolute; right: 0; top: 100%; margin-top: 4px; min-width: 176px; background: var(--m-bg); border: 1px solid var(--m-sub); border-radius: 6px; padding: 4px; display: none; z-index: 2; }
+  .toolbar .menu.open { display: block; }
+  .toolbar .menu button { width: 100%; text-align: left; background: none; border: none; color: var(--m-red-soft); padding: 7px 10px; border-radius: 4px; font-size: 12.5px; cursor: pointer; font-family: inherit; }
+  .toolbar .menu button:hover { background: var(--m-el); }
+  .bulkbar { display: none; align-items: center; gap: 10px; background: var(--m-el); border: 1px solid var(--m-sub); border-radius: 8px; padding: 6px 12px; font-size: 13px; }
+  .bulkbar.show { display: flex; }
+  .bulkbar .n { color: var(--m-accent); font-weight: 600; }
+  .qcard { display: flex; align-items: flex-start; gap: 10px; border: 1px solid var(--m-border); border-radius: 6px; padding: 9px 12px; cursor: pointer; }
+  .qcard:hover { background: var(--m-el); }
+  .qcard.is-selected { border-color: rgba(139,233,253,.5); background: rgba(139,233,253,.06); }
+  .qcard .chk { margin-top: 3px; }
+  .qcard .pos { font-family: Consolas, ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 12px; color: var(--m-sub); margin-top: 3px; width: 18px; text-align: right; flex: none; }
+  .qcard .body { flex: 1; min-width: 0; }
+  .qcard .r1 { display: flex; align-items: center; gap: 10px; }
+  .qcard .ttl { font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+  .qcard .r2 { display: flex; align-items: center; gap: 12px; margin-top: 4px; font-size: 12px; color: var(--m-muted); }
+  .qcard .bar { flex: 1; min-width: 80px; height: 5px; border-radius: 3px; background: rgba(98,114,164,.35); overflow: hidden; }
+  .qcard .bar i { display: block; height: 100%; background: var(--m-accent); border-radius: 3px; }
+  .qcard .stats { font-family: Consolas, ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 11.5px; white-space: nowrap; }
+  .qcard .err { color: var(--m-red-soft); }
+  .qcard .link { margin-left: auto; color: var(--m-accent); }
+  .qcard .meta { font-size: 11.5px; color: var(--m-sub); white-space: nowrap; }
+  .pill { font-size: 11px; padding: 1px 9px; border-radius: 999px; white-space: nowrap; font-weight: 500; flex: none; }
+  .pill.cyan { background: rgba(139,233,253,.12); color: var(--m-accent); }
+  .pill.green { background: rgba(80,250,123,.18); color: var(--m-green); }
+  .pill.red { background: rgba(255,85,85,.18); color: var(--m-red-soft); }
+  .pill.gray { background: var(--m-el); color: var(--m-muted); }
+  .pill.orange { background: rgba(255,184,108,.16); color: var(--m-orange); }
+  .kebab { width: 26px; height: 26px; border-radius: 6px; background: transparent; border: none; color: var(--m-sub); font-size: 14px; cursor: pointer; flex: none; }
+  .kebab:hover { background: var(--m-el); color: var(--m-muted); }
+  .empty { border: 1px dashed var(--m-border); border-radius: 8px; padding: 34px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--m-muted); font-size: 13.5px; }
+  .empty.short { padding: 22px 16px; }
+
+  /* Convert-specific */
+  .dropstrip { flex: 1; min-width: 300px; display: flex; align-items: center; gap: 12px; border: 1px dashed var(--m-sub); border-radius: 6px; padding: 8px 12px; min-height: 52px; color: var(--m-muted); font-size: 13px; }
+  .dropstrip .icon { width: 28px; height: 28px; border-radius: 6px; background: var(--m-el); display: inline-flex; align-items: center; justify-content: center; color: var(--m-accent); font-size: 14px; flex: none; }
+  .dropstrip .txt { flex: 1; min-width: 0; }
+  .dropstrip .txt b { color: var(--m-fg); font-weight: 500; }
+  .staged { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fchip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 6px 0 9px; border-radius: 6px; background: var(--m-el); font-family: Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--m-fg); max-width: 260px; }
+  .fchip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fchip .x { color: var(--m-sub); cursor: pointer; font-size: 13px; }
+  .fchip .x:hover { color: var(--m-red-soft); }
+  .footer-row { border-top: 1px solid var(--m-border); padding-top: 10px; }
+
+  .zonemap { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  .zonemap .z { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; font-size: 14.5px; }
+  .zonemap .z b { display: block; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  @media (max-width: 720px) { .zonemap { grid-template-columns: 1fr; } }
+  .callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 14.5px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="masthead">
+  <div class="eyebrow">av-kit · proposal · 2026-09-03 · companion to the Downloader page mockup</div>
+  <h1>Convert page: one add panel, one queue</h1>
+  <p class="lede">Convert has the most form on any page: a task switch, a drop target, five presets, an advanced box, cut and extract sub-forms, an output folder with its own Save, and finally Add. Today they arrive as nine full-width blocks with the queue controls at the very bottom. This mockup keeps every control and every test id, and rearranges them so the eye travels once, top to bottom: <em>what</em> → <em>which files</em> → <em>how</em> → <em>Add</em>, then the queue.</p>
+  <div class="tldr">
+    <div class="cell"><b>Zone 1 · Add</b>Task switch and encoder chip on one header line. Drop strip and Add on one line. Task-specific options as a single row underneath. Output folder in a quiet footer row.</div>
+    <div class="cell"><b>Zone 2 · Queue</b>Identical to the Downloader proposal: one header row with select-all, status chips, live processor chip and the four-control toolbar; cards below.</div>
+    <div class="cell"><b>Choices look like choices</b>Task, preset, cut mode and extract scope become segmented controls (sm). Only Add and Save are buttons.</div>
+    <div class="cell"><b>Scope</b>Composition only. No preset value, mutation or status changes. §05 lists every test id as keep / move / change.</div>
+  </div>
+</header>
+
+<h2><span class="sec">01</span>Before: nine blocks, one column</h2>
+<p>Numbered against <code>ConvertPage.tsx</code> as it renders today (Compress task, Advanced open, one staged file). Each block is a sibling in a <code>flex-col gap-4</code>, so every element takes the full content width regardless of how much it needs.</p>
+<div class="mock">
+  <p class="frame-label">Today — Compress selected, Advanced open</p>
+  <div class="page before-wrap">
+    <div class="before">
+      <div class="help"><span class="i">i</span> How it works <span class="plus">+</span></div>
+      <div class="row zone-note" data-n="1" style="justify-content:space-between"><div class="radio"><label><input type="radio" name="bt" checked> Compress</label><label><input type="radio" name="bt"> Cut</label><label><input type="radio" name="bt"> Extract</label></div><span style="font-size:13px">Encoder: NVIDIA NVENC</span></div>
+      <div class="drop zone-note" data-n="2"><span>Drop video or audio files here</span><button class="btn md">Browse…</button><ul style="margin:0;padding-left:18px;font-size:12px;text-align:left"><li>D:\Video\raw\interview-2026-08-30.mkv</li></ul></div>
+      <div class="row zone-note" data-n="3"><button class="btn md outline">Archival</button><button class="btn md outline">High Quality</button><button class="btn md primary">Balanced</button><button class="btn md outline">Sharing</button><button class="btn md outline">Mobile</button></div>
+      <button class="btn ghost" style="align-self:flex-start">Advanced</button>
+      <div class="box zone-note" data-n="4">
+        <div><div class="lbl fg">CQ 25</div><input type="range" class="full" aria-label="CQ"></div>
+        <div><div class="lbl fg">Scale</div><select class="field full" aria-label="Scale"><option>Source</option></select></div>
+        <div><div class="lbl fg">Audio</div><select class="field full" aria-label="Audio"><option>aac_128</option></select></div>
+        <div><div class="lbl fg">Encoder override</div><select class="field full" aria-label="Encoder override"><option>auto</option></select></div>
+        <button class="btn" style="align-self:flex-start">Refresh GPU</button>
+      </div>
+      <div class="row zone-note" data-n="5"><div style="flex:1"><div class="lbl fg">Output folder</div><input class="field full" value="D:\Video\converted" aria-label="Output folder"></div><label class="opt"><input type="checkbox" class="chk" checked> Skip files that already exist</label><button class="btn md primary">Save</button></div>
+      <button class="btn md primary full zone-note" data-n="6">Add</button>
+      <label class="opt zone-note" data-n="7"><input type="checkbox" class="chk"> <span class="lbl">Select all conversions</span></label>
+      <div class="empty short">Drop files above or press Browse… to queue a conversion</div>
+      <div class="summ zone-note" data-n="8"><span>Pending: 0</span><span>Processing: 0</span><span>Done: 0</span><span>Failed: 0</span><span>Cancelled: 0</span><span>Skipped: 0</span></div>
+      <div class="row zone-note" data-n="9"><button class="btn">Start</button><button class="btn">Pause</button><button class="btn">Clear finished</button><button class="btn ghost">⋯ More</button></div>
+    </div>
+  </div>
+</div>
+<ol class="tight">
+  <li><strong>Task radios and encoder chip</strong> share a line, but the button that refreshes the encoder (<code>convert-gpu-refresh</code>) is buried inside Advanced.</li>
+  <li><strong>Drop zone</strong> is a 100 px tall box with a md Browse button inside it; the staged file list grows the box downward, pushing everything else.</li>
+  <li><strong>Five preset buttons at md</strong>, one filled and four outlined: they look like five actions, not one choice with five values.</li>
+  <li><strong>Advanced box</strong> opens between presets and the output row, holding four full-width controls plus an unrelated Refresh GPU.</li>
+  <li><strong>Output folder, Skip existing and Save</strong> are persisted converter settings (they also live on the Settings page) but sit inside the per-job form. Two primary buttons, Save and Add, are stacked.</li>
+  <li><strong>Add</strong> is a full-width primary button four blocks below the files it acts on.</li>
+  <li><strong>Select all</strong> renders even when the queue is empty.</li>
+  <li><strong>Summary</strong> lists all six statuses including zeros, as plain text.</li>
+  <li><strong>Queue toolbar</strong> is the last thing on the page, three blocks below the cards it controls.</li>
+</ol>
+
+<h2><span class="sec">02</span>After: Add panel above, queue below</h2>
+<p>Same controls, same ids. The header line inside the panel is the task switch; the second line is files + Add; the third line changes with the task. Everything is interactive here: switch the task, open Advanced, select cards.</p>
+
+<div class="mock">
+  <p class="frame-label"><b>Proposed</b> — working state, two processing, one failed</p>
+  <div class="page after" id="after-working">
+    <div class="help"><span class="i">i</span> How it works <span class="plus">+</span></div>
+
+    <section class="panel" aria-label="Add conversion">
+      <div class="row">
+        <div class="seg" role="radiogroup" aria-label="Task" data-role="task-seg">
+          <label class="on"><input type="radio" name="task" value="compress" checked>Compress</label>
+          <label><input type="radio" name="task" value="cut">Cut</label>
+          <label><input type="radio" name="task" value="extract">Extract</label>
+        </div>
+        <span class="spacer"></span>
+        <span class="chip ok" title="convert-gpu-chip"><span class="dot"></span>NVIDIA NVENC</span>
+        <button class="btn ghost" title="convert-gpu-refresh">Refresh</button>
+      </div>
+
+      <div class="row">
+        <div class="dropstrip" title="convert-dropzone">
+          <span class="icon">⤓</span>
+          <span class="txt"><b>Drop video or audio files here</b> · or <a href="#" style="color:var(--m-accent)" title="convert-browse">Browse…</a></span>
+          <span class="chip count">2 staged</span>
+        </div>
+        <button class="btn md primary" title="convert-add">Add 2</button>
+      </div>
+      <div class="staged" aria-label="Staged files">
+        <span class="fchip"><span>D:\Video\raw\interview-2026-08-30.mkv</span><span class="x" aria-label="Remove">×</span></span>
+        <span class="fchip"><span>D:\Video\raw\b-roll-hallway.mov</span><span class="x" aria-label="Remove">×</span></span>
+      </div>
+
+      <div class="row sub-shown" data-task="compress">
+        <span class="lbl">Preset</span>
+        <div class="seg" role="radiogroup" aria-label="Preset" data-role="preset-seg">
+          <label><input type="radio" name="preset">Archival</label>
+          <label><input type="radio" name="preset">High Quality</label>
+          <label class="on"><input type="radio" name="preset" checked>Balanced</label>
+          <label><input type="radio" name="preset">Sharing</label>
+          <label><input type="radio" name="preset">Mobile</label>
+        </div>
+        <span class="status-line" data-role="preset-desc">CQ 25 · Source · aac 128k</span>
+        <span class="spacer"></span>
+        <button class="btn ghost" data-role="adv-toggle" aria-expanded="false" title="convert-advanced">Advanced ▾</button>
+      </div>
+      <div class="row sub-hidden" data-task="cut">
+        <span class="lbl">In</span><input class="field mono" style="width:120px" value="00:00:00.000" aria-label="In">
+        <span class="lbl">Out</span><input class="field mono" style="width:120px" value="00:00:00.000" aria-label="Out">
+        <div class="seg" role="radiogroup" aria-label="Cut mode">
+          <label class="on"><input type="radio" name="cutmode" checked>Fast (copy)</label>
+          <label><input type="radio" name="cutmode">Accurate</label>
+        </div>
+      </div>
+      <div class="row sub-hidden" data-task="extract">
+        <span class="lbl">Audio streams</span>
+        <div class="seg" role="radiogroup" aria-label="Extract scope">
+          <label class="on"><input type="radio" name="extract" checked>First stream</label>
+          <label><input type="radio" name="extract">All streams</label>
+        </div>
+      </div>
+
+      <div class="disclosure" data-role="adv">
+        <h4>Advanced · overrides the preset for this add</h4>
+        <div class="grp">
+          <span class="lbl">CQ <small>18 sharper · 32 smaller</small></span>
+          <span class="opt"><input type="range" min="18" max="32" value="25" style="width:200px" aria-label="CQ"><span class="lbl fg" style="font-family:Consolas,ui-monospace,monospace">25</span></span>
+          <span class="lbl">Scale</span>
+          <select class="field" style="width:150px" aria-label="Scale"><option>Source</option><option>1080p</option><option>720p</option><option>480p</option></select>
+          <span class="lbl">Audio</span>
+          <select class="field" style="width:150px" aria-label="Audio"><option>copy</option><option>aac_96</option><option selected>aac_128</option><option>aac_192</option></select>
+          <span class="lbl">Encoder override <small>auto uses the detected GPU</small></span>
+          <select class="field" style="width:150px" aria-label="Encoder override"><option>auto</option><option>nvidia</option><option>amd</option><option>intel</option><option>software</option></select>
+        </div>
+      </div>
+
+      <div class="row footer-row">
+        <span class="lbl">Output</span>
+        <input class="field" style="flex:1;min-width:240px" value="D:\Video\converted" aria-label="Output folder" title="convert-output-dir">
+        <label class="opt lbl"><input type="checkbox" class="chk" checked title="convert-skip-existing"> Skip existing</label>
+        <button class="btn ghost" title="convert-page-save">Save</button>
+      </div>
+    </section>
+
+    <section aria-label="Conversion queue" style="display:flex;flex-direction:column;gap:8px">
+      <div class="qhead">
+        <input type="checkbox" class="chk" aria-label="Select all conversions" data-role="select-all">
+        <span class="title">Queue</span>
+        <div class="chips">
+          <span class="chip live"><span class="dot"></span>Processing</span>
+          <span class="chip count">2 pending</span>
+          <span class="chip count">1 done</span>
+          <span class="chip red">1 failed</span>
+        </div>
+        <div class="toolbar" role="group" aria-label="Conversion queue actions">
+          <button class="btn ghost dim">Start</button>
+          <button class="btn ghost on">Pause</button>
+          <button class="btn ghost">Clear finished</button>
+          <button class="btn ghost" data-role="more" aria-haspopup="menu" aria-expanded="false">⋯</button>
+          <div class="menu" role="menu" data-role="menu"><button role="menuitem">Clear all…</button></div>
+        </div>
+      </div>
+      <div class="bulkbar" data-role="bulk"><span><span class="n">0</span> selected</span><button class="btn">Move to top</button><button class="btn">Retry</button><button class="btn danger">Remove 0</button><span class="spacer"></span><button class="btn ghost" data-role="bulk-clear">Clear selection</button></div>
+
+      <div class="qcard" data-card>
+        <input type="checkbox" class="chk" aria-label="Select">
+        <span class="pos">1</span>
+        <div class="body">
+          <div class="r1"><span class="ttl">interview-2026-08-30.mkv</span><span class="pill cyan">Processing</span></div>
+          <div class="r2"><span class="meta">Compress · Balanced · NVENC</span><div class="bar"><i style="width:38%"></i></div><span class="stats">38% · 2.4× · 00:51 left</span></div>
+        </div>
+        <button class="kebab" aria-label="Actions">⋮</button>
+      </div>
+      <div class="qcard" data-card>
+        <input type="checkbox" class="chk" aria-label="Select">
+        <span class="pos">2</span>
+        <div class="body">
+          <div class="r1"><span class="ttl">lecture-03-full.mp4</span><span class="pill gray">Pending</span></div>
+          <div class="r2"><span class="meta">Cut · 00:12:04 → 00:47:30 · fast</span><span class="stats">2.1 GB</span></div>
+        </div>
+        <button class="kebab" aria-label="Actions">⋮</button>
+      </div>
+      <div class="qcard" data-card>
+        <input type="checkbox" class="chk" aria-label="Select">
+        <span class="pos">3</span>
+        <div class="body">
+          <div class="r1"><span class="ttl">podcast-ep-114.mkv</span><span class="pill gray">Pending</span></div>
+          <div class="r2"><span class="meta">Extract · all audio streams</span></div>
+        </div>
+        <button class="kebab" aria-label="Actions">⋮</button>
+      </div>
+      <div class="qcard" data-card>
+        <input type="checkbox" class="chk" aria-label="Select">
+        <span class="pos">4</span>
+        <div class="body">
+          <div class="r1"><span class="ttl">screen-rec-2026-08-29.mp4</span><span class="pill red">Failed</span></div>
+          <div class="r2"><span class="meta">Compress · Sharing</span><span class="err">ffmpeg exited 1: no NVENC session available</span><a class="link" href="#">Retry</a></div>
+        </div>
+        <button class="kebab" aria-label="Actions">⋮</button>
+      </div>
+      <div class="qcard" data-card>
+        <input type="checkbox" class="chk" aria-label="Select">
+        <span class="pos">5</span>
+        <div class="body">
+          <div class="r1"><span class="ttl">b-roll-drone.mov</span><span class="pill green">Done</span></div>
+          <div class="r2"><span class="meta">Compress · Mobile · 720p</span><span class="stats">1.8 GB → 212 MB</span><a class="link" href="#">Open folder</a></div>
+        </div>
+        <button class="kebab" aria-label="Actions">⋮</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="mock">
+  <p class="frame-label"><b>Proposed</b> — first launch, nothing staged, empty queue, FFmpeg missing</p>
+  <div class="page after" id="after-empty">
+    <div class="help"><span class="i">i</span> How it works <span class="plus">+</span></div>
+    <section class="panel" aria-label="Add conversion">
+      <div class="row">
+        <div class="seg" role="radiogroup" aria-label="Task">
+          <label class="on"><input type="radio" name="task2" checked>Compress</label><label><input type="radio" name="task2">Cut</label><label><input type="radio" name="task2">Extract</label>
+        </div>
+        <span class="spacer"></span>
+        <span class="chip red"><span class="dot"></span>FFmpeg missing</span>
+        <button class="btn ghost">Refresh</button>
+      </div>
+      <div class="row">
+        <div class="dropstrip"><span class="icon">⤓</span><span class="txt"><b>Drop video or audio files here</b> · or <a href="#" style="color:var(--m-accent)">Browse…</a></span></div>
+        <button class="btn md primary dim" disabled>Add</button>
+      </div>
+      <div class="row">
+        <span class="lbl">Preset</span>
+        <div class="seg"><label><input type="radio" name="p2">Archival</label><label><input type="radio" name="p2">High Quality</label><label class="on"><input type="radio" name="p2" checked>Balanced</label><label><input type="radio" name="p2">Sharing</label><label><input type="radio" name="p2">Mobile</label></div>
+        <span class="status-line">CQ 25 · Source · aac 128k</span>
+        <span class="spacer"></span>
+        <button class="btn ghost">Advanced ▾</button>
+      </div>
+      <div class="status-line" style="color:var(--m-red-soft)">FFmpeg was not found. Set the FFmpeg path in Settings → Download, then press Refresh.</div>
+      <div class="row footer-row">
+        <span class="lbl">Output</span>
+        <input class="field" style="flex:1;min-width:240px" value="D:\Video\converted" aria-label="Output folder">
+        <label class="opt lbl"><input type="checkbox" class="chk" checked> Skip existing</label>
+        <button class="btn ghost">Save</button>
+      </div>
+    </section>
+    <section aria-label="Conversion queue" style="display:flex;flex-direction:column;gap:8px">
+      <div class="qhead">
+        <span class="title">Queue</span>
+        <div class="chips"><span class="chip count">0 items</span></div>
+        <div class="toolbar"><button class="btn ghost dim">Start</button><button class="btn ghost dim">Pause</button><button class="btn ghost dim">Clear finished</button><button class="btn ghost dim">⋯</button></div>
+      </div>
+      <div class="empty">Drop files above or press Browse… to queue a conversion</div>
+    </section>
+  </div>
+</div>
+
+<div class="zonemap">
+  <div class="z"><b>Zone 1 · Add panel</b>Line 1: task segmented control left, encoder chip + Refresh right. Line 2: drop strip (flex 1) + Add. Line 3: staged file chips (only when non-empty). Line 4: task options, one row. Advanced is a disclosure below line 4. Footer: Output folder, Skip existing, Save.</div>
+  <div class="z"><b>Zone 2 · Queue</b>Header row = select-all + “Queue” + status chips (non-zero only) + live processor chip, toolbar right-aligned. Bulk bar appears between header and cards. Cards: position, checkbox, filename, status pill; second line = task meta, progress or size, error or output link.</div>
+</div>
+
+<h2><span class="sec">03</span>Why these moves</h2>
+<ul class="tight">
+  <li><strong>Task first, files second, options third.</strong> The task decides which options exist, so it has to be the first thing the user commits to. Segmenting it and pinning it to the panel header makes the state obvious even when scrolled.</li>
+  <li><strong>Add lives next to the files it adds.</strong> The label shows the count (“Add 2”) so the user never has to look down for the staged list. Staged paths become removable chips instead of a bulleted list inside the drop target.</li>
+  <li><strong>Presets are a choice, not five buttons.</strong> A segmented control at sm height reads as one value; the one-line description next to it (CQ · scale · audio) replaces the need to open Advanced just to know what Balanced means.</li>
+  <li><strong>Advanced is an override, and says so.</strong> The disclosure header names its relationship to the preset. Refresh GPU moves out: it is about the encoder chip, so it sits beside the chip.</li>
+  <li><strong>Output folder is a footer, not a form field.</strong> It is a persisted setting the user changes rarely. A quiet row under a divider keeps it reachable without competing with per-job inputs. Save is ghost until dirty (then primary, same as today’s <code>btn-save-dirty</code>).</li>
+  <li><strong>Encoder state is a chip.</strong> ok (green) when a GPU encoder is detected, gray for software, red for FFmpeg missing, and the same chip doubles as the Add-disabled explanation.</li>
+  <li><strong>Queue matches the Downloader proposal 1:1.</strong> The four-slot toolbar, the chips-not-zeros summary, the live processor chip, the bulk bar position and the card anatomy are the same, so the two pages are learned once.</li>
+</ul>
+<div class="callout">Cut and Extract are single rows. Cut = In, Out, mode; Extract = scope. Both use the same segmented pattern as Preset, so the third line of the panel changes shape but never height.</div>
+
+<h2><span class="sec">04</span>Sizing and tokens</h2>
+<ul class="tight">
+  <li>Panel column max-width 1000–1150 px, left-aligned (same cap as the Downloader proposal).</li>
+  <li>Page root height chain (Phase 10 input, inherited from Downloader §04): <code>h-full min-h-0</code> on <code>convert-page</code>, <code>flex-1 min-h-[20rem]</code> on <code>convert-queue-region</code>, <code>overflow-auto</code> on a wrapper around <code>QueueList</code> only — not on the shared list container.</li>
+  <li>Which pane yields (same Phase 10 input): the controls above the queue are one <code>flex min-h-0 flex-col gap-4 overflow-auto</code> pane and the summary/toolbar footer is one <code>flex shrink-0 flex-col gap-4</code> wrapper, so the controls absorb the column's height deficit. Left at the flex default the deficit is split by content height and the queue shrinks to 85px here — under the ~124px the clamp needs, which silently takes keyboard reorder away again.</li>
+  <li>G34 heights: task, preset, cut mode and extract scope segments and their labels at <code>sm</code> (28 px); Add at <code>md</code> (36 px); Save <code>ghost sm</code>, switching to <code>primary sm</code> when dirty; Refresh <code>ghost sm</code>.</li>
+  <li>Drop strip: min-height 52 px, dashed <code>border-neutral</code>, radius 6, flex 1 with min-width 300 px; while dragging over it, border and text switch to <code>accent</code>.</li>
+  <li>Staged chips: 24 px, <code>bg-bg-elevated</code>, monospace path, × on the right; wrap to as many rows as needed.</li>
+  <li>Tokens only (G32): chips reuse <code>accent-green / accent / error / accent-red / accent-orange</code>; card metadata in <code>fg-muted</code>, position numbers in <code>bg-subtle</code> text.</li>
+  <li>Motion (G33): Advanced disclosure and bulk bar use <code>duration-fast</code> / <code>ease-out</code>; processor chip dot pulses, disabled under <code>prefers-reduced-motion</code>.</li>
+  <li>Queue Zone 2 sizing is inherited unchanged from the Downloader proposal §04.</li>
+</ul>
+
+<h2><span class="sec">05</span>Element inventory (test ids)</h2>
+<p class="note">Every id that exists on the page today, with what happens to it. Nothing is removed. “change” means the same node with a different shape or position rule, never a different action.</p>
+<div class="tblwrap">
+<table class="inv">
+  <tr><th>Element / test id</th><th>Today</th><th>Proposed</th><th></th></tr>
+  <tr><td><code>convert-page</code></td><td>Full-width column</td><td>Same root; content capped and left-aligned</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>HelpCard (converter)</td><td>Top</td><td>Top, unchanged</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td><code>convert-task-compress</code> / <code>-cut</code> / <code>-extract</code></td><td>Native radios, left of GPU chip</td><td>Same radios inside a segmented control; panel header line</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-gpu-chip</code></td><td>Plain text, right</td><td>Chip with dot; color by state (GPU ok / software / FFmpeg missing)</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-gpu-refresh</code></td><td>Inside Advanced box (+ hidden twin when closed)</td><td>Ghost sm beside the chip; single instance, always rendered</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>convert-dropzone</code></td><td>Padded box with Browse and staged list inside</td><td>Drop strip, one line, flex 1 next to Add; staged list moves out</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-browse</code></td><td>Secondary md inside dropzone</td><td>Inline link-button inside the strip text</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>Staged file list <code>&lt;ul&gt;</code></td><td>Inside dropzone</td><td>Chip row below the strip, each chip removable (new remove-from-staging action; see §06)</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-add</code></td><td>Full-width primary md, after output row</td><td>Primary md at the end of the drop-strip line; label carries the staged count</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>convert-preset-archival</code> … <code>-mobile</code></td><td>Five md buttons, primary/outline</td><td>Five options in one sm segmented control; description text beside it</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-advanced</code></td><td>Ghost sm under presets</td><td>Ghost sm at the right end of the preset row; caret shows state</td><td><span class="tag move">move</span></td></tr>
+  <tr><td>Advanced: CQ, Scale, Audio, Encoder override</td><td>Stacked full width in a bordered box</td><td>Two-column label/control grid inside a disclosure; controls at natural width</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-cut-in</code> / <code>convert-cut-out</code></td><td>Full-width inputs (hidden unless Cut)</td><td>Fixed-width monospace inputs on the task-options row</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-copy</code> radios (Fast / Accurate)</td><td>Native radios</td><td>Segmented control on the same row</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-extract-first</code> / <code>convert-extract-all</code></td><td>Native radios</td><td>Segmented control on the task-options row</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-output-dir</code></td><td>Flex-1 input with label above</td><td>Footer row, inline label “Output”, flex 1</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>convert-skip-existing</code></td><td>Checkbox, long label</td><td>Footer row, label “Skip existing”</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>convert-page-save</code></td><td>Primary md, always primary</td><td>Footer row; ghost sm when clean, primary sm + “Save Changes •” when dirty</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>error-banner</code></td><td>Between Add and queue</td><td>Status line inside the panel, error color; also explains why Add is disabled</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>convert-queue-region</code></td><td>Wraps header, bulk bar, toast, list</td><td>Same wrapper; now also owns the queue header row and toolbar. Carries <code>flex-1 min-h-[20rem]</code>; the list sits in an <code>overflow-auto</code> child, and the controls above it are the pane that shrinks (Phase 10 height chain)</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>QueueSelectionHeader (“Select all conversions”)</td><td>Own line above the list</td><td>Leading checkbox of the queue header row; hidden when the queue is empty</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>BulkActionBar</td><td>Between header and list</td><td>Same position (USER_LOCKS lock 1); verb + count on the confirm button (lock 2)</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td>BulkResultToast</td><td>Below bulk bar</td><td>Unchanged</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td><code>convert-queue</code> / <code>convert-queue-row</code></td><td>QueueList cards</td><td>Same list; card second line adds task meta (kind · preset/range/scope · encoder)</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>convert-queue-summary</code></td><td>Six “status: n” strings below the list</td><td>Chips in the queue header; zero counts omitted; empty queue shows “0 items”</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>convert-processor</code></td><td>Text line, hidden when idle</td><td>Live chip in the header chips group; hidden when idle</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>queue-toolbar</code> (Start · Pause/Resume · Clear finished · ⋯)</td><td>Last block on the page</td><td>Right end of the queue header row; same four children, popup sibling</td><td><span class="tag move">move</span></td></tr>
+  <tr><td>Queue overflow menu (Clear all)</td><td>Popup</td><td>Unchanged, anchored to ⋯</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td>ConfirmModal (remove / clear / bulk)</td><td>Portal</td><td>Unchanged</td><td><span class="tag keep">keep</span></td></tr>
+</table>
+</div>
+
+<h2><span class="sec">06</span>Decisions to lock before implementation</h2>
+<ol class="tight">
+  <li><strong>Staged-file removal.</strong> The chip × is a new action (remove one staged path before Add). Today the only way out is to Add or to re-stage. Ship it, or render the chips without × for parity?</li>
+  <li><strong>Add label.</strong> “Add 2” (count) vs plain “Add”. The count is the reason Add can sit far from the list; if the label must stay “Add”, keep the chip row directly under the strip.</li>
+  <li><strong>Output folder row.</strong> Stay on the page as a footer (proposed), or move entirely to Settings → Convert and show only a read-only path hint here? Both pages currently expose it with explicit Save.</li>
+  <li><strong>Save visual state.</strong> Ghost when clean, primary when dirty, or always primary as today? The dirty-dot label logic already exists.</li>
+  <li><strong>Encoder chip vocabulary.</strong> Drop the “Encoder:” prefix in the chip (“NVIDIA NVENC”, “Software (libx265)”, “FFmpeg missing”) or keep the exact <code>gpuChipLabel</code> strings? Tests assert on the text today.</li>
+  <li><strong>Refresh GPU visibility.</strong> Always visible beside the chip (proposed) vs only when Advanced is open (today). Always visible means one instance and simpler tests.</li>
+  <li><strong>Card second line content.</strong> Task meta (“Compress · Balanced · NVENC”) requires the row to know its preset and encoder; confirm the queue item wire already carries these or the line shows kind only.</li>
+</ol>
+<p class="note">Everything else is composition and can be implemented from this document plus the Downloader mockup’s Zone 2 spec without further product decisions.</p>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('after-working');
+  if (!root) return;
+  // task segmented control → swap the options row
+  const taskSeg = root.querySelector('[data-role="task-seg"]');
+  taskSeg.addEventListener('change', (e) => {
+    const v = e.target.value;
+    taskSeg.querySelectorAll('label').forEach((l) => l.classList.toggle('on', l.querySelector('input').value === v));
+    root.querySelectorAll('[data-task]').forEach((row) => {
+      const on = row.dataset.task === v;
+      row.classList.toggle('sub-hidden', !on);
+      row.classList.toggle('sub-shown', on);
+    });
+    if (v !== 'compress') root.querySelector('[data-role="adv"]').classList.remove('open');
+  });
+  // preset segmented control
+  const desc = { Archival: 'CQ 18 · Source · copy audio', 'High Quality': 'CQ 22 · Source · aac 128k', Balanced: 'CQ 25 · Source · aac 128k', Sharing: 'CQ 28 · Source · aac 128k', Mobile: 'CQ 30 · 720p · aac 96k' };
+  root.querySelector('[data-role="preset-seg"]').addEventListener('change', (e) => {
+    const lab = e.target.closest('label');
+    lab.parentElement.querySelectorAll('label').forEach((l) => l.classList.toggle('on', l === lab));
+    root.querySelector('[data-role="preset-desc"]').textContent = desc[lab.textContent.trim()] || '';
+  });
+  // generic segmented controls (cut mode, extract)
+  root.querySelectorAll('.seg:not([data-role])').forEach((seg) => seg.addEventListener('change', (e) => {
+    const lab = e.target.closest('label');
+    seg.querySelectorAll('label').forEach((l) => l.classList.toggle('on', l === lab));
+  }));
+  // advanced disclosure
+  const advBtn = root.querySelector('[data-role="adv-toggle"]');
+  const adv = root.querySelector('[data-role="adv"]');
+  advBtn.addEventListener('click', () => {
+    const open = adv.classList.toggle('open');
+    advBtn.setAttribute('aria-expanded', String(open));
+    advBtn.textContent = open ? 'Advanced ▴' : 'Advanced ▾';
+    advBtn.classList.toggle('on', open);
+  });
+  // more menu
+  const more = root.querySelector('[data-role="more"]');
+  const menu = root.querySelector('[data-role="menu"]');
+  more.addEventListener('click', (e) => { e.stopPropagation(); const o = menu.classList.toggle('open'); more.setAttribute('aria-expanded', String(o)); });
+  document.addEventListener('click', () => { menu.classList.remove('open'); more.setAttribute('aria-expanded', 'false'); });
+  // card selection + bulk bar
+  const cards = [...root.querySelectorAll('[data-card]')];
+  const bulk = root.querySelector('[data-role="bulk"]');
+  const selectAll = root.querySelector('[data-role="select-all"]');
+  function sync() {
+    const n = cards.filter((c) => c.querySelector('.chk').checked).length;
+    cards.forEach((c) => c.classList.toggle('is-selected', c.querySelector('.chk').checked));
+    bulk.classList.toggle('show', n > 0);
+    bulk.querySelector('.n').textContent = n;
+    bulk.querySelector('.danger').textContent = 'Remove ' + n;
+    selectAll.checked = n === cards.length; selectAll.indeterminate = n > 0 && n < cards.length;
+  }
+  cards.forEach((c) => {
+    c.addEventListener('click', (e) => { if (e.target.closest('.kebab, a, .chk')) return; const k = c.querySelector('.chk'); k.checked = !k.checked; sync(); });
+    c.querySelector('.chk').addEventListener('change', sync);
+  });
+  selectAll.addEventListener('change', () => { cards.forEach((c) => (c.querySelector('.chk').checked = selectAll.checked)); sync(); });
+  root.querySelector('[data-role="bulk-clear"]').addEventListener('click', () => { cards.forEach((c) => (c.querySelector('.chk').checked = false)); sync(); });
+})();
+</script>
+</body>
+</html>

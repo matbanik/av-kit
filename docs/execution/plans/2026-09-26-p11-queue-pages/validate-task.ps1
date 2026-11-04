@@ -1,0 +1,40 @@
+# Exact validation procedures extracted from the approved task table.
+# Script files make these commands portable under the adopted task linter.
+param([Parameter(Mandatory=$true)][string]$Check)
+$ErrorActionPreference = 'Stop'
+$env:RECEIPTS_DIR = 'C:/Temp/av-kit'
+switch ($Check) {
+    '52-red-check' {
+        $p='C:/Temp/av-kit/p11q-52-red.json'; rtk proxy npm --prefix ui run test -- tests/unit/queue-header-row.test.tsx tests/unit/downloader-page.behavior.test.ts tests/unit/convert-page.behavior.test.ts --reporter=json --outputFile=$p *> C:/Temp/av-kit/p11q-52-red.txt; $rc=$LASTEXITCODE; if($rc -eq 0 -or -not(Test-Path $p)){Write-Error 'missing Red failure/report'; exit 1}; $j=ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($p)); if($j.numFailedTests -lt 1 -or $j.numPendingTests -ne 0 -or $j.numTodoTests -ne 0 -or @($j.testResults).Count -ne 3 -or $j.testResults[0].message -ne '' -or -not (($j.testResults[0].assertionResults.fullName -join ' ') -match 'AC-52')){Write-Error 'AC-52 assertion Red not established'; exit 1}; 'PASS AC-52 RED'
+        break
+    }
+    '53-red-check' {
+        $p='C:/Temp/av-kit/p11q-53-red.json'; rtk proxy npm --prefix ui run test -- tests/unit/downloader-page.behavior.test.ts --reporter=json --outputFile=$p *> C:/Temp/av-kit/p11q-53-red.txt; $rc=$LASTEXITCODE; if($rc -eq 0 -or -not(Test-Path $p)){Write-Error 'missing Red failure/report'; exit 1}; $j=ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($p)); if($j.numFailedTests -lt 1 -or $j.numPendingTests -ne 0 -or $j.numTodoTests -ne 0 -or @($j.testResults).Count -ne 1 -or $j.testResults[0].message -ne '' -or -not (($j.testResults[0].assertionResults.fullName -join ' ') -match 'AC-53')){Write-Error 'AC-53 assertion Red not established'; exit 1}; 'PASS AC-53 RED'
+        break
+    }
+    '54-red-check' {
+        $p='C:/Temp/av-kit/p11q-54-red.json'; rtk proxy npm --prefix ui run test -- tests/unit/convert-page.behavior.test.ts --reporter=json --outputFile=$p *> C:/Temp/av-kit/p11q-54-red.txt; $rc=$LASTEXITCODE; if($rc -eq 0 -or -not(Test-Path $p)){Write-Error 'missing Red failure/report'; exit 1}; $j=ConvertFrom-Json -InputObject ([IO.File]::ReadAllText($p)); if($j.numFailedTests -lt 1 -or $j.numPendingTests -ne 0 -or $j.numTodoTests -ne 0 -or @($j.testResults).Count -ne 1 -or $j.testResults[0].message -ne '' -or -not (($j.testResults[0].assertionResults.fullName -join ' ') -match 'AC-54')){Write-Error 'AC-54 assertion Red not established'; exit 1}; 'PASS AC-54 RED'
+        break
+    }
+    'task-state' {
+        $rows=@(Select-String -LiteralPath 'docs/execution/plans/2026-09-26-p11-queue-pages/task.md' -Pattern '^\| [0-9]+ \|'); if($rows.Count -ne 10){Write-Error 'wrong row count'; exit 1}; foreach($r in $rows){$s=$r.Line.Split([char]124)[-2].Trim().Trim([char]96); if($s -eq '[x]'){continue}; if($s -eq '[B]' -and $r.Line.Contains('follow-up:') -and $r.Line.Contains('receipt:')){continue}; Write-Error "unfinished row $($r.LineNumber)"; exit 1}; 'PASS implementation rows'
+        break
+    }
+    'ssot-hub' {
+        $base='docs/execution/plans/2026-09-26-p11-queue-pages'; foreach($n in @(52,53,54)){ rtk proxy uv run python tools/meu_status.py update "MEU-$n" ready_for_review --plan $base *> "C:/Temp/av-kit/p11q-meu-$n-update.txt"; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE} }; rtk proxy uv run python tools/meu_status.py render *> C:/Temp/av-kit/p11q-meu-render.txt; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; rtk proxy uv run python tools/meu_status.py render --check *> C:/Temp/av-kit/p11q-meu-check.txt; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; $hub=[IO.File]::ReadAllText('docs/BUILD_PLAN.md'); if(-not $hub.Contains('MEU-55') -or -not $hub.Contains('11-page-layout.md')){Write-Error 'hub next/link audit failed'; exit 1}; $g=[IO.File]::ReadAllText('.agent/context/grouping/2026-09-03-p11-page-layout-session-grouping.md'); if(-not ($g -match '24\s+\x7c\s+`p11-queue-pages`\s+\x7c\s+in review\s+\x7c\s+`docs/execution/plans/2026-09-26-p11-queue-pages/')){Write-Error 'grouping Session 24 not in review'; exit 1}; $f=[IO.File]::ReadAllText('.agent/context/current-focus.md'); if(-not $f.Contains('Session 24')){Write-Error 'focus not in review'; exit 1}; 'PASS SSOT and BUILD_PLAN audit'
+        break
+    }
+    'post-review-state' {
+        $base='docs/execution/plans/2026-09-26-p11-queue-pages'; foreach($n in @(52,53,54)){ rtk proxy uv run python tools/meu_status.py update "MEU-$n" approved --plan $base *> "C:/Temp/av-kit/p11q-meu-$n-approved.txt"; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE} }; rtk proxy uv run python tools/meu_status.py render *> C:/Temp/av-kit/p11q-approved-render.txt; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; rtk proxy uv run python tools/meu_status.py render --check *> C:/Temp/av-kit/p11q-approved-check.txt; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; $y=[IO.File]::ReadAllText('.agent/context/meu-status.yaml'); foreach($n in @(52,53,54)){ $b=[regex]::Match($y,"(?ms)^- row_key: MEU-$n\r?\n.*?(?=^- row_key:)").Value; if(-not $b.Contains('  status: approved') -or -not $b.Contains("  execution_plan: $base")){Write-Error "MEU-$n approved/binding absent"; exit 1} }; $g=[IO.File]::ReadAllText('.agent/context/grouping/2026-09-03-p11-page-layout-session-grouping.md'); if(-not ($g -match '24\s+\x7c\s+`p11-queue-pages`\s+\x7c\s+approved\s+\x7c\s+`docs/execution/plans/2026-09-26-p11-queue-pages/')){Write-Error 'grouping Session 24 not approved'; exit 1}; $h=[IO.File]::ReadAllText('docs/BUILD_PLAN.md'); if(-not $h.Contains('Next: Phase 11 page layout (MEU-55)')){Write-Error 'hub Next is stale'; exit 1}; $f=[IO.File]::ReadAllText('.agent/context/current-focus.md'); if(-not $f.Contains('Session 25')){Write-Error 'focus not advanced'; exit 1}; $m=@(Select-String -LiteralPath 'docs/execution/metrics.md' -Pattern '2026-09-26.*p11-queue-pages'); if($m.Count -ne 1){Write-Error 'missing/duplicate metrics row'; exit 1}; 'PASS POST_REVIEW_STATE and metrics'
+        break
+    }
+    'closeout-draft' {
+        $p='C:/Temp/av-kit/p11q-commit-draft.txt'; if(-not(Test-Path $p) -or (Get-Item $p).Length -eq 0){Write-Error 'missing commit draft'; exit 1}; 'PASS draft'
+        break
+    }
+    'final-task-check' {
+        $rows=@(Select-String -LiteralPath 'docs/execution/plans/2026-09-26-p11-queue-pages/task.md' -Pattern @('^\| [0-9]+ \|','^\| H1-[0-9]+ \|','^\| H2-[0-9]+ \|')); if($rows.Count -ne 19){Write-Error "expected 19 rows, got $($rows.Count)"; exit 1}; foreach($r in $rows){$s=$r.Line.Split([char]124)[-2].Trim().Trim([char]96); if($s -eq '[x]'){continue}; if($s -eq '[B]' -and $r.Line.Contains('follow-up:') -and $r.Line.Contains('receipt:')){continue}; Write-Error "unfinished row $($r.LineNumber)"; exit 1}; rtk proxy uv run python tools/check_exec_review.py --review-file .agent/context/handoffs/2026-09-26-p11-queue-pages-implementation-critical-review.md --expected-mode implementation --expected-target docs/execution/plans/2026-09-26-p11-queue-pages/implementation-plan.md --max-round 6 *> C:/Temp/av-kit/p11q-final-review-check.txt; if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}; $base='docs/execution/plans/2026-09-26-p11-queue-pages'; $y=[IO.File]::ReadAllText('.agent/context/meu-status.yaml'); foreach($n in @(52,53,54)){ $b=[regex]::Match($y,"(?ms)^- row_key: MEU-$n\r?\n.*?(?=^- row_key:)").Value; if(-not $b.Contains('  status: approved') -or -not $b.Contains("  execution_plan: $base")){Write-Error "MEU-$n not approved/bound"; exit 1} }; $g=[IO.File]::ReadAllText('.agent/context/grouping/2026-09-03-p11-page-layout-session-grouping.md'); $h=[IO.File]::ReadAllText('docs/BUILD_PLAN.md'); $f=[IO.File]::ReadAllText('.agent/context/current-focus.md'); if(-not ($g -match '24\s+\x7c\s+`p11-queue-pages`\s+\x7c\s+approved\s+\x7c\s+`docs/execution/plans/2026-09-26-p11-queue-pages/') -or -not $h.Contains('Next: Phase 11 page layout (MEU-55)') -or -not $f.Contains('Session 25')){Write-Error 'post-review grouping/hub/focus mismatch'; exit 1}; 'PASS 19 rows, independent approval, POST_REVIEW_STATE'
+        break
+    }
+    default { throw "Unknown check: $Check" }
+}

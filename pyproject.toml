@@ -1,0 +1,45 @@
+[project]
+name = "av-kit"
+version = "0.1.0"
+description = "YouTube media toolkit workspace"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["packages/core", "packages/infrastructure", "packages/api"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pyright>=1.1",
+    "ruff>=0.6",
+    "pyyaml>=6.0",
+    "jsonschema>=4.0",
+    "pyinstaller>=6.22.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "packages/core/src", "packages/infrastructure/src", "packages/api/src"]
+markers = [
+    "unit: isolated unit tests",
+    "integration: adapter/integration tests",
+    "e2e: end-to-end tests",
+]
+
+[tool.pyright]
+include = ["packages/core/src", "packages/infrastructure/src", "packages/api/src"]
+extraPaths = ["packages/core/src", "packages/infrastructure/src", "packages/api/src"]
+pythonVersion = "3.11"
+typeCheckingMode = "standard"
+
+[tool.ruff]
+target-version = "py311"
+src = ["packages/core/src", "packages/infrastructure/src", "packages/api/src", "tests"]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

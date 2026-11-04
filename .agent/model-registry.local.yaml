@@ -1,0 +1,52 @@
+extends: global
+classes:
+  avkit_coordinator:
+    contract:
+      capabilities: [orchestration, deep_reasoning, agentic_exec]
+      effort_default: high
+      forbid: [claude-fable-5-1]
+    bindings:
+      cursor-task: {slug: cursor-grok-4.6, effort: xhigh}
+      claude-p: {slug: claude-opus-5, effort: high}
+  avkit_builder:
+    contract:
+      capabilities: [agentic_exec, bulk_edit]
+      effort_default: medium
+      price_ceiling_band: high
+      inherit_allowed: false
+      not_a_reviewer: true
+      forbid: [claude-fable-5-1]
+    bindings:
+      cursor-task: {slug: cursor-grok-4.6, effort: xhigh}
+      claude-code-agents: {slug: claude-sonnet-5-5, effort: medium}
+  avkit_verifier:
+    contract:
+      capabilities: [agentic_exec, bulk_edit]
+      effort_default: medium
+      price_ceiling_band: high
+      inherit_allowed: false
+      not_a_reviewer: true
+      forbid: [claude-fable-5-1]
+    bindings:
+      cursor-task: {slug: composer-2.5-fast, effort: medium}
+      claude-code-agents: {slug: claude-sonnet-5-5, effort: medium}
+  avkit_independent_reviewer:
+    contract:
+      capabilities: [code_review, agentic_exec, read_only_sandbox]
+      vendor_distinct_from: author
+      effort_floor: medium
+      effort_default: high
+      price_ceiling_band: high
+      auth_mode: chatgpt-plan
+    bindings:
+      codex-cli:
+        slug: gpt-6.1-sol
+        effort_map: {routine: medium, risk_path: high}
+  avkit_router:
+    contract:
+      capabilities: [classification]
+      effort_default: low
+      price_ceiling_band: low
+      not_a_reviewer: true
+    bindings:
+      claude-code-agents: {slug: claude-haiku-5-5, effort: low}

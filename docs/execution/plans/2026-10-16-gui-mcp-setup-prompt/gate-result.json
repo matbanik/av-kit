@@ -1,0 +1,248 @@
+{
+  "schema": "s31b-gate.v1",
+  "tested_commit": "6097cf59adc7835fa6062c8bd3d55c679aef4543",
+  "product_uncommitted": [
+    " M docs/BUILD_PLAN.md",
+    " M docs/build-plan/05-mcp-server.md",
+    " M docs/build-plan/06-gui.md",
+    " M docs/build-plan/07-distribution.md",
+    " M docs/build-plan/10-queue-card-ui.md",
+    " M docs/build-plan/build-priority-matrix.md",
+    " M docs/build-plan/gui-actions-index.md",
+    " M docs/distribution/mcp.json.example",
+    " M docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/implementation-plan.md",
+    " M docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/plan_checks.py",
+    " M docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/task.md",
+    " M docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/validate-task.ps1",
+    " M mcp-server/package-lock.json",
+    " M mcp-server/package.json",
+    " M mcp-server/src/index.ts",
+    " M mcp-server/tests/runtime.test.ts",
+    " M ui/electron-builder.yml",
+    " M ui/package.json",
+    " M ui/src/main/index.ts",
+    " M ui/src/main/ipc.ts",
+    " M ui/src/main/preload.ts",
+    " M ui/src/renderer/src/env.d.ts",
+    " M ui/src/renderer/src/features/settings/SettingsPage.tsx",
+    " M ui/tests/e2e/settings.test.ts",
+    " M ui/tests/e2e/test-ids.ts",
+    " M ui/tests/unit/clipboard-image-main.test.ts",
+    " M ui/tests/unit/gui-actions-audit.test.ts",
+    " M ui/tests/unit/ipc-channels.ts",
+    " M ui/tests/unit/ipc-strict-census.test.ts",
+    " M ui/tests/unit/login-item-ipc.test.ts",
+    " M ui/tests/unit/queue-canon.test.ts",
+    "?? docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/baseline-counts.json",
+    "?? docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/baseline.sha",
+    "?? docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/gate-result.json",
+    "?? docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/pkg-probe-result.json",
+    "?? docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/review-prompt-execution.md",
+    "?? docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/walkthrough.md",
+    "?? mcp-server/scripts/bundle-licenses.ts",
+    "?? mcp-server/scripts/bundle.ts",
+    "?? mcp-server/src/entry-guard.ts",
+    "?? mcp-server/tests/bundle-licenses.test.ts",
+    "?? mcp-server/tests/bundle.test.ts",
+    "?? mcp-server/tests/entry-guard.test.ts",
+    "?? mcp-server/tests/entry-spawn.test.ts",
+    "?? mcp-server/tests/example-config.test.ts",
+    "?? ui/src/main/mcp-setup-prompt.ts",
+    "?? ui/tests/e2e/mcp-setup-prompt.test.ts",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/claude-code-project.txt",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/claude-code-user.txt",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/claude-desktop-user.txt",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/codex-project.txt",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/codex-user.txt",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/cursor-project.txt",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/cursor-user.txt",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/generic-user.txt",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/vscode-project.txt",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/vscode-user.txt",
+    "?? ui/tests/unit/fixtures/mcp-setup-prompt/windsurf-user.txt",
+    "?? ui/tests/unit/mcp-prompt-ipc.test.ts",
+    "?? ui/tests/unit/mcp-server-entry.test.ts",
+    "?? ui/tests/unit/mcp-setup-prompt.test.ts",
+    "?? ui/tests/unit/mcp-spawn-electron.test.ts",
+    "?? ui/tests/unit/settings-mcp-prompt.test.ts"
+  ],
+  "product_file_sha256": {
+    "docs/BUILD_PLAN.md": "D57DED0E5474ED2DE5F84C05245886DEA835E486D6027038BB1E21F1A9030F60",
+    "docs/build-plan/05-mcp-server.md": "50610A1CEF3BD9AA1B02249D62A214C4274BF0ADAA261A12F564DB00D5B09939",
+    "docs/build-plan/06-gui.md": "9D773BD78C74B081DC2443B075D90A4FAF3CFD28FE8312649916E5A4EE73BA55",
+    "docs/build-plan/07-distribution.md": "2443789A07FEA5C90BE050F4414C4481C0754BCF598396BC9690DFC56C5634C2",
+    "docs/build-plan/10-queue-card-ui.md": "877A132DA0DCDF02E095DA72C1EE7582A090CA0C2BAE88B9FFC07B5A967981FD",
+    "docs/build-plan/build-priority-matrix.md": "D8A1ECF3226B7E91CE217D17D75D7E064EC85203CD5879C2715BA0CF4756C7C0",
+    "docs/build-plan/gui-actions-index.md": "90CADD4DC2B5BC3871C3B15B426A7731064EA6EA10944EB94B82767306C5AB5C",
+    "docs/distribution/mcp.json.example": "4CC56FD841F3179629C4436FCA68D65D3D195AC1C46E4E2CA59F3C68349033A3",
+    "docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/implementation-plan.md": "D3FF9C748C57ED674844397051ED700094B72E5E58431BDEFE0DF6D27D8B010A",
+    "docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/plan_checks.py": "9363CC50E217543C4E457392E795A586CEF54BA19E1B97ECE020EBD156881638",
+    "docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/task.md": "C95688BBCEF9BBD15A4FE5D4E02BDBBFD1A0674E48CB255BBF2178535F5A785D",
+    "docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/validate-task.ps1": "07296675DF8658E321E2EF1F88C8137965381AEF45837980C696B146DA87B9E5",
+    "mcp-server/package-lock.json": "9D2BD456D1B76CC1B685261653A81845D81DB63C7CF44BD2119835D105CBE10A",
+    "mcp-server/package.json": "05389BB4BDB1A36FF0C937A869AC7A3E5F421514DF339C4E46F3293B99CF9D5D",
+    "mcp-server/src/index.ts": "603EA636286D1C165DCB4BBB3C8185FDF8FA7AF0597CA9CBEA8A7639D4F7AA99",
+    "mcp-server/tests/runtime.test.ts": "2501374EF3FE183EBE760F640858511FB8799FA4A91F63C3BBB8991FA903FEFF",
+    "ui/electron-builder.yml": "965321F37CE453E9941CBF53B1ABC87A289B937B2AA2360CC62969219585395E",
+    "ui/package.json": "F436AAA98DF775FC07B63955F1D8F97E82C3F1EBD3EE6C3DA8848DBF02C35E68",
+    "ui/src/main/index.ts": "06E36DD3044B59418CBE3A723889608538E50C8A90A4E8A935130A35B58D01C6",
+    "ui/src/main/ipc.ts": "C588AEF37E41FB1B3411D51C551F96510B3D0885ED6D5B76E289218C07A2C013",
+    "ui/src/main/preload.ts": "ECB57223E9B700FAD99E10CCE51823622EBC87B86C76EAF029850AD8608ACE1D",
+    "ui/src/renderer/src/env.d.ts": "5D42524BEB1D024149B4A8CA988B6CE33D4702B857A4CD38D9318483CC72FC00",
+    "ui/src/renderer/src/features/settings/SettingsPage.tsx": "3143E2FE91E2A23F72D2FC4159FB7FE7A2CDCF9402D485E97506B6FA29359328",
+    "ui/tests/e2e/settings.test.ts": "F4AACBEB1B85A3A6A4AF09FA00C6C6D5EE27E2CE30FAB19BA104A85EBA9A37C7",
+    "ui/tests/e2e/test-ids.ts": "CEBE4F8308F325C58B201D1FF909AE4F4D2758E4ED3C714A0A50FC2E65BBB35F",
+    "ui/tests/unit/clipboard-image-main.test.ts": "8ABAD55E3F3AB1CFBA976DC6B25001B0D0C0EAE723E8AF0C37975013A3EE0C3A",
+    "ui/tests/unit/gui-actions-audit.test.ts": "5656D00689D42274EC0D81C48557A41AC35ACC18F86997B20D318AAC56A5A1BE",
+    "ui/tests/unit/ipc-channels.ts": "A0EF9ECB2F27EB9E89004DCF0FE9C83A3D7C24FBD1421E9B15EEAE4DF157F6F4",
+    "ui/tests/unit/ipc-strict-census.test.ts": "0A39D9A94D2F667ED1A6AB062D2A5520BD57B5C5A08EA4EAF9D5E1B1B64115E4",
+    "ui/tests/unit/login-item-ipc.test.ts": "7F161A265164257A77A80BF5E0A2DED3513F36D1DBCB96030A22DC994A698DFF",
+    "ui/tests/unit/queue-canon.test.ts": "5D9AAEBA9344A52D4141C48D9CB9733AA9C95E0659D517F46CD4F343B14A56FD",
+    "docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/baseline-counts.json": "3E434A8DF92185A99D56DD68ABB2CBE17BA2C6AAB9235A0F35BED6502F4935A6",
+    "docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/baseline.sha": "83511ED27ACC85326BD2EFFD099BDB64D6774B56F68585EB90C51BFBA7EB1227",
+    "docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/gate-result.json": "BFFBB7031054B52588C59EEE319466FAE19C54E07047E62CC130C39E63F02ADC",
+    "docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/pkg-probe-result.json": "6ADBD230C1AB9A64A75D9D9377459E8C18381C9B70D099DC6039F5E436CFC672",
+    "docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/review-prompt-execution.md": "3E7D809A60561228867FFD722A5A396BED5B8630F06E2F86F696B67501311E03",
+    "docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/walkthrough.md": "57C2E6DAB3C10A8F5763A085B1F6EB07A46F88DFB2462F255E057D53DF64C28D",
+    "mcp-server/scripts/bundle-licenses.ts": "1C3A27895FBDEF12F49C0FE8538F21F6B19079116F65631355F69C54F36E7B70",
+    "mcp-server/scripts/bundle.ts": "CD185472439C1ECBAF2E94DB7184A7D4CA2953E79810B7BE3310A21F97FA91F8",
+    "mcp-server/src/entry-guard.ts": "AE579CDF59CE9DB0AA2D47526C0D91B92027D8803B529C105207A76C1F0D6DBB",
+    "mcp-server/tests/bundle-licenses.test.ts": "ACA7E7B0642C9511D0097E5C8BE84B55C2F298764C40A03F6F7D17323FA51679",
+    "mcp-server/tests/bundle.test.ts": "1CD4B80AC0120B8919178C62F000350980C527712AE6D39373F6E301E25EFFD9",
+    "mcp-server/tests/entry-guard.test.ts": "867A21C8EA999CFBBD014F9A90652F836C33A89E5B10B9FEB9CC3034F60FF15E",
+    "mcp-server/tests/entry-spawn.test.ts": "F2181F424C1BDA9D1661D0C4B1482A2CD1A6EF29442761E96852209F283C9233",
+    "mcp-server/tests/example-config.test.ts": "35F15C9B84AC5F91B5040260229F72CC21978876A901D0874D38563C06DCE137",
+    "ui/src/main/mcp-setup-prompt.ts": "8DB15A2D0464625182A9AB144EDC55B1306F413F9D9592FF3CC2D8D729176E65",
+    "ui/tests/e2e/mcp-setup-prompt.test.ts": "56A12FBDD709AF2DCDDC74F91D32280B1909968ECD27023B9D8CF1A38F615B69",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/claude-code-project.txt": "14E08D211C118ACB914D1B594233286E757A766A2569F46581F4ACD8B1C0663C",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/claude-code-user.txt": "4B6BA6647F2719B13F06EEB083BA2E07577A43ECDEA2026F3C706F8C6D1816D5",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/claude-desktop-user.txt": "E926DB2D4DA5042879DD05C5086F26D03AF610A93A6D7A1C69FBD822FE812AC3",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/codex-project.txt": "7A4737555BDCD1EACFD3AA68357136DCBA2045B558614F32CDF0890D096D4C89",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/codex-user.txt": "00022146178732C5BE87AA12AD354341BC76E9E8CCD1FAA33463A45A867F2916",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/cursor-project.txt": "0C2B3C44E35704BB633D5C452B21B54018781B7FD3E09B5C639AA31F020B004E",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/cursor-user.txt": "7EA468F5A18894FA97C16A6178F56350F96D67BC13F649AC070505E664C7313E",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/generic-user.txt": "AE8ECB0D4B5E0552FFD3625818CCC98F4D08E115E1D1BD565A0ABA3AE594D26C",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/vscode-project.txt": "01891B97BCDA7D30EE639C4C51D554D51844D313EDA333436261998B3CE8A139",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/vscode-user.txt": "7A9B55FE84D984866C25A2EC0A2D3D6C850FFA1AA407EC9D793EF5646C852EA8",
+    "ui/tests/unit/fixtures/mcp-setup-prompt/windsurf-user.txt": "2DBCD2651443A6B3AE8B84173A9934C1317803A14D4EEA00A62E5845D01F0859",
+    "ui/tests/unit/mcp-prompt-ipc.test.ts": "BA61923B2D7F5FEC948A7676F1BA39D85BDD8448D26EC87ECDFA8165A65E4894",
+    "ui/tests/unit/mcp-server-entry.test.ts": "9E38AE7C3D231644E689A0A254E58FEADBFFE50521A82529DE7CF5421FBE0A31",
+    "ui/tests/unit/mcp-setup-prompt.test.ts": "2B0BC2A655FD0F7C65556852AFF1EE0900FF16BB100844290F6A19AC0A283831",
+    "ui/tests/unit/mcp-spawn-electron.test.ts": "1F989145266E0DF73E2576BF9235E4011B0B4D6FC9021DC9981DD31ECA04D6D7",
+    "ui/tests/unit/settings-mcp-prompt.test.ts": "C96401B3196F96AB853B6D5A21AEFB70375556548F5CD5DEEE229B40A5177C20"
+  },
+  "lockfile_sha256": {
+    "ui": "A86D9A42C6CBD98705E1720EDBD7666FED573581C07E21EA0F56379DC7332980",
+    "mcp_server": "9D2BD456D1B76CC1B685261653A81845D81DB63C7CF44BD2119835D105CBE10A"
+  },
+  "node": "v24.19.0",
+  "skipped": "py-types, py-lint, py-tests, openapi: no change under packages/, openapi.committed.json, pyproject.toml or uv.lock (-Check scope). mcp-audit: no MCP tool, schema or annotation changes; the audit snapshot does not cover the server instructions (AC-71.12 does), and mcp-server/scripts/audit/run.ts audits tool surfaces, not the instructions.",
+  "started": "2026-10-17T14:36:07.3858966-04:00",
+  "stages": [
+    {
+      "id": "gate-npm-ci",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-npm-ci.txt"
+    },
+    {
+      "id": "gate-ui-types",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-ui-types.txt"
+    },
+    {
+      "id": "gate-ui-lint",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-ui-lint.txt"
+    },
+    {
+      "id": "gate-mcp-types",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-mcp-types.txt"
+    },
+    {
+      "id": "gate-mcp-build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-mcp-build.txt"
+    },
+    {
+      "id": "gate-mcp-bundle",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-mcp-bundle.txt"
+    },
+    {
+      "id": "gate-pkg-current",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-pkg-current.txt"
+    },
+    {
+      "id": "gate-ui-build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-ui-build.txt"
+    },
+    {
+      "id": "gate-ui-harness-build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-ui-harness-build.txt"
+    },
+    {
+      "id": "gate-picker-stub",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-picker-stub.txt"
+    },
+    {
+      "id": "gate-mcp-tests",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-mcp-tests.txt"
+    },
+    {
+      "id": "gate-ui-tests",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-ui-tests.txt"
+    },
+    {
+      "id": "gate-ui-electron",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-ui-electron.txt"
+    },
+    {
+      "id": "gate-state-render",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-state-render.txt"
+    },
+    {
+      "id": "gate-task-contract",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-task-contract.txt"
+    },
+    {
+      "id": "gate-source-audit",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-source-audit.txt",
+      "note": "rg exit 1 (1 = no hits)"
+    },
+    {
+      "id": "gate-floors",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s31b-gate-floors.txt"
+    }
+  ],
+  "ui_vitest": {
+    "passed": 1007,
+    "failed": 0,
+    "total": 1007
+  },
+  "mcp_vitest": {
+    "passed": 446,
+    "failed": 0,
+    "total": 446
+  },
+  "e2e": {
+    "expected": 159,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "electron": "`-- electron@42.9.3",
+  "finished": "2026-10-17T14:41:00.9521746-04:00",
+  "passed": true
+}

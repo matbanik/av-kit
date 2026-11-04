@@ -1,0 +1,2 @@
+tests/unit/test_packaging_backend.py::test_pack_dist_onedir_layout[AC-24.10]
+tests/unit/test_packaging_installer.py::test_nsis_pack_check_script[AC-25.10]

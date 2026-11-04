@@ -1,0 +1,138 @@
+{
+  "schema": "s38-gate.v1",
+  "tested_commit": "90f041e0fd0ec15efddc77b8c57c4e074b0cb525",
+  "product_uncommitted": [
+    " M docs/build-plan/06-gui.md",
+    " M docs/build-plan/09-screenshot-capture.md",
+    " M docs/build-plan/gui-actions-index.md",
+    " M ui/src/main/index.ts",
+    " M ui/src/main/ipc.ts",
+    " M ui/src/main/preload.ts",
+    " M ui/src/renderer/src/env.d.ts",
+    " M ui/src/renderer/src/features/capture/CaptureFilmstrip.tsx",
+    " M ui/src/renderer/src/features/capture/CapturePage.tsx",
+    " M ui/src/renderer/src/features/capture/capture-commands.ts",
+    " M ui/src/renderer/src/features/capture/capture-help-content.ts",
+    " M ui/tests/e2e/test-ids.ts",
+    " M ui/tests/unit/capture-help-content.test.ts",
+    " M ui/tests/unit/gui-actions-audit.test.ts",
+    " M ui/tests/unit/ipc-channels.ts",
+    " M ui/tests/unit/ipc-strict-census.test.ts",
+    " M ui/tests/unit/login-item-ipc.test.ts",
+    "?? ui/src/main/clipboard-image.ts",
+    "?? ui/src/renderer/src/features/capture/CaptureFilmstripMenu.tsx",
+    "?? ui/src/renderer/src/features/capture/capture-clipboard.ts",
+    "?? ui/src/renderer/src/features/capture/capture-filmstrip-select.ts",
+    "?? ui/tests/e2e/capture-filmstrip-actions.test.ts",
+    "?? ui/tests/unit/capture-batch-delete.test.ts",
+    "?? ui/tests/unit/capture-clipboard.test.ts",
+    "?? ui/tests/unit/capture-filmstrip-actions.behavior.test.ts",
+    "?? ui/tests/unit/capture-filmstrip-select.test.ts",
+    "?? ui/tests/unit/clipboard-image-main.test.ts"
+  ],
+  "product_file_sha256": {
+    "docs/build-plan/06-gui.md": "97B31359A6890CE1299D9489549292583CD77690400ACD7C4D997FE083903599",
+    "docs/build-plan/09-screenshot-capture.md": "4DF222421848C4137857D516DE0B8DF996643C67D7C9911049C3A8991231EB24",
+    "docs/build-plan/gui-actions-index.md": "702E496B691458253F5A6E869861813632DA03B22D208DC423C8A7F22C0DA93C",
+    "ui/src/main/index.ts": "F480BB642EF3161D6EC91462EDB8D4DD8CC0F735E3ED995FB380B61C34F38C9E",
+    "ui/src/main/ipc.ts": "4F5304B3B63EA23B64D2FD5D0BF8A777845430938482CAE5445F31CC411A6F89",
+    "ui/src/main/preload.ts": "BC13B44DC6D0523DE489A21A4C8A2146E2062D63C5FBC851840585E78602C8C2",
+    "ui/src/renderer/src/env.d.ts": "49FB42E283497D58DF91A94FD59DBCF352EA851B347EBDDB329AC9127CAF5C38",
+    "ui/src/renderer/src/features/capture/CaptureFilmstrip.tsx": "C7341718CCA0E336E866EC5FB1A3F0B2FC8E4EFEC19D412E791B28CF6FD2476F",
+    "ui/src/renderer/src/features/capture/CapturePage.tsx": "4FECAEC976685EA8CD5279098160B3028FCD68CBB864CC9F581D290DA23C1F8F",
+    "ui/src/renderer/src/features/capture/capture-commands.ts": "8CFD8A916C8D0C3BA163E5CDF9A2CC4BA308C9C57B6BFFBA6AFEF3F6D2218B62",
+    "ui/src/renderer/src/features/capture/capture-help-content.ts": "90877E590C2358A97A77F3B32B049B54C00E1646F0A361D3B56581B85770542D",
+    "ui/tests/e2e/test-ids.ts": "5F335D7D3F235CD3F0513B43F1CF867CD14226FC372E31B121EE041023F6327B",
+    "ui/tests/unit/capture-help-content.test.ts": "40D58A335C06E5DC97D076BC922BFD18980E2C9B419A1AA8B6616F439189D5AC",
+    "ui/tests/unit/gui-actions-audit.test.ts": "416FED00F87DBA5797D9B8CF9D2545589E1C003E663EC6AE0BA609819EFC803D",
+    "ui/tests/unit/ipc-channels.ts": "556F6067723ED5F00509D577B86B091F87035EDF8B69B51A4D937E28749D06C6",
+    "ui/tests/unit/ipc-strict-census.test.ts": "23F80E7A242D424379079097EA80932FB6496E27EBDC67867639A3CBD9C9F397",
+    "ui/tests/unit/login-item-ipc.test.ts": "B6427C45F7FF84C953BF01833EFC9CD904FBB66545A984D4B7C8CD04738F8DD7",
+    "ui/src/main/clipboard-image.ts": "E827F756DE7F12DBC7FA9FE8519487FF70F9667F449A630D5DEAF3EFF7D6E478",
+    "ui/src/renderer/src/features/capture/CaptureFilmstripMenu.tsx": "E1A229E708454F3A8AACBF7545D2A8C905ED918A41545544B74DE708560E01FC",
+    "ui/src/renderer/src/features/capture/capture-clipboard.ts": "46FA5042B5833E235FE88A2D006E4168D1F39829CCB77DCCA044DC344E939326",
+    "ui/src/renderer/src/features/capture/capture-filmstrip-select.ts": "8EE84ABEFF326B5E1F497E1F9ADB1180166F683B000A589908FBF584A82FB4C0",
+    "ui/tests/e2e/capture-filmstrip-actions.test.ts": "9214E0FCEEA633A139A8F1A9FAF9D94055DB3287DDBF2C30FBA9ABD6A0C876A2",
+    "ui/tests/unit/capture-batch-delete.test.ts": "9DFA51F72B64093321EF48BE476542581CE9FE1DDC0C8CC908F0D6A85FA49F4D",
+    "ui/tests/unit/capture-clipboard.test.ts": "8EFA01E7C19881A9D522C13A2645BF22B80202D6EA8DEAA9E171BC1772FBA196",
+    "ui/tests/unit/capture-filmstrip-actions.behavior.test.ts": "F8FD2EB4E78FF22358B74B3986DF7CB4488466E1BD2D070DCE966B830E2FA0B3",
+    "ui/tests/unit/capture-filmstrip-select.test.ts": "A9AA9A2AED1FCF80A7234EA58678212ED86EF508DE43E2CB9475CF0D04C8E556",
+    "ui/tests/unit/clipboard-image-main.test.ts": "975D95E2759524FD02123583A8DC7D4AD91C9D13E99F909193B7E64F11446A66"
+  },
+  "lockfile_sha256": "A86D9A42C6CBD98705E1720EDBD7666FED573581C07E21EA0F56379DC7332980",
+  "node": "v24.19.0",
+  "skipped": "py-types, py-lint, py-tests, mcp-*, openapi: no change outside the Files Modified rows and closeout outputs, so none under packages/, mcp-server/, openapi.committed.json, pyproject.toml or uv.lock (-Check scope)",
+  "started": "2026-10-16T15:24:43.2565088-04:00",
+  "stages": [
+    {
+      "id": "gate-npm-ci",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-npm-ci.txt"
+    },
+    {
+      "id": "gate-ui-types",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-ui-types.txt"
+    },
+    {
+      "id": "gate-ui-lint",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-ui-lint.txt"
+    },
+    {
+      "id": "gate-ui-build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-ui-build.txt"
+    },
+    {
+      "id": "gate-ui-harness-build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-ui-harness-build.txt"
+    },
+    {
+      "id": "gate-ui-tests",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-ui-tests.txt"
+    },
+    {
+      "id": "gate-ui-electron",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-ui-electron.txt"
+    },
+    {
+      "id": "gate-state-render",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-state-render.txt"
+    },
+    {
+      "id": "gate-task-contract",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-task-contract.txt"
+    },
+    {
+      "id": "gate-source-audit",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-source-audit.txt",
+      "note": "rg exit 1 (1 = no hits)"
+    },
+    {
+      "id": "gate-floors",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s38-gate-floors.txt"
+    }
+  ],
+  "vitest": {
+    "passed": 857,
+    "failed": 0,
+    "total": 857
+  },
+  "e2e": {
+    "expected": 142,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "electron": "`-- electron@42.9.3",
+  "finished": "2026-10-16T15:35:14.3945363-04:00",
+  "passed": true
+}

@@ -1,0 +1,154 @@
+Perform /plan-critical-review for p10-queue-card-foundations (Round 7 - FINAL, human-authorised).
+
+## READ THIS FIRST - what the human actually wants from you
+
+The human's words, verbatim:
+
+  "Refocus the reviewer to the plan's substance and stress that Human requires more attention
+   on intent then procedure and protocols or any other beurocratic load since that can be
+   dealth with with AI reasoning pretty esily in the momement and tokens should not be wasted
+   on it."
+
+Rounds 4, 5 and 6 honoured that instruction exactly - eleven product findings, zero procedural
+findings. Keep doing precisely that:
+
+1. **Judge the plan on whether it builds the right thing.** Will executing this plan produce a
+   queue UI a person actually wants to use, with correct behaviour, honest accessibility, and no
+   silent scope loss? That is the review.
+2. **Do not spend tokens auditing process compliance.** Template sections, YAML ordering, artifact
+   naming, receipt-path spelling, whether a rule cites the blessed document - an agent resolves all
+   of that in the moment. One-line fix-note at most; never a finding, never a verdict gate.
+3. **A finding must name a way the delivered product is wrong**, with the case where a user sees
+   it. If you cannot write the failure case, it is not a finding.
+4. **Round 6 was the configured cap and it stopped.** The human read your two findings and
+   authorised exactly one more round rather than accepting them into execution unreviewed. That
+   authorisation is spent on this round. A `changes_required` here returns the plan to the human
+   for good, so it needs to name a defect genuinely worth that.
+
+## Write scope (non-negotiable)
+
+Write ONLY:
+`.agent/context/handoffs/2026-08-28-p10-queue-card-foundations-plan-critical-review.md`
+
+ROLLING file - APPEND a `## Round 7` section after the existing
+`## Round 7 Corrections - Reviewer R6-F1..F2 (corrections agent)` section, and update the YAML
+frontmatter in place. Do NOT create a `-r7`, `-recheck`, or `-final` variant. Do NOT edit product
+code, tests, docs outside that review file, or the plan files.
+
+YAML frontmatter MUST include:
+- date: "2026-08-28"
+- review_mode: "plan"
+- target_plan: "docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md"
+- verdict: "approved" or "changes_required"
+- findings_count: <integer, Round 7 findings only>
+- round: 7
+- template_version: "2.1"
+- requested_verbosity: "standard"
+- agent: "gpt-5.6-sol"
+- dispatch_id: "p10-queue-card-foundations-plan-r7"
+
+## Review targets
+
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/task.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/named-sets.json
+- packages/core/src/avkit_core/services/download.py - specifically `enqueue`, `apply_lock`
+  (~351-365), `apply_defaults_to_pending` (~369-391), `clear_sabr` (~335-348) and `_run_one`'s
+  AgeRestrictedError handler; and packages/core/src/avkit_core/domain/download.py `transition` /
+  `reset_failed` (~111-128). Read them; do not take the plan's description on faith.
+- docs/proposals/2026-08-27-queue-card-ui-proposal.md §4 and the mockup HTML at 255-292 (the card
+  anatomy block, which is the factual basis for F2)
+- Your own Round 6 findings, and the `## Round 7 Corrections` section above.
+
+## What changed since Round 6 - both findings accepted, neither argued down
+
+**R6-F1 (the reason went stale).** You offered two remedies; the plan takes the **first** -
+quality-independent copy - rather than recomputing at every mutation, on the reasoning that
+recomputation leaves the failure mode alive and just adds sites that must remember to run.
+`BLOCKER_REASON_TEMPLATE['QualityBlocked']` is now *"YouTube is limiting which formats this video
+will serve right now, so the requested quality or audio format is not available."* - no
+interpolation, no acronym, and it covers the audio-only branch of `_incompatible()` too.
+`BLOCKER_REMEDIATION['QualityBlocked']` loses "SABR" for the same reason (it is also the 409 body).
+
+With nothing interpolated, "keep the reason true" collapses to "keep the reason present", stated as
+`BLOCKER_REASON_INVARIANT`: (1) every persisted `QualityBlocked` row carries the reason, including
+rows blocked before this ships; (2) no row persisted **out** of a blocker state retains one.
+`BLOCKER_REASON_PRODUCERS` is restructured into `enters` / `persists-while-blocked` / `leaves` so the
+sites are enumerable. New **AC-41.12** asserts clause (1) against both mutations you named - a legacy
+`error_message=None` row backfilled by `apply_lock` (whose already-blocked branch today falls through
+with no write at all), and a blocked row put through Apply Defaults - both seeded as persisted state,
+asserted at the repository and at `GET /downloads`.
+
+**Self-caught while verifying yours:** clause (2) did not exist and needed to. `transition()` is
+`replace(self, status=...)` and preserves `error_message`, so `clear_sabr` would have handed every
+un-blocked job back to the queue still displaying its blocker sentence - a leak that Round 6's own
+fix created. New **AC-41.13** clears it at the transition; `reset_failed` already conforms and is
+asserted, not changed.
+
+**R6-F2 (nested interactive controls).** Confirmed against the mockup: 261-277 nests the primary
+action and the kebab inside `<div class="body">`, which proposal §4 makes `role="button"`; only the
+checkbox was already a sibling and only the checkbox had an AC. `CLICKABLE_REGION_RULE` +
+`CARD_INTERACTIVE_ZONES` now require all three zones to be siblings of the open-region, and new
+**AC-43.16** asserts ancestry directly plus independent operation - own tab stop, click and keyboard
+each invoking its own callback exactly once, `onOpen` not called. AC-43.2 gains a pointer to it. This
+changes DOM, not design: the mockup's own zone strip (278) already lays out `action` and the kebab as
+separate right-edge columns.
+
+`RED_COUNT_41` 11 -> 13, `RED_COUNT_43` 15 -> 16; predicates 40|8, 41|13, 42|13, 43|16 all MATCH.
+Binding census 194/194 bound, 0 dangling. Correction census: 40 values, 245 literals, 483 sites, PASS.
+
+## What this round is really for
+
+1. **Is quality-independent copy the right call, or did it trade a stale sentence for a useless
+   one?** The reason no longer names the quality that is blocked. The plan's argument is that the
+   quality is already in the card's meta zone and the fix is in `BLOCKER_REMEDIATION`, so the
+   sentence only has to say *what happened*. Is that enough for a person staring at a stuck queue -
+   or does the card now under-explain in a way the interpolation was actually earning?
+2. **Does `BLOCKER_REASON_INVARIANT` close the lifecycle, or is there still a hole?** Walk every
+   write path that can persist a `QualityBlocked` row or move a job out of one - including
+   `reorder_queue`, `remove_from_queue`, the worker's `_finish`, and any repository-level bulk write
+   - and say whether AC-41.12/41.13 as written cover it. If the invariant needs enforcement at the
+   repository boundary rather than at four service callsites, say so plainly; that is a real
+   architectural call and this is the round to make it.
+3. **Does AC-43.16 actually make the card operable, or only non-nested?** Hoisting three controls
+   out of the open-region changes the tab order and the hit targets. Is the resulting keyboard
+   experience the one a person wants - and does anything in the plan now under-specify what the
+   open-region *contains* (title, meta, progress, pill) once the controls are outside it?
+4. **Anything still wrong that six rounds have not caught** - scope honesty for MEU-40..43, the
+   USER_LOCKS, the reduced control model, the re-queue widening, the pill palette.
+
+Answer with a recommendation, not a survey.
+
+## SIGN 1 - no project tests
+
+Do NOT run pytest, vitest, npm test, playwright, tools/meu_status.py, tools/export_openapi.py,
+tools/issue_triage.py, or any product test/generator - including --check and --dry-run forms.
+
+You MAY run the plan-local hermetic oracles and the census driver (they build synthetic fixtures
+under C:/Temp/av-kit and touch no project file):
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-red-oracle.ps1 -SelfTest *> C:/Temp/av-kit/r7-red-selftest.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r7-red-selftest.txt; exit $code
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1 -SelfTest *> C:/Temp/av-kit/r7-iso-selftest.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r7-iso-selftest.txt; exit $code
+
+Do NOT run `assert-page-isolation.ps1 -Capture` against the real tree - that is task row 1's first
+action during execution, and a pre-seeded baseline would corrupt it.
+P0: redirect every process to C:/Temp/av-kit/ (`*>`), capture $LASTEXITCODE immediately.
+
+## Harness
+
+`.agent/context/harness.local.md` declares `plan_to_exec_gate: reviewer-auto`, but the driving
+harness is Claude Code and the user explicitly chose `human` (`USER_LOCKS.exec_gate`). Your
+`approved` verdict does NOT authorize execution; the user's next explicit message does. Do not flag
+the Step 5c pause as a premature stop.
+
+## Verdict rules
+
+If approved, findings_count must be 0. If changes_required, list findings with file:line, most
+severe first, and each one must name the wrong product behaviour it causes.
+
+**Round 7 of 7.** The human authorised this round specifically to get F1 and F2 reviewed rather than
+executed on trust. A `changes_required` here does not buy another correction cycle - it returns the
+plan to the human. Reserve it for a defect that genuinely should stop the project. Do not withhold
+approval over procedural or documentation nits. If the plan builds the right thing, approve it and
+put your remaining doubts under Residual Risk.

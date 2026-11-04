@@ -1,0 +1,47 @@
+Perform /plan-critical-review for p9-capture-gui (Round 4). Human authorized "continue review loop" after the Round 3 cap HARD STOP.
+
+Read and follow `.agent/workflows/plan-critical-review.md`.
+Use `.agent/context/handoffs/REVIEW-TEMPLATE.md`.
+
+## Write scope
+
+Update ONLY:
+`.agent/context/handoffs/2026-08-27-p9-capture-gui-plan-critical-review.md`
+
+Keep Round 1, Round 2, and Round 3 text. Append a **Round 4** section. Frontmatter:
+
+- date: "2026-08-27"
+- review_mode: "plan"
+- target_plan: "docs/execution/plans/2026-08-27-p9-capture-gui/implementation-plan.md"
+- verdict: "approved" or "changes_required"
+- findings_count: <integer; 0 if approved>
+- round: 4
+- template_version: "2.1"
+- requested_verbosity: "standard"
+- agent: "gpt-5.6-sol"
+- dispatch_id: "p9-capture-gui-plan-r4"
+
+`dispatch_id` MUST equal `-DispatchId` `p9-capture-gui-plan-r4`.
+
+Do NOT edit product code, tests, or plan files. SIGN 1: no pytest/vitest/npm test/playwright. Static evidence only (Read, Test-Path, rg). You MAY run the plan-folder helper `assert-e2e-control-census.ps1` (self-tests run before the missing E2E file check). P0 redirect to C:/Temp/av-kit/.
+
+## Round 3 blocker — claimed fixed
+
+Round 3 Finding 1 (Round 1 Finding 4 still open): `WAVE9_POST_ZERO_ORACLE` accepted a no-op `page.on('request', () => {})` plus a route literal plus `expect(capturePostCount).toBe(0)`.
+
+Corrector claim: `Test-PostZero` now requires the compact form of
+`page.on('request', (req) => { if (req.method() === WAVE9_POST_METHOD && new URL(req.url()).pathname === WAVE9_CAPTURE_POST_PATH) { WAVE9_POST_COUNTER += 1 } })`
+plus `expect(WAVE9_POST_COUNTER).toBe(0)`. Self-tests reject: `expect(0).toBe(0)`, the Round 3 no-op counterexample, increment without predicates, and `url().includes(path)`.
+
+**Independently re-verify** that the exact Round 3 no-op counterexample now fails the helper. Do not approve if a weaker listener still satisfies `Test-PostZero`.
+
+PR-6: untruncated receipt `C:/Temp/av-kit/plan-r3-blast-radius.txt` (61 hits + 2 zero-hit families). Duplicate dispositions: `C:/Temp/av-kit/plan-r3-per-hit-dispositions.md` and `## Corrections Applied — 2026-08-27 (Round 3 → Round 4)` in the review file.
+
+## Review targets
+
+- docs/execution/plans/2026-08-27-p9-capture-gui/implementation-plan.md
+- docs/execution/plans/2026-08-27-p9-capture-gui/task.md
+- docs/execution/plans/2026-08-27-p9-capture-gui/named-sets.json
+- all five assert-*.ps1 in that folder
+
+If approved, findings_count must be 0.

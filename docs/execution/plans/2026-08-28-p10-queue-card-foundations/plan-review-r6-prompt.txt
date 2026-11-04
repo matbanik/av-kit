@@ -1,0 +1,159 @@
+Perform /plan-critical-review for p10-queue-card-foundations (Round 6 - FINAL).
+
+## READ THIS FIRST - what the human actually wants from you
+
+The human's words, verbatim:
+
+  "Refocus the reviewer to the plan's substance and stress that Human requires more attention
+   on intent then procedure and protocols or any other beurocratic load since that can be
+   dealth with with AI reasoning pretty esily in the momement and tokens should not be wasted
+   on it."
+
+Rounds 4 and 5 honoured that instruction exactly - nine product findings, zero procedural
+findings, and Round 5 caught two defects that the Round 4 *remedies* had introduced. Keep doing
+precisely that:
+
+1. **Judge the plan on whether it builds the right thing.** Will executing this plan produce a
+   queue UI a person actually wants to use, with correct behaviour, honest accessibility, and no
+   silent scope loss? That is the review.
+2. **Do not spend tokens auditing process compliance.** Template sections, YAML ordering,
+   artifact naming, receipt-path spelling, whether a rule cites the blessed document - an agent
+   resolves all of that in the moment. One-line fix-note at most; never a finding, never a
+   verdict gate.
+3. **A finding must name a way the delivered product is wrong**, with the case where a user sees
+   it. If you cannot write the failure case, it is not a finding.
+4. **This is the last configured round.** Round 6 `changes_required` is a HARD STOP that hands
+   the plan back to the human, so a finding needs to be worth stopping a project over. Doubts
+   that do not meet that bar belong under Residual Risk, with the plan approved.
+
+## Write scope (non-negotiable)
+
+Write ONLY:
+`.agent/context/handoffs/2026-08-28-p10-queue-card-foundations-plan-critical-review.md`
+
+ROLLING file - APPEND a `## Round 6` section after the existing
+`## Round 6 Corrections - Reviewer R5-F1..F4 (corrections agent)` section (line 1158), and update
+the YAML frontmatter in place. Do NOT create a `-r6`, `-recheck`, or `-final` variant. Do NOT edit
+product code, tests, docs outside that review file, or the plan files.
+
+YAML frontmatter MUST include:
+- date: "2026-08-28"
+- review_mode: "plan"
+- target_plan: "docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md"
+- verdict: "approved" or "changes_required"
+- findings_count: <integer, Round 6 findings only>
+- round: 6
+- template_version: "2.1"
+- requested_verbosity: "standard"
+- agent: "gpt-5.6-sol"
+- dispatch_id: "p10-queue-card-foundations-plan-r6"
+
+## Review targets
+
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/task.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/named-sets.json
+- docs/proposals/2026-08-27-queue-card-ui-proposal.md (DRAFT rev 2) + the mockup HTML
+- packages/core/src/avkit_core/services/download.py - the F1 remedy's factual basis; read
+  `enqueue` (~228-247), `apply_lock` (~351-365) and the `_run_one` AgeRestrictedError handler
+  (~506-507) rather than taking the plan's description on faith
+- Your own Round 5 findings, and the `## Round 6 Corrections` section above.
+
+## What changed since Round 5 - all four findings accepted, none argued down
+
+**R5-F1 (the blocker reason had no producer).** You were right in fact, and it was the worst of
+the four: AC-43.15 promised a card that explains why a job is blocked, but `enqueue` builds the
+job with `error_message=None` in the very branch that chose `QualityBlocked`, and `apply_lock`
+transitions without adding one. The AC could only ever have passed against a fabricated prop.
+`BLOCKER_REASON_RULE` + `BLOCKER_REASON_TEMPLATE` + `BLOCKER_REASON_PRODUCERS` now name both
+producers, and new **AC-41.11** asserts the reason **against the persisted repository row and the
+`GET /downloads` payload, never a hand-built `DownloadJob`**. `AgeRestricted` already conforms and
+is asserted rather than changed. AC-43.15 is sharpened so neither the reason nor the remediation
+may be authored by the component, and so substituting remediation for a missing reason fails.
+
+**R5-F2 (kebab availability was evaluated per group).** Accepted. `KEBAB_MENU_ORDER_SEMANTICS` now
+states availability is evaluated **per action, never per group**, and **AC-43.8** carries four
+cases: mid-list Done (all eight ids), first-but-not-last Pending (`copy-location`, `move-down`,
+`move-bottom`, `remove` - the downward moves **present**), a genuine one-item queue
+(`copy-location` + `remove`, the only case that legitimately loses all four moves), and a
+callback-starved row (`remove` alone). Your "absence beats disabled" judgement is preserved.
+
+**R5-F3 (the confirm dialog was invented).** Accepted and **withdrawn** - not softened.
+proposal:146-149 assigns queue-level Cancel *no dialog* ("re-queue is cheap"), and Round 5 had
+bolted one on as part of the wording fix. `CANCEL_CONFIRM_POLICY` records both the rule and the
+mistake; **AC-43.14** now asserts `onCancelQueue` is invoked directly and that **no `role="dialog"`
+appears in the document**. Scope disclosure stays entirely in `CANCEL_CONTROL_LABEL` /
+`CANCEL_CONTROL_TITLE`.
+
+**R5-F4 (the copy label could lie).** Accepted. `KEBAB_MENU_ORDER` is now a list of action **ids**;
+`KEBAB_ACTION_LABELS` maps id -> label, and `copy-location` resolves to `Copy path` once an output
+path exists, `Copy URL` before then. This also reconciles the two Spec sources that had quietly
+disagreed (proposal:78 "Copy path/URL" vs mockup:287 "Copy URL"). AC-43.8 asserts the label and the
+clipboard payload **together**.
+
+**Self-caught, not raised by you, and reported rather than hidden:** AC-41.10 and AC-41.11 both edit
+`services/download.py`, while the plan still carried a standing note "Services are unchanged in
+code." That note is now narrowed to `services/conversion.py` with an explicit containment clause,
+and `services/download.py` is listed in MEU-41's Files Modified, in task row 6's durable outputs,
+and in its anti-placeholder path set.
+
+`RED_COUNT_41` 10 -> 11; predicates 40|8, 41|11, 42|13, 43|15 all MATCH. Binding census 190/190
+bound, 0 dangling. Correction census: 35 values, 216 literals, 413 sites, PASS.
+
+## What this round is really for
+
+1. **Does AC-41.11 actually make the blocker card honest end to end?** Trace it: service writes
+   `error_message` at the transition -> repository persists it -> `GET /downloads` serializes it ->
+   the card renders it. Is there a `QualityBlocked` producer the plan missed, a serializer that
+   drops the field, or a re-transition (a later `apply_lock` pass over an already-blocked job) that
+   would blank or stale the reason? And is the template text itself the right thing to show a
+   person - does "SABR restrictions are active for this video" mean anything to a user who has
+   never heard of SABR?
+2. **Is the drift you flagged under Round 5 Residual Risk now worse or better?** You warned that
+   `BLOCKER_REMEDIATION` is a plan contract rather than a runtime cross-language module, so the
+   Python 409 copy and the TypeScript card copy can diverge. R6 adds a *second* such contract
+   (`BLOCKER_REASON_TEMPLATE`, Python-side only, consumed by a TS assertion). Is that an acceptable
+   cost for this MEU set, or does it need a shared source before execution starts?
+3. **Did the R6 remedies introduce new wrongness, the way the R4 and R5 remedies did?** Two rounds
+   running, the fixes were the defect. Look hardest at AC-43.8's four cases (are the expected sets
+   actually right for each row position now?) and at the state-dependent copy label (does a menu
+   item whose text changes between rows help or confuse - and what does it copy for a Failed job
+   that has no output path but did once have a partial file?).
+4. **Anything still wrong that five rounds have not caught** - scope honesty for MEU-40..43, the
+   USER_LOCKS, the reduced control model, the re-queue widening, the pill palette.
+
+Answer with a recommendation, not a survey.
+
+## SIGN 1 - no project tests
+
+Do NOT run pytest, vitest, npm test, playwright, tools/meu_status.py, tools/export_openapi.py,
+tools/issue_triage.py, or any product test/generator - including --check and --dry-run forms.
+
+You MAY run the plan-local hermetic oracles and the census driver (they build synthetic fixtures
+under C:/Temp/av-kit and touch no project file):
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-red-oracle.ps1 -SelfTest *> C:/Temp/av-kit/r6-red-selftest.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r6-red-selftest.txt; exit $code
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1 -SelfTest *> C:/Temp/av-kit/r6-iso-selftest.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r6-iso-selftest.txt; exit $code
+
+Do NOT run `assert-page-isolation.ps1 -Capture` against the real tree - that is task row 1's first
+action during execution, and a pre-seeded baseline would corrupt it.
+P0: redirect every process to C:/Temp/av-kit/ (`*>`), capture $LASTEXITCODE immediately.
+
+## Harness
+
+`.agent/context/harness.local.md` declares `plan_to_exec_gate: reviewer-auto`, but the driving
+harness is Claude Code and the user explicitly chose `human` (`USER_LOCKS.exec_gate`). Your
+`approved` verdict does NOT authorize execution; the user's next explicit message does. Do not flag
+the Step 5c pause as a premature stop.
+
+## Verdict rules
+
+If approved, findings_count must be 0. If changes_required, list findings with file:line, most
+severe first, and each one must name the wrong product behaviour it causes.
+
+**Round 6 of a maximum of 6 (`PLAN_REVIEW_MAX_ROUND` = 6). This is the last round.** A
+`changes_required` here is a HARD STOP that returns the plan to the human rather than starting
+another correction cycle - so reserve it for a defect that genuinely should stop the project. Do
+not withhold approval over procedural or documentation nits. If the plan builds the right thing,
+approve it and put your remaining doubts under Residual Risk.

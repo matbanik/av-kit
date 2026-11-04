@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Deterministic sidecar stub for the AC-40.18 Playwright spec.
+
+       It is NOT the picker: it shows no window, needs no display, and takes its whole
+       behaviour from two environment variables, so the E2E can drive confirm / cancel /
+       all-black outcomes headlessly and reproducibly. It speaks exactly the helper's
+       contract (an out-path option, a `ready` line on stdout, and the declared exit codes),
+       which is what makes it a valid stand-in for the real executable. -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>avkit-region-picker-stub</AssemblyName>
+    <RootNamespace>AvKit.RegionPicker.Stub</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,183 @@
+Perform /plan-critical-review for p10-queue-card-foundations (Round 3 — final configured round).
+
+Read and follow `.agent/workflows/plan-critical-review.md` for the protocol.
+Use the handoff template at `.agent/context/handoffs/REVIEW-TEMPLATE.md`.
+
+## Write scope (non-negotiable)
+
+Write ONLY:
+`.agent/context/handoffs/2026-08-28-p10-queue-card-foundations-plan-critical-review.md`
+
+This is a ROLLING file — APPEND a `## Round 3` section and update the YAML frontmatter in place.
+Do NOT create a `-r3`, `-recheck`, or `-final` variant. Do NOT edit product code, tests, docs
+outside that review file, or the plan files. Do not delete or rewrite the Round 1, Round 2, or
+`## Round 2 Corrections — Blast-Radius Census` sections already in that file.
+
+YAML frontmatter MUST include:
+- date: "2026-08-28"
+- review_mode: "plan"
+- target_plan: "docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md"
+- verdict: "approved" or "changes_required"
+- findings_count: <integer, Round 3 findings only>
+- round: 3
+- template_version: "2.1"
+- requested_verbosity: "standard"
+- agent: "gpt-5.6-sol"
+- dispatch_id: "p10-queue-card-foundations-plan-r3"
+
+The `dispatch_id` value MUST equal this dispatch's `-DispatchId` exactly (`p10-queue-card-foundations-plan-r3`).
+
+## The Round 2 PR-6 gate is now satisfied — start there and verify it
+
+Round 2 returned `changes_required` on the PR-6 pre-verdict gate alone, with `findings_count: 0`,
+and adjudicated none of the seven Round 1 fixes. The missing evidence has been produced. Verify
+the pair before proceeding; if it holds, PR-6 passes and the substantive re-review you deferred
+is now in scope.
+
+- **Correction log (per-hit disposition):** `## Round 2 Corrections — Blast-Radius Census` in the
+  rolling review file. 59 literals, 102 sites, every site marked `updated` or
+  `confirmed-consistent` with a reason, plus every zero-hit literal and what its absence proves.
+- **Untruncated census receipts:** `C:/Temp/av-kit/census/census-{slug}-{old|new}-{i}.txt`,
+  one file per swept literal. Index with per-literal `rg` exit code and hit count:
+  `C:/Temp/av-kit/census/INDEX.txt`. Run receipt: `C:/Temp/av-kit/census-run.txt`.
+- **Declared semantic variants:** `docs/execution/plans/2026-08-28-p10-queue-card-foundations/correction-census.json`
+  (one entry per changed value, each with a `variants` field naming the other forms it takes).
+- **Reproducible driver:** `docs/execution/plans/2026-08-28-p10-queue-card-foundations/run-correction-census.ps1`
+  — re-run it if you want to reproduce rather than trust the receipts:
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/run-correction-census.ps1 *> C:/Temp/av-kit/r3-census-rerun.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r3-census-rerun.txt; exit $code
+
+- **Predicate census:** `C:/Temp/av-kit/census/census-red-counts-predicate.txt` — AC rows counted
+  structurally per MEU against `RED_COUNT_40/41/42/43` (8/9/13/13, all MATCH), because the F3/F4
+  AC rewrites could have desynchronised the Red oracle's declared counts.
+
+Summary line: **17 values changed, 59 literals swept, 102 sites found, 55 updated, 47 confirmed consistent.**
+
+The census found and the corrections agent fixed one genuine regression: `implementation-plan.md`
+section 6 still asserted the **superseded** substring reachability rule one clause before the
+sentence stating the oracle resolves import specifiers. That is disclosed in the correction log.
+
+Attack the census itself if you think it is thin — in particular, whether the declared variant
+lists are complete, and whether any `confirmed-consistent` disposition is really an unfixed site.
+
+## SIGN 1 — no project tests
+
+Do NOT run pytest, vitest, npm test, playwright, tools/meu_status.py, tools/export_openapi.py,
+or any product test/generator — including --check and --dry-run forms.
+
+You MAY run the census driver above and the two plan-local oracle self-tests, all of which are
+hermetic (synthetic fixtures under C:/Temp/av-kit; they touch no project file):
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-red-oracle.ps1 -SelfTest *> C:/Temp/av-kit/r3-red-selftest.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r3-red-selftest.txt; exit $code
+
+  rtk proxy pwsh -NoProfile -File docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1 -SelfTest *> C:/Temp/av-kit/r3-iso-selftest.txt; $code=$LASTEXITCODE; Get-Content C:/Temp/av-kit/r3-iso-selftest.txt; exit $code
+
+Do NOT run `assert-page-isolation.ps1 -Capture` against the real tree — that is task row 1's
+first action during execution, and a pre-seeded baseline would corrupt it.
+P0: redirect every process to C:/Temp/av-kit/ (`*>`), capture $LASTEXITCODE immediately.
+
+## Review targets
+
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/task.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/named-sets.json
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/correction-census.json
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/run-correction-census.ps1
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-red-oracle.ps1
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-handoff-markers.ps1
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-handoff-acs.ps1
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-exec-review-dispatch.ps1
+- Your own Round 1 findings table (the seven fixes under audit).
+
+Authority for the FIC is unchanged:
+- docs/proposals/2026-08-27-queue-card-ui-proposal.md (DRAFT rev 2) + the mockup HTML
+- .agent/context/grouping/2026-08-28-p10-queue-card-ui-session-grouping.md (Session 19 = MEU-40..43)
+- docs/build-plan/06-gui.md, gui-actions-index.md, build-priority-matrix.md
+- .agent/docs/emerging-standards.md (G20, G30-G37)
+- docs/build-plan/10-queue-card-ui.md still does not exist; MEU-40 authors it.
+
+## The seven Round 1 fixes, for adjudication
+
+1. **F1 — Red oracle never constructed `$names`.** The script now extracts names explicitly for
+   both receipt kinds before `Get-IdPattern`; the text fallback is real code, not prose. Proven by
+   `-SelfTest`: 11 hermetic cases (dotted UI JSON ids, snake_case pytest ids, the optional-json
+   text path, unrelated failures, a stuffed multi-ID title, a trailing-dot prefix, a missing
+   receipt file). Reports `PASS: RED_ORACLE selftest 11 cases`. Task row 1 runs it before any edit.
+
+2. **F2 — page-isolation could pass a materially migrated queue.** Rewritten as capture-then-verify
+   (this tree is not a git work tree, so there is no diff to bind to). Row 1 runs `-Capture` before
+   any edit, writing `PAGE_BASELINE`: SHA-256 per frozen file, plus the carve-out files' line sets,
+   `data-testid` multisets, and the E2E title **set**. Reachability now **resolves** each import
+   specifier (relative, `@/` alias, barrel re-export) instead of substring-matching text — the repo
+   imports relatively, so the old substring scan could not have seen the bypass it was written to
+   close. The carve-out is narrowed to one sanctioned doorway (`CARVE_OUT_ALLOWED_IMPORT` only).
+   `FROZEN_GLOBS` absorbs the three `git diff --quiet` guards. Proven by 19 hermetic cases,
+   17 rejections + 2 accepts, each asserting rejection *with the expected reason*. Reports
+   `PASS: PAGE_ISOLATION selftest 19 cases`.
+   **Attack specifically:** can a materially migrated queue still pass? Is the doorway too wide?
+   Does the title set actually catch a rename at constant count?
+
+3. **F3 — envelope extra-field contract stated two ways.** Resolved to one named policy,
+   `ENVELOPE_UNKNOWN_KEY_POLICY` (Zod `.strict()`, unknown wrapper key rejected). AC-42.11 rewritten
+   to assert rejection, with the unknown-key adversary as its negative oracle.
+
+4. **F4 — WCAG oracle not bound to rendered values.** Replaced with `STATUS_PILL_TABLE` (per status:
+   foreground token, fill token, alpha, and the exact `fillClass`/`textClass`) and
+   `CONTRAST_BACKDROPS` (the four backdrop expressions). The test resolves those classes against
+   both theme blocks in `styles.css` and alpha-composites the fill. Statically computing all 80
+   pairings, the proposal's own palette failed 4.5:1 in 11 of 20; the plan therefore adds ten
+   `--color-pill-*-fg` tokens (enumerated once in `NEW_TOKENS`, authored by AC-40.3), and the worst
+   surviving pairing is 4.60:1. **This changes visible pill text colour beyond what the proposal
+   literally specifies** and is disclosed to the user as an explicit decision at the Step 5c gate.
+   Flag it if you disagree with the resolution.
+
+5. **F5 — unredirected oracle process in all four Red rows.** Every oracle invocation now sits
+   inside a redirected sequence with `$LASTEXITCODE` captured immediately and propagated;
+   0 unredirected oracle invocations across 27 actionable rows.
+
+6. **F6 — 26 orphan named-set keys.** Closed by a transitive binding census. A key counts as bound
+   only if cited in plan/task prose as `KEY`, consumed by an assert script (statically or via the
+   dynamic `$sets.("RED_PREFIX_" + $Meu)` form), or named inside the value of an already-bound key.
+   All 168 top-level keys bound, 0 citations dangling. `RED_ORACLE_CHECK` deleted as a pure
+   duplicate of `RED_ORACLE`; `SSOT_READY` and `SSOT_APPROVED` promoted from bare prose citations
+   to defined assertion receipts.
+
+7. **F7 — C2 labeling drift.** The two rows are relabeled `deferred`; the only surviving `MEU-44+`
+   is task.md:40 "Do not start MEU-44+", a forward-scope prohibition rather than a C2 owner label
+   (dispositioned in the correction log).
+
+Five further defects that the self-tests found in the *oracles themselves* were fixed, each with a
+named regression case — including a PowerShell two-backslash literal that made `.Replace()` a no-op
+and left the whole reachability rule vacuous, and a `.Split` overload that returned the path
+unsplit. Both are disclosed in plan section 6.
+
+## Harness
+
+Unchanged. `.agent/context/harness.local.md` declares `plan_to_exec_gate: reviewer-auto`, but the
+driving harness is Claude Code and **the user explicitly chose `human`** (USER_LOCKS.exec_gate /
+PLAN_TO_EXEC_GATE="human"). Your `approved` verdict does NOT authorize execution; the user's next
+explicit message does. Do not flag the Step 5c pause as a premature stop.
+
+## Focus for Round 3
+
+Primary: did each of the seven fixes actually close its finding, or did it move the hole?
+Secondary: full re-application of PR-1..PR-9, DR-1..DR-8, the Boundary Input Contract, C2, Sweep 8,
+the single-statement rule, and control binding (observable + traceable call chain + negative oracle)
+on every AC touched since Round 1 — the F3 and F4 rewrites in particular changed AC text.
+
+Specifically check:
+- Whether the two self-test suites are honest: do the cases assert the *reason* for rejection, or
+  would a script failing for any reason pass the suite?
+- Whether capture-then-verify has an ordering hole — row 1 self-tests both oracles *before*
+  `-Capture`, but is there any later row that could re-capture and launder a violation?
+- Whether the ten `--color-pill-*-fg` tokens are internally consistent with MEU-40's token work
+  (AC-40.3, `NEW_TOKENS`) and do not collide with the deferred `--color-status-pending` repoint.
+- Whether the binding census's own definition of "bound" launders documentation into contract — a
+  key named only inside another key's prose value is transitively bound but may still have no
+  executable consumer.
+
+If approved, findings_count must be 0. If changes_required, list High findings first with file:line.
+**This is Round 3 of a maximum of 3 (`PLAN_REVIEW_MAX_ROUND` = 3).** A `changes_required` verdict
+here is a HARD STOP that hands the plan to the user for direction, so state plainly whether the
+remaining findings are blocking or advisory.

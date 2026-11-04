@@ -1,0 +1,110 @@
+Perform /plan-critical-review for p10-queue-card-foundations (Round 1).
+
+Read and follow `.agent/workflows/plan-critical-review.md` for the protocol.
+Use the handoff template at `.agent/context/handoffs/REVIEW-TEMPLATE.md`.
+
+## Write scope (non-negotiable)
+
+Write ONLY:
+`.agent/context/handoffs/2026-08-28-p10-queue-card-foundations-plan-critical-review.md`
+
+Do NOT edit product code, tests, docs outside that review file, or the plan files.
+
+YAML frontmatter MUST include:
+- date: "2026-08-28"
+- review_mode: "plan"
+- target_plan: "docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md"
+- verdict: "approved" or "changes_required"
+- findings_count: <integer>
+- round: 1
+- template_version: "2.1"
+- requested_verbosity: "standard"
+- agent: "gpt-5.6-sol"
+- dispatch_id: "p10-queue-card-foundations-plan-r1"
+
+The `dispatch_id` value MUST equal this dispatch's `-DispatchId` exactly (`p10-queue-card-foundations-plan-r1`).
+
+## Review targets
+
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/implementation-plan.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/task.md
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/named-sets.json
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-red-oracle.ps1
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-handoff-markers.ps1
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-handoff-acs.ps1
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-page-isolation.ps1
+- docs/execution/plans/2026-08-28-p10-queue-card-foundations/assert-exec-review-dispatch.ps1
+
+Authority for the FIC:
+- docs/proposals/2026-08-27-queue-card-ui-proposal.md (DRAFT rev 2) and
+  docs/proposals/2026-08-27-queue-card-ui-mockup.html — the source proposal + visual mockup.
+- .agent/context/grouping/2026-08-28-p10-queue-card-ui-session-grouping.md — Session 19 = MEU-40..43.
+- docs/build-plan/06-gui.md (the queue sections this plan supersedes by pointer, never deletion),
+  docs/build-plan/gui-actions-index.md, docs/build-plan/build-priority-matrix.md.
+- .agent/docs/emerging-standards.md — G20, G30-G37 are cited by ACs.
+- docs/build-plan/10-queue-card-ui.md does NOT exist yet; MEU-40 authors it. That absence is a
+  scheduled deliverable, not a gap.
+
+Analog: docs/execution/plans/2026-08-27-p9-capture-gui/ (structure, assert scripts, task v2.1 shape).
+
+## SIGN 1 — no project tests
+
+Do NOT run pytest, vitest, npm test, playwright, tools/meu_status.py, tools/export_openapi.py,
+or any product test/generator — including --check and --dry-run forms.
+Static evidence only: Read, Test-Path, rg. P0: redirect shell to C:/Temp/av-kit/ (`*>`).
+
+## What this plan claims
+
+Session 19 only: MEU-40 (Phase 10 canon doc + 06-gui supersession pointers + two new design
+tokens + the AgeRestricted token fix), MEU-41 (widen job re-queue from {Failed} to the
+re-queueable status sets, both queues, plus OpenAPI regen), MEU-42 (shared queue primitives
+and lib/queue/), MEU-43 (QueueCard / QueueList / EmptyDropZone).
+
+The defining claim is that **nothing is wired**: no page is migrated, no new E2E wave is added,
+no runtime dependency is added, mcp-server/ is untouched, ROUTE_COUNT_AFTER 71 and
+ACTION_INDEX_AFTER 67 stay flat. `assert-page-isolation.ps1` is the sole executable owner of
+that claim (PAGE_ISOLATION_RULE). Attack it: can a migrated page pass it? Does the declared
+carve-out for MEU-42's two import-only edits to ConvertQueueTable.tsx / DownloadQueueTable.tsx
+actually hold, or does it leave a hole?
+
+Capture is explicitly out of scope (CaptureInbox is a filmstrip, not a work queue).
+
+## Harness
+
+`.agent/context/harness.local.md` declares `plan_to_exec_gate: reviewer-auto`, but the driving
+harness is Claude Code and **the user explicitly chose `human`** (recorded as USER_LOCKS.exec_gate
+and PLAN_TO_EXEC_GATE="human" in named-sets.json, and as item 1 of the plan's §User Review
+Required). The conflict is disclosed, not silently resolved. Your `approved` verdict therefore
+does NOT authorize execution; the user's next explicit message does. Do not flag the pause at
+Step 5c as a premature stop.
+
+## Focus
+
+Apply PR-5/7/8/9, the Boundary Input Contract, C2 Out of Scope, referenced-artifact existence
+(Sweep 8), the single-statement rule (every set/threshold used by >1 AC must be defined once in
+named-sets.json), and control-binding (observable + traceable call chain + negative oracle) on
+every control AC. Specifically verify:
+
+1. **Red oracle integrity.** `assert-red-oracle.ps1` was adapted from a UI-only exemplar; the new
+   `Get-IdPattern` accepts snake_case `test_ac_41_2_*` for `-Kind py` because pytest node ids
+   cannot contain `.` or `-`. Confirm RED_PREFIX_40..43 carry no trailing dot (the script builds
+   `$Prefix + '.' + $n`), that RED_COUNT_40/41/42/43 = 8/9/13/13 match the AC counts actually
+   written in the plan, and that a stuffed multi-id test title still fails the oracle.
+2. **MEU-41 additive-only claim.** The plan asserts every existing negative reset assertion uses
+   `Pending` or `Done`, neither of which enters the widened set, so widening breaks zero tests.
+   Verify against the cited test files. Also confirm the repository-level bulk `reset_failed()` in
+   ports/storage.py / repositories.py is a different concern that the plan correctly leaves alone,
+   and that CONVERSION_TRANSITIONS stays exhaustive over ConversionStatus.
+3. **Machine-checkability.** AC-42.3/42.4 claim WCAG 4.5:1 contrast is computed in-test from
+   status-tokens.ts and cross-checked against styles.css without a browser. Is that oracle real
+   or decorative?
+4. **Verification Plan §2's fallback.** It states that if pytest `--json-report` is unavailable the
+   text receipt path is the contract and a missing plugin is NOT a `[B]`. Confirm the text path is
+   actually implemented in assert-red-oracle.ps1 and not merely asserted in prose.
+5. **task.md gate completeness.** Every numbered row's Validation must be a runnable P0-compliant
+   receipt (redirect to C:/Temp/av-kit/, $LASTEXITCODE captured immediately, no long-running pipe).
+   Check the `\|` pipe escaping inside table cells does not corrupt any command.
+6. **named-sets.json consumption.** Every key referenced by an assert script or task row must exist,
+   and every key must be consumed by something. Report orphans and dangling references.
+
+If approved, findings_count must be 0. If changes_required, list High findings first with file:line.

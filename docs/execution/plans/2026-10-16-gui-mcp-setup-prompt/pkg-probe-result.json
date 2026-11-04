@@ -1,0 +1,44 @@
+{
+  "schema": "s31b-pkg-probe.v2",
+  "tested_commit": "6097cf59adc7835fa6062c8bd3d55c679aef4543",
+  "identity": {
+    "exe": "34383e87849b8506b6ff4829f4128d60338f7f911cf116e6dca48e3dfe719cfd",
+    "packaged_entry": "2ee9a90bc366adb8b75dd258e088d1da773c1aad34cb6a36bdedca611cfe5edb",
+    "packaged_licences": "24ee29319a63f6c43dc35d3a1dd879bd2ed40ca459b8d4b972f9331e24c2d7b1",
+    "bundle": "2ee9a90bc366adb8b75dd258e088d1da773c1aad34cb6a36bdedca611cfe5edb",
+    "bundle_licences": "24ee29319a63f6c43dc35d3a1dd879bd2ed40ca459b8d4b972f9331e24c2d7b1",
+    "electron_builder_yml": "965321f37ce453e9941cbf53b1abc87a289b937b2aa2360cc62969219585395e",
+    "ui_package_json": "f436aaa98df775fc07b63955f1d8f97e82c3f1ebd3ee6c3da8848dbf02c35e68",
+    "ui_package_lock": "a86d9a42c6cbd98705e1720edbd7666fed573581c07e21ea0f56379dc7332980",
+    "mcp_package_json": "05389bb4bdb1a36ff0c937a869ac7a3e5f421514df339c4e46f3293b99cf9d5d",
+    "mcp_package_lock": "9d2bd456d1b76cc1b685261653a81845d81db63c7cf44bd2119835d105cbe10a"
+  },
+  "byte_equal": true,
+  "licences_present": true,
+  "missing": [],
+  "in_place": {
+    "argv": [
+      "ui/dist/win-unpacked/av-kit.exe",
+      "ui/dist/win-unpacked/resources/mcp-server/index.mjs"
+    ],
+    "result": "started",
+    "exit_code": 1,
+    "stderr_tail": "",
+    "first_stdout": "{\"result\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{\"tools\":{\"listChanged\":true},\"resources\":{\"listChanged\":true}},\"serverInfo\":{\"name\":\"av-kit\",\"version\":\"0.1.0\"},\"instructions\":\"av-kit is a local YouTube read/consume toolkit. Never upload or write to YouTube.\\nDownloads: avkit_download add \u2192",
+    "seconds": 0.17,
+    "passed": true
+  },
+  "hermetic": {
+    "argv": [
+      "ui/dist/win-unpacked/av-kit.exe",
+      "C:/Temp/av-kit/s31b-pkg-probe/mcp-server/index.mjs"
+    ],
+    "result": "started",
+    "exit_code": 1,
+    "stderr_tail": "",
+    "first_stdout": "{\"result\":{\"protocolVersion\":\"2025-06-18\",\"capabilities\":{\"tools\":{\"listChanged\":true},\"resources\":{\"listChanged\":true}},\"serverInfo\":{\"name\":\"av-kit\",\"version\":\"0.1.0\"},\"instructions\":\"av-kit is a local YouTube read/consume toolkit. Never upload or write to YouTube.\\nDownloads: avkit_download add \u2192",
+    "seconds": 0.11,
+    "passed": true
+  },
+  "passed": true
+}

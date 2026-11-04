@@ -1,0 +1,38 @@
+appId: com.avkit.app
+productName: av-kit
+directories:
+  buildResources: build
+  output: dist
+files:
+  - out/**/*
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  include: build/installer.nsh
+  deleteAppDataOnUninstall: false
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+extraResources:
+  # app-icon.ts reads process.resourcesPath/icon.{png,ico} when packaged: `build/`
+  # lives outside the asar, so without these entries the tray falls back to an
+  # empty image and the window icon path resolves to nothing.
+  - from: build/icon.png
+    to: icon.png
+  - from: build/icon.ico
+    to: icon.ico
+  - from: ../packaging/dist/avkit-backend
+    to: avkit-backend
+  - from: ../packaging/ffmpeg-win64
+    to: ffmpeg
+  # Licences of the shipped Python components and FFmpeg (MEU-72 NOTICES).
+  - from: ../packaging/THIRD_PARTY_NOTICES.md
+    to: THIRD_PARTY_NOTICES.md
+  - from: ../mcp-server/bundle
+    to: mcp-server
+  - from: ../native/region-picker/publish
+    to: region-picker

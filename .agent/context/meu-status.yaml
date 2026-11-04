@@ -1,0 +1,2824 @@
+# yaml-language-server: $schema=../../tools/meu_status/meu-status.schema.json
+version: 1
+phases:
+- id: '0'
+  name: Overview
+  band: P0
+  sources:
+  - docs/build-plan/00-overview.md
+  execution_plans: []
+  last_updated: '2026-08-18'
+  note: Spec-only overview; no code MEUs.
+- id: '1'
+  name: Domain
+  band: P0
+  sources:
+  - docs/build-plan/01-domain-layer.md
+  execution_plans:
+  - docs/execution/plans/2026-08-18-p1-domain-foundation/
+  last_updated: '2026-08-19'
+  note: MEU-1–4 approved — Session 1 p1-domain-foundation complete.
+- id: '2'
+  name: Infrastructure
+  band: P1
+  sources:
+  - docs/build-plan/02-infrastructure.md
+  execution_plans:
+  - docs/execution/plans/2026-08-19-p2-persistence-io/
+  - docs/execution/plans/2026-08-19-p2-external-adapters/
+  last_updated: '2026-08-19'
+  note: MEU-5+8 persistence-io approved; MEU-6/7/9 external-adapters approved.
+- id: '3'
+  name: Service layer
+  band: P1
+  sources:
+  - docs/build-plan/03-service-layer.md
+  execution_plans:
+  - docs/execution/plans/2026-08-19-p3-services/
+  last_updated: '2026-10-17'
+  note: MEU-10–13 bound to p3-services — ready_for_review pending H1. MEU-62 residual (TTS runtime assets) registered 2026-09-30. MEU-73/74/75/77/78 residuals (TTS voice assets, language runtime, device
+    fallback, async generate, ffmpeg resolver) registered 2026-10-09. MEU-75 delivered by Session 35 tts-voice-panel. MEU-98 residual (TTS sideload load) registered 2026-10-17.
+- id: '4'
+  name: REST API
+  band: P2
+  sources:
+  - docs/build-plan/04-rest-api.md
+  execution_plans:
+  - docs/execution/plans/2026-08-19-p4-rest-api/
+  last_updated: '2026-10-09'
+  note: MEU-14–16 bound to p4-rest-api. MEU-76 residual (unhandled errors) registered 2026-10-09.
+- id: '5'
+  name: MCP server
+  band: P2
+  sources:
+  - docs/build-plan/05-mcp-server.md
+  execution_plans:
+  - docs/execution/plans/2026-08-19-p5-mcp-server/
+  - docs/execution/plans/2026-10-01-mcp-live-audit/
+  last_updated: '2026-10-01'
+  note: MEU-17–18 bound to p5-mcp-server. MEU-68 approved 2026-10-01 (MCP live audit, 2026-10-01-mcp-live-audit).
+- id: '6'
+  name: GUI
+  band: P2
+  sources:
+  - docs/build-plan/06-gui.md
+  execution_plans:
+  - docs/execution/plans/2026-08-19-p6-gui-shell/
+  - docs/execution/plans/2026-08-20-p6-gui-downloader/
+  - docs/execution/plans/2026-08-20-p6-gui-zorivest-chrome/
+  - docs/execution/plans/2026-08-20-p6-gui-console-polish/
+  - docs/execution/plans/2026-08-20-p6-gui-transcript/
+  - docs/execution/plans/2026-08-20-p6-gui-tts-models/
+  - docs/execution/plans/2026-08-21-p6-gui-settings-help/
+  - docs/execution/plans/2026-09-20-p6-gui-login-item/
+  last_updated: '2026-10-17'
+  note: MEU-19 p6-gui-shell; MEU-20 p6-gui-downloader; MEU-26 p6-gui-zorivest-chrome; MEU-21 p6-gui-transcript; MEU-22 p6-gui-tts-models; MEU-23 p6-gui-settings-help. MEU-61 bound to p6-gui-login-item (login-item
+    residual). MEU-69 residual (header toggles) registered 2026-09-30. MEU-93–97 residuals (path fields, theme-reactive selects, shortcut binding, palette curation, common shortcuts) registered 2026-10-17.
+- id: '7'
+  name: Distribution
+  band: P2
+  sources:
+  - docs/build-plan/07-distribution.md
+  execution_plans:
+  - docs/execution/plans/2026-08-24-p7-distribution/
+  last_updated: '2026-10-09'
+  note: MEU-24–25 bound to p7-distribution. MEU-71/72 residuals (MCP setup prompt, packaged ONNX TTS runtime) registered 2026-10-09.
+- id: '8'
+  name: Video conversion
+  band: P2
+  sources:
+  - docs/build-plan/08-video-conversion.md
+  execution_plans:
+  - docs/execution/plans/2026-08-24-p8-conversion-engine/
+  - docs/execution/plans/2026-08-26-p8-conversion-api-mcp/
+  - docs/execution/plans/2026-08-26-p8-conversion-gui/
+  last_updated: '2026-08-26'
+  note: MEU-28–30 bound to p8-conversion-engine. MEU-31–32 approved p8-conversion-api-mcp. MEU-33 bound to p8-conversion-gui.
+- id: '9'
+  name: Screenshot capture
+  band: P2
+  sources:
+  - docs/build-plan/09-screenshot-capture.md
+  execution_plans:
+  - docs/execution/plans/2026-08-26-p9-capture-engine/
+  - docs/execution/plans/2026-08-27-p9-capture-api-mcp/
+  - docs/execution/plans/2026-08-27-p9-capture-gui/
+  - docs/execution/plans/2026-08-27-p9-capture-native-picker/
+  - docs/execution/plans/2026-09-19-p9-capture-annotate-arrow-text/
+  - docs/execution/plans/2026-09-20-p9-capture-annotate-edit/
+  last_updated: '2026-10-29'
+  note: MEU-34–36 bound to p9-capture-engine. MEU-37–38 bound to p9-capture-api-mcp. MEU-39 bound to p9-capture-gui. MEU-40 bound to p9-capture-native-picker. MEU-59 bound to p9-capture-annotate-arrow-text
+    (arrow+text geometry residual). MEU-60 bound to p9-capture-annotate-edit (edit-until-Save residual). Session 8c / MEU-27 approved. MEU-65–67 residuals (toolbar icons, zoom, flatten-with-backup) registered
+    2026-09-30. MEU-80–91 residuals (icon hints, action row, text baseline, arrow geometry, file sync, size scrub, swatches, tool lock, filmstrip menu/multi-select, pixelate, eraser) registered 2026-10-09.
+    MEU-82–84 bound to capture-render-fidelity. MEU-85–87 bound to capture-editor-options. MEU-90–91 bound to capture-new-marks. MEU-99–107 residuals (canvas history chords, resize handles, text re-edit,
+    multi-line text, redact, copy image, style and tool flow, line and ellipse, step mark) registered 2026-10-29.
+- id: '10'
+  name: Queue card UI
+  band: P2
+  sources:
+  - docs/build-plan/10-queue-card-ui.md
+  execution_plans:
+  - docs/execution/plans/2026-08-28-p10-queue-card-foundations/
+  - docs/execution/plans/2026-09-02-p10-queue-card-migration/
+  - docs/execution/plans/2026-09-03-p10-queue-card-dnd/
+  last_updated: '2026-09-16'
+  note: MEU-41–44 bound to p10-queue-card-foundations. MEU-45–47 bound to p10-queue-card-migration. MEU-48 closed (superseded by MEU-55/MEU-56). MEU-49 bound to p10-queue-card-dnd.
+- id: '11'
+  name: Page layout
+  band: P2
+  sources:
+  - docs/build-plan/11-page-layout.md
+  execution_plans:
+  - docs/execution/plans/2026-09-26-p11-layout-canon/
+  - docs/execution/plans/2026-09-26-p11-queue-pages/
+  last_updated: '2026-10-09'
+  note: MEU-50–51 approved in Session 23 p11-layout-canon; MEU-52–54 approved in Session 24 p11-queue-pages after independent Round 3 review; Sessions 25–26 remain pending for MEU-55–58. Spec doc authored
+    by MEU-50. MEU-63/64/70 residuals (TTS model manager, TTS text panel, Settings section emphasis) registered 2026-09-30. MEU-79 residual (TTS voice panel alignment) registered 2026-10-09; spec section
+    and delivery by Session 35 tts-voice-panel.
+meus:
+- row_key: MEU-1
+  id: MEU-1
+  slug: domain-scaffold
+  phase: '1'
+  band: P0
+  matrix_item: '1.1'
+  build_ref:
+    path: build-plan/01-domain-layer.md
+    anchor: package-layout
+    text: Phase 1 §Package layout
+  description: packages/core layout, root uv/pyproject workspace, pytest/pyright/ruff for core — no domain logic yet
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: none
+  dependency_parse_status: none
+  depends_on: []
+  execution_plan: docs/execution/plans/2026-08-18-p1-domain-foundation
+  updated: '2026-08-19'
+  closed_reason: null
+  note: exec review approved 2026-08-19
+- row_key: MEU-2
+  id: MEU-2
+  slug: domain-enums-vos
+  phase: '1'
+  band: P0
+  matrix_item: '1.2'
+  build_ref:
+    path: build-plan/01-domain-layer.md
+    anchor: enums-domainenumspy
+    text: Phase 1 §Enums + VOs
+  description: domain/enums.py plus session VOs (ProgressSnapshot, SABRStatus, QueueRuntime, ModelDownloadRuntime, CookieTestResult) — no tables
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-1
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-1
+  execution_plan: docs/execution/plans/2026-08-18-p1-domain-foundation
+  updated: '2026-08-19'
+  closed_reason: null
+  note: null
+- row_key: MEU-3
+  id: MEU-3
+  slug: domain-entities
+  phase: '1'
+  band: P0
+  matrix_item: '1.3'
+  build_ref:
+    path: build-plan/01-domain-layer.md
+    anchor: persistable-entities
+    text: Phase 1 §Persistable entities
+  description: DownloadJob, DownloadArchiveEntry, TranscriptJob+Item, TTSJob, ModelVariant, Setting; relationships; progress.json conflict (items are SoT)
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-2
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-2
+  execution_plan: docs/execution/plans/2026-08-18-p1-domain-foundation
+  updated: '2026-08-19'
+  closed_reason: null
+  note: null
+- row_key: MEU-4
+  id: MEU-4
+  slug: domain-ports-errors
+  phase: '1'
+  band: P0
+  matrix_item: '1.4'
+  build_ref:
+    path: build-plan/01-domain-layer.md
+    anchor: port-protocols
+    text: Phase 1 §Ports + errors
+  description: Canonical ports (YouTube, Transcript, TTS, Media, Filesystem, ModelCatalog, UnitOfWork/repos) plus domain/errors.py including AgeRestrictedError and SABRDetectedError
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-2, MEU-3
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-2
+  - MEU-3
+  execution_plan: docs/execution/plans/2026-08-18-p1-domain-foundation
+  updated: '2026-08-19'
+  closed_reason: null
+  note: null
+- row_key: MEU-5
+  id: MEU-5
+  slug: infra-sqlite-uow
+  phase: '2'
+  band: P1
+  matrix_item: '2.1'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: database
+    text: Phase 2 §Database + ORM
+  description: SQLite WAL engine, seven tables only, mappers, repositories, SqlAlchemyUnitOfWork, append-only migrations, structlog — no STI jobs table
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-4
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-4
+  execution_plan: docs/execution/plans/2026-08-19-p2-persistence-io
+  updated: '2026-08-19'
+  closed_reason: null
+  note: null
+- row_key: MEU-6
+  id: MEU-6
+  slug: infra-youtube
+  phase: '2'
+  band: P1
+  matrix_item: '2.2'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: youtube-adapter-youtubeadapterpy
+    text: Phase 2 §YouTube adapter
+  description: YouTubePort via yt-dlp — extract_info, extract_video_ids, download, formats, SABR detect/check, test_cookies → CookieTestResult, AgeRestrictedError
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-4
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-4
+  execution_plan: docs/execution/plans/2026-08-19-p2-external-adapters
+  updated: '2026-08-19'
+  closed_reason: null
+  note: null
+- row_key: MEU-7
+  id: MEU-7
+  slug: infra-transcript
+  phase: '2'
+  band: P1
+  matrix_item: '2.3'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: transcript-adapter-transcriptadapterpy
+    text: Phase 2 §Transcript adapter
+  description: TranscriptPort via youtube-transcript-api — get_transcript returns None for missing/disabled; TranscriptRetryableError for transients
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-4
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-4
+  execution_plan: docs/execution/plans/2026-08-19-p2-external-adapters
+  updated: '2026-08-19'
+  closed_reason: null
+  note: null
+- row_key: MEU-8
+  id: MEU-8
+  slug: infra-filesystem-media
+  phase: '2'
+  band: P1
+  matrix_item: '2.4'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: filesystem-adapter-filesystemwriterpy
+    text: Phase 2 §Filesystem + Media
+  description: FilesystemPort (atomic write, compile-only read_text, channel dirs, WAV) and MediaPort (FFmpeg setting→bundle→PATH, convert, probe)
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-4
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-4
+  execution_plan: docs/execution/plans/2026-08-19-p2-persistence-io
+  updated: '2026-08-19'
+  closed_reason: null
+  note: null
+- row_key: MEU-9
+  id: MEU-9
+  slug: infra-tts-models
+  phase: '2'
+  band: P1
+  matrix_item: '2.5'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: tts-adapter-ttsadapterpy
+    text: Phase 2 §TTS + Model manager
+  description: TTSPort (Kokoro load/generate/voices) and ModelCatalogPort (HF download + sideload); seed ONNX FP32 catalog row; no ModelFetchJob
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-4
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-4
+  execution_plan: docs/execution/plans/2026-08-19-p2-external-adapters
+  updated: '2026-08-19'
+  closed_reason: null
+  note: null
+- row_key: MEU-10
+  id: MEU-10
+  slug: svc-download
+  phase: '3'
+  band: P1
+  matrix_item: '3.1'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: downloadservice
+    text: Phase 3 §DownloadService
+  description: DownloadService worker, session QueueRuntime, SABR session + apply_lock, archive skip, apply_defaults_to_pending, AgeRestricted mapping
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-5, MEU-6, MEU-8
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-5
+  - MEU-6
+  - MEU-8
+  execution_plan: docs/execution/plans/2026-08-19-p3-services
+  updated: '2026-08-19'
+  closed_reason: null
+  note: p3-services download approved
+- row_key: MEU-11
+  id: MEU-11
+  slug: svc-transcript
+  phase: '3'
+  band: P1
+  matrix_item: '3.2'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: transcriptservice
+    text: Phase 3 §TranscriptService
+  description: TranscriptService resolve/items, start=Pending only, resume=Paused, retry_failed_channel, Stop→Cancelled, compile/zip, progress.json export-only
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-5, MEU-6, MEU-7, MEU-8
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-5
+  - MEU-6
+  - MEU-7
+  - MEU-8
+  execution_plan: docs/execution/plans/2026-08-19-p3-services
+  updated: '2026-08-19'
+  closed_reason: null
+  note: p3-services transcript approved
+- row_key: MEU-12
+  id: MEU-12
+  slug: svc-tts-models
+  phase: '3'
+  band: P1
+  matrix_item: '3.3'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: ttsservice
+    text: Phase 3 §TTS + Prepare + Models
+  description: TextPreparationService, TTSService (text body, source_path metadata), ModelService + session ModelDownloadRuntime — no ModelFetchJob
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-5, MEU-8, MEU-9
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-5
+  - MEU-8
+  - MEU-9
+  execution_plan: docs/execution/plans/2026-08-19-p3-services
+  updated: '2026-08-19'
+  closed_reason: null
+  note: p3-services tts/models approved
+- row_key: MEU-13
+  id: MEU-13
+  slug: svc-settings-health
+  phase: '3'
+  band: P1
+  matrix_item: '3.4'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: settingsservice
+    text: Phase 3 §Settings + Health
+  description: SettingsService leaf keys extra=forbid; HealthService sole seq allocator, console ring, dependency probe (yt-dlp/FFmpeg)
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-5, MEU-8
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-5
+  - MEU-8
+  execution_plan: docs/execution/plans/2026-08-19-p3-services
+  updated: '2026-08-19'
+  closed_reason: null
+  note: p3-services settings/health approved
+- row_key: MEU-14
+  id: MEU-14
+  slug: api-app-auth
+  phase: '4'
+  band: P2
+  matrix_item: '4.1'
+  build_ref:
+    path: build-plan/04-rest-api.md
+    anchor: app-factory-and-lifespan
+    text: Phase 4 §App factory + auth
+  description: create_app, lifespan, dual Bearer (GUI nonce vs MCP token), ErrorEnvelope, extra=forbid, list {items, processor}, static paths before {id}
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-10, MEU-11, MEU-12, MEU-13
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-10
+  - MEU-11
+  - MEU-12
+  - MEU-13
+  execution_plan: docs/execution/plans/2026-08-19-p4-rest-api
+  updated: '2026-08-19'
+  closed_reason: null
+  note: p4-rest-api ready_for_review
+- row_key: MEU-15
+  id: MEU-15
+  slug: api-downloads-health-settings
+  phase: '4'
+  band: P2
+  matrix_item: '4.2'
+  build_ref:
+    path: build-plan/04-rest-api.md
+    anchor: routes--downloads
+    text: Phase 4 §Downloads + Health + Settings
+  description: Download/SABR/cookies/apply-defaults routes plus settings and health/console/dependencies; 422/409 mapping
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-14
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-14
+  execution_plan: docs/execution/plans/2026-08-19-p4-rest-api
+  updated: '2026-08-19'
+  closed_reason: null
+  note: p4-rest-api ready_for_review
+- row_key: MEU-16
+  id: MEU-16
+  slug: api-transcripts-tts-models
+  phase: '4'
+  band: P2
+  matrix_item: '4.3'
+  build_ref:
+    path: build-plan/04-rest-api.md
+    anchor: routes--transcripts
+    text: Phase 4 §Transcripts + TTS + Models
+  description: Transcript start/resume/retry/requeue/compile, TTS generate/prepare, models download-runtime; OpenAPI committed
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-14
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-14
+  execution_plan: docs/execution/plans/2026-08-19-p4-rest-api
+  updated: '2026-08-19'
+  closed_reason: null
+  note: p4-rest-api ready_for_review
+- row_key: MEU-17
+  id: MEU-17
+  slug: mcp-runtime
+  phase: '5'
+  band: P2
+  matrix_item: '5.1'
+  build_ref:
+    path: build-plan/05-mcp-server.md
+    anchor: runtime
+    text: Phase 5 §Runtime
+  description: mcp-server scaffold, discovery (AVKIT_API_BASE optional; else backend.json), AVKIT_API_TOKEN, REST client, no SQLite
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-14
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-14
+  execution_plan: docs/execution/plans/2026-08-19-p5-mcp-server
+  updated: '2026-08-19'
+  closed_reason: null
+  note: MEU-17 handoff + gate; awaiting exec review
+- row_key: MEU-18
+  id: MEU-18
+  slug: mcp-tools
+  phase: '5'
+  band: P2
+  matrix_item: '5.2'
+  build_ref:
+    path: build-plan/05-mcp-server.md
+    anchor: compound-tools
+    text: Phase 5 §Compound tools
+  description: Compound avkit_* + action, Zod .strict(), confirm on destructive, REST parity; omit GUI-only console
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-17, MEU-15, MEU-16
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-17
+  - MEU-15
+  - MEU-16
+  execution_plan: docs/execution/plans/2026-08-19-p5-mcp-server
+  updated: '2026-08-19'
+  closed_reason: null
+  note: MEU-18 handoff + gate; awaiting exec review
+- row_key: MEU-19
+  id: MEU-19
+  slug: gui-shell
+  phase: '6'
+  band: P2
+  matrix_item: '6.1'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: loading--startup-performance-tracked
+    text: Phase 6 §Startup + IPC
+  description: Electron splash/main, requestSingleInstanceLock, live-identity orphan reap (no attach), preload IPC, apiFetch 204, AppShell, ConsolePanel seq/ipc
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-14
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-14
+  execution_plan: docs/execution/plans/2026-08-19-p6-gui-shell
+  updated: '2026-08-20'
+  closed_reason: null
+  note: Codex exec r2 approved
+- row_key: MEU-20
+  id: MEU-20
+  slug: gui-downloader
+  phase: '6'
+  band: P2
+  matrix_item: '6.2'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: downloader-page---default-route
+    text: Phase 6 §Downloader page
+  description: Downloader page — queue table, SABR, cookies test, start/pause/resume, TanStack Query v5 polling of {items, processor}
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-19, MEU-15
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-19
+  - MEU-15
+  execution_plan: docs/execution/plans/2026-08-20-p6-gui-downloader
+  updated: '2026-08-20'
+  closed_reason: null
+  note: Codex exec r2 approved
+- row_key: MEU-26
+  id: MEU-26
+  slug: gui-chrome-zorivest
+  phase: '6'
+  band: P2
+  matrix_item: 6.2a
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: main-window-layout
+    text: Phase 6 §Main window layout + console chrome
+  description: Zorivest-derived shell chrome — tokens, pinned rail, header Console, right side-sheet console, Settings headings
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-19, MEU-20
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-19
+  - MEU-20
+  execution_plan: docs/execution/plans/2026-08-20-p6-gui-zorivest-chrome
+  updated: '2026-08-20'
+  closed_reason: null
+  note: Exec r2 approved; Session 8b complete
+- row_key: MEU-27
+  id: MEU-27
+  slug: gui-console-polish
+  phase: '6'
+  band: P2
+  matrix_item: 6.2b
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: console-panel-right-side-sheet
+    text: Phase 6 §Console panel (right side sheet)
+  description: Console polish — Zorivest header-left expand/collapse, contained viewport, exclusive exact-level buttons, black/green output
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-26
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-26
+  execution_plan: docs/execution/plans/2026-08-20-p6-gui-console-polish
+  updated: '2026-08-27'
+  closed_reason: null
+  note: Session 8c complete. Exec r3 approved. USER_EXPLICIT 2026-08-27 after Sessions 9–18.
+- row_key: MEU-21
+  id: MEU-21
+  slug: gui-transcript
+  phase: '6'
+  band: P2
+  matrix_item: '6.3'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: transcript-page-transcript
+    text: Phase 6 §Transcript page
+  description: Transcript cards bound to video_count/item aggregates; start/resume/retry/requeue; output tree at job.output_dir/raw|compiled
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-19, MEU-16
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-19
+  - MEU-16
+  execution_plan: docs/execution/plans/2026-08-20-p6-gui-transcript
+  updated: '2026-08-20'
+  closed_reason: null
+  note: Session 9 exec r1 approved; 117 vitest; Playwright 30; pytest 298
+- row_key: MEU-22
+  id: MEU-22
+  slug: gui-tts-models
+  phase: '6'
+  band: P2
+  matrix_item: '6.4'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: tts-page-tts
+    text: Phase 6 §TTS + Model Manager
+  description: TTS editor, prepare, generate/cancel, readTextFile dialog-only, tts.output_path ~/Documents; Model Manager download-runtime rows
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-19, MEU-16
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-19
+  - MEU-16
+  execution_plan: docs/execution/plans/2026-08-20-p6-gui-tts-models
+  updated: '2026-08-20'
+  closed_reason: null
+  note: Session 10 exec r2 approved; 141 vitest; Playwright 6 TTS; pytest 298
+- row_key: MEU-23
+  id: MEU-23
+  slug: gui-settings-help
+  phase: '6'
+  band: P2
+  matrix_item: '6.5'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: settings-page-settings
+    text: Phase 6 §Settings + Help + audit
+  description: Settings cards, Browse actions, copyMcpConfig (no token to renderer), HelpCards, command registry, bidirectional gui-actions-index audit, E2E waves
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-19, MEU-20, MEU-21, MEU-22
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-19
+  - MEU-20
+  - MEU-21
+  - MEU-22
+  execution_plan: docs/execution/plans/2026-08-21-p6-gui-settings-help
+  updated: '2026-08-21'
+  closed_reason: null
+  note: null
+- row_key: MEU-24
+  id: MEU-24
+  slug: dist-backend
+  phase: '7'
+  band: P2
+  matrix_item: '7.1'
+  build_ref:
+    path: build-plan/07-distribution.md
+    anchor: backend-packaging-pyinstaller
+    text: Phase 7 §Backend packaging
+  description: PyInstaller onedir, backend.json (no secrets), live-identity fields, dual --token/--mcp-token, --port 0, AVKIT_READY
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-14, MEU-19
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-14
+  - MEU-19
+  execution_plan: docs/execution/plans/2026-08-24-p7-distribution
+  updated: '2026-08-24'
+  closed_reason: null
+  note: exec r2 approved; H2 closeout
+- row_key: MEU-25
+  id: MEU-25
+  slug: dist-installer
+  phase: '7'
+  band: P2
+  matrix_item: '7.2'
+  build_ref:
+    path: build-plan/07-distribution.md
+    anchor: electron-packaging-electron-builder
+    text: Phase 7 §NSIS + FFmpeg + MCP
+  description: NSIS extraResources (avkit-backend, ffmpeg, mcp-server), FFmpeg bundle, Copy MCP omits AVKIT_API_BASE; no CUDA/weights
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-24, MEU-17
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-24
+  - MEU-17
+  execution_plan: docs/execution/plans/2026-08-24-p7-distribution
+  updated: '2026-08-24'
+  closed_reason: null
+  note: exec r2 approved; H2 closeout
+- row_key: MEU-28
+  id: MEU-28
+  slug: domain-conversion
+  phase: '8'
+  band: P2
+  matrix_item: '8.1'
+  build_ref:
+    path: build-plan/08-video-conversion.md
+    anchor: domain
+    text: Phase 8 §Domain
+  description: ConversionKind/Status/presets, ConversionJob entity, GPUCapabilities VO, additive MediaPort (encode/cut/extract/detect_gpu); TTS/download convert() unchanged
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-4
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-4
+  execution_plan: docs/execution/plans/2026-08-24-p8-conversion-engine
+  updated: '2026-08-25'
+  closed_reason: null
+  note: Session 13 exec r2 approved
+- row_key: MEU-29
+  id: MEU-29
+  slug: infra-conversion
+  phase: '8'
+  band: P2
+  matrix_item: '8.2'
+  build_ref:
+    path: build-plan/08-video-conversion.md
+    anchor: infrastructure
+    text: Phase 8 §Infrastructure
+  description: conversion_jobs eighth table (append-only migration), FFmpegAdapter encode/cut/extract/gpu/progress parse; no wmic
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-28, MEU-5, MEU-8
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-28
+  - MEU-5
+  - MEU-8
+  execution_plan: docs/execution/plans/2026-08-24-p8-conversion-engine
+  updated: '2026-08-25'
+  closed_reason: null
+  note: Session 13 exec r2 approved
+- row_key: MEU-30
+  id: MEU-30
+  slug: svc-conversion
+  phase: '8'
+  band: P2
+  matrix_item: '8.3'
+  build_ref:
+    path: build-plan/08-video-conversion.md
+    anchor: service-layer
+    text: Phase 8 §Service layer
+  description: ConversionService sequential GPU queue, start/pause/resume/cancel, skip-existing, output suffix; not used for TTS MP3
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-29
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-29
+  execution_plan: docs/execution/plans/2026-08-24-p8-conversion-engine
+  updated: '2026-08-25'
+  closed_reason: null
+  note: Session 13 exec r2 approved
+- row_key: MEU-31
+  id: MEU-31
+  slug: api-conversion
+  phase: '8'
+  band: P2
+  matrix_item: '8.4'
+  build_ref:
+    path: build-plan/08-video-conversion.md
+    anchor: rest-api
+    text: Phase 8 §REST API
+  description: /api/v1/conversions envelope routes, converter settings namespace, extra=forbid, OpenAPI regen
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-30, MEU-14
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-30
+  - MEU-14
+  execution_plan: docs/execution/plans/2026-08-26-p8-conversion-api-mcp
+  updated: '2026-08-26'
+  closed_reason: null
+  note: exec r2 approved p8-conversion-api-mcp
+- row_key: MEU-32
+  id: MEU-32
+  slug: mcp-convert
+  phase: '8'
+  band: P2
+  matrix_item: '8.5'
+  build_ref:
+    path: build-plan/08-video-conversion.md
+    anchor: mcp
+    text: Phase 8 §MCP
+  description: Compound avkit_convert + action, Zod .strict(), confirm on remove/clear, REST parity
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-31, MEU-17
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-31
+  - MEU-17
+  execution_plan: docs/execution/plans/2026-08-26-p8-conversion-api-mcp
+  updated: '2026-08-26'
+  closed_reason: null
+  note: exec r2 approved p8-conversion-api-mcp
+- row_key: MEU-33
+  id: MEU-33
+  slug: gui-convert
+  phase: '8'
+  band: P2
+  matrix_item: '8.6'
+  build_ref:
+    path: build-plan/08-video-conversion.md
+    anchor: convert-page-convert
+    text: Phase 8 §Convert page
+  description: Convert rail below TTS, Downloader-shaped queue, presets, HelpCard, Wave 8 E2E, action-index audit
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-31, MEU-19, MEU-26
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-31
+  - MEU-19
+  - MEU-26
+  execution_plan: docs/execution/plans/2026-08-26-p8-conversion-gui
+  updated: '2026-08-26'
+  closed_reason: null
+  note: MEU-33 Convert GUI ready_for_review; Wave 8 10 passed
+- row_key: MEU-34
+  id: MEU-34
+  slug: domain-capture
+  phase: '9'
+  band: P2
+  matrix_item: '9.1'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: domain
+    text: Phase 9 §Domain
+  description: CaptureSource/RequestStatus/AnnotationType, CaptureShot + CaptureRequest, ScreenCapturePort + ImageAnnotatePort; no QueueRuntime for captures
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-4
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-4
+  execution_plan: docs/execution/plans/2026-08-26-p9-capture-engine
+  updated: '2026-08-27'
+  closed_reason: null
+  note: Session 16 p9-capture-engine approved; CaptureShot domain
+- row_key: MEU-35
+  id: MEU-35
+  slug: infra-capture
+  phase: '9'
+  band: P2
+  matrix_item: '9.2'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: infrastructure
+    text: Phase 9 §Infrastructure
+  description: capture_shots + capture_requests tables, Pillow bake + mss/ImageGrab adapter; append-only migration
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-34, MEU-5
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-34
+  - MEU-5
+  execution_plan: docs/execution/plans/2026-08-26-p9-capture-engine
+  updated: '2026-08-27'
+  closed_reason: null
+  note: Session 16 p9-capture-engine approved; capture tables + adapter
+- row_key: MEU-36
+  id: MEU-36
+  slug: svc-capture
+  phase: '9'
+  band: P2
+  matrix_item: '9.3'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: service-layer
+    text: Phase 9 §Service layer
+  description: CaptureService inbox scan/upsert/prune, interactive 409, annotate bake, delete files
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-35
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-35
+  execution_plan: docs/execution/plans/2026-08-26-p9-capture-engine
+  updated: '2026-08-27'
+  closed_reason: null
+  note: Session 16 p9-capture-engine approved; CaptureService
+- row_key: MEU-37
+  id: MEU-37
+  slug: api-capture
+  phase: '9'
+  band: P2
+  matrix_item: '9.4'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: rest-api
+    text: Phase 9 §REST API
+  description: /api/v1/captures catalog routes, capture settings namespace, image GET, extra=forbid, OpenAPI regen
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-36, MEU-14
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-36
+  - MEU-14
+  execution_plan: docs/execution/plans/2026-08-27-p9-capture-api-mcp
+  updated: '2026-08-27'
+  closed_reason: null
+  note: MEU-37 Green + H1-2 217 passed; ready for exec review
+- row_key: MEU-38
+  id: MEU-38
+  slug: mcp-capture
+  phase: '9'
+  band: P2
+  matrix_item: '9.5'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: mcp
+    text: Phase 9 §MCP
+  description: Compound avkit_capture + action, Zod .strict(), confirm on remove (deletes files), image may return PNG
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-37, MEU-17
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-37
+  - MEU-17
+  execution_plan: docs/execution/plans/2026-08-27-p9-capture-api-mcp
+  updated: '2026-08-27'
+  closed_reason: null
+  note: MEU-38 Green 214 vitest; ready for exec review
+- row_key: MEU-39
+  id: MEU-39
+  slug: gui-capture
+  phase: '9'
+  band: P2
+  matrix_item: '9.6'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: capture-page-capture
+    text: Phase 9 §Capture page
+  description: Tray + F2 overlay, Capture rail below Convert, filmstrip + four tools, HelpCard, Wave 9 E2E, action-index audit
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-37, MEU-19, MEU-26
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-37
+  - MEU-19
+  - MEU-26
+  execution_plan: docs/execution/plans/2026-08-27-p9-capture-gui
+  updated: '2026-08-27'
+  closed_reason: null
+  note: Session 18 exec r2 approved
+- row_key: MEU-40
+  id: MEU-40
+  slug: native-region-picker
+  phase: '9'
+  band: P2
+  matrix_item: '9.7'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: native-region-picker-helper-process
+    text: Phase 9 §Native region picker (helper process)
+  description: 'Native C# WinForms (.NET 8) region-picker sidecar replaces the Chromium overlay: freeze-before-show GDI capture, Electron lifecycle + collision-safe publication, Chromium overlay deleted
+    with no fallback'
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-39
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-39
+  execution_plan: docs/execution/plans/2026-08-27-p9-capture-native-picker
+  updated: '2026-09-02'
+  closed_reason: null
+  note: Session 19 exec r3 approved
+- row_key: MEU-59
+  id: MEU-59
+  slug: gui-capture-annotate-arrow-text
+  phase: '9'
+  band: P2
+  matrix_item: '9.8'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: annotation-geometry-arrow-text
+    text: Phase 9 §Annotation geometry (arrow + text)
+  description: Repair Capture-page arrow pointer and text overlays — fit-to-viewport image-pixel mapping, SVG preview matching Pillow bake, sidecar reload on GET detail, original PNG immutable. No new annotation
+    types.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-39, MEU-40
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-39
+  - MEU-40
+  execution_plan: docs/execution/plans/2026-09-19-p9-capture-annotate-arrow-text
+  updated: '2026-09-19'
+  closed_reason: null
+  note: Session grouping 2026-09-19 complete; exec review r2 approved; Human-approved arrow+text not circle/marker
+- row_key: MEU-60
+  id: MEU-60
+  slug: gui-capture-annotate-edit-until-save
+  phase: '9'
+  band: P2
+  matrix_item: '9.9'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: annotation-edit-until-save
+    text: Phase 9 §Annotation edit until Save
+  description: Select-mode Capture overlay editing until Save — arrow body and independent endpoints, move committed text / box / highlight, compact mark list, Apply/Cancel color plus original-image sampler.
+    No new annotation types. No REST/MCP schema fork.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-59
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-59
+  execution_plan: docs/execution/plans/2026-09-20-p9-capture-annotate-edit
+  updated: '2026-09-20'
+  closed_reason: null
+  note: Session grouping 2026-09-20 complete; exec review r2 approved; Select-mode edit until Save
+- row_key: MEU-61
+  id: MEU-61
+  slug: gui-login-item
+  phase: '6'
+  band: P2
+  matrix_item: '6.6'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: startup-login-item
+    text: Phase 6 §Startup (login item)
+  description: Per-user Electron login item (Start av-kit when I sign in + Start minimized). OS is SoT. Not a Windows service. Hidden when unpackaged or Linux. NSIS uninstall DeleteRegValue.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-23, MEU-25
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-23
+  - MEU-25
+  execution_plan: docs/execution/plans/2026-09-20-p6-gui-login-item
+  updated: '2026-09-20'
+  closed_reason: null
+  note: Residual after Settings/Help; USER_EXPLICIT 2026-09-20 copy Zorivest login-item not service autostart; Green+gate complete, ready_for_review
+- row_key: MEU-41
+  id: MEU-41
+  slug: canon-queue-cards
+  phase: '10'
+  band: P2
+  matrix_item: '10.1'
+  build_ref:
+    path: build-plan/10-queue-card-ui.md
+    anchor: scope-and-non-goals
+    text: Phase 10 §Scope and non-goals
+  description: Phase 10 spec doc (10-queue-card-ui.md), 06-gui.md supersession pointers, --color-age-restricted + --color-bg-selected tokens ported from zorivest, AgeRestricted status-colour Spec-conformance
+    fix
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-39
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-39
+  execution_plan: docs/execution/plans/2026-08-28-p10-queue-card-foundations
+  updated: '2026-09-02'
+  closed_reason: null
+  note: Session 20 p10-queue-card-foundations
+- row_key: MEU-42
+  id: MEU-42
+  slug: svc-requeue-widening
+  phase: '10'
+  band: P2
+  matrix_item: '10.2'
+  build_ref:
+    path: build-plan/10-queue-card-ui.md
+    anchor: re-queue-contract
+    text: Phase 10 §Re-queue contract
+  description: Widen reset_failed from {Failed} to the full re-queueable set (Cancelled, QualityBlocked, AgeRestricted); transition maps; route docstrings; OpenAPI regen
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-41
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-41
+  execution_plan: docs/execution/plans/2026-08-28-p10-queue-card-foundations
+  updated: '2026-09-02'
+  closed_reason: null
+  note: Session 20 p10-queue-card-foundations
+- row_key: MEU-43
+  id: MEU-43
+  slug: gui-queue-primitives
+  phase: '10'
+  band: P2
+  matrix_item: '10.3'
+  build_ref:
+    path: build-plan/10-queue-card-ui.md
+    anchor: status-token-table
+    text: Phase 10 §Status token table
+  description: Shared queue primitives StatusBadge, ProgressBar, SelectionCheckbox, ConfirmModal plus lib/queue/ (deduped formatFileSize, envelope parser, status tokens + contrast oracle, per-feature status
+    configs)
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-41
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-41
+  execution_plan: docs/execution/plans/2026-08-28-p10-queue-card-foundations
+  updated: '2026-09-02'
+  closed_reason: null
+  note: Session 20 p10-queue-card-foundations
+- row_key: MEU-44
+  id: MEU-44
+  slug: gui-queue-card
+  phase: '10'
+  band: P2
+  matrix_item: '10.4'
+  build_ref:
+    path: build-plan/10-queue-card-ui.md
+    anchor: queuecard-anatomy
+    text: Phase 10 §QueueCard anatomy
+  description: QueueCard, QueueList and EmptyDropZone row-card components with testid registration; no page mounts them yet
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-43
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-43
+  execution_plan: docs/execution/plans/2026-08-28-p10-queue-card-foundations
+  updated: '2026-09-02'
+  closed_reason: null
+  note: Session 20 p10-queue-card-foundations
+- row_key: MEU-45
+  id: MEU-45
+  slug: gui-convert-queue
+  phase: '10'
+  band: P2
+  matrix_item: '10.5'
+  build_ref:
+    path: build-plan/10-queue-card-ui.md
+    anchor: toolbar-reduction
+    text: Phase 10 §Toolbar reduction
+  description: Convert queue migration to QueueList; toolbar reduced 13 to 4 + kebab overflow; testid census
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-42, MEU-44
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-42
+  - MEU-44
+  execution_plan: docs/execution/plans/2026-09-02-p10-queue-card-migration
+  updated: '2026-09-03'
+  closed_reason: null
+  note: Session 21 p10-queue-card-migration
+- row_key: MEU-46
+  id: MEU-46
+  slug: gui-downloader-queue
+  phase: '10'
+  band: P2
+  matrix_item: '10.6'
+  build_ref:
+    path: build-plan/10-queue-card-ui.md
+    anchor: primary-action-model
+    text: Phase 10 §Primary action model
+  description: Downloader queue migration to QueueList; summary bar; duplicate table deleted
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-45
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-45
+  execution_plan: docs/execution/plans/2026-09-02-p10-queue-card-migration
+  updated: '2026-09-03'
+  closed_reason: null
+  note: Session 21 p10-queue-card-migration
+- row_key: MEU-47
+  id: MEU-47
+  slug: gui-queue-bulk
+  phase: '10'
+  band: P2
+  matrix_item: '10.7'
+  build_ref:
+    path: build-plan/10-queue-card-ui.md
+    anchor: selection-and-bulk-model
+    text: Phase 10 §Selection and bulk model
+  description: Selection model (Set<id>), sticky BulkActionBar, shift-click range, Ctrl/Cmd-A, client-side bulk fan-out, Clear finished, G35 partial-result toasts
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-46
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-46
+  execution_plan: docs/execution/plans/2026-09-02-p10-queue-card-migration
+  updated: '2026-09-03'
+  closed_reason: null
+  note: Session 21 p10-queue-card-migration
+- row_key: MEU-48
+  id: MEU-48
+  slug: gui-queue-convergence
+  phase: '10'
+  band: P2
+  matrix_item: '10.8'
+  build_ref:
+    path: build-plan/10-queue-card-ui.md
+    anchor: supersession-of-06-guimd
+    text: Phase 10 §Supersession of 06-gui.md
+  description: Transcript ChannelCard onto the shared primitives (fixes the G33 width-percent violation); TTS gets the shared ProgressBar
+  status: closed
+  status_labels:
+    registry: 🚫 closed
+    build_plan: 🚫
+  surface_overrides: null
+  dependencies_raw: MEU-47
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-47
+  execution_plan: null
+  updated: '2026-09-03'
+  closed_reason: Superseded by MEU-55 (gui-transcript-layout) and MEU-56 (gui-tts-layout). Both deliverables are strict subsets of the 2026-09-03 Transcript and TTS page-layout mockups; executing MEU-48
+    standalone would open TranscriptPage.tsx and TTSPage.tsx twice and write two test suites for the same components. Its two ACs — ChannelCard on the shared primitives incl. the G33 width-percent fix,
+    and TTS on the shared ProgressBar — are inherited as mandatory ACs by MEU-55 and MEU-56 respectively and must not be dropped.
+  note: Closed 2026-09-03 during Phase 11 registration; substance carried forward, not cancelled.
+- row_key: MEU-49
+  id: MEU-49
+  slug: gui-queue-dnd
+  phase: '10'
+  band: P2
+  matrix_item: '10.9'
+  build_ref:
+    path: build-plan/10-queue-card-ui.md
+    anchor: reorder-model
+    text: Phase 10 §Reorder model
+  description: dnd-kit drag reorder inside QueueList with ARIA live-region announcements; keyboard reorder retained as the equal path. Lands before Phase 11 so Transcript (MEU-55) inherits reorder by adopting
+    QueueList.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-47
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-47
+  execution_plan: docs/execution/plans/2026-09-03-p10-queue-card-dnd
+  updated: '2026-09-16'
+  closed_reason: null
+  note: Session 22 p10-queue-card-dnd
+- row_key: MEU-50
+  id: MEU-50
+  slug: canon-page-layout
+  phase: '11'
+  band: P2
+  matrix_item: '11.1'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: scope-and-non-goals
+    text: Phase 11 §Scope and non-goals
+  description: Phase 11 spec doc (11-page-layout.md) authored from the six 2026-09-03 page-layout mockups; resolves every mockup §06 open decision into a locked rule; content-column cap, zone model, form
+    grid, disclosure/segment/chip vocabulary and save-model captions; supersession pointers into 06-gui.md, 08, 09 and 10
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-49
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-49
+  execution_plan: docs/execution/plans/2026-09-26-p11-layout-canon
+  updated: '2026-09-26'
+  closed_reason: null
+  note: Session 23 p11-layout-canon
+- row_key: MEU-51
+  id: MEU-51
+  slug: gui-layout-primitives
+  phase: '11'
+  band: P2
+  matrix_item: '11.2'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: shared-layout-primitives
+    text: Phase 11 §Shared layout primitives
+  description: Shared layout primitives Disclosure, SegmentedControl, StatusChip, FormRow and PathRow with testid registration; consumed by five pages, no page mounts them yet
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-50
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-50
+  execution_plan: docs/execution/plans/2026-09-26-p11-layout-canon
+  updated: '2026-09-26'
+  closed_reason: null
+  note: Session 23 p11-layout-canon
+- row_key: MEU-52
+  id: MEU-52
+  slug: gui-queue-header-row
+  phase: '11'
+  band: P2
+  matrix_item: '11.3'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: queue-header-row
+    text: Phase 11 §Queue header row
+  description: QueueHeaderRow composing QueueSelectionHeader, non-zero status chips, the live processor chip and QueueToolbar into one row; lands on Downloader and Convert in the SAME MEU so the two queues
+    cannot diverge again; queue-summary and processor-indicator ids move onto chips
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-51
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-51
+  execution_plan: docs/execution/plans/2026-09-26-p11-queue-pages
+  updated: '2026-09-27'
+  closed_reason: null
+  note: Session 24 p11-queue-pages approved by independent Round 3 review
+- row_key: MEU-53
+  id: MEU-53
+  slug: gui-downloader-layout
+  phase: '11'
+  band: P2
+  matrix_item: '11.4'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: downloader-page-layout
+    text: Phase 11 §Downloader page layout
+  description: Downloader Zone 1 add panel — URL and Add on one row, content-width options row, Advanced disclosure holding the cookie-mode segment and the three SABR controls; SABR chip beside Quality;
+    column cap; add-status and error-banner share one panel status line
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-52
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-52
+  execution_plan: docs/execution/plans/2026-09-26-p11-queue-pages
+  updated: '2026-09-27'
+  closed_reason: null
+  note: Session 24 p11-queue-pages approved by independent Round 3 review
+- row_key: MEU-54
+  id: MEU-54
+  slug: gui-convert-layout
+  phase: '11'
+  band: P2
+  matrix_item: '11.5'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: convert-page-layout
+    text: Phase 11 §Convert page layout
+  description: Convert Zone 1 add panel — task segment with encoder chip and Refresh GPU, one-line drop strip with Add carrying the staged count, removable staged-path chips, single task-options row, Advanced
+    override disclosure, output/skip-existing/Save footer
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-53
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-53
+  execution_plan: docs/execution/plans/2026-09-26-p11-queue-pages
+  updated: '2026-09-27'
+  closed_reason: null
+  note: Session 24 p11-queue-pages approved by independent Round 3 review
+- row_key: MEU-55
+  id: MEU-55
+  slug: gui-transcript-layout
+  phase: '11'
+  band: P2
+  matrix_item: '11.6'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: transcript-page-layout
+    text: Phase 11 §Transcript page layout
+  description: 'Transcript Add row, channel cards on the QueueCard anatomy (inherits closed MEU-48: shared primitives plus the G33 width-percent fix), 13-button footer replaced by a three-action header
+    toolbar plus per-card ▲ ▼ and ⋮ menu; single-select model unchanged'
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-52, MEU-49
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-52
+  - MEU-49
+  execution_plan: docs/execution/plans/2026-09-28-p11-transcript-tts
+  updated: '2026-09-28'
+  closed_reason: null
+  note: Session 25 p11-transcript-tts — three-action header toolbar; inherits MEU-48 transcript ACs
+- row_key: MEU-56
+  id: MEU-56
+  slug: gui-tts-layout
+  phase: '11'
+  band: P2
+  matrix_item: '11.7'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: tts-page-layout
+    text: Phase 11 §TTS page layout
+  description: 'TTS two-column text/voice grid, Cleanup and Manage-models disclosures, one-line voice list, speed slider plus preset segment, and a single run bar (inherits closed MEU-48: TTS adopts the
+    shared ProgressBar)'
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-51
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-51
+  execution_plan: docs/execution/plans/2026-09-28-p11-transcript-tts
+  updated: '2026-09-28'
+  closed_reason: null
+  note: Session 25 p11-transcript-tts — inherits MEU-48 TTS AC
+- row_key: MEU-57
+  id: MEU-57
+  slug: gui-capture-layout
+  phase: '11'
+  band: P2
+  matrix_item: '11.8'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: capture-page-layout
+    text: Phase 11 §Capture page layout
+  description: Capture header row with the hotkey key cap and a Settings disclosure, 200px thumbnail filmstrip, per-shot viewport toolbar with the tool segment, and inline confirm strips; Phase 10 excluded
+    Capture as a queue, Phase 11 includes it as a layout
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-51
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-51
+  execution_plan: docs/execution/plans/2026-09-28-p11-capture-settings
+  updated: '2026-09-30'
+  closed_reason: null
+  note: Session 26 p11-capture-settings
+- row_key: MEU-58
+  id: MEU-58
+  slug: gui-settings-layout
+  phase: '11'
+  band: P2
+  matrix_item: '11.9'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: settings-page-layout
+    text: Phase 11 §Settings page layout
+  description: Settings sticky section rail (Pages / App / Setup), 168px label-control form grid, path-plus-Browse rows, per-section save-model captions making the three existing save models visible, and
+    Dependencies/Readiness/MCP rendered as chip lists
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-51
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-51
+  execution_plan: docs/execution/plans/2026-09-28-p11-capture-settings
+  updated: '2026-09-30'
+  closed_reason: null
+  note: Session 26 p11-capture-settings
+- row_key: MEU-62
+  id: MEU-62
+  slug: svc-tts-runtime-assets
+  phase: '3'
+  band: P2
+  matrix_item: '3.5'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-runtime-assets-residual
+    text: Phase 3 §TTS runtime assets (residual)
+  description: ONNX vocab (config.json) downloaded with each ONNX variant and wired into KokoroAdapter; spaCy en_core_web_sm as a managed download with a readiness row; tts.generate/_failed structured logs;
+    generate fails fast with a named missing asset. Human-approved D-22.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-16, MEU-22
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-16
+  - MEU-22
+  execution_plan: docs/execution/plans/2026-09-30-tts-repair
+  updated: '2026-10-01'
+  closed_reason: null
+  note: Registered 2026-09-30 by /session-grouping from the 2026-09-30 GUI walkthrough triage; covers TTS-GENERATE-FAILED-SILENT.
+- row_key: MEU-63
+  id: MEU-63
+  slug: gui-tts-model-manager
+  phase: '11'
+  band: P2
+  matrix_item: '11.10'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: tts-model-manager-residual
+    text: Phase 11 §TTS model manager (residual)
+  description: Model picker plus one state-driven Get / Load / Unload button replacing the Manage grid; run bar shows job.error_message for Failed jobs; asset readiness rows from MEU-62 visible in the picker.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-56, MEU-62
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-56
+  - MEU-62
+  execution_plan: docs/execution/plans/2026-09-30-tts-repair
+  updated: '2026-10-01'
+  closed_reason: null
+  note: Registered 2026-09-30 by /session-grouping from the 2026-09-30 GUI walkthrough triage; covers TTS-MODEL-MANAGE-AFFORDANCE, TTS-GENERATE-FAILED-SILENT.
+- row_key: MEU-64
+  id: MEU-64
+  slug: gui-tts-text-panel
+  phase: '11'
+  band: P2
+  matrix_item: '11.11'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: tts-text-panel-residual
+    text: Phase 11 §TTS text panel (residual)
+  description: Apply cleanup writes cleaned_text back to the text; preview-raw removed and the cleaned preview shown only after Preview; searchable voice combobox replaces the full-width language select
+    + tall listbox.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-56
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-56
+  execution_plan: docs/execution/plans/2026-09-30-tts-repair
+  updated: '2026-10-01'
+  closed_reason: null
+  note: Registered 2026-09-30 by /session-grouping from the 2026-09-30 GUI walkthrough triage; covers TTS-CLEANUP-APPLY-MISSING, TTS-CLEANUP-PREVIEW-REDUNDANT, TTS-LANGUAGE-VOICE-PICKER-SPACE.
+- row_key: MEU-65
+  id: MEU-65
+  slug: gui-capture-toolbar-icons
+  phase: '9'
+  band: P2
+  matrix_item: '9.10'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: viewport-toolbar-icons-and-options
+    text: Phase 9 §Viewport toolbar icons and Options
+  description: Capture toolbar becomes icon buttons with tooltips and aria-pressed; per-tool options move to a contextual row; header 'Settings' disclosure becomes an 'Options' button; no horizontal scroll
+    at the default window size.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-57, MEU-60
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-57
+  - MEU-60
+  execution_plan: docs/execution/plans/2026-10-01-capture-viewport-chrome
+  updated: '2026-10-02'
+  closed_reason: null
+  note: Registered 2026-09-30 by /session-grouping from the 2026-09-30 GUI walkthrough triage; covers CAPTURE-TOOLBAR-ICONS, CAPTURE-SETTINGS-BUTTON-LABEL.
+- row_key: MEU-66
+  id: MEU-66
+  slug: gui-capture-zoom
+  phase: '9'
+  band: P2
+  matrix_item: '9.11'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: viewport-zoom
+    text: Phase 9 §Viewport zoom
+  description: Wheel and +/-/Fit zoom about the cursor with pan; FIT_MAP extended with scale and offset so MEU-59/60 pointer mapping stays exact; stored annotations unchanged.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-59, MEU-65
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-59
+  - MEU-65
+  execution_plan: docs/execution/plans/2026-10-01-capture-viewport-chrome
+  updated: '2026-10-02'
+  closed_reason: null
+  note: Registered 2026-09-30 by /session-grouping from the 2026-09-30 GUI walkthrough triage; covers CAPTURE-VIEWPORT-ZOOM.
+- row_key: MEU-67
+  id: MEU-67
+  slug: capture-flatten-backup
+  phase: '9'
+  band: P2
+  matrix_item: '9.12'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: flatten-with-backup
+    text: Phase 9 §Flatten with backup
+  description: POST /captures/{id}/flatten bakes annotations over the original after copying it to a backup folder; /revert restores; capture.flatten_backup and capture.backup_dir settings; MCP flatten/revert
+    with confirm; GUI Apply-to-image with confirm strip.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-38, MEU-60
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-38
+  - MEU-60
+  execution_plan: docs/execution/plans/2026-10-02-capture-flatten-backup
+  updated: '2026-10-11'
+  closed_reason: null
+  note: Registered 2026-09-30 by /session-grouping from the 2026-09-30 GUI walkthrough triage; covers CAPTURE-FLATTEN-WITH-BACKUP.
+- row_key: MEU-68
+  id: MEU-68
+  slug: mcp-live-audit
+  phase: '5'
+  band: P2
+  matrix_item: '5.3'
+  build_ref:
+    path: build-plan/05-mcp-server.md
+    anchor: mcp-live-audit-residual
+    text: Phase 5 §MCP live audit (residual)
+  description: /mcp-audit workflow + skill + runner that drives the built server as a real stdio client against the live local API, executes every compound-tool action in dependency order, asserts observable
+    state, diffs a committed baseline, and cleans up. Adapted from the Zorivest skill.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-18, MEU-62
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-18
+  - MEU-62
+  execution_plan: docs/execution/plans/2026-10-01-mcp-live-audit
+  updated: '2026-10-01'
+  closed_reason: null
+  note: 'Session 28 mcp-live-audit: WINDOWS_GATE attempt 1 passed on 8345599 (39de635); execution review pending.'
+- row_key: MEU-69
+  id: MEU-69
+  slug: gui-header-toggle-state
+  phase: '6'
+  band: P2
+  matrix_item: '6.7'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: header-toggles-residual
+    text: Phase 6 §Header toggles (residual)
+  description: Console header control becomes an aria-pressed toggle with icon and pressed styling; palette control reads Commands Ctrl+K with an icon; both render as buttons.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-19, MEU-26
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-19
+  - MEU-26
+  execution_plan: docs/execution/plans/2026-10-10-gui-polish-residuals
+  updated: '2026-10-14'
+  closed_reason: null
+  note: Registered 2026-09-30 by /session-grouping from the 2026-09-30 GUI walkthrough triage; covers HEADER-CONSOLE-SETTINGS-BUTTON-STATE.
+- row_key: MEU-70
+  id: MEU-70
+  slug: gui-settings-section-emphasis
+  phase: '11'
+  band: P2
+  matrix_item: '11.12'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: settings-section-emphasis-residual
+    text: Phase 11 §Settings section emphasis (residual)
+  description: After a target check of MEU-58's rail aria-current, the current section card gets a subtle surface-raised emphasis driven by the same observer state; no layout shift; all section ids kept.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-58
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-58
+  execution_plan: docs/execution/plans/2026-10-10-gui-polish-residuals
+  updated: '2026-10-14'
+  closed_reason: null
+  note: Registered 2026-09-30 by /session-grouping from the 2026-09-30 GUI walkthrough triage; covers SETTINGS-ACTIVE-SECTION-HIGHLIGHT.
+- row_key: MEU-71
+  id: MEU-71
+  slug: gui-mcp-setup-prompt
+  phase: '7'
+  band: P2
+  matrix_item: '7.3'
+  build_ref:
+    path: build-plan/07-distribution.md
+    anchor: mcp-setup-prompt-residual
+    text: Phase 7 §MCP setup prompt (residual)
+  description: Settings MCP card shows a per-client setup prompt (user scope by default, project option) whose command is the app executable with ELECTRON_RUN_AS_NODE=1 and the server path in args; no token
+    in any block (the server reads mcp-token.txt) but always AVKIT_APP_DATA; backup-and-merge, verify via authenticated avkit_health dependencies, one RESULT line; fixes the mcp-server entry guard.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-23, MEU-25
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-23
+  - MEU-25
+  execution_plan: docs/execution/plans/2026-10-16-gui-mcp-setup-prompt
+  updated: '2026-10-17'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers MCP-SETUP-PROMPT.
+- row_key: MEU-72
+  id: MEU-72
+  slug: dist-tts-onnx-runtime
+  phase: '7'
+  band: P2
+  matrix_item: '7.4'
+  build_ref:
+    path: build-plan/07-distribution.md
+    anchor: packaged-onnx-tts-runtime-residual
+    text: Phase 7 §Packaged ONNX TTS runtime (residual)
+  description: The ONNX TTS path runs G2P + onnxruntime without kokoro.KPipeline or torch so the packaged app synthesizes; hiddenimports for the G2P stack; packaged smoke generate (also records the shipped
+    MCP entry).
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-24, MEU-62
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-24
+  - MEU-62
+  execution_plan: docs/execution/plans/2026-10-14-tts-engine-runtime/
+  updated: '2026-10-15'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers TTS-PACKAGED-RUNTIME-EXCLUDED.
+- row_key: MEU-73
+  id: MEU-73
+  slug: svc-tts-voice-assets
+  phase: '3'
+  band: P2
+  matrix_item: '3.6'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-voice-assets-residual
+    text: Phase 3 §TTS voice assets (residual)
+  description: Kokoro voice packs become managed assets with fail-fast 409 instead of a mid-run Hugging Face fetch; Settings Dependencies refreshes after asset downloads; spaCy dir appended to sys.path.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-62
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-62
+  execution_plan: docs/execution/plans/2026-10-14-tts-engine-runtime/
+  updated: '2026-10-15'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers TTS-VOICE-PACK-LAZY-FETCH, SETTINGS-TTS-ASSET-ROW-STALE, TTS-SPACY-SYSPATH-PREPEND.
+- row_key: MEU-74
+  id: MEU-74
+  slug: svc-tts-language-runtime
+  phase: '3'
+  band: P2
+  matrix_item: '3.7'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-language-runtime-residual
+    text: Phase 3 §TTS language runtime (residual)
+  description: espeak-ng never bundled; a user-installed copy is detected as a readiness row; voices report available/reason and the TTS page disables unavailable ones; generate with an unavailable voice
+    is 409.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-73, MEU-64
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-73
+  - MEU-64
+  execution_plan: docs/execution/plans/2026-10-14-tts-engine-runtime/
+  updated: '2026-10-15'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers TTS-NON-ENGLISH-G2P-DEPS.
+- row_key: MEU-75
+  id: MEU-75
+  slug: svc-tts-device-fallback
+  phase: '3'
+  band: P2
+  matrix_item: '3.8'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-device-resolution-residual
+    text: Phase 3 §TTS device resolution (residual)
+  description: PyTorch load on an unavailable device falls back to CPU like ONNX with a logged downgrade; the device list comes from the runtime; unmapped load failures raise ModelLoadError.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-62, MEU-63
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-62
+  - MEU-63
+  execution_plan: docs/execution/plans/2026-10-16-tts-voice-panel/
+  updated: '2026-10-17'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers TTS-MODEL-FLOW-GAPS.
+- row_key: MEU-76
+  id: MEU-76
+  slug: api-error-surface
+  phase: '4'
+  band: P2
+  matrix_item: '4.4'
+  build_ref:
+    path: build-plan/04-rest-api.md
+    anchor: unhandled-errors-residual
+    text: Phase 4 §Unhandled errors (residual)
+  description: Unhandled exceptions are logged with request_id and returned as a CORS-safe internal_error envelope (no more 'Failed to fetch'); yt-dlp extract failures on download add map to a typed DomainError.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-14
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-14
+  execution_plan: docs/execution/plans/2026-10-14-backend-robustness
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers API-UNHANDLED-ERROR-OPAQUE.
+- row_key: MEU-77
+  id: MEU-77
+  slug: svc-tts-async-generate
+  phase: '3'
+  band: P2
+  matrix_item: '3.9'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-async-generation-residual
+    text: Phase 3 §TTS async generation (residual)
+  description: POST /tts/generate queues and returns the job; synthesis runs in the background; DELETE /tts/{id} cancels a running job; MCP returns the job and the audit baseline gains poll/cancel; GUI
+    run bar polls.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-62, MEU-63, MEU-68, MEU-76
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-62
+  - MEU-63
+  - MEU-68
+  - MEU-76
+  execution_plan: docs/execution/plans/2026-10-14-backend-robustness
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers MCP-TTS-GENERATE-SYNCHRONOUS.
+- row_key: MEU-78
+  id: MEU-78
+  slug: svc-ffmpeg-resolver
+  phase: '3'
+  band: P2
+  matrix_item: '3.10'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: ffmpeg-resolution-residual
+    text: Phase 3 §FFmpeg resolution (residual)
+  description: One ffmpeg resolver (configured, bundled, PATH) for Convert, TTS MP3, health and yt-dlp ffmpeg_location; re-resolves on setting change; the Dependencies row reports the resolved binary and
+    checks ffprobe.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-13, MEU-29
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-13
+  - MEU-29
+  execution_plan: docs/execution/plans/2026-10-14-backend-robustness
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers FFMPEG-RESOLUTION-DIVERGENCE.
+- row_key: MEU-79
+  id: MEU-79
+  slug: gui-tts-voice-panel-layout
+  phase: '11'
+  band: P2
+  matrix_item: '11.13'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: tts-voice-panel-alignment-residual
+    text: Phase 11 §TTS voice panel alignment (residual)
+  description: Model, Device and the model action share one aligned row and control height with no wrap at the default window; Format, Speed and voice search match; geometry pinned in Electron. Spec in
+    11 §TTS voice panel alignment (residual).
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-63, MEU-75
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-63
+  - MEU-75
+  execution_plan: docs/execution/plans/2026-10-16-tts-voice-panel/
+  updated: '2026-10-17'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers TTS-MODEL-ROW-LAYOUT.
+- row_key: MEU-80
+  id: MEU-80
+  slug: gui-icon-button-hints
+  phase: '9'
+  band: P2
+  matrix_item: '9.13'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: icon-button-hints
+    text: Phase 9 §Icon-button hints
+  description: Shared rendered tooltip for icon-only function buttons (hover and focus, including disabled), generalising Session 30 A-10; nav-rail labels out of scope.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-65, MEU-67
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-65
+  - MEU-67
+  execution_plan: docs/execution/plans/2026-10-14-capture-chrome
+  updated: '2026-10-15'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-TOOLTIPS-NOT-SHOWN.
+- row_key: MEU-81
+  id: MEU-81
+  slug: gui-capture-action-row
+  phase: '9'
+  band: P2
+  matrix_item: '9.14'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: capture-action-row
+    text: Phase 9 §Capture action row
+  description: Per-shot/per-mark actions as icon buttons; Body/Tail/Head, nudge buttons and Sample original removed; row shrink-0 with no overflow; hotkey status inline in the header (no reserved band).
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-80, MEU-67
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-80
+  - MEU-67
+  execution_plan: docs/execution/plans/2026-10-14-capture-chrome
+  updated: '2026-10-15'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-ACTION-ROW-ICONS, CAPTURE-MARKS-ROW-SQUEEZED, CAPTURE-SAMPLE-ORIGINAL-UNLABELED, CAPTURE-HOTKEY-BANNER-GAP.
+- row_key: MEU-82
+  id: MEU-82
+  slug: capture-text-baseline
+  phase: '9'
+  band: P2
+  matrix_item: '9.15'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: text-preview-baseline
+    text: Phase 9 §Text preview baseline
+  description: SVG text on the alphabetic baseline from the bake's Segoe metrics so preview, plate and bake share one anchor; preview-vs-bake pixel test.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-59
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-59
+  execution_plan: docs/execution/plans/2026-10-14-capture-render-fidelity
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-TEXT-BG-PREVIEW-OFFSET.
+- row_key: MEU-83
+  id: MEU-83
+  slug: capture-arrow-geometry
+  phase: '9'
+  band: P2
+  matrix_item: '9.16'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: arrow-bake-geometry
+    text: Phase 9 §Arrow bake geometry
+  description: Arrow shaft ends at the back of the head in bake and preview; arrows baked at 4x with LANCZOS downscale.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-59, MEU-67
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-59
+  - MEU-67
+  execution_plan: docs/execution/plans/2026-10-14-capture-render-fidelity
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-BAKE-ARROW-THIN.
+- row_key: MEU-84
+  id: MEU-84
+  slug: capture-file-variant-sync
+  phase: '9'
+  band: P2
+  matrix_item: '9.17'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: annotated-file-sync-and-open-file
+    text: Phase 9 §Annotated file sync and Open file
+  description: scan_inbox clears missing annotated/sidecar paths; Open file and Open folder follow the viewport's Original/Annotated view.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-39, MEU-67
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-39
+  - MEU-67
+  execution_plan: docs/execution/plans/2026-10-14-capture-render-fidelity
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-STALE-ANNOTATED-PATH, CAPTURE-OPEN-FILE-VARIANT.
+- row_key: MEU-85
+  id: MEU-85
+  slug: gui-capture-size-scrub
+  phase: '9'
+  band: P2
+  matrix_item: '9.18'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: size-scrubbing
+    text: Phase 9 §Size scrubbing
+  description: Stroke width and font size scrub by dragging the label, wheel and arrow keys, with live preview and one undo per gesture.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-65
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-65
+  execution_plan: docs/execution/plans/2026-10-16-capture-editor-options
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-SIZE-MOUSE-CONTROL.
+- row_key: MEU-86
+  id: MEU-86
+  slug: gui-capture-color-swatches
+  phase: '9'
+  band: P2
+  matrix_item: '9.19'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: named-colour-swatches
+    text: Phase 9 §Named colour swatches
+  description: Named colour options show their colour with contrast-picked text, or a swatch popover if the target ignores option backgrounds.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-65
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-65
+  execution_plan: docs/execution/plans/2026-10-16-capture-editor-options
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-NAMED-COLOR-SWATCHES.
+- row_key: MEU-87
+  id: MEU-87
+  slug: gui-capture-tool-lock
+  phase: '9'
+  band: P2
+  matrix_item: '9.20'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: tool-lock
+    text: Phase 9 §Tool lock
+  description: Auto-Select after drawing stays the default; a visible tool lock keeps the current tool across marks.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-60, MEU-65
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-60
+  - MEU-65
+  execution_plan: docs/execution/plans/2026-10-16-capture-editor-options
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-AUTO-SELECT-AFTER-DRAW.
+- row_key: MEU-88
+  id: MEU-88
+  slug: gui-capture-filmstrip-menu
+  phase: '9'
+  band: P2
+  matrix_item: '9.21'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: filmstrip-context-menu
+    text: Phase 9 §Filmstrip context menu
+  description: 'Thumbnail right-click menu: Copy full path, Copy image (main-process clipboard via preload), Delete with the existing confirm.'
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-57
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-57
+  execution_plan: docs/execution/plans/2026-10-14-capture-filmstrip-actions
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-FILMSTRIP-CONTEXT-MENU.
+- row_key: MEU-89
+  id: MEU-89
+  slug: gui-capture-filmstrip-multiselect
+  phase: '9'
+  band: P2
+  matrix_item: '9.22'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: filmstrip-multi-select
+    text: Phase 9 §Filmstrip multi-select
+  description: Shift-click range selection; batch Delete with one confirm and per-shot failure reporting.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-88
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-88
+  execution_plan: docs/execution/plans/2026-10-14-capture-filmstrip-actions
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-FILMSTRIP-MULTISELECT.
+- row_key: MEU-90
+  id: MEU-90
+  slug: capture-pixelate-mark
+  phase: '9'
+  band: P2
+  matrix_item: '9.23'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: pixelate-mark
+    text: Phase 9 §Pixelate mark
+  description: New pixelate rectangle mark across domain, sidecar, OpenAPI/MCP and editor; bake downscale + nearest-neighbour upscale, default 10 px blocks, live preview.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-59, MEU-67
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-59
+  - MEU-67
+  execution_plan: docs/execution/plans/2026-10-16-capture-new-marks
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-PIXELATE-TOOL.
+- row_key: MEU-91
+  id: MEU-91
+  slug: capture-eraser-mark
+  phase: '9'
+  band: P2
+  matrix_item: '9.24'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: eraser-mark
+    text: Phase 9 §Eraser mark
+  description: New eraser rectangle mark filled with the colour sampled from its border for every format.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-90
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-90
+  execution_plan: docs/execution/plans/2026-10-16-capture-new-marks
+  updated: '2026-10-16'
+  closed_reason: null
+  note: Registered 2026-10-09 by /session-grouping from the 2026-10-09 issue triage; covers CAPTURE-ERASER-TOOL.
+- row_key: MEU-92
+  id: MEU-92
+  slug: dist-mcp-server-bundle
+  phase: '7'
+  band: P2
+  matrix_item: '7.5'
+  build_ref:
+    path: build-plan/07-distribution.md
+    anchor: mcp-server-bundle-residual
+    text: Phase 7 §MCP server bundle (residual)
+  description: Self-contained esbuild bundle of the MCP server (index.mjs plus LICENSES.txt) that the packaged app ships as resources/mcp-server; MCP_ENTRY_PROBE on a freshly built win-unpacked tree is
+    a pass condition.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-25, MEU-71
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-25
+  - MEU-71
+  execution_plan: docs/execution/plans/2026-10-16-gui-mcp-setup-prompt
+  updated: '2026-10-17'
+  closed_reason: null
+  note: Registered 2026-10-17 by Session 31b row 0 under grouping D-56 (Mat accepted 2026-10-16); covers MCP-PACKAGED-ENTRY-UNREACHABLE.
+- row_key: MEU-93
+  id: MEU-93
+  slug: gui-path-fields
+  phase: '6'
+  band: P2
+  matrix_item: '6.8'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: path-fields-residual
+    text: Phase 6 §Path fields (residual)
+  description: Every page field that edits a folder path uses the PathRow primitive with Browse (showDirectoryDialog); Convert Output folder gains Browse, and the TTS output path becomes PathRow readOnly.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-33, MEU-22
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-33
+  - MEU-22
+  execution_plan: docs/execution/plans/2026-10-24-gui-theme-path-fields/implementation-plan.md
+  updated: '2026-10-26'
+  closed_reason: null
+  note: Registered 2026-10-17 by /session-grouping from the 2026-10-17 issue triage; covers GUI-CONVERT-OUTPUT-NO-BROWSE.
+- row_key: MEU-94
+  id: MEU-94
+  slug: gui-theme-reactive-selects
+  phase: '6'
+  band: P2
+  matrix_item: '6.9'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: theme-reactive-selects-residual
+    text: Phase 6 §Theme-reactive selects (residual)
+  description: G30 select styles follow the live theme — one reactive theme hook behind getG30Styles/SelectInput, the ConsolePanel copy removed, a theme-aware option-menu pair, the persisted theme applied
+    before first paint, and a both-theme Electron test.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-19, MEU-23
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-19
+  - MEU-23
+  execution_plan: docs/execution/plans/2026-10-24-gui-theme-path-fields/implementation-plan.md
+  updated: '2026-10-26'
+  closed_reason: null
+  note: Registered 2026-10-17 by /session-grouping from the 2026-10-17 issue triage; covers GUI-LIGHT-THEME-SELECT-STALE-DARK.
+- row_key: MEU-95
+  id: MEU-95
+  slug: gui-shortcut-binding
+  phase: '6'
+  band: P2
+  matrix_item: '6.10'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: shortcut-binding-residual
+    text: Phase 6 §Shortcut binding (residual)
+  description: The AppShell keydown map is generated from the command registry shortcut field, so Ctrl+1..5, Ctrl+, and Ctrl+B are bound as advertised and a displayed shortcut is always bound.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-19, MEU-69
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-19
+  - MEU-69
+  execution_plan: docs/execution/plans/2026-10-26-gui-keyboard-palette/
+  updated: '2026-10-27'
+  closed_reason: null
+  note: Registered 2026-10-17 by /session-grouping from the 2026-10-17 issue triage; covers GUI-SHORTCUTS-ADVERTISED-UNBOUND.
+- row_key: MEU-96
+  id: MEU-96
+  slug: gui-command-palette-curation
+  phase: '6'
+  band: P2
+  matrix_item: '6.11'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: command-palette-curation-residual
+    text: Phase 6 §Command palette curation (residual)
+  description: Context-aware palette (global commands plus the current page, unavailable commands hidden, Pause/Resume merged), Appearance Dark and Light commands on Ctrl+Shift+D/L, destructive commands
+    through ConfirmModal, plain labels; gui-actions-index Palette column amended.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-95, MEU-23
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-95
+  - MEU-23
+  execution_plan: docs/execution/plans/2026-10-26-gui-keyboard-palette/
+  updated: '2026-10-27'
+  closed_reason: null
+  note: Registered 2026-10-17 by /session-grouping from the 2026-10-17 issue triage; covers GUI-COMMAND-PALETTE-CURATION.
+- row_key: MEU-97
+  id: MEU-97
+  slug: gui-common-shortcuts
+  phase: '6'
+  band: P2
+  matrix_item: '6.12'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: common-shortcuts-residual
+    text: Phase 6 §Common shortcuts (residual)
+  description: Core shortcut set — Ctrl+L focus URL, Ctrl+Enter page primary action, Ctrl+O Convert Browse, Ctrl+S save capture, Ctrl+J console, F1 help, shown in tooltips and aria-keyshortcuts, with no
+    collision with Capture Ctrl+=/-/0 or the F2 hotkey.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-95, MEU-96
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-95
+  - MEU-96
+  execution_plan: docs/execution/plans/2026-10-26-gui-keyboard-palette/
+  updated: '2026-10-27'
+  closed_reason: null
+  note: Registered 2026-10-17 by /session-grouping from the 2026-10-17 issue triage; covers GUI-KEYBOARD-SHORTCUTS-COMMON.
+- row_key: MEU-98
+  id: MEU-98
+  slug: svc-tts-sideload-load
+  phase: '3'
+  band: P2
+  matrix_item: '3.11'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-sideload-load-residual
+    text: Phase 3 §TTS sideload load (residual)
+  description: A sideloaded model file found in tts.models_directory is marked downloaded with its path, ModelService.load resolves that path, and a load failure is logged as tts.load_failed like the adapter's
+    other load failures.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-12, MEU-75
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-12
+  - MEU-75
+  execution_plan: docs/execution/plans/2026-10-26-tts-sideload-load/
+  updated: '2026-10-27'
+  closed_reason: null
+  note: Registered 2026-10-17 by /session-grouping from the 2026-10-17 issue triage; covers MODEL-SIDELOAD-LOAD-500.
+- row_key: MEU-99
+  id: MEU-99
+  slug: gui-capture-history-chords
+  phase: '9'
+  band: P2
+  matrix_item: '9.25'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: canvas-history-chords
+    text: Phase 9 §Canvas history chords
+  description: Ctrl+Z undoes and Ctrl+Y or Ctrl+Shift+Z redoes on the Capture canvas, renderer-local with preventDefault, while text fields keep their native undo; Undo and Redo show the chords.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-60, MEU-97
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-60
+  - MEU-97
+  execution_plan: docs/execution/plans/2026-10-29-capture-editor-repair/
+  updated: '2026-11-03'
+  closed_reason: null
+  note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
+- row_key: MEU-100
+  id: MEU-100
+  slug: gui-capture-resize-handles
+  phase: '9'
+  band: P2
+  matrix_item: '9.26'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: resize-handles
+    text: Phase 9 §Resize handles
+  description: A selected box, highlight, pixelate or eraser mark shows 8 screen-constant handles; a handle drag resizes it with the opposite edge fixed, normalized and clamped, as one undo step.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-60, MEU-91
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-60
+  - MEU-91
+  execution_plan: docs/execution/plans/2026-10-29-capture-editor-repair/
+  updated: '2026-11-03'
+  closed_reason: null
+  note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
+- row_key: MEU-101
+  id: MEU-101
+  slug: gui-capture-text-reedit
+  phase: '9'
+  band: P2
+  matrix_item: '9.27'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: text-re-edit-and-scaling
+    text: Phase 9 §Text re-edit and scaling
+  description: Double-click or Enter re-opens a committed text mark for editing, Escape restores it, and the text plate's corner handles scale its font size, each as one undo step.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-82, MEU-100
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-82
+  - MEU-100
+  execution_plan: docs/execution/plans/2026-10-29-capture-editor-repair/
+  updated: '2026-11-03'
+  closed_reason: null
+  note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
+- row_key: MEU-102
+  id: MEU-102
+  slug: capture-text-multiline
+  phase: '9'
+  band: P2
+  matrix_item: '9.28'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: multi-line-text
+    text: Phase 9 §Multi-line text
+  description: Shift+Enter adds a line to a text mark; newline semantics, multi-line Segoe metrics and bake fixtures keep the preview and the bake in agreement.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-101
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-101
+  execution_plan: null
+  updated: '2026-10-29'
+  closed_reason: null
+  note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
+- row_key: MEU-103
+  id: MEU-103
+  slug: capture-redact-mark
+  phase: '9'
+  band: P2
+  matrix_item: '9.29'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: redact-mark
+    text: Phase 9 §Redact mark
+  description: A new solid redact mark baked in the region pass, a Redact tool with a Solid or Pixelate toggle, the Smart eraser rename and dashed editor-only outlines.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-91, MEU-100
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-91
+  - MEU-100
+  execution_plan: null
+  updated: '2026-10-29'
+  closed_reason: null
+  note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
+- row_key: MEU-104
+  id: MEU-104
+  slug: capture-copy-image-actions
+  phase: '9'
+  band: P2
+  matrix_item: '9.30'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: copy-image-and-action-names
+    text: Phase 9 §Copy image and action names
+  description: Copy image renders the current marks through a render endpoint to the clipboard from a button or canvas Ctrl+C, and the action row reads Save annotations, Flatten into image and Restore backup.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-81, MEU-99
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-81
+  - MEU-99
+  execution_plan: null
+  updated: '2026-10-29'
+  closed_reason: null
+  note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
+- row_key: MEU-105
+  id: MEU-105
+  slug: gui-capture-style-tool-flow
+  phase: '9'
+  band: P2
+  matrix_item: '9.31'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: style-and-tool-flow
+    text: Phase 9 §Style and tool flow
+  description: Colour applies on click, each tool keeps its own persisted style, Lock is on by default, letter shortcuts pick tools, and Shift, Alt and Shift+arrow modify drawing and nudging.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-87, MEU-99, MEU-100
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-87
+  - MEU-99
+  - MEU-100
+  execution_plan: null
+  updated: '2026-10-29'
+  closed_reason: null
+  note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
+- row_key: MEU-106
+  id: MEU-106
+  slug: capture-line-ellipse-shapes
+  phase: '9'
+  band: P2
+  matrix_item: '9.32'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: line-and-ellipse
+    text: Phase 9 §Line and ellipse
+  description: Line as an arrow with no head and Ellipse as a rect shape, with 45 degree snap and Ctrl+D duplicate.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-100, MEU-105
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-100
+  - MEU-105
+  execution_plan: null
+  updated: '2026-10-29'
+  closed_reason: null
+  note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
+- row_key: MEU-107
+  id: MEU-107
+  slug: capture-step-mark
+  phase: '9'
+  band: P2
+  matrix_item: '9.33'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: step-mark
+    text: Phase 9 §Step mark
+  description: A new numbered step mark for how-to screenshots, drawn, moved and baked like the other marks.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-105
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-105
+  execution_plan: null
+  updated: '2026-10-29'
+  closed_reason: null
+  note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
+summary_bands:
+- key: P0
+  label: P0
+  range: MEU-1–4 (Phase 1 domain)
+- key: P1
+  label: P1
+  range: MEU-5–13 (Phases 2–3)
+- key: P2
+  label: P2
+  range: MEU-14–107 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+    triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107)
+narrative_sections: []

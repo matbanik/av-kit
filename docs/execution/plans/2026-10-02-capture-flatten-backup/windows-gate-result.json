@@ -1,0 +1,143 @@
+{
+  "schema": "s30-windows-gate.v1",
+  "tested_commit": "81fdda7a02a7bdcf09043e3333ee8e9b14149438",
+  "clean_tree": true,
+  "lockfile_sha256": "A86D9A42C6CBD98705E1720EDBD7666FED573581C07E21EA0F56379DC7332980",
+  "mcp_lockfile_sha256": "62147DE51AFE855992D9BCA14364AFC03B493E8B02C478BA0F890B957DCA5095",
+  "uv_lock_sha256": "DA452C3481BC2C7B00BE49AB8DAA9747CC90CB27F17CCDD8EAE49D19063E7D20",
+  "electron": "`-- electron@42.9.3",
+  "node": "v24.19.0",
+  "preflight": {
+    "agentic_framework_head": "80461f6dd3392939540f023a46971d19f5e75b3c",
+    "agent_registry_sha256": "A7C95972C1E83885AA339873BDBF35CD5A6DAF3FB593F0D894F658BBFB80EBFA",
+    "drift": true,
+    "drift_accepted": "A-13",
+    "previous": {
+      "agentic_framework_head": "47a205c4a44ef289d470278329e0987ce55ac160",
+      "agent_registry_sha256": "AD9A09DEFD46D0D47E5EAD2375E0A0A1A7E0066B3CFB56FAD7945424A73D204C"
+    }
+  },
+  "pytest_floor": 629,
+  "started": "2026-10-10T12:42:28.0570497-04:00",
+  "stages": [
+    {
+      "id": "npm-ci",
+      "argv": "pwsh -NoProfile -Command npm --prefix ui ci; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; node ui/node_modules/electron/install.js; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; if (-not (Test-Path ui/node_modules/electron/path.txt)) { exit 3 }; exit 0",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-npm-ci.txt"
+    },
+    {
+      "id": "mcp-npm-ci",
+      "argv": "npm --prefix mcp-server ci",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-mcp-npm-ci.txt"
+    },
+    {
+      "id": "py-types",
+      "argv": "uv run pyright packages/",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-py-types.txt"
+    },
+    {
+      "id": "py-lint",
+      "argv": "uv run ruff check packages/ tests/",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-py-lint.txt"
+    },
+    {
+      "id": "ui-types",
+      "argv": "npm --prefix ui run typecheck",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-ui-types.txt"
+    },
+    {
+      "id": "ui-lint",
+      "argv": "npm --prefix ui run lint",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-ui-lint.txt"
+    },
+    {
+      "id": "mcp-types",
+      "argv": "npm --prefix mcp-server run typecheck",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-mcp-types.txt"
+    },
+    {
+      "id": "py-tests",
+      "argv": "uv run pytest tests/ -x --tb=short -q",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-py-tests.txt"
+    },
+    {
+      "id": "ui-tests",
+      "argv": "npm --prefix ui run test -- --reporter=json --outputFile=C:/Temp/av-kit/s30-win-vitest.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-ui-tests.txt"
+    },
+    {
+      "id": "ui-build",
+      "argv": "npm --prefix ui run build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-ui-build.txt"
+    },
+    {
+      "id": "ui-harness-build",
+      "argv": "pwsh -NoProfile -Command $env:AVKIT_PRIMITIVE_HARNESS_BUILD='1'; npm --prefix ui run build -- --outDir 'P:\\av-kit\\ui/out-e2e'; exit $LASTEXITCODE",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-ui-harness-build.txt"
+    },
+    {
+      "id": "mcp-build",
+      "argv": "npm --prefix mcp-server run build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-mcp-build.txt"
+    },
+    {
+      "id": "mcp-tests",
+      "argv": "npm --prefix mcp-server run test",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-mcp-tests.txt"
+    },
+    {
+      "id": "openapi",
+      "argv": "uv run python tools/export_openapi.py --check openapi.committed.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-openapi.txt"
+    },
+    {
+      "id": "state-render",
+      "argv": "uv run python tools/meu_status.py render --check",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-state-render.txt"
+    },
+    {
+      "id": "ui-electron",
+      "argv": "npm --prefix ui run test:e2e -- --reporter=json --outputFile=C:/Temp/av-kit/s30-win-e2e.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-ui-electron.txt"
+    },
+    {
+      "id": "source-audit",
+      "argv": "rg -n -e TODO|FIXME|transition-all|bg-\\[#|console\\.log\\(|@ts-ignore|@ts-expect-error|: any\\b packages/core/src/avkit_core/services/capture.py packages/api/src/avkit_api/routes/captures.py packages/infrastructure/src/avkit_infra/capture/adapter.py mcp-server/src/toolsets/capture.ts mcp-server/src/toolsets/registry.ts mcp-server/scripts/audit/plan.ts mcp-server/scripts/audit/client.ts mcp-server/scripts/audit/classify.ts ui/src/renderer/src/features/capture/CapturePage.tsx ui/src/renderer/src/features/capture/capture-flatten.ts ui/src/renderer/src/features/capture/capture-commands.ts ui/src/renderer/src/features/capture/CaptureFilmstrip.tsx ui/src/renderer/src/features/settings/SettingsPage.tsx",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s30-win-source-audit.txt",
+      "note": "rg exit 1 (1 = no hits)"
+    }
+  ],
+  "pytest": {
+    "passed": 655,
+    "failed": 0
+  },
+  "vitest": {
+    "passed": 773,
+    "failed": 0,
+    "total": 773
+  },
+  "e2e": {
+    "expected": 133,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "finished": "2026-10-10T12:49:08.0987144-04:00"
+}

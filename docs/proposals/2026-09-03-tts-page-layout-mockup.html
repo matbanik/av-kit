@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TTS Page Layout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f3f5f8; --paper: #ffffff; --ink: #1c2530; --ink-muted: #5b6b7a;
+    --accent: #0891b2; --accent-soft: rgba(8, 145, 178, 0.10); --line: #d9e0e7; --code-bg: #eaeff3;
+    --good: #16a34a; --bad: #dc2626; --warn: #b45309;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #1d1f27; --paper: #262935; --ink: #edeef2; --ink-muted: #9aa6b8;
+      --accent: #8be9fd; --accent-soft: rgba(139,233,253,.10); --line: #3a3e4f;
+      --code-bg: #2e3240; --good: #50fa7b; --bad: #ff6e6e; --warn: #ffb86c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #1d1f27; --paper: #262935; --ink: #edeef2; --ink-muted: #9aa6b8;
+    --accent: #8be9fd; --accent-soft: rgba(139,233,253,.10); --line: #3a3e4f;
+    --code-bg: #2e3240; --good: #50fa7b; --bad: #ff6e6e; --warn: #ffb86c;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--ink); font-family: "Source Sans 3", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 16px; line-height: 1.55; margin: 0; padding: 0 20px 96px; }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  header.masthead { padding: 52px 0 6px; }
+  .eyebrow { font-family: "JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: clamp(30px, 4.5vw, 40px); font-weight: 700; letter-spacing: -.02em; line-height: 1.1; margin: 8px 0 10px; text-wrap: balance; }
+  .lede { font-size: 17.5px; color: var(--ink-muted); max-width: 64ch; margin: 0 0 18px; }
+  h2 { font-size: 22px; font-weight: 700; letter-spacing: -.01em; margin: 56px 0 6px; text-wrap: balance; }
+  h2 .sec { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: 13px; color: var(--accent); margin-right: 10px; font-weight: 500; }
+  p, li { max-width: 70ch; }
+  p.note { color: var(--ink-muted); font-size: 14.5px; }
+  code { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: .86em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  a { color: var(--accent); }
+  ul.tight, ol.tight { padding-left: 22px; margin: 6px 0; }
+  ul.tight li, ol.tight li { margin: 5px 0; }
+  .tldr { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 22px 0 8px; }
+  .tldr .cell { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; font-size: 14.5px; }
+  .tldr .cell b { display: block; margin-bottom: 3px; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+  table.inv { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+  table.inv th, table.inv td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.inv th { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-muted); font-weight: 600; }
+  table.inv td:first-child { white-space: nowrap; }
+  .tblwrap { overflow-x: auto; }
+  .tag { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 999px; font-weight: 600; letter-spacing: .02em; white-space: nowrap; }
+  .tag.keep { background: rgba(22,163,74,.12); color: var(--good); }
+  .tag.move { background: var(--accent-soft); color: var(--accent); }
+  .tag.change { background: rgba(180,83,9,.12); color: var(--warn); }
+
+  /* ---------- Mock frames: pinned to av-kit's dark app palette (ui/src/renderer/src/styles.css @theme) ---------- */
+  .mock {
+    --m-bg: #282a36; --m-el: #44475a; --m-sub: #6272a4; --m-border: #44475a; --m-fg: #f8f8f2; --m-muted: #bae6fd;
+    --m-accent: #8be9fd; --m-accent-fg: #282a36; --m-green: #50fa7b; --m-red: #ff5555; --m-red-soft: #ffa0a0; --m-orange: #ffb86c; --m-purple: #bd93f9;
+    background: var(--m-bg); color: var(--m-fg); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 16px 0;
+    font-family: "Segoe UI", system-ui, sans-serif; font-size: 13.5px; overflow-x: auto;
+  }
+  .mock, .mock * { line-height: 1.4; }
+  .mock .frame-label { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--m-sub); margin: 0 0 12px; }
+  .mock .frame-label b { color: var(--m-accent); font-weight: 500; }
+  .page { min-width: 760px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer; border-radius: 6px; font-size: 12.5px; font-weight: 500; white-space: nowrap; padding: 0 12px; height: 28px; background: rgba(139,233,253,.12); color: var(--m-accent); font-family: inherit; }
+  .btn:hover { background: rgba(139,233,253,.22); }
+  .btn.md { height: 36px; font-size: 13.5px; padding: 0 18px; }
+  .btn.primary { background: var(--m-accent); color: var(--m-accent-fg); font-weight: 600; }
+  .btn.primary:hover { background: #a6f0ff; }
+  .btn.ghost { background: transparent; color: var(--m-muted); }
+  .btn.ghost:hover { background: var(--m-el); }
+  .btn.ghost.on { color: var(--m-accent); }
+  .btn.outline { background: transparent; border: 1px solid var(--m-border); color: var(--m-fg); }
+  .btn.danger { background: rgba(255,85,85,.15); color: var(--m-red-soft); }
+  .btn.dim { opacity: .5; cursor: default; }
+  .btn:focus-visible, .field:focus-visible, .chk:focus-visible, .ta:focus-visible { outline: 2px solid rgba(139,233,253,.5); outline-offset: 1px; }
+  .field { height: 28px; border-radius: 6px; border: 1px solid var(--m-border); background: var(--m-el); color: var(--m-fg); padding: 0 8px; font-size: 12.5px; font-family: inherit; }
+  .field.md { height: 36px; font-size: 14px; padding: 0 12px; }
+  .field::placeholder { color: var(--m-sub); }
+  .lbl { font-size: 12px; color: var(--m-muted); }
+  .lbl.fg { color: var(--m-fg); }
+  .chk { width: 15px; height: 15px; accent-color: var(--m-accent); cursor: pointer; margin: 0; }
+  .divider { width: 1px; height: 18px; background: var(--m-border); flex: none; }
+  .spacer { flex: 1; }
+  .help { display: flex; align-items: center; gap: 8px; border: 1px solid var(--m-border); border-radius: 6px; padding: 7px 12px; font-size: 13px; font-weight: 600; }
+  .help .plus { margin-left: auto; color: var(--m-muted); font-weight: 400; }
+  .help .i { display: inline-flex; width: 16px; height: 16px; border-radius: 3px; background: #82aaff; color: #282a36; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-style: italic; }
+  .ta { width: 100%; border-radius: 6px; border: 1px solid var(--m-border); background: var(--m-el); color: var(--m-fg); padding: 8px 10px; font-size: 13px; font-family: inherit; resize: vertical; }
+  .ta::placeholder { color: var(--m-sub); }
+  .pre { border: 1px solid var(--m-border); border-radius: 6px; padding: 8px 10px; font-family: Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--m-muted); white-space: pre-wrap; min-height: 60px; margin: 0; }
+
+  /* ---- BEFORE ---- */
+  .before { display: flex; flex-direction: column; gap: 10px; }
+  .before .row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .before .full { width: 100%; }
+  .before .box { border: 1px solid var(--m-border); border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .before .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px 12px; font-size: 12px; }
+  .before .vgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .before .vc { border: 1px solid var(--m-border); border-radius: 6px; padding: 8px; font-size: 12px; text-align: left; }
+  .before .vc.sel { background: rgba(139,233,253,.2); }
+  .before .vc small { display: block; color: var(--m-muted); }
+  .before h3 { margin: 0; font-size: 16px; font-weight: 600; }
+  .before-wrap { padding-left: 34px; }
+  .zone-note { position: relative; }
+  .zone-note::before { content: attr(data-n); position: absolute; left: -32px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--m-red); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-family: Consolas, ui-monospace, monospace; }
+  .scrollhint { text-align: center; color: var(--m-sub); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; padding: 4px 0; border-top: 1px dashed var(--m-sub); }
+
+  /* ---- AFTER ---- */
+  .after { display: flex; flex-direction: column; gap: 14px; max-width: 1060px; }
+  .cols { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, 1fr); gap: 14px; align-items: start; }
+  .panel { border: 1px solid var(--m-border); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; background: rgba(68,71,90,.18); }
+  .panel .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .panel .ph { display: flex; align-items: center; gap: 10px; }
+  .panel .ph .t { font-size: 13px; font-weight: 600; }
+  .status-line { font-size: 12.5px; color: var(--m-muted); min-height: 18px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .status-line b { color: var(--m-fg); font-weight: 500; }
+  .stats { font-family: Consolas, ui-monospace, monospace; font-variant-numeric: tabular-nums; font-size: 11.5px; color: var(--m-muted); white-space: nowrap; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .chip.warn { background: rgba(255,184,108,.14); color: var(--m-orange); }
+  .chip.ok { background: rgba(80,250,123,.14); color: var(--m-green); }
+  .chip.live { background: rgba(139,233,253,.12); color: var(--m-accent); }
+  .chip.red { background: rgba(255,85,85,.14); color: var(--m-red-soft); }
+  .chip.gray { background: var(--m-el); color: var(--m-muted); }
+  .chip.count { background: transparent; color: var(--m-muted); font-weight: 500; padding: 0 4px; }
+  .chip .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .chip.live .dot { animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .35 } }
+  @media (prefers-reduced-motion: reduce) { .chip.live .dot { animation: none; } }
+  .disclosure { border-top: 1px solid var(--m-border); padding-top: 10px; display: none; flex-direction: column; gap: 10px; }
+  .disclosure.open { display: flex; }
+  .disclosure h4 { margin: 0; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--m-sub); font-weight: 600; }
+  .stepgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 14px; font-size: 12.5px; }
+  .stepgrid label { display: inline-flex; align-items: center; gap: 7px; }
+  .twin { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .seg { display: inline-flex; border: 1px solid var(--m-border); border-radius: 6px; overflow: hidden; height: 28px; position: relative; }
+  .seg label { display: inline-flex; align-items: center; padding: 0 12px; font-size: 12.5px; color: var(--m-muted); cursor: pointer; border-right: 1px solid var(--m-border); }
+  .seg label:last-child { border-right: none; }
+  .seg label.on { background: rgba(139,233,253,.14); color: var(--m-accent); font-weight: 600; }
+  .seg input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .grp { display: grid; grid-template-columns: 90px 1fr; gap: 8px 12px; align-items: center; }
+  .grp .lbl { font-size: 12.5px; color: var(--m-fg); }
+  .voices { display: flex; flex-direction: column; gap: 4px; max-height: 236px; overflow-y: auto; padding-right: 2px; }
+  .voice { display: flex; align-items: center; gap: 10px; border: 1px solid transparent; border-radius: 6px; padding: 6px 10px; cursor: pointer; font-size: 12.5px; }
+  .voice:hover { background: var(--m-el); }
+  .voice.on { border-color: rgba(139,233,253,.5); background: rgba(139,233,253,.08); }
+  .voice .id { font-family: Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--m-fg); width: 84px; flex: none; }
+  .voice .desc { color: var(--m-muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .voice .lang { color: var(--m-sub); font-size: 11px; flex: none; }
+  .voice .play { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--m-border); display: inline-flex; align-items: center; justify-content: center; color: var(--m-muted); font-size: 10px; flex: none; }
+  .modelrow { display: flex; align-items: center; gap: 10px; font-size: 12.5px; padding: 4px 0; }
+  .modelrow .id { font-family: Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--m-muted); flex: 1; }
+  .modelrow .bar { width: 90px; height: 5px; border-radius: 3px; background: rgba(98,114,164,.35); overflow: hidden; }
+  .modelrow .bar i { display: block; height: 100%; background: var(--m-accent); }
+  .runbar { border: 1px solid var(--m-border); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: rgba(68,71,90,.18); }
+  .runbar .prog { flex: 1; min-width: 160px; display: flex; align-items: center; gap: 10px; }
+  .runbar .bar { flex: 1; height: 5px; border-radius: 3px; background: rgba(98,114,164,.35); overflow: hidden; }
+  .runbar .bar i { display: block; height: 100%; background: var(--m-accent); }
+  .runbar .path { font-family: Consolas, ui-monospace, monospace; font-size: 11.5px; color: var(--m-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 340px; }
+  .pill { font-size: 11px; padding: 1px 9px; border-radius: 999px; white-space: nowrap; font-weight: 500; flex: none; }
+  .pill.cyan { background: rgba(139,233,253,.12); color: var(--m-accent); }
+  .pill.green { background: rgba(80,250,123,.18); color: var(--m-green); }
+  .pill.gray { background: var(--m-el); color: var(--m-muted); }
+  .zonemap { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  .zonemap .z { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; font-size: 14.5px; }
+  .zonemap .z b { display: block; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  @media (max-width: 720px) { .zonemap { grid-template-columns: 1fr; } }
+  .callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 14.5px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="masthead">
+  <div class="eyebrow">av-kit · proposal · 2026-09-03 · companion to the Downloader page mockup</div>
+  <h1>TTS page: text on the left, voice on the right, one run bar</h1>
+  <p class="lede">Text-to-speech is a three-step task: paste text, pick a voice, press Generate. Today those steps are spread across a single column roughly five screens tall, with the model manager and an eleven-checkbox cleanup pipeline sitting in the middle of the path and Generate at the very end. This mockup puts the text and the voice side by side, folds the two “once in a while” groups into disclosures, and gives Generate a run bar that stays in view.</p>
+  <div class="tldr">
+    <div class="cell"><b>Left · Text</b>Textarea with Load file / Paste in its header and live word · sentence · duration counts. Cleanup pipeline is a disclosure under it, closed by default, with the raw/cleaned preview inside.</div>
+    <div class="cell"><b>Right · Voice</b>Model state as a chip (with “Manage” disclosure for device, load, unload, downloads). Language filter, compact voice list, speed slider with presets, format segment.</div>
+    <div class="cell"><b>Bottom · Run</b>One bar: output path + Browse, Generate, Cancel, status pill, segment progress, last output with Open file / Open folder.</div>
+    <div class="cell"><b>Scope</b>Composition only. Same settings leaves, same debounce, same mutations. §05 lists all 40 test ids as keep / move / change.</div>
+  </div>
+</header>
+
+<h2><span class="sec">01</span>Before: five screens to reach Generate</h2>
+<p>Numbered against <code>TTSPage.tsx</code> as it renders today. The dashed line marks roughly where a 1080p window stops showing content.</p>
+<div class="mock">
+  <p class="frame-label">Today — single column, model loaded, no output yet</p>
+  <div class="page before-wrap">
+    <div class="before">
+      <div class="help"><span class="i">i</span> How it works <span class="plus">+</span></div>
+      <div class="zone-note" data-n="1"><div class="lbl fg">Text</div><textarea class="ta" rows="5" aria-label="Text">Chapter 1. The pipeline begins with a clean transcript…</textarea></div>
+      <div class="row"><button class="btn md">Load file</button><button class="btn md">Paste</button></div>
+      <div class="row lbl"><span>1,204 words</span><span>68 sentences</span><span>~412s @ 1.0x</span></div>
+      <div class="box zone-note" data-n="2">
+        <div class="lbl fg">Cleanup pipeline</div>
+        <div class="grid"><label><input type="checkbox" class="chk" checked> punctuation</label><label><input type="checkbox" class="chk" checked> symbols</label><label><input type="checkbox" class="chk" checked> numbers</label><label><input type="checkbox" class="chk" checked> currency</label><label><input type="checkbox" class="chk" checked> all_caps</label><label><input type="checkbox" class="chk"> chapter_markers</label><label><input type="checkbox" class="chk" checked> urls_emails</label><label><input type="checkbox" class="chk" checked> page_numbers</label><label><input type="checkbox" class="chk" checked> whitespace</label><label><input type="checkbox" class="chk" checked> chunk</label><label><input type="checkbox" class="chk" checked> kokoro</label></div>
+        <pre class="pre">raw preview</pre><pre class="pre">cleaned preview</pre>
+        <button class="btn md" style="align-self:flex-start">Preview cleanup</button>
+      </div>
+      <div class="scrollhint">≈ fold at 1080p</div>
+      <div class="box zone-note" data-n="3">
+        <h3>Model manager</h3>
+        <div class="lbl">Loaded: kokoro-v1.0-onnx-fp16 (cuda) · 169,344,921 B</div>
+        <div><div class="lbl fg">Device</div><select class="field full" aria-label="Device"><option>auto</option></select></div>
+        <button class="btn md" style="align-self:flex-start">Unload</button>
+        <div class="row" style="justify-content:space-between"><span>kokoro-v1.0 · PyTorch FP32 <small class="lbl">kokoro-v1.0-pt-fp32</small></span><button class="btn">Get</button></div>
+        <div class="row" style="justify-content:space-between"><span>kokoro-v1.0 · ONNX FP16 <small class="lbl">kokoro-v1.0-onnx-fp16</small></span><button class="btn primary">Load</button></div>
+        <div class="row" style="justify-content:space-between"><span>kokoro-v1.0 · ONNX INT8 <small class="lbl">kokoro-v1.0-onnx-int8</small></span><button class="btn primary">Load</button></div>
+      </div>
+      <div class="zone-note" data-n="4"><div class="lbl fg">Language</div><select class="field full" aria-label="Language"><option>All</option></select></div>
+      <div class="vgrid">
+        <button class="vc sel">af_heart<small>en-us · warm, expressive female</small></button><button class="vc">af_bella<small>en-us · bright, energetic female</small></button>
+        <button class="vc">am_adam<small>en-us · deep, steady male</small></button><button class="vc">bf_emma<small>en-gb · calm, articulate female</small></button>
+        <button class="vc">bm_george<small>en-gb · measured male narrator</small></button><button class="vc">jf_alpha<small>ja · clear female</small></button>
+      </div>
+      <div class="zone-note" data-n="5"><div class="lbl fg">Speed (1.0)</div><input type="range" class="full" aria-label="Speed"></div>
+      <div class="row"><button class="btn">0.8</button><button class="btn">1.0</button><button class="btn">1.1</button></div>
+      <div><div class="lbl fg">Format</div><select class="field full" aria-label="Format"><option>MP3</option></select></div>
+      <div><div class="lbl fg">Output path</div><input class="field full" value="~/Documents" readonly aria-label="Output path"></div>
+      <button class="btn md" style="align-self:flex-start">Browse output</button>
+      <div class="row zone-note" data-n="6"><button class="btn md primary">Generate</button><button class="btn md dim">Cancel</button><span class="pill gray">Idle</span></div>
+      <div class="lbl">Segments 0/0</div>
+      <div class="lbl">No output yet</div>
+      <div class="row"><button class="btn md dim">Open file</button><button class="btn md dim">Open folder</button></div>
+    </div>
+  </div>
+</div>
+<ol class="tight">
+  <li><strong>Text input</strong> is followed by its two source buttons and then a stats line: three rows for one field.</li>
+  <li><strong>Cleanup pipeline</strong> renders eleven checkboxes plus two preview panes and a button, always open, even though the defaults are right for almost every run.</li>
+  <li><strong>Model manager</strong>, needed once per install, occupies the middle of the page with a full-width device select and a row per variant.</li>
+  <li><strong>Voice grid</strong>: two columns of tall cards under a full-width language select. Nine voices means five rows.</li>
+  <li><strong>Speed, presets, format, output path, Browse</strong> each take a full-width row.</li>
+  <li><strong>Generate</strong> is the last control on the page; status, segment progress, last output and the two Open buttons trail below it.</li>
+</ol>
+
+<h2><span class="sec">02</span>After: two columns and a run bar</h2>
+<p>Interactive: open Cleanup and Manage models, pick a voice, drag the speed slider, switch the format.</p>
+
+<div class="mock">
+  <p class="frame-label"><b>Proposed</b> — model loaded, generating</p>
+  <div class="page after" id="after-working">
+    <div class="help"><span class="i">i</span> How it works <span class="plus">+</span></div>
+
+    <div class="cols">
+      <section class="panel" aria-label="Text">
+        <div class="ph">
+          <span class="t">Text</span>
+          <span class="spacer"></span>
+          <button class="btn ghost" title="load-file-btn">Load file</button>
+          <button class="btn ghost" title="paste-btn">Paste</button>
+        </div>
+        <textarea class="ta" rows="11" aria-label="Text" title="text-input">Chapter 1. The pipeline begins with a clean transcript. Numbers like 1,204 are read as words; URLs such as https://example.com are dropped; ALL CAPS headings are lowered; and the text is chunked so Kokoro never sees more than the model’s limit at once.</textarea>
+        <div class="status-line">
+          <span class="stats" title="word-count">1,204 words</span><span class="stats" title="sentence-count">68 sentences</span><span class="stats" title="duration-estimate">~6:52 @ 1.0×</span>
+          <span class="spacer"></span>
+          <button class="btn ghost" data-role="cleanup-toggle" aria-expanded="false">Cleanup · 10 of 11 steps ▾</button>
+        </div>
+        <div class="disclosure" data-role="cleanup">
+          <div class="ph"><h4 style="margin:0">Cleanup pipeline</h4><span class="spacer"></span><button class="btn" title="preview-cleanup-btn">Preview cleanup</button></div>
+          <fieldset style="border:none;margin:0;padding:0" title="cleanup-pipeline">
+            <div class="stepgrid">
+              <label><input type="checkbox" class="chk" checked> Punctuation</label><label><input type="checkbox" class="chk" checked> Symbols</label><label><input type="checkbox" class="chk" checked> Numbers</label>
+              <label><input type="checkbox" class="chk" checked> Currency</label><label><input type="checkbox" class="chk" checked> All caps</label><label><input type="checkbox" class="chk"> Chapter markers</label>
+              <label><input type="checkbox" class="chk" checked> URLs &amp; emails</label><label><input type="checkbox" class="chk" checked> Page numbers</label><label><input type="checkbox" class="chk" checked> Whitespace</label>
+              <label><input type="checkbox" class="chk" checked> Chunk</label><label><input type="checkbox" class="chk" checked> Kokoro</label>
+            </div>
+          </fieldset>
+          <div class="twin">
+            <div><div class="lbl" style="margin-bottom:4px">Raw</div><pre class="pre" title="preview-raw">Chapter 1. The pipeline begins… 1,204 … https://example.com … ALL CAPS</pre></div>
+            <div><div class="lbl" style="margin-bottom:4px">Cleaned</div><pre class="pre" title="preview-cleaned">Chapter one. The pipeline begins… one thousand two hundred four … all caps</pre></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Voice">
+        <div class="ph">
+          <span class="t">Voice</span>
+          <span class="spacer"></span>
+          <span class="chip ok" title="loaded-model"><span class="dot"></span>kokoro fp16 · cuda</span>
+          <button class="btn ghost" data-role="models-toggle" aria-expanded="false">Manage ▾</button>
+        </div>
+        <div class="disclosure" data-role="models" title="model-manager">
+          <div class="grp">
+            <span class="lbl">Device</span>
+            <span style="display:flex;gap:8px;align-items:center"><select class="field" style="width:110px" aria-label="Device" title="device-select"><option>auto</option><option selected>cuda</option><option>cpu</option><option>mps</option></select><button class="btn ghost" title="unload-btn">Unload</button></span>
+          </div>
+          <div class="modelrow" title="model-row"><span>PyTorch FP32</span><span class="id">kokoro-v1.0-pt-fp32</span><div class="bar"><i style="width:62%"></i></div><span class="stats" title="download-progress">62%</span></div>
+          <div class="modelrow" title="model-row"><span>ONNX FP16</span><span class="id">kokoro-v1.0-onnx-fp16</span><span class="pill green">Loaded</span></div>
+          <div class="modelrow" title="model-row"><span>ONNX INT8</span><span class="id">kokoro-v1.0-onnx-int8</span><button class="btn" title="model-load-btn">Load</button></div>
+        </div>
+        <div class="grp">
+          <span class="lbl">Language</span>
+          <select class="field" style="width:140px" aria-label="Language" title="language-select"><option>All</option><option>en-us</option><option>en-gb</option><option>ja</option><option>zh</option></select>
+        </div>
+        <div class="voices" role="listbox" aria-label="Voices" title="voice-grid" data-role="voices">
+          <div class="voice on" role="option" aria-selected="true" title="voice-card"><span class="id">af_heart</span><span class="desc">warm, expressive female</span><span class="lang">en-us</span></div>
+          <div class="voice" role="option" title="voice-card"><span class="id">af_bella</span><span class="desc">bright, energetic female</span><span class="lang">en-us</span></div>
+          <div class="voice" role="option" title="voice-card"><span class="id">af_nicole</span><span class="desc">soft, close-mic female</span><span class="lang">en-us</span></div>
+          <div class="voice" role="option" title="voice-card"><span class="id">am_adam</span><span class="desc">deep, steady male</span><span class="lang">en-us</span></div>
+          <div class="voice" role="option" title="voice-card"><span class="id">am_michael</span><span class="desc">relaxed male narrator</span><span class="lang">en-us</span></div>
+          <div class="voice" role="option" title="voice-card"><span class="id">bf_emma</span><span class="desc">calm, articulate female</span><span class="lang">en-gb</span></div>
+          <div class="voice" role="option" title="voice-card"><span class="id">bm_george</span><span class="desc">measured male narrator</span><span class="lang">en-gb</span></div>
+          <div class="voice" role="option" title="voice-card"><span class="id">jf_alpha</span><span class="desc">clear female</span><span class="lang">ja</span></div>
+        </div>
+        <div class="grp">
+          <span class="lbl">Speed <span class="stats" data-role="speed-val">1.0×</span></span>
+          <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input type="range" min="0.5" max="2" step="0.1" value="1" style="flex:1;min-width:110px" aria-label="Speed" title="speed-slider" data-role="speed"><span class="seg" data-role="speed-seg"><label><input type="radio" name="sp" value="0.8">0.8</label><label class="on"><input type="radio" name="sp" value="1" checked>1.0</label><label><input type="radio" name="sp" value="1.1">1.1</label></span></span>
+          <span class="lbl">Format</span>
+          <span class="seg" title="format-select" data-role="fmt"><label class="on"><input type="radio" name="fmt" checked>MP3</label><label><input type="radio" name="fmt">WAV</label></span>
+        </div>
+      </section>
+    </div>
+
+    <section class="runbar" aria-label="Generate">
+      <span class="lbl">Output</span>
+      <input class="field" style="width:220px" value="D:\Audio\tts" readonly aria-label="Output path" title="output-path">
+      <button class="btn ghost" title="browse-output-btn">Browse</button>
+      <span class="divider"></span>
+      <button class="btn md primary dim" title="generate-btn">Generate</button>
+      <button class="btn md" title="cancel-btn">Cancel</button>
+      <span class="pill cyan">Generating</span>
+      <span class="prog" title="segment-progress"><div class="bar"><i style="width:41%"></i></div><span class="stats">Segments 28/68 · “the text is chunked so…” · 9f3a1c2e</span></span>
+    </section>
+  </div>
+</div>
+
+<div class="mock">
+  <p class="frame-label"><b>Proposed</b> — run bar after a finished run, and with no model loaded</p>
+  <div class="page after">
+    <section class="runbar" aria-label="Generate">
+      <span class="lbl">Output</span>
+      <input class="field" style="width:220px" value="D:\Audio\tts" readonly aria-label="Output path">
+      <button class="btn ghost">Browse</button>
+      <span class="divider"></span>
+      <button class="btn md primary">Generate</button>
+      <button class="btn md dim" disabled>Cancel</button>
+      <span class="pill green">Done</span>
+      <span class="path" title="last-output">D:\Audio\tts\chapter-1-af_heart-1.0x.mp3</span>
+      <button class="btn ghost" title="open-output-btn">Open file</button>
+      <button class="btn ghost" title="open-output-folder-btn">Open folder</button>
+    </section>
+    <section class="runbar" aria-label="Generate" style="margin-top:14px">
+      <span class="lbl">Output</span>
+      <input class="field" style="width:220px" value="~/Documents" readonly aria-label="Output path">
+      <button class="btn ghost">Browse</button>
+      <span class="divider"></span>
+      <button class="btn md primary dim" disabled>Generate</button>
+      <button class="btn md dim" disabled>Cancel</button>
+      <span class="pill gray">Idle</span>
+      <span class="status-line"><span class="chip warn"><span class="dot"></span>No model loaded</span> Open <b>Manage</b> in the Voice panel and load a Kokoro variant.</span>
+    </section>
+  </div>
+</div>
+
+<div class="zonemap">
+  <div class="z"><b>Left · Text panel</b>Header: “Text” + Load file / Paste (ghost sm). Body: textarea, 11 rows, resizable. Footer status line: word · sentence · duration counts, and the Cleanup disclosure toggle showing how many steps are on. Disclosure holds the checkbox grid (3 columns), the Preview button, and raw/cleaned side by side.</div>
+  <div class="z"><b>Right · Voice panel</b>Header: “Voice” + model chip + Manage toggle. Manage disclosure: device + Unload, one row per variant (name · id · Get/Load/Loaded/progress). Then Language filter, scrollable voice list (one line per voice), Speed slider + 0.8/1.0/1.1 segment, Format segment MP3/WAV.</div>
+</div>
+<div class="callout">Below both columns, one <strong>run bar</strong>: Output path + Browse · Generate · Cancel · status pill · progress (while running) or last output + Open file / Open folder (after). On narrow windows the two columns stack and the run bar stays at the bottom.</div>
+
+<h2><span class="sec">03</span>Why these moves</h2>
+<ul class="tight">
+  <li><strong>Text and voice are the two inputs; they belong side by side.</strong> The user reads the text while choosing a voice, and the page becomes one screen tall at 1080p instead of five.</li>
+  <li><strong>Cleanup is a preview tool, not a form.</strong> Defaults are correct for most text, so the eleven checkboxes collapse behind a toggle that states the current count. The preview panes only make sense inside that disclosure.</li>
+  <li><strong>Model state is a chip; model management is a disclosure.</strong> What the user needs on every run is “is a model loaded, on which device” (the chip). Loading, downloading and unloading happen once and open on demand. With no model, the chip turns warn and the run bar says how to fix it.</li>
+  <li><strong>Voices as a list, not a grid.</strong> One line per voice (id · description · language) shows twice as many voices in half the height and keeps the language filter useful.</li>
+  <li><strong>Speed presets become a segment next to the slider</strong>, so the value, the slider and the shortcuts read as one control.</li>
+  <li><strong>One run bar, always the same shape.</strong> Generate/Cancel and the status pill never move; the right side swaps between progress and last output. Open file / Open folder appear only when there is a file, which is also when the user wants them.</li>
+</ul>
+
+<h2><span class="sec">04</span>Sizing and tokens</h2>
+<ul class="tight">
+  <li>Two-column grid <code>minmax(0,1.45fr) minmax(300px,1fr)</code>, gap 14 px, capped at ~1150 px; below ~880 px the columns stack (text first).</li>
+  <li>G34 heights: Generate and Cancel <code>md</code> (36 px); Load file, Paste, Browse, Manage, Cleanup toggle, Unload, Get/Load <code>ghost/secondary sm</code> (28 px). Segments 28 px.</li>
+  <li>Textarea: 11 rows default (~230 px), <code>resize: vertical</code>, <code>bg-bg-elevated</code>, radius 6.</li>
+  <li>Voice list max-height ~236 px with its own scrollbar; row 30 px; selected = 50 % <code>accent</code> border + 8 % fill.</li>
+  <li>Model chip: ok (<code>accent-green</code>) when loaded, warn (<code>accent-orange</code>) when none, live (<code>accent</code>, pulsing dot) while loading; status pill colors stay on <code>STATUS_COLORS</code>.</li>
+  <li>Motion (G33): disclosures and the run bar’s progress ⇄ output swap on <code>duration-fast</code> / <code>ease-out</code>; pulsing dots stop under <code>prefers-reduced-motion</code>.</li>
+  <li>Tokens only (G32); monospace counts use <code>tabular-nums</code>.</li>
+</ul>
+
+<h2><span class="sec">05</span>Element inventory (test ids)</h2>
+<div class="tblwrap">
+<table class="inv">
+  <tr><th>Element / test id</th><th>Today</th><th>Proposed</th><th></th></tr>
+  <tr><td><code>tts-page</code></td><td>Full-width column</td><td>Same root; two-column grid + run bar inside</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>HelpCard (tts)</td><td>Top</td><td>Top, unchanged</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td><code>error-banner</code></td><td>Bordered block under HelpCard</td><td>Status line inside the run bar, error color (replaces progress/output slot while present)</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>text-input</code></td><td>Textarea min-h-32, label above</td><td>Textarea in the Text panel body, 11 rows; label is the panel title</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>load-file-btn</code> / <code>paste-btn</code></td><td>Secondary md row under the textarea</td><td>Ghost sm in the Text panel header</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>word-count</code> / <code>sentence-count</code> / <code>duration-estimate</code></td><td>Stats row</td><td>Text panel footer status line, monospace</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>cleanup-pipeline</code> (fieldset)</td><td>Always-open bordered box</td><td>Inside the Cleanup disclosure; 3-column grid, human labels (values unchanged)</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>Cleanup disclosure toggle</td><td>—</td><td>New ghost sm in the Text footer; label shows “n of 11 steps”; proposed id <code>cleanup-toggle</code></td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>preview-raw</code> / <code>preview-cleaned</code></td><td>Stacked pre blocks</td><td>Side by side inside the disclosure</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>preview-cleanup-btn</code></td><td>Secondary md under previews</td><td>Secondary sm in the disclosure header</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>model-manager</code> (section)</td><td>Own section with h2, mid-page</td><td>Disclosure in the Voice panel, opened by Manage</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>loaded-model</code></td><td>Text line “Loaded: … B”</td><td>Chip in the Voice header: “{variant short} · {device}”; warn “No model loaded”</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>device-select</code></td><td>Full-width select</td><td>110 px select on the disclosure’s first row</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>unload-btn</code></td><td>Secondary md</td><td>Ghost sm beside the device select</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>model-row</code> / <code>model-get-btn</code> / <code>model-load-btn</code> / <code>download-progress</code></td><td>Row per variant, id + button</td><td>Same rows, denser: name · id · action or progress bar + %</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>language-select</code></td><td>Full-width</td><td>140 px select, label to the left</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>voice-grid</code></td><td>Two-column grid of cards</td><td>Single-column scrollable list (role listbox)</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>voice-card</code></td><td>Tall button, 3 lines</td><td>One-line row: id · description · language; selected style retained</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>speed-slider</code></td><td>Full-width range, label “Speed (x.x)”</td><td>Range on the Speed row, value in the label; same min/max/step</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>Speed presets 0.8 / 1.0 / 1.1</td><td>Three secondary sm buttons</td><td>Segment beside the slider; still set the same value</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>format-select</code></td><td>Full-width select MP3/WAV</td><td>Two-option segment (or a 90 px select if the test needs a select element; see §06)</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>output-path</code></td><td>Full-width readonly input</td><td>Run bar, 220 px readonly</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>browse-output-btn</code></td><td>Secondary md below the path</td><td>Ghost sm beside the path</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>generate-btn</code> / <code>cancel-btn</code></td><td>Bottom action row</td><td>Run bar centre, primary md / secondary md</td><td><span class="tag move">move</span></td></tr>
+  <tr><td>Status pill</td><td>Beside Cancel</td><td>Beside Cancel in the run bar; same colors</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td><code>segment-progress</code></td><td>Text line</td><td>Run bar right side while running: bar + “Segments d/t · preview · hash”</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>last-output</code></td><td>Text line “No output yet” / path</td><td>Run bar right side after a run; hidden while running or when there is no output</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>open-output-btn</code> / <code>open-output-folder-btn</code></td><td>Secondary md pair at the very bottom</td><td>Ghost sm beside the last output; rendered only when an output exists</td><td><span class="tag change">change</span></td></tr>
+</table>
+</div>
+
+<h2><span class="sec">06</span>Decisions to lock before implementation</h2>
+<ol class="tight">
+  <li><strong>Format control.</strong> Segment (proposed) or keep a <code>&lt;select&gt;</code> so <code>format-select</code> tests keep using <code>selectOptions</code>? A 90 px select in the same slot is an acceptable fallback.</li>
+  <li><strong>Cleanup step labels.</strong> Humanised (“URLs &amp; emails”) vs the raw step ids (“urls_emails”) shown today. Values sent to the API do not change either way.</li>
+  <li><strong>Loaded-model chip text.</strong> Short (“kokoro fp16 · cuda”) vs today’s full “Loaded: {variant} ({device}) · {bytes} B”. Tests currently match on the long string; bytes could move to the Manage disclosure.</li>
+  <li><strong>Open file / Open folder visibility.</strong> Render only when an output exists (proposed) or always render disabled (today)?</li>
+  <li><strong>Last output when idle.</strong> Drop “No output yet” (proposed: nothing shows) or keep it as muted text in the run bar?</li>
+  <li><strong>Voice preview.</strong> The list leaves room for a play glyph per voice; there is no preview endpoint today, so it is not drawn. Confirm it stays out of scope.</li>
+  <li><strong>Run bar stickiness.</strong> Static below the columns (proposed) or sticky at the window bottom when the page scrolls? Static is simpler; sticky only matters if the textarea is enlarged a lot.</li>
+</ol>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('after-working');
+  if (!root) return;
+  function toggle(btnRole, boxRole, label) {
+    const b = root.querySelector('[data-role="' + btnRole + '"]');
+    const box = root.querySelector('[data-role="' + boxRole + '"]');
+    b.addEventListener('click', () => {
+      const open = box.classList.toggle('open');
+      b.setAttribute('aria-expanded', String(open));
+      b.textContent = label + (open ? ' ▴' : ' ▾');
+      b.classList.toggle('on', open);
+    });
+  }
+  toggle('cleanup-toggle', 'cleanup', 'Cleanup · 10 of 11 steps');
+  toggle('models-toggle', 'models', 'Manage');
+  // step count in the toggle
+  root.querySelectorAll('[data-role="cleanup"] .chk').forEach((c) => c.addEventListener('change', () => {
+    const n = [...root.querySelectorAll('[data-role="cleanup"] .chk')].filter((x) => x.checked).length;
+    const b = root.querySelector('[data-role="cleanup-toggle"]');
+    b.textContent = 'Cleanup · ' + n + ' of 11 steps ▴';
+  }));
+  // voices
+  const voices = [...root.querySelectorAll('[data-role="voices"] .voice')];
+  voices.forEach((v) => v.addEventListener('click', () => voices.forEach((x) => { const on = x === v; x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); })));
+  // speed
+  const slider = root.querySelector('[data-role="speed"]');
+  const val = root.querySelector('[data-role="speed-val"]');
+  const seg = root.querySelector('[data-role="speed-seg"]');
+  function setSpeed(v) {
+    slider.value = v; val.textContent = Number(v).toFixed(1) + '×';
+    seg.querySelectorAll('label').forEach((l) => l.classList.toggle('on', Number(l.querySelector('input').value) === Number(v)));
+    root.querySelector('[title="duration-estimate"]').textContent = '~' + fmt(412 / Number(v)) + ' @ ' + Number(v).toFixed(1) + '×';
+  }
+  function fmt(s) { s = Math.round(s); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  slider.addEventListener('input', () => setSpeed(slider.value));
+  seg.addEventListener('change', (e) => setSpeed(e.target.value));
+  // format
+  const fmtSeg = root.querySelector('[data-role="fmt"]');
+  fmtSeg.addEventListener('change', (e) => { const lab = e.target.closest('label'); fmtSeg.querySelectorAll('label').forEach((l) => l.classList.toggle('on', l === lab)); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+# --- Python ---
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Node / Electron ---
+node_modules/
+ui/out/
+ui/out-e2e/
+ui/dist/
+mcp-server/dist/
+mcp-server/bundle/
+*.tsbuildinfo
+
+# --- Test artifacts ---
+test-results/
+playwright-report/
+blob-report/
+.playwright/
+
+# --- .NET (native/region-picker) ---
+[Bb]in/
+[Oo]bj/
+native/**/publish/
+
+# --- Packaged / fetched binaries (reproducible via tools/) ---
+packaging/build/
+packaging/dist/
+packaging/ffmpeg-win64/
+
+# --- Third-party reference sources kept locally, not redistributed ---
+_inspiration/external_code/
+
+# --- Tool caches / machine-local state ---
+.serena/cache/
+.serena/project.local.yml
+
+# --- Editor / OS ---
+.DS_Store
+Thumbs.db
+*.swp
+
+# --- Stray artifacts ---
+undefined

@@ -1,0 +1,13 @@
+@keyframes avkit-save-dirty-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent-amber) 55%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent-amber) 35%, transparent);
+  }
+}
+
+.btn-save-dirty {
+  animation: avkit-save-dirty-pulse 1.6s var(--ease-out, ease-in-out) infinite;
+}

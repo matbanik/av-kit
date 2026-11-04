@@ -1,0 +1,131 @@
+{
+  "schema": "s27-windows-gate.v1",
+  "tested_commit": "407db192a9fbc80ecb9358c9a00e7cc5788c075c",
+  "clean_tree": true,
+  "lockfile_sha256": "A86D9A42C6CBD98705E1720EDBD7666FED573581C07E21EA0F56379DC7332980",
+  "mcp_lockfile_sha256": "62147DE51AFE855992D9BCA14364AFC03B493E8B02C478BA0F890B957DCA5095",
+  "uv_lock_sha256": "DA452C3481BC2C7B00BE49AB8DAA9747CC90CB27F17CCDD8EAE49D19063E7D20",
+  "electron": "`-- electron@42.9.3",
+  "node": "v24.19.0",
+  "preflight": {
+    "agentic_framework_head": "4033418f66d2d2085f989e27bf2823d9c55332b6",
+    "agent_registry_sha256": "B06D7CDA110CC3979594C2DBB9BA17F21CB747A82BDCBB39937D24E91B1C2C78",
+    "drift": false
+  },
+  "pytest_floor": 322,
+  "started": "2026-10-01T10:47:36.6152961-04:00",
+  "stages": [
+    {
+      "id": "npm-ci",
+      "argv": "pwsh -NoProfile -Command npm --prefix ui ci; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; node ui/node_modules/electron/install.js; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; if (-not (Test-Path ui/node_modules/electron/path.txt)) { exit 3 }; exit 0",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-npm-ci.txt"
+    },
+    {
+      "id": "mcp-npm-ci",
+      "argv": "npm --prefix mcp-server ci",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-mcp-npm-ci.txt"
+    },
+    {
+      "id": "py-types",
+      "argv": "uv run pyright packages/",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-py-types.txt"
+    },
+    {
+      "id": "py-lint",
+      "argv": "uv run ruff check packages/ tests/",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-py-lint.txt"
+    },
+    {
+      "id": "ui-types",
+      "argv": "npm --prefix ui run typecheck",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-ui-types.txt"
+    },
+    {
+      "id": "ui-lint",
+      "argv": "npm --prefix ui run lint",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-ui-lint.txt"
+    },
+    {
+      "id": "mcp-types",
+      "argv": "npm --prefix mcp-server run typecheck",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-mcp-types.txt"
+    },
+    {
+      "id": "py-tests",
+      "argv": "uv run pytest tests/ -x --tb=short -q",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-py-tests.txt"
+    },
+    {
+      "id": "ui-tests",
+      "argv": "npm --prefix ui run test -- --reporter=json --outputFile=C:/Temp/av-kit/s27-win-vitest.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-ui-tests.txt"
+    },
+    {
+      "id": "ui-build",
+      "argv": "npm --prefix ui run build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-ui-build.txt"
+    },
+    {
+      "id": "ui-harness-build",
+      "argv": "pwsh -NoProfile -Command $env:AVKIT_PRIMITIVE_HARNESS_BUILD='1'; npm --prefix ui run build -- --outDir 'P:\\av-kit\\ui/out-e2e'; exit $LASTEXITCODE",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-ui-harness-build.txt"
+    },
+    {
+      "id": "mcp-build",
+      "argv": "npm --prefix mcp-server run build",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-mcp-build.txt"
+    },
+    {
+      "id": "mcp-tests",
+      "argv": "npm --prefix mcp-server run test",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-mcp-tests.txt"
+    },
+    {
+      "id": "openapi",
+      "argv": "uv run python tools/export_openapi.py --check openapi.committed.json",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-openapi.txt"
+    },
+    {
+      "id": "state-render",
+      "argv": "uv run python tools/meu_status.py render --check",
+      "exit": 0,
+      "receipt": "C:/Temp/av-kit/s27-win-state-render.txt"
+    },
+    {
+      "id": "ui-electron",
+      "argv": "npm --prefix ui run test:e2e -- --reporter=json --outputFile=C:/Temp/av-kit/s27-win-e2e.json",
+      "exit": 1,
+      "receipt": "C:/Temp/av-kit/s27-win-ui-electron.txt"
+    }
+  ],
+  "pytest": {
+    "passed": 629,
+    "failed": 0
+  },
+  "vitest": {
+    "passed": 702,
+    "failed": 0,
+    "total": 702
+  },
+  "e2e": {
+    "expected": 117,
+    "unexpected": 1,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "finished": "2026-10-01T10:52:56.8390453-04:00"
+}

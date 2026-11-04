@@ -1,0 +1,532 @@
+{
+  "source": "P:/agentic-framework/core",
+  "target": "P:/av-kit",
+  "counts": {
+    "missing": 17,
+    "different": 74,
+    "equal": 38,
+    "binary": 1
+  },
+  "files": [
+    {
+      "target": ".agent/context/current-focus.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/context/grouping/README.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/context/known-issues-archive.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/context/known-issues.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/context/known-issues.yaml",
+      "status": "different"
+    },
+    {
+      "target": ".agent/context/meu-registry.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/context/meu-status.yaml",
+      "status": "different"
+    },
+    {
+      "target": ".agent/context/review-vocabulary.yaml",
+      "status": "missing"
+    },
+    {
+      "target": ".agent/context/triage-output.EXAMPLE.yaml",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/docs/agentic-methodology.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/artifact-naming.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/claude-cli-fallback-lessons.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/code-quality.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/docs/commands.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/context-compression.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/context-tool-decision-gate.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/docs/development-lifecycle.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/diagrams/development-lifecycle-overview.png",
+      "status": "binary"
+    },
+    {
+      "target": ".agent/docs/diagrams/development-lifecycle-overview.svg",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/emerging-standards.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/harness-profiles.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/issue-lifecycle-guide.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/macos-setup.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/model-delegation.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/model-routing.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/natural-writing-guide.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/docs/output-evidence-policy.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/prompt-templates.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/docs/testing-strategy.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/docs/triage-meu-loop.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/docs/verification-principles.md",
+      "status": "missing"
+    },
+    {
+      "target": ".agent/INSTANTIATE.md",
+      "status": "missing"
+    },
+    {
+      "target": ".agent/roles/coder.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/roles/guardrail.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/roles/orchestrator.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/roles/researcher.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/roles/reviewer.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/roles/tester.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/schemas/reflection.v1.yaml",
+      "status": "different"
+    },
+    {
+      "target": ".agent/schemas/registry.yaml",
+      "status": "different"
+    },
+    {
+      "target": ".agent/schemas/review-verdict.schema.json",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/schemas/review-verdict.schema.v2.json",
+      "status": "missing"
+    },
+    {
+      "target": ".agent/skills/cli-dispatch/SKILL.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/cli-dispatch/tests/Test-CliDispatch.ps1",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/cli-dispatch/tests/Test-OpenCodePoC.ps1",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/completion-preflight/SKILL.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/deep-research-prompting/SKILL.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/git-workflow/scripts/agent-commit.ps1",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/git-workflow/scripts/agent-commit.sh",
+      "status": "missing"
+    },
+    {
+      "target": ".agent/skills/git-workflow/SKILL.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/issue-triage/SKILL.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/meu-status/SKILL.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/skills/pre-handoff-review/SKILL.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/quality-gate/SKILL.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/README.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/session-meta-review/SKILL.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/skills/skill-optimizer/rubric-templates.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/skills/skill-optimizer/SKILL.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/subagent-delegation/SKILL.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/subagent-delegation/verification-log.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/terminal-preflight/SKILL.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/skills/timestamp/scripts/stamp.py",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/skills/timestamp/SKILL.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/workflows/cli-dispatch.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/create-plan.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/delegated-plan-creation.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/execution-corrections.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/execution-critical-review.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/execution-session.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/inspiration-research.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/issue-triage.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/meu-handoff.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/next-project.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/workflows/orchestrated-delivery.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/plan-corrections.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/plan-critical-review.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/pre-build-research.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/README.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/session-grouping.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/session-meta-review.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/skill-optimize.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/tdd-implementation.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/workflows/validation-review.md",
+      "status": "different"
+    },
+    {
+      "target": ".claude/agents/README.md",
+      "status": "different"
+    },
+    {
+      "target": ".claude/agents/av-kit-builder.md",
+      "status": "different"
+    },
+    {
+      "target": ".claude/agents/av-kit-verifier.md",
+      "status": "different"
+    },
+    {
+      "target": ".cursor/agents/README.md",
+      "status": "different"
+    },
+    {
+      "target": ".cursor/agents/av-kit-builder.md",
+      "status": "different"
+    },
+    {
+      "target": ".cursor/agents/av-kit-verifier.md",
+      "status": "different"
+    },
+    {
+      "target": "AGENTS.md",
+      "status": "different"
+    },
+    {
+      "target": "CLAUDE.md",
+      "status": "different"
+    },
+    {
+      "target": "GUARDRAILS.md",
+      "status": "different"
+    },
+    {
+      "target": "MANIFEST.md",
+      "status": "missing"
+    },
+    {
+      "target": ".agent/templates/BUILD_PLAN-STUB.md",
+      "status": "equal"
+    },
+    {
+      "target": ".agent/templates/HANDOFF-TEMPLATE.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/templates/PLAN-TEMPLATE.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/templates/REFLECTION-TEMPLATE.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/templates/REVIEW-TEMPLATE.md",
+      "status": "different"
+    },
+    {
+      "target": ".agent/templates/TASK-TEMPLATE.md",
+      "status": "different"
+    },
+    {
+      "target": "tools/__init__.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/adapt_output_schema.py",
+      "status": "missing"
+    },
+    {
+      "target": "tools/durable_evidence.py",
+      "status": "missing"
+    },
+    {
+      "target": "tools/Invoke-CodexDispatch.ps1",
+      "status": "different"
+    },
+    {
+      "target": "tools/Invoke-CodexDispatch.sh",
+      "status": "different"
+    },
+    {
+      "target": "tools/issue_triage/__init__.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/issue_triage/bucket.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/issue_triage/discover.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/issue_triage/migrate.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/issue_triage/model.py",
+      "status": "different"
+    },
+    {
+      "target": "tools/issue_triage/query.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/issue_triage/render.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/issue_triage/triage.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/issue_triage/verify.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/issue_triage.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/lint_task_contract.py",
+      "status": "missing"
+    },
+    {
+      "target": "tools/meu_status/__init__.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/meu_status/meu-status.schema.json",
+      "status": "equal"
+    },
+    {
+      "target": "tools/meu_status/migrate.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/meu_status/model.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/meu_status/query.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/meu_status/render.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/meu_status.py",
+      "status": "equal"
+    },
+    {
+      "target": "tools/preflight.sh",
+      "status": "missing"
+    },
+    {
+      "target": "tools/review_ledger.py",
+      "status": "missing"
+    },
+    {
+      "target": "tools/tests/Test-GetPhysicalPath.ps1",
+      "status": "missing"
+    },
+    {
+      "target": "tools/tests/test_durable_evidence.py",
+      "status": "missing"
+    },
+    {
+      "target": "tools/tests/test_review_output_pipeline.py",
+      "status": "missing"
+    },
+    {
+      "target": "tools/tests/test_review_verdict_schema_v2.py",
+      "status": "missing"
+    },
+    {
+      "target": "tools/validate_closeout_artifacts.py",
+      "status": "missing"
+    },
+    {
+      "target": "tools/validate_json_schema.py",
+      "status": "missing"
+    }
+  ]
+}

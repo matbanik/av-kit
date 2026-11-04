@@ -1,0 +1,66 @@
+{
+  "RED_PREFIX_28": "AC-28",
+  "RED_COUNT_28": 14,
+  "RED_PREFIX_29": "AC-29",
+  "RED_COUNT_29": 14,
+  "RED_PREFIX_30": "AC-30",
+  "RED_COUNT_30": 13,
+  "HANDOFF_COUNT": 3,
+  "HANDOFF_FILTER": "2026-08-24-p8-conversion-engine-MEU-*-handoff.md",
+  "HANDOFFS": [
+    "2026-08-24-p8-conversion-engine-MEU-28-handoff.md",
+    "2026-08-24-p8-conversion-engine-MEU-29-handoff.md",
+    "2026-08-24-p8-conversion-engine-MEU-30-handoff.md"
+  ],
+  "HUB_NEXT_AFTER": "/create-plan p8-conversion-api-mcp",
+  "QUEUE_NAME": "conversions",
+  "SETTING_NS": "converter",
+  "UNIT_LABEL_FRAMES": "frames",
+  "MEDIA_PORT_ADDITIVE": ["detect_gpu", "encode", "cut", "extract_stream"],
+  "MEDIA_PORT_KEEP": ["is_available", "ffmpeg_version", "convert", "probe"],
+  "CANCEL_HOOK": "should_stop",
+  "GPU_PROBE_SIZE": "256x256",
+  "GPU_PROBE_ENCODERS": ["hevc_nvenc", "hevc_amf", "hevc_qsv"],
+  "WMIC_BAN": "wmic",
+  "KIND_TOKEN": {
+    "Compress": "compress",
+    "Cut": "cut",
+    "Extract": "a"
+  },
+  "EXTRACT_CONTAINER_MAP": {
+    "pcm": ".wav",
+    "aac": ".m4a",
+    "ac3": ".ac3",
+    "eac3": ".eac3",
+    "opus": ".opus",
+    "vorbis": ".oga",
+    "mp3": ".mp3",
+    "mp2": ".mp2",
+    "wma": ".wma"
+  },
+  "EXTRACT_UNKNOWN_EXT": ".mka",
+  "COMPRESS_EXT": ".mp4",
+  "DEFAULT_PRESET": "Balanced",
+  "CONVERTER_KEYS": ["output_dir", "default_preset", "skip_existing", "gpu_preference"],
+  "CONVERTER_DEFAULTS": {
+    "output_dir": "~/Videos/av-kit",
+    "default_preset": "balanced",
+    "skip_existing": true,
+    "gpu_preference": "auto"
+  },
+  "CONVERSION_JOB_COLUMNS": [
+    "id", "kind", "input_path", "output_path", "display_name", "preset_id", "cq",
+    "scale_height", "audio_mode", "gpu_encoder", "in_ms", "out_ms", "copy_mode",
+    "stream_index", "status", "progress", "speed_bps", "eta_seconds", "file_size",
+    "duration_seconds", "width", "height", "error_message", "queue_position",
+    "created_at", "updated_at"
+  ],
+  "API_TREE": "packages/api",
+  "API_BASELINE": "C:/Temp/av-kit/p8-engine-api-tree-baseline.txt",
+  "TEST_DOMAIN_CONV": "tests/unit/test_domain_conversion.py",
+  "TEST_INFRA_CONV": "tests/unit/test_ffmpeg_conversion.py",
+  "TEST_SVC_CONV": "tests/unit/test_conversion_service.py",
+  "TEST_DOMAIN": "tests/unit/test_domain.py",
+  "TEST_MEDIA_INT": "tests/integration/test_filesystem_media.py",
+  "TEST_SERVICES": "tests/unit/test_services.py"
+}

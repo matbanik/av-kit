@@ -1,0 +1,25 @@
+feat(tts): provision runtime assets, surface failures, rework model and text panels
+
+MEU-62 makes TTS produce audio again. Managed downloads now provide the
+ONNX vocab and a pinned, sha256-verified en_core_web_sm wheel, and both
+appear as Settings readiness rows. A missing asset fails fast with a 409
+that names it. Every Failed job carries a reason that reaches the Console
+and the run bar. Real-network checks found two more defects, now fixed:
+Kokoro output past +/-1.0 is clipped, and kokoro 0.9.4 KPipeline.Result
+chunks are unpacked.
+
+MEU-63 gives the model picker a single action per variant, an inline
+details panel and asset chips. MEU-64 adds Cleanup Apply, removes the raw
+preview and adds a voice combobox with a language filter. Speed and
+Format now stay above the fold.
+
+Fixes found by the Windows gate:
+- the main window is revealed on ready-to-show, and boot survives an
+  aborted first load;
+- the Settings rail click lock lasts until the smooth scroll settles;
+- tests restore sys.path after each test.
+
+Validated with the container pre-gate and the authoritative Windows gate
+on 407db19. TTS_LIVE passed 5/5 and pytest 629/0, Vitest 702/702. e2e had
+117 passed and 1 unexpected, which Mat attributed to his own input and
+accepted (A-7). Independent Fable 5.1 review approved in Round 1.

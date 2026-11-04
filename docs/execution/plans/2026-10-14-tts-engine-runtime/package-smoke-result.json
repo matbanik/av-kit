@@ -1,0 +1,153 @@
+{
+  "schema": "s32-package-smoke.v2",
+  "identity": "cd879e6ef3f5f16a7266c0a66afbf19f284baa6863bc2fa17c1bc599f2611e18",
+  "head": "c72fc4436da8534ef613264620b83c3e84e97631",
+  "started": "2026-10-15T13:55:35.9601294-04:00",
+  "online": {
+    "phase": "online",
+    "passed": true,
+    "started": "2026-10-15T13:55:36.064582-04:00",
+    "errors": [],
+    "build": {
+      "exit": 0,
+      "seconds": 34.0,
+      "tail": [
+        "28479 INFO: Creating base_library.zip...",
+        "28523 INFO: Looking for dynamic libraries",
+        "32339 INFO: Extra DLL search directories (AddDllDirectory): ['P:\\\\av-kit-wt\\\\tts-engine-runtime\\\\.venv\\\\Lib\\\\site-packages\\\\numpy.libs', 'P:\\\\av-kit-wt\\\\tts-engine-runtime\\\\.venv\\\\Lib\\\\site-packages\\\\torch\\\\lib']",
+        "32339 INFO: Extra DLL search directories (PATH): []",
+        "33051 INFO: Warnings written to P:\\av-kit-wt\\tts-engine-runtime\\packaging\\build\\avkit-backend\\warn-avkit-backend.txt",
+        "33193 INFO: Graph cross-reference written to P:\\av-kit-wt\\tts-engine-runtime\\packaging\\build\\avkit-backend\\xref-avkit-backend.html",
+        "33246 INFO: checking PYZ",
+        "33315 INFO: checking PKG",
+        "33316 INFO: Bootloader P:\\av-kit-wt\\tts-engine-runtime\\.venv\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\run.exe",
+        "33316 INFO: checking EXE",
+        "33318 INFO: checking COLLECT",
+        "33321 INFO: Removing dir P:\\av-kit-wt\\tts-engine-runtime\\packaging\\dist\\avkit-backend",
+        "33369 INFO: Building COLLECT COLLECT-00.toc",
+        "33595 INFO: Building COLLECT COLLECT-00.toc completed successfully.",
+        "33601 INFO: Build complete! The results are available in: P:\\av-kit-wt\\tts-engine-runtime\\packaging\\dist"
+      ]
+    },
+    "exe_bytes": 27032476,
+    "forbidden_dirs": [],
+    "home": "C:\\Temp\\av-kit\\s32-smoke-online-home",
+    "downloads": {
+      "kokoro-onnx-int8": {
+        "result": "already_downloaded"
+      },
+      "tts_onnx_vocab": {
+        "result": "already_ready"
+      },
+      "tts_spacy_model": {
+        "result": "already_ready"
+      },
+      "tts_voice_packs": {
+        "result": "already_ready"
+      }
+    },
+    "asset_states": {
+      "tts_onnx_vocab": "ready",
+      "tts_spacy_model": "ready",
+      "tts_voice_packs": "ready"
+    },
+    "variant_downloaded": true,
+    "backend_tail": [
+      "2026-10-15 13:56:10 [info     ] engine.created                 module=database path=C:\\Temp\\av-kit\\s32-smoke-online-app-data\\avkit.db",
+      "2026-10-15 13:56:10 [info     ] migrations.apply               count=8 data_count=1 module=database",
+      "2026-10-15 13:56:10 [info     ] catalog.seeded                 count=4 module=database",
+      "2026-10-15 13:56:10 [info     ] schema.initialized             module=database",
+      "AVKIT_READY port=40717 instance=785d445b-c905-45af-a6d3-de7f2ca0a64d"
+    ],
+    "finished": "2026-10-15T13:56:11.261685-04:00"
+  },
+  "installer": {
+    "dist_exit": 0,
+    "nsis_assert_exit": 0,
+    "build_receipt": "C:/Temp/av-kit/s32-package-smoke-dist.txt",
+    "notices_staged": true,
+    "ffmpeg_license_staged": true
+  },
+  "offline": {
+    "phase": "offline",
+    "passed": true,
+    "started": "2026-10-15T13:57:19.365888-04:00",
+    "backend_dir": "C:\\temp\\av-kit\\s32-smoke-run\\avkit-backend",
+    "cwd": "C:\\temp\\av-kit\\s32-smoke-run",
+    "wav_samples": 41400,
+    "negative_probe": {
+      "state": "Failed",
+      "error": "voice pack af_heart download failed: An error happened while trying to locate the file on the Hub and we cannot find the requested files in the local cache. Please check your connection and try again or make sure your Internet connection is on."
+    },
+    "errors": [],
+    "proxy": {
+      "HTTP_PROXY": "http://127.0.0.1:9",
+      "HTTPS_PROXY": "http://127.0.0.1:9",
+      "ALL_PROXY": "http://127.0.0.1:9",
+      "NO_PROXY": "127.0.0.1,localhost"
+    },
+    "proxy_lower_case_set": true,
+    "home": "C:\\Temp\\av-kit\\s32-smoke-run\\home",
+    "hf_home": "C:\\Temp\\av-kit\\s32-smoke-run\\hf-home",
+    "register": {
+      "result": "downloaded",
+      "state": "Idle",
+      "error": null
+    },
+    "asset_states": {
+      "tts_onnx_vocab": "ready",
+      "tts_spacy_model": "ready",
+      "tts_voice_packs": "ready"
+    },
+    "generate": {
+      "status": "Done",
+      "error": null,
+      "output_path": "C:\\Temp\\av-kit\\s32-smoke-run\\out\\3b95a1ac-b7d8-4cba-b57b-17ed82570b66.wav",
+      "wav_samples": 41400,
+      "sample_rate": 24000,
+      "inside_out_dir": true,
+      "seconds": 1.9
+    },
+    "backend_tail": [
+      "2026-10-15 13:57:20 [info     ] engine.created                 module=database path=C:\\Temp\\av-kit\\s32-smoke-run\\app-data\\avkit.db",
+      "2026-10-15 13:57:20 [info     ] migrations.apply               count=8 data_count=1 module=database",
+      "2026-10-15 13:57:20 [info     ] catalog.seeded                 count=4 module=database",
+      "2026-10-15 13:57:20 [info     ] schema.initialized             module=database",
+      "AVKIT_READY port=39839 instance=d58fd926-1192-4560-8060-6f118a2ad9f4",
+      "{\"seq\": 1, \"message\": \"model.marked_downloaded\", \"module\": \"database\", \"level\": \"INFO\"}",
+      "2026-10-15 13:57:20 [info     ] model.marked_downloaded        module=database path=C:\\Temp\\av-kit\\s32-smoke-models\\kokoro-v1.0-onnx\\onnx\\model_quantized.onnx seq=1 variant_id=kokoro-onnx-int8",
+      "{\"seq\": 2, \"message\": \"tts.load_model\", \"module\": \"tts\", \"level\": \"INFO\"}",
+      "2026-10-15 13:57:21 [info     ] tts.load_model                 device=cpu module=tts request_id=9871136f-ca5c-4a3d-89d4-755d3fd40380 seq=2 variant_id=kokoro-onnx-int8",
+      "{\"seq\": 3, \"message\": \"tts.generate job_id=3b95a1ac-b7d8-4cba-b57b-17ed82570b66\", \"module\": \"tts\", \"level\": \"INFO\"}",
+      "2026-10-15 13:57:21 [info     ] tts.generate job_id=3b95a1ac-b7d8-4cba-b57b-17ed82570b66 job_id=3b95a1ac-b7d8-4cba-b57b-17ed82570b66 module=tts request_id=dcf92b9e-7dcc-48e4-9d21-ba17d84e4ca3 seq=3 variant=kokoro-onnx-int8 voice=af_heart",
+      "{\"seq\": 4, \"message\": \"filesystem.write_audio_wav\", \"module\": \"filesystem\", \"level\": \"DEBUG\"}",
+      "2026-10-15 13:57:22 [debug    ] filesystem.write_audio_wav     frames=41400 module=filesystem path=C:\\Temp\\av-kit\\s32-smoke-run\\out\\3b95a1ac-b7d8-4cba-b57b-17ed82570b66.wav request_id=dcf92b9e-7dcc-48e4-9d21-ba17d84e4ca3 seq=4",
+      "{\"seq\": 5, \"message\": \"tts.generate_done job_id=3b95a1ac-b7d8-4cba-b57b-17ed82570b66\", \"module\": \"tts\", \"level\": \"INFO\"}",
+      "2026-10-15 13:57:22 [info     ] tts.generate_done job_id=3b95a1ac-b7d8-4cba-b57b-17ed82570b66 job_id=3b95a1ac-b7d8-4cba-b57b-17ed82570b66 module=tts output=C:\\Temp\\av-kit\\s32-smoke-run\\out\\3b95a1ac-b7d8-4cba-b57b-17ed82570b66.wav request_id=dcf92b9e-7dcc-48e4-9d21-ba17d84e4ca3 seq=5",
+      "'[WinError 10061] No connection could be made because the target machine actively refused it' thrown while requesting HEAD https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/af_heart.bin",
+      "Retrying in 1s [Retry 1/5].",
+      "'[WinError 10061] No connection could be made because the target machine actively refused it' thrown while requesting HEAD https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/af_heart.bin",
+      "Retrying in 2s [Retry 2/5].",
+      "'[WinError 10061] No connection could be made because the target machine actively refused it' thrown while requesting HEAD https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/af_heart.bin",
+      "Retrying in 4s [Retry 3/5].",
+      "'[WinError 10061] No connection could be made because the target machine actively refused it' thrown while requesting HEAD https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/af_heart.bin",
+      "Retrying in 8s [Retry 4/5].",
+      "'[WinError 10061] No connection could be made because the target machine actively refused it' thrown while requesting HEAD https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/af_heart.bin",
+      "Retrying in 8s [Retry 5/5].",
+      "'[WinError 10061] No connection could be made because the target machine actively refused it' thrown while requesting HEAD https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/af_heart.bin",
+      "{\"seq\": 6, \"message\": \"model.download_failed error=voice pack af_heart download failed: An error happened while trying to locate the file on the Hub and we cannot find the requested files in the local cache. Please check your connection and try again or make sure your Internet connection is on.\", \"module\": \"model_manager\", \"level\": \"WARNING\"}",
+      "2026-10-15 13:58:01 [warning  ] model.download_failed error=voice pack af_heart download failed: An error happened while trying to locate the file on the Hub and we cannot find the requested files in the local cache. Please check your connection and try again or make sure your Internet connection is on. asset=tts_voice_packs error='voice pack af_heart download failed: An error happened while trying to locate the file on the Hub and we cannot find the requested files in the local cache. Please check your connection and try again or make sure your Internet connection is on.' module=model_manager seq=6 variant_id=None"
+    ],
+    "finished": "2026-10-15T13:58:02.006366-04:00"
+  },
+  "mcp_probe": {
+    "entry": "ui/dist/win-unpacked/resources/mcp-server/index.js",
+    "result": "unreachable",
+    "exit_code": 1,
+    "stderr_tail": "sources\\mcp-server\\index.js\n    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)\n    at packageResolve (node:internal/modules/esm/resolve:768:81)\n    at moduleResolve (node:internal/modules/esm/resolve:859:18)\n    at defaultResolve (node:internal/modules/esm/resolve:992:11)\n    at #cachedDefaultResolve (node:internal/modules/esm/loader:701:20)\n    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:721:38)\n    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:759:56)\n    at #resolve (node:internal/modules/esm/loader:683:17)\n    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:603:35)\n    at ModuleJob.syncLink (node:internal/modules/esm/module_job:163:33) {\n  code: 'ERR_MODULE_NOT_FOUND'\n}\n\nNode.js v24.19.0\n",
+    "seconds": 0.11,
+    "first_stdout": ""
+  },
+  "identity_end": "cd879e6ef3f5f16a7266c0a66afbf19f284baa6863bc2fa17c1bc599f2611e18",
+  "finished": "2026-10-15T13:58:02.2237759-04:00"
+}

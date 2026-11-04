@@ -1,0 +1,45 @@
+export const RENDERER_TO_MAIN_CHANNELS = [
+  'get-backend-url',
+  'get-token',
+  'startup-metric',
+  'show-directory-dialog',
+  'show-file-dialog',
+  'show-files-dialog',
+  'open-path',
+  'show-item-in-folder',
+  'read-clipboard-text',
+  'write-clipboard-text',
+  'read-text-file',
+  'copy-mcp-config',
+  'get-log-snapshot',
+  'get-setup-readiness',
+  'get-mcp-access-status',
+  'capture-region',
+  'get-hotkey-status',
+  'login-item-get',
+  'login-item-set',
+  'write-clipboard-image',
+  'get-mcp-setup-prompt',
+] as const
+
+export const STARTUP_METRIC_KEYS = [
+  'startup.python_spawn_ms',
+  'startup.renderer_load_ms',
+  'startup.shell_paint_ms',
+  'startup.window_show_ms',
+  'startup.data_ready_ms',
+  'startup.lazy_preload_ms',
+] as const
+
+export const IPC_NO_PAYLOAD = [
+  'get-backend-url',
+  'get-token',
+  'show-directory-dialog',
+  'read-clipboard-text',
+  'get-log-snapshot',
+  'get-setup-readiness',
+  'get-mcp-access-status',
+  'capture-region',
+  'get-hotkey-status',
+  'login-item-get',
+] as const

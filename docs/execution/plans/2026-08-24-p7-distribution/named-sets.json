@@ -1,0 +1,22 @@
+{
+  "RED_PREFIX_24": "AC-24",
+  "RED_COUNT_24": 10,
+  "RED_PREFIX_25": "AC-25",
+  "RED_COUNT_25": 10,
+  "HANDOFF_COUNT": 2,
+  "HANDOFF_FILTER": "2026-08-24-p7-distribution-MEU-*-handoff.md",
+  "HANDOFFS": [
+    "2026-08-24-p7-distribution-MEU-24-handoff.md",
+    "2026-08-24-p7-distribution-MEU-25-handoff.md"
+  ],
+  "HUB_NEXT_AFTER": "phase-7 complete",
+  "PACK_DIST_DIR": "packaging/dist/avkit-backend",
+  "PACK_DIST_EXE": "packaging/dist/avkit-backend/avkit-backend.exe",
+  "NSIS_PACK_FOLLOWUP": "NSIS-SANDBOX-PACK",
+  "NSIS_CI_JOB": "windows-latest electron-builder --win nsis --x64",
+  "SIZE_CAP_BYTES": 524288000,
+  "VITEST_MEU25_FILES": [
+    "tests/unit/dev-spawn.test.ts",
+    "tests/unit/copy-mcp-config.test.ts"
+  ]
+}

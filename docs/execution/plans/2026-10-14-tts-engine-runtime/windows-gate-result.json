@@ -1,0 +1,155 @@
+{
+  "schema": "s32-windows-gate.v1",
+  "identity": "cd879e6ef3f5f16a7266c0a66afbf19f284baa6863bc2fa17c1bc599f2611e18",
+  "head": "c72fc4436da8534ef613264620b83c3e84e97631",
+  "lockfile_sha256": "A86D9A42C6CBD98705E1720EDBD7666FED573581C07E21EA0F56379DC7332980",
+  "mcp_lockfile_sha256": "D9570466713091B2F67B0BCEFC5FE12050BC8761CCC9532500714898516189A6",
+  "uv_lock_sha256": "5285FAC845036947C7E7E8F18420B3278CAC7C04A7C10892655C3F992EC5FFF6",
+  "electron": "`-- electron@42.9.3",
+  "node": "v24.19.0",
+  "preflight": {
+    "agentic_framework_head": "e387decb45e5106efbb1c55747131e7ca45918c4",
+    "agent_registry_sha256": "A7C95972C1E83885AA339873BDBF35CD5A6DAF3FB593F0D894F658BBFB80EBFA",
+    "drift": false
+  },
+  "started": "2026-10-15T13:50:17.1499122-04:00",
+  "stages": [
+    {
+      "id": "npm-ci",
+      "argv": "pwsh -NoProfile -Command npm --prefix ui ci; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; node ui/node_modules/electron/install.js; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }; if (-not (Test-Path ui/node_modules/electron/path.txt)) { exit 3 }; exit 0",
+      "exit": 0,
+      "seconds": 8.2,
+      "receipt": "C:/Temp/av-kit/s32-win-npm-ci.txt"
+    },
+    {
+      "id": "mcp-npm-ci",
+      "argv": "npm --prefix mcp-server ci",
+      "exit": 0,
+      "seconds": 1.8,
+      "receipt": "C:/Temp/av-kit/s32-win-mcp-npm-ci.txt"
+    },
+    {
+      "id": "py-types",
+      "argv": "uv run pyright packages/",
+      "exit": 0,
+      "seconds": 3.3,
+      "receipt": "C:/Temp/av-kit/s32-win-py-types.txt"
+    },
+    {
+      "id": "py-lint",
+      "argv": "uv run ruff check packages/ tests/ tools/smoke_packaged_tts.py",
+      "exit": 0,
+      "seconds": 0.1,
+      "receipt": "C:/Temp/av-kit/s32-win-py-lint.txt"
+    },
+    {
+      "id": "ui-types",
+      "argv": "npm --prefix ui run typecheck",
+      "exit": 0,
+      "seconds": 3.9,
+      "receipt": "C:/Temp/av-kit/s32-win-ui-types.txt"
+    },
+    {
+      "id": "ui-lint",
+      "argv": "npm --prefix ui run lint",
+      "exit": 0,
+      "seconds": 3.3,
+      "receipt": "C:/Temp/av-kit/s32-win-ui-lint.txt"
+    },
+    {
+      "id": "mcp-types",
+      "argv": "npm --prefix mcp-server run typecheck",
+      "exit": 0,
+      "seconds": 2.6,
+      "receipt": "C:/Temp/av-kit/s32-win-mcp-types.txt"
+    },
+    {
+      "id": "py-tests",
+      "argv": "uv run pytest tests/ -x --tb=short -q",
+      "exit": 0,
+      "seconds": 82.0,
+      "receipt": "C:/Temp/av-kit/s32-win-py-tests.txt"
+    },
+    {
+      "id": "ui-tests",
+      "argv": "npm --prefix ui run test -- --reporter=json --outputFile=C:/Temp/av-kit/s32-win-vitest.json",
+      "exit": 0,
+      "seconds": 24.9,
+      "receipt": "C:/Temp/av-kit/s32-win-ui-tests.txt"
+    },
+    {
+      "id": "ui-build",
+      "argv": "npm --prefix ui run build",
+      "exit": 0,
+      "seconds": 4.8,
+      "receipt": "C:/Temp/av-kit/s32-win-ui-build.txt"
+    },
+    {
+      "id": "ui-harness-build",
+      "argv": "pwsh -NoProfile -Command $env:AVKIT_PRIMITIVE_HARNESS_BUILD='1'; npm --prefix ui run build -- --outDir 'P:\\av-kit-wt\\tts-engine-runtime\\ui/out-e2e'; exit $LASTEXITCODE",
+      "exit": 0,
+      "seconds": 5.2,
+      "receipt": "C:/Temp/av-kit/s32-win-ui-harness-build.txt"
+    },
+    {
+      "id": "mcp-build",
+      "argv": "npm --prefix mcp-server run build",
+      "exit": 0,
+      "seconds": 1.4,
+      "receipt": "C:/Temp/av-kit/s32-win-mcp-build.txt"
+    },
+    {
+      "id": "mcp-tests",
+      "argv": "npm --prefix mcp-server run test",
+      "exit": 0,
+      "seconds": 8.1,
+      "receipt": "C:/Temp/av-kit/s32-win-mcp-tests.txt"
+    },
+    {
+      "id": "openapi",
+      "argv": "uv run python tools/export_openapi.py --check openapi.committed.json",
+      "exit": 0,
+      "seconds": 2.0,
+      "receipt": "C:/Temp/av-kit/s32-win-openapi.txt"
+    },
+    {
+      "id": "state-render",
+      "argv": "uv run python tools/meu_status.py render --check",
+      "exit": 0,
+      "seconds": 0.2,
+      "receipt": "C:/Temp/av-kit/s32-win-state-render.txt"
+    },
+    {
+      "id": "ui-electron",
+      "argv": "npm --prefix ui run test:e2e -- --reporter=json --outputFile=C:/Temp/av-kit/s32-win-e2e.json",
+      "exit": 0,
+      "seconds": 166.1,
+      "receipt": "C:/Temp/av-kit/s32-win-ui-electron.txt"
+    },
+    {
+      "id": "source-audit",
+      "argv": "rg -n -e TODO|FIXME|transition-all|bg-\\[#|console\\.log\\(|@ts-ignore|@ts-expect-error|: any\\b|breakpoint\\(\\)|# type: ignore packages/infrastructure/src/avkit_infra/tts/g2p.py packages/infrastructure/src/avkit_infra/tts/espeak.py packages/infrastructure/src/avkit_infra/tts/adapter.py packages/infrastructure/src/avkit_infra/tts/assets.py packages/infrastructure/src/avkit_infra/model_manager/voice_packs.py tools/smoke_packaged_tts.py ui/src/renderer/src/features/tts/VoiceCombobox.tsx ui/src/renderer/src/features/tts/useTtsJob.ts ui/src/renderer/src/features/tts/tts-voices.ts ui/src/renderer/src/features/tts/tts-assets.ts ui/src/renderer/src/features/settings/SettingsPage.tsx",
+      "exit": 0,
+      "seconds": 0.0,
+      "receipt": "C:/Temp/av-kit/s32-win-source-audit.txt",
+      "note": "rg exit 1 (1 = no hits)"
+    }
+  ],
+  "pytest": {
+    "passed": 803,
+    "failed": 0
+  },
+  "vitest": {
+    "passed": 816,
+    "failed": 0,
+    "total": 816
+  },
+  "e2e": {
+    "expected": 138,
+    "unexpected": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "identity_end": "cd879e6ef3f5f16a7266c0a66afbf19f284baa6863bc2fa17c1bc599f2611e18",
+  "finished": "2026-10-15T13:55:35.4329280-04:00"
+}

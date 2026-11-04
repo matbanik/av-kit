@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>av-kit Queue Cards — visual mockup (rev 2)</title>
+<style>
+  :root {
+    --ground: #f4f6f8;
+    --paper: #ffffff;
+    --ink: #1c2530;
+    --ink-muted: #5b6b7a;
+    --accent: #0891b2;
+    --accent-soft: rgba(8, 145, 178, 0.10);
+    --line: #dce3e9;
+    --code-bg: #eef2f5;
+    --good: #16a34a;
+    --bad: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #1e2029;
+      --paper: #262935;
+      --ink: #edeef2;
+      --ink-muted: #9aa6b8;
+      --accent: #8be9fd;
+      --accent-soft: rgba(139, 233, 253, 0.10);
+      --line: #3a3e4f;
+      --code-bg: #2e3240;
+      --good: #50fa7b;
+      --bad: #ff6e6e;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+    line-height: 1.55;
+    margin: 0;
+    padding: 0 20px 96px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+
+  header.masthead { padding: 56px 0 8px; }
+  .eyebrow {
+    font-family: "Cascadia Code", Consolas, ui-monospace, monospace;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+    font-size: clamp(30px, 5vw, 42px);
+    font-weight: 650; letter-spacing: -0.02em; line-height: 1.1;
+    margin: 8px 0 10px; text-wrap: balance;
+  }
+  .lede { font-size: 17px; color: var(--ink-muted); max-width: 62ch; margin: 0 0 20px; }
+
+  h2 {
+    font-size: 21px; font-weight: 650; letter-spacing: -0.01em;
+    margin: 56px 0 6px; text-wrap: balance;
+  }
+  h2 .sec {
+    font-family: "Cascadia Code", Consolas, ui-monospace, monospace;
+    font-size: 13px; color: var(--accent); margin-right: 10px; font-weight: 600;
+  }
+  p, li { max-width: 68ch; }
+  p.note { color: var(--ink-muted); font-size: 14.5px; }
+  code {
+    font-family: "Cascadia Code", Consolas, ui-monospace, monospace;
+    font-size: 0.88em; background: var(--code-bg);
+    padding: 1px 5px; border-radius: 4px;
+  }
+  a { color: var(--accent); }
+
+  .tldr {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px; margin: 26px 0 8px;
+  }
+  .tldr .cell {
+    background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; font-size: 14.5px;
+  }
+  .tldr .cell b { display: block; margin-bottom: 3px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--accent); }
+
+  /* ---------- Mock frames: pinned to av-kit's dark app palette ---------- */
+  .mock {
+    --m-bg: #282a36; --m-el: #44475a; --m-sub: #6272a4;
+    --m-fg: #f8f8f2; --m-muted: #bae6fd;
+    --m-accent: #8be9fd; --m-green: #50fa7b; --m-red: #ff5555;
+    --m-purple: #bd93f9; --m-orange: #ffb86c; --m-yellow: #f1fa8c;
+    background: var(--m-bg); color: var(--m-fg);
+    border: 1px solid var(--line); border-radius: 10px;
+    padding: 18px; margin: 18px 0;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    overflow-x: auto;
+  }
+  .mock .frame-label {
+    font-family: "Cascadia Code", Consolas, ui-monospace, monospace;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: #6272a4; margin: 0 0 12px;
+  }
+  .mock, .mock * { line-height: 1.4; }
+
+  .qcard {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: var(--m-bg); border: 1px solid var(--m-sub);
+    border-radius: 6px; padding: 10px 14px; margin: 0 0 8px;
+    min-width: 640px;
+    transition: background-color 120ms cubic-bezier(.2,0,0,1), border-color 120ms cubic-bezier(.2,0,0,1);
+    cursor: pointer;
+  }
+  .qcard:hover { background: var(--m-el); }
+  /* Selected fill = accent tint. NOT bg-subtle: av-kit's --color-bg-subtle is #6272a4
+     (same value as --color-neutral, a text color) — reusing it here would paint cards
+     comment-purple. See proposal §4. */
+  .qcard.is-selected { border-color: rgba(139,233,253,.5); background: rgba(139,233,253,.06); }
+  .qcard input[type="checkbox"] {
+    width: 16px; height: 16px; margin: 3px 0 0; accent-color: #8be9fd; cursor: pointer; flex: none;
+  }
+  .qcard .pos {
+    font-family: Consolas, ui-monospace, monospace; font-variant-numeric: tabular-nums;
+    font-size: 12px; color: var(--m-sub); margin-top: 4px; width: 18px; flex: none; text-align: right;
+  }
+  .qcard .sicon { font-size: 14px; margin-top: 2px; width: 20px; flex: none; text-align: center; }
+  .qcard .body { flex: 1; min-width: 0; }
+  .qcard .row1 { display: flex; align-items: center; gap: 10px; }
+  .qcard .title {
+    font-size: 14px; font-weight: 500; color: var(--m-fg);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;
+  }
+  .qcard .row2 {
+    display: flex; align-items: center; gap: 12px; margin-top: 5px;
+    font-size: 12px; color: var(--m-muted);
+  }
+  .qcard .meta { white-space: nowrap; flex: none; opacity: 0.85; }
+  .qcard .bar { flex: 1; min-width: 80px; height: 6px; border-radius: 3px; background: rgba(98,114,164,.35); overflow: hidden; }
+  .qcard .bar > i { display: block; height: 100%; border-radius: 3px; background: var(--m-accent); }
+  .qcard .stats {
+    font-family: Consolas, ui-monospace, monospace; font-variant-numeric: tabular-nums;
+    font-size: 11.5px; color: var(--m-muted); white-space: nowrap; flex: none;
+  }
+  /* placeholder keeping row1 alignment when a state has no primary action */
+  .actgap { flex: none; width: 26px; height: 26px; }
+  .pill {
+    font-size: 11px; padding: 2px 9px; border-radius: 999px; white-space: nowrap; flex: none; font-weight: 500;
+  }
+  .pill.cyan   { background: rgba(139,233,253,.12); color: var(--m-accent); }
+  .pill.green  { background: rgba(80,250,123,.18);  color: var(--m-green); }
+  .pill.red    { background: rgba(255,85,85,.18);   color: #ff9e9e; }
+  .pill.purple { background: rgba(189,147,249,.12); color: var(--m-purple); }
+  .pill.orange { background: rgba(255,184,108,.12); color: var(--m-orange); }
+  .pill.yellow { background: rgba(241,250,140,.12); color: var(--m-yellow); }
+  .pill.gray   { background: #44475a; color: var(--m-muted); }
+  .iconbtn {
+    flex: none; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(139,233,253,.12); color: var(--m-accent);
+    border: none; border-radius: 6px; font-size: 12px; cursor: pointer;
+  }
+  .iconbtn:hover { background: rgba(139,233,253,.22); }
+  .iconbtn.ghost { background: transparent; color: var(--m-sub); }
+  .iconbtn.ghost:hover { background: var(--m-el); color: var(--m-muted); }
+  .qcard .err { color: #ff9e9e; font-size: 12px; }
+
+  /* zone diagram */
+  .zones { display: flex; gap: 4px; min-width: 640px; margin-top: 4px; }
+  .zones span {
+    border: 1px dashed var(--m-sub); border-radius: 4px; color: var(--m-muted);
+    font-family: Consolas, ui-monospace, monospace; font-size: 10.5px;
+    padding: 8px 4px; text-align: center; white-space: nowrap;
+  }
+
+  /* bulk bar + list header */
+  .listhead { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; min-width: 640px; }
+  .listhead input { width: 16px; height: 16px; accent-color: #8be9fd; cursor: pointer; }
+  .listhead .count { font-size: 12px; color: var(--m-muted); }
+  .bulkbar {
+    display: none; align-items: center; gap: 12px; min-width: 640px;
+    background: var(--m-el); border: 1px solid var(--m-sub); border-radius: 8px;
+    padding: 8px 14px; margin: 0 0 8px; font-size: 13px;
+  }
+  .bulkbar.show { display: flex; }
+  .bulkbar .n { color: var(--m-accent); font-weight: 600; }
+  .bulkbar .div { width: 1px; height: 18px; background: var(--m-sub); }
+  .mbtn {
+    background: rgba(139,233,253,.12); color: var(--m-accent); border: none;
+    border-radius: 6px; padding: 4px 12px; font-size: 12.5px; cursor: pointer; white-space: nowrap;
+  }
+  .mbtn:hover { background: rgba(139,233,253,.22); }
+  .mbtn.primary { background: var(--m-accent); color: #282a36; font-weight: 600; }
+  .mbtn.danger { background: rgba(255,85,85,.15); color: #ff9e9e; }
+  .mbtn.danger:hover { background: rgba(255,85,85,.28); }
+  .mbtn.outline { background: transparent; border: 1px solid var(--m-sub); color: var(--m-muted); }
+  .spacer { flex: 1; }
+
+  /* toolbar before/after */
+  .toolrow { display: flex; flex-wrap: wrap; gap: 6px; min-width: 640px; align-items: center; }
+  .oldbtn {
+    background: rgba(139,233,253,.12); color: var(--m-accent); border: none; border-radius: 6px;
+    padding: 4px 10px; font-size: 12px; cursor: default;
+  }
+  .oldbtn.sm { padding: 2px 8px; font-size: 11px; }
+  .oldbtn.danger { background: #c42b2b; color: #fff; }
+  .oldbtn.ghost { background: transparent; color: var(--m-muted); }
+  .verdict { font-size: 12px; margin-top: 10px; }
+  .verdict.badv { color: #ff9e9e; }
+  .verdict.goodv { color: var(--m-green); }
+
+  /* empty state */
+  .dropzone {
+    min-width: 640px; border: 2px dashed var(--m-sub); border-radius: 10px;
+    padding: 44px 20px; text-align: center; color: var(--m-muted);
+  }
+  .dropzone .big { font-size: 15px; color: var(--m-fg); margin-bottom: 6px; }
+  .dropzone small { font-size: 12px; color: var(--m-sub); display: block; margin-top: 10px; }
+
+  /* document tables */
+  table.doc {
+    border-collapse: collapse; width: 100%; font-size: 14px;
+    background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+    overflow: hidden; margin: 14px 0;
+  }
+  table.doc th, table.doc td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.doc th { font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-muted); background: var(--accent-soft); }
+  table.doc tr:last-child td { border-bottom: none; }
+  .tablewrap { overflow-x: auto; }
+  .swatch {
+    display: inline-block; background: #282a36; border-radius: 6px; padding: 4px 8px;
+  }
+  .kv { color: var(--ink-muted); font-size: 13px; }
+
+  .decision { border-left: 3px solid var(--accent); background: var(--paper); border-radius: 0 8px 8px 0; padding: 10px 16px; margin: 10px 0; font-size: 14.5px; }
+  .decision b { color: var(--accent); }
+
+  footer { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink-muted); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="masthead">
+  <div class="eyebrow">av-kit · design proposal · rev 2 · 2026-08-27</div>
+  <h1>Queue Cards</h1>
+  <p class="lede">One card system for the Downloader and Convert queues — with Transcript and TTS converging onto the same primitives — replacing bare tables and the 13-button control bar with self-describing cards, state-dependent actions, and Gmail-style multi-select. GUI-only: every verb maps to an existing REST call.</p>
+</header>
+
+<div class="tldr">
+  <div class="cell"><b>What changes</b>Queue tables become row-cards with inline progress, status pills, and per-card actions. Style and primitives come from Zorivest — both apps already share the same Dracula token base.</div>
+  <div class="cell"><b>Why cards</b>A queue is a <em>scanning</em> task, not a column-comparison task. Research consensus: vertical row-cards with fixed internal zones beat both tables and free-form cards for job queues.</div>
+  <div class="cell"><b>Control model</b>One state-dependent primary action per card (empty slot when no verb applies) + kebab for the rest; checkbox multi-select with a contextual bulk bar; global toolbar shrinks from 13 buttons to 4.</div>
+</div>
+
+<h2><span class="sec">01</span>Card anatomy</h2>
+<p>Two rows, fixed zones, borrowed directly from the Zorivest plan-card shell (<code>px-4 py-3</code>, 6px radius, muted border, hover elevate). Hover a card below — the states are live.</p>
+
+<div class="mock">
+  <p class="frame-label">Downloader — proposed</p>
+  <div class="qcard">
+    <input type="checkbox" aria-label="Select">
+    <span class="pos">1</span>
+    <span class="sicon" style="color:#8be9fd">↓</span>
+    <div class="body">
+      <div class="row1">
+        <span class="title">Deep Dive: FFmpeg NVENC Tuning Guide</span>
+        <span class="pill cyan">Downloading</span>
+        <button class="iconbtn" title="Cancel (queue-level — this row is in flight)">✕</button>
+        <button class="iconbtn ghost" title="More">⋮</button>
+      </div>
+      <div class="row2">
+        <span class="meta">1080p · mp4 · 512 MB</span>
+        <span class="bar"><i style="width:42%"></i></span>
+        <span class="stats">42% · 3.2 MB/s · 1:04</span>
+      </div>
+    </div>
+  </div>
+  <div class="zones" aria-hidden="true">
+    <span style="width:26px">☐</span><span style="width:28px">#</span><span style="width:30px">icon</span><span style="flex:2">title + meta (truncate ≥15ch)</span><span style="flex:1.4">progress · speed · ETA</span><span style="width:86px">status pill</span><span style="width:44px">action</span><span style="width:34px">⋮</span>
+  </div>
+</div>
+
+<ul>
+  <li><b>Checkbox</b> is a sibling of the clickable card body (<code>stopPropagation</code>) — clicking it never opens the item. Zorivest's exact pattern.</li>
+  <li><b>Status icon at the left edge</b> — the fastest-scanning position — plus a <b>text pill</b> on the right. Never color alone (WCAG 1.4.1).</li>
+  <li><b>One primary action, state-dependent:</b> Retry when failed/cancelled (existing per-id retry), Open when done, Cancel <em>only on the in-flight row</em> — wired to the existing <em>queue-level</em> cancel (<code>POST /downloads/cancel</code> / <code>POST /conversions/cancel</code>). <b>There is no per-item cancel API and none is added.</b> Pending rows show an empty slot; Remove stays in the kebab: Open file / Open folder / Copy URL / Move up · down · top · bottom / <span style="color:var(--bad)">Remove</span>.</li>
+  <li><b>Pause stays queue-level</b> (per the 06-gui spec's state machine) — no per-card pause button to puzzle over.</li>
+  <li><b>Selection fill is an accent tint</b>, not <code>bg-bg-subtle</code> — av-kit's <code>--color-bg-subtle</code> is #6272a4, identical to <code>--color-neutral</code> (a text color), so reusing it would paint selected cards comment-purple. Proposal §4 locks the remap.</li>
+</ul>
+
+<h2><span class="sec">02</span>Every state, at a glance</h2>
+<div class="mock">
+  <p class="frame-label">State gallery — note Pending has no primary action (nothing to cancel: cancel is queue-level)</p>
+  <div class="qcard">
+    <input type="checkbox" aria-label="Select"><span class="pos">2</span><span class="sicon" style="color:#6272a4">⏳</span>
+    <div class="body">
+      <div class="row1"><span class="title">Kokoro TTS — Voice Cloning Explained</span><span class="pill gray">Pending</span><span class="actgap" aria-hidden="true"></span><button class="iconbtn ghost" title="More">⋮</button></div>
+      <div class="row2"><span class="meta">720p · mp4</span><span class="stats">waiting · 1 ahead</span></div>
+    </div>
+  </div>
+  <div class="qcard">
+    <input type="checkbox" aria-label="Select"><span class="pos">3</span><span class="sicon" style="color:#50fa7b">✓</span>
+    <div class="body">
+      <div class="row1"><span class="title">Windows Sandbox Internals, Part 3</span><span class="pill green">Done</span><button class="iconbtn" title="Open file">▸</button><button class="iconbtn ghost" title="More">⋮</button></div>
+      <div class="row2"><span class="meta">1080p · mp4 · 231 MB</span></div>
+    </div>
+  </div>
+  <div class="qcard">
+    <input type="checkbox" aria-label="Select"><span class="pos">4</span><span class="sicon" style="color:#ff5555">✕</span>
+    <div class="body">
+      <div class="row1"><span class="title">Live Concert Archive 2024 (4K)</span><span class="pill red">Failed</span><button class="iconbtn" title="Retry">↻</button><button class="iconbtn ghost" title="More">⋮</button></div>
+      <div class="row2"><span class="err">HTTP 403 — SABR restriction; retry with fallback client</span></div>
+    </div>
+  </div>
+  <div class="qcard">
+    <input type="checkbox" aria-label="Select"><span class="pos">5</span><span class="sicon" style="color:#bd93f9">⏭</span>
+    <div class="body">
+      <div class="row1"><span class="title">Intro to yt-dlp (2023 edition)</span><span class="pill purple">Skipped</span><span class="actgap" aria-hidden="true"></span><button class="iconbtn ghost" title="More">⋮</button></div>
+      <div class="row2"><span class="meta">already exists in output folder</span></div>
+    </div>
+  </div>
+</div>
+
+<p>Pill colors follow the status color contract already locked in <code>06-gui.md</code> — the same tokens the summary bar uses, so status reads identically everywhere. Status <em>sets</em> stay per-feature (Downloader has SABR states, Convert does not) via parameterized configs — a single shared enum is not possible:</p>
+
+<div class="tablewrap"><table class="doc">
+  <tr><th>Status</th><th>Pill</th><th>Token</th><th>Progress zone shows</th></tr>
+  <tr><td>Pending</td><td><span class="swatch"><span class="pill gray">Pending</span></span></td><td class="kv">--color-neutral #6272a4</td><td>"waiting · N ahead"</td></tr>
+  <tr><td>Processing / Downloading</td><td><span class="swatch"><span class="pill cyan">Downloading</span></span></td><td class="kv">--color-accent-cyan #8be9fd</td><td>bar + % · speed · ETA</td></tr>
+  <tr><td>Done</td><td><span class="swatch"><span class="pill green">Done</span></span></td><td class="kv">--color-accent-green #50fa7b</td><td>final size</td></tr>
+  <tr><td>Failed</td><td><span class="swatch"><span class="pill red">Failed</span></span></td><td class="kv">--color-error #ff5555</td><td>error cause + remedy</td></tr>
+  <tr><td>Skipped</td><td><span class="swatch"><span class="pill purple">Skipped</span></span></td><td class="kv">--color-accent-purple #bd93f9</td><td>skip reason</td></tr>
+  <tr><td>Cancelled</td><td><span class="swatch"><span class="pill gray">Cancelled</span></span></td><td class="kv">--color-border #44475a</td><td>—</td></tr>
+  <tr><td>QualityBlocked</td><td><span class="swatch"><span class="pill orange">QualityBlocked</span></span></td><td class="kv">--color-accent-orange #ffb86c</td><td>fallback offer</td></tr>
+  <tr><td>Paused (processor)</td><td><span class="swatch"><span class="pill yellow">Paused</span></span></td><td class="kv">--color-accent-yellow #f1fa8c</td><td>bar frozen</td></tr>
+</table></div>
+<p class="note">Zorivest measured 20%-tint purple at 4.08:1 — a WCAG AA fail at pill sizes — so light tints (10%) are used for purple/orange/yellow/cyan, and every pairing gets re-verified in both themes during implementation. <code>--color-age-restricted</code> (#c4a882) is the only genuinely new color token.</p>
+
+<h2><span class="sec">03</span>Multi-select &amp; bulk actions — try it</h2>
+<p>Checkbox any card below (shift-click selects a range). The bulk bar appears only when something is selected — the Gmail / Carbon / Polaris contextual-bar pattern, using Zorivest's existing <code>BulkActionBar</code> component.</p>
+
+<div class="mock" id="demo">
+  <p class="frame-label">Interactive demo — selection model</p>
+  <div class="listhead">
+    <input type="checkbox" id="selall" aria-label="Select all">
+    <span class="count" id="countlabel">5 items</span>
+  </div>
+  <div class="bulkbar" id="bulkbar">
+    <span class="n" id="selcount">0 selected</span>
+    <span class="div"></span>
+    <button class="mbtn">↻ Retry</button>
+    <button class="mbtn">⤒ Move to top</button>
+    <button class="mbtn">⤓ Move to bottom</button>
+    <button class="mbtn danger">🗑 Remove…</button>
+    <span class="spacer"></span>
+    <button class="mbtn outline" id="clearsel">Clear</button>
+  </div>
+  <div id="demolist"></div>
+</div>
+
+<ul>
+  <li>Header checkbox = select all (indeterminate when partial), operating on the <em>filtered</em> list.</li>
+  <li>Bulk bar is sticky above the list — matching Zorivest, so muscle memory transfers between the two apps.</li>
+  <li><b>Bulk execution is client-side fan-out only</b> — N sequential calls against the existing per-id endpoints (retry, <code>DELETE /{id}</code>, <code>PUT …/reorder</code>). No <code>POST …/bulk</code> endpoint exists and none is invented.</li>
+  <li>Bulk results are itemized: <code>12 removed, 2 skipped (processing)</code> — never a silent partial failure (G35).</li>
+</ul>
+
+<h2><span class="sec">04</span>Global toolbar: 13 buttons → 4</h2>
+<div class="mock">
+  <p class="frame-label">Before — Convert page today (13 buttons, Start → Open folder)</p>
+  <div class="toolrow">
+    <button class="oldbtn">Start</button><button class="oldbtn">Pause</button><button class="oldbtn">Resume</button><button class="oldbtn">Cancel</button>
+    <button class="oldbtn sm">Up</button><button class="oldbtn sm">Down</button><button class="oldbtn sm">Top</button><button class="oldbtn sm">Bottom</button><button class="oldbtn sm">Reset</button>
+    <button class="oldbtn danger">Remove</button><button class="oldbtn danger">Clear All</button>
+    <button class="oldbtn ghost sm">Open file</button><button class="oldbtn ghost sm">Open folder</button>
+  </div>
+  <p class="verdict badv">✕ 13 choices, mixed sizes, per-item verbs mixed with queue verbs, destructive next to benign</p>
+  <p class="frame-label" style="margin-top:20px">After — proposed</p>
+  <div class="toolrow">
+    <button class="mbtn primary">▶ Start queue</button>
+    <button class="mbtn">⏸ Pause</button>
+    <button class="mbtn">Clear finished</button>
+    <span class="spacer"></span>
+    <button class="iconbtn ghost" title="More: Clear all…">⋮</button>
+  </div>
+  <p class="verdict goodv">✓ Queue-level verbs only. Per-item verbs moved onto the cards; move/retry/remove also in the bulk bar; Clear all… behind ⋮ with a verb-labeled confirm ("Remove 12 jobs")</p>
+</div>
+
+<ul>
+  <li><b>"Clear finished" is a new control with no backing route</b> — implemented as client-side fan-out of the existing <code>DELETE /{id}</code> over <b>Done</b> jobs only (output files stay on disk), with a G35 partial-result toast. No new REST endpoint.</li>
+  <li><b>Destructive ladder:</b> queue-level cancel of a re-queueable job — no dialog; remove from queue — light confirm; clear all — full confirm. Overusing confirmation dialogs trains click-through (NN/g). Note: a shared <code>ConfirmModal</code> is new work — Convert's is a page-local portal, and Downloader's Clear All currently has no confirm at all.</li>
+  <li><b>Reorder:</b> ships first as Move up/down/top/bottom (kebab + bulk bar + <code>Alt+↑/↓</code>), then drag handles via dnd-kit as a later enhancement — drag is never the only path (accessibility).</li>
+  <li><b>G31, correctly scoped:</b> it bans per-page <em>accent forks</em> (e.g. inventing a green Save button color) — it does not collapse every control to <code>variant="primary"</code>. The full G34 5×3 variant grid (primary / secondary / ghost / destructive) stays exactly as Convert already uses it; status colors appear only on pills, icons, and progress fills.</li>
+</ul>
+
+<h2><span class="sec">05</span>Empty state is an invitation</h2>
+<div class="mock">
+  <p class="frame-label">Empty queue</p>
+  <div class="dropzone">
+    <div class="big">Drop video or audio files here</div>
+    <div>or</div>
+    <div style="margin-top:10px"><button class="mbtn primary">Browse…</button></div>
+    <small>mp4 · mkv · webm · mp3 · m4a — invalid types are flagged during the drag, not after the drop</small>
+  </div>
+</div>
+<p>Once items exist, the whole list remains a drop target (highlight overlay on drag-enter) plus a compact "Drop files to add" strip — intake stays discoverable without eating vertical space.</p>
+
+<h2><span class="sec">06</span>Rollout — new phase (MEU-40+)</h2>
+<div class="tablewrap"><table class="doc">
+  <tr><th>MEU</th><th>Delivers</th></tr>
+  <tr><td>M1 Canon + foundations</td><td>06-gui amendment (DataTable no longer the queue surface) · tokens (fix <code>bg-subtle</code> collision, add <code>--color-age-restricted</code>) · <code>StatusBadge</code> / <code>ProgressBar</code> / <code>SelectionCheckbox</code> / shared <code>ConfirmModal</code> · de-duplicated queue lib with <b>parameterized per-feature status configs</b> (no single shared enum)</td></tr>
+  <tr><td>M2 Primitives</td><td><code>QueueCard</code> / <code>QueueList</code> / <code>EmptyDropZone</code> + testid registration (<code>queue-row</code> stays on the card)</td></tr>
+  <tr><td>M3–M4 Migration</td><td>Convert page, then Downloader — table + 13-button bar replaced. Wired E2E testids (<code>queue-table</code>, <code>queue-row</code>, <code>convert-queue-row</code>, <code>start-btn</code>, <code>convert-start</code>) kept or remapped with the census updated in the same MEU</td></tr>
+  <tr><td>M5 Multi-select</td><td>Selection model, BulkActionBar, shift-click, Ctrl/Cmd-A, client-side fan-out + G35 toasts</td></tr>
+  <tr><td>M6 Convergence (shrunk)</td><td>Transcript ChannelCard onto primitives (fixes its G33 <code>width:%</code> animation violation); TTS gets the shared ProgressBar only; Capture out of scope (filmstrip, not a queue)</td></tr>
+  <tr><td>M7 Drag reorder</td><td>dnd-kit handles + ARIA live announcements (keyboard path already shipped in M3)</td></tr>
+</table></div>
+
+<h2><span class="sec">07</span>Open decisions — need explicit locks before /create-plan</h2>
+<div class="decision"><b>1 · Bulk bar placement.</b> Recommended: sticky above the list (Zorivest parity). Alternative: floating bottom bar (Linear-style).</div>
+<div class="decision"><b>2 · Remove semantics.</b> Recommended: light confirm now; switch to undo-toast once the API can restore a removed job (it cannot today).</div>
+<div class="decision"><b>3 · Drag-and-drop timing.</b> Recommended: defer to M7 — keyboard/menu reorder ships first.</div>
+<div class="decision"><b>4 · Density toggle.</b> Recommended: skip. One density, no zombie features.</div>
+<div class="decision"><b>5 · Per-card Cancel semantics.</b> Recommended: per-card Cancel = the queue-level cancel, shown only on the in-flight row; other rows' primary slot stays empty, Remove in kebab. No new per-item cancel API this session (that would be a processor-state-machine change).</div>
+<div class="decision"><b>6 · Clear-finished semantics.</b> Recommended: client fan-out of <code>DELETE /{id}</code> over Done jobs only, files stay on disk, G35 partial-result toast, no new REST. Alternative: also sweep Cancelled/Skipped — a product decision needing an explicit lock.</div>
+
+<footer>
+  Full proposal (rev 2) with evidence, standards-compliance table, and flagged spec conflicts:
+  <code>docs/proposals/2026-08-27-queue-card-ui-proposal.md</code>.
+  Research basis: NN/g, Carbon, Polaris, Material, PatternFly, React Spectrum; LogRocket, Eleken,
+  Smart Interface Design Patterns; conventions observed in qBittorrent, GitHub Actions, Handbrake.
+  Note: mock progress bars here are static images of the design — the real
+  <code>ProgressBar</code> animates <code>transform: scaleX</code>, never <code>width</code> (G33).
+</footer>
+</div>
+
+<script>
+(function () {
+  // act: null = no primary action for this state (cancel is queue-level; Remove lives in the kebab)
+  var items = [
+    { pos: 1, icon: "↓", ic: "#8be9fd", title: "Deep Dive: FFmpeg NVENC Tuning Guide", pill: ["cyan", "Downloading"], meta: "1080p · mp4 · 512 MB", bar: 42, stats: "42% · 3.2 MB/s · 1:04", act: ["✕", "Cancel (queue-level — in-flight row)"] },
+    { pos: 2, icon: "⏳", ic: "#6272a4", title: "Kokoro TTS — Voice Cloning Explained", pill: ["gray", "Pending"], meta: "720p · mp4", bar: null, stats: "waiting · 1 ahead", act: null },
+    { pos: 3, icon: "⏳", ic: "#6272a4", title: "Rust for Python Developers — Full Course", pill: ["gray", "Pending"], meta: "1080p · mkv", bar: null, stats: "waiting · 2 ahead", act: null },
+    { pos: 4, icon: "✓", ic: "#50fa7b", title: "Windows Sandbox Internals, Part 3", pill: ["green", "Done"], meta: "1080p · mp4 · 231 MB", bar: null, stats: "", act: ["▸", "Open file"] },
+    { pos: 5, icon: "✕", ic: "#ff5555", title: "Live Concert Archive 2024 (4K)", pill: ["red", "Failed"], meta: "HTTP 403 — SABR restriction", bar: null, stats: "", act: ["↻", "Retry"] }
+  ];
+  var list = document.getElementById("demolist");
+  var bulkbar = document.getElementById("bulkbar");
+  var selcount = document.getElementById("selcount");
+  var selall = document.getElementById("selall");
+  var countlabel = document.getElementById("countlabel");
+  var lastIndex = null;
+
+  items.forEach(function (it, i) {
+    var card = document.createElement("div");
+    card.className = "qcard";
+    card.innerHTML =
+      '<input type="checkbox" aria-label="Select ' + it.title.replace(/"/g, "&quot;") + '">' +
+      '<span class="pos">' + it.pos + '</span>' +
+      '<span class="sicon" style="color:' + it.ic + '">' + it.icon + '</span>' +
+      '<div class="body"><div class="row1"><span class="title">' + it.title + '</span>' +
+      '<span class="pill ' + it.pill[0] + '">' + it.pill[1] + '</span>' +
+      (it.act ? '<button class="iconbtn" title="' + it.act[1] + '">' + it.act[0] + '</button>'
+              : '<span class="actgap" aria-hidden="true"></span>') +
+      '<button class="iconbtn ghost" title="More">⋮</button></div>' +
+      '<div class="row2"><span class="meta">' + it.meta + '</span>' +
+      (it.bar !== null ? '<span class="bar"><i style="width:' + it.bar + '%"></i></span>' : '') +
+      (it.stats ? '<span class="stats">' + it.stats + '</span>' : '') +
+      '</div></div>';
+    list.appendChild(card);
+
+    var cb = card.querySelector("input");
+    cb.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (e.shiftKey && lastIndex !== null) {
+        var a = Math.min(lastIndex, i), b = Math.max(lastIndex, i);
+        var boxes = list.querySelectorAll(".qcard input");
+        for (var k = a; k <= b; k++) boxes[k].checked = cb.checked;
+      }
+      lastIndex = i;
+      sync();
+    });
+    card.addEventListener("click", function (e) {
+      if (e.target.closest("button") || e.target.closest("input")) return;
+      cb.checked = !cb.checked;
+      lastIndex = i;
+      sync();
+    });
+  });
+
+  function sync() {
+    var boxes = Array.prototype.slice.call(list.querySelectorAll(".qcard input"));
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    boxes.forEach(function (b) { b.closest(".qcard").classList.toggle("is-selected", b.checked); });
+    bulkbar.classList.toggle("show", n > 0);
+    selcount.textContent = n + " selected";
+    countlabel.textContent = n > 0 ? n + " of " + boxes.length + " selected" : boxes.length + " items";
+    selall.checked = n === boxes.length;
+    selall.indeterminate = n > 0 && n < boxes.length;
+  }
+  selall.addEventListener("change", function () {
+    list.querySelectorAll(".qcard input").forEach(function (b) { b.checked = selall.checked; });
+    sync();
+  });
+  document.getElementById("clearsel").addEventListener("click", function () {
+    list.querySelectorAll(".qcard input").forEach(function (b) { b.checked = false; });
+    sync();
+  });
+})();
+</script>
+</body>
+</html>

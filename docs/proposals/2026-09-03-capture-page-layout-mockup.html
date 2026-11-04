@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capture Page Layout</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #f3f5f8; --paper: #ffffff; --ink: #1c2530; --ink-muted: #5b6b7a;
+    --accent: #0891b2; --accent-soft: rgba(8, 145, 178, 0.10); --line: #d9e0e7; --code-bg: #eaeff3;
+    --good: #16a34a; --bad: #dc2626; --warn: #b45309;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #1d1f27; --paper: #262935; --ink: #edeef2; --ink-muted: #9aa6b8;
+      --accent: #8be9fd; --accent-soft: rgba(139,233,253,.10); --line: #3a3e4f;
+      --code-bg: #2e3240; --good: #50fa7b; --bad: #ff6e6e; --warn: #ffb86c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #1d1f27; --paper: #262935; --ink: #edeef2; --ink-muted: #9aa6b8;
+    --accent: #8be9fd; --accent-soft: rgba(139,233,253,.10); --line: #3a3e4f;
+    --code-bg: #2e3240; --good: #50fa7b; --bad: #ff6e6e; --warn: #ffb86c;
+  }
+
+  * { box-sizing: border-box; }
+  body { background: var(--ground); color: var(--ink); font-family: "Source Sans 3", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; font-size: 16px; line-height: 1.55; margin: 0; padding: 0 20px 96px; }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+  header.masthead { padding: 52px 0 6px; }
+  .eyebrow { font-family: "JetBrains Mono", "Cascadia Code", Consolas, ui-monospace, monospace; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: clamp(30px, 4.5vw, 40px); font-weight: 700; letter-spacing: -.02em; line-height: 1.1; margin: 8px 0 10px; text-wrap: balance; }
+  .lede { font-size: 17.5px; color: var(--ink-muted); max-width: 64ch; margin: 0 0 18px; }
+  h2 { font-size: 22px; font-weight: 700; letter-spacing: -.01em; margin: 56px 0 6px; text-wrap: balance; }
+  h2 .sec { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: 13px; color: var(--accent); margin-right: 10px; font-weight: 500; }
+  p, li { max-width: 70ch; }
+  p.note { color: var(--ink-muted); font-size: 14.5px; }
+  code { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: .86em; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  a { color: var(--accent); }
+  ul.tight, ol.tight { padding-left: 22px; margin: 6px 0; }
+  ul.tight li, ol.tight li { margin: 5px 0; }
+  .tldr { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 22px 0 8px; }
+  .tldr .cell { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; font-size: 14.5px; }
+  .tldr .cell b { display: block; margin-bottom: 3px; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); }
+  table.inv { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+  table.inv th, table.inv td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.inv th { font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-muted); font-weight: 600; }
+  table.inv td:first-child { white-space: nowrap; }
+  .tblwrap { overflow-x: auto; }
+  .tag { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 999px; font-weight: 600; letter-spacing: .02em; white-space: nowrap; }
+  .tag.keep { background: rgba(22,163,74,.12); color: var(--good); }
+  .tag.move { background: var(--accent-soft); color: var(--accent); }
+  .tag.change { background: rgba(180,83,9,.12); color: var(--warn); }
+
+  /* ---------- Mock frames: pinned to av-kit's dark app palette (ui/src/renderer/src/styles.css @theme) ---------- */
+  .mock {
+    --m-bg: #282a36; --m-el: #44475a; --m-sub: #6272a4; --m-border: #44475a; --m-fg: #f8f8f2; --m-muted: #bae6fd;
+    --m-accent: #8be9fd; --m-accent-fg: #282a36; --m-green: #50fa7b; --m-red: #ff5555; --m-red-soft: #ffa0a0; --m-orange: #ffb86c; --m-purple: #bd93f9;
+    background: var(--m-bg); color: var(--m-fg); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin: 16px 0;
+    font-family: "Segoe UI", system-ui, sans-serif; font-size: 13.5px; overflow-x: auto;
+  }
+  .mock, .mock * { line-height: 1.4; }
+  .mock .frame-label { font-family: "JetBrains Mono", Consolas, ui-monospace, monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--m-sub); margin: 0 0 12px; }
+  .mock .frame-label b { color: var(--m-accent); font-weight: 500; }
+  .page { min-width: 760px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: none; cursor: pointer; border-radius: 6px; font-size: 12.5px; font-weight: 500; white-space: nowrap; padding: 0 12px; height: 28px; background: rgba(139,233,253,.12); color: var(--m-accent); font-family: inherit; }
+  .btn:hover { background: rgba(139,233,253,.22); }
+  .btn.md { height: 36px; font-size: 13.5px; padding: 0 18px; }
+  .btn.primary { background: var(--m-accent); color: var(--m-accent-fg); font-weight: 600; }
+  .btn.primary:hover { background: #a6f0ff; }
+  .btn.ghost { background: transparent; color: var(--m-muted); }
+  .btn.ghost:hover { background: var(--m-el); }
+  .btn.ghost.on { color: var(--m-accent); }
+  .btn.outline { background: transparent; border: 1px solid var(--m-border); color: var(--m-fg); }
+  .btn.danger { background: rgba(255,85,85,.15); color: var(--m-red-soft); }
+  .btn.dim { opacity: .5; cursor: default; }
+  .btn:focus-visible, .field:focus-visible, .chk:focus-visible { outline: 2px solid rgba(139,233,253,.5); outline-offset: 1px; }
+  .field { height: 28px; border-radius: 6px; border: 1px solid var(--m-border); background: var(--m-el); color: var(--m-fg); padding: 0 8px; font-size: 12.5px; font-family: inherit; }
+  .field.md { height: 36px; font-size: 14px; padding: 0 12px; }
+  .field.mono { font-family: Consolas, ui-monospace, monospace; }
+  .lbl { font-size: 12px; color: var(--m-muted); }
+  .lbl.fg { color: var(--m-fg); }
+  .chk { width: 15px; height: 15px; accent-color: var(--m-accent); cursor: pointer; margin: 0; }
+  .divider { width: 1px; height: 18px; background: var(--m-border); flex: none; }
+  .spacer { flex: 1; }
+  .help { display: flex; align-items: center; gap: 8px; border: 1px solid var(--m-border); border-radius: 6px; padding: 7px 12px; font-size: 13px; font-weight: 600; }
+  .help .plus { margin-left: auto; color: var(--m-muted); font-weight: 400; }
+  .help .i { display: inline-flex; width: 16px; height: 16px; border-radius: 3px; background: #82aaff; color: #282a36; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; font-style: italic; }
+  .kbd { font-family: Consolas, ui-monospace, monospace; font-size: 11px; border: 1px solid var(--m-border); border-bottom-width: 2px; border-radius: 4px; padding: 0 6px; background: rgba(68,71,90,.4); color: var(--m-fg); }
+
+  /* shot thumbnails: CSS "screenshots" so no image assets are needed */
+  .thumb { border-radius: 4px; background: linear-gradient(135deg, #1e2230 0%, #2b3145 60%, #3a4260 100%); position: relative; overflow: hidden; flex: none; }
+  .thumb::before { content: ""; position: absolute; left: 10%; top: 14%; width: 55%; height: 6%; background: rgba(248,248,242,.5); border-radius: 2px; }
+  .thumb::after { content: ""; position: absolute; left: 10%; top: 28%; width: 80%; height: 50%; background: repeating-linear-gradient(0deg, rgba(248,248,242,.16) 0 2px, transparent 2px 7px); }
+  .thumb.b::before { width: 35%; } .thumb.b::after { left: 30%; width: 50%; }
+  .thumb.c { background: linear-gradient(160deg, #23303a, #2f4f57); } .thumb.c::after { left: 10%; width: 45%; height: 40%; }
+
+  /* ---- BEFORE ---- */
+  .before { display: flex; flex-direction: column; gap: 10px; }
+  .before .row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
+  .before .fld { display: flex; flex-direction: column; gap: 3px; }
+  .before .ws { display: flex; gap: 12px; min-height: 16rem; }
+  .before .strip { width: 160px; flex: none; display: flex; flex-direction: column; gap: 4px; border-right: 1px solid var(--m-border); padding-right: 8px; }
+  .before .strip button { display: flex; flex-direction: column; gap: 4px; border: none; background: transparent; color: var(--m-fg); text-align: left; padding: 6px; border-radius: 4px; font-size: 11.5px; cursor: pointer; }
+  .before .strip button.sel { background: rgba(139,233,253,.2); border-left: 2px solid var(--m-accent); }
+  .before .strip .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+  .before .vp { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+  .before-wrap { padding-left: 34px; }
+  .zone-note { position: relative; }
+  .zone-note::before { content: attr(data-n); position: absolute; left: -32px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: var(--m-red); color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-family: Consolas, ui-monospace, monospace; }
+  .surface { flex: 1; min-height: 190px; border: 1px solid var(--m-border); border-radius: 6px; background: #1a1c26; position: relative; overflow: hidden; }
+  .surface .shot { position: absolute; inset: 12px; border-radius: 4px; }
+  .surface svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* ---- AFTER ---- */
+  .after { display: flex; flex-direction: column; gap: 12px; max-width: 1060px; }
+  .hdr { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .chip.warn { background: rgba(255,184,108,.14); color: var(--m-orange); }
+  .chip.ok { background: rgba(80,250,123,.14); color: var(--m-green); }
+  .chip.gray { background: var(--m-el); color: var(--m-muted); }
+  .chip.red { background: rgba(255,85,85,.14); color: var(--m-red-soft); }
+  .chip.count { background: transparent; color: var(--m-muted); font-weight: 500; padding: 0 4px; }
+  .status-line { font-size: 12.5px; color: var(--m-muted); min-height: 18px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .status-line.err { color: var(--m-red-soft); }
+  .status-line.warn { color: var(--m-orange); }
+  .disclosure { border: 1px solid var(--m-border); border-radius: 8px; padding: 10px 14px; display: none; align-items: center; gap: 10px; flex-wrap: wrap; background: rgba(68,71,90,.18); }
+  .disclosure.open { display: flex; }
+  .disclosure .lbl { font-size: 12.5px; color: var(--m-fg); }
+  .ws { display: flex; gap: 12px; min-height: 18rem; }
+  .strip { width: 200px; flex: none; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 420px; padding-right: 4px; }
+  .strip .shot { display: flex; align-items: center; gap: 8px; border: 1px solid transparent; border-radius: 6px; padding: 5px 6px; cursor: pointer; text-align: left; background: transparent; color: var(--m-fg); font-family: inherit; }
+  .strip .shot:hover { background: var(--m-el); }
+  .strip .shot.on { border-color: rgba(139,233,253,.5); background: rgba(139,233,253,.08); }
+  .strip .shot .thumb { width: 56px; height: 36px; }
+  .strip .shot .txt { min-width: 0; display: flex; flex-direction: column; }
+  .strip .shot .nm { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .strip .shot .ts { font-size: 10.5px; color: var(--m-sub); font-family: Consolas, ui-monospace, monospace; }
+  .strip .shot .dirty { width: 6px; height: 6px; border-radius: 50%; background: var(--m-orange); flex: none; margin-left: auto; }
+  .vp { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .seg { display: inline-flex; border: 1px solid var(--m-border); border-radius: 6px; overflow: hidden; height: 28px; }
+  .seg button { border: none; background: transparent; color: var(--m-muted); padding: 0 12px; font-size: 12.5px; cursor: pointer; border-right: 1px solid var(--m-border); font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+  .seg button:last-child { border-right: none; }
+  .seg button[aria-pressed="true"] { background: rgba(139,233,253,.14); color: var(--m-accent); font-weight: 600; }
+  .swatch { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--m-border); background: #E0AF68; cursor: pointer; padding: 0; }
+  .empty { border: 1px dashed var(--m-sub); border-radius: 8px; padding: 36px 20px; text-align: center; color: var(--m-muted); font-size: 13.5px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .empty b { color: var(--m-fg); font-weight: 600; }
+  .confirm { border: 1px solid var(--m-border); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 12px; background: rgba(68,71,90,.3); flex-wrap: wrap; font-size: 13px; }
+  .zonemap { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  .zonemap .z { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; font-size: 14.5px; }
+  .zonemap .z b { display: block; font-size: 12.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+  @media (max-width: 720px) { .zonemap { grid-template-columns: 1fr; } }
+  .callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 14px 0; font-size: 14.5px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="masthead">
+  <div class="eyebrow">av-kit · proposal · 2026-09-03 · companion to the Downloader page mockup</div>
+  <h1>Capture page: one global row, one per-shot toolbar</h1>
+  <p class="lede">Capture has three kinds of control that today sit in the same two rows: things that act on the app (capture a region, change the hotkey), things that act on the selected shot (save, delete, open, annotate), and settings (inbox folder). This mockup gives each its own home: a header row for capturing and settings, a toolbar above the viewport for everything that touches the selected shot, and a filmstrip that shows thumbnails instead of clipped names.</p>
+  <div class="tldr">
+    <div class="cell"><b>Header</b>Capture region (primary md) with the hotkey shown as a key cap, then a Settings disclosure for inbox folder and hotkey with its own Save. Hotkey conflict shows as a warn line under the header.</div>
+    <div class="cell"><b>Viewport toolbar</b>Arrow · Box · Highlight · Text as a segment, Undo/Redo, Color + Stroke with labels, then Save overlay (only when dirty), Open file, Open folder, Delete on the right.</div>
+    <div class="cell"><b>Filmstrip</b>200 px wide, 56×36 thumbnail + name + time per shot, orange dot for unsaved marks. Empty state lives inside the viewport, not above the workspace.</div>
+    <div class="cell"><b>Scope</b>Composition only. Same IPC, same annotation reducer, same confirm dialogs. §05 lists all 33 test ids as keep / move / change.</div>
+  </div>
+</header>
+
+<h2><span class="sec">01</span>Before: two rows, two Saves, three concerns</h2>
+<p>Numbered against <code>CapturePage.tsx</code>, <code>CaptureFilmstrip.tsx</code> and <code>CaptureViewport.tsx</code> as they render today.</p>
+<div class="mock">
+  <p class="frame-label">Today — one shot selected with unsaved marks, hotkey conflict</p>
+  <div class="page before-wrap">
+    <div class="before">
+      <div class="help"><span class="i">i</span> How it works <span class="plus">+</span></div>
+      <div class="row zone-note" data-n="1"><button class="btn md primary">Capture region</button><button class="btn md primary">Save</button><button class="btn danger">Delete</button><button class="btn ghost">Open file</button><button class="btn ghost">Open folder</button></div>
+      <div class="row zone-note" data-n="2">
+        <div class="fld" style="flex:1"><span class="lbl fg">Inbox</span><input class="field" value="D:\Captures\inbox" readonly aria-label="Inbox"></div><button class="btn">Browse</button>
+        <div class="fld"><span class="lbl fg">Hotkey</span><input class="field mono" value="F2" readonly aria-label="Hotkey" style="width:90px"></div><button class="btn">Change</button>
+        <button class="btn md primary">Save</button>
+      </div>
+      <div class="status-line warn zone-note" data-n="3">F2 is in use — quit ShareX or pick another key</div>
+      <div class="ws zone-note" data-n="4">
+        <div class="strip">
+          <button class="sel"><div class="thumb" style="width:100%;height:60px"></div><span class="nm">2026-09-03 14-22-08 settings-dialog…</span></button>
+          <button><div class="thumb b" style="width:100%;height:60px"></div><span class="nm">2026-09-03 14-19-51 queue-card-me…</span></button>
+          <button><div class="thumb c" style="width:100%;height:60px"></div><span class="nm">2026-09-03 13-58-30 convert-page…</span></button>
+        </div>
+        <div class="vp">
+          <div class="row zone-note" data-n="5" style="align-items:center"><button class="btn md primary">Arrow</button><button class="btn md">Box</button><button class="btn md">Highlight</button><button class="btn md">Text</button><button class="btn ghost">Undo</button><button class="btn ghost dim">Redo</button><input type="color" value="#E0AF68" aria-label="Color" class="swatch"><select class="field" aria-label="Stroke" style="width:56px"><option>3</option></select></div>
+          <div class="surface"><div class="shot thumb" style="position:absolute"></div><svg viewBox="0 0 400 190" aria-hidden="true"><rect x="60" y="40" width="150" height="70" fill="none" stroke="#E0AF68" stroke-width="3"/><line x1="290" y1="150" x2="220" y2="110" stroke="#E0AF68" stroke-width="3"/><polygon points="212,104 232,110 222,122" fill="#E0AF68"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<ol class="tight">
+  <li><strong>Action row</strong> mixes the global Capture region with four per-shot actions, in three different button sizes (md primary, sm destructive, sm ghost), and its Save means “save overlay marks”.</li>
+  <li><strong>Settings row</strong> puts a second primary md Save next to the first. Inputs are <code>items-end</code>-aligned under labels, so the row is taller than either neighbour and the two Saves read as one group.</li>
+  <li><strong>Hotkey conflict</strong> is a bare orange sentence between the rows; the key it refers to is two rows up.</li>
+  <li><strong>Filmstrip</strong> is 160 px, so every timestamped name truncates to the date part and the shots become indistinguishable.</li>
+  <li><strong>Tool row</strong> uses md buttons for the four tools but sm for Undo/Redo, and the colour and stroke controls have no visible label.</li>
+</ol>
+<p class="note">Not shown: with no shots, <code>capture-empty</code> renders “Press F2 or Capture region” as a paragraph above the workspace while the workspace still shows an empty filmstrip and “Select a shot from the filmstrip.”</p>
+
+<h2><span class="sec">02</span>After: header · filmstrip · viewport toolbar</h2>
+<p>Interactive: open Settings, click filmstrip shots, switch tools, press Delete to see the confirm strip.</p>
+
+<div class="mock">
+  <p class="frame-label"><b>Proposed</b> — same state: unsaved marks on the selected shot, hotkey conflict</p>
+  <div class="page after" id="after-working">
+    <div class="help"><span class="i">i</span> How it works <span class="plus">+</span></div>
+
+    <div class="hdr">
+      <button class="btn md primary" title="capture-region">Capture region <span class="kbd">F2</span></button>
+      <span class="chip count" title="shot count">3 shots · inbox D:\Captures\inbox</span>
+      <span class="spacer"></span>
+      <button class="btn ghost" data-role="settings-toggle" aria-expanded="false">Settings ▾</button>
+    </div>
+    <div class="status-line warn" title="capture-hotkey-banner"><span class="chip warn">Hotkey</span> F2 is in use — quit ShareX or pick another key in Settings.</div>
+
+    <div class="disclosure" data-role="settings">
+      <span class="lbl">Inbox</span>
+      <input class="field" style="width:260px" value="D:\Captures\inbox" readonly aria-label="Inbox folder" title="capture-inbox-path">
+      <button class="btn ghost" title="capture-inbox-browse">Browse</button>
+      <span class="divider"></span>
+      <span class="lbl">Hotkey</span>
+      <input class="field mono" style="width:80px" value="F2" readonly aria-label="Hotkey" title="capture-hotkey">
+      <button class="btn ghost" title="capture-hotkey-change">Change</button>
+      <span class="spacer"></span>
+      <button class="btn primary" title="capture-page-save">Save settings</button>
+    </div>
+
+    <div class="ws">
+      <div class="strip" role="listbox" aria-label="Captured shots" title="capture-filmstrip" data-role="strip">
+        <button class="shot on" role="option" aria-selected="true" title="capture-filmstrip-item"><div class="thumb"></div><span class="txt"><span class="nm">settings-dialog</span><span class="ts">14:22:08</span></span><span class="dirty" title="unsaved marks"></span></button>
+        <button class="shot" role="option" title="capture-filmstrip-item"><div class="thumb b"></div><span class="txt"><span class="nm">queue-card-menu</span><span class="ts">14:19:51</span></span></button>
+        <button class="shot" role="option" title="capture-filmstrip-item"><div class="thumb c"></div><span class="txt"><span class="nm">convert-page-empty</span><span class="ts">13:58:30</span></span></button>
+      </div>
+      <div class="vp" title="capture-viewport">
+        <div class="tools">
+          <span class="seg" role="group" aria-label="Annotation tool" data-role="tools">
+            <button aria-pressed="true" title="capture-tool-arrow">↗ Arrow</button>
+            <button aria-pressed="false" title="capture-tool-box">▭ Box</button>
+            <button aria-pressed="false" title="capture-tool-highlight">▮ Highlight</button>
+            <button aria-pressed="false" title="capture-tool-text">T Text</button>
+          </span>
+          <button class="btn ghost" title="capture-undo">Undo</button>
+          <button class="btn ghost dim" title="capture-redo">Redo</button>
+          <span class="divider"></span>
+          <span class="lbl">Color</span><input type="color" value="#E0AF68" class="swatch" aria-label="Color" title="capture-color">
+          <span class="lbl">Stroke</span><select class="field" aria-label="Stroke" title="capture-stroke" style="width:56px"><option>1</option><option>2</option><option selected>3</option><option>5</option><option>8</option></select>
+          <span class="spacer"></span>
+          <button class="btn primary" title="capture-save" data-role="save">Save overlay •</button>
+          <button class="btn ghost" title="capture-open-file">Open file</button>
+          <button class="btn ghost" title="capture-open-folder">Open folder</button>
+          <button class="btn danger" title="capture-delete" data-role="delete">Delete</button>
+        </div>
+        <div class="confirm" data-role="confirm" hidden>
+          <span>Delete this capture and its files from disk?</span>
+          <span class="spacer"></span>
+          <button class="btn ghost" title="capture-delete-confirm-cancel" data-role="confirm-cancel">Cancel</button>
+          <button class="btn danger" title="capture-delete-confirm">Delete capture</button>
+        </div>
+        <div class="surface" title="capture-draw-surface"><div class="shot thumb" style="position:absolute" title="capture-viewport-image"></div><svg viewBox="0 0 400 190" aria-hidden="true" title="capture-annotation"><rect x="60" y="40" width="150" height="70" fill="none" stroke="#E0AF68" stroke-width="3"/><line x1="290" y1="150" x2="220" y2="110" stroke="#E0AF68" stroke-width="3"/><polygon points="212,104 232,110 222,122" fill="#E0AF68"/></svg></div>
+        <div class="status-line" title="capture-status">settings-dialog.png · 1440×900 · 2 marks unsaved</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="mock">
+  <p class="frame-label"><b>Proposed</b> — no shots yet</p>
+  <div class="page after">
+    <div class="help"><span class="i">i</span> How it works <span class="plus">+</span></div>
+    <div class="hdr">
+      <button class="btn md primary">Capture region <span class="kbd">F2</span></button>
+      <span class="chip count">0 shots · inbox D:\Captures\inbox</span>
+      <span class="spacer"></span>
+      <button class="btn ghost">Settings ▾</button>
+    </div>
+    <div class="ws">
+      <div class="strip" aria-label="Captured shots"></div>
+      <div class="vp">
+        <div class="tools">
+          <span class="seg" role="group" aria-label="Annotation tool"><button aria-pressed="true" disabled style="opacity:.5">↗ Arrow</button><button aria-pressed="false" disabled style="opacity:.5">▭ Box</button><button aria-pressed="false" disabled style="opacity:.5">▮ Highlight</button><button aria-pressed="false" disabled style="opacity:.5">T Text</button></span>
+          <button class="btn ghost dim">Undo</button><button class="btn ghost dim">Redo</button>
+        </div>
+        <div class="empty" title="capture-empty"><b>No captures yet</b><span>Press <span class="kbd">F2</span> anywhere, or click Capture region. Shots land in the inbox folder and appear here.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="zonemap">
+  <div class="z"><b>Header row</b>Capture region (primary md) carries the hotkey as a key cap, so the user sees the shortcut every time. A muted count + inbox path follows. Settings (ghost sm) opens a one-row disclosure: Inbox + Browse · Hotkey + Change · Save settings. Hotkey conflict shows as a warn status line directly under the header.</div>
+  <div class="z"><b>Viewport toolbar</b>Left: the four tools as a segment with <code>aria-pressed</code>, Undo/Redo. Middle: labelled Color swatch and Stroke select. Right: Save overlay (primary sm, only when dirty), Open file, Open folder, Delete (danger sm). Delete swaps in a confirm strip above the surface instead of a separate dialog area.</div>
+</div>
+<div class="callout"><strong>Filmstrip</strong> widens to 200 px and shows a 56×36 thumbnail, the display name without the date prefix, and the time on a second line. An orange dot marks a shot with unsaved marks. With no shots the filmstrip is empty and the viewport shows the empty state; the tool segment renders disabled.</div>
+
+<h2><span class="sec">03</span>Why these moves</h2>
+<ul class="tight">
+  <li><strong>Separate the three concerns by row.</strong> Global (capture, settings) at the top, per-shot in the viewport toolbar, next to the thing they act on. The two identically labelled Save buttons become “Save overlay” beside the drawing and “Save settings” inside the settings disclosure.</li>
+  <li><strong>Settings are a disclosure</strong> because the inbox folder and hotkey change once. They also exist on the Settings page; the disclosure keeps them reachable without spending a permanent row.</li>
+  <li><strong>The hotkey is shown where it is used.</strong> A key cap on the Capture button replaces a read-only input the user cannot type into anyway; the conflict banner then sits right under it.</li>
+  <li><strong>Thumbnails, not truncated file names.</strong> Shots are visual; a 56×36 thumbnail distinguishes them faster than a date string that gets clipped at 160 px.</li>
+  <li><strong>Tools as a segment</strong> matches the pattern used across the other page mockups (task, preset, format) and makes the pressed state visible without four primary buttons.</li>
+  <li><strong>Empty state inside the viewport.</strong> The workspace frame stays where it is, so the page does not jump when the first shot arrives.</li>
+</ul>
+
+<h2><span class="sec">04</span>Sizing and tokens</h2>
+<ul class="tight">
+  <li>Header row: Capture region <code>md</code> (36 px), key cap 18 px mono inside the button; Settings toggle <code>ghost sm</code>.</li>
+  <li>Settings disclosure: 28 px fields; inbox path 260 px, hotkey 80 px mono; Save settings <code>primary sm</code>; dirty state uses the existing <code>btn-save-dirty</code> class and “Save settings •” label.</li>
+  <li>Filmstrip: 200 px wide, max-height ~420 px with its own scroll; row 46 px; thumbnail 56×36 radius 4; selected = 50 % <code>accent</code> border + 8 % fill (replaces the <code>bg-accent border-l-2</code> block).</li>
+  <li>Toolbar: all 28 px (segment, ghost buttons, swatch 28×28, stroke select 56 px). Save overlay is <code>primary sm</code> and mounts only when the overlay is dirty; Delete is <code>danger sm</code>.</li>
+  <li>Draw surface: <code>bg #1a1c26</code> is illustrative; use <code>bg</code> token darkened or <code>bg-elevated</code>. Min height 16 rem as today.</li>
+  <li>Motion (G33): settings disclosure and confirm strip on <code>duration-fast</code> / <code>ease-out</code>; tool segment state change is instant.</li>
+  <li>Tokens only (G32); heights follow G34; confirm strips use the same shape as the queue bulk bar.</li>
+</ul>
+
+<h2><span class="sec">05</span>Element inventory (test ids)</h2>
+<div class="tblwrap">
+<table class="inv">
+  <tr><th>Element / test id</th><th>Today</th><th>Proposed</th><th></th></tr>
+  <tr><td><code>capture-page</code></td><td>Column of rows</td><td>Same root; header, status, disclosure, workspace</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td>HelpCard (capture)</td><td>Top</td><td>Top, unchanged</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td><code>capture-region</code></td><td>Primary md, first in action row</td><td>Primary md, first in header; label gains a key cap with the current hotkey</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>capture-save</code></td><td>Primary md in action row, label “Save”</td><td>Primary sm in the viewport toolbar, label “Save overlay •”, mounted only when the overlay is dirty</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>capture-delete</code></td><td>Destructive sm in action row</td><td>Danger sm, last in the viewport toolbar</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>capture-open-file</code> / <code>capture-open-folder</code></td><td>Ghost sm in action row</td><td>Ghost sm in the viewport toolbar</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>capture-inbox-path</code> / <code>capture-inbox-browse</code></td><td>Settings row, label above</td><td>Settings disclosure, label to the left, 260 px</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>capture-hotkey</code> / <code>capture-hotkey-change</code></td><td>Settings row</td><td>Settings disclosure; input still becomes editable while recording</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>capture-page-save</code></td><td>Primary md “Save” at end of settings row</td><td>Primary sm “Save settings” at end of the disclosure; same dirty label/class</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>Settings disclosure toggle</td><td>—</td><td>New ghost sm in the header; proposed id <code>capture-settings-toggle</code>, <code>aria-expanded</code></td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>capture-hotkey-banner</code></td><td>Orange text between rows</td><td>Warn status line under the header with a “Hotkey” chip; same sentence</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>capture-status</code></td><td>Error text under the rows</td><td>Status line under the draw surface; error color when it carries an error, muted for shot info</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>capture-empty</code></td><td>Paragraph above the workspace</td><td>Empty-state block inside the viewport (replaces the draw surface when there are no shots)</td><td><span class="tag move">move</span></td></tr>
+  <tr><td><code>capture-filmstrip</code></td><td>aside w-40, border-right</td><td>aside 200 px, role listbox, own scroll</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>capture-filmstrip-item</code></td><td>Stacked img + full name</td><td>Row: 56×36 thumbnail · name · time · dirty dot; <code>aria-selected</code></td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>capture-viewport</code></td><td>flex-1 column</td><td>Same; contains toolbar, optional confirm strip, surface, status line</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td><code>capture-tool-arrow</code> / <code>-box</code> / <code>-highlight</code> / <code>-text</code></td><td>Four md buttons, primary when active</td><td>One segment of four sm buttons with <code>aria-pressed</code>; disabled with no shot</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>capture-undo</code> / <code>capture-redo</code></td><td>Ghost sm after the tools</td><td>Ghost sm after the segment</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td><code>capture-color</code></td><td>Unlabelled color input</td><td>28×28 swatch with a visible “Color” label</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>capture-stroke</code></td><td>Unlabelled select</td><td>56 px select with a visible “Stroke” label</td><td><span class="tag change">change</span></td></tr>
+  <tr><td>“Select a shot from the filmstrip.”</td><td>Text in place of the surface</td><td>Kept, styled like the empty block, only when shots exist but none is selected</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td><code>capture-draw-surface</code> / <code>capture-viewport-image</code> / <code>capture-annotation</code> / <code>capture-text-draft</code></td><td>Surface</td><td>Unchanged</td><td><span class="tag keep">keep</span></td></tr>
+  <tr><td><code>capture-dirty-confirm</code> / <code>capture-dirty-confirm-cancel</code></td><td>Confirm block</td><td>Confirm strip above the surface; same text “Discard unsaved overlay marks on this shot?”</td><td><span class="tag change">change</span></td></tr>
+  <tr><td><code>capture-delete-confirm</code> / <code>capture-delete-confirm-cancel</code></td><td>Confirm block</td><td>Confirm strip above the surface; confirm button “Delete capture” (danger)</td><td><span class="tag change">change</span></td></tr>
+</table>
+</div>
+
+<h2><span class="sec">06</span>Decisions to lock before implementation</h2>
+<ol class="tight">
+  <li><strong>Save overlay mount rule.</strong> Mount only when dirty (proposed) or always render, disabled when clean? Tests that look for <code>capture-save</code> on a clean shot would need the second.</li>
+  <li><strong>Hotkey key cap.</strong> Inside the Capture button label (proposed) or as a separate chip after it? Inside keeps one element; a chip is easier to hide when the hotkey is unregistered.</li>
+  <li><strong>Settings duplication.</strong> The inbox folder and hotkey also live on the Settings page. Keep the disclosure (proposed) or drop the page-level copies and link to Settings?</li>
+  <li><strong>Filmstrip name format.</strong> Strip the date prefix and show time on line two (proposed, derived from the same <code>display_name</code>) or keep the full name with a wider column?</li>
+  <li><strong>Tools disabled with no shot</strong> (proposed) or hidden entirely?</li>
+  <li><strong>Status line content.</strong> Today <code>capture-status</code> only carries errors. Showing “name · size · marks” when there is no error is new behaviour; confirm or keep it error-only.</li>
+</ol>
+</div>
+
+<script>
+(function () {
+  const root = document.getElementById('after-working');
+  if (!root) return;
+  const st = root.querySelector('[data-role="settings-toggle"]');
+  const sb = root.querySelector('[data-role="settings"]');
+  st.addEventListener('click', () => { const o = sb.classList.toggle('open'); st.setAttribute('aria-expanded', String(o)); st.textContent = o ? 'Settings ▴' : 'Settings ▾'; st.classList.toggle('on', o); });
+  const shots = [...root.querySelectorAll('[data-role="strip"] .shot')];
+  const save = root.querySelector('[data-role="save"]');
+  shots.forEach((s, i) => s.addEventListener('click', () => {
+    shots.forEach((x) => { const on = x === s; x.classList.toggle('on', on); x.setAttribute('aria-selected', String(on)); });
+    save.hidden = i !== 0;
+    root.querySelector('[title="capture-status"]').textContent = s.querySelector('.nm').textContent + '.png · 1440×900' + (i === 0 ? ' · 2 marks unsaved' : '');
+  }));
+  const tools = [...root.querySelectorAll('[data-role="tools"] button')];
+  tools.forEach((t) => t.addEventListener('click', () => tools.forEach((x) => x.setAttribute('aria-pressed', String(x === t)))));
+  const conf = root.querySelector('[data-role="confirm"]');
+  root.querySelector('[data-role="delete"]').addEventListener('click', () => { conf.hidden = false; });
+  root.querySelector('[data-role="confirm-cancel"]').addEventListener('click', () => { conf.hidden = true; });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') conf.hidden = true; });
+})();
+</script>
+</body>
+</html>

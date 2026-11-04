@@ -1,0 +1,6475 @@
+{
+  "components": {
+    "schemas": {
+      "AnnotateIn": {
+        "additionalProperties": false,
+        "description": "POST /captures/{id}/annotate body.",
+        "properties": {
+          "annotations": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "arrow": "#/components/schemas/ArrowAnnotationIn",
+                  "eraser": "#/components/schemas/EraserAnnotationIn",
+                  "highlight": "#/components/schemas/HighlightAnnotationIn",
+                  "pixelate": "#/components/schemas/PixelateAnnotationIn",
+                  "rect": "#/components/schemas/RectAnnotationIn",
+                  "text": "#/components/schemas/TextAnnotationIn"
+                },
+                "propertyName": "type"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ArrowAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/RectAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/HighlightAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/TextAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/PixelateAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/EraserAnnotationIn"
+                }
+              ]
+            },
+            "title": "Annotations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "annotations"
+        ],
+        "title": "AnnotateIn",
+        "type": "object"
+      },
+      "ApplyDefaultsOut": {
+        "additionalProperties": false,
+        "description": "POST /downloads/apply-defaults body.",
+        "properties": {
+          "updated": {
+            "title": "Updated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "updated"
+        ],
+        "title": "ApplyDefaultsOut",
+        "type": "object"
+      },
+      "ArrowAnnotationIn": {
+        "additionalProperties": false,
+        "description": "Arrow overlay.",
+        "properties": {
+          "color": {
+            "pattern": "^#[0-9A-Fa-f]{6}$|^(black|blue|green|orange|red|white|yellow)$",
+            "title": "Color",
+            "type": "string"
+          },
+          "from": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "From",
+            "type": "array"
+          },
+          "stroke_width": {
+            "title": "Stroke Width",
+            "type": "integer"
+          },
+          "to": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "To",
+            "type": "array"
+          },
+          "type": {
+            "const": "arrow",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "color",
+          "stroke_width",
+          "from",
+          "to"
+        ],
+        "title": "ArrowAnnotationIn",
+        "type": "object"
+      },
+      "CaptureCompleteIn": {
+        "additionalProperties": false,
+        "description": "POST /captures/requests/{id}/complete body.",
+        "properties": {
+          "path": {
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "CaptureCompleteIn",
+        "type": "object"
+      },
+      "CaptureFullscreenIn": {
+        "additionalProperties": false,
+        "description": "POST /captures body for mode=fullscreen.",
+        "properties": {
+          "mode": {
+            "const": "fullscreen",
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "CaptureFullscreenIn",
+        "type": "object"
+      },
+      "CaptureItemOut": {
+        "additionalProperties": false,
+        "description": "POST /captures 201 envelope.",
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/CaptureShotOut"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "title": "CaptureItemOut",
+        "type": "object"
+      },
+      "CaptureListOut": {
+        "additionalProperties": false,
+        "description": "Catalog list. Not a queue \u2014 no processor key.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CaptureShotOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CaptureListOut",
+        "type": "object"
+      },
+      "CaptureRegionIn": {
+        "additionalProperties": false,
+        "description": "POST /captures body for mode=region.",
+        "properties": {
+          "height": {
+            "minimum": 8.0,
+            "title": "Height",
+            "type": "integer"
+          },
+          "mode": {
+            "const": "region",
+            "title": "Mode",
+            "type": "string"
+          },
+          "width": {
+            "minimum": 8.0,
+            "title": "Width",
+            "type": "integer"
+          },
+          "x": {
+            "minimum": 0.0,
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "minimum": 0.0,
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mode",
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "title": "CaptureRegionIn",
+        "type": "object"
+      },
+      "CaptureRegisterIn": {
+        "additionalProperties": false,
+        "description": "POST /captures body for mode=register.",
+        "properties": {
+          "mode": {
+            "const": "register",
+            "title": "Mode",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "hotkey",
+              "gui",
+              "scan"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "path",
+          "source"
+        ],
+        "title": "CaptureRegisterIn",
+        "type": "object"
+      },
+      "CaptureRequestListOut": {
+        "additionalProperties": false,
+        "description": "Interactive request catalog.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CaptureRequestOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "CaptureRequestListOut",
+        "type": "object"
+      },
+      "CaptureRequestOut": {
+        "additionalProperties": false,
+        "description": "Interactive capture wait row.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "shot_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shot Id"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "shot_id",
+          "created_at",
+          "expires_at"
+        ],
+        "title": "CaptureRequestOut",
+        "type": "object"
+      },
+      "CaptureShotDetailOut": {
+        "additionalProperties": false,
+        "description": "GET /captures/{id} includes validated sidecar annotations and the newest backup path.",
+        "properties": {
+          "annotated_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotated Path"
+          },
+          "annotations": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "arrow": "#/components/schemas/ArrowAnnotationIn",
+                  "eraser": "#/components/schemas/EraserAnnotationIn",
+                  "highlight": "#/components/schemas/HighlightAnnotationIn",
+                  "pixelate": "#/components/schemas/PixelateAnnotationIn",
+                  "rect": "#/components/schemas/RectAnnotationIn",
+                  "text": "#/components/schemas/TextAnnotationIn"
+                },
+                "propertyName": "type"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ArrowAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/RectAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/HighlightAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/TextAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/PixelateAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/EraserAnnotationIn"
+                }
+              ]
+            },
+            "title": "Annotations",
+            "type": "array"
+          },
+          "backup_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backup Path"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "file_size": {
+            "title": "File Size",
+            "type": "integer"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "original_path": {
+            "title": "Original Path",
+            "type": "string"
+          },
+          "sidecar_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sidecar Path"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "original_path",
+          "annotated_path",
+          "sidecar_path",
+          "display_name",
+          "width",
+          "height",
+          "file_size",
+          "source",
+          "created_at",
+          "updated_at",
+          "annotations",
+          "backup_path"
+        ],
+        "title": "CaptureShotDetailOut",
+        "type": "object"
+      },
+      "CaptureShotOut": {
+        "additionalProperties": false,
+        "description": "One capture catalog row. Paths are strings; no bytes.",
+        "properties": {
+          "annotated_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotated Path"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "file_size": {
+            "title": "File Size",
+            "type": "integer"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "original_path": {
+            "title": "Original Path",
+            "type": "string"
+          },
+          "sidecar_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sidecar Path"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "original_path",
+          "annotated_path",
+          "sidecar_path",
+          "display_name",
+          "width",
+          "height",
+          "file_size",
+          "source",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CaptureShotOut",
+        "type": "object"
+      },
+      "ConsoleEventOut": {
+        "additionalProperties": false,
+        "description": "One console ring item.",
+        "properties": {
+          "level": {
+            "title": "Level",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "module": {
+            "title": "Module",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "ts": {
+            "title": "Ts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "ts",
+          "level",
+          "module",
+          "message"
+        ],
+        "title": "ConsoleEventOut",
+        "type": "object"
+      },
+      "ConsoleSnapshotOut": {
+        "additionalProperties": false,
+        "description": "`GET /health/console` body.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConsoleEventOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "last_seq": {
+            "title": "Last Seq",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "last_seq"
+        ],
+        "title": "ConsoleSnapshotOut",
+        "type": "object"
+      },
+      "ConversionCompressIn": {
+        "additionalProperties": false,
+        "description": "POST /conversions body for kind=compress.",
+        "properties": {
+          "audio_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "copy",
+                  "aac_96",
+                  "aac_128",
+                  "aac_192"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Mode"
+          },
+          "cq": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cq"
+          },
+          "gpu_preference": {
+            "anyOf": [
+              {
+                "enum": [
+                  "auto",
+                  "nvidia",
+                  "amd",
+                  "intel",
+                  "software"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu Preference"
+          },
+          "kind": {
+            "const": "compress",
+            "title": "Kind",
+            "type": "string"
+          },
+          "paths": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Paths",
+            "type": "array"
+          },
+          "preset": {
+            "default": "balanced",
+            "enum": [
+              "archival",
+              "high_quality",
+              "balanced",
+              "sharing",
+              "mobile"
+            ],
+            "title": "Preset",
+            "type": "string"
+          },
+          "scale_height": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scale Height"
+          }
+        },
+        "required": [
+          "paths",
+          "kind"
+        ],
+        "title": "ConversionCompressIn",
+        "type": "object"
+      },
+      "ConversionCreateOut": {
+        "additionalProperties": false,
+        "description": "POST /conversions envelope.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConversionJobOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ConversionCreateOut",
+        "type": "object"
+      },
+      "ConversionCutIn": {
+        "additionalProperties": false,
+        "description": "POST /conversions body for kind=cut.",
+        "properties": {
+          "copy_mode": {
+            "default": "fast_copy",
+            "enum": [
+              "fast_copy",
+              "reencode"
+            ],
+            "title": "Copy Mode",
+            "type": "string"
+          },
+          "in_ms": {
+            "minimum": 0.0,
+            "title": "In Ms",
+            "type": "integer"
+          },
+          "kind": {
+            "const": "cut",
+            "title": "Kind",
+            "type": "string"
+          },
+          "out_ms": {
+            "minimum": 0.0,
+            "title": "Out Ms",
+            "type": "integer"
+          },
+          "paths": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Paths",
+            "type": "array"
+          }
+        },
+        "required": [
+          "paths",
+          "kind",
+          "in_ms",
+          "out_ms"
+        ],
+        "title": "ConversionCutIn",
+        "type": "object"
+      },
+      "ConversionExtractIn": {
+        "additionalProperties": false,
+        "description": "POST /conversions body for kind=extract.",
+        "properties": {
+          "kind": {
+            "const": "extract",
+            "title": "Kind",
+            "type": "string"
+          },
+          "paths": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Paths",
+            "type": "array"
+          },
+          "stream_index": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stream Index"
+          },
+          "stream_mode": {
+            "enum": [
+              "first",
+              "all"
+            ],
+            "title": "Stream Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paths",
+          "kind",
+          "stream_mode"
+        ],
+        "title": "ConversionExtractIn",
+        "type": "object"
+      },
+      "ConversionJobOut": {
+        "additionalProperties": false,
+        "description": "One formatted conversion queue row.",
+        "properties": {
+          "audio_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Mode"
+          },
+          "copy_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Copy Mode"
+          },
+          "cq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cq"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "eta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta"
+          },
+          "file_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Size"
+          },
+          "gpu_encoder": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu Encoder"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "in_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "In Ms"
+          },
+          "input_path": {
+            "title": "Input Path",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "out_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Out Ms"
+          },
+          "output_path": {
+            "title": "Output Path",
+            "type": "string"
+          },
+          "preset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset Id"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "number"
+          },
+          "queue_position": {
+            "title": "Queue Position",
+            "type": "integer"
+          },
+          "scale_height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scale Height"
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "stream_index": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stream Index"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "input_path",
+          "output_path",
+          "display_name",
+          "preset_id",
+          "cq",
+          "scale_height",
+          "audio_mode",
+          "gpu_encoder",
+          "in_ms",
+          "out_ms",
+          "copy_mode",
+          "stream_index",
+          "status",
+          "progress",
+          "speed",
+          "eta",
+          "file_size",
+          "duration_seconds",
+          "width",
+          "height",
+          "error_message",
+          "queue_position",
+          "created_at"
+        ],
+        "title": "ConversionJobOut",
+        "type": "object"
+      },
+      "ConversionListOut": {
+        "additionalProperties": false,
+        "description": "GET /conversions envelope.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConversionJobOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "processor": {
+            "$ref": "#/components/schemas/QueueRuntimeOut"
+          }
+        },
+        "required": [
+          "items",
+          "processor"
+        ],
+        "title": "ConversionListOut",
+        "type": "object"
+      },
+      "ConversionReorderIn": {
+        "additionalProperties": false,
+        "description": "PUT /conversions/reorder body.",
+        "properties": {
+          "job_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Job Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "job_ids"
+        ],
+        "title": "ConversionReorderIn",
+        "type": "object"
+      },
+      "CookieTestIn": {
+        "additionalProperties": false,
+        "description": "POST /downloads/cookies/test body.",
+        "properties": {
+          "browser": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Browser"
+          },
+          "cookie_file": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cookie File"
+          },
+          "mode": {
+            "enum": [
+              "none",
+              "browser",
+              "file"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "CookieTestIn",
+        "type": "object"
+      },
+      "CookieTestOut": {
+        "additionalProperties": false,
+        "description": "Cookie probe result without cookie bytes.",
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "CookieTestOut",
+        "type": "object"
+      },
+      "DependenciesOut": {
+        "additionalProperties": false,
+        "description": "`GET /health/dependencies` body.",
+        "properties": {
+          "ffmpeg": {
+            "$ref": "#/components/schemas/FfmpegDependencyOut"
+          },
+          "tts_espeak": {
+            "$ref": "#/components/schemas/EspeakOut"
+          },
+          "tts_onnx_vocab": {
+            "$ref": "#/components/schemas/TtsAssetOut"
+          },
+          "tts_spacy_model": {
+            "$ref": "#/components/schemas/TtsAssetOut"
+          },
+          "tts_voice_packs": {
+            "$ref": "#/components/schemas/TtsAssetOut"
+          },
+          "yt_dlp": {
+            "$ref": "#/components/schemas/VersionAvailabilityOut"
+          }
+        },
+        "required": [
+          "yt_dlp",
+          "ffmpeg",
+          "tts_onnx_vocab",
+          "tts_spacy_model",
+          "tts_voice_packs",
+          "tts_espeak"
+        ],
+        "title": "DependenciesOut",
+        "type": "object"
+      },
+      "DownloadCreateIn": {
+        "additionalProperties": false,
+        "description": "POST /downloads body.",
+        "properties": {
+          "audio_format": {
+            "default": "default",
+            "enum": [
+              "default",
+              "best",
+              "lowest",
+              "low_webm",
+              "medium_webm",
+              "standard_webm",
+              "standard_m4a",
+              "standard_mp3",
+              "high_m4a"
+            ],
+            "title": "Audio Format",
+            "type": "string"
+          },
+          "audio_only": {
+            "default": false,
+            "title": "Audio Only",
+            "type": "boolean"
+          },
+          "quality": {
+            "enum": [
+              "best",
+              "2160p",
+              "1440p",
+              "1080p",
+              "720p",
+              "480p",
+              "360p",
+              "240p",
+              "144p",
+              "lowest"
+            ],
+            "title": "Quality",
+            "type": "string"
+          },
+          "url": {
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "quality"
+        ],
+        "title": "DownloadCreateIn",
+        "type": "object"
+      },
+      "DownloadCreateOut": {
+        "additionalProperties": false,
+        "description": "POST /downloads envelope.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DownloadJobOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "DownloadCreateOut",
+        "type": "object"
+      },
+      "DownloadJobOut": {
+        "additionalProperties": false,
+        "description": "One formatted download queue row.",
+        "properties": {
+          "audio_format": {
+            "title": "Audio Format",
+            "type": "string"
+          },
+          "audio_only": {
+            "title": "Audio Only",
+            "type": "boolean"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "eta": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta"
+          },
+          "file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Path"
+          },
+          "file_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Size"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "progress": {
+            "title": "Progress",
+            "type": "number"
+          },
+          "quality": {
+            "title": "Quality",
+            "type": "string"
+          },
+          "queue_position": {
+            "title": "Queue Position",
+            "type": "integer"
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "video_id": {
+            "title": "Video Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "video_id",
+          "title",
+          "quality",
+          "audio_only",
+          "audio_format",
+          "status",
+          "progress",
+          "speed",
+          "eta",
+          "file_size",
+          "file_path",
+          "error_message",
+          "queue_position",
+          "created_at"
+        ],
+        "title": "DownloadJobOut",
+        "type": "object"
+      },
+      "DownloadListOut": {
+        "additionalProperties": false,
+        "description": "GET /downloads envelope.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DownloadJobOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "processor": {
+            "$ref": "#/components/schemas/QueueRuntimeOut"
+          }
+        },
+        "required": [
+          "items",
+          "processor"
+        ],
+        "title": "DownloadListOut",
+        "type": "object"
+      },
+      "EmptyIn": {
+        "additionalProperties": false,
+        "description": "Body for POST/PUT routes that take no fields. Extra keys are 422.",
+        "properties": {},
+        "title": "EmptyIn",
+        "type": "object"
+      },
+      "EraserAnnotationIn": {
+        "additionalProperties": false,
+        "description": "Eraser region: the rectangle filled with one colour sampled around it.",
+        "properties": {
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "type": {
+            "const": "eraser",
+            "title": "Type",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "title": "EraserAnnotationIn",
+        "type": "object"
+      },
+      "EspeakOut": {
+        "additionalProperties": false,
+        "description": "The user-installed eSpeak NG CLI (`ESPEAK_DETECT`); never shipped by av-kit.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "available",
+          "version",
+          "path"
+        ],
+        "title": "EspeakOut",
+        "type": "object"
+      },
+      "FfmpegDependencyOut": {
+        "additionalProperties": false,
+        "description": "FFmpeg probe: the resolved binary path and whether an ffprobe was found.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "ffprobe_available": {
+            "title": "Ffprobe Available",
+            "type": "boolean"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "version",
+          "available",
+          "path",
+          "ffprobe_available"
+        ],
+        "title": "FfmpegDependencyOut",
+        "type": "object"
+      },
+      "GPUCapabilitiesOut": {
+        "additionalProperties": false,
+        "description": "Session GPU probe snapshot. Matches the domain value object.",
+        "properties": {
+          "amd_amf": {
+            "title": "Amd Amf",
+            "type": "boolean"
+          },
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "intel_qsv": {
+            "title": "Intel Qsv",
+            "type": "boolean"
+          },
+          "nvidia_nvenc": {
+            "title": "Nvidia Nvenc",
+            "type": "boolean"
+          },
+          "recommended_encoder": {
+            "title": "Recommended Encoder",
+            "type": "string"
+          },
+          "software_h264": {
+            "title": "Software H264",
+            "type": "boolean"
+          },
+          "software_h265": {
+            "title": "Software H265",
+            "type": "boolean"
+          },
+          "vulkan": {
+            "title": "Vulkan",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "nvidia_nvenc",
+          "amd_amf",
+          "intel_qsv",
+          "vulkan",
+          "software_h265",
+          "software_h264",
+          "recommended_encoder",
+          "checked_at"
+        ],
+        "title": "GPUCapabilitiesOut",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HighlightAnnotationIn": {
+        "additionalProperties": false,
+        "description": "Translucent fill overlay.",
+        "properties": {
+          "color": {
+            "pattern": "^#[0-9A-Fa-f]{6}$|^(black|blue|green|orange|red|white|yellow)$",
+            "title": "Color",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "opacity": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Opacity",
+            "type": "number"
+          },
+          "type": {
+            "const": "highlight",
+            "title": "Type",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "x",
+          "y",
+          "width",
+          "height",
+          "color",
+          "opacity"
+        ],
+        "title": "HighlightAnnotationIn",
+        "type": "object"
+      },
+      "LivenessOut": {
+        "additionalProperties": false,
+        "description": "`GET /health` body.",
+        "properties": {
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "LivenessOut",
+        "type": "object"
+      },
+      "ModelDownloadAcceptedOut": {
+        "additionalProperties": false,
+        "description": "202 immediate download acceptance: the variant, or the TTS asset, being fetched.",
+        "properties": {
+          "asset": {
+            "anyOf": [
+              {
+                "enum": [
+                  "tts_onnx_vocab",
+                  "tts_spacy_model",
+                  "tts_voice_packs"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset"
+          },
+          "variant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ModelVariantOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "variant"
+        ],
+        "title": "ModelDownloadAcceptedOut",
+        "type": "object"
+      },
+      "ModelDownloadIn": {
+        "additionalProperties": false,
+        "description": "POST /models/download body: exactly one of `variant_id` or `asset`.",
+        "properties": {
+          "asset": {
+            "anyOf": [
+              {
+                "enum": [
+                  "tts_onnx_vocab",
+                  "tts_spacy_model",
+                  "tts_voice_packs"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset"
+          },
+          "variant_id": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant Id"
+          }
+        },
+        "title": "ModelDownloadIn",
+        "type": "object"
+      },
+      "ModelDownloadRuntimeOut": {
+        "additionalProperties": false,
+        "description": "In-flight model or TTS-asset download snapshot.",
+        "properties": {
+          "asset": {
+            "anyOf": [
+              {
+                "enum": [
+                  "tts_onnx_vocab",
+                  "tts_spacy_model",
+                  "tts_voice_packs"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asset"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "fraction": {
+            "title": "Fraction",
+            "type": "number"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "variant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant Id"
+          }
+        },
+        "required": [
+          "variant_id",
+          "asset",
+          "state",
+          "fraction",
+          "error_message"
+        ],
+        "title": "ModelDownloadRuntimeOut",
+        "type": "object"
+      },
+      "ModelListOut": {
+        "additionalProperties": false,
+        "description": "Available or downloaded list.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ModelVariantOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ModelListOut",
+        "type": "object"
+      },
+      "ModelLoadIn": {
+        "additionalProperties": false,
+        "description": "POST /models/load body.",
+        "properties": {
+          "device": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              "cuda",
+              "cpu",
+              "mps"
+            ],
+            "title": "Device",
+            "type": "string"
+          },
+          "variant_id": {
+            "minLength": 1,
+            "title": "Variant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "variant_id"
+        ],
+        "title": "ModelLoadIn",
+        "type": "object"
+      },
+      "ModelStatusOut": {
+        "additionalProperties": false,
+        "description": "Loaded model snapshot.",
+        "properties": {
+          "device": {
+            "title": "Device",
+            "type": "string"
+          },
+          "is_loaded": {
+            "title": "Is Loaded",
+            "type": "boolean"
+          },
+          "memory_bytes": {
+            "title": "Memory Bytes",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "variant_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variant Id"
+          }
+        },
+        "required": [
+          "variant_id",
+          "name",
+          "device",
+          "memory_bytes",
+          "is_loaded"
+        ],
+        "title": "ModelStatusOut",
+        "type": "object"
+      },
+      "ModelVariantOut": {
+        "additionalProperties": false,
+        "description": "Catalog or downloaded variant.",
+        "properties": {
+          "devices": {
+            "items": {
+              "enum": [
+                "auto",
+                "cuda",
+                "cpu",
+                "mps"
+              ],
+              "type": "string"
+            },
+            "title": "Devices",
+            "type": "array"
+          },
+          "format": {
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_downloaded": {
+            "title": "Is Downloaded",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "precision": {
+            "title": "Precision",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "format",
+          "precision",
+          "size_bytes",
+          "path",
+          "is_downloaded",
+          "devices"
+        ],
+        "title": "ModelVariantOut",
+        "type": "object"
+      },
+      "PixelateAnnotationIn": {
+        "additionalProperties": false,
+        "description": "Pixelate region: a mosaic of ``block_size`` squares over the rectangle.",
+        "properties": {
+          "block_size": {
+            "default": 10,
+            "maximum": 100.0,
+            "minimum": 2.0,
+            "title": "Block Size",
+            "type": "integer"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "type": {
+            "const": "pixelate",
+            "title": "Type",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "title": "PixelateAnnotationIn",
+        "type": "object"
+      },
+      "QueueRuntimeOut": {
+        "additionalProperties": false,
+        "description": "Processor snapshot attached to list envelopes.",
+        "properties": {
+          "current_job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Job Id"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "QueueRuntimeOut",
+        "type": "object"
+      },
+      "RectAnnotationIn": {
+        "additionalProperties": false,
+        "description": "Stroke rectangle overlay.",
+        "properties": {
+          "color": {
+            "pattern": "^#[0-9A-Fa-f]{6}$|^(black|blue|green|orange|red|white|yellow)$",
+            "title": "Color",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "stroke_width": {
+            "title": "Stroke Width",
+            "type": "integer"
+          },
+          "type": {
+            "const": "rect",
+            "title": "Type",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "x",
+          "y",
+          "width",
+          "height",
+          "color",
+          "stroke_width"
+        ],
+        "title": "RectAnnotationIn",
+        "type": "object"
+      },
+      "ReorderIn": {
+        "additionalProperties": false,
+        "description": "PUT /downloads/reorder body.",
+        "properties": {
+          "job_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Job Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "job_ids"
+        ],
+        "title": "ReorderIn",
+        "type": "object"
+      },
+      "SABRStatusOut": {
+        "additionalProperties": false,
+        "description": "Session SABR snapshot.",
+        "properties": {
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "mode": {
+            "enum": [
+              "inactive",
+              "active",
+              "checking"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "detected",
+                  "forced"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "mode",
+          "source",
+          "checked_at"
+        ],
+        "title": "SABRStatusOut",
+        "type": "object"
+      },
+      "SettingsPutIn": {
+        "additionalProperties": false,
+        "description": "Partial leaf mapping for any settings namespace. Extra fields are forbidden.",
+        "properties": {
+          "annotated_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Annotated Format"
+          },
+          "archive_tracking": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archive Tracking"
+          },
+          "audio_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Format"
+          },
+          "audio_only": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Only"
+          },
+          "backup_dir": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Backup Dir"
+          },
+          "batch_size": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Batch Size"
+          },
+          "chunk_max_chars": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Max Chars"
+          },
+          "close_to_tray": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Close To Tray"
+          },
+          "console_visible": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Console Visible"
+          },
+          "cookie_browser": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cookie Browser"
+          },
+          "cookie_browser_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cookie Browser Profile"
+          },
+          "cookie_file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cookie File Path"
+          },
+          "cookie_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cookie Mode"
+          },
+          "copy_to_clipboard": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Copy To Clipboard"
+          },
+          "default_preset": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Preset"
+          },
+          "delay_between_requests": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Between Requests"
+          },
+          "device": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Device"
+          },
+          "ffmpeg_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ffmpeg Path"
+          },
+          "flatten_backup": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flatten Backup"
+          },
+          "gpu_preference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpu Preference"
+          },
+          "hotkey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hotkey"
+          },
+          "inbox_dir": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inbox Dir"
+          },
+          "input_text": {
+            "anyOf": [
+              {
+                "maxLength": 1000000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Text"
+          },
+          "log_level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Log Level"
+          },
+          "log_to_file": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Log To File"
+          },
+          "max_retries": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Retries"
+          },
+          "max_words_per_document": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Words Per Document"
+          },
+          "models_directory": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Models Directory"
+          },
+          "output_dir": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Dir"
+          },
+          "output_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Format"
+          },
+          "output_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Path"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "pause_between_batches": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pause Between Batches"
+          },
+          "playlist_end": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Playlist End"
+          },
+          "quality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality"
+          },
+          "requests_per_hour": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requests Per Hour"
+          },
+          "retry_delay": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retry Delay"
+          },
+          "skip_existing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Skip Existing"
+          },
+          "speed": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed"
+          },
+          "theme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Theme"
+          },
+          "voice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voice"
+          },
+          "yt_dlp_debug": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Yt Dlp Debug"
+          }
+        },
+        "title": "SettingsPutIn",
+        "type": "object"
+      },
+      "StartupMetricIn": {
+        "additionalProperties": false,
+        "description": "`POST /health/startup-metrics` body.",
+        "properties": {
+          "key": {
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "value_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "title": "Value Ms"
+          }
+        },
+        "required": [
+          "key",
+          "value_ms"
+        ],
+        "title": "StartupMetricIn",
+        "type": "object"
+      },
+      "TTSGenerateIn": {
+        "additionalProperties": false,
+        "description": "POST /tts/generate body.",
+        "properties": {
+          "enabled_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Enabled Steps",
+            "type": "array"
+          },
+          "format": {
+            "enum": [
+              "MP3",
+              "WAV"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "source_kind": {
+            "default": "inline",
+            "enum": [
+              "inline",
+              "file"
+            ],
+            "title": "Source Kind",
+            "type": "string"
+          },
+          "source_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Path"
+          },
+          "speed": {
+            "maximum": 2.0,
+            "minimum": 0.5,
+            "title": "Speed",
+            "type": "number"
+          },
+          "text": {
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          },
+          "voice": {
+            "title": "Voice",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "voice",
+          "speed",
+          "format",
+          "enabled_steps"
+        ],
+        "title": "TTSGenerateIn",
+        "type": "object"
+      },
+      "TTSJobOut": {
+        "additionalProperties": false,
+        "description": "TTS job without full text.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "format": {
+            "title": "Format",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "output_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Path"
+          },
+          "segments_done": {
+            "title": "Segments Done",
+            "type": "integer"
+          },
+          "segments_total": {
+            "title": "Segments Total",
+            "type": "integer"
+          },
+          "source_kind": {
+            "title": "Source Kind",
+            "type": "string"
+          },
+          "source_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Path"
+          },
+          "speed": {
+            "title": "Speed",
+            "type": "number"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "text_hash": {
+            "title": "Text Hash",
+            "type": "string"
+          },
+          "text_preview": {
+            "title": "Text Preview",
+            "type": "string"
+          },
+          "voice": {
+            "title": "Voice",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "source_kind",
+          "source_path",
+          "text_hash",
+          "text_preview",
+          "voice",
+          "speed",
+          "format",
+          "status",
+          "output_path",
+          "segments_total",
+          "segments_done",
+          "error_message",
+          "created_at"
+        ],
+        "title": "TTSJobOut",
+        "type": "object"
+      },
+      "TTSPrepareIn": {
+        "additionalProperties": false,
+        "description": "POST /tts/prepare body.",
+        "properties": {
+          "chunk_max_chars": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Max Chars"
+          },
+          "enabled_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Enabled Steps",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "enabled_steps"
+        ],
+        "title": "TTSPrepareIn",
+        "type": "object"
+      },
+      "TTSPrepareOut": {
+        "additionalProperties": false,
+        "description": "Prepare result. No job row.",
+        "properties": {
+          "cleaned_text": {
+            "title": "Cleaned Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cleaned_text"
+        ],
+        "title": "TTSPrepareOut",
+        "type": "object"
+      },
+      "TextAnnotationIn": {
+        "additionalProperties": false,
+        "description": "Text overlay.",
+        "properties": {
+          "bg_color": {
+            "anyOf": [
+              {
+                "pattern": "^#[0-9A-Fa-f]{6}$|^(black|blue|green|orange|red|white|yellow)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bg Color"
+          },
+          "color": {
+            "pattern": "^#[0-9A-Fa-f]{6}$|^(black|blue|green|orange|red|white|yellow)$",
+            "title": "Color",
+            "type": "string"
+          },
+          "font_size": {
+            "title": "Font Size",
+            "type": "integer"
+          },
+          "text": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          },
+          "type": {
+            "const": "text",
+            "title": "Type",
+            "type": "string"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "x",
+          "y",
+          "text",
+          "color",
+          "font_size"
+        ],
+        "title": "TextAnnotationIn",
+        "type": "object"
+      },
+      "TranscriptCompileOut": {
+        "additionalProperties": false,
+        "description": "POST /transcripts/{id}/compile body.",
+        "properties": {
+          "compiled_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Compiled Paths",
+            "type": "array"
+          }
+        },
+        "required": [
+          "compiled_paths"
+        ],
+        "title": "TranscriptCompileOut",
+        "type": "object"
+      },
+      "TranscriptCreateIn": {
+        "additionalProperties": false,
+        "description": "POST /transcripts body.",
+        "properties": {
+          "channel_url": {
+            "minLength": 1,
+            "title": "Channel Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "channel_url"
+        ],
+        "title": "TranscriptCreateIn",
+        "type": "object"
+      },
+      "TranscriptJobOut": {
+        "additionalProperties": false,
+        "description": "Formatted transcript parent row with computed aggregates.",
+        "properties": {
+          "channel_name": {
+            "title": "Channel Name",
+            "type": "string"
+          },
+          "channel_url": {
+            "title": "Channel Url",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_item_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Item Status"
+          },
+          "last_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Title"
+          },
+          "output_dir": {
+            "title": "Output Dir",
+            "type": "string"
+          },
+          "queue_position": {
+            "title": "Queue Position",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "transcripts_done": {
+            "title": "Transcripts Done",
+            "type": "integer"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "video_count": {
+            "title": "Video Count",
+            "type": "integer"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          },
+          "zip_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Zip Path"
+          }
+        },
+        "required": [
+          "id",
+          "channel_url",
+          "channel_name",
+          "status",
+          "output_dir",
+          "video_count",
+          "transcripts_done",
+          "word_count",
+          "zip_path",
+          "last_title",
+          "last_item_status",
+          "queue_position",
+          "error_message",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "TranscriptJobOut",
+        "type": "object"
+      },
+      "TranscriptListOut": {
+        "additionalProperties": false,
+        "description": "GET /transcripts envelope.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TranscriptJobOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "processor": {
+            "$ref": "#/components/schemas/QueueRuntimeOut"
+          }
+        },
+        "required": [
+          "items",
+          "processor"
+        ],
+        "title": "TranscriptListOut",
+        "type": "object"
+      },
+      "TranscriptReorderIn": {
+        "additionalProperties": false,
+        "description": "PUT /transcripts/reorder body.",
+        "properties": {
+          "job_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Job Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "job_ids"
+        ],
+        "title": "TranscriptReorderIn",
+        "type": "object"
+      },
+      "TtsAssetOut": {
+        "additionalProperties": false,
+        "description": "TTS runtime-asset readiness row; `available == (state == \"ready\")`.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "state": {
+            "enum": [
+              "ready",
+              "missing",
+              "downloading"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "version",
+          "available",
+          "state"
+        ],
+        "title": "TtsAssetOut",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VersionAvailabilityOut": {
+        "additionalProperties": false,
+        "description": "Binary version plus availability flag.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "version",
+          "available"
+        ],
+        "title": "VersionAvailabilityOut",
+        "type": "object"
+      },
+      "VoiceListOut": {
+        "additionalProperties": false,
+        "description": "GET /tts/voices envelope.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "VoiceListOut",
+        "type": "object"
+      },
+      "VoiceOut": {
+        "additionalProperties": false,
+        "description": "Public voice row. No user-set lang_code. `reason` is a `VOICE_REASON` (MEU-74).",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "gender": {
+            "title": "Gender",
+            "type": "string"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "espeak_missing",
+                  "language_unsupported"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "style_description": {
+            "title": "Style Description",
+            "type": "string"
+          },
+          "voice_id": {
+            "title": "Voice Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "voice_id",
+          "language",
+          "gender",
+          "style_description",
+          "available",
+          "reason"
+        ],
+        "title": "VoiceOut",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "title": "av-kit",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/captures": {
+      "get": {
+        "description": "Return the inbox catalog. Not a queue.",
+        "operationId": "list_captures_api_v1_captures_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Captures"
+      },
+      "post": {
+        "description": "Register an inbox file or grab fullscreen/region.",
+        "operationId": "create_capture_api_v1_captures_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "discriminator": {
+                  "mapping": {
+                    "fullscreen": "#/components/schemas/CaptureFullscreenIn",
+                    "region": "#/components/schemas/CaptureRegionIn",
+                    "register": "#/components/schemas/CaptureRegisterIn"
+                  },
+                  "propertyName": "mode"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/CaptureRegisterIn"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CaptureFullscreenIn"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CaptureRegionIn"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Capture"
+      }
+    },
+    "/api/v1/captures/requests": {
+      "get": {
+        "description": "Expire stale rows, then list interactive requests.",
+        "operationId": "list_capture_requests_api_v1_captures_requests_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "completed",
+                    "cancelled",
+                    "expired"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureRequestListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Capture Requests"
+      },
+      "post": {
+        "description": "Create a pending overlay wait. Second pending is 409.",
+        "operationId": "create_capture_request_api_v1_captures_requests_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureRequestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Capture Request"
+      }
+    },
+    "/api/v1/captures/requests/{id}/cancel": {
+      "post": {
+        "description": "Cancel a pending overlay wait.",
+        "operationId": "cancel_capture_request_api_v1_captures_requests__id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureRequestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Capture Request"
+      }
+    },
+    "/api/v1/captures/requests/{id}/complete": {
+      "post": {
+        "description": "Register the overlay PNG and complete the request in one UoW.",
+        "operationId": "complete_capture_request_api_v1_captures_requests__id__complete_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureCompleteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureRequestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Complete Capture Request"
+      }
+    },
+    "/api/v1/captures/{id}": {
+      "delete": {
+        "description": "Delete the shot row and its files.",
+        "operationId": "delete_capture_api_v1_captures__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Capture"
+      },
+      "get": {
+        "description": "Return shot metadata plus sidecar annotations. Bytes are on GET /image.",
+        "operationId": "get_capture_api_v1_captures__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureShotDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Capture"
+      }
+    },
+    "/api/v1/captures/{id}/annotate": {
+      "post": {
+        "description": "Bake annotations or clear them when the array is empty.",
+        "operationId": "annotate_capture_api_v1_captures__id__annotate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnotateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureShotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Annotate Capture"
+      }
+    },
+    "/api/v1/captures/{id}/flatten": {
+      "post": {
+        "description": "Bake saved marks into the original after a backup; a JPEG/WebP shot gets a new PNG copy.",
+        "operationId": "flatten_capture_api_v1_captures__id__flatten_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureShotDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Flatten Capture"
+      }
+    },
+    "/api/v1/captures/{id}/image": {
+      "get": {
+        "description": "Return original or annotated image bytes.",
+        "operationId": "get_capture_image_api_v1_captures__id__image_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "variant",
+            "required": false,
+            "schema": {
+              "default": "original",
+              "enum": [
+                "original",
+                "annotated"
+              ],
+              "title": "Variant",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Capture Image"
+      }
+    },
+    "/api/v1/captures/{id}/revert": {
+      "post": {
+        "description": "Restore the newest backup over the original; the backup file is kept.",
+        "operationId": "revert_capture_api_v1_captures__id__revert_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureShotDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Revert Capture"
+      }
+    },
+    "/api/v1/conversions": {
+      "delete": {
+        "description": "Remove jobs only. Files stay.",
+        "operationId": "clear_conversions_api_v1_conversions_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Clear Conversions"
+      },
+      "get": {
+        "description": "Return the queue plus processor snapshot.",
+        "operationId": "list_conversions_api_v1_conversions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Conversions"
+      },
+      "post": {
+        "description": "Enqueue one or more conversion jobs.",
+        "operationId": "create_conversions_api_v1_conversions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "discriminator": {
+                  "mapping": {
+                    "compress": "#/components/schemas/ConversionCompressIn",
+                    "cut": "#/components/schemas/ConversionCutIn",
+                    "extract": "#/components/schemas/ConversionExtractIn"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/ConversionCompressIn"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ConversionCutIn"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ConversionExtractIn"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionCreateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Conversions"
+      }
+    },
+    "/api/v1/conversions/cancel": {
+      "post": {
+        "description": "Cancel in-flight work.",
+        "operationId": "cancel_conversions_api_v1_conversions_cancel_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Conversions"
+      }
+    },
+    "/api/v1/conversions/gpu": {
+      "get": {
+        "description": "Return the session GPU snapshot, probing once when the cache is empty.",
+        "operationId": "get_conversion_gpu_api_v1_conversions_gpu_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GPUCapabilitiesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Conversion Gpu"
+      }
+    },
+    "/api/v1/conversions/gpu/refresh": {
+      "post": {
+        "description": "Re-run the GPU probe.",
+        "operationId": "refresh_conversion_gpu_api_v1_conversions_gpu_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GPUCapabilitiesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Refresh Conversion Gpu"
+      }
+    },
+    "/api/v1/conversions/pause": {
+      "post": {
+        "description": "Pause after the current file.",
+        "operationId": "pause_conversions_api_v1_conversions_pause_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Pause Conversions"
+      }
+    },
+    "/api/v1/conversions/reorder": {
+      "put": {
+        "description": "Reorder the queue by a permutation of ids.",
+        "operationId": "reorder_conversions_api_v1_conversions_reorder_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionReorderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionCreateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reorder Conversions"
+      }
+    },
+    "/api/v1/conversions/resume": {
+      "post": {
+        "description": "Resume from Paused.",
+        "operationId": "resume_conversions_api_v1_conversions_resume_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Resume Conversions"
+      }
+    },
+    "/api/v1/conversions/start": {
+      "post": {
+        "description": "Start the worker, or 409 when already Processing.",
+        "operationId": "start_conversions_api_v1_conversions_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Conversions"
+      }
+    },
+    "/api/v1/conversions/{id}": {
+      "delete": {
+        "description": "Remove one job. Files stay.",
+        "operationId": "delete_conversion_api_v1_conversions__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Conversion"
+      },
+      "get": {
+        "description": "Return one job.",
+        "operationId": "get_conversion_api_v1_conversions__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionJobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Conversion"
+      }
+    },
+    "/api/v1/conversions/{id}/reset": {
+      "post": {
+        "description": "Re-queue a job from a re-queueable state.",
+        "operationId": "reset_conversion_api_v1_conversions__id__reset_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionJobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reset Conversion"
+      }
+    },
+    "/api/v1/downloads": {
+      "delete": {
+        "description": "Remove jobs only; archive stays.",
+        "operationId": "clear_downloads_api_v1_downloads_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Clear Downloads"
+      },
+      "get": {
+        "description": "Return the queue plus processor snapshot.",
+        "operationId": "list_downloads_api_v1_downloads_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Downloads"
+      },
+      "post": {
+        "description": "Enqueue one URL as one or more download jobs.",
+        "operationId": "create_downloads_api_v1_downloads_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DownloadCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadCreateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Downloads"
+      }
+    },
+    "/api/v1/downloads/apply-defaults": {
+      "post": {
+        "description": "Apply current downloader defaults to pending rows.",
+        "operationId": "apply_defaults_api_v1_downloads_apply_defaults_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyDefaultsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Apply Defaults"
+      }
+    },
+    "/api/v1/downloads/cancel": {
+      "post": {
+        "description": "Cancel in-flight work.",
+        "operationId": "cancel_downloads_api_v1_downloads_cancel_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Downloads"
+      }
+    },
+    "/api/v1/downloads/cookies/test": {
+      "post": {
+        "description": "Probe cookies and return `{ok}` only.",
+        "operationId": "test_cookies_api_v1_downloads_cookies_test_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CookieTestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CookieTestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Test Cookies"
+      }
+    },
+    "/api/v1/downloads/pause": {
+      "post": {
+        "description": "Pause the download worker.",
+        "operationId": "pause_downloads_api_v1_downloads_pause_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Pause Downloads"
+      }
+    },
+    "/api/v1/downloads/reorder": {
+      "put": {
+        "description": "Reorder the queue by a permutation of ids.",
+        "operationId": "reorder_downloads_api_v1_downloads_reorder_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadCreateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reorder Downloads"
+      }
+    },
+    "/api/v1/downloads/resume": {
+      "post": {
+        "description": "Resume from Paused.",
+        "operationId": "resume_downloads_api_v1_downloads_resume_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Resume Downloads"
+      }
+    },
+    "/api/v1/downloads/sabr": {
+      "get": {
+        "description": "Return the session SABR snapshot without running a check.",
+        "operationId": "get_sabr_api_v1_downloads_sabr_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SABRStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Sabr"
+      }
+    },
+    "/api/v1/downloads/sabr/check": {
+      "post": {
+        "description": "Run a SABR probe.",
+        "operationId": "check_sabr_api_v1_downloads_sabr_check_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SABRStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Check Sabr"
+      }
+    },
+    "/api/v1/downloads/sabr/clear": {
+      "post": {
+        "description": "Clear SABR to inactive.",
+        "operationId": "clear_sabr_api_v1_downloads_sabr_clear_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SABRStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Clear Sabr"
+      }
+    },
+    "/api/v1/downloads/sabr/force": {
+      "post": {
+        "description": "Force SABR active.",
+        "operationId": "force_sabr_api_v1_downloads_sabr_force_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SABRStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Force Sabr"
+      }
+    },
+    "/api/v1/downloads/start": {
+      "post": {
+        "description": "Start the worker, or 409 when already Processing.",
+        "operationId": "start_downloads_api_v1_downloads_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Downloads"
+      }
+    },
+    "/api/v1/downloads/stop": {
+      "post": {
+        "description": "Alias of cancel.",
+        "operationId": "stop_downloads_api_v1_downloads_stop_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stop Downloads"
+      }
+    },
+    "/api/v1/downloads/{id}": {
+      "delete": {
+        "description": "Remove one job. Files stay.",
+        "operationId": "delete_download_api_v1_downloads__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Download"
+      },
+      "get": {
+        "description": "Return one job.",
+        "operationId": "get_download_api_v1_downloads__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadJobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Download"
+      }
+    },
+    "/api/v1/downloads/{id}/reset": {
+      "post": {
+        "description": "Re-queue a job from a re-queueable state.",
+        "operationId": "reset_download_api_v1_downloads__id__reset_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadJobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reset Download"
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "description": "Unauthenticated process-up probe.",
+        "operationId": "health_liveness_api_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LivenessOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health Liveness"
+      }
+    },
+    "/api/v1/health/console": {
+      "get": {
+        "description": "Return console events after `after_seq`. Not SSE.",
+        "operationId": "health_console_api_v1_health_console_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "after_seq",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "title": "After Seq",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsoleSnapshotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Health Console"
+      }
+    },
+    "/api/v1/health/dependencies": {
+      "get": {
+        "description": "Authenticated binary version probe.",
+        "operationId": "health_dependencies_api_v1_health_dependencies_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DependenciesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Health Dependencies"
+      }
+    },
+    "/api/v1/health/startup-metrics": {
+      "post": {
+        "description": "Record a startup metric. Log only.",
+        "operationId": "health_startup_metrics_api_v1_health_startup_metrics_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartupMetricIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Health Startup Metrics"
+      }
+    },
+    "/api/v1/models/available": {
+      "get": {
+        "description": "Return the catalog union sideload.",
+        "operationId": "list_available_api_v1_models_available_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Available"
+      }
+    },
+    "/api/v1/models/download": {
+      "post": {
+        "description": "Accept a variant or TTS-asset download immediately. 409 if one is in flight.",
+        "operationId": "download_model_api_v1_models_download_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelDownloadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDownloadAcceptedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Conflict: a download is in flight, or a TTS asset is missing or already ready"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download Model"
+      }
+    },
+    "/api/v1/models/download-runtime": {
+      "get": {
+        "description": "Poll in-flight model download state.",
+        "operationId": "download_runtime_api_v1_models_download_runtime_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelDownloadRuntimeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Download Runtime"
+      }
+    },
+    "/api/v1/models/downloaded": {
+      "get": {
+        "description": "Return downloaded variants.",
+        "operationId": "list_downloaded_api_v1_models_downloaded_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Downloaded"
+      }
+    },
+    "/api/v1/models/load": {
+      "post": {
+        "description": "Load a variant onto a device.",
+        "operationId": "load_model_api_v1_models_load_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModelLoadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Conflict: a download is in flight, or a TTS asset is missing or already ready"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Load Model"
+      }
+    },
+    "/api/v1/models/status": {
+      "get": {
+        "description": "Return the loaded-model snapshot.",
+        "operationId": "model_status_api_v1_models_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Model Status"
+      }
+    },
+    "/api/v1/models/unload": {
+      "post": {
+        "description": "Unload the current model.",
+        "operationId": "unload_model_api_v1_models_unload_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Unload Model"
+      }
+    },
+    "/api/v1/settings/{namespace}": {
+      "get": {
+        "description": "Return a namespace with defaults filled.",
+        "operationId": "get_settings_api_v1_settings__namespace__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "namespace",
+            "required": true,
+            "schema": {
+              "title": "Namespace",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Settings Api V1 Settings  Namespace  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Settings"
+      },
+      "put": {
+        "description": "Replace provided leaves atomically via `set_namespace`.",
+        "operationId": "put_settings_api_v1_settings__namespace__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "namespace",
+            "required": true,
+            "schema": {
+              "title": "Namespace",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsPutIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Put Settings Api V1 Settings  Namespace  Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Put Settings"
+      }
+    },
+    "/api/v1/transcripts": {
+      "get": {
+        "description": "Return the transcript queue plus processor snapshot.",
+        "operationId": "list_transcripts_api_v1_transcripts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Transcripts"
+      },
+      "post": {
+        "description": "Add a channel batch.",
+        "operationId": "create_transcript_api_v1_transcripts_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranscriptCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptJobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Transcript"
+      }
+    },
+    "/api/v1/transcripts/pause": {
+      "post": {
+        "description": "Pause the transcript worker.",
+        "operationId": "pause_transcripts_api_v1_transcripts_pause_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Pause Transcripts"
+      }
+    },
+    "/api/v1/transcripts/reorder": {
+      "put": {
+        "description": "Reorder the transcript queue.",
+        "operationId": "reorder_transcripts_api_v1_transcripts_reorder_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranscriptReorderIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reorder Transcripts"
+      }
+    },
+    "/api/v1/transcripts/resume": {
+      "post": {
+        "description": "Resume the transcript worker.",
+        "operationId": "resume_transcripts_api_v1_transcripts_resume_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Resume Transcripts"
+      }
+    },
+    "/api/v1/transcripts/start": {
+      "post": {
+        "description": "Start the transcript worker.",
+        "operationId": "start_transcripts_api_v1_transcripts_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Start Transcripts"
+      }
+    },
+    "/api/v1/transcripts/stop": {
+      "post": {
+        "description": "Stop the transcript worker (parent \u2192 Cancelled).",
+        "operationId": "stop_transcripts_api_v1_transcripts_stop_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Stop Transcripts"
+      }
+    },
+    "/api/v1/transcripts/{id}": {
+      "delete": {
+        "description": "Remove a channel. Files stay.",
+        "operationId": "delete_transcript_api_v1_transcripts__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Delete Transcript"
+      },
+      "get": {
+        "description": "Return one parent job with aggregates.",
+        "operationId": "get_transcript_api_v1_transcripts__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptJobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Transcript"
+      }
+    },
+    "/api/v1/transcripts/{id}/compile": {
+      "post": {
+        "description": "Compile volumes. Paths only, no text.",
+        "operationId": "compile_transcript_api_v1_transcripts__id__compile_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptCompileOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Compile Transcript"
+      }
+    },
+    "/api/v1/transcripts/{id}/requeue": {
+      "post": {
+        "description": "Requeue a Cancelled channel.",
+        "operationId": "requeue_transcript_api_v1_transcripts__id__requeue_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptJobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Requeue Transcript"
+      }
+    },
+    "/api/v1/transcripts/{id}/retry": {
+      "post": {
+        "description": "Retry a Failed channel.",
+        "operationId": "retry_transcript_api_v1_transcripts__id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/EmptyIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptJobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Retry Transcript"
+      }
+    },
+    "/api/v1/tts/generate": {
+      "post": {
+        "description": "Start a generation in the background and return the job at once (`Generating`).\n\nPoll `GET /tts/{id}` until `Done`, `Failed` or `Cancelled`. Does not open `source_path`.",
+        "operationId": "generate_tts_api_v1_tts_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TTSGenerateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TTSJobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "Conflict: no model loaded, a run in progress, or a TTS asset missing"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Generate Tts"
+      }
+    },
+    "/api/v1/tts/prepare": {
+      "post": {
+        "description": "Run prepare steps. Unknown step \u2192 422 from the service.",
+        "operationId": "prepare_tts_api_v1_tts_prepare_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TTSPrepareIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TTSPrepareOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Prepare Tts"
+      }
+    },
+    "/api/v1/tts/voices": {
+      "get": {
+        "description": "Public `TTSService.list_voices` facade: each voice with its availability (D-89).",
+        "operationId": "list_voices_api_v1_tts_voices_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "List Voices"
+      }
+    },
+    "/api/v1/tts/{id}": {
+      "delete": {
+        "description": "Cancel the running TTS job; it ends `Cancelled` with no output file. Always 204.",
+        "operationId": "cancel_tts_api_v1_tts__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancel Tts"
+      },
+      "get": {
+        "description": "Poll one TTS job.",
+        "operationId": "get_tts_api_v1_tts__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TTSJobOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Tts"
+      }
+    }
+  }
+}

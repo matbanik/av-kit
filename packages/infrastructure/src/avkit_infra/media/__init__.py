@@ -1,0 +1,1 @@
+"""FFmpeg subprocess MediaPort adapter."""
