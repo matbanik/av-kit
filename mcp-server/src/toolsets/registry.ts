@@ -392,7 +392,7 @@ export async function handleTool(tool: string, args: unknown, runtime?: ToolRunt
 }
 
 /** The object branches of a tool's per-action union (descriptions are on the branches). */
-function branchesOf(schema: z.ZodTypeAny): z.AnyZodObject[] {
+function branchesOf(schema: z.ZodTypeAny): z.ZodObject[] {
   if (schema instanceof z.ZodObject) {
     return [schema];
   }
@@ -403,7 +403,7 @@ function branchesOf(schema: z.ZodTypeAny): z.AnyZodObject[] {
 }
 
 function unwrapOptional(schema: z.ZodTypeAny): z.ZodTypeAny {
-  return schema instanceof z.ZodOptional ? unwrapOptional(schema.unwrap()) : schema;
+  return schema instanceof z.ZodOptional ? unwrapOptional(schema.unwrap() as z.ZodTypeAny) : schema;
 }
 
 /**
@@ -411,7 +411,7 @@ function unwrapOptional(schema: z.ZodTypeAny): z.ZodTypeAny {
  * tool's actions, every other branch field typed and optional. Only advertised; the registered
  * strict union still validates every call.
  */
-export function advertisedSchema(tool: string): z.AnyZodObject {
+export function advertisedSchema(tool: string): z.ZodObject {
   const actions = ACTION_INDEX.filter((row) => row.tool === tool).map((row) => row.action);
   if (actions.length === 0) {
     throw new Error(`no actions for ${tool}`);

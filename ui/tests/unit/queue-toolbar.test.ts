@@ -28,7 +28,7 @@ import { fileURLToPath } from 'node:url'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createElement, type ReactElement } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, type Mock, vi } from 'vitest'
 
 import type * as QueueToolbarModule from '../../src/renderer/src/components/queue/QueueToolbar'
 
@@ -87,10 +87,10 @@ function interactiveIn(scope: ParentNode): HTMLElement[] {
 
 /** Handlers every case supplies, so an unfired one is an observable failure. */
 function handlers(): {
-  onStart: ReturnType<typeof vi.fn>
-  onPauseResume: ReturnType<typeof vi.fn>
-  onClearFinished: ReturnType<typeof vi.fn>
-  onClearAll: ReturnType<typeof vi.fn>
+  onStart: Mock<(...args: unknown[]) => void>
+  onPauseResume: Mock<(...args: unknown[]) => void>
+  onClearFinished: Mock<(...args: unknown[]) => void>
+  onClearAll: Mock<(...args: unknown[]) => void>
 } {
   return {
     onStart: vi.fn(),

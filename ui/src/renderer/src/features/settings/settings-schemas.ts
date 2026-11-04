@@ -130,7 +130,7 @@ export function parseSettingsPut<N extends SettingsNamespace>(
       .flatMap((issue) => ('keys' in issue ? (issue.keys as string[]) : []))
     throw new SettingsValidationError(parsed.error.message, unknown)
   }
-  return parsed.data
+  return parsed.data as z.infer<(typeof schemaByNamespace)[N]>
 }
 
 export function safeParseSettingsPut<N extends SettingsNamespace>(

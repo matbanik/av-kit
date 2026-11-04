@@ -2,7 +2,7 @@
 
 import { act, cleanup, render, screen } from '@testing-library/react'
 import { createElement } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, type Mock, vi } from 'vitest'
 
 import { CaptureScrubField } from '../../src/renderer/src/features/capture/CaptureScrubField'
 import {
@@ -76,10 +76,10 @@ describe('MEU-85 scrub math (SCRUB_MATH)', () => {
 })
 
 type Spies = {
-  onChange: ReturnType<typeof vi.fn>
-  onPreview: ReturnType<typeof vi.fn>
-  onCommit: ReturnType<typeof vi.fn>
-  onCancel: ReturnType<typeof vi.fn>
+  onChange: Mock<(...args: unknown[]) => void>
+  onPreview: Mock<(...args: unknown[]) => void>
+  onCommit: Mock<(...args: unknown[]) => void>
+  onCancel: Mock<(...args: unknown[]) => void>
 }
 
 function renderField(value = '3', fallback = 3): Spies {

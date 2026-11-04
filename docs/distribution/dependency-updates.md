@@ -70,6 +70,15 @@ Don't pass the override on the command line instead: `uv lock --check` then fail
 because the lockfile no longer matches `pyproject.toml`. Remove the line and run `uv lock`
 again once that release is more than 7 days old.
 
+## Held back
+
+- **`@vitest/eslint-plugin`** stays at exactly 1.6.27 in `ui`. Later versions need
+  TypeScript 6, and `npm update` fails until one of them moves. Drop the pin when
+  TypeScript does.
+- **`minimatch`** still shows as moderate findings in `npm audit` for `ui`. It only comes in
+  through electron-builder and the lint tools, so nothing ships with it. Don't take
+  `npm audit fix --force`: it offers to downgrade electron-builder to version 20.
+
 ## Pinned tools
 
 Change these on purpose, not as part of a routine update:

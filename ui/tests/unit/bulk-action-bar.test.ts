@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { createElement, type ReactElement } from 'react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, type Mock, vi } from 'vitest'
 
 import { CONVERT_REQUEUEABLE_STATUSES } from '../../src/renderer/src/features/converter/convert-controls'
 import { DOWNLOAD_REQUEUEABLE_STATUSES } from '../../src/renderer/src/features/downloader/download-controls'
@@ -85,11 +85,11 @@ afterEach(() => {
 
 /** Every handler the bar takes, recorded. */
 function handlers(): {
-  onRetry: ReturnType<typeof vi.fn>
-  onMoveTop: ReturnType<typeof vi.fn>
-  onMoveBottom: ReturnType<typeof vi.fn>
-  onRemove: ReturnType<typeof vi.fn>
-  onClearSelection: ReturnType<typeof vi.fn>
+  onRetry: Mock<(...args: unknown[]) => void>
+  onMoveTop: Mock<(...args: unknown[]) => void>
+  onMoveBottom: Mock<(...args: unknown[]) => void>
+  onRemove: Mock<(...args: unknown[]) => void>
+  onClearSelection: Mock<(...args: unknown[]) => void>
 } {
   return {
     onRetry: vi.fn(),
