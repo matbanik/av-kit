@@ -303,6 +303,9 @@ class ConversionService:
                 queue_position=position + offset,
                 created_at=_now(),
                 updated_at=_now(),
+                gpu_preference=(
+                    spec.gpu_preference if spec.kind is ConversionKind.Compress else None
+                ),
             )
             jobs.append(job)
             reserved.add(output)
@@ -391,8 +394,12 @@ class ConversionService:
         wire = str(self._settings.get("converter", "gpu_preference"))
         return GPU_WIRE.get(wire, GpuPreference.Auto)
 
-    def _resolve_encoder(self, caps: GPUCapabilities) -> str:
-        preference = self._preference()
+    def _resolve_encoder(
+        self, caps: GPUCapabilities, preference: GpuPreference | None = None
+    ) -> str:
+        """The job's own choice wins, including Auto; without one, the setting decides."""
+        if preference is None:
+            preference = self._preference()
         if preference is GpuPreference.Auto:
             return caps.recommended_encoder
         if preference is GpuPreference.Nvidia:
@@ -478,7 +485,7 @@ class ConversionService:
 
     def _dispatch(self, job) -> None:
         caps = self._gpu or self.detect_gpu()
-        encoder = self._resolve_encoder(caps)
+        encoder = self._resolve_encoder(caps, job.gpu_preference)
         with self._uow_factory() as uow:
             latest = uow.conversion_jobs.get(job.id)
             if latest is None:

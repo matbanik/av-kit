@@ -226,7 +226,7 @@ Canonical action table: [08-video-conversion.md](08-video-conversion.md) §MCP. 
 Canonical action table: [09-screenshot-capture.md](09-screenshot-capture.md) §MCP. Implement under MEU-38, not MEU-18.
 
 **Workflow:** `capture` or `capture_interactive` → `image` → `annotate`.  
-**Exception:** `image` returns PNG bytes (vision). List/get stay path-only.
+**Exception:** `image` returns PNG bytes (vision), up to the cap in [§Image size limit (residual)](#image-size-limit-residual). List/get stay path-only.
 
 ---
 
@@ -305,6 +305,29 @@ Publish on the MCP server so agents see it without this file. Minimum:
 | Cleanup | Every created job, shot, request, file and setting change is removed or restored before the report; residuals are listed as findings | Zorivest §Cleanup Contract |
 | Where it runs | The authoritative run is a **local Windows stage** (real Kokoro model, ffmpeg, screen capture, network) recorded per [`cloud-local-collaboration.md`](../../.agent/docs/cloud-local-collaboration.md). The Linux container runs the same runner against a real spawned backend as a **non-authoritative subset**: proven environment-bound actions are `skip_env`, and the report header says so. The Vitest fake-backend suite covers the negative oracles | Local Canon |
 | Evidence | One record per call (`actions.jsonl`) plus a summary JSON (`mcp-audit-summary.v1`) that the task/handoff validators can bind to (`evidence.v1`). The report header states the date, agent, backend version, commit, and tool/action counts. Tokens never appear in any output | Local Canon AGENTS §Artifact Naming |
+
+<a id="image-size-limit-residual"></a>
+
+## Image size limit (residual)
+
+> **MEU-111.** Registered 2026-11-03 from known issue `MCP-IMAGE-OVER-STDIO-LIMIT`; Mat added it to release candidate 1 on 2026-11-04. `avkit_capture image` sends the file as base64 in one JSON line. The MCP TypeScript SDK's stdio client closes the transport when a line outgrows `STDIO_DEFAULT_MAX_BUFFER_SIZE` (10 MiB), and the client then loses every tool until it reconnects. The server doesn't crash. Measured with SDK 1.30.0 and 1.32.2: 7,860,000 B returns the image and 7,880,000 B closes the connection.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Cap | `IMAGE_FITS_STDIO`: `avkit_capture image` never sends an image the SDK's stdio reader can't take. The MCP cap is 7,800,000 B: 10,400,000 B of base64, leaving 85,760 B of the buffer for the envelope. | Known issue; measured limit above |
+| Above the cap | A `payload_too_large` tool error that tells the agent to read `original_path` or `annotated_path` from `avkit_capture get`. The connection still answers later calls. An oversize shot can't be seen through MCP as an image; a downscaled preview can come later. | Known issue |
+| SDK guard | A test imports `STDIO_DEFAULT_MAX_BUFFER_SIZE` from `@modelcontextprotocol/sdk/shared/stdio.js` and checks the cap's base64 length plus the envelope reserve against it, so an SDK release that lowers the buffer fails that test. | This section |
+| REST | Stays at 15 MiB ([09 §REST API](09-screenshot-capture.md#rest-api)). OpenAPI and `tools/list` don't change: no description names the cap. | Phase 9 |
+| Live audit | `capture.image` and `capture.image.annotated` pass on that refusal only when the REST image is larger than the cap. A refused smaller image, or a lost connection, fails the step. | §MCP live audit (residual) |
+| Not tested | MCP clients other than the SDK's. | Known issue |
+
+> **Delivered (Session 44).**
+> - `IMAGE_MAX_BYTES` in `mcp-server/src/toolsets/capture.ts` is 7,800,000 B. `registry.ts` refuses a larger file with `payload_too_large`, naming `original_path` and `annotated_path`.
+> - `tests/image-over-stdio.test.ts` runs the built server over real stdio with the SDK's client: a file at the cap arrives, and a larger one is refused while the connection keeps answering.
+> - The live audit's `capture.image` steps accept that refusal only for a shot over the cap (`scripts/audit/plan.ts`, `tests/audit/capture-image-step.test.ts`).
+> - AC-111.1 to AC-111.4.
+> - Gate: the shared `session-gate.ps1` record in the MEU-111 handoff.
+> - Plan `docs/execution/plans/2026-11-03-release-rc1/`.
 
 ## What this layer must not do
 

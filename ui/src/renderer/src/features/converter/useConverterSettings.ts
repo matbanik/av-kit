@@ -60,14 +60,15 @@ export function useConverterSettings() {
     queryKey: CONVERTER_SETTINGS_KEY,
     queryFn: async () => apiFetch<ConverterPut>('/settings/converter'),
   })
-  const [draft, setDraft] = useState<ConverterForm | null>(null)
+  const [draft, setDraft] = useState<Partial<ConverterForm> | null>(null)
   const baseline = useMemo(() => asForm(query.data), [query.data])
-  const form = draft ?? baseline
+  // The draft holds only what was edited, so every other field keeps following the saved settings.
+  const form = useMemo<ConverterForm>(() => ({ ...baseline, ...draft }), [baseline, draft])
   const isDirty = query.data !== undefined && !sameForm(form, baseline)
 
   const patchForm = useCallback((patch: Partial<ConverterForm>) => {
-    setDraft((current) => ({ ...(current ?? baseline), ...patch }))
-  }, [baseline])
+    setDraft((current) => ({ ...current, ...patch }))
+  }, [])
 
   const save = useCallback(async () => {
     const body = converterPutSchema.parse(form)

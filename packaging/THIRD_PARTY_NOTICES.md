@@ -2,6 +2,7 @@
 
 av-kit's Windows installer ships the components below alongside its own code. Each entry gives
 the licence and the upstream source. This file is installed as `resources/THIRD_PARTY_NOTICES.md`.
+`resources/THIRD_PARTY_LICENSES.txt`, generated from the build, has the full list with every licence text.
 
 espeak-ng is not shipped: av-kit calls a separately, user-installed `espeak-ng` program as a
 subprocess for non-English phonemes and the English fallback, and never loads its library.
@@ -60,10 +61,15 @@ through onnxruntime.
 - **Licence:** GPL-3.0 (the BtbN `gpl` build). The licence text ships next to the binaries as
   `resources/ffmpeg/LICENSE.txt`.
 - **What ships:** `resources/ffmpeg/ffmpeg.exe` and `resources/ffmpeg/ffprobe.exe`, the BtbN
-  Windows build `n8.1.2-44-g7c533d0f86` (win64, gpl) that `tools/fetch_ffmpeg_windows.ps1` pins
-  by SHA256. They are a separate program: av-kit runs them as subprocesses and never links them.
-- **Source:** FFmpeg's source for this release is at https://github.com/FFmpeg/FFmpeg/tree/n8.1.2,
-  and the scripts that produced the build are at https://github.com/BtbN/FFmpeg-Builds.
+  Windows build `n8.1.3-27-g8dca1586f4` (win64, gpl, release `autobuild-2026-10-31-12-59`) that
+  `tools/fetch_ffmpeg_windows.ps1` pins by SHA256. They are a separate program: av-kit runs them
+  as subprocesses and never links them.
+- **Source:** the complete corresponding source is `av-kit-0.1.0-rc.1-ffmpeg-source.tar.xz`,
+  attached to the release at https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.1. It holds
+  FFmpeg at commit `8dca1586f468bfcbb78ae3ed618af1361d9f140a`, every dependency this build enables
+  at its pinned commit, the scripts that produced the build
+  (https://github.com/BtbN/FFmpeg-Builds) with their patches, and the toolchain sources. Its
+  `README.md` names what those scripts don't pin.
 
 ## Appendix: GNU Lesser General Public License, version 2.1
 

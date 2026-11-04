@@ -93,6 +93,7 @@
 | MEU-95 | `gui-shortcut-binding` | 6.10 | [Phase 6 §Shortcut binding (residual)](../../docs/build-plan/06-gui.md#shortcut-binding-residual) | The AppShell keydown map is generated from the command registry shortcut field, so Ctrl+1..5, Ctrl+, and Ctrl+B are bound as advertised and a displayed shortcut is always bound. | ✅ approved |
 | MEU-96 | `gui-command-palette-curation` | 6.11 | [Phase 6 §Command palette curation (residual)](../../docs/build-plan/06-gui.md#command-palette-curation-residual) | Context-aware palette (global commands plus the current page, unavailable commands hidden, Pause/Resume merged), Appearance Dark and Light commands on Ctrl+Shift+D/L, destructive commands through ConfirmModal, plain labels; gui-actions-index Palette column amended. | ✅ approved |
 | MEU-97 | `gui-common-shortcuts` | 6.12 | [Phase 6 §Common shortcuts (residual)](../../docs/build-plan/06-gui.md#common-shortcuts-residual) | Core shortcut set — Ctrl+L focus URL, Ctrl+Enter page primary action, Ctrl+O Convert Browse, Ctrl+S save capture, Ctrl+J console, F1 help, shown in tooltips and aria-keyshortcuts, with no collision with Capture Ctrl+=/-/0 or the F2 hotkey. | ✅ approved |
+| MEU-108 | `gui-ready-probe-guard` | 6.13 | [Phase 6 §Ready probe (residual)](../../docs/build-plan/06-gui.md#ready-probe-residual) | The main process queries the backend process only for output that carries a usable AVKIT_READY line, so ordinary backend logging no longer blocks the window. | ✅ approved |
 
 
 ## Distribution (P2)
@@ -106,6 +107,7 @@
 | MEU-71 | `gui-mcp-setup-prompt` | 7.3 | [Phase 7 §MCP setup prompt (residual)](../../docs/build-plan/07-distribution.md#mcp-setup-prompt-residual) | Settings MCP card shows a per-client setup prompt (user scope by default, project option) whose command is the app executable with ELECTRON_RUN_AS_NODE=1 and the server path in args; no token in any block (the server reads mcp-token.txt) but always AVKIT_APP_DATA; backup-and-merge, verify via authenticated avkit_health dependencies, one RESULT line; fixes the mcp-server entry guard. | ✅ approved |
 | MEU-72 | `dist-tts-onnx-runtime` | 7.4 | [Phase 7 §Packaged ONNX TTS runtime (residual)](../../docs/build-plan/07-distribution.md#packaged-onnx-tts-runtime-residual) | The ONNX TTS path runs G2P + onnxruntime without kokoro.KPipeline or torch so the packaged app synthesizes; hiddenimports for the G2P stack; packaged smoke generate (also records the shipped MCP entry). | ✅ approved |
 | MEU-92 | `dist-mcp-server-bundle` | 7.5 | [Phase 7 §MCP server bundle (residual)](../../docs/build-plan/07-distribution.md#mcp-server-bundle-residual) | Self-contained esbuild bundle of the MCP server (index.mjs plus LICENSES.txt) that the packaged app ships as resources/mcp-server; MCP_ENTRY_PROBE on a freshly built win-unpacked tree is a pass condition. | ✅ approved |
+| MEU-110 | `dist-release-candidate` | 7.6 | [Phase 7 §Release candidate packaging (residual)](../../docs/build-plan/07-distribution.md#release-candidate-packaging-residual) | Release candidate 1 packaging with a generated licence list, one version on every surface, a real NSIS installer with packaged checks, release notes and a publish checklist. | ✅ approved |
 
 
 ## Video conversion (P2)
@@ -120,6 +122,8 @@
 | MEU-31 | `api-conversion` | 8.4 | [Phase 8 §REST API](../../docs/build-plan/08-video-conversion.md#rest-api) | /api/v1/conversions envelope routes, converter settings namespace, extra=forbid, OpenAPI regen | ✅ approved |
 | MEU-32 | `mcp-convert` | 8.5 | [Phase 8 §MCP](../../docs/build-plan/08-video-conversion.md#mcp) | Compound avkit_convert + action, Zod .strict(), confirm on remove/clear, REST parity | ✅ approved |
 | MEU-33 | `gui-convert` | 8.6 | [Phase 8 §Convert page](../../docs/build-plan/08-video-conversion.md#convert-page-convert) | Convert rail below TTS, Downloader-shaped queue, presets, HelpCard, Wave 8 E2E, action-index audit | ✅ approved |
+| MEU-109 | `convert-output-folder` | 8.7 | [Phase 8 §Output folder (residual)](../../docs/build-plan/08-video-conversion.md#output-folder-residual) | Encode, cut and extract create the output folder before FFmpeg starts, so a first Convert job into the default folder succeeds and a folder that cannot be created names the path. | ✅ approved |
+| MEU-112 | `convert-job-gpu-preference` | 8.8 | [Phase 8 §Encoder choice per job (residual)](../../docs/build-plan/08-video-conversion.md#job-encoder-choice-residual) | The encoder chosen for one Compress job reaches FFmpeg, survives a re-queue or a restart, and an existing database upgrades in place. The setting still applies when a job sends nothing. | ✅ approved |
 
 
 ## Screenshot capture (P2)
@@ -161,6 +165,7 @@
 | MEU-105 | `gui-capture-style-tool-flow` | 9.31 | [Phase 9 §Style and tool flow](../../docs/build-plan/09-screenshot-capture.md#style-and-tool-flow) | Colour applies on click, each tool keeps its own persisted style, Lock is on by default, letter shortcuts pick tools, and Shift, Alt and Shift+arrow modify drawing and nudging. | ⬜ pending |
 | MEU-106 | `capture-line-ellipse-shapes` | 9.32 | [Phase 9 §Line and ellipse](../../docs/build-plan/09-screenshot-capture.md#line-and-ellipse) | Line as an arrow with no head and Ellipse as a rect shape, with 45 degree snap and Ctrl+D duplicate. | ⬜ pending |
 | MEU-107 | `capture-step-mark` | 9.33 | [Phase 9 §Step mark](../../docs/build-plan/09-screenshot-capture.md#step-mark) | A new numbered step mark for how-to screenshots, drawn, moved and baked like the other marks. | ⬜ pending |
+| MEU-111 | `mcp-image-fits-stdio` | 9.34 | [Phase 5 §Image size limit (residual)](../../docs/build-plan/05-mcp-server.md#image-size-limit-residual) | avkit_capture image never sends an image the MCP stdio client cannot read. Above 7,800,000 B it returns a tool error that names the file's path and the connection stays up. | ✅ approved |
 
 
 ## Queue card UI (P2)

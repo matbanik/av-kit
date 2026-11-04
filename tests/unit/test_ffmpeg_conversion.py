@@ -47,6 +47,7 @@ CONVERSION_JOB_COLUMNS = (
     "queue_position",
     "created_at",
     "updated_at",
+    "gpu_preference",
 )
 REPO_METHODS = (
     "add",
@@ -874,3 +875,260 @@ def test_ac_29_7_ten_bit_uses_p010_not_nv12(
     argv8 = captured[1]
     assert "nv12" in argv8
     assert "p010" not in argv8
+
+
+def _record_parent_at_spawn(seen: list[bool], output: Path):
+    def _popen(cmd: list[str], **_kwargs: object) -> _FakePopen:
+        seen.append(output.parent.is_dir())
+        return _FakePopen(cmd)
+
+    return _popen
+
+
+def _no_progress(_snap: object) -> None:
+    return None
+
+
+def _never_stop() -> bool:
+    return False
+
+
+@pytest.mark.parametrize("ac_id", ["AC-109.1"], ids=["AC-109.1"])
+@pytest.mark.unit
+def test_ac_109_1_encode_creates_missing_parents_before_ffmpeg(
+    ac_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert ac_id == "AC-109.1"
+    from avkit_infra.media.adapter import FFmpegAdapter
+
+    output = tmp_path / "Converted" / "nested" / "out.mp4"
+    seen: list[bool] = []
+    monkeypatch.setattr(
+        "avkit_infra.media.adapter.subprocess.Popen", _record_parent_at_spawn(seen, output)
+    )
+    FFmpegAdapter(configured_path=_fake_ffmpeg(tmp_path)).encode(
+        tmp_path / "in.mp4", output, _encode_options(), _no_progress, _never_stop
+    )
+    assert seen == [True]
+
+
+@pytest.mark.parametrize("ac_id", ["AC-109.2"], ids=["AC-109.2"])
+@pytest.mark.unit
+def test_ac_109_2_cut_creates_missing_parents_before_ffmpeg(
+    ac_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert ac_id == "AC-109.2"
+    from avkit_core.domain.conversion import CutOptions
+    from avkit_core.domain.enums import CutCopyMode
+    from avkit_infra.media.adapter import FFmpegAdapter
+
+    output = tmp_path / "Converted" / "nested" / "out.mp4"
+    seen: list[bool] = []
+    monkeypatch.setattr(
+        "avkit_infra.media.adapter.subprocess.Popen", _record_parent_at_spawn(seen, output)
+    )
+    FFmpegAdapter(configured_path=_fake_ffmpeg(tmp_path)).cut(
+        tmp_path / "in.mp4",
+        output,
+        CutOptions(in_ms=0, out_ms=1000, copy_mode=CutCopyMode.FastCopy),
+        _no_progress,
+        _never_stop,
+    )
+    assert seen == [True]
+
+
+@pytest.mark.parametrize("ac_id", ["AC-109.3"], ids=["AC-109.3"])
+@pytest.mark.unit
+def test_ac_109_3_extract_creates_missing_parents_before_ffmpeg(
+    ac_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert ac_id == "AC-109.3"
+    from avkit_core.domain.conversion import ExtractOptions
+    from avkit_infra.media.adapter import FFmpegAdapter
+
+    output = tmp_path / "Converted" / "nested" / "out.m4a"
+    seen: list[bool] = []
+    monkeypatch.setattr(
+        "avkit_infra.media.adapter.subprocess.Popen", _record_parent_at_spawn(seen, output)
+    )
+    FFmpegAdapter(configured_path=_fake_ffmpeg(tmp_path)).extract_stream(
+        tmp_path / "in.mp4",
+        output,
+        ExtractOptions(stream_index=0, output_container="m4a"),
+        _no_progress,
+        _never_stop,
+    )
+    assert seen == [True]
+
+
+@pytest.mark.parametrize("ac_id", ["AC-109.4"], ids=["AC-109.4"])
+@pytest.mark.unit
+def test_ac_109_4_existing_folder_and_contents_survive(
+    ac_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert ac_id == "AC-109.4"
+    from avkit_infra.media.adapter import FFmpegAdapter
+
+    folder = tmp_path / "Converted"
+    folder.mkdir()
+    keeper = folder / "keeper.txt"
+    keeper.write_text("keep me", encoding="utf-8")
+    seen: list[bool] = []
+    output = folder / "out.mp4"
+    monkeypatch.setattr(
+        "avkit_infra.media.adapter.subprocess.Popen", _record_parent_at_spawn(seen, output)
+    )
+    FFmpegAdapter(configured_path=_fake_ffmpeg(tmp_path)).encode(
+        tmp_path / "in.mp4", output, _encode_options(), _no_progress, _never_stop
+    )
+    assert seen == [True]
+    assert keeper.read_text(encoding="utf-8") == "keep me"
+
+
+@pytest.mark.parametrize("ac_id", ["AC-109.5"], ids=["AC-109.5"])
+@pytest.mark.unit
+def test_ac_109_5_blocked_folder_raises_and_never_spawns(
+    ac_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert ac_id == "AC-109.5"
+    from avkit_infra.media.adapter import FFmpegAdapter
+
+    blocker = tmp_path / "blocker-file"
+    blocker.write_text("a file, not a folder", encoding="utf-8")
+    output = blocker / "sub" / "out.mp4"
+    spawned: list[list[str]] = []
+
+    def _popen(cmd: list[str], **_kwargs: object) -> _FakePopen:
+        spawned.append(list(cmd))
+        return _FakePopen(cmd)
+
+    monkeypatch.setattr("avkit_infra.media.adapter.subprocess.Popen", _popen)
+    with pytest.raises(OSError) as caught:
+        FFmpegAdapter(configured_path=_fake_ffmpeg(tmp_path)).encode(
+            tmp_path / "in.mp4", output, _encode_options(), _no_progress, _never_stop
+        )
+    assert "blocker-file" in str(caught.value)
+    assert spawned == []
+
+
+@pytest.mark.parametrize("ac_id", ["AC-112.4"], ids=["AC-112.4-sqlite"])
+@pytest.mark.unit
+def test_ac_112_4_choice_survives_sqlite_round_trip(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-112.4"
+    from avkit_core.domain.enums import GpuPreference
+    from avkit_core.domain.errors import ValidationError
+
+    factory, _engine = _make_uow_factory(tmp_path)
+    chosen = _cut_job(gpu_preference=GpuPreference.Software)
+    unset = _cut_job(gpu_preference=None, queue_position=1)
+    with factory() as uow:
+        uow.conversion_jobs.add(chosen)
+        uow.conversion_jobs.add(unset)
+        uow.commit()
+    with factory() as uow:
+        loaded_chosen = uow.conversion_jobs.get(chosen.id)
+        loaded_unset = uow.conversion_jobs.get(unset.id)
+    assert loaded_chosen is not None
+    assert loaded_chosen.gpu_preference is GpuPreference.Software
+    assert loaded_unset is not None
+    assert loaded_unset.gpu_preference is None
+    with pytest.raises(ValidationError):
+        _cut_job(gpu_preference="Software")
+
+
+#: conversion_jobs as every database before MEU-112 has it.
+_PRE_MEU_112_CONVERSION_JOBS = """
+CREATE TABLE conversion_jobs (
+    id VARCHAR(36) NOT NULL PRIMARY KEY,
+    kind TEXT NOT NULL,
+    input_path TEXT NOT NULL,
+    output_path TEXT NOT NULL,
+    display_name TEXT NOT NULL,
+    preset_id TEXT,
+    cq INTEGER,
+    scale_height INTEGER,
+    audio_mode TEXT,
+    gpu_encoder TEXT,
+    in_ms INTEGER,
+    out_ms INTEGER,
+    copy_mode TEXT,
+    stream_index INTEGER,
+    status TEXT NOT NULL,
+    progress FLOAT NOT NULL,
+    speed_bps FLOAT,
+    eta_seconds INTEGER,
+    file_size INTEGER,
+    duration_seconds FLOAT,
+    width INTEGER,
+    height INTEGER,
+    error_message TEXT,
+    queue_position INTEGER NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL
+)
+"""
+
+
+@pytest.mark.parametrize("ac_id", ["AC-112.5"], ids=["AC-112.5"])
+@pytest.mark.unit
+def test_ac_112_5_old_database_upgrades_in_place(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-112.5"
+    import sqlite3
+
+    from sqlalchemy import inspect as sa_inspect
+
+    from avkit_core.domain.enums import ConversionKind, ConversionStatus
+    from avkit_infra.database.engine import (
+        create_session_factory,
+        create_sqlite_engine,
+        init_schema,
+    )
+    from avkit_infra.database.migrations import apply_migrations
+    from avkit_infra.database.unit_of_work import SqlAlchemyUnitOfWork
+
+    def _columns(engine: object) -> list[str]:
+        return [col["name"] for col in sa_inspect(engine).get_columns("conversion_jobs")]
+
+    old_path = tmp_path / "old.db"
+    job_id = str(uuid4())
+    connection = sqlite3.connect(old_path)
+    connection.execute(_PRE_MEU_112_CONVERSION_JOBS)
+    connection.execute(
+        "INSERT INTO conversion_jobs (id, kind, input_path, output_path, display_name, preset_id,"
+        " cq, gpu_encoder, status, progress, queue_position, created_at, updated_at)"
+        " VALUES (?, 'Compress', 'C:/in/old.mp4', 'C:/out/old_compress.mp4', 'old.mp4',"
+        " 'Balanced', 25, 'hevc_nvenc', 'Done', 1.0, 0,"
+        " '2026-10-01 10:00:00.000000', '2026-10-01 10:05:00.000000')",
+        (job_id,),
+    )
+    connection.commit()
+    connection.close()
+
+    engine = create_sqlite_engine(old_path)
+    init_schema(engine)
+    assert _columns(engine) == list(CONVERSION_JOB_COLUMNS)
+    session_factory = create_session_factory(engine)
+    with SqlAlchemyUnitOfWork(session_factory) as uow:
+        loaded = uow.conversion_jobs.get(job_id)
+    assert loaded is not None
+    assert loaded.gpu_preference is None
+    assert loaded.kind is ConversionKind.Compress
+    assert loaded.status is ConversionStatus.Done
+    assert loaded.input_path == Path("C:/in/old.mp4")
+    assert loaded.gpu_encoder == "hevc_nvenc"
+    assert loaded.cq == 25
+
+    apply_migrations(engine)
+    assert _columns(engine) == list(CONVERSION_JOB_COLUMNS)
+    with SqlAlchemyUnitOfWork(session_factory) as uow:
+        assert [job.id for job in uow.conversion_jobs.list_ordered()] == [job_id]
+
+    fresh_dir = tmp_path / "fresh"
+    fresh_dir.mkdir()
+    _factory, fresh = _make_uow_factory(fresh_dir)
+    assert _columns(fresh) == _columns(engine)
+
+    migrated_path = tmp_path / "migrations-only.db"
+    migrated = create_sqlite_engine(migrated_path)
+    apply_migrations(migrated)
+    assert _columns(migrated) == _columns(engine)

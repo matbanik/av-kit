@@ -281,6 +281,7 @@ One row per output. Many files on Add → **N jobs** (Local Canon playlist explo
 | `error_message` | `str \| None` | yes | Spec |
 | `queue_position` | `int` | yes | Reorder |
 | `created_at` / `updated_at` | `datetime` | yes | Spec |
+| `gpu_preference` | `GpuPreference \| None` | yes | Compress. The job's own encoder choice; null = the setting at Start |
 
 **Invariants**
 
@@ -546,6 +547,51 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 
 ---
 
+<a id="output-folder-residual"></a>
+
+## Output folder (residual)
+
+> **MEU-109.** Registered 2026-11-03 from known issue `CONVERT-OUTPUT-DIR-MISSING`. Nothing creates the `converter.output_dir` folder, so on a fresh profile the first Convert job fails and the user reads only "ffmpeg exited 4294967294".
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Create | `OUTPUT_PARENT`: `encode`, `cut` and `extract_stream` create `output_path.parent` before starting FFmpeg. | Known issue; precedent `capture/adapter.py:359` |
+| Existing folder | Left alone, and its contents survive. | This section |
+| Can't create | The job ends `Failed` with an error naming the path, and FFmpeg never starts. The `OSError` reaches the existing `_process` failure path. | `conversion.py:468-472` |
+| Layer | The fix belongs in the infrastructure adapter. Core services don't touch the filesystem for this. | Precedent `capture/adapter.py:359,375` |
+
+> **Delivered (Session 44).**
+> - `_ensure_output_parent` in `packages/infrastructure/src/avkit_infra/media/adapter.py` creates the folder before FFmpeg starts, in `encode`, `cut` and `extract_stream`.
+> - `tests/unit/test_ffmpeg_conversion.py` and `tests/unit/test_conversion_service.py`, AC-109.1 to AC-109.5. The packaged smoke ran a real first conversion into a missing folder.
+> - Gate: the shared `session-gate.ps1` record in the MEU-109 handoff.
+> - Plan `docs/execution/plans/2026-11-03-release-rc1/`.
+
+<a id="job-encoder-choice-residual"></a>
+
+## Encoder choice per job (residual)
+
+> **MEU-112.** Registered 2026-11-04 from known issue `CONVERT-JOB-GPU-PREFERENCE-IGNORED`, on Mat's ruling to fix it before RC1. `POST /conversions` accepts `gpu_preference` and the page has an Encoder dropdown, but nothing reads the value, so a job always runs what the `converter.gpu_preference` setting says.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Stored | A Compress job stores the request's `gpu_preference`. Null means the request sent none. Cut and Extract jobs store null. | This section |
+| Resolved | `_dispatch` passes the job's value to `_resolve_encoder`. Null means the setting, read when the job runs. An explicit value wins, including Auto over a non-auto setting. | This section |
+| Kept | The value survives a re-queue and a restart, because it lives on the row. | This section |
+| Upgrade | `conversion_jobs` gets a nullable last column. `COLUMN_MIGRATIONS` adds it to an existing database after reading `PRAGMA table_info`, so a repeat does nothing and rows stay intact. | `tests/integration/test_sqlite_uow.py:254` keeps `MIGRATIONS` self-guarding |
+| Page | The page and the command snapshot send the dropdown when it differs from the saved setting, including Auto over a saved non-auto value, and omit it when they match. | This section |
+| Dropdown | A choice made in the dropdown stays the choice when settings arrive late or change afterwards, and it is sent when the saved setting isn't known yet. A dropdown nobody touched shows the setting and sends nothing. | This section |
+| API response | Unchanged. `gpu_encoder` already shows what ran. | §`ConversionJobOut` |
+
+> **Delivered (Session 44).**
+> - `ConversionJob.gpu_preference` in `packages/core/src/avkit_core/domain/conversion.py`, stored by `_jobs_for_path` and read by `_dispatch` and `_resolve_encoder` in `services/conversion.py`. The column and its `COLUMN_MIGRATIONS` step are in `packages/infrastructure/src/avkit_infra/database/`.
+> - `ConvertPage.tsx` keeps only what the user picked, and `perJobGpuPreference` in `convert-commands.ts` decides what Add and the command snapshot send: a pick goes out unless it equals a known saved setting.
+> - The draft in `useConverterSettings.ts` holds only the fields the user edited, so every other field, including the encoder the page compares against, follows the saved settings while an edit is open.
+> - `tests/unit/test_conversion_service.py`, `tests/unit/test_ffmpeg_conversion.py` and `ui/tests/unit/convert-page.behavior.test.ts`, AC-112.1 to AC-112.6, AC-112.8 and AC-112.9. `tools/smoke_packaged_rc.py` proved AC-112.7 on the packaged and installed backends: a Software job ran `libx265` on a PC where the default job ran `hevc_nvenc`.
+> - Gate: the shared `session-gate.ps1` record in the MEU-112 handoff.
+> - Plan `docs/execution/plans/2026-11-03-release-rc1/`.
+
+---
+
 ## MEUs
 
 | MEU | Slug | Section | Depends on |
@@ -556,6 +602,8 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 | MEU-31 | `api-conversion` | REST + settings namespace + OpenAPI | MEU-30, MEU-14 |
 | MEU-32 | `mcp-convert` | `avkit_convert` | MEU-31, MEU-17 |
 | MEU-33 | `gui-convert` | Rail + page + Help + Wave 8 | MEU-31, MEU-19, MEU-26 |
+| MEU-109 | `convert-output-folder` | [§Output folder (residual)](#output-folder-residual) | MEU-29 |
+| MEU-112 | `convert-job-gpu-preference` | [§Encoder choice per job (residual)](#job-encoder-choice-residual) | MEU-30, MEU-33 |
 
 ---
 

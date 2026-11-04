@@ -1,8 +1,9 @@
 {
   "name": "avkit-mcp-server",
-  "version": "0.1.0",
+  "version": "0.1.0-rc.1",
   "private": true,
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "bundle": "tsx scripts/bundle.ts",

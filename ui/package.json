@@ -1,9 +1,16 @@
 {
   "name": "av-kit-ui",
-  "version": "0.1.0",
+  "version": "0.1.0-rc.1",
   "private": true,
   "type": "module",
-  "description": "av-kit Electron + React host (MEU-19 shell)",
+  "description": "Save YouTube videos and captions, read text aloud, shrink videos and mark up screenshots, all on your own PC.",
+  "license": "MIT",
+  "author": "Mat Banik",
+  "homepage": "https://github.com/matbanik/av-kit",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matbanik/av-kit.git"
+  },
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",

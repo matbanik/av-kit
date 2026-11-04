@@ -12,6 +12,15 @@
 # nothing ERRORs. Any other failure, or any other pytest exit code, fails the step.
 # ui-tests keeps the same rule with an empty expected set: QUEUE-PILL-TOKEN-DRIFT is resolved
 # (known-issues.yaml), so any Vitest failure fails the step.
+# mcp-audit runs last because it uses real YouTube traffic and the real screen. mcp-audit-clear runs
+# just before it, and fail-fast stops the gate if the old output can't be removed, because a crashed
+# Node process also exits 1 and the rule must never read an earlier run's summary. Exit 0 passes.
+# Exit 1 continues only when audit-rule.py finds the caption block (YOUTUBE-CAPTIONS-IP-BLOCK) is the
+# one thing wrong, with a non-empty compile output, in a summary from this HEAD, and proves it with a
+# direct caption fetch through the product's adapter (D-186). That isn't a clean audit: the report
+# stays non-pass and the gate's last line says INCOMPLETE VERIFICATION. The report stays under
+# C:/Temp so tested_state doesn't move; H1-3 copies it into .agent/context/MCP/. The baseline
+# is never refreshed here.
 $ErrorActionPreference = 'Continue'
 $root = (git rev-parse --show-toplevel).Trim()
 Set-Location $root
@@ -22,15 +31,17 @@ $receipts = 'C:/Temp/av-kit'
 $env:RECEIPTS_DIR = $receipts
 $env:ELECTRON_RUN_AS_NODE = $null
 $base = (Get-Content "$plan/baseline.sha").Trim()
+$head = (git rev-parse HEAD).Trim()
+$auditOut = "$receipts/D6-mcp-audit"
 
 $scopePaths = @"
 import subprocess, sys
 allowed = {
-    'LICENSE',
     'README.md',
     'ui/src/main/index.ts',
     'ui/src/main/python-manager.ts',
     'ui/tests/unit/ready-probe-guard.test.ts',
+    'ui/tests/e2e/backend-output-after-close.test.ts',
     'packages/infrastructure/src/avkit_infra/media/adapter.py',
     'tests/unit/test_ffmpeg_conversion.py',
     'tests/unit/test_conversion_service.py',
@@ -40,6 +51,12 @@ allowed = {
     'mcp-server/package.json',
     'mcp-server/package-lock.json',
     'mcp-server/src/index.ts',
+    'mcp-server/src/toolsets/capture.ts',
+    'mcp-server/src/toolsets/registry.ts',
+    'mcp-server/scripts/audit/plan.ts',
+    'mcp-server/tests/capture.test.ts',
+    'mcp-server/tests/image-over-stdio.test.ts',
+    'mcp-server/tests/audit/capture-image-step.test.ts',
     'pyproject.toml',
     'packages/api/pyproject.toml',
     'packages/core/pyproject.toml',
@@ -52,9 +69,11 @@ allowed = {
     'tools/smoke_packaged_rc.py',
     'tests/unit/test_generate_third_party_licenses.py',
     'tests/unit/test_release_packaging.py',
+    'docs/build-plan/05-mcp-server.md',
     'docs/build-plan/06-gui.md',
     'docs/build-plan/07-distribution.md',
     'docs/build-plan/08-video-conversion.md',
+    'docs/build-plan/09-screenshot-capture.md',
     'docs/build-plan/build-priority-matrix.md',
     'docs/BUILD_PLAN.md',
     '.agent/context/meu-status.yaml',
@@ -62,9 +81,24 @@ allowed = {
     '.agent/context/current-focus.md',
     '.agent/context/known-issues.yaml',
     '.agent/context/known-issues.md',
+    '.agent/context/MCP/mcp-tool-audit-report.md',
     'docs/execution/metrics.md',
+    'packages/core/src/avkit_core/domain/conversion.py',
+    'packages/core/src/avkit_core/services/conversion.py',
+    'packages/infrastructure/src/avkit_infra/database/mappers.py',
+    'packages/infrastructure/src/avkit_infra/database/migrations.py',
+    'packages/infrastructure/src/avkit_infra/database/models.py',
+    'tests/unit/test_assemble_ffmpeg_source.py',
+    'tests/unit/test_packaging_installer.py',
+    'tools/assemble_ffmpeg_source.py',
+    'tools/fetch_ffmpeg_windows.ps1',
+    'ui/src/renderer/src/features/converter/ConvertPage.tsx',
+    'ui/src/renderer/src/features/converter/convert-commands.ts',
+    'ui/src/renderer/src/features/converter/useConverterSettings.ts',
+    'ui/tests/unit/convert-page.behavior.test.ts',
+    '.agent/context/sessions/d2be867f-0d35-422e-b139-55d6ed0d88f2/digest.md',
 }
-prefixes = ('$plan/', 'docs/images/readme/', 'docs/releases/', 'packaging/licence-overrides/', '.agent/context/handoffs/2026-11-03-release-rc1-', 'docs/execution/reflections/2026-11-03-release-rc1-')
+prefixes = ('$plan/', 'docs/releases/', 'packaging/licence-overrides/', '.agent/context/handoffs/2026-11-03-release-rc1-', 'docs/execution/reflections/2026-11-03-release-rc1-')
 # --no-renames: a rename reports both its source deletion and its destination, so moving an
 # out-of-scope file into an allowed path still shows the out-of-scope deletion.
 # -z: NUL-separated, so a path with spaces or quoting is one entry.
@@ -80,14 +114,12 @@ print('changed paths:', len(set(out)), 'outside scope:', extra, 'head:', head, '
 sys.exit(1 if extra or moved else 0)
 "@
 
-# Row 0 receipt (s44-base-py), the Sessions 35-43 set: the environmental packaging tests that need the
-# gitignored pack tree and ffmpeg binaries. They are excused only if row 0 really saw them fail.
-# c34866b re-pinned the AGENTS.md rule map, so Session 41's framework-adoption ids are not expected.
+# Row 0 receipt (s44-base-py): the environmental packaging tests that need the gitignored pack tree
+# and ffmpeg binaries. They are excused only if row 0 really saw them fail. c34866b re-pinned the
+# AGENTS.md rule map, so Session 41's framework-adoption ids are not expected, and 0eb59ab fixed AC-25.7.
 $expectedBaselinePyFailed = @(
     'tests/unit/test_packaging_backend.py::test_pack_dist_onedir_layout[AC-24.10]',
-    'tests/unit/test_packaging_installer.py::test_nsis_pack_check_script[AC-25.10]',
-    # Session 40 EC-1 (known issue PACKAGING-MCP-SNIPPET-TOKEN-STALE): fails against the committed mcp.json.example, outside PRODUCT_SCOPE.
-    'tests/unit/test_packaging_installer.py::test_mcp_snippet_keys[AC-25.7]'
+    'tests/unit/test_packaging_installer.py::test_nsis_pack_check_script[AC-25.10]'
 )
 # An expected id is excused only when row 0's baseline receipt really shows it FAILED (round 1 Q7):
 # a missing receipt, or an id that passed at baseline, excuses nothing.
@@ -126,6 +158,8 @@ $steps = @(
     @{ Id = 'task-contract'; Stage = 'static'; Argv = @('uv', 'run', 'python', 'tools/lint_task_contract.py', '--allowed-builder-classes', 'avkit_builder,avkit_coordinator,avkit_verifier', '--task', "$plan/task.md") },
     @{ Id = 'scope-paths'; Stage = 'static'; Argv = @('uv', 'run', 'python', '-c', $scopePaths) },
     @{ Id = 'build-identity-selftest'; Stage = 'static'; Argv = @('uv', 'run', 'python', "$plan/build-identity.py", '--selftest') },
+    @{ Id = 'audit-rule-selftest'; Stage = 'static'; Argv = @('uv', 'run', 'python', "$plan/audit-rule.py", '--selftest') },
+    @{ Id = 'audit-clear-selftest'; Stage = 'static'; Argv = @('pwsh', '-NoProfile', '-File', "$plan/audit-clear.ps1", '-Selftest') },
     @{ Id = 'py-tests'; Stage = 'full'; Argv = @('uv', 'run', 'pytest', 'tests/', '--tb=short', '-q', '-rfE') },
     @{ Id = 'ui-tests'; Stage = 'full'; Argv = @('npm', '--prefix', 'ui', 'run', 'test') },
     # G-1 (S2 decision 2026-10-16): build before the tests, which load mcp-server/dist (RULE-1).
@@ -139,6 +173,8 @@ $steps = @(
     # BUILD_RECORD: rows 11 and 12 tested this installer, so it must still match the tree and its bytes.
     @{ Id = 'build-record'; Stage = 'full'; Argv = @('uv', 'run', 'python', "$plan/build-identity.py", '--verify-record', 'C:/Temp/av-kit/rc1/build-record.json') },
     @{ Id = 'ui-electron'; Stage = 'runtime'; Argv = @('npm', '--prefix', 'ui', 'run', 'test:e2e') },
+    @{ Id = 'mcp-audit-clear'; Stage = 'runtime'; Argv = @('pwsh', '-NoProfile', '-File', "$plan/audit-clear.ps1", '-Dir', $auditOut) },
+    @{ Id = 'mcp-audit'; Stage = 'runtime'; Argv = @('npm', '--prefix', 'mcp-server', 'run', 'audit', '--', '--mode', 'authoritative', '--baseline', "$root/.agent/skills/mcp-tool-audit/resources/baseline-snapshot.json", '--report', "$auditOut/mcp-tool-audit-report.md", '--out', $auditOut, '--agent', 'claude-code') },
     @{ Id = 'identity-npm'; Stage = 'identity'; Argv = @('npm', '--prefix', 'ui', 'ls', 'electron', '@playwright/test') },
     @{ Id = 'identity-after'; Stage = 'identity'; Argv = $identity }
 )
@@ -149,6 +185,7 @@ function Get-TestedState([string]$Receipt) {
     return $line.Line.Substring('tested_state '.Length).Trim()
 }
 
+$auditTolerated = $false
 for ($i = 0; $i -lt $steps.Count; $i++) {
     $step = $steps[$i]
     $receipt = "$receipts/s44-D6-$($step.Id).txt"
@@ -180,6 +217,17 @@ for ($i = 0; $i -lt $steps.Count; $i++) {
             $code = 0
         }
     }
+    if ($code -eq 1 -and $step.Id -eq 'mcp-audit') {
+        $ruleReceipt = "$receipts/s44-D6-mcp-audit-rule.txt"
+        & rtk proxy uv run python "$plan/audit-rule.py" "$auditOut/mcp-audit-summary.json" --head $head *> $ruleReceipt
+        $ruleCode = $LASTEXITCODE
+        Get-Content $ruleReceipt | Select-Object -Last 12
+        Write-Output ("mcp-audit audit rule: exit={0} receipt={1}" -f $ruleCode, $ruleReceipt)
+        if ($ruleCode -eq 0) {
+            $code = 0
+            $auditTolerated = $true
+        }
+    }
     if ($code -eq 0 -and $step.Id -eq 'identity-after') {
         $before = Get-TestedState "$receipts/s44-D6-identity-before.txt"
         $after = Get-TestedState $receipt
@@ -195,6 +243,10 @@ for ($i = 0; $i -lt $steps.Count; $i++) {
         }
         exit $code
     }
+}
+if ($auditTolerated) {
+    Write-Output 'session-gate: INCOMPLETE VERIFICATION: every other step exits 0, but the authoritative audit stays non-pass. Transcript is not verified end to end while YouTube blocks captions (YOUTUBE-CAPTIONS-IP-BLOCK).'
+    exit 0
 }
 Write-Output 'session-gate: all steps exit 0'
 exit 0

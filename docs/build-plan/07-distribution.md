@@ -301,6 +301,34 @@ MCP Guard / lock stays **deferred** ([06-gui.md](06-gui.md)).
 | Pass condition | `MCP_ENTRY_PROBE` on a freshly built `win-unpacked` tree: `av-kit.exe` with `ELECTRON_RUN_AS_NODE=1` starts the in-place entry and a hermetic copy, and each answers `initialize` as `av-kit`. A record of an earlier probe is not a pass | p7 RULE-1; Session 31b plan D-84 |
 | Tests | A temp-directory copy of the bundle with no `node_modules` above it answers `initialize`; `collectLicenses` fixture cases, including the missing-licence error; pins on `electron-builder.yml`, `dist:prep`, `.gitignore` and the `esbuild` version | Session 31b plan AC-92.1–92.3 |
 
+<a id="release-candidate-packaging-residual"></a>
+
+### Release candidate packaging (residual)
+
+> **MEU-110.** Registered 2026-11-03 from Mat's request to prepare the first release candidate. The only installer on disk is a local build from 2026-09-01 that predates the licence file and must not be uploaded. Tag, release, upload and the FFmpeg licence ruling (D-101) stay with Mat; nothing in this section publishes.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Licence | `LICENSE` is MIT and is installed as `resources/LICENSE`. Every package manifest declares MIT. The README links it and says bundled components keep their own licences. | Mat 2026-11-03 |
+| Licence list | `LICENCE_LIST`: the installer carries a generated `resources/THIRD_PARTY_LICENSES.txt` listing every third-party component actually in the build, with the full text of every licence or notice its distribution carries, including notices outside dist-info and outside the build's TOC. `tools/generate_third_party_licenses.py` reads what shipped, not what the environment holds. | `NOTICES-SPACY-TRANSITIVE` |
+| Fails closed | Generation exits non-zero for a component with no notice, a notice its `RECORD` lists but disk lacks, a GPL-class licence not on the explicit allow list, payload outside the named classes (first party, CPython, CPython native library with a reviewed text, Windows runtime, source-less namespace package), or a stale build whose TOCs disagree with `_internal` or the exe's module archive. | This section |
+| Version | `VERSION_ONE`: one release version on every shipped surface. `0.1.0-rc.1` for npm and electron-builder, `0.1.0rc1` for Python and OpenAPI, tag `v0.1.0-rc.1`. A test fails when they drift. | This section |
+| Installer | `av-kit-Setup-<version>.exe`, no spaces, so GitHub keeps the name. The FFmpeg entry filters `*.zip`. The installer stays under the 500 MB budget. | `INSTALLER-SHIPS-FFMPEG-ZIP`; GitHub REST docs (asset renaming) |
+| Fresh build | The installer comes from today's tree, after clearing `ui/dist`, `packaging/build` and `packaging/dist`, with a fresh backend, picker, MCP bundle and FFmpeg with its licence. | This section |
+| Build record | `BUILD_RECORD`: the build writes the identity of its inputs, the installer's name, size and SHA-256, and its toolchain. `build-identity.py --verify-record` fails when the tree or the installer no longer matches. | This section |
+| Packaged checks | Packaged layout, including the absence of `torch`, `kokoro`, `phonemizer` and `espeakng_loader`. The frozen backend reports the version and completes a first conversion into a folder that doesn't exist. The MCP entry starts through `av-kit.exe`. TTS runs offline from cached models. A silent install launches, reaches the backend and renders a page, and uninstall leaves no key, value, shortcut or install folder while `%LOCALAPPDATA%/av-kit` keeps the same top-level entries. | MEU-72 `PACKAGE_SMOKE`; AC-92.4; [§Login item uninstall](#login-item-uninstall-meu-61) |
+| Release materials | Release notes say what the RC is, what it doesn't fix and how to report problems. A publish checklist gives the outward steps in order with exact commands. D-101 is presented as a Decision Brief. | Mat 2026-11-03 |
+
+> **Delivered (Session 44).**
+> - `LICENSE` and the MIT metadata in every manifest. One RC version on every surface: `0.1.0-rc.1` for npm and electron-builder, `0.1.0rc1` for Python.
+> - `tools/generate_third_party_licenses.py` builds `THIRD_PARTY_LICENSES.txt` from what the build shipped and fails closed. `packaging/licence-overrides/` holds the upstream texts it can't read from the build.
+> - `build-rc.ps1` built the real installer, recorded in `docs/releases/v0.1.0-rc.1-build-record.json`. `tools/smoke_packaged_rc.py`, `packaged-probes.ps1` and `install-roundtrip.ps1` checked the packaged tree and a real install and uninstall on the build PC. That doesn't replace the clean-machine test.
+> - `docs/releases/v0.1.0-rc.1.md` and `publish-checklist-v0.1.0-rc.1.md`. Nothing was tagged or uploaded.
+> - Mat ruled D-101 on 2026-11-04: the GPL build stays, re-pinned to BtbN `autobuild-2026-10-31-12-59`. `tools/assemble_ffmpeg_source.py` builds its complete corresponding source archive, and the publish checklist refuses to publish without that archive attached.
+> - AC-110.1 to AC-110.22.
+> - Gate: the shared `session-gate.ps1` record in the MEU-110 handoff.
+> - Plan `docs/execution/plans/2026-11-03-release-rc1/`.
+
 ---
 
 ## Platforms

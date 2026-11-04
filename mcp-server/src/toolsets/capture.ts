@@ -8,7 +8,8 @@ const TEXT_MAX_CHARS = 500;
 const PIXELATE_BLOCK_MIN = 2;
 const PIXELATE_BLOCK_MAX = 100;
 
-export const IMAGE_MAX_BYTES = 15_728_640;
+// Its base64 plus the JSON-RPC envelope must fit the SDK's 10 MiB stdio buffer; a longer line closes the connection.
+export const IMAGE_MAX_BYTES = 7_800_000;
 /**
  * Capture ids are server-minted opaque tokens (uuid4). Anything else is refused at the boundary,
  * so agent text can never reach the USER_CONFIRM prompt or the request path (review F1).

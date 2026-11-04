@@ -1513,6 +1513,29 @@ The following features are explicitly **deferred** to a future phase:
 > - Gate: `session-gate.ps1` run 4, all steps exit 0 (walkthrough §Gate).
 > - Plan `docs/execution/plans/2026-10-26-gui-keyboard-palette/`.
 
+<a id="ready-probe-residual"></a>
+
+### Ready probe (residual)
+
+> **MEU-108.** Registered 2026-11-03 from known issue `GUI-READY-PROBE-BLOCKS-MAIN`. The main process's output handler runs `queryLiveProcess` for every chunk of backend output before it looks at the text, and on Windows that call runs PowerShell synchronously, so ordinary logging can stall the window.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Guard | `READY_GUARD`: `live-identity`'s process query runs only for an output chunk that carries a usable `AVKIT_READY` line. Every other chunk does no process query and publishes nothing. | Known issue |
+| Unusable READY | `AVKIT_READY port=0` does no process query and publishes nothing. | Existing `port=0` rule in `python-manager.ts` |
+| Usable READY | One process query, then the same publish as `confirmReadyAndPublish`: same `apiBase`, same token. The ownership checks don't change. | [07 §PythonManager](07-distribution.md) step 3 |
+| One test of READY | The guard and the publisher read one shared regex, so they can't disagree. | This section |
+| Log after the window | `LOG_AFTER_WINDOW`: backend output can arrive after the window is destroyed or its renderer is torn down. `forwardConsoleLines` sends nothing then and throws nothing, because an uncaught throw stops the main process behind an error dialog. The line stays in the in-memory log either way. | Mat's report, Session 44 |
+| Shape | New exported `publishIfReady` in `ui/src/main/python-manager.ts` takes the chunk text and an injected `queryLive`. The output handler in `ui/src/main/index.ts` calls only that and keeps its published log note. | This section |
+
+> **Delivered (Session 44).**
+> - `publishIfReady` in `ui/src/main/python-manager.ts` runs the process query only for a chunk carrying a usable `AVKIT_READY` line. The guard and the publisher read one shared regex, and `index.ts` calls it for every chunk.
+> - The backend descriptor read sits behind the same guard, so an ordinary chunk touches neither.
+> - `ui/tests/unit/ready-probe-guard.test.ts`, AC-108.1 to AC-108.6.
+> - `forwardConsoleLines` in `ui/src/main/python-manager.ts` is the output handler's only route to the window. `ui/tests/e2e/backend-output-after-close.test.ts`, AC-108.7, runs the real handler in real Electron with the window destroyed.
+> - Gate: the shared `session-gate.ps1` record in the MEU-108 handoff.
+> - Plan `docs/execution/plans/2026-11-03-release-rc1/`.
+
 ## Validation Commands
 
 ```bash

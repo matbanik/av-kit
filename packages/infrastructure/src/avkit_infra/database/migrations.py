@@ -41,7 +41,8 @@ MIGRATIONS: list[str] = [
         error_message TEXT,
         queue_position INTEGER NOT NULL,
         created_at DATETIME NOT NULL,
-        updated_at DATETIME NOT NULL
+        updated_at DATETIME NOT NULL,
+        gpu_preference TEXT
     )
     """,
     "CREATE INDEX IF NOT EXISTS ix_conversion_jobs_queue_position "
@@ -95,6 +96,14 @@ DATA_MIGRATIONS: list[str] = [
 ]
 
 
+# Columns added after a table first shipped. create_all and CREATE TABLE IF NOT EXISTS
+# both leave an existing table alone, and ADD COLUMN has no IF NOT EXISTS, so each entry
+# runs only when PRAGMA table_info says the column is missing.
+COLUMN_MIGRATIONS: list[tuple[str, str, str]] = [
+    ("conversion_jobs", "gpu_preference", "TEXT"),
+]
+
+
 def _data_migration_table(statement: str) -> str:
     """Return the table a data migration writes to (`UPDATE <table> SET ...`)."""
     parts = statement.split()
@@ -121,4 +130,16 @@ def apply_migrations(engine: Any) -> None:
                 continue
             connection.exec_driver_sql(statement)
             applied_data += 1
-    log.info("migrations.apply", count=len(MIGRATIONS), data_count=applied_data)
+        added_columns = 0
+        for table, column, sql_type in COLUMN_MIGRATIONS:
+            existing = connection.exec_driver_sql(f"PRAGMA table_info({table})")
+            if column in {str(row[1]) for row in existing}:
+                continue
+            connection.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {column} {sql_type}")
+            added_columns += 1
+    log.info(
+        "migrations.apply",
+        count=len(MIGRATIONS),
+        data_count=applied_data,
+        added_columns=added_columns,
+    )

@@ -1,3 +1,11 @@
+Current priority: Session 44 `release-rc1` (MEU-108 READY guard, MEU-109 output folder, MEU-111 MCP image limit, MEU-112 encoder chosen for one job, MEU-110 RC packaging). Mat ruled on the five open decisions on 2026-11-04 (plan ECN-6, D-202 to D-206). The execution review approved and the closeout is done. Mat approved the commit, tag, release and repository description, and they run in that order once CI is green:
+- Plan: `docs/execution/plans/2026-11-03-release-rc1/`. Handoffs: `.agent/context/handoffs/2026-11-03-release-rc1-MEU-{108,109,110,111,112}-handoff.md`. Reflection: `docs/execution/reflections/2026-11-03-release-rc1-reflection.md`. Release materials: `docs/releases/`.
+- Gate: H1-2 attempt 6 reads `session-gate: INCOMPLETE VERIFICATION`. Every step exits 0, and the live audit passes 98 of 99. `transcript.compile` stays non-pass while YouTube blocks captions from this machine (`YOUTUBE-CAPTIONS-IP-BLOCK`, D-186).
+- Installer: `av-kit-Setup-0.1.0-rc.1.exe`, 340,348,020 B, SHA-256 `beabc50990e10c30afe8895170fd7fa3deedf622b182b5d343cc5f3aa09768a7`, unsigned, on FFmpeg `n8.1.3-27-g8dca1586f4-20261031`. Source archive `av-kit-0.1.0-rc.1-ffmpeg-source.tar.xz`, 992,681,460 B, SHA-256 `953a62373693e388a853ee2c6dbfadf4ce12e7f4aeb13b86e26f179b48d07284`. It sits in `C:/Temp/av-kit/rc1/ffmpeg-src/` until it's uploaded, so keep it there.
+- Reviews: the plan review approved at round 3 of 3, and that loop stays closed. The execution review approved the first build at round 1 of 6. Round 2 returned two findings, and both are fixed (ECN-8). The ledger refused to record that verdict, because F1 cites AC-112 and the loop's AC list predates it. Mat chose the same loop (D-210). Mat also reported a main-process crash during attempt 4, now fixed (ECN-9). Round 3 kept one blocker, an open settings edit freezing the encoder comparison, and the ledger refused that verdict too. Mat chose to fix it and run one narrow round (D-211, ECN-10), which the report counts as 4 and the ledger as 2. It approved with no findings. My prompt gave the reviewer the report's number, so the ledger refused the first record, and a narrow re-issue recorded it as round 2 of 6 (D-213, ECN-11). Real spend is 20,839,698 of the 21M budget, and the ledger shows 554,304.
+- Mat approved `docs/releases/publish-checklist-v0.1.0-rc.1.md` steps 4, 5, 8, 9 and 10. Steps 6 and 7 are Mat's. Still waiting on Mat: what to do with `.agent/fleet.json` (excluded locally, not this session's) and removing the pill worktree.
+- **Remind Mat once the release is public:** Mat waived the clean-machine install, the real F2 picker check, the first-model check and the Transcript recheck for now, and will run them from the published GitHub release (checklist steps 6 and 7, D-204).
+
 Current priority: Session 43 `capture-editor-repair` (MEU-99 history chords, MEU-100 resize handles, MEU-101 text re-edit and scaling), the only session of the 2026-10-29 grouping (`.agent/context/grouping/2026-10-29-capture-annotation-editor-session-grouping.md`). Executing on `main` (2026-11-03): the plan review approved in round 2 (D-161), rows 0-9 `[x]`, and the H1-2 fresh gate passed on its third run (every step exit 0, py-tests by the baseline rule; runs 1 and 2 hit load timeouts in `ui-electron` only). Mat ruled D-175 (census the builder pin), D-176 (Vitest worker flag for Node 26 `localStorage`) and D-177 (TA-3 in `icon-hints.test.ts`) on 2026-11-03. Next: the handoffs and the Codex execution review. Nothing is committed.
 - Plan: `docs/execution/plans/2026-10-29-capture-editor-repair/`. Handoffs: `.agent/context/handoffs/2026-10-29-capture-editor-repair-MEU-{99,100,101}-handoff.md`.
 - Execution corrections EC-1 to EC-10 (`walkthrough.md` §Execution Correction Notes).
@@ -18,6 +26,8 @@ Session 40 `gui-theme-path-fields` (MEU-94 theme-reactive selects, MEU-93 path f
 - Resolved: `GUI-LIGHT-THEME-SELECT-STALE-DARK`, `GUI-CONVERT-OUTPUT-NO-BROWSE`. Opened: `CAPTURE-E2E-LAUNCH-TEARDOWN-HANG` (the gate's Electron hangs) and `PACKAGING-MCP-SNIPPET-TOKEN-STALE` (AC-25.7).
 - Landed on `main` on 2026-11-03: Zorivest `1f254832`'s darker light pill hexes, on Mat's ruling of 2026-10-26.
 
+Repository state (2026-11-04): public on GitHub. History was squashed again to `6c11ef3` on 2026-11-03 and the repository recreated, so older hashes, `7b29fcd` included, are no longer on `main`. The bundles in `P:/av-kit-backup/` hold them.
+
 Repository state (2026-10-24):
 - Git history was squashed to one root commit, `7b29fcd` ("Initial commit: av-kit as of 2026-10-24"), and force-pushed. The 286 earlier commits are in `P:/av-kit-backup/full-history-20261024-3da69a1.bundle`; commit hashes cited in handoffs, plans, receipts and `baseline.sha` files resolve only there, so old `validate-task.ps1` scripts that read a pinned baseline do not re-run on `main`.
 - No branches or worktrees besides `main`. Every session through 39, plus 31b, is approved and merged.
@@ -25,9 +35,9 @@ Repository state (2026-10-24):
 - Resolved by the merge: `MCP-SETUP-PROMPT`, `MCP-PACKAGED-ENTRY-UNREACHABLE`, `QUEUE-PILL-TOKEN-DRIFT`.
 
 Next steps:
-1. Commit Session 42 on Mat's direction (draft: `C:/Temp/av-kit/commit-draft.txt`). For `TTS-ESPEAK-LIVE-PATH-UNVERIFIED`, Mat installs eSpeak NG 1.52 and runs AC-74.11 in the dev app; row 10 then turns `[x]`.
-2. Run the Electron E2E suite and the packaged `PKG_PROBE` on merged `main` (not run since the 31b merge).
-3. Mat's ruling on D-101 (FFmpeg LGPL versus GPL); it blocks `FFMPEG-PIN-URL-404` and the FFmpeg debt batch, not Sessions 40–42.
+1. Make the single commit Mat directed (D-206), draft in `C:/Temp/av-kit/commit-draft.txt`, then wait for green CI.
+2. Follow `docs/releases/publish-checklist-v0.1.0-rc.1.md` on Mat's go-ahead, and remind Mat of the checks waived until public (D-204).
+3. For `TTS-ESPEAK-LIVE-PATH-UNVERIFIED`, Mat installs eSpeak NG 1.52 and runs AC-74.11 in the dev app; Session 42's row 10 then turns `[x]`.
 
 Open follow-ups from earlier sessions:
 - Session 30 `/plan-corrections`: review F6 (stale plan wordings) and the missing Files-table row for `tests/tooling/test_framework_adoption.py`.

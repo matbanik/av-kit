@@ -168,6 +168,23 @@ const TERMINAL = new Set(["Done", "Failed", "Cancelled", "Skipped", "AgeRestrict
 
 // ---------------------------------------------------------------- step builders
 
+/**
+ * The MCP server's image cap, restated: the audit drives the server from outside and may not
+ * import it (AC-68.2). `tests/audit/capture-image-step.test.ts` fails if the two part.
+ */
+export const AUDIT_IMAGE_CAP = 7_800_000;
+
+/** The server's own refusal; a lost connection is also isError but never carries this code. */
+function isImageRefusal(result: ToolCallOutcome): boolean {
+  return result.isError && result.text.startsWith("payload_too_large:");
+}
+
+/** The refusal is right only when REST's own image really is over the cap. */
+function refusedImageObservation(rest: { status: number; bytes: Uint8Array }): ObservableResult {
+  const over = rest.status === 200 && rest.bytes.length > AUDIT_IMAGE_CAP;
+  return obs(over, `MCP refused; REST ${rest.status} ${rest.bytes.length} B over the ${AUDIT_IMAGE_CAP} B cap: ${String(over)}`);
+}
+
 /** One MCP call + one observable. */
 export function simpleStep(spec: {
   id: string;
@@ -175,7 +192,7 @@ export function simpleStep(spec: {
   action: string;
   phase?: "lifecycle" | "functional";
   depends_on?: string[];
-  expectError?: boolean;
+  expectError?: boolean | ((result: ToolCallOutcome) => boolean);
   needs?: string[];
   args: (ctx: StepContext) => Record<string, unknown>;
   observe: (ctx: StepContext, result: ToolCallOutcome) => Promise<ObservableResult>;
@@ -191,7 +208,8 @@ export function simpleStep(spec: {
       if (missing) return { kind: "blocked", by: `state:${missing}`, detail: `${missing} was never established` };
       const result = await ctx.call(spec.tool, spec.args(ctx));
       const observable = await spec.observe(ctx, result);
-      return { kind: "simple", isError: result.isError, expectError: spec.expectError ?? false, observable, text: result.text };
+      const expectError = typeof spec.expectError === "function" ? spec.expectError(result) : (spec.expectError ?? false);
+      return { kind: "simple", isError: result.isError, expectError, observable, text: result.text };
     },
   };
 }
@@ -1469,11 +1487,14 @@ const CAPTURE_STEPS: StepSpec[] = [
     tool: "avkit_capture",
     action: "image",
     needs: ["shot_id"],
+    expectError: isImageRefusal,
     args: (ctx) => ({ action: "image", id: ctx.state.get("shot_id") }),
     observe: async (ctx, result) => {
+      const restPath = `/captures/${str(ctx.state.get("shot_id"))}/image`;
+      if (isImageRefusal(result)) return refusedImageObservation(await ctx.rest.bytes(restPath));
       if (result.isError || !result.image) return obs(false, `no image content: ${result.text.slice(0, 160)}`);
       const mcpBytes = Buffer.from(result.image.data, "base64");
-      const rest = await ctx.rest.bytes(`/captures/${str(ctx.state.get("shot_id"))}/image`);
+      const rest = await ctx.rest.bytes(restPath);
       const same = rest.status === 200 && Buffer.compare(mcpBytes, Buffer.from(rest.bytes)) === 0;
       const png = mcpBytes.subarray(0, 8).equals(PNG_SIGNATURE);
       return obs(same && png, `MCP image ${mcpBytes.length} B == REST ${rest.bytes.length} B: ${String(same)}; PNG ${String(png)}`);
@@ -1501,11 +1522,14 @@ const CAPTURE_STEPS: StepSpec[] = [
     tool: "avkit_capture",
     action: "image",
     depends_on: ["capture.annotate"],
+    expectError: isImageRefusal,
     args: (ctx) => ({ action: "image", id: ctx.state.get("shot_id"), variant: "annotated" }),
     observe: async (ctx, result) => {
+      const restPath = `/captures/${str(ctx.state.get("shot_id"))}/image?variant=annotated`;
+      if (isImageRefusal(result)) return refusedImageObservation(await ctx.rest.bytes(restPath));
       if (result.isError || !result.image) return obs(false, `no image content: ${result.text.slice(0, 160)}`);
       const mcpBytes = Buffer.from(result.image.data, "base64");
-      const rest = await ctx.rest.bytes(`/captures/${str(ctx.state.get("shot_id"))}/image?variant=annotated`);
+      const rest = await ctx.rest.bytes(restPath);
       const same = rest.status === 200 && Buffer.compare(mcpBytes, Buffer.from(rest.bytes)) === 0;
       return obs(same, `annotated MCP ${mcpBytes.length} B == REST: ${String(same)}`);
     },

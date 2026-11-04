@@ -62,6 +62,11 @@ def _ms_to_seconds(ms: int) -> str:
     return text if text else "0"
 
 
+def _ensure_output_parent(output_path: Path) -> None:
+    # FFmpeg reports a missing folder only as an exit code; a failed mkdir names the path.
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+
 def _parse_rate(raw: object) -> float | None:
     if not isinstance(raw, str) or raw in {"", "0/0", "N/A"}:
         return None
@@ -551,6 +556,7 @@ class FFmpegAdapter:
         should_stop: Callable[[], bool],
     ) -> None:
         ffmpeg = self._require_ffmpeg()
+        _ensure_output_parent(output_path)
         command = [str(ffmpeg), "-y"]
         if options.hwaccel:
             command.extend(["-hwaccel", options.hwaccel])
@@ -577,6 +583,7 @@ class FFmpegAdapter:
         should_stop: Callable[[], bool],
     ) -> None:
         ffmpeg = self._require_ffmpeg()
+        _ensure_output_parent(output_path)
         start = _ms_to_seconds(options.in_ms)
         duration = _ms_to_seconds(options.out_ms - options.in_ms)
         command = [str(ffmpeg), "-y", "-ss", start, "-i", str(input_path), "-t", duration]
@@ -614,6 +621,7 @@ class FFmpegAdapter:
         should_stop: Callable[[], bool],
     ) -> None:
         ffmpeg = self._require_ffmpeg()
+        _ensure_output_parent(output_path)
         command = [
             str(ffmpeg),
             "-y",

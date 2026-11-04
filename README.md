@@ -49,7 +49,7 @@ av-kit does all of that in one window.
 > **No installer yet.** The first release candidate is being prepared. Until it's out,
 > you can [build from source](#build-from-source).
 
-1. Download **`av-kit Setup <version>.exe`** from the [Releases page](https://github.com/matbanik/av-kit/releases).
+1. Download **`av-kit-Setup-<version>.exe`** from the [Releases page](https://github.com/matbanik/av-kit/releases).
    It runs on Windows 10 and 11 (64-bit).
 2. Run it. The installer is not code-signed yet, so Windows SmartScreen may ask:
    choose **More info → Run anyway**.
@@ -207,15 +207,16 @@ npm run dev
 <details>
 <summary>Building the installer</summary>
 
-`npm run dist` (in `ui`) builds `ui\dist\av-kit Setup <version>.exe`. It packs three things
+`npm run dist` (in `ui`) builds `ui\dist\av-kit-Setup-<version>.exe`. It packs three things
 that must exist first:
 
 1. **The backend:** from the repo root, `uv run python tools/package_backend.py` builds
    `packaging\dist\avkit-backend` with PyInstaller.
-2. **FFmpeg:** `tools\fetch_ffmpeg_windows.ps1` downloads a pinned build into
-   `packaging\ffmpeg-win64`. If the pinned link has expired, pass a current
-   [BtbN win64 GPL build](https://github.com/BtbN/FFmpeg-Builds/releases) with `-Url`
-   and its `-Sha256`.
+2. **FFmpeg:** `tools\fetch_ffmpeg_windows.ps1` downloads the pinned build,
+   `n8.1.3-27-g8dca1586f4`, into `packaging\ffmpeg-win64`. If the pinned link has expired, pass
+   a current [BtbN win64 GPL build](https://github.com/BtbN/FFmpeg-Builds/releases) with `-Url`
+   and its `-Sha256`. If you share an installer made with a different build, you need to provide
+   that build's source too. `tools\assemble_ffmpeg_source.py` collects the pinned build's.
 3. **The MCP server's packages:** `npm install` in `mcp-server`.
 
 </details>
@@ -255,4 +256,6 @@ Rottiboo, the pup, is av-kit's mascot.
 ## License
 
 av-kit's own code is released under the [MIT License](LICENSE). Bundled components keep
-their own licenses, listed in [THIRD_PARTY_NOTICES.md](packaging/THIRD_PARTY_NOTICES.md).
+their own licenses, listed in [THIRD_PARTY_NOTICES.md](packaging/THIRD_PARTY_NOTICES.md). The
+installer's FFmpeg is licensed under the GPL, version 3, and its complete source is attached to
+each release.

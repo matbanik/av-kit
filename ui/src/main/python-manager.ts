@@ -1,6 +1,7 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import { realpathSync } from 'node:fs'
 import { join } from 'node:path'
+import type { LiveQuery } from './live-identity'
 
 export async function resolvePythonImage(
   run: (cmd: string[]) => Promise<string>,
@@ -85,6 +86,14 @@ export async function shutdownOwned(
   deps.retirePortSibling()
 }
 
+// One test of READY, shared by the guard and the publisher so they cannot disagree.
+const AVKIT_READY_LINE = /AVKIT_READY port=(\d+) instance=(\S+)/
+
+function usableReadyPort(text: string): string | null {
+  const match = AVKIT_READY_LINE.exec(text)
+  return match === null || match[1] === '0' ? null : match[1]
+}
+
 export function confirmReadyAndPublish(input: {
   readyText: string
   ownedPid: number
@@ -94,8 +103,8 @@ export function confirmReadyAndPublish(input: {
   token: string
   publish: (ready: { apiBase: string; token: string }) => void
 }): boolean {
-  const match = /AVKIT_READY port=(\d+) instance=(\S+)/.exec(input.readyText)
-  if (match === null || match[1] === '0') {
+  const port = usableReadyPort(input.readyText)
+  if (port === null) {
     return false
   }
   // READY arrived on the stdout pipe of the child we spawned. That is the
@@ -110,10 +119,54 @@ export function confirmReadyAndPublish(input: {
     oursExe: input.oursExe,
   })
   input.publish({
-    apiBase: `http://127.0.0.1:${match[1]}/api/v1`,
+    apiBase: `http://127.0.0.1:${port}/api/v1`,
     token: input.token,
   })
   return true
+}
+
+/**
+ * Sends backend log lines to the window. The backend can write after the window has gone: reading
+ * `webContents` from a destroyed window throws, and an uncaught throw in the output handler stops the
+ * main process behind an error dialog. The lines stay in the in-memory log either way.
+ */
+export function forwardConsoleLines(
+  window: { isDestroyed(): boolean; webContents: { send(channel: string, ...args: unknown[]): void } } | null,
+  lines: unknown[],
+): void {
+  if (window === null || window.isDestroyed()) {
+    return
+  }
+  try {
+    window.webContents.send('console-log-batch', lines)
+  } catch {
+    // the renderer went away between the check and the send
+  }
+}
+
+export function publishIfReady(input: {
+  chunkText: string
+  ownedPid: number
+  readDescriptorPid: () => number | null
+  queryLive: (pid: number) => LiveQuery
+  oursExe: string
+  token: string
+  publish: (ready: { apiBase: string; token: string }) => void
+}): boolean {
+  // The query runs PowerShell synchronously on Windows; backend output arrives in many chunks.
+  if (usableReadyPort(input.chunkText) === null) {
+    return false
+  }
+  const live = input.queryLive(input.ownedPid)
+  return confirmReadyAndPublish({
+    readyText: input.chunkText,
+    ownedPid: input.ownedPid,
+    descriptorPid: input.readDescriptorPid(),
+    liveImage: live.image ?? '',
+    oursExe: input.oursExe,
+    token: input.token,
+    publish: input.publish,
+  })
 }
 
 export async function waitPidExit(

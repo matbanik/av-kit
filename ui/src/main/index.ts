@@ -32,8 +32,9 @@ import {
 import {
   buildDevSpawnArgv,
   buildPackagedSpawnArgv,
-  confirmReadyAndPublish,
+  forwardConsoleLines,
   packagedBackendPath,
+  publishIfReady,
   resolvePythonImage,
   shutdownOwned,
   spawnOwned,
@@ -270,24 +271,23 @@ export async function boot(): Promise<void> {
         continue
       }
       const item = appendStdoutLog(line)
-      mainWindow?.webContents.send('console-log-batch', [item])
+      forwardConsoleLines(mainWindow, [item])
     }
     if (ownedPid === null) {
       return
     }
-    const live = queryLiveProcess(ownedPid)
-    const published = confirmReadyAndPublish({
-      readyText: text,
+    const published = publishIfReady({
+      chunkText: text,
       ownedPid,
-      descriptorPid: readDescriptorPid(appData),
-      liveImage: live.image ?? '',
+      readDescriptorPid: () => readDescriptorPid(appData),
+      queryLive: queryLiveProcess,
       oursExe: pythonImage,
       token: guiNonce,
       publish: publishBackendReady,
     })
     if (published) {
       const note = appendStdoutLog(`INFO backend published for port in AVKIT_READY`)
-      mainWindow?.webContents.send('console-log-batch', [note])
+      forwardConsoleLines(mainWindow, [note])
     }
   }
   child.stdout?.on('data', onChildOutput)

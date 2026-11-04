@@ -221,9 +221,12 @@ def test_ac_72_7_third_party_notices() -> None:
     assert "not shipped" in _section(sections, "Kokoro").lower()
     ffmpeg = _section(sections, "FFmpeg")
     for needle in (
-        "n8.1.2-44-g7c533d0f86",
-        "https://github.com/FFmpeg/FFmpeg/tree/n8.1.2",
+        "n8.1.3-27-g8dca1586f4",
+        "8dca1586f468bfcbb78ae3ed618af1361d9f140a",
+        "autobuild-2026-10-31-12-59",
         "https://github.com/BtbN/FFmpeg-Builds",
+        "av-kit-0.1.0-rc.1-ffmpeg-source.tar.xz",
+        "https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.1",
         "resources/ffmpeg/LICENSE.txt",
         "ffmpeg.exe",
         "ffprobe.exe",
@@ -243,7 +246,7 @@ def test_ac_72_7_third_party_notices() -> None:
 def _ffmpeg_zip(archive: Path, *, with_license: bool) -> str:
     import hashlib
 
-    root = "ffmpeg-n8.1.2-44-g7c533d0f86-win64-gpl-8.1"
+    root = "ffmpeg-n8.1.3-27-g8dca1586f4-win64-gpl-8.1"
     with zipfile.ZipFile(archive, "w") as zf:
         zf.writestr(f"{root}/bin/ffmpeg.exe", b"M" * 2048)
         zf.writestr(f"{root}/bin/ffprobe.exe", b"P" * 2048)

@@ -1,12 +1,12 @@
 # Fetch a pinned Windows FFmpeg essentials build into FFMPEG_VENDOR.
 # URL + SHA256 are mandatory. Never download an unpinned floating "latest".
-# Pin: BtbN autobuild-2026-08-24-13-10 win64 gpl (not /latest/).
+# Pin: BtbN autobuild-2026-10-31-12-59 win64 gpl (not /latest/).
 # The build's GPL-3.0 LICENSE.txt is required and lands next to the binaries (D-87,
 # packaging/THIRD_PARTY_NOTICES.md).
 param(
     [string]$OutDir = 'packaging/ffmpeg-win64',
-    [string]$Url = $(if ($env:AVKIT_FFMPEG_URL) { $env:AVKIT_FFMPEG_URL } else { 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-08-24-13-10/ffmpeg-n8.1.2-44-g7c533d0f86-win64-gpl-8.1.zip' }),
-    [string]$Sha256 = $(if ($env:AVKIT_FFMPEG_SHA256) { $env:AVKIT_FFMPEG_SHA256 } else { '5EFB8182E0770C7AF639CE46C229E5A5EA585884F17D2E94983051D8DA90BDAB' }),
+    [string]$Url = $(if ($env:AVKIT_FFMPEG_URL) { $env:AVKIT_FFMPEG_URL } else { 'https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-10-31-12-59/ffmpeg-n8.1.3-27-g8dca1586f4-win64-gpl-8.1.zip' }),
+    [string]$Sha256 = $(if ($env:AVKIT_FFMPEG_SHA256) { $env:AVKIT_FFMPEG_SHA256 } else { '401DFFCF14C301082E1FC03B0BC876B92EA676BFC521FC56E80A1537D137034F' }),
     [switch]$ExtractOnly
 )
 $ErrorActionPreference = 'Stop'

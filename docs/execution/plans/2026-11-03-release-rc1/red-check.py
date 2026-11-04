@@ -59,6 +59,8 @@ DECLARED_NEW = (
     # MEU-108: the guard in python-manager.ts is extracted first, so it is never missing.
     # MEU-110: the new generator, imported inside the test body.
     "generate_third_party_licenses",
+    # MEU-112: the job's own encoder choice, read off the job and passed to its constructor.
+    "gpu_preference",
     # Names the --selftest fixtures declare; nothing in this session uses them.
     "resizeBox",
     "hitResizeHandle",

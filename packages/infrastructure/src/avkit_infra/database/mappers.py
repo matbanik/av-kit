@@ -20,6 +20,7 @@ from avkit_core.domain.enums import (
     ConversionStatus,
     CutCopyMode,
     DownloadStatus,
+    GpuPreference,
     MediaFormat,
     ModelFormat,
     ModelPrecision,
@@ -411,6 +412,7 @@ def conversion_job_from_row(row: ConversionJobRow) -> ConversionJob:
         queue_position=row.queue_position,
         created_at=_as_utc(row.created_at),
         updated_at=_as_utc(row.updated_at),
+        gpu_preference=_optional_enum(GpuPreference, row.gpu_preference, "gpu_preference"),
     )
 
 
@@ -443,6 +445,7 @@ def conversion_job_to_row(job: ConversionJob) -> ConversionJobRow:
         queue_position=job.queue_position,
         created_at=job.created_at,
         updated_at=job.updated_at,
+        gpu_preference=None if job.gpu_preference is None else job.gpu_preference.name,
     )
 
 
@@ -473,6 +476,7 @@ def apply_conversion_job(row: ConversionJobRow, job: ConversionJob) -> None:
     row.queue_position = job.queue_position
     row.created_at = job.created_at
     row.updated_at = job.updated_at
+    row.gpu_preference = None if job.gpu_preference is None else job.gpu_preference.name
 
 
 def capture_shot_from_row(row: CaptureShotRow) -> CaptureShot:

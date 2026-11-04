@@ -50,6 +50,8 @@ PROJECT_ARTIFACTS = (
     ".agent/context/current-focus.md",
     ".agent/context/known-issues.yaml",
     ".agent/context/known-issues.md",
+    ".agent/context/MCP/mcp-tool-audit-report.md",
+    ".agent/context/sessions/d2be867f-0d35-422e-b139-55d6ed0d88f2/digest.md",
 )
 #: Session 44 changes no Python dependency; the whole distribution set is still hashed.
 NAMED_DISTRIBUTIONS: tuple[str, ...] = ()

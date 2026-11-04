@@ -12,6 +12,8 @@ win:
       arch:
         - x64
 nsis:
+  # The default name has spaces, and GitHub rewrites those in a release asset's name.
+  artifactName: ${productName}-Setup-${version}.${ext}
   include: build/installer.nsh
   deleteAppDataOnUninstall: false
   installerIcon: build/icon.ico
@@ -29,9 +31,16 @@ extraResources:
     to: avkit-backend
   - from: ../packaging/ffmpeg-win64
     to: ffmpeg
+    filter:
+      - "!*.zip"
   # Licences of the shipped Python components and FFmpeg (MEU-72 NOTICES).
   - from: ../packaging/THIRD_PARTY_NOTICES.md
     to: THIRD_PARTY_NOTICES.md
+  # Generated from the real build by tools/generate_third_party_licenses.py (MEU-110).
+  - from: ../packaging/dist/THIRD_PARTY_LICENSES.txt
+    to: THIRD_PARTY_LICENSES.txt
+  - from: ../LICENSE
+    to: LICENSE
   - from: ../mcp-server/bundle
     to: mcp-server
   - from: ../native/region-picker/publish

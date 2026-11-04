@@ -351,7 +351,7 @@ export async function handleTool(tool: string, args: unknown, runtime?: ToolRunt
     if (binary.bytes.byteLength > IMAGE_MAX_BYTES) {
       return toToolError({
         code: "payload_too_large",
-        message: "image exceeds IMAGE_MAX_BYTES",
+        message: `image exceeds the ${IMAGE_MAX_BYTES} B MCP limit; read original_path or annotated_path from avkit_capture get and open that file`,
       }, env);
     }
     return {

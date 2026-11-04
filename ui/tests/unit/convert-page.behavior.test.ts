@@ -74,14 +74,16 @@ describe('MEU-33 convert GUI runtime (exec r1 F1–F4)', () => {
     output_dir: '~/Videos/av-kit',
     default_preset: 'archival' as const,
     skip_existing: true,
-    gpu_preference: 'auto' as const,
+    gpu_preference: 'auto' as 'auto' | 'software' | 'nvidia',
   }
+  let converterGate: Promise<void> | null = null
   const dialogFilters: unknown[] = []
 
   beforeEach(() => {
     user = userEvent.setup()
     fetches.length = 0
     dialogFilters.length = 0
+    converterGate = null
     converterGet = {
       output_dir: '~/Videos/av-kit',
       default_preset: 'archival',
@@ -151,6 +153,9 @@ describe('MEU-33 convert GUI runtime (exec r1 F1–F4)', () => {
           if (method === 'PUT') {
             converterGet = body as typeof converterGet
             return jsonResponse(converterGet)
+          }
+          if (converterGate !== null) {
+            await converterGate
           }
           return jsonResponse(converterGet)
         }
@@ -225,6 +230,304 @@ describe('MEU-33 convert GUI runtime (exec r1 F1–F4)', () => {
       )
       expect(post?.body).toMatchObject({ kind: 'compress', preset: 'archival', paths: ['C:/e2e/sample.mp4'] })
     })
+  })
+
+  function conversionPost(): FetchCall | undefined {
+    return fetches.find(
+      (row) => row.method === 'POST' && row.url.includes('/conversions') && !row.url.includes('/gpu'),
+    )
+  }
+
+  async function renderConvertWithSavedEncoder(saved: 'auto' | 'software'): Promise<HTMLSelectElement> {
+    converterGet = { ...converterGet, gpu_preference: saved }
+    await renderConvert()
+    const encoder = screen.getByLabelText('Encoder override') as HTMLSelectElement
+    await vi.waitFor(() => {
+      expect(encoder.value).toBe(saved)
+    })
+    await user.click(screen.getByTestId('convert-advanced'))
+    return encoder
+  }
+
+  async function addOneFile(): Promise<void> {
+    await user.click(screen.getByTestId('convert-browse'))
+    await user.click(screen.getByTestId('convert-add'))
+    await vi.waitFor(() => {
+      expect(conversionPost()).toBeDefined()
+    })
+  }
+
+  it('AC-112.6 Auto over a saved non-auto setting is sent on Add', async () => {
+    const encoder = await renderConvertWithSavedEncoder('software')
+    await user.selectOptions(encoder, 'auto')
+    await addOneFile()
+    expect(conversionPost()?.body).toMatchObject({ gpu_preference: 'auto' })
+  })
+
+  it('AC-112.6 a choice that differs from the saved setting is sent on Add', async () => {
+    const encoder = await renderConvertWithSavedEncoder('auto')
+    await user.selectOptions(encoder, 'software')
+    await addOneFile()
+    expect(conversionPost()?.body).toMatchObject({ gpu_preference: 'software' })
+  })
+
+  it('AC-112.6 a choice that matches a saved non-auto setting is omitted on Add', async () => {
+    await renderConvertWithSavedEncoder('software')
+    await addOneFile()
+    expect(conversionPost()?.body).not.toHaveProperty('gpu_preference')
+  })
+
+  it('AC-112.6 the command snapshot sends only a choice that differs from the saved setting', () => {
+    const snapshot: convertCommands.ConvertFormSnapshot = {
+      kind: 'compress',
+      paths: ['C:/e2e/sample.mp4'],
+      preset: 'balanced',
+      cq: 25,
+      scale_height: 0,
+      audio_mode: 'aac_128',
+      gpu_choice: 'auto',
+      saved_gpu_preference: 'software',
+      cutIn: '00:00:00.000',
+      cutOut: '00:00:00.000',
+      copy_mode: 'fast_copy',
+      stream_mode: 'first',
+      ffmpegAvailable: true,
+    }
+    convertCommands.setConvertFormSnapshot(snapshot)
+    expect(convertCommands.snapshotCreateInput()).toMatchObject({ gpu_preference: 'auto' })
+    convertCommands.setConvertFormSnapshot({ ...snapshot, gpu_choice: 'software' })
+    expect(convertCommands.snapshotCreateInput()).not.toHaveProperty('gpu_preference')
+    convertCommands.setConvertFormSnapshot({
+      ...snapshot,
+      gpu_choice: 'software',
+      saved_gpu_preference: 'auto',
+    })
+    expect(convertCommands.snapshotCreateInput()).toMatchObject({ gpu_preference: 'software' })
+  })
+
+  // Query results reach subscribers on a later timer, so an assertion straight after the fetch would run too early.
+  async function queryUpdatesReachThePage(): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    await new Promise((resolve) => setTimeout(resolve, 0))
+  }
+
+  async function renderConvertBeforeSettings(
+    saved: 'auto' | 'software',
+  ): Promise<{ encoder: HTMLSelectElement; settingsArrive: () => Promise<void> }> {
+    converterGet = { ...converterGet, gpu_preference: saved }
+    let release = (): void => {}
+    converterGate = new Promise((resolve) => {
+      release = resolve
+    })
+    await renderConvert()
+    await user.click(screen.getByTestId('convert-advanced'))
+    const settingsArrive = async (): Promise<void> => {
+      converterGate = null
+      await act(async () => {
+        release()
+        await vi.waitFor(() => {
+          expect(queryClient.getQueryState(['settings', 'converter'])?.status).toBe('success')
+        })
+        await queryUpdatesReachThePage()
+      })
+    }
+    return { encoder: screen.getByLabelText('Encoder override') as HTMLSelectElement, settingsArrive }
+  }
+
+  async function savedSettingChangesTo(next: 'software' | 'nvidia'): Promise<void> {
+    converterGet = { ...converterGet, gpu_preference: next }
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: ['settings', 'converter'] })
+      await queryUpdatesReachThePage()
+    })
+  }
+
+  it('AC-112.8 a choice made before settings load survives them on Add', async () => {
+    const { encoder, settingsArrive } = await renderConvertBeforeSettings('auto')
+    await user.selectOptions(encoder, 'software')
+    await settingsArrive()
+    expect(encoder.value).toBe('software')
+    await addOneFile()
+    expect(conversionPost()?.body).toMatchObject({ gpu_preference: 'software' })
+  })
+
+  it('AC-112.8 a choice made before settings load survives them on the command snapshot', async () => {
+    const { encoder, settingsArrive } = await renderConvertBeforeSettings('auto')
+    await user.selectOptions(encoder, 'software')
+    await settingsArrive()
+    expect(convertCommands.snapshotCreateInput()).toMatchObject({ gpu_preference: 'software' })
+  })
+
+  it('AC-112.8 a choice survives a later change to the saved setting on Add', async () => {
+    const encoder = await renderConvertWithSavedEncoder('auto')
+    await user.selectOptions(encoder, 'software')
+    await savedSettingChangesTo('nvidia')
+    expect(encoder.value).toBe('software')
+    await addOneFile()
+    expect(conversionPost()?.body).toMatchObject({ gpu_preference: 'software' })
+  })
+
+  it('AC-112.8 a choice survives a later change to the saved setting on the command snapshot', async () => {
+    const encoder = await renderConvertWithSavedEncoder('auto')
+    await user.selectOptions(encoder, 'software')
+    await savedSettingChangesTo('nvidia')
+    expect(convertCommands.snapshotCreateInput()).toMatchObject({ gpu_preference: 'software' })
+  })
+
+  it('AC-112.8 Auto picked before settings load stays Auto over a saved non-auto setting', async () => {
+    const { encoder, settingsArrive } = await renderConvertBeforeSettings('software')
+    await user.selectOptions(encoder, 'software')
+    await user.selectOptions(encoder, 'auto')
+    await settingsArrive()
+    expect(encoder.value).toBe('auto')
+    await addOneFile()
+    expect(conversionPost()?.body).toMatchObject({ gpu_preference: 'auto' })
+  })
+
+  it('AC-112.8 Add while settings are still loading sends the choice', async () => {
+    const { encoder } = await renderConvertBeforeSettings('software')
+    await user.selectOptions(encoder, 'software')
+    await user.selectOptions(encoder, 'auto')
+    await addOneFile()
+    expect(conversionPost()?.body).toMatchObject({ gpu_preference: 'auto' })
+  })
+
+  it('AC-112.8 a preset clicked before settings load leaves the dropdown following the setting', async () => {
+    const { encoder, settingsArrive } = await renderConvertBeforeSettings('software')
+    await user.click(screen.getByTestId('convert-preset-mobile'))
+    await settingsArrive()
+    expect(encoder.value).toBe('software')
+    await addOneFile()
+    expect(conversionPost()?.body).not.toHaveProperty('gpu_preference')
+  })
+
+  it('AC-112.8 an untouched dropdown follows a changed setting and sends nothing', async () => {
+    const encoder = await renderConvertWithSavedEncoder('auto')
+    await savedSettingChangesTo('nvidia')
+    await vi.waitFor(() => {
+      expect(encoder.value).toBe('nvidia')
+    })
+    await addOneFile()
+    expect(conversionPost()?.body).not.toHaveProperty('gpu_preference')
+  })
+
+  it('AC-112.8 perJobGpuPreference sends a pick unless it equals a known saved setting', () => {
+    expect(convertCommands.perJobGpuPreference).toBeTypeOf('function')
+    const rows = [
+      [null, null, undefined],
+      [null, 'software', undefined],
+      ['software', null, 'software'],
+      ['auto', null, 'auto'],
+      ['auto', 'software', 'auto'],
+      ['software', 'software', undefined],
+    ] as const
+    for (const [choice, saved, sent] of rows) {
+      expect(convertCommands.perJobGpuPreference(choice, saved)).toBe(sent)
+    }
+  })
+
+  async function editOutputFolder(): Promise<void> {
+    const dir = screen.getByTestId('convert-output-dir') as HTMLInputElement
+    await user.clear(dir)
+    await user.type(dir, 'C:/edited-output')
+  }
+
+  // Auto then Software is a real pick that equals the saved Software, because selecting the shown value changes nothing.
+  async function pickSoftwareOverSavedSoftware(): Promise<HTMLSelectElement> {
+    const encoder = await renderConvertWithSavedEncoder('software')
+    await user.selectOptions(encoder, 'auto')
+    await user.selectOptions(encoder, 'software')
+    return encoder
+  }
+
+  it('AC-112.9 a pick equal to the old setting is sent when an Output folder edit is open and the setting changes, on Add', async () => {
+    const encoder = await pickSoftwareOverSavedSoftware()
+    await editOutputFolder()
+    await savedSettingChangesTo('nvidia')
+    expect(encoder.value).toBe('software')
+    await addOneFile()
+    expect(conversionPost()?.body).toMatchObject({ gpu_preference: 'software' })
+  })
+
+  it('AC-112.9 a pick equal to the old setting is sent when an Output folder edit is open and the setting changes, on the command snapshot', async () => {
+    await pickSoftwareOverSavedSoftware()
+    await editOutputFolder()
+    await savedSettingChangesTo('nvidia')
+    expect(convertCommands.snapshotCreateInput()).toMatchObject({ gpu_preference: 'software' })
+  })
+
+  it('AC-112.9 a pick equal to the old setting is sent when a Skip existing edit is open and the setting changes', async () => {
+    await pickSoftwareOverSavedSoftware()
+    await user.click(screen.getByTestId('convert-skip-existing'))
+    await savedSettingChangesTo('nvidia')
+    await addOneFile()
+    expect(conversionPost()?.body).toMatchObject({ gpu_preference: 'software' })
+  })
+
+  it('AC-112.9 an untouched dropdown follows a changed setting while an edit is open, and sends nothing', async () => {
+    const encoder = await renderConvertWithSavedEncoder('software')
+    await editOutputFolder()
+    await savedSettingChangesTo('nvidia')
+    await vi.waitFor(() => {
+      expect(encoder.value).toBe('nvidia')
+    })
+    await addOneFile()
+    expect(conversionPost()?.body).not.toHaveProperty('gpu_preference')
+  })
+
+  it('AC-112.9 Save keeps the edit and writes the current saved encoder, not the one from when the edit began', async () => {
+    await renderConvertWithSavedEncoder('software')
+    await editOutputFolder()
+    await savedSettingChangesTo('nvidia')
+    await user.click(screen.getByTestId('convert-page-save'))
+    await vi.waitFor(() => {
+      expect(fetches.filter((row) => row.method === 'PUT' && row.url.includes('/settings/converter'))).toHaveLength(1)
+    })
+    const put = fetches.find((row) => row.method === 'PUT' && row.url.includes('/settings/converter'))
+    expect(put?.body).toMatchObject({ output_dir: 'C:/edited-output', gpu_preference: 'nvidia' })
+  })
+
+  it('AC-112.9 an edit begun before settings load keeps the saved values for everything else', async () => {
+    const { encoder, settingsArrive } = await renderConvertBeforeSettings('software')
+    await editOutputFolder()
+    await settingsArrive()
+    expect(encoder.value).toBe('software')
+    await addOneFile()
+    expect(conversionPost()?.body).not.toHaveProperty('gpu_preference')
+    expect((screen.getByTestId('convert-output-dir') as HTMLInputElement).value).toBe('C:/edited-output')
+  })
+
+  it('AC-112.9 on the Settings page an edit survives a refetch and a field nobody edited follows it', async () => {
+    converterGet = { ...converterGet, gpu_preference: 'software' }
+    await renderSettings()
+    const dir = screen.getByTestId('settings-leaf-converter-output_dir') as HTMLInputElement
+    await vi.waitFor(() => {
+      expect(dir.value).toBe('~/Videos/av-kit')
+    })
+    await user.clear(dir)
+    await user.type(dir, 'C:/edited-output')
+    const skip = screen.getByTestId('settings-leaf-skip_existing') as HTMLInputElement
+    expect(skip.checked).toBe(true)
+    converterGet = { ...converterGet, skip_existing: false }
+    await savedSettingChangesTo('nvidia')
+    expect(dir.value).toBe('C:/edited-output')
+    await vi.waitFor(() => {
+      expect(skip.checked).toBe(false)
+    })
+  })
+
+  it('AC-112.9 a pick equal to the unchanged setting stays unsent while an edit is open', async () => {
+    await pickSoftwareOverSavedSoftware()
+    await editOutputFolder()
+    await addOneFile()
+    expect(conversionPost()?.body).not.toHaveProperty('gpu_preference')
+  })
+
+  it('AC-112.9 the Output folder edit survives a changed setting', async () => {
+    await renderConvertWithSavedEncoder('software')
+    await editOutputFolder()
+    await savedSettingChangesTo('nvidia')
+    expect((screen.getByTestId('convert-output-dir') as HTMLInputElement).value).toBe('C:/edited-output')
   })
 
   it('AC-33.5 Advanced disclosure is Compress-only', async () => {

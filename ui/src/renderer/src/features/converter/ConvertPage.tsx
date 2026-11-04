@@ -46,6 +46,7 @@ import {
   CONVERT_BROWSE_EVENT,
   CONVERT_CONFIRM_EVENT,
   pauseConversion,
+  perJobGpuPreference,
   postConversionCreate,
   removeConversion,
   removeConversionOnly,
@@ -191,7 +192,8 @@ export function ConvertPage() {
   const [cq, setCq] = useState(defaults.cq)
   const [scaleHeight, setScaleHeight] = useState<ScaleHeight>(defaults.scale_height)
   const [audioMode, setAudioMode] = useState<AudioModeWire>(defaults.audio_mode)
-  const [gpuPreference, setGpuPreference] = useState<GpuPrefWire>('auto')
+  const [encoderChoice, setEncoderChoice] = useState<GpuPrefWire | null>(null)
+  const savedEncoder = converter.ready ? converter.form.gpu_preference : null
   const [cutIn, setCutIn] = useState('00:00:00.000')
   const [cutOut, setCutOut] = useState('00:00:00.000')
   const [copyMode, setCopyMode] = useState<'fast_copy' | 'reencode'>('fast_copy')
@@ -275,8 +277,7 @@ export function ConvertPage() {
     setCq(advanced.cq)
     setScaleHeight(advanced.scale_height)
     setAudioMode(advanced.audio_mode)
-    setGpuPreference(converter.form.gpu_preference)
-  }, [converter.ready, converter.form.default_preset, converter.form.gpu_preference])
+  }, [converter.ready, converter.form.default_preset])
 
   useEffect(() => {
     if (selectedId !== null && !items.some((item) => item.id === selectedId)) {
@@ -292,7 +293,8 @@ export function ConvertPage() {
       cq,
       scale_height: scaleHeight,
       audio_mode: audioMode,
-      gpu_preference: gpuPreference,
+      gpu_choice: encoderChoice,
+      saved_gpu_preference: savedEncoder,
       cutIn,
       cutOut,
       copy_mode: copyMode,
@@ -306,7 +308,8 @@ export function ConvertPage() {
     cq,
     scaleHeight,
     audioMode,
-    gpuPreference,
+    encoderChoice,
+    savedEncoder,
     cutIn,
     cutOut,
     copyMode,
@@ -336,8 +339,9 @@ export function ConvertPage() {
       if (audioMode !== catalog.audio_mode) {
         body.audio_mode = audioMode
       }
-      if (gpuPreference !== 'auto') {
-        body.gpu_preference = gpuPreference
+      const encoder = perJobGpuPreference(encoderChoice, savedEncoder)
+      if (encoder !== undefined) {
+        body.gpu_preference = encoder
       }
       return body
     }
@@ -720,9 +724,9 @@ export function ConvertPage() {
                 />
                 <SelectInput
                   label="Encoder override"
-                  value={gpuPreference}
+                  value={encoderChoice ?? converter.form.gpu_preference}
                   options={GPU_PREF_WIRES.map((pref) => ({ value: pref, label: pref }))}
-                  onChange={(event) => setGpuPreference(event.target.value as GpuPrefWire)}
+                  onChange={(event) => setEncoderChoice(event.target.value as GpuPrefWire)}
                 />
               </div>
             </Disclosure>

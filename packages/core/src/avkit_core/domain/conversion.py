@@ -12,6 +12,7 @@ from avkit_core.domain.enums import (
     ConversionPresetId,
     ConversionStatus,
     CutCopyMode,
+    GpuPreference,
 )
 from avkit_core.domain.errors import (
     ConflictError,
@@ -271,6 +272,7 @@ class ConversionJob:
     queue_position: int
     created_at: datetime
     updated_at: datetime
+    gpu_preference: GpuPreference | None = None
 
     def __post_init__(self) -> None:
         require_uuid_str(self.id, "id")
@@ -285,6 +287,8 @@ class ConversionJob:
         if self.audio_mode is not None:
             require_enum(self.audio_mode, AudioEncodeMode, "audio_mode")
         require_optional_str(self.gpu_encoder, "gpu_encoder")
+        if self.gpu_preference is not None:
+            require_enum(self.gpu_preference, GpuPreference, "gpu_preference")
         require_optional_non_negative_int(self.in_ms, "in_ms")
         require_optional_non_negative_int(self.out_ms, "out_ms")
         if self.copy_mode is not None:

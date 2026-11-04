@@ -566,7 +566,7 @@ G8: regenerate committed OpenAPI after these routes.
 
 New compound tool `avkit_capture` (M2 parity with REST). No second URL space. Zod `.strict()`. Destructive `remove` requires `confirm: true` (M3), and so do `flatten` and `revert` (MEU-67); all three also need the person to accept an elicitation prompt in the IDE, or a native Windows dialog when the IDE cannot ask (user confirmation, §Flatten with backup).
 
-**Phase 5 exception (dated 2026-08-26):** Phase 5 forbids returning media bytes for transcripts/videos. **`avkit_capture` action `image` MAY return MCP image content** (the PNG) so a vision model can place annotations. Cap matches REST 15 MiB. `list` / `get` still return paths only.
+**Phase 5 exception (dated 2026-08-26):** Phase 5 forbids returning media bytes for transcripts/videos. **`avkit_capture` action `image` MAY return MCP image content** (the PNG) so a vision model can place annotations. The MCP cap is 7,800,000 B, lower than REST's 15 MiB, because the image travels as base64 in one JSON line ([05 §Image size limit (residual)](05-mcp-server.md#image-size-limit-residual), MEU-111). `list` / `get` still return paths only.
 
 **Workflow:** `capture` (fullscreen or bbox) **or** `capture_interactive` (poll `list_requests` until completed) → `image` → `annotate` → done. Inbox review: `list` → `image` → `annotate`.
 

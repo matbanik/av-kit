@@ -2441,7 +2441,7 @@ issues:
   title: The installer ships a GPL-3.0 BtbN FFmpeg build (libx264/libx265)
   severity: medium
   component: infrastructure
-  status: open
+  status: resolved
   discovered: '2026-10-15'
   root_cause: 'D-87 (Session 32): P7 bundles a BtbN GPL build for Convert''s libx264/libx265 fallback. Session 32 discloses it in THIRD_PARTY_NOTICES with its source location and ships its LICENSE.txt,
     and scoped the goal to the TTS runtime. Open choice: an LGPL build with Convert''s software encoders changed, or keep GPL with full source-offer compliance; a follow-up Convert MEU owns the encoder
@@ -2452,9 +2452,15 @@ issues:
   related:
   - distribution
   - convert
-  meu_links: []
+  meu_links:
+  - MEU-110
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
+    method: 'AC-110.20 to AC-110.22: tests/unit/test_assemble_ffmpeg_source.py, the real pack and its read-back against the manifest, and the configuration check against the new ffmpeg.exe'
+    result: Row 9f packed and read back 739 sources, and every --enable flag in the binary's configuration line is explained. The obligation is met only when the archive is attached, at publish checklist
+      step 5. This covers copyright licences, not codec patents, and it isn't legal advice.
+  resolution_path: 'Ruled by Mat on 2026-11-04 (D-101, D-202): keep the GPL build and publish its complete corresponding source with the release. Done by MEU-110 (in Session 44''s working tree, uncommitted
+    until Mat commits it): tools/assemble_ffmpeg_source.py builds av-kit-0.1.0-rc.1-ffmpeg-source.tar.xz, and the publish checklist refuses to publish without it attached. av-kit''s own code stays MIT.'
 - id: TTS-ESPEAK-LIVE-PATH-UNVERIFIED
   title: Non-English voices via the real espeak-ng CLI were never run end to end (AC-74.11)
   severity: medium
@@ -2477,7 +2483,7 @@ issues:
   title: The pinned BtbN FFmpeg release URL returns 404
   severity: low
   component: infrastructure
-  status: open
+  status: resolved
   discovered: '2026-10-15'
   root_cause: BtbN no longer publishes autobuild-2026-08-24-13-10 (checked 2026-10-15); tools/fetch_ffmpeg_windows.ps1 cannot fetch on a fresh checkout. Session 32 used a cached archive whose SHA matches
     the pin (-ExtractOnly).
@@ -2487,17 +2493,20 @@ issues:
   related:
   - ffmpeg-fetch
   - installer-licensing
-  meu_links: []
+  meu_links:
+  - MEU-110
   verification:
-    last_checked: '2026-10-17'
-    method: curl -sIL on the URL pinned at tools/fetch_ffmpeg_windows.ps1:8 and on its release tag page
-    result: Both 404 (receipt C:/Temp/av-kit/ffmpeg-pin-curl.txt). AVKIT_FFMPEG_URL/AVKIT_FFMPEG_SHA256 can override the pin.
+    last_checked: '2026-11-04'
+    method: tools/fetch_ffmpeg_windows.ps1 downloaded the new pin and checked its SHA-256 on this PC
+    result: 'PASS: 194,182,300 B, SHA-256 401dffcf14c301082e1fc03b0bc876b92ea676bfc521fc56e80a1537d137034f. The link will expire when BtbN''s retention ends, so this holds for about two years, not for good.'
   notes: 'Blocked on FFMPEG-GPL-BUILD: its LGPL-versus-GPL decision picks the build this pin must point at, so the re-pin waits for it. Prefer a pin that does not expire (BtbN autobuild tags are pruned).'
+  resolution_path: Fixed by MEU-110 on 2026-11-04 (in Session 44's working tree, uncommitted until Mat commits it). Mat's D-101 ruling re-pinned tools/fetch_ffmpeg_windows.ps1 to BtbN autobuild-2026-10-31-12-59,
+    a month-end build, which BtbN's README says is kept for two years.
 - id: INSTALLER-SHIPS-FFMPEG-ZIP
   title: The installer ships the 168 MB ffmpeg-pin.zip download archive
   severity: low
   component: infrastructure
-  status: open
+  status: resolved
   discovered: '2026-10-15'
   root_cause: tools/fetch_ffmpeg_windows.ps1:22 downloads into -OutDir and never removes the archive; ui/electron-builder.yml copies the whole packaging/ffmpeg-win64 folder, so resources/ffmpeg/ffmpeg-pin.zip
     is in win-unpacked.
@@ -2506,13 +2515,14 @@ issues:
   priority: P3
   related:
   - ffmpeg-fetch
-  meu_links: []
+  meu_links:
+  - MEU-110
   verification:
-    last_checked: '2026-10-17'
-    method: Static read of tools/fetch_ffmpeg_windows.ps1:22,62 and ui/electron-builder.yml:30-31
-    result: 'The archive is written to -OutDir and only _extract is removed; electron-builder copies packaging/ffmpeg-win64 with no filter. Not reproduced on disk: the local win-unpacked is a stale 2026-09-01
-      build without the zip.'
+    last_checked: '2026-11-04'
+    method: Listed packaging/ffmpeg-win64 and the RC build's ui/dist/win-unpacked/resources/ffmpeg on 2026-11-04; AC-110.3
+    result: The source folder holds ffmpeg-pin.zip (168,262,457 B). The built folder holds LICENSE.txt, ffmpeg.exe and ffprobe.exe only. The installer is 328,403,592 B.
   notes: Fix with a `!*.zip` filter in electron-builder.yml so -ExtractOnly reuse keeps working. Batch with FETCH-FFMPEG-EXIT-CODES and the FFMPEG-PIN-URL-404 re-pin.
+  resolution_path: Fixed by MEU-110 on 2026-11-04 (in Session 44's working tree, uncommitted until Mat commits it). ui/electron-builder.yml filters *.zip from the FFmpeg entry.
 - id: MODEL-SIDELOAD-LOAD-500
   title: A sideloaded TTS variant is listed as downloaded but cannot be loaded (422 'model weight file is missing')
   severity: medium
@@ -2607,7 +2617,7 @@ issues:
   title: THIRD_PARTY_NOTICES omits most bundled backend dependencies (spaCy's transitive set, yt-dlp, FastAPI, numpy and others)
   severity: low
   component: infrastructure
-  status: open
+  status: resolved
   discovered: '2026-10-15'
   root_cause: packaging/THIRD_PARTY_NOTICES.md lists the six TTS components; thinc, srsly, cymem, preshed, murmurhash, wasabi, catalogue, langcodes and others also ship in _internal.
   blast_radius: Attribution completeness of the installer.
@@ -2615,13 +2625,16 @@ issues:
   priority: P3
   related:
   - installer-licensing
-  meu_links: []
+  meu_links:
+  - MEU-110
   verification:
-    last_checked: '2026-10-17'
-    method: grep -ci each package name in packaging/THIRD_PARTY_NOTICES.md; packaging/avkit-backend.spec:33 hiddenimports
-    result: 0 hits for thinc, srsly, cymem, preshed, murmurhash, wasabi, catalogue, langcodes, weasel, confection; the file lists six components and also leaves out yt-dlp, FastAPI/uvicorn, SQLAlchemy,
-      pydantic, structlog and numpy
+    last_checked: '2026-11-04'
+    method: grep -ci of each name in packaging/dist/THIRD_PARTY_LICENSES.txt, cmp against the installed copy, and a check of uv.lock and _internal for langcodes
+    result: 'The list has 73 Python distributions and names thinc, srsly, cymem, preshed, murmurhash, wasabi, catalogue, weasel, confection, yt-dlp, fastapi, uvicorn, sqlalchemy, pydantic, structlog and
+      numpy. langcodes has no hits because it no longer ships: uv.lock has no entry and _internal has no folder.'
   notes: Wider than filed. Generate the list from the built bundle's environment instead of maintaining names by hand. Sits next to FFMPEG-GPL-BUILD (installer licensing) but is not covered by it.
+  resolution_path: Fixed by MEU-110 on 2026-11-04 (in Session 44's working tree, uncommitted until Mat commits it). tools/generate_third_party_licenses.py builds resources/THIRD_PARTY_LICENSES.txt from
+    the built bundle, and THIRD_PARTY_NOTICES.md points to it.
 - id: GUI-AUDIT-CLIPBOARD-RESOLVER
   title: gui-actions-audit cannot resolve a writeClipboardText settings action
   severity: low
@@ -3221,13 +3234,22 @@ issues:
   title: avkit_capture image over about 7.86 MB drops the MCP connection
   severity: high
   component: mcp-server
-  status: open
+  status: resolved
   discovered: '2026-11-03'
   root_cause: 'IMAGE_MAX_BYTES allows 15 MiB (mcp-server/src/toolsets/capture.ts:11), but the image travels as base64 in one JSON line and the MCP TypeScript SDK''s stdio client closes the transport when
     its read buffer passes 10 MiB (STDIO_DEFAULT_MAX_BUFFER_SIZE). Measured with the real server and SDK 1.30.0 and 1.32.2: 7,860,000 B returns the image, 7,880,000 B throws ''Connection closed''. The server
     does not crash; its stderr stays empty.'
   blast_radius: 'Any client built on that SDK loses every av-kit tool until it reconnects, not just the one call. Full-screen PNGs can be this big: real shots of 7.5 MB and 8.06 MB came from the same desktop
     minutes apart, so the failure depends on what is on screen. The live MCP audit fails capture.image and every later step when its shot crosses the line. Other MCP clients were not tested.'
+  meu_links:
+  - MEU-111
+  verification:
+    last_checked: '2026-11-04'
+    method: AC-111.1 to AC-111.4 (mcp-server/tests/image-over-stdio.test.ts, mcp-server/tests/audit/capture-image-step.test.ts) and the H1-2 live audit
+    result: AC-111.2 proves the refusal one byte over the cap and at the real 8,059,548 B shot, with the connection still answering. Live, capture.image and capture.image.annotated pass on a 335031 B shot,
+      so the live run did not cross the cap. Other MCP clients were not tested.
+  resolution_path: Fixed by MEU-111 on 2026-11-04 (in Session 44's working tree, uncommitted until Mat commits it). IMAGE_MAX_BYTES is 7,800,000 B, under the measured break, and a bigger image returns a
+    payload_too_large tool error naming original_path.
 - id: YOUTUBE-CAPTIONS-IP-BLOCK
   title: YouTube is blocking caption requests from the maintainer's IP
   severity: low
@@ -3238,3 +3260,263 @@ issues:
     change: the block is on the network side.'
   blast_radius: Transcript fails on this network until the block lifts, and the live MCP audit reports transcript.compile as a REGRESSION against the baseline because that signature is only tolerated in
     container mode. Do not refresh the audit baseline to hide it.
+- id: GUI-READY-PROBE-BLOCKS-MAIN
+  title: The main window can freeze because a slow process query runs for every chunk of backend output
+  severity: high
+  component: ui
+  status: resolved
+  discovered: '2026-11-03'
+  root_cause: onChildOutput in ui/src/main/index.ts:266-292 calls queryLiveProcess (:278) for every output chunk before confirmReadyAndPublish looks at the text. On Windows queryLiveProcess runs powershell.exe
+    through execFileSync with an 8 s timeout (ui/src/main/live-identity.ts:126-130), which stops the main process until it returns.
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. During a transcript playlist run the renderer''s main thread froze for about half a minute (a 1+1 check took 4.3 s, then timed
+    out at 8 s twice) and recovered on its own; the per-chunk synchronous PowerShell call on the Electron main thread was then found as the stall. Not measured: time per chunk, or chunks per session. Target:
+    MEU-108.'
+  meu_links:
+  - MEU-108
+  verification:
+    last_checked: '2026-11-04'
+    method: AC-108 tests (ui/tests/unit/ready-probe-guard.test.ts) and the Session 44 execution review's own probe of HEAD against the current module (check s44-review-ready-adversarial)
+    result: Ordinary output went from two process queries to zero, a log/READY/log sequence from three to one, and the published values stayed identical. The half-minute freeze itself was not re-measured
+      in a transcript run.
+  resolution_path: Fixed by MEU-108 on 2026-11-04 (in Session 44's working tree, uncommitted until Mat commits it). publishIfReady in ui/src/main/python-manager.ts tests the text first, so only a READY
+    line reaches the process query.
+- id: CONVERT-OUTPUT-DIR-MISSING
+  title: The first Convert job fails with 'ffmpeg exited 4294967294' because nothing creates the output folder
+  severity: high
+  component: infrastructure
+  status: resolved
+  discovered: '2026-11-03'
+  root_cause: ConversionService plans outputs under the converter.output_dir setting (packages/core/src/avkit_core/services/conversion.py:351-352). FFmpegAdapter encode, cut and extract_stream (packages/infrastructure/src/avkit_infra/media/adapter.py:545,571,608)
+    start FFmpeg without creating the parent folder, and the only error is 'ffmpeg exited <code>' (:368). 4294967294 is -2 read as unsigned.
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. The first job on a fresh profile failed, and the same job succeeded once the folder existed. Every new install hits this on
+    first Convert unless the folder happens to exist. Target: MEU-109.'
+  meu_links:
+  - MEU-109
+  verification:
+    last_checked: '2026-11-04'
+    method: AC-109 tests (tests/unit/test_ffmpeg_conversion.py, tests/unit/test_conversion_service.py) and row 11's packaged smoke
+    result: 'The packaged app converted into a missing folder: Done, hevc_nvenc, 109239 B.'
+  resolution_path: Fixed by MEU-109 on 2026-11-04 (in Session 44's working tree, uncommitted until Mat commits it). FFmpegAdapter encode, cut and extract_stream create the output's parent folder first,
+    and a blocked folder fails the job naming the path.
+- id: TRANSCRIPT-TITLE-IS-VIDEO-ID
+  title: Every transcript's title is its video ID
+  severity: medium
+  component: infrastructure
+  status: open
+  discovered: '2026-11-03'
+  root_cause: packages/infrastructure/src/avkit_infra/transcript/adapter.py:42-44 reads a title attribute from the fetched transcript and falls back to the video ID. The installed youtube_transcript_api
+    FetchedTranscript has only snippets, video_id, language, language_code and is_generated, so the fallback always wins.
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Transcript files, compiled volume headings and contents, and the ''Last:'' label all show the ID. Not measured: whether other
+    fields are affected. Compiled files stay usable but are hard to navigate.'
+- id: TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME
+  title: A transcript job's channel name is the playlist's title
+  severity: low
+  component: core
+  status: open
+  discovered: '2026-11-03'
+  root_cause: TranscriptService.add_channel uses info.title as channel_name for a PlaylistInfo (packages/core/src/avkit_core/services/transcript.py:136-138,151). For a channel's videos tab that is the tab's
+    playlist title rather than the channel's name.
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Per-video transcript files from a playlist run read ''channel: Blender Fundamentals 2.8'', the playlist''s title. It also
+    feeds the output slug (:312). Not measured: other URL shapes, including a channel''s videos tab.'
+- id: TRANSCRIPT-ADD-CHANNEL-422
+  title: Adding a channel returned 422 after about 8 minutes of enumeration
+  severity: low
+  component: core
+  status: open
+  discovered: '2026-11-03'
+  root_cause: add_channel enumerates the channel inside the add request (packages/core/src/avkit_core/services/transcript.py:129-130). Cause of the 422 not established.
+  blast_radius: 'Measured once, not reproduced: `@BlenderOfficial/videos` returned 422 after about 8 minutes of enumeration while staging README screenshots on 2026-11-03. A 43-video playlist added normally
+    in the same session. A replay meant to capture the error body was cut off when the app shut down, so the cause is not established. Not measured: what raised it, or the channel''s size.'
+- id: DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
+  title: A download row shows the quality you asked for, not the quality you got
+  severity: medium
+  component: ui
+  status: open
+  discovered: '2026-11-03'
+  root_cause: The row's meta line prints row.quality (ui/src/renderer/src/features/downloader/DownloaderPage.tsx:497-498), which is the preset stored when the item was added (packages/core/src/avkit_core/services/download.py:213,235).
+    No field carries the downloaded file's real quality.
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. With YouTube limiting quality under SABR, a row still showed the requested preset. A user can believe they have a higher quality
+    than the file holds. Not measured: how often the two differ outside SABR.'
+- id: TTS-DEVICE-OPTIONS-IN-CPU-BUILD
+  title: The shipped build runs text to speech on the CPU only, but its device options don't say so
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-03'
+  root_cause: The packaged backend bundles the CPU onnxruntime (packages/infrastructure/pyproject.toml:16) and excludes torch (packaging/avkit-backend.spec). Settings always offers auto, cuda, cpu and mps
+    (ui/src/renderer/src/features/settings/SettingsPage.tsx:62), and the TTS page offers 'auto' (ui/src/renderer/src/features/tts/TTSPage.tsx:274).
+  blast_radius: 'Measured from the code and the spec file: ''auto'' can only mean CPU in the shipped build, and the README''s GPU claim was removed for that reason on 2026-11-03. Not measured: what the
+    packaged Settings page does when cuda is chosen. Speech still works on the CPU.'
+- id: TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE
+  title: The TTS progress label reads 'Segments 0/1000' whatever the text's length
+  severity: low
+  component: core
+  status: open
+  discovered: '2026-11-03'
+  root_cause: segments_total is TTS_PROGRESS_RESOLUTION (packages/core/src/avkit_core/services/tts.py:44,252), a 1000-step progress scale rather than a segment count, and ui/src/renderer/src/features/tts/TTSPage.tsx:733
+    prints it as segments.
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Cosmetic; the progress bar itself is right.'
+- id: TTS-AUDIO-RANDOM-FILE-NAMES
+  title: Generated audio files have random ID names
+  severity: low
+  component: core
+  status: open
+  discovered: '2026-11-03'
+  root_cause: Output is written to <job id>.wav and <job id>.mp3 (packages/core/src/avkit_core/services/tts.py:327-328), and the job ID is a uuid4 (:242).
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Finding a clip in the output folder later means opening each one.'
+- id: CONVERT-POSITIONS-NOT-RENUMBERED
+  title: Convert's queue numbers aren't renumbered
+  severity: low
+  component: core
+  status: open
+  discovered: '2026-11-03'
+  root_cause: queue_position is set once at enqueue from the current list length (packages/core/src/avkit_core/services/conversion.py:172,303), and the card prints it as stored (ui/src/renderer/src/features/converter/ConvertPage.tsx:521,
+    ui/src/renderer/src/components/queue/QueueCard.tsx:558).
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. A job keeps the number it got at enqueue, so the number stops saying how many jobs are ahead. Cosmetic: the order itself holds.'
+- id: CONVERT-CUT-TIME-RAW-MS
+  title: A cut job's row shows its times in raw milliseconds
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-03'
+  root_cause: convertMetaSegments prints in_ms and out_ms unformatted (ui/src/renderer/src/features/converter/convert-controls.ts:203-204).
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Cosmetic.'
+- id: CONVERT-EXTRACT-ENCODER-LABEL
+  title: An audio extract is labelled with a video encoder
+  severity: low
+  component: core
+  status: open
+  discovered: '2026-11-03'
+  root_cause: _dispatch resolves a GPU encoder and saves it as gpu_encoder for every job kind (packages/core/src/avkit_core/services/conversion.py:479-487), although an extract is a stream copy that uses
+    no encoder.
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. An extract row read hevc_nvenc. Cosmetic: the file is right.'
+- id: DOWNLOADER-ADVANCED-PANEL-GAP
+  title: An empty gap sits under Advanced on the Downloader page
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-03'
+  root_cause: Cause not established. The panel is the Disclosure at ui/src/renderer/src/features/downloader/DownloaderPage.tsx:651-662.
+  blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Visible in the main screenshot. Cosmetic. Not measured: which element holds the space.'
+- id: CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
+  title: validate_closeout_artifacts --selftest fails when a .agent folder sits above the temp folder
+  severity: low
+  component: agent
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'project_root (tools/validate_closeout_artifacts.py:1736-1749) returns the nearest ancestor holding a .agent directory. The selftest builds temp plans under the temp folder, so a C:/Users/Mat/.agent
+    folder, which appeared on 2026-11-04 outside the repository, becomes their root. Candidate fix: make the selftest hermetic, or require a real repo marker such as .agent/context.'
+  blast_radius: 'Measured: 5 of 215 selftest arms fail under the default temp folder and 0 of 215 with TMP and TEMP outside the home folder (C:/Temp/av-kit/rc1/rows/selftest-closeout-1.txt, selftest-closeout-2-tmp-elsewhere.txt).
+    tests/tooling fails on this machine under the default temp. Real runs on P:/av-kit plans and CI are unaffected. Plan 2026-11-03-release-rc1 ECN-2 runs its gate with temp elsewhere rather than excusing
+    the test.'
+- id: MAIN-LOG-AFTER-WINDOW-DESTROYED
+  title: Backend output after the window is destroyed stops the main process behind a JavaScript error dialog
+  severity: medium
+  component: ui
+  status: resolved
+  discovered: '2026-11-04'
+  root_cause: 'onChildOutput in ui/src/main/index.ts sent each line with mainWindow?.webContents.send. mainWindow is never cleared, so ?. does not protect a destroyed window, and reading webContents from one throws TypeError: Object has been destroyed. An uncaught exception in the main process shows a modal dialog that holds the process until it is dismissed.'
+  blast_radius: 'Observed: Mat dismissed four of these dialogs during H1-2 attempt 4, in E2E runs, where AVKIT_E2E lets the window close while the backend still writes. Read from the code, not reproduced by hand: an installed copy reaches it only with Close to tray off, when the X button destroys the window and the backend writes before shutdown finishes. Not measured: how often that happens, or how many earlier gate runs showed the dialog with nobody there to see it. Present since the initial commit.'
+  meu_links:
+  - MEU-108
+  verification:
+    last_checked: '2026-11-04'
+    method: AC-108.5 to AC-108.7, ready-probe-guard.test.ts and the real-Electron case backend-output-after-close.test.ts, which destroys the window and pushes a line through the real onChildOutput handler
+    result: Before the fix both unit cases and the real-Electron case failed with Object has been destroyed, on the stdout and stderr streams. After it they pass, with 1129 UI tests passing.
+  resolution_path: Fixed under MEU-108 on 2026-11-04 (plan D-209, ECN-9). forwardConsoleLines in ui/src/main/python-manager.ts sends nothing to a destroyed window and catches a send that throws. The line stays in the in-memory log. The tray's Show window item has the same shape and is left as it is, because only a menu click during shutdown reaches it.
+- id: E2E-MAIN-PROCESS-ERRORS-UNWATCHED
+  title: The E2E suite does not notice an uncaught exception in the main process
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'ui/tests/e2e launches Electron through Playwright and watches the pages. Nothing fails a test when the main process throws, and the error appears only as a modal dialog on the desktop. MAIN-LOG-AFTER-WINDOW-DESTROYED was found by Mat, who was at the screen, and not by any test.'
+  blast_radius: 'A main-process crash can go unnoticed through an unattended gate, or show up only as a test timeout while app.close() waits on the dialog. AC-66.14 failed that way in H1-2 attempt 4 and passed 8 of 8 repeats and H1-2 attempts 5 and 6 after the fix, which fits this explanation and does not prove it.'
+  verification:
+    last_checked: '2026-11-04'
+  category: DEFER
+  priority: P4
+  related:
+  - MAIN-LOG-AFTER-WINDOW-DESTROYED
+  - E2E-CLIPBOARD-PRIMER-EMPTY
+  meu_links: []
+- id: E2E-CLIPBOARD-PRIMER-EMPTY
+  title: AC-88.12's clipboard primer read an empty clipboard for 5 s once
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'Not established. primeTransparentClipboard in ui/tests/e2e/capture-filmstrip-actions.test.ts writes the image once and then polls the read. In H1-2 attempt 4 the read stayed empty until the 5 s poll ended. The clipboard is shared with the whole desktop, and Mat was using the PC during that run, so another program replacing it is one candidate. Nothing tested that.'
+  blast_radius: 'One failure in H1-2 attempt 4, the first test of that run. It passed in attempts 2, 3, 5 and 6 and 8 of 8 repeats after ECN-9. A failure here stops a gate at ui-electron and costs a rerun. The primer is a precondition of the test, so it says nothing about the product.'
+  verification:
+    last_checked: '2026-11-04'
+  category: DEFER
+  priority: P4
+  related:
+  - E2E-MAIN-PROCESS-ERRORS-UNWATCHED
+  meu_links: []
+- id: SETTINGS-DRAFT-STALE-BASELINE
+  title: An unsaved capture settings edit freezes the other capture settings at their old values
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'useCaptureSettings.ts:83 copies the whole form into its draft on the first edit, so the form stops following a refetch and save() writes the copy. useConverterSettings had the same shape and was fixed under AC-112.9 (plan D-212), because there it sent a job to the wrong encoder. Read from the code, not reproduced for capture.'
+  blast_radius: 'Reachable when an MCP client or API call changes a capture setting while a capture settings edit is open. A later Save would write the old value of the other fields back over the newer one. No job runs differently and no file is touched. An edit made before settings load would also hold the defaults for the other fields.'
+  verification:
+    last_checked: '2026-11-04'
+  category: DEFER
+  priority: P4
+  related:
+  - CONVERT-JOB-GPU-PREFERENCE-IGNORED
+  meu_links: []
+- id: CONVERT-ADVANCED-EDIT-REPLACED
+  title: An Advanced edit on Convert snaps back when settings load late or the default preset changes
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'The settings effect in ConvertPage.tsx replaces the preset, CQ, scale and audio unless presetTouched is set, and only selectPreset sets it, so an edit to CQ, Scale or Audio does not protect
+    itself. Found while fixing F1 of execution review round 2, which took the encoder out of this effect and left the others.'
+  blast_radius: 'Measured on the real page in jsdom (C:/Temp/av-kit/rc1/sibling/result.txt): CQ set to 31 went back to 25 when settings arrived late, and became 30 when the saved default preset changed to
+    mobile. Not measured: Scale and Audio, which the same effect sets the same way, or how often settings arrive after a user has edited something on a real PC. A job could run with values the user changed
+    and did not notice changing back. The fields show the replaced values. Not fixed in RC1 (plan D-208); the release notes list it.'
+  verification:
+    last_checked: '2026-11-04'
+  category: DEFER
+  priority: P4
+  related:
+  - CONVERT-JOB-GPU-PREFERENCE-IGNORED
+  meu_links: []
+- id: CONVERT-JOB-GPU-PREFERENCE-IGNORED
+  title: A per-job encoder choice is ignored; only the saved setting counts
+  severity: medium
+  component: core
+  status: resolved
+  discovered: '2026-11-04'
+  root_cause: 'routes/conversions.py:126 puts gpu_preference into ConversionAddSpec and nothing reads it there. ConversionService._resolve_encoder (services/conversion.py:394-395) takes the choice from
+    the converter.gpu_preference setting only. Observed on the packaged RC backend on 2026-11-04: POST /conversions with gpu_preference software on a PC with an NVIDIA GPU ran hevc_nvenc.'
+  blast_radius: The Convert page's Advanced Encoder dropdown (ConvertPage.tsx:339-340, read from the code, not run in the GUI) and avkit_convert add's gpu_preference have no effect unless the saved setting
+    already matches. The setting itself works (test_conversion_service.py:702). tests/e2e/test_api_conversions.py:700-709 proves the value reaches a fake service only, so no test covers the real one. Not
+    fixed in RC1, which would need a rebuild; the release notes list it.
+  verification:
+    last_checked: '2026-11-04'
+    method: 'AC-112.1 to AC-112.6 in tests/unit/test_conversion_service.py, tests/unit/test_ffmpeg_conversion.py and ui/tests/unit/convert-page.behavior.test.ts. AC-112.7: tools/smoke_packaged_rc.py against
+      the packaged win-unpacked backend and the installed backend. AC-112.8: delayed and changed settings in ui/tests/unit/convert-page.behavior.test.ts, and the reviewer''s reproduction exits 0 after the fix. AC-112.9: an open Output folder or Skip existing edit in the same test file, and round 3''s reproduction exits 0 after the fix.'
+    result: 'PASS: on a PC with an NVIDIA GPU, a job with gpu_preference software ran libx265 while the default job ran hevc_nvenc, on both backends. The page''s dropdown is covered by behaviour tests,
+      not by a run of the installed window.'
+  resolution_path: Fixed by MEU-112 on 2026-11-04, on Mat's ruling to fix it before RC1 (in Session 44's working tree, uncommitted until Mat commits it). A job stores its own gpu_preference, _dispatch passes
+    it to _resolve_encoder, and null means the setting. The column upgrades an existing database in place. Execution review round 2 then found the page losing a choice when settings arrived late or changed
+    (F1). The page now keeps only what the user picked (plan D-207, AC-112.8). Round 3 found an open Output folder or Skip existing edit freezing the saved encoder the page compared against. The settings draft now holds only what was edited (plan D-212, AC-112.9).
+  meu_links:
+  - MEU-112
+- id: GUI-READY-CHUNK-BOUNDARY
+  title: A READY line split across output chunks can be missed, and two READY chunks publish twice
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-04'
+  root_cause: publishIfReady and confirmReadyAndPublish (ui/src/main/python-manager.ts:106,138) test each output chunk on its own, with no stream buffering or deduplication. A failed live query also does
+    not veto READY from the owned child's pipe, which the publisher treats as ownership proof. MEU-108 changed none of this.
+  blast_radius: 'Measured: never seen in the real app. The Session 44 execution review''s probe reproduced all three on synthesized chunks, on both HEAD and the current module, and raised them as unchanged
+    behaviour, not a regression. Not measured: whether a real backend ever splits the line.'

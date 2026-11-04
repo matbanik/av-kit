@@ -59,7 +59,8 @@ export type ConvertFormSnapshot = {
   cq: number
   scale_height: ScaleHeight
   audio_mode: AudioModeWire
-  gpu_preference: GpuPrefWire
+  gpu_choice: GpuPrefWire | null
+  saved_gpu_preference: GpuPrefWire | null
   cutIn: string
   cutOut: string
   copy_mode: CopyModeWire
@@ -74,7 +75,8 @@ const DEFAULT_SNAPSHOT: ConvertFormSnapshot = {
   cq: 25,
   scale_height: 0,
   audio_mode: 'aac_128',
-  gpu_preference: 'auto',
+  gpu_choice: null,
+  saved_gpu_preference: null,
   cutIn: '00:00:00.000',
   cutOut: '00:00:00.000',
   copy_mode: 'fast_copy',
@@ -162,6 +164,19 @@ export async function postConversionCreate(
   return created
 }
 
+/** What a Compress job sends as its encoder. `choice` is what the user picked in this form, null until
+ *  they pick. `saved` is the saved setting, null until it has loaded. A job with no value reads the
+ *  setting when it runs. */
+export function perJobGpuPreference(
+  choice: GpuPrefWire | null,
+  saved: GpuPrefWire | null,
+): GpuPrefWire | undefined {
+  if (choice === null || choice === saved) {
+    return undefined
+  }
+  return choice
+}
+
 export function snapshotCreateInput(): unknown {
   const snap = formSnapshot
   if (snap.kind === 'compress') {
@@ -180,8 +195,9 @@ export function snapshotCreateInput(): unknown {
     if (snap.audio_mode !== catalog.audio_mode) {
       body.audio_mode = snap.audio_mode
     }
-    if (snap.gpu_preference !== 'auto') {
-      body.gpu_preference = snap.gpu_preference
+    const encoder = perJobGpuPreference(snap.gpu_choice, snap.saved_gpu_preference)
+    if (encoder !== undefined) {
+      body.gpu_preference = encoder
     }
     return body
   }

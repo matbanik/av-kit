@@ -1,7 +1,8 @@
 [project]
 name = "av-kit"
-version = "0.1.0"
+version = "0.1.0rc1"
 description = "YouTube media toolkit workspace"
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = []
 

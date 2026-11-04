@@ -751,3 +751,179 @@ def test_ac_30_9_encode_options_carry_probed_bit_depth(
     options = media.encode_options[0]
     assert getattr(options, "bit_depth") == 10
     assert getattr(options, "duration_seconds") == 10.0
+
+
+@pytest.mark.parametrize("ac_id", ["AC-109.5"], ids=["AC-109.5"])
+@pytest.mark.unit
+def test_ac_109_5_blocked_output_folder_fails_job_naming_path(
+    ac_id: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert ac_id == "AC-109.5"
+    from avkit_core.domain.enums import ConversionKind, ConversionStatus
+    from avkit_core.services.conversion import ConversionAddSpec
+    from avkit_infra.media.adapter import FFmpegAdapter
+
+    binary = tmp_path / "ffmpeg.exe"
+    binary.write_text("fake", encoding="utf-8")
+    blocker = tmp_path / "blocker-file"
+    blocker.write_text("a file, not a folder", encoding="utf-8")
+    spawned: list[list[str]] = []
+
+    def _popen(cmd: list[str], **_kwargs: object) -> object:
+        spawned.append(list(cmd))
+        raise RuntimeError("ffmpeg must not start")
+
+    monkeypatch.setattr("avkit_infra.media.adapter.subprocess.Popen", _popen)
+
+    class _RealEncode(RecordingMedia):
+        def encode(
+            self,
+            input_path: Path,
+            output_path: Path,
+            options: object,
+            on_progress: object,
+            should_stop: object,
+        ) -> None:
+            FFmpegAdapter(configured_path=binary).encode(
+                input_path,
+                output_path,
+                options,  # type: ignore[arg-type]
+                on_progress,  # type: ignore[arg-type]
+                should_stop,  # type: ignore[arg-type]
+            )
+
+    service, uow, _media, settings = _stack(tmp_path, _RealEncode())
+    settings.set("converter", "output_dir", str(blocker / "sub"))
+    clip = _write_clip(tmp_path)
+    service.add_to_queue([clip], ConversionAddSpec(kind=ConversionKind.Compress))
+    service.start_processing()
+    if service._thread is not None:
+        service._thread.join(timeout=5)
+    job = uow.conversion_jobs.list_ordered()[0]
+    assert spawned == []
+    assert job.status is ConversionStatus.Failed
+    assert "blocker-file" in (job.error_message or "")
+
+
+def _nvidia_caps() -> object:
+    from avkit_core.domain.conversion import GPUCapabilities
+
+    return GPUCapabilities(
+        nvidia_nvenc=True,
+        amd_amf=False,
+        intel_qsv=False,
+        vulkan=False,
+        software_h265=True,
+        software_h264=True,
+        recommended_encoder="hevc_nvenc",
+        checked_at=None,
+    )
+
+
+def _run_compress(tmp_path: Path, *, setting: str, choice: object | None) -> tuple[object, object]:
+    from avkit_core.domain.enums import ConversionKind
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    media = RecordingMedia(gpu=_nvidia_caps())
+    service, uow, _media, settings = _stack(tmp_path, media)
+    settings.set("converter", "gpu_preference", setting)
+    service.add_to_queue(
+        [_write_clip(tmp_path)],
+        ConversionAddSpec(kind=ConversionKind.Compress, gpu_preference=choice),
+    )
+    service.start_processing()
+    if service._thread is not None:
+        service._thread.join(timeout=2)
+    return uow.conversion_jobs.list_ordered()[0], media
+
+
+@pytest.mark.parametrize("ac_id", ["AC-112.1"], ids=["AC-112.1"])
+@pytest.mark.unit
+def test_ac_112_1_job_software_runs_software_on_nvidia(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-112.1"
+    from avkit_core.domain.enums import GpuPreference
+
+    job, media = _run_compress(tmp_path, setting="auto", choice=GpuPreference.Software)
+    assert job.gpu_encoder == "libx265"
+    assert media.encode_options[0].codec == "libx265"
+
+
+@pytest.mark.parametrize("ac_id", ["AC-112.2"], ids=["AC-112.2"])
+@pytest.mark.unit
+def test_ac_112_2_no_choice_reads_setting_when_job_runs(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-112.2"
+    from avkit_core.domain.enums import ConversionKind
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    media = RecordingMedia(gpu=_nvidia_caps())
+    service, uow, _media, settings = _stack(tmp_path, media)
+    service.add_to_queue(
+        [_write_clip(tmp_path)],
+        ConversionAddSpec(kind=ConversionKind.Compress),
+    )
+    settings.set("converter", "gpu_preference", "software")
+    service.start_processing()
+    if service._thread is not None:
+        service._thread.join(timeout=2)
+    job = uow.conversion_jobs.list_ordered()[0]
+    assert job.gpu_encoder == "libx265"
+    assert media.encode_options[0].codec == "libx265"
+
+
+@pytest.mark.parametrize("ac_id", ["AC-112.3"], ids=["AC-112.3"])
+@pytest.mark.unit
+def test_ac_112_3_job_auto_beats_a_non_auto_setting(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-112.3"
+    from avkit_core.domain.enums import GpuPreference
+
+    job, media = _run_compress(tmp_path, setting="software", choice=GpuPreference.Auto)
+    assert job.gpu_encoder == "hevc_nvenc"
+    assert media.encode_options[0].codec == "hevc_nvenc"
+
+
+@pytest.mark.parametrize("ac_id", ["AC-112.4"], ids=["AC-112.4-requeue"])
+@pytest.mark.unit
+def test_ac_112_4_choice_survives_a_requeue(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-112.4"
+    from avkit_core.domain.enums import ConversionKind, ConversionStatus, GpuPreference
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    service, uow, _media, _settings = _stack(tmp_path, RecordingMedia(gpu=_nvidia_caps()))
+    service.add_to_queue(
+        [_write_clip(tmp_path)],
+        ConversionAddSpec(kind=ConversionKind.Compress, gpu_preference=GpuPreference.Software),
+    )
+    job = uow.conversion_jobs.list_ordered()[0]
+    assert job.gpu_preference is GpuPreference.Software
+    uow.conversion_jobs.save(replace(job, status=ConversionStatus.Failed, error_message="boom"))
+    uow.commit()
+    requeued = service.reset_failed(job.id)
+    assert requeued.status is ConversionStatus.Pending
+    assert requeued.gpu_preference is GpuPreference.Software
+
+
+@pytest.mark.parametrize(
+    ("ac_id", "kind_name", "extra"),
+    [
+        ("AC-112.4", "Cut", {"in_ms": 0, "out_ms": 1000}),
+        ("AC-112.4", "Extract", {}),
+    ],
+    ids=["AC-112.4-cut", "AC-112.4-extract"],
+)
+@pytest.mark.unit
+def test_ac_112_4_only_compress_stores_the_choice(
+    ac_id: str, kind_name: str, extra: dict[str, int], tmp_path: Path
+) -> None:
+    assert ac_id == "AC-112.4"
+    from avkit_core.domain.enums import ConversionKind, GpuPreference
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    service, uow, _media, _settings = _stack(tmp_path, RecordingMedia(gpu=_nvidia_caps()))
+    service.add_to_queue(
+        [_write_clip(tmp_path)],
+        ConversionAddSpec(
+            kind=ConversionKind[kind_name], gpu_preference=GpuPreference.Software, **extra
+        ),
+    )
+    job = uow.conversion_jobs.list_ordered()[0]
+    assert job.gpu_preference is None
