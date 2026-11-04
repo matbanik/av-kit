@@ -7,6 +7,7 @@
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
+import net from "node:net";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -62,6 +63,26 @@ function waitReady(child: ChildProcess, timeoutMs: number): Promise<number> {
   });
 }
 
+function accepts(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = net.connect(port, "127.0.0.1");
+    socket.once("connect", () => {
+      socket.destroy();
+      resolve(true);
+    });
+    socket.once("error", () => resolve(false));
+  });
+}
+
+/** cli.py prints AVKIT_READY after binding and before uvicorn listens, so a request on that line alone is refused. */
+async function waitAccepting(port: number, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!(await accepts(port))) {
+    if (Date.now() >= deadline) throw new Error(`backend port ${port} refused connections for ${timeoutMs} ms`);
+    await new Promise((r) => setTimeout(r, 50));
+  }
+}
+
 async function stopChild(child: ChildProcess, isExited: () => boolean): Promise<boolean> {
   if (isExited()) return true;
   child.kill();
@@ -98,6 +119,7 @@ export async function startBackendProcess(
   let port: number;
   try {
     port = await waitReady(child, readyTimeoutMs);
+    await waitAccepting(port, readyTimeoutMs);
   } catch (err) {
     const stopped = await stopChild(child, () => exited);
     const message = err instanceof Error ? err.message : String(err);

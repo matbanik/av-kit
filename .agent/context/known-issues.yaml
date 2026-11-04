@@ -987,7 +987,8 @@ issues:
   verification:
     last_checked: '2026-10-27'
     method: Session 42 tts-sideload-load row 0 baseline at d30f62b, then the re-run at c34866b (walkthrough Baseline, plan ECN-1)
-    result: 'Seen again at d30f62b (the same four REFUSE: rule map identity mismatch: AGENTS.md failures). Mat chose to rebind the pin (D-132): counts."AGENTS.md".postimage_sha256 in 2026-09-26-framework-update-adoption/rule-preservation.md updated and committed alone as c34866b; test_framework_adoption.py then 91 passed. The next governance edit reds them again'
+    result: 'Seen again at d30f62b (the same four REFUSE: rule map identity mismatch: AGENTS.md failures). Mat chose to rebind the pin (D-132): counts."AGENTS.md".postimage_sha256 in 2026-09-26-framework-update-adoption/rule-preservation.md
+      updated and committed alone as c34866b; test_framework_adoption.py then 91 passed. The next governance edit reds them again'
   category: TECH-DEBT
   priority: P3
   related:
@@ -2533,8 +2534,10 @@ issues:
   verification:
     evidence_file: .agent/context/handoffs/2026-10-26-tts-sideload-load-MEU-98-handoff.md
     last_checked: '2026-10-27'
-    method: 'Session 42 MEU-98: list_available() and load() record each scanned sideload file that has a catalog row (mark_downloaded(id, path), one explicit commit, none when already recorded at that path), so GET /models/downloaded then POST /models/load loads the dropped file; every load failure logs one tts.load_failed naming the cause (AC-98.1-98.6)'
-    result: 'H1-2 fresh full gate at tested_state c34866b+bd4e38d5: every step exit 0 (py-tests by the baseline rule, 1 failed, 956 passed; the one failure the baseline AC-25.7 id). Execution review approved in round 1 (Codex)'
+    method: 'Session 42 MEU-98: list_available() and load() record each scanned sideload file that has a catalog row (mark_downloaded(id, path), one explicit commit, none when already recorded at that path),
+      so GET /models/downloaded then POST /models/load loads the dropped file; every load failure logs one tts.load_failed naming the cause (AC-98.1-98.6)'
+    result: 'H1-2 fresh full gate at tested_state c34866b+bd4e38d5: every step exit 0 (py-tests by the baseline rule, 1 failed, 956 passed; the one failure the baseline AC-25.7 id). Execution review approved
+      in round 1 (Codex)'
   enrichment:
     questions_asked: []
     answers: []
@@ -2576,8 +2579,10 @@ issues:
   verification:
     evidence_file: .agent/context/handoffs/2026-10-26-tts-sideload-load-MEU-98-handoff.md
     last_checked: '2026-10-27'
-    method: 'Session 42 rider (SPACY_PATH_SWAP): activate_spacy_dir tracks the sys.path entries it appended and, on the next readiness check or load after a tts.models_directory change, removes the old ones and appends the new ones; an entry it did not append is never touched; Dependencies reads missing until the new folder has spaCy (AC-98.8, AC-98.9)'
-    result: 'H1-2 fresh full gate at tested_state c34866b+bd4e38d5: every step exit 0 (py-tests by the baseline rule, 1 failed, 956 passed; the one failure the baseline AC-25.7 id). Execution review approved in round 1 (Codex)'
+    method: 'Session 42 rider (SPACY_PATH_SWAP): activate_spacy_dir tracks the sys.path entries it appended and, on the next readiness check or load after a tts.models_directory change, removes the old
+      ones and appends the new ones; an entry it did not append is never touched; Dependencies reads missing until the new folder has spaCy (AC-98.8, AC-98.9)'
+    result: 'H1-2 fresh full gate at tested_state c34866b+bd4e38d5: every step exit 0 (py-tests by the baseline rule, 1 failed, 956 passed; the one failure the baseline AC-25.7 id). Execution review approved
+      in round 1 (Codex)'
   notes: 'Follows the resolved TTS-SPACY-SYSPATH-PREPEND (MEU-73). Fix: swap the tracked entry when models_directory changes, or check readiness against the current directory. Can ride with MEU-98.'
 - id: FETCH-FFMPEG-EXIT-CODES
   title: fetch_ffmpeg_windows.ps1 exit codes 2 to 5 are never returned (Write-Error exits 1 first)
@@ -2637,7 +2642,8 @@ issues:
     evidence_file: .agent/context/handoffs/2026-10-26-gui-keyboard-palette-MEU-96-handoff.md
     last_checked: '2026-10-26'
     method: 'Session 41 MEU-96 rider: resolveIpcChannel resolves writeClipboardText; the Settings Copy link and Copy log path rows are indexed and checked by AC-23.20 (AC-96.11, AC-96.12)'
-    result: 'H1-2 fresh full gate at tested_state bb481ec+f07e5ce8: every step exit 0 (py-tests by the baseline rule), ui Vitest 1082/1082, Electron 178 passed, e2e repeat 70 passed. Execution review approved in round 1 (Codex)'
+    result: 'H1-2 fresh full gate at tested_state bb481ec+f07e5ce8: every step exit 0 (py-tests by the baseline rule), ui Vitest 1082/1082, Electron 178 passed, e2e repeat 70 passed. Execution review approved
+      in round 1 (Codex)'
   notes: Rides with the GUI shell batch (MEU-93 to MEU-97), which edits gui-actions-index.md for the palette and shortcuts anyway.
 - id: QUEUE-PILL-TOKEN-DRIFT
   title: Zorivest MEU-662 darkened three light status-pill hexes; av-kit AC-41.3 fails until they are re-ported
@@ -2745,10 +2751,10 @@ issues:
       reasoning: The bucketer groups by component and priority only; MCP-SETUP-PROMPT already has a session and a plan, and the two share no file or test.
   notes: 'Resolved 2026-10-17 by Session 31b amendment A-1 (row 0a). The re-port fix in blast_radius was overturned: Mat ruled D-90 (keep the pre-MEU-662 palette, Zorivest 61243baf) and D-91 A (remove every
     dependency on the Zorivest checkout). AC-41.3 now reads av-kit''s copy _inspiration/zorivest/globals.css (PROVENANCE.md), and 10-queue-card-ui.md makes av-kit the owner of its pill palette, so a Zorivest
-    change no longer reaches av-kit except as an av-kit change. Adopting darker light-theme hexes is a separate product decision if it is ever wanted.
-    2026-10-26: Mat took that decision as a direct change, not a session (branch claude/pill-palette-darker). The copy was replaced with Zorivest 1f254832 and its PROVENANCE.md row together; the eight
-    light pill tokens in styles.css (status pending/filled/rejected, accent cyan/yellow/purple/orange/red) follow it; contrast-matrix.json was re-baselined (labels 80/80, worst 6.61; light icons all >=
-    3.0, icon_below_advisory 12 -> 4) and the AC-43.3 same-token oracle moved from light Paused to light Cancelled, whose hue is unchanged. The status stays resolved.'
+    change no longer reaches av-kit except as an av-kit change. Adopting darker light-theme hexes is a separate product decision if it is ever wanted. 2026-10-26: Mat took that decision as a direct change,
+    not a session (branch claude/pill-palette-darker). The copy was replaced with Zorivest 1f254832 and its PROVENANCE.md row together; the eight light pill tokens in styles.css (status pending/filled/rejected,
+    accent cyan/yellow/purple/orange/red) follow it; contrast-matrix.json was re-baselined (labels 80/80, worst 6.61; light icons all >= 3.0, icon_below_advisory 12 -> 4) and the AC-43.3 same-token oracle
+    moved from light Paused to light Cancelled, whose hue is unchanged. The status stays resolved.'
 - id: GUI-CONVERT-OUTPUT-NO-BROWSE
   title: Convert Output folder is a free-text field with no Browse; path fields bypass the PathRow standard
   severity: medium
@@ -2763,11 +2769,9 @@ issues:
   verification:
     evidence_file: .agent/context/handoffs/2026-10-24-gui-theme-path-fields-MEU-93-handoff.md
     last_checked: '2026-10-26'
-    method: 'Session 40 MEU-93: the Convert Output folder, the TTS output path (readOnly, Browse disabled while a job runs) and the
-      Settings capture backup folder are PathRow with Browse; Convert Browse patches the form only and Save sends the PUT; the
-      convert:browse_output_dir index row and its audit (AC-93.1-93.8)'
-    result: 'Gate runs 1-4 at tested_state 7b29fcd+154d3f8e: every AC-93 test passed in all four (D-120). Execution review
-      approved in round 2 (Codex)'
+    method: 'Session 40 MEU-93: the Convert Output folder, the TTS output path (readOnly, Browse disabled while a job runs) and the Settings capture backup folder are PathRow with Browse; Convert Browse
+      patches the form only and Save sends the PUT; the convert:browse_output_dir index row and its audit (AC-93.1-93.8)'
+    result: 'Gate runs 1-4 at tested_state 7b29fcd+154d3f8e: every AC-93 test passed in all four (D-120). Execution review approved in round 2 (Codex)'
   category: MEU-NEW
   priority: P3
   related:
@@ -2788,8 +2792,8 @@ issues:
       chosen: Use the PathRow primitive with a Browse button everywhere a page edits a folder path (Convert output folder; TTS output path as PathRow readOnly)
       source_tag: Local Canon
       precedents:
-        - ui/src/renderer/src/features/settings/SettingsPage.tsx:806 — the same converter.output_dir already uses PathRow + showDirectoryDialog
-        - ui/src/renderer/src/features/capture/CapturePage.tsx:1477 — Capture inbox uses PathRow + Browse
+      - ui/src/renderer/src/features/settings/SettingsPage.tsx:806 — the same converter.output_dir already uses PathRow + showDirectoryDialog
+      - ui/src/renderer/src/features/capture/CapturePage.tsx:1477 — Capture inbox uses PathRow + Browse
       research:
         engine: none
         sources: []
@@ -2802,13 +2806,14 @@ issues:
       chosen: New MEU-93 `gui-path-fields` as matrix row 6.8 under 06 §DirectoryPicker (Shared Components); batched with MEU-93 to MEU-97 as one GUI shell session
       source_tag: Local Canon
       precedents:
-        - 'docs/build-plan/build-priority-matrix.md:52 — row 6.7 MEU-69 gui-header-toggle-state: shell residuals land as Phase 6 rows against an 06 (residual) section'
-        - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-74 — a residual goes to the phase whose build-plan file owns the behaviour, as a new MEU after the highest registered
-        - docs/build-plan/06-gui.md:304-314 — palette, registry and shortcut wiring are specified in 06; 06-gui.md:1192 specifies DirectoryPicker (input + Browse)
+      - 'docs/build-plan/build-priority-matrix.md:52 — row 6.7 MEU-69 gui-header-toggle-state: shell residuals land as Phase 6 rows against an 06 (residual) section'
+      - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-74 — a residual goes to the phase whose build-plan file owns the behaviour, as a new MEU after the highest registered
+      - docs/build-plan/06-gui.md:304-314 — palette, registry and shortcut wiring are specified in 06; 06-gui.md:1192 specifies DirectoryPicker (input + Browse)
       research:
         engine: none
         sources: []
-      reasoning: 06-gui.md already specifies the behaviour, so this is a residual MEU, not PLAN-NEW; no planned (pending) MEU covers the shell, palette or path fields (MEU-19/23/69 are approved), so not MEU-EXPAND. One MEU per issue keeps each FIC reviewable; the shortcut and palette MEUs share commandRegistry.ts and AppShell.tsx, so they share a session.
+      reasoning: 06-gui.md already specifies the behaviour, so this is a residual MEU, not PLAN-NEW; no planned (pending) MEU covers the shell, palette or path fields (MEU-19/23/69 are approved), so not
+        MEU-EXPAND. One MEU per issue keeps each FIC reviewable; the shortcut and palette MEUs share commandRegistry.ts and AppShell.tsx, so they share a session.
 - id: GUI-LIGHT-THEME-SELECT-STALE-DARK
   title: 'Light theme: native dropdowns keep the dark G30 colours (#1a1a2e bg) across the app'
   severity: medium
@@ -2827,13 +2832,11 @@ issues:
   verification:
     evidence_file: .agent/context/handoffs/2026-10-24-gui-theme-path-fields-MEU-94-handoff.md
     last_checked: '2026-10-26'
-    method: 'Session 40 MEU-94: useDocumentTheme and useG30Styles re-render every G30 select and its option menu on THEME_CHANGED_EVENT
-      (one dark-class read, one copy of the G30 pairs); boot-theme.ts applies the localStorage mirror before createRoot; THEME_GATE
-      holds route content until the boot GET /settings/ui settles (503 retry inside 60 s, the whole load bounded by a deadline, EC-6);
-      the Electron THEME_PROBE pins Settings, TTS and Convert in both themes and after a cold boot (AC-94.1-94.11)'
-    result: 'Gate runs 1-4 at tested_state 7b29fcd+154d3f8e: every AC-93 and AC-94 test passed in all four, each run had one
-      environment or load miss, and Mat accepted runs 1-4 with no re-run (D-120). After the EC-6 fix: UI unit 1043/1043 and row 3
-      Electron 61 passed. Execution review approved in round 2 (Codex; round 1 F1 fixed)'
+    method: 'Session 40 MEU-94: useDocumentTheme and useG30Styles re-render every G30 select and its option menu on THEME_CHANGED_EVENT (one dark-class read, one copy of the G30 pairs); boot-theme.ts applies
+      the localStorage mirror before createRoot; THEME_GATE holds route content until the boot GET /settings/ui settles (503 retry inside 60 s, the whole load bounded by a deadline, EC-6); the Electron
+      THEME_PROBE pins Settings, TTS and Convert in both themes and after a cold boot (AC-94.1-94.11)'
+    result: 'Gate runs 1-4 at tested_state 7b29fcd+154d3f8e: every AC-93 and AC-94 test passed in all four, each run had one environment or load miss, and Mat accepted runs 1-4 with no re-run (D-120). After
+      the EC-6 fix: UI unit 1043/1043 and row 3 Electron 61 passed. Execution review approved in round 2 (Codex; round 1 F1 fixed)'
   category: MEU-NEW
   priority: P2
   related:
@@ -2851,17 +2854,19 @@ issues:
       question: Where should the light-theme dropdown fix live?
       resolution: autonomous
       class: two-way
-      chosen: 'Fix the G30 primitive: one reactive theme hook (subscribe to THEME_CHANGED_EVENT) behind getG30Styles/SelectInput, remove the ConsolePanel copy, make the option-menu pair theme-aware, and apply the persisted theme before first paint; add a both-theme Electron test'
+      chosen: 'Fix the G30 primitive: one reactive theme hook (subscribe to THEME_CHANGED_EVENT) behind getG30Styles/SelectInput, remove the ConsolePanel copy, make the option-menu pair theme-aware, and
+        apply the persisted theme before first paint; add a both-theme Electron test'
       source_tag: Local Canon
       precedents:
-        - .agent/docs/emerging-standards.md G30 — selects must be theme-aware; prefer SelectInput/getG30Styles over per-page styling
-        - ui/src/renderer/src/lib/theme.ts:27 — the event exists precisely so mounted G30 selects re-render; it does not reach route children
+      - .agent/docs/emerging-standards.md G30 — selects must be theme-aware; prefer SelectInput/getG30Styles over per-page styling
+      - ui/src/renderer/src/lib/theme.ts:27 — the event exists precisely so mounted G30 selects re-render; it does not reach route children
       research:
         engine: tavily
         sources:
-          - https://textslashplain.com/2021/10/17/spooky-enhancing-dark-mode-in-chromium — colours computed once in JS go stale on theme change; CSS variables update live
-          - https://electronjs.org/docs/latest/api/native-theme — nativeTheme.themeSource drives prefers-color-scheme for Chromium-drawn UI
-      reasoning: The defect is one shared mechanism, so a per-page patch would leave the other consumers broken. Keeping G30's inline-style rule but making it reactive stays inside local canon; whether to also adopt CSS variables is left to the plan.
+        - https://textslashplain.com/2021/10/17/spooky-enhancing-dark-mode-in-chromium — colours computed once in JS go stale on theme change; CSS variables update live
+        - https://electronjs.org/docs/latest/api/native-theme — nativeTheme.themeSource drives prefers-color-scheme for Chromium-drawn UI
+      reasoning: The defect is one shared mechanism, so a per-page patch would leave the other consumers broken. Keeping G30's inline-style rule but making it reactive stays inside local canon; whether
+        to also adopt CSS variables is left to the plan.
     - id: D-81
       stage: triage
       question: Which build-plan section and MEU should own this issue?
@@ -2870,13 +2875,14 @@ issues:
       chosen: New MEU-94 `gui-theme-reactive-selects` as matrix row 6.9 under 06 §App Shell Architecture (theme) + emerging-standards G30; batched with MEU-93 to MEU-97 as one GUI shell session
       source_tag: Local Canon
       precedents:
-        - 'docs/build-plan/build-priority-matrix.md:52 — row 6.7 MEU-69 gui-header-toggle-state: shell residuals land as Phase 6 rows against an 06 (residual) section'
-        - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-74 — a residual goes to the phase whose build-plan file owns the behaviour, as a new MEU after the highest registered
-        - docs/build-plan/06-gui.md:304-314 — palette, registry and shortcut wiring are specified in 06; 06-gui.md:1192 specifies DirectoryPicker (input + Browse)
+      - 'docs/build-plan/build-priority-matrix.md:52 — row 6.7 MEU-69 gui-header-toggle-state: shell residuals land as Phase 6 rows against an 06 (residual) section'
+      - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-74 — a residual goes to the phase whose build-plan file owns the behaviour, as a new MEU after the highest registered
+      - docs/build-plan/06-gui.md:304-314 — palette, registry and shortcut wiring are specified in 06; 06-gui.md:1192 specifies DirectoryPicker (input + Browse)
       research:
         engine: none
         sources: []
-      reasoning: 06-gui.md already specifies the behaviour, so this is a residual MEU, not PLAN-NEW; no planned (pending) MEU covers the shell, palette or path fields (MEU-19/23/69 are approved), so not MEU-EXPAND. One MEU per issue keeps each FIC reviewable; the shortcut and palette MEUs share commandRegistry.ts and AppShell.tsx, so they share a session.
+      reasoning: 06-gui.md already specifies the behaviour, so this is a residual MEU, not PLAN-NEW; no planned (pending) MEU covers the shell, palette or path fields (MEU-19/23/69 are approved), so not
+        MEU-EXPAND. One MEU per issue keeps each FIC reviewable; the shortcut and palette MEUs share commandRegistry.ts and AppShell.tsx, so they share a session.
 - id: GUI-SHORTCUTS-ADVERTISED-UNBOUND
   title: Ctrl+1/2/3, Ctrl+, and Ctrl+B are shown in the palette and rail but do nothing
   severity: medium
@@ -2890,8 +2896,10 @@ issues:
   verification:
     evidence_file: .agent/context/handoffs/2026-10-26-gui-keyboard-palette-MEU-95-handoff.md
     last_checked: '2026-10-26'
-    method: 'Session 41 MEU-95: every registry chord dispatches from one map (SHORTCUT_MAP) through AppShell''s single window handler; Ctrl+1/2/3, Ctrl+, and Ctrl+B navigate and collapse from any focus, text fields included; reserved chords refused; rail hints come from the map (AC-95.1-95.8)'
-    result: 'H1-2 fresh full gate at tested_state bb481ec+f07e5ce8: every step exit 0 (py-tests by the baseline rule), ui Vitest 1082/1082, Electron 178 passed, e2e repeat 70 passed. Execution review approved in round 1 (Codex)'
+    method: 'Session 41 MEU-95: every registry chord dispatches from one map (SHORTCUT_MAP) through AppShell''s single window handler; Ctrl+1/2/3, Ctrl+, and Ctrl+B navigate and collapse from any focus,
+      text fields included; reserved chords refused; rail hints come from the map (AC-95.1-95.8)'
+    result: 'H1-2 fresh full gate at tested_state bb481ec+f07e5ce8: every step exit 0 (py-tests by the baseline rule), ui Vitest 1082/1082, Electron 178 passed, e2e repeat 70 passed. Execution review approved
+      in round 1 (Codex)'
   category: MEU-NEW
   priority: P2
   related:
@@ -2964,8 +2972,10 @@ issues:
   verification:
     evidence_file: .agent/context/handoffs/2026-10-26-gui-keyboard-palette-MEU-96-handoff.md
     last_checked: '2026-10-26'
-    method: 'Session 41 MEU-96: the palette lists global commands plus only the current page''s eligible commands, refreshed on page and state change; at most one of Pause/Resume; Clear and Cancel open the page''s ConfirmModal with no API call before Confirm; Appearance: Dark/Light (Ctrl+Shift+D/L) save through the Settings path; label renames (AC-96.1-96.13)'
-    result: 'H1-2 fresh full gate at tested_state bb481ec+f07e5ce8: every step exit 0 (py-tests by the baseline rule), ui Vitest 1082/1082, Electron 178 passed, e2e repeat 70 passed. Execution review approved in round 1 (Codex)'
+    method: 'Session 41 MEU-96: the palette lists global commands plus only the current page''s eligible commands, refreshed on page and state change; at most one of Pause/Resume; Clear and Cancel open
+      the page''s ConfirmModal with no API call before Confirm; Appearance: Dark/Light (Ctrl+Shift+D/L) save through the Settings path; label renames (AC-96.1-96.13)'
+    result: 'H1-2 fresh full gate at tested_state bb481ec+f07e5ce8: every step exit 0 (py-tests by the baseline rule), ui Vitest 1082/1082, Electron 178 passed, e2e repeat 70 passed. Execution review approved
+      in round 1 (Codex)'
   category: MEU-NEW
   priority: P2
   related:
@@ -3060,8 +3070,10 @@ issues:
   verification:
     evidence_file: .agent/context/handoffs/2026-10-26-gui-keyboard-palette-MEU-97-handoff.md
     last_checked: '2026-10-26'
-    method: 'Session 41 MEU-97: the D-89 core set (Ctrl+L, Ctrl+O, Ctrl+S, Ctrl+Enter page:primary, Ctrl+J, F1) through the registry, page-scoped and only while the control is enabled; aria-keyshortcuts and a chord hint on every bound control; Ctrl+S presses the real capture-save (AC-97.1-97.11)'
-    result: 'H1-2 fresh full gate at tested_state bb481ec+f07e5ce8: every step exit 0 (py-tests by the baseline rule), ui Vitest 1082/1082, Electron 178 passed, e2e repeat 70 passed. Execution review approved in round 1 (Codex)'
+    method: 'Session 41 MEU-97: the D-89 core set (Ctrl+L, Ctrl+O, Ctrl+S, Ctrl+Enter page:primary, Ctrl+J, F1) through the registry, page-scoped and only while the control is enabled; aria-keyshortcuts
+      and a chord hint on every bound control; Ctrl+S presses the real capture-save (AC-97.1-97.11)'
+    result: 'H1-2 fresh full gate at tested_state bb481ec+f07e5ce8: every step exit 0 (py-tests by the baseline rule), ui Vitest 1082/1082, Electron 178 passed, e2e repeat 70 passed. Execution review approved
+      in round 1 (Codex)'
   category: MEU-NEW
   priority: P3
   related:
@@ -3136,42 +3148,38 @@ issues:
   component: ui
   status: open
   discovered: '2026-10-25'
-  root_cause: 'hypothesis: under host load (other agent sessions starting their MCP servers) an Electron launch or close in
-    capture-inbox.test.ts stalls past the 60 s test timeout, and Playwright then cannot tear the worker down. No assertion or
-    locator step fails. Not reproduced in isolation; unexplained.'
-  blast_radius: ui/tests/e2e/capture-inbox.test.ts in the full Electron run (AC-67.24 and AC-67.35 seen). A miss fails the fail-fast
-    session gate at ui-electron, so the run has to be repeated.
+  root_cause: 'hypothesis: under host load (other agent sessions starting their MCP servers) an Electron launch or close in capture-inbox.test.ts stalls past the 60 s test timeout, and Playwright then cannot
+    tear the worker down. No assertion or locator step fails. Not reproduced in isolation; unexplained.'
+  blast_radius: ui/tests/e2e/capture-inbox.test.ts in the full Electron run (AC-67.24 and AC-67.35 seen). A miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
   verification:
     last_checked: '2026-10-26'
     method: Session 40 gui-theme-path-fields gate runs 3 and 4 (walkthrough §Gate run 3 and §Gate run 4)
-    result: 'run 3 AC-67.24 and run 4 AC-67.35: Test timeout of 60000ms exceeded, then Worker teardown timeout of 60000ms exceeded,
-      170 passed each. Alone: AC-67.24 --repeat-each=10 10 passed (28.2s); capture-inbox.test.ts 39 passed (1.2m)'
+    result: 'run 3 AC-67.24 and run 4 AC-67.35: Test timeout of 60000ms exceeded, then Worker teardown timeout of 60000ms exceeded, 170 passed each. Alone: AC-67.24 --repeat-each=10 10 passed (28.2s); capture-inbox.test.ts
+      39 passed (1.2m)'
   category: MONITORING
   priority: P4
   related:
   - e2e-flake
   - capture
   meu_links: []
-  notes: 'SEEN 2026-10-25 (Session 40 gui-theme-path-fields on main; no ui/src/main or capture file changed). In run 4 a zorivest
-    session started its MCP servers at 09:52-09:53, while test 33 was running. Same hang shape as DOWNLOAD-QUEUE-DRAG-OVER-MISS
-    W2-5 (Session 35 A-2) and 2026-09-28-p11-transcript-tts walkthrough line 151. Next step on a repeat: log host process starts
-    during the Electron stage and time launch and close in the capture-inbox fixture.'
+  notes: 'SEEN 2026-10-25 (Session 40 gui-theme-path-fields on main; no ui/src/main or capture file changed). In run 4 a zorivest session started its MCP servers at 09:52-09:53, while test 33 was running.
+    Same hang shape as DOWNLOAD-QUEUE-DRAG-OVER-MISS W2-5 (Session 35 A-2) and 2026-09-28-p11-transcript-tts walkthrough line 151. Next step on a repeat: log host process starts during the Electron stage
+    and time launch and close in the capture-inbox fixture.'
 - id: PACKAGING-MCP-SNIPPET-TOKEN-STALE
   title: test_mcp_snippet_keys (AC-25.7) still requires AVKIT_API_TOKEN in mcp.json.example, which Session 31b made token-free
   severity: low
   component: infrastructure
   status: resolved
   discovered: '2026-10-25'
-  root_cause: tests/unit/test_packaging_installer.py::test_mcp_snippet_keys[AC-25.7] asserts 'AVKIT_API_TOKEN' in docs/distribution/mcp.json.example.
-    Session 31b (D-79, EXAMPLE_CONFIG) rewrote the example to the generic block with no token, so its env holds only ELECTRON_RUN_AS_NODE
-    and AVKIT_APP_DATA, and the test fails on HEAD 7b29fcd.
-  blast_radius: Every py-tests gate carries one failure that each session must excuse as a baseline failure (Session 40 EC-1 added
-    it to session-gate.ps1 expectedBaselinePyFailed). Fix is a test-expectation change to match EXAMPLE_CONFIG, so it needs approval.
+  root_cause: tests/unit/test_packaging_installer.py::test_mcp_snippet_keys[AC-25.7] asserts 'AVKIT_API_TOKEN' in docs/distribution/mcp.json.example. Session 31b (D-79, EXAMPLE_CONFIG) rewrote the example
+    to the generic block with no token, so its env holds only ELECTRON_RUN_AS_NODE and AVKIT_APP_DATA, and the test fails on HEAD 7b29fcd.
+  blast_radius: Every py-tests gate carries one failure that each session must excuse as a baseline failure (Session 40 EC-1 added it to session-gate.ps1 expectedBaselinePyFailed). Fix is a test-expectation
+    change to match EXAMPLE_CONFIG, so it needs approval.
   verification:
     last_checked: '2026-10-26'
     method: Session 40 baseline row 0 (s40-base-py.txt, s40-base-py-fail.txt) and gate runs 1-4
     result: '1 failed, 936 passed: AC-25.7 only, AssertionError on AVKIT_API_TOKEN, on HEAD and in every gate run'
-  resolution_path: 'Fixed 2026-11-03. The test now asserts the token is absent from the example, matching D-79. Mat approved the fix on 2026-11-03 so it would not keep CI red.'
+  resolution_path: Fixed 2026-11-03. The test now asserts the token is absent from the example, matching D-79. Mat approved the fix on 2026-11-03 so it would not keep CI red.
   category: TECH-DEBT
   priority: P3
   related:
@@ -3184,15 +3192,49 @@ issues:
   component: ui
   status: open
   discovered: '2026-10-26'
-  root_cause: ui/tests/unit/capture-page.test.ts:620-625 (AC-97.4, source text) asserts only that capture-save and capture-region carry shortcut, aria-keyshortcuts and title props. A wrong chord value still passes; the ToolbarIconButton test supplies its own Ctrl+S and does not check CapturePage's wiring.
-  blast_radius: Regression coverage only. Current values are correct (CapturePage.tsx:1362, :1441, :1442). A future edit that binds the wrong chord to Capture's Save or Region hint would not fail AC-97.4. Fix is a test change (assert the rendered values against getCommand(...).shortcut), so it needs approval.
+  root_cause: ui/tests/unit/capture-page.test.ts:620-625 (AC-97.4, source text) asserts only that capture-save and capture-region carry shortcut, aria-keyshortcuts and title props. A wrong chord value still
+    passes; the ToolbarIconButton test supplies its own Ctrl+S and does not check CapturePage's wiring.
+  blast_radius: Regression coverage only. Current values are correct (CapturePage.tsx:1362, :1441, :1442). A future edit that binds the wrong chord to Capture's Save or Region hint would not fail AC-97.4.
+    Fix is a test change (assert the rendered values against getCommand(...).shortcut), so it needs approval.
   verification:
     last_checked: '2026-10-26'
     method: Session 41 execution review round 1 F1 (Medium, non-blocking), .agent/context/handoffs/2026-10-26-gui-keyboard-palette-implementation-critical-review.md
-    result: 'An in-memory probe changed the Save and Region chords to Ctrl+O and all three presence predicates still held'
+    result: An in-memory probe changed the Save and Region chords to Ctrl+O and all three presence predicates still held
   category: TECH-DEBT
   priority: P3
   related:
   - gui-shortcuts
   - capture
   meu_links: []
+- id: BACKEND-READY-BEFORE-LISTEN
+  title: The backend prints AVKIT_READY before its socket listens, so an immediate request is refused
+  severity: low
+  component: api
+  status: open
+  discovered: '2026-11-03'
+  root_cause: packages/api/src/avkit_api/cli.py:218-232 binds the socket, prints AVKIT_READY, then calls server.run, and uvicorn only starts listening inside that call. Node fetch sent on the ready line
+    got ECONNREFUSED in 3 of 3 tries with the updated dependencies and 2 of 3 with the old ones.
+  blast_radius: 'Measured: the live MCP audit (mcp-audit) stopped with exit 4 before any action ran; its runner now waits for the port (mcp-server/scripts/audit/backend.ts). Not measured: whether the desktop
+    app''s first request can hit the same gap (ui/src/main/python-manager.ts publishes the API on this line). Candidate fix: call sock.listen() before printing the line, so early requests queue instead
+    of being refused.'
+- id: MCP-IMAGE-OVER-STDIO-LIMIT
+  title: avkit_capture image over about 7.86 MB drops the MCP connection
+  severity: high
+  component: mcp-server
+  status: open
+  discovered: '2026-11-03'
+  root_cause: 'IMAGE_MAX_BYTES allows 15 MiB (mcp-server/src/toolsets/capture.ts:11), but the image travels as base64 in one JSON line and the MCP TypeScript SDK''s stdio client closes the transport when
+    its read buffer passes 10 MiB (STDIO_DEFAULT_MAX_BUFFER_SIZE). Measured with the real server and SDK 1.30.0 and 1.32.2: 7,860,000 B returns the image, 7,880,000 B throws ''Connection closed''. The server
+    does not crash; its stderr stays empty.'
+  blast_radius: 'Any client built on that SDK loses every av-kit tool until it reconnects, not just the one call. Full-screen PNGs can be this big: real shots of 7.5 MB and 8.06 MB came from the same desktop
+    minutes apart, so the failure depends on what is on screen. The live MCP audit fails capture.image and every later step when its shot crosses the line. Other MCP clients were not tested.'
+- id: YOUTUBE-CAPTIONS-IP-BLOCK
+  title: YouTube is blocking caption requests from the maintainer's IP
+  severity: low
+  component: infrastructure
+  status: open
+  discovered: '2026-11-03'
+  root_cause: 'The product TranscriptAdapter raises TranscriptRetryableError ''YouTube is blocking requests from your IP'' for two public videos, with both the old and the updated dependencies. Not a code
+    change: the block is on the network side.'
+  blast_radius: Transcript fails on this network until the block lifts, and the live MCP audit reports transcript.compile as a REGRESSION against the baseline because that signature is only tolerated in
+    container mode. Do not refresh the audit baseline to hide it.

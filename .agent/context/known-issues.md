@@ -3,12 +3,13 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 73** — Active: 18 | Mitigated: 1 | Resolved: 53
+**Total: 76** — Active: 21 | Mitigated: 1 | Resolved: 53
 
 ## Active Issues
 
 | Sev | ID | Title | Component | Status | Discovered |
 |-----|-----|-------|-----------|--------|------------|
+| 🟠 | `MCP-IMAGE-OVER-STDIO-LIMIT` | avkit_capture image over about 7.86 MB drops the MCP connection | mcp-server | ⬜ open | 2026-11-03 |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | ⬜ open | 2026-09-30 |
 | 🟡 | `FFMPEG-GPL-BUILD` | The installer ships a GPL-3.0 BtbN FFmpeg build (libx264/libx265) | infrastructure | ⬜ open | 2026-10-15 |
 | 🟡 | `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` | Non-English voices via the real espeak-ng CLI were never run end to end… | infrastructure | ⬜ open | 2026-10-15 |
@@ -27,6 +28,8 @@
 | 🟢 | `TOOLING-TRIAGE-CLI-CP1252` | issue_triage.py bucket and --help crash with UnicodeEncodeError when ou… | infrastructure | ⬜ open | 2026-10-17 |
 | 🟢 | `CAPTURE-E2E-LAUNCH-TEARDOWN-HANG` | capture-inbox Electron specs occasionally hang in launch or close under… | ui | ⬜ open | 2026-10-25 |
 | 🟢 | `CAPTURE-HINT-TEST-PRESENCE-ONLY` | Capture's AC-97.4 hint test checks that the shortcut props exist, not t… | ui | ⬜ open | 2026-10-26 |
+| 🟢 | `BACKEND-READY-BEFORE-LISTEN` | The backend prints AVKIT_READY before its socket listens, so an immedia… | api | ⬜ open | 2026-11-03 |
+| 🟢 | `YOUTUBE-CAPTIONS-IP-BLOCK` | YouTube is blocking caption requests from the maintainer's IP | infrastructure | ⬜ open | 2026-11-03 |
 
 ## Mitigated / Workaround
 

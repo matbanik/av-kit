@@ -580,6 +580,16 @@ const MODEL_STEPS_BEFORE_TTS: StepSpec[] = [
         return obs(false, `variant ${variant} never listed as downloaded`, str(rt.error_message) || null);
       }
       const f = fileReport(str(row.path), ctx.root);
+      // The row lists once the weights land. Voice packs keep the runtime busy after that
+      // (MODEL_CHAINS_PACKS), and any other download started meanwhile gets a 409.
+      const runtime = await pollJson(ctx, "/models/download-runtime", T.model, (json) => {
+        const rt = asRec(json);
+        return rt.state === "Downloading" ? null : rt;
+      });
+      if (!runtime) return obs(false, `voice packs still downloading after ${variant}`);
+      if (runtime.state === "Failed") {
+        return obs(false, `voice packs failed after ${variant}`, str(runtime.error_message) || null);
+      }
       return obs(f.ok, `REST downloaded ${variant}; ${f.detail}`);
     },
   }),
