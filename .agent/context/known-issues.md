@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 112** — Active: 47 | Mitigated: 1 | Resolved: 62
+**Total: 112** — Active: 45 | Mitigated: 1 | Resolved: 64
 
 ## Active Issues
 
@@ -32,7 +32,6 @@
 | 🟢 | `CAPTURE-ZOOM-PAN-ORIGIN-FLAKE` | Capture viewport AC-66.14 middle-button pan origin occasionally off und… | ui | ⬜ open | 2026-10-17 |
 | 🟢 | `MCP-AUDIT-CENSUS-PROBE-SINGLE-SHOT` | MCP audit container census network proofs are single-shot, so YouTube's… | mcp-server | ⬜ open | 2026-10-01 |
 | 🟢 | `TTS-JA-ZH-G2P-EXTRAS` | Japanese and Mandarin Kokoro voices are listed but unavailable (no misa… | infrastructure | ⬜ open | 2026-10-15 |
-| 🟢 | `FETCH-FFMPEG-EXIT-CODES` | fetch_ffmpeg_windows.ps1 exit codes 2 to 5 are never returned (Write-Er… | infrastructure | ⬜ open | 2026-10-15 |
 | 🟢 | `TOOLING-TRIAGE-CLI-CP1252` | issue_triage.py bucket and --help crash with UnicodeEncodeError when ou… | infrastructure | ⬜ open | 2026-10-17 |
 | 🟢 | `CAPTURE-E2E-LAUNCH-TEARDOWN-HANG` | capture-inbox Electron specs occasionally hang in launch or close under… | ui | ⬜ open | 2026-10-25 |
 | 🟢 | `CAPTURE-HINT-TEST-PRESENCE-ONLY` | Capture's AC-97.4 hint test checks that the shortcut props exist, not t… | ui | ⬜ open | 2026-10-26 |
@@ -53,7 +52,6 @@
 | 🟢 | `CONVERT-ADVANCED-EDIT-REPLACED` | An Advanced edit on Convert snaps back when settings load late or the d… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `GUI-READY-CHUNK-BOUNDARY` | A READY line split across output chunks can be missed, and two READY ch… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `CONSOLE-FAILURE-DETAIL-LOST` | Failure details get lost: the Console ring clears on close, and it and… | core | ⬜ open | 2026-11-04 |
-| 🟢 | `UNINSTALL-LEAVES-INSTALLER-COPY` | Uninstalling leaves a 340 MB copy of the installer in %LOCALAPPDATA%\av… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `LIGHT-ACCENT-BELOW-AA-CONTRAST` | The light theme's accent colour puts button labels below 4.5:1 contrast | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `INSTALL-FOLDER-NAME-MISMATCH` | The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build pla… | ui | ⬜ open | 2026-11-04 |
 
@@ -63,9 +61,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (62)
+## Resolved (64)
 
-62 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+64 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

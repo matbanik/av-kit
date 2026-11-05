@@ -10,12 +10,14 @@ param(
     [switch]$ExtractOnly
 )
 $ErrorActionPreference = 'Stop'
+# Each refusal writes to stderr directly: the error cmdlet throws under Stop and exits 1,
+# so the documented exit code below it would never run.
 if ([string]::IsNullOrWhiteSpace($Url)) {
-    Write-Error 'FETCH_FFMPEG requires a pinned URL (AVKIT_FFMPEG_URL or -Url).'
+    [Console]::Error.WriteLine('FETCH_FFMPEG requires a pinned URL (AVKIT_FFMPEG_URL or -Url).')
     exit 2
 }
 if ($Sha256 -notmatch '^[0-9A-Fa-f]{64}$') {
-    Write-Error 'FETCH_FFMPEG requires a nonempty 64-hex SHA256 (AVKIT_FFMPEG_SHA256 or -Sha256).'
+    [Console]::Error.WriteLine('FETCH_FFMPEG requires a nonempty 64-hex SHA256 (AVKIT_FFMPEG_SHA256 or -Sha256).')
     exit 2
 }
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
@@ -24,12 +26,12 @@ if (-not $ExtractOnly) {
     Invoke-WebRequest -Uri $Url -OutFile $archive
 }
 if (-not (Test-Path -LiteralPath $archive)) {
-    Write-Error ('missing archive ' + $archive)
+    [Console]::Error.WriteLine('missing archive ' + $archive)
     exit 2
 }
 $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath $archive).Hash
 if ($actual.ToLowerInvariant() -ne $Sha256.ToLowerInvariant()) {
-    Write-Error ("SHA256 mismatch actual=" + $actual + " expected=" + $Sha256)
+    [Console]::Error.WriteLine("SHA256 mismatch actual=" + $actual + " expected=" + $Sha256)
     exit 3
 }
 $stage = Join-Path $OutDir '_extract'
@@ -39,7 +41,7 @@ if (Test-Path -LiteralPath $stage) {
 Expand-Archive -LiteralPath $archive -DestinationPath $stage -Force
 $bins = @(Get-ChildItem -Path $stage -Recurse -Include 'ffmpeg.exe', 'ffprobe.exe')
 if ($bins.Count -lt 2) {
-    Write-Error 'archive missing ffmpeg.exe or ffprobe.exe'
+    [Console]::Error.WriteLine('archive missing ffmpeg.exe or ffprobe.exe')
     exit 4
 }
 # The shallowest LICENSE.txt is the build's own (BtbN puts it in the archive root folder).
@@ -47,13 +49,12 @@ $license = Get-ChildItem -Path $stage -Recurse -File -Filter 'LICENSE.txt' |
     Sort-Object { $_.FullName.Length } | Select-Object -First 1
 if ($null -eq $license) {
     Remove-Item -LiteralPath $stage -Recurse -Force
-    # Not Write-Error: under ErrorActionPreference Stop it throws (exit 1) before exit 6.
     [Console]::Error.WriteLine('archive missing LICENSE.txt')
     exit 6
 }
 foreach ($bin in $bins) {
     if ($bin.Length -le 1024) {
-        Write-Error ('refusing stub payload ' + $bin.Name + ' bytes=' + $bin.Length)
+        [Console]::Error.WriteLine('refusing stub payload ' + $bin.Name + ' bytes=' + $bin.Length)
         exit 5
     }
     Copy-Item -LiteralPath $bin.FullName -Destination (Join-Path $OutDir $bin.Name) -Force

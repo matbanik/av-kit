@@ -1,0 +1,13 @@
+ M .agent/context/current-focus.md
+ M .agent/context/sessions/d2be867f-0d35-422e-b139-55d6ed0d88f2/digest.md
+ M docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md
+ M docs/execution/plans/2026-11-03-release-rc1/task.md
+ M docs/execution/reflections/2026-11-03-release-rc1-reflection.md
+ M docs/releases/publish-checklist-v0.1.0-rc.1.md
+?? .agent/context/handoffs/2026-11-04-rc2-fetch-uninstall-plan-critical-review.md
+?? docs/execution/plans/2026-11-04-rc2-fetch-uninstall/baseline.ps1
+?? docs/execution/plans/2026-11-04-rc2-fetch-uninstall/baseline.sha
+?? docs/execution/plans/2026-11-04-rc2-fetch-uninstall/identity.py
+?? docs/execution/plans/2026-11-04-rc2-fetch-uninstall/implementation-plan.md
+?? docs/execution/plans/2026-11-04-rc2-fetch-uninstall/red-check.py
+?? docs/execution/plans/2026-11-04-rc2-fetch-uninstall/task.md

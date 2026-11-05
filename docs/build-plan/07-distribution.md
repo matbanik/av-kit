@@ -340,6 +340,13 @@ MCP Guard / lock stays **deferred** ([06-gui.md](06-gui.md)).
 | Exit codes | `fetch_ffmpeg_windows.ps1` returns its documented codes 2 to 5 through the stderr pattern exit 6 already uses. | Local Canon: known issue `FETCH-FFMPEG-EXIT-CODES` |
 | Tests | The tests assert the exact codes, not just a nonzero exit. | Local Canon: known issue `FETCH-FFMPEG-EXIT-CODES` |
 
+> **Delivered (Session 49).**
+> - `tools/fetch_ffmpeg_windows.ps1` writes each refusal to stderr and returns its documented code: 2 for a blank URL, a malformed SHA or a missing archive, 3 for a SHA mismatch, 4 for a missing `ffmpeg.exe` or `ffprobe.exe` and 5 for a stub. No `Write-Error` remains.
+> - `tests/unit/test_packaging_installer.py` asserts the exact codes. The two earlier tests now assert 2 and 3.
+> - AC-113.1 to AC-113.5.
+> - Gate: the shared `session-gate.ps1` record in the MEU-113 handoff.
+> - Plan `docs/execution/plans/2026-11-04-rc2-fetch-uninstall/`.
+
 <a id="uninstall-installer-copy-residual"></a>
 
 ### Uninstall removes the installer copy (residual)
@@ -352,6 +359,14 @@ MCP Guard / lock stays **deferred** ([06-gui.md](06-gui.md)).
 | Upgrade | An upgrade still works, checked on the next build. | Local Canon: triage D-228 |
 | Kept | `%APPDATA%\av-kit-ui` stays, per `deleteAppDataOnUninstall: false`, and the notes name it. | Local Canon: triage D-228 |
 | Tests | A pin on the macro in `ui/tests/unit/login-item-nsh.test.ts`; `install-roundtrip.ps1` checks the folder is gone after uninstall and `%APPDATA%\av-kit-ui` is still there, and an install over an existing one keeps working. | Local Canon |
+
+> **Delivered (Session 49).**
+> - `customUnInstall` in `ui/build/installer.nsh` deletes `$LOCALAPPDATA\${APP_INSTALLER_STORE_FILE}` and removes `av-kit-ui-updater` with a non-recursive `RMDir`, skipping `${isUpdated}`. A per-machine install switches to the current user's folders for the two lines and back. `%APPDATA%\av-kit-ui` stays.
+> - `ui/tests/unit/login-item-nsh.test.ts` pins the macro and the folder name.
+> - `repackage.ps1` rebuilt the installer from the existing `win-unpacked` with only the macro changed, and `install-roundtrip.ps1` ran it on the build PC. RC1's uninstall leaves the copy, the negative control. The new uninstall removes the copy and its folder. RC1 to new and new over itself both launch, and the uninstall after each is clean. MEU-125 repeats the round trip on the full rc.2 build (plan D-268).
+> - AC-114.1 to AC-114.9.
+> - Gate: the shared `session-gate.ps1` record in the MEU-114 handoff.
+> - Plan `docs/execution/plans/2026-11-04-rc2-fetch-uninstall/`.
 
 <a id="second-release-candidate-residual"></a>
 

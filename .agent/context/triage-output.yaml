@@ -1478,6 +1478,14 @@ archived:
   category: TECH-DEBT
   priority: P4
   enrichment: null
+- id: FETCH-FFMPEG-EXIT-CODES
+  title: fetch_ffmpeg_windows.ps1 exit codes 2 to 5 are never returned (Write-Error exits 1 first)
+  severity: low
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
 - id: NOTICES-SPACY-TRANSITIVE
   title: THIRD_PARTY_NOTICES omits most bundled backend dependencies (spaCy's transitive set, yt-dlp, FastAPI, numpy and others)
   severity: low
@@ -1906,6 +1914,33 @@ archived:
   category: null
   priority: null
   enrichment: null
+- id: UNINSTALL-LEAVES-INSTALLER-COPY
+  title: Uninstalling leaves a 340 MB copy of the installer in %LOCALAPPDATA%\av-kit-ui-updater
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-228
+      stage: triage
+      question: How does the 340 MB installer copy go away?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Delete the copy and its folder in customUnInstall, except when the uninstaller runs for an update, and check an upgrade still works on the next build. %APPDATA%\av-kit-ui stays, per deleteAppDataOnUninstall:
+        false, and the notes name it.'
+      source_tag: Local Canon
+      precedents:
+      - ui/build/installer.nsh — customUnInstall today
+      - 'ui/electron-builder.yml:18 — deleteAppDataOnUninstall: false'
+      research:
+        engine: none
+        sources: []
+      reasoning: No user data is involved and av-kit has no updater that reads the copy (no electron-updater in ui/package.json). Two-way.
+    decided_by: agent
 actionable:
 - id: E2E-ELECTRON-LAUNCH-FLAG
   title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
@@ -2014,14 +2049,6 @@ actionable:
         sources: []
       reasoning: D-100 already made this a local evidence stage. Two-way.
     decided_by: agent
-- id: FETCH-FFMPEG-EXIT-CODES
-  title: fetch_ffmpeg_windows.ps1 exit codes 2 to 5 are never returned (Write-Error exits 1 first)
-  severity: low
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
 - id: TOOLING-TRIAGE-CLI-CP1252
   title: issue_triage.py bucket and --help crash with UnicodeEncodeError when output is redirected on Windows
   severity: low
@@ -2509,33 +2536,6 @@ actionable:
         sources: []
       reasoning: The adapter and the spec already mean this (-map a:N), so only the service moves. The filer measured -map a:1 failing on a one-track file. Two-way.
     decided_by: agent
-- id: UNINSTALL-LEAVES-INSTALLER-COPY
-  title: Uninstalling leaves a 340 MB copy of the installer in %LOCALAPPDATA%\av-kit-ui-updater
-  severity: low
-  component: ui
-  status: open
-  category: MEU-NEW
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-228
-      stage: triage
-      question: How does the 340 MB installer copy go away?
-      resolution: autonomous
-      class: two-way
-      chosen: 'Delete the copy and its folder in customUnInstall, except when the uninstaller runs for an update, and check an upgrade still works on the next build. %APPDATA%\av-kit-ui stays, per deleteAppDataOnUninstall:
-        false, and the notes name it.'
-      source_tag: Local Canon
-      precedents:
-      - ui/build/installer.nsh — customUnInstall today
-      - 'ui/electron-builder.yml:18 — deleteAppDataOnUninstall: false'
-      research:
-        engine: none
-        sources: []
-      reasoning: No user data is involved and av-kit has no updater that reads the copy (no electron-updater in ui/package.json). Two-way.
-    decided_by: agent
 - id: TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS
   title: verify --deep and discover report noise, and verify stamps last_checked without checking
   severity: medium
@@ -2613,6 +2613,57 @@ actionable:
       reasoning: A user who keeps the preselected model should not hit a failure on an ordinary sentence. INT8 and FP32 had no failures in the 2026-11-04 probe and generated at the same speed. INT8 is 92
         MB against 326 MB and peaked at 583 MB against 817 MB. Nobody has compared them by ear, so the choice between them stays with Mat's listening check.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+- id: CLOSEOUT-CHECK-REFUSES-REGISTER
+  title: The closeout check refuses known-issues.yaml as the triage tool writes it, and --decision-issue keeps only the last value
+  severity: medium
+  component: agent
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked:
+    - 'D-279: Does the closeout check''s refusal of the issue register get tracked as an issue?'
+    - 'D-274: When is the tooling fixed?'
+    answers:
+    - 'D-279: Yes, filed here'
+    - 'D-274: Session 49b, after Session 49 and before Session 50'
+    decision_log:
+    - id: D-279
+      stage: triage
+      question: Does the closeout check's refusal of the issue register get tracked as an issue?
+      resolution: autonomous
+      class: two-way
+      chosen: Yes, filed as CLOSEOUT-CHECK-REFUSES-REGISTER. When to fix it is a separate question for Mat, D-274.
+      source_tag: Local Canon
+      precedents:
+      - docs/execution/reflections/2026-11-03-release-rc1-reflection.md:45 — D-190 filed the same class of tooling defect as CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
+      - docs/execution/reflections/2026-10-14-capture-chrome-reflection.md:49 — names the triage tool and validator YAML mismatch as a missing contract
+      - docs/execution/reflections/2026-10-16-tts-voice-panel-reflection.md:225 — slim candidate on the single-value flag
+      research:
+        engine: pomera_web_search (tavily, exa)
+        sources:
+        - https://blog.codacy.com/complete-guide-to-technical-debt-tracking-for-engineering-leaders — remembering a defect is not tracking it; untracked debt compounds
+        - https://www.atlassian.com/agile/software-development/technical-debt — track debt alongside feature work
+      reasoning: 'Passes the HDP section 4 test: precedent and sources agree, filing is two-way, no product fork and no governance number. Repeated rediscovery shows that memory and reflections alone do
+        not hold it.'
+    - id: D-274
+      stage: triage
+      question: When is the tooling fixed?
+      resolution: human
+      class: governance-value
+      chosen: A tooling session, 49b, after Session 49 and before Session 50. Session 49 keeps D-272's extract
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/reflections/2026-10-14-capture-chrome-reflection.md:288 — tools/ edits were Mat's exception before (D-39)
+      - docs/execution/reflections/2026-10-16-tts-voice-panel-reflection.md:92 — D-22 repaired the form by hand, which the next model.save undoes
+      research:
+        engine: pomera_web_search (tavily, exa)
+        sources:
+        - https://pyyaml.org/wiki/PyYAMLDocumentation — the emitter's width and indent are configurable
+        - https://github.com/crdoconnor/strictyaml — a restricted YAML reader is an established pattern, so the reader need not be loosened
+      reasoning: The workaround works, so the session buys an end to a failure that otherwise arrives at the end of each of Sessions 50 to 57. Alternatives were reusing D-272 in every session, and fixing
+        it inside Session 49, which would change that plan's goal just before review.
+      human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -2713,10 +2764,12 @@ deferred:
     - 'D-214: Which FFmpeg build replaces the pinned BtbN GPL build so libdvdcss leaves the package?'
     - 'D-215: Does v0.1.0-rc.1 stay publicly downloadable until a build without libdvdcss replaces it?'
     - 'D-266: Does FFmpeg stay the stock BtbN GPL build, with libdvdcss in it, in rc.2 and later?'
+    - 'D-275: Do the third-party notices name libdvdcss?'
     answers:
     - 'D-214: superseded by D-266'
     - 'D-215: RC1 stays up, settled by D-266'
     - 'D-266: FFmpeg, keeping libdvdcss in rc.2: yes'
+    - 'D-275: Yes, one factual line in MEU-125'
     decision_log:
     - id: D-214
       stage: triage
@@ -2793,6 +2846,25 @@ deferred:
         assessed the legal exposure, the brief asked Mat to accept it knowingly, and this is not legal advice. Downloads already made cannot be recalled on any route, and the GPL source duty stays. The
         approved plan and patch are parked at docs/execution/plans/2026-11-04-rc2-ffmpeg-uninstall/ if the risk ever changes.'
       human_message_reference: 'USER_EXPLICIT 2026-11-04 ''FFmpeg, keeping libdvdcss in rc.2: yes'''
+    - id: D-275
+      stage: triage
+      question: Do the third-party notices name libdvdcss?
+      resolution: human
+      class: one-way-door
+      chosen: 'Yes. One factual line in the FFmpeg section, in MEU-125: the build includes libdvdcss, and av-kit never uses DVD input'
+      source_tag: Human-approved
+      precedents:
+      - packaging/THIRD_PARTY_NOTICES.md:59-72 — the FFmpeg section names no individual dependency
+      - docs/execution/plans/2026-11-04-rc2-fetch-uninstall/implementation-plan.md:227 — the question was left to Mat
+      research:
+        engine: pomera_web_search (tavily, exa)
+        sources:
+        - https://www.videolan.org/legal.html — VideoLAN's legal page on libdvdcss
+        - 'https://www.psychocats.net/ubuntucat/the-legality-or-illegality-of-w32codecs-and-libdvdcss2 — quotes the VideoLAN FAQ: VLC binaries are distributed with libdvdcss included'
+        - https://www.ffmpeg.org/legal.html — FFmpeg's checklist, which it says is not the only way to comply
+      reasoning: The name is already public in four committed files and in the source archive, so the line adds prominence, not new information, and matches VLC's open practice. Alternatives were a generated
+        list of every FFmpeg dependency and no change. Whether naming it changes legal exposure was not assessed; this is not legal advice.
+      human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
     decided_by: human
 - id: TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD
   title: Nothing downloads the PyTorch runtime, so the PyTorch model can't run in an installed app, and Settings has no row for it
@@ -2873,10 +2945,9 @@ proposed_batches:
   - DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
   - TTS-DEVICE-OPTIONS-IN-CPU-BUILD
   - MODELS-DIR-DOCS-AND-PROBE-MISMATCH
-  - UNINSTALL-LEAVES-INSTALLER-COPY
   component: ui
   priority_band: P3
-  complexity: L
+  complexity: M
   has_duplicates: true
 - slug: api-transcript-failed-no-reason
   issues:

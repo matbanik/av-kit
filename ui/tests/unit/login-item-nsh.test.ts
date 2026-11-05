@@ -69,3 +69,59 @@ describe('MEU-61 NSIS uninstall', () => {
     expect(includeVal).toBe('build/installer.nsh')
   })
 })
+
+const pkgPath = resolve(repoRoot, 'ui/package.json')
+const DELETE_COPY = 'Delete "$LOCALAPPDATA\\${APP_INSTALLER_STORE_FILE}"'
+
+function macroBody(src: string, name: string): string[] {
+  const lines = nsisCodeLines(src)
+  const start = lines.indexOf(`!macro ${name}`)
+  const end = lines.indexOf('!macroend', start)
+  return start >= 0 && end > start ? lines.slice(start + 1, end) : []
+}
+
+// The lines inside `${ifNot} ${isUpdated}` ... its matching `${endIf}`, nested blocks included.
+function notUpdatedBlock(body: string[]): string[] {
+  const start = body.findIndex((line) => /^\$\{ifNot\}\s+\$\{isUpdated\}$/.test(line))
+  if (start < 0) return []
+  let depth = 1
+  for (let i = start + 1; i < body.length; i++) {
+    if (/^\$\{if(Not)?\}\s/i.test(body[i])) depth++
+    if (/^\$\{endIf\}$/i.test(body[i]) && --depth === 0) return body.slice(start + 1, i)
+  }
+  return []
+}
+
+function updaterDir(): string {
+  const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { name: string }
+  return `${pkg.name}-updater`
+}
+
+describe('MEU-114 NSIS uninstall removes the installer copy', () => {
+  it('AC-114.1 customUnInstall deletes the copy and its folder inside the not-updated guard', () => {
+    const unguarded = [
+      '!macro customUnInstall',
+      `  ${DELETE_COPY}`,
+      '  RMDir "$LOCALAPPDATA\\av-kit-ui-updater"',
+      '!macroend',
+    ].join('\n')
+    expect(notUpdatedBlock(macroBody(unguarded, 'customUnInstall'))).toHaveLength(0)
+
+    const block = notUpdatedBlock(macroBody(readFileSync(nshPath, 'utf8'), 'customUnInstall'))
+    expect(block.filter((line) => line === DELETE_COPY)).toHaveLength(1)
+    expect(block.filter((line) => /^RMDir\s+"\$LOCALAPPDATA\\[^"]+"$/.test(line))).toHaveLength(1)
+  })
+
+  it('AC-114.2 the folder RMDir removes is the package name plus -updater', () => {
+    expect(updaterDir()).toBe('av-kit-ui-updater')
+    const body = macroBody(readFileSync(nshPath, 'utf8'), 'customUnInstall')
+    const rmdirs = body.filter((line) => /^RMDir\b/.test(line))
+    expect(rmdirs).toEqual([`RMDir "$LOCALAPPDATA\\${updaterDir()}"`])
+  })
+
+  it('AC-114.3 the two DeleteRegValue lines stay the only two and no RMDir is recursive', () => {
+    const lines = nsisCodeLines(readFileSync(nshPath, 'utf8'))
+    expect(lines.filter((line) => /^DeleteRegValue\b/.test(line))).toHaveLength(2)
+    expect(lines.filter((line) => /^RMDir\s+\/r\b/i.test(line))).toHaveLength(0)
+  })
+})

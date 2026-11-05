@@ -2672,7 +2672,7 @@ issues:
   title: fetch_ffmpeg_windows.ps1 exit codes 2 to 5 are never returned (Write-Error exits 1 first)
   severity: low
   component: infrastructure
-  status: open
+  status: resolved
   discovered: '2026-10-15'
   root_cause: Their Write-Error throws under $ErrorActionPreference='Stop', so the process exits 1 first; the tests only check for a nonzero exit.
   blast_radius: Scripts and docs that branch on the documented exit codes.
@@ -2684,15 +2684,18 @@ issues:
   - MEU-110
   - MEU-113
   verification:
-    last_checked: '2026-11-04'
-    method: Ran tools/fetch_ffmpeg_windows.ps1 with a blank SHA and with a wrong SHA
-    result: exit=1 for both, where 2 and 3 are documented (receipts C:/Temp/av-kit/fetch-exit-blank-sha.txt, fetch-exit-sha-mismatch.txt). Exit 5 (:56) has the same defect; exit 6 already writes to stderr
-      and works. Tests assert only nonzero (tests/unit/test_packaging_installer.py:152,172).
+    last_checked: '2026-11-05'
+    method: AC-113.1 to AC-113.5 in tests/unit/test_packaging_installer.py, which run tools/fetch_ffmpeg_windows.ps1 on local fixture archives and assert the exact exit code with stderr, plus a check that
+      no Write-Error is left in the script
+    result: Before the fix the nine new and tightened cases failed, each with exit 1 (C:/Temp/av-kit/s49-exit-red.txt). After it the script returns 2 for a blank URL, a malformed SHA or a missing archive,
+      3 for a SHA mismatch, 4 for a missing binary and 5 for a stub, and all 20 tests in the file pass (C:/Temp/av-kit/s49-exit-green.txt).
   notes: 'Use the exit-6 stderr pattern for codes 2 to 5 and assert exact codes. Batch with INSTALLER-SHIPS-FFMPEG-ZIP.
 
 
     Triage 2026-11-04: Rider on the FFmpeg session, which edits the same script (grouping D-99 rule). tools/fetch_ffmpeg_windows.ps1:18,32 still use Write-Error. D-266 removed the FFmpeg build later that
     day, so MEU-113 is now this fix alone.'
+  resolution_path: 'Fixed under MEU-113 on 2026-11-05 (plan 2026-11-04-rc2-fetch-uninstall): fixed in the tree, ships in rc.2. Each refusal in tools/fetch_ffmpeg_windows.ps1 writes to stderr and exits with
+    its documented code, the pattern exit 6 already used, because Write-Error throws under Stop and exits 1. The two earlier tests now assert 2 and 3.'
 - id: NOTICES-SPACY-TRANSITIVE
   title: THIRD_PARTY_NOTICES omits most bundled backend dependencies (spaCy's transitive set, yt-dlp, FastAPI, numpy and others)
   severity: low
@@ -4365,7 +4368,7 @@ issues:
   title: Uninstalling leaves a 340 MB copy of the installer in %LOCALAPPDATA%\av-kit-ui-updater
   severity: low
   component: ui
-  status: open
+  status: resolved
   discovered: '2026-11-04'
   root_cause: electron-builder 26.18.0 copies the running installer to its updater cache folder on install (ui/node_modules/app-builder-lib/templates/nsis/include/installer.nsh:93, path set in out/targets/nsis/NsisTarget.js:612),
     and no NSIS template removes it. The customUnInstall macro in ui/build/installer.nsh deletes only the two Run registry values. ui/package.json has no electron-updater, so av-kit itself never reads the
@@ -4373,14 +4376,20 @@ issues:
   blast_radius: 'Measured on the published v0.1.0-rc.1 on the maintainer''s test PC on 2026-11-04: after uninstalling, %LOCALAPPDATA%\av-kit-ui-updater\installer.exe is still there at 340,348,020 B with
     the release''s SHA-256. %APPDATA%\av-kit-ui also stays (51 files, 9 MB of Chromium profile and caches), by deleteAppDataOnUninstall: false at ui/electron-builder.yml:18. docs/releases/v0.1.0-rc.1.md
     names both in its test section since 2026-11-04 (:95-98); its uninstall paragraph at :28-30 does not. Nothing breaks; the user loses the disk space until they find the folder.'
-  resolution_path: 'Proposed for triage, not approved: delete the copy and its folder in customUnInstall, skipping the ${isUpdated} case so an in-place upgrade is untouched, and check that an upgrade still
-    works afterwards. Needs a new build. The notes already name the leftovers.'
+  resolution_path: 'Fixed under MEU-114 on 2026-11-05 (plan 2026-11-04-rc2-fetch-uninstall, triage D-228): fixed in the tree, ships in rc.2. customUnInstall in ui/build/installer.nsh deletes the copy and
+    removes av-kit-ui-updater with a non-recursive RMDir, skipping ${isUpdated} so an in-place upgrade keeps its copy, and switches a per-machine install to the current user''s folders for those two lines.
+    %APPDATA%\av-kit-ui stays, per deleteAppDataOnUninstall: false. A copy RC1 already left behind goes once rc.2 or later is installed and then uninstalled, the order phases A and B ran.'
   category: MEU-NEW
   priority: P4
   related:
   - MODELS-DIR-DOCS-AND-PROBE-MISMATCH
   verification:
-    last_checked: '2026-11-04'
+    last_checked: '2026-11-05'
+    method: 'AC-114.1 to AC-114.3 pin the macro in ui/tests/unit/login-item-nsh.test.ts. AC-114.4: repackage.ps1 compiles it under -WX from the existing win-unpacked. AC-114.5 to AC-114.9: install-roundtrip.ps1
+      on the build PC, phases A to D, with RC1 as the negative control'
+    result: 'PASS: RC1''s uninstall leaves the copy. The new uninstall removes the copy and its folder, keeps %APPDATA%\av-kit-ui and leaves %LOCALAPPDATA%\av-kit''s top-level entries unchanged. RC1 to
+      new and new over itself both launch, and the uninstall after each is clean (C:/Temp/av-kit/rc2/roundtrip-prepackaged.txt). The installer was repackaged, not a full build; MEU-125 repeats the round
+      trip on the rc.2 build.'
   meu_links:
   - MEU-25
   - MEU-114

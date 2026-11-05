@@ -149,7 +149,7 @@ def test_fetch_ffmpeg_rejects_blank_sha(tmp_path: Path) -> None:
         "-ExtractOnly",
         cwd=tmp_path,
     )
-    assert result.returncode != 0
+    assert result.returncode == 2, result.stdout + result.stderr
     assert "PASS: FETCH_FFMPEG" not in (result.stdout + result.stderr)
 
 
@@ -169,7 +169,7 @@ def test_fetch_ffmpeg_rejects_sha_mismatch(tmp_path: Path) -> None:
         "-ExtractOnly",
         cwd=tmp_path,
     )
-    assert result.returncode != 0
+    assert result.returncode == 3, result.stdout + result.stderr
     assert "PASS: FETCH_FFMPEG" not in (result.stdout + result.stderr)
 
 
@@ -286,3 +286,83 @@ def test_ac_72_7_fetch_ffmpeg_copies_license_txt(tmp_path: Path) -> None:
     assert "GNU GENERAL PUBLIC LICENSE" in license_txt.read_text(encoding="utf-8")
     assert (tmp_path / "ffmpeg.exe").is_file()
     assert (tmp_path / "ffprobe.exe").is_file()
+
+
+# --- MEU-113 AC-113.1 to AC-113.5 the fetch script's documented exit codes --------------------
+
+FETCH_SCRIPT = REPO_ROOT / "tools" / "fetch_ffmpeg_windows.ps1"
+
+
+def _fetch(
+    out_dir: Path, *, url: str = "https://example.invalid/ffmpeg.zip", sha: str
+) -> subprocess.CompletedProcess[str]:
+    return _run_fetch(
+        "-OutDir", str(out_dir), "-Url", url, "-Sha256", sha, "-ExtractOnly", cwd=out_dir
+    )
+
+
+def _zip(archive: Path, members: dict[str, bytes]) -> str:
+    import hashlib
+
+    with zipfile.ZipFile(archive, "w") as zf:
+        for name, data in members.items():
+            zf.writestr(name, data)
+    return hashlib.sha256(archive.read_bytes()).hexdigest()
+
+
+@pytest.mark.parametrize(
+    ("case", "message"),
+    [
+        ("blank-url", "requires a pinned URL"),
+        ("malformed-sha", "requires a nonempty 64-hex SHA256"),
+        ("missing-archive", "missing archive"),
+    ],
+    ids=["blank-url", "malformed-sha", "missing-archive"],
+)
+def test_ac_113_1_fetch_exits_2_with_message_on_stderr(
+    tmp_path: Path, case: str, message: str
+) -> None:
+    """AC-113.1: a blank URL, a malformed SHA and a missing archive exit 2, message on stderr."""
+    if case == "blank-url":
+        result = _fetch(tmp_path, url="", sha="0" * 64)
+    elif case == "malformed-sha":
+        result = _fetch(tmp_path, sha="not-hex")
+    else:
+        result = _fetch(tmp_path, sha="0" * 64)
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert message in result.stderr
+
+
+def test_ac_113_2_fetch_exits_3_on_sha_mismatch(tmp_path: Path) -> None:
+    """AC-113.2: a SHA-256 mismatch exits 3."""
+    _zip(tmp_path / "ffmpeg-pin.zip", {"ffmpeg.exe": b"M" * 2048, "ffprobe.exe": b"P" * 2048})
+    result = _fetch(tmp_path, sha="0" * 64)
+    assert result.returncode == 3, result.stdout + result.stderr
+    assert "SHA256 mismatch" in result.stderr
+
+
+def test_ac_113_3_fetch_exits_4_without_both_binaries(tmp_path: Path) -> None:
+    """AC-113.3: an archive with no ffmpeg.exe exits 4."""
+    sha = _zip(tmp_path / "ffmpeg-pin.zip", {"bin/ffprobe.exe": b"P" * 2048, "LICENSE.txt": b"GPL"})
+    result = _fetch(tmp_path, sha=sha)
+    assert result.returncode == 4, result.stdout + result.stderr
+    assert "archive missing ffmpeg.exe or ffprobe.exe" in result.stderr
+
+
+def test_ac_113_4_fetch_exits_5_on_stub_binary(tmp_path: Path) -> None:
+    """AC-113.4: a 1024 B ffmpeg.exe exits 5.
+
+    Both binaries and LICENSE.txt are present, because exit 6 is checked first.
+    """
+    sha = _zip(
+        tmp_path / "ffmpeg-pin.zip",
+        {"bin/ffmpeg.exe": b"M" * 1024, "bin/ffprobe.exe": b"P" * 2048, "LICENSE.txt": b"GPL"},
+    )
+    result = _fetch(tmp_path, sha=sha)
+    assert result.returncode == 5, result.stdout + result.stderr
+    assert "refusing stub payload" in result.stderr
+
+
+def test_ac_113_5_fetch_script_has_no_write_error() -> None:
+    """AC-113.5: no Write-Error is left in the script, comments included."""
+    assert "Write-Error" not in FETCH_SCRIPT.read_text(encoding="utf-8")
