@@ -126,6 +126,9 @@ template_version: "2.0"
 | D-211 | execution | Round 3 kept one blocker and the ledger refused the verdict again. Fix it, or publish with it disclosed? | human | Fix it with tests, make a sixth build, run gate attempt 6, then one Codex round limited to the fix, in the same loop. | Human-approved | It was the only route ending in an independent approval, and the option said real spend might pass 21M. It came to 20.84M. | USER_EXPLICIT 2026-11-04 "Fix, then narrow review (Recommended)" |
 | D-212 | execution | Where does the fix for the frozen settings baseline go? | autonomous | The draft in `useConverterSettings` holds only edited fields, and the form is the saved values with those edits on top. | Local Canon | A second saved-value field would have fixed the encoder and left Save writing the frozen copy over a newer setting. The reviewer had recommended a different shape and accepted this one. `useCaptureSettings` has the same draft and no encoder, so it's filed as `SETTINGS-DRAFT-STALE-BASELINE`. | — |
 | D-213 | execution | The ledger refused round 4's approval because my prompt gave the reviewer the report's round number. How is it recorded? | autonomous | A narrow re-issue, `s44-exec-r4b`: the reviewer re-emits its own verdict with the ledger's number and reruns only the state check. | Local Canon | It was my error and held no decision. S7 sends a refusal to Mat, so I said so as I dispatched it. D-198 set the precedent, and editing the verdict was never an option. It cost 263,539 tokens, and a further refusal would have gone to Mat. | — |
+| D-236 | closeout | Does Session 44 close with the step 7 Transcript recheck and audit still open? | human | Yes. A Transcript run from another network and the development audit move to the resolution path of `YOUTUBE-CAPTIONS-IP-BLOCK`. | Human-approved | Mat closed the plan. Where the open check goes is my reading, and Mat was told. | USER_EXPLICIT 2026-11-04 "also uninstall worked so this session plan can be closed out" |
+| D-237 | closeout | Mat approved pushing four files "before triage starts", but the triage session's results were already in two of them. What goes out? | autonomous | Only the notes and the focus file, commit `d287c55`, in exact-scope mode. The register goes out with the triage commit. | Local Canon | The approval covered this session's intake, not another session's unreviewed classifications on a public repository. Five issue names in the notes reach the public list later, and Mat was told. | — |
+| D-238 | closeout | Are the corrected notes published, and does RC1 stay up until a new build replaces it? | human | Yes to both. Published from `d287c55`, with the live body read back. | Human-approved | Mat's rulings came before the triage session reported its D-215, which recommends a draft. D-215 stays open, and this holds unless Mat changes it. | USER_EXPLICIT 2026-11-04 "1.  yes 2. yes 3. yes" |
 
 ---
 
@@ -212,12 +215,12 @@ EXAMPLE: "red-check exit 0, moving on" → "Tests 7 failed | 2 passed: the two p
 
 ## Next Day Outline
 
-1. **Target:** no new MEU. Mat runs checklist steps 6 and 7 from the published release: the clean-machine install, the real F2 check, the first-model check and the Transcript recheck (D-204).
-2. **Scaffold changes needed:** a product fix from those checks moves `build_inputs`, so it means a new build and a fresh gate, and most likely a new release candidate.
-3. **Issues to pick up:** `E2E-MAIN-PROCESS-ERRORS-UNWATCHED` first, because it hid a crash from the gate. Then `E2E-CLIPBOARD-PRIMER-EMPTY`, `SETTINGS-DRAFT-STALE-BASELINE` and `CONVERT-ADVANCED-EDIT-REPLACED`.
+1. **Target:** no new MEU until Mat has reviewed the issue triage of 2026-11-04. Mat ran checklist step 6 on 2026-11-04 (ECN-12). Still open from step 7: a Transcript run from another network, and the development audit (D-236).
+2. **Scaffold changes needed:** a product fix moves `build_inputs`, so it means a new build and a fresh gate, and most likely a new release candidate. Removing libdvdcss needs the same, and its route is Mat's (D-214).
+3. **Issues to pick up:** the triage's batches decide the order once Mat has reviewed them. Before that triage, this list stood: `E2E-MAIN-PROCESS-ERRORS-UNWATCHED` first, because it hid a crash from the gate. Then `E2E-CLIPBOARD-PRIMER-EMPTY`, `SETTINGS-DRAFT-STALE-BASELINE` and `CONVERT-ADVANCED-EDIT-REPLACED`.
 4. **Patterns to bake in from today:** RULE-1 to RULE-8.
 5. **Codex validation scope:** none if no product file changes. Otherwise only the change.
-6. **Time estimate:** Mat's checks are Mat's. A fix from them is about half a day of agent time, including the rebuild and the gate.
+6. **Time estimate:** the remaining Transcript check is Mat's. A fix from the triage is about half a day of agent time, including the rebuild and the gate.
 
 ---
 

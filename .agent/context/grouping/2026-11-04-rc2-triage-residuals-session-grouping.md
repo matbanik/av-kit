@@ -222,7 +222,7 @@ Each plan follows `.agent/docs/cloud-local-collaboration.md`: gate location and 
 ## 5. Prerequisite gate
 
 - **Session 49b:** Session 49 has closed, with D-272's extract.
-- **Session 50:** Session 49b has closed (D-274), and Mat rules on whether errors always go to a file (D-247).
+- **Session 50:** Session 49b has closed (D-274). Mat has ruled that errors always go to a file (D-247).
 - **Session 52:** Mat listens to the INT8 sample before the preselection ships (D-239).
 - **Session 56:** Mat looks at the light theme before it ships (D-235).
 - **Session 57:** the check from another network settles the release notes' 'your network' wording (D-216).
@@ -270,7 +270,7 @@ Each plan follows `.agent/docs/cloud-local-collaboration.md`: gate location and 
 | D-244 | Which session runs first? | autonomous | Fetch and uninstall, Session 49 | Local Canon | It's the smallest and is already planned, and its round trip script is reused by MEU-125. The earlier reason, the FFmpeg build's unknowns, went with D-266. No dependency needs it first. Two-way. | — |
 | D-245 | Is TTS one session or two? | autonomous | Two, Sessions 51 and 52 | Local Canon | The FP16 cause hunt has no upper bound and shouldn't hold the download refusal. Two-way. | — |
 | D-246 | Where does the FFmpeg build run, and where does the rebuilt archive live? | human | Withdrawn: no build runs | Human-approved | Mat kept FFmpeg as it is, so neither question remains (D-266). | USER_EXPLICIT 2026-11-04 "FFmpeg, keeping libdvdcss in rc.2: yes" |
-| D-247 | Do errors always go to a file? | open | Session 50's plan brings it to Mat as a Decision Brief | Local Canon | It changes a default the user sees (`app.log_to_file` is off), and the issue's own path leaves it open. | — |
+| D-247 | Do errors always go to a file? | human | Yes: errors always go to a file. Session 50's plan carries it out | Human-approved | It changes a default the user sees (`app.log_to_file` is off), so it was Mat's to rule. | USER_EXPLICIT 2026-11-05 "D-247: yes they should go to file" |
 | D-248 | Does Mat's "Proceed" confirm the grouping for the D-234 scoping review? | autonomous | Yes, with the changes listed in §3 for Mat to check | Local Canon | D-234 runs the review after Mat confirms the grouping. Mat accepted the batching and said proceed, but hasn't seen this file. Waiting would stop work Mat asked to go ahead; the grouping stays reversible. Two-way. | USER_EXPLICIT 2026-11-04 "All ohter recommendations are accepted. Proceed" |
 | D-249 | Does the light accent stay in MEU-118? | autonomous | No: its own MEU-126 in Session 56, optional for rc.2 | Local Canon | Scoping review F1 (AC-2): separate cause, tests and human check, sharing no file with the device select. Mat's D-235 ruling names no release and the issue is P4, so rc.2 doesn't wait for it. Two-way. | — |
 | D-250 | Does Batch E stay one session? | autonomous | No: MEU-123 in Session 54 and MEU-124 in Session 55, both still optional for rc.2 | Local Canon | Scoping review F2 (AC-4): they share no file, so one plan would chain unrelated work. Mat accepted the batch's place in the release, which doesn't change. Two-way. | — |

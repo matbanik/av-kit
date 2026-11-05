@@ -536,7 +536,7 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | API | The job the API returns carries the message when its last item failed or was skipped. A job ending `Failed` fills `error_message`. | Local Canon: triage D-218 |
 | Card | The Transcript job card states the message. | Local Canon: triage D-218 |
 | Log | Each failure or skip logs one line with the same message, so the Console has a line that matches the card. | Local Canon: triage D-218 |
-| Console fields (rider) | The Console ring and `console.log` keep the model and the error text, after checking that redaction still holds. Whether errors always go to a file comes to Mat as a Decision Brief in the plan. | Local Canon: known issue `CONSOLE-FAILURE-DETAIL-LOST`; grouping D-247 |
+| Console fields (rider) | The Console ring and `console.log` keep the model and the error text, after checking that redaction still holds. Errors always go to a file, even with `app.log_to_file` off, and the plan says how. | Local Canon: known issue `CONSOLE-FAILURE-DETAIL-LOST`; Mat's ruling, grouping D-247 |
 | Done | A blocked job's card states the reason and the Console has a matching line. | Local Canon: triage D-218 |
 | Tests | Unit for each cause, with no real network; a contract test for the route; a renderer test for the card; a redaction test for the kept fields. | Local Canon |
 

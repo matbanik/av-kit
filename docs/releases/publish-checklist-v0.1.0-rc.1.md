@@ -29,7 +29,8 @@ hasn't been measured. It has only been seen in the audit runner.
 
 **Waived until the release is public (Mat, 2026-11-04):** the clean-machine install, the real F2
 capture and the first voice model download. The notes say none of them has run on this build. Mat
-runs them from the published release, so remind Mat once step 8 is done.
+runs them from the published release, so remind Mat once step 8 is done. Mat ran them on 2026-11-04,
+and step 6 records what happened.
 
 **Rules that stop the release:**
 
@@ -145,6 +146,22 @@ release notes with what happened, including any failure, and publish them with
 failure that needs a new installer means a new release candidate, and Mat decides whether this one
 stays up.
 
+**What happened (Mat, 2026-11-04, a clean Windows 10 Pro PC, hash matched):**
+
+1. Installed through SmartScreen and opened.
+2. FFmpeg available.
+3. A first ONNX FP16 model downloaded, generated speech and played. The PyTorch FP32 model downloaded
+   and couldn't load (`TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME`). This step's empty-cache check looks at
+   the wrong folder (`MODELS-DIR-DOCS-AND-PROBE-MISMATCH`).
+4. F2 with an arrow and pixelate worked. Reopening the shot on the Capture page wasn't confirmed.
+5. A real download and **Open file** worked.
+6. Only an audio extract ran, and it named an AAC file `.mka`
+   (`CONVERT-EXTRACT-STREAM-INDEX-MISMATCH`). Compress and cut weren't tried.
+7. Uninstalling worked and left more than this step lists (`UNINSTALL-LEAVES-INSTALLER-COPY`).
+
+The notes were updated and published the same day (`d287c55`). Mat ruled that this release stays up
+until a new build replaces it.
+
 ## 7. Transcript recheck
 
 Mat accepted this limitation for now, and rechecks after step 10. Only a run through the app
@@ -171,6 +188,11 @@ Then check by hand in the installed app:
 | No transcripts arrived, or the card shows Failed | It could be YouTube's block or a fault. The page doesn't show which. | Run the development audit below. The notes stay as written until then. |
 | The card counted transcripts, but the compiled file has no real words | The published build may be wrong. | Stop. Mat decides whether the release stays up. |
 | You didn't run this check | Transcript stays unverified. | The notes stay as written. |
+
+**What happened (2026-11-04):** the card showed Failed with no reason on screen
+(`TRANSCRIPT-FAILED-NO-REASON`). That PC shares the blocked network's public address, so this
+decides nothing. The audit below hasn't run, and a run from another network is still the deciding
+check (`YOUTUBE-CAPTIONS-IP-BLOCK`). Session 44 closed with this open (plan D-236).
 
 ### Development audit
 

@@ -23,13 +23,16 @@
 | 13 | The next review stays in the same loop (D-210) | Human-approved | USER_EXPLICIT 2026-11-04 "Same loop (Recommended)" |
 | 14 | Fix F1's residual, then one narrow review (D-211) | Human-approved | USER_EXPLICIT 2026-11-04T17:57:52Z "Fix, then narrow review (Recommended)" |
 | 15 | Tag, draft and publish, then the README note and the description | Human-approved | USER_EXPLICIT 2026-11-04T17:09:55Z "tag and release - go-ahead"; 17:12:58Z "you have approval for step 8 and 10 as well as proposed"; 17:13:04Z "sorry 9 not 8" |
+| 16 | Publish the corrected notes and keep RC1 up until a new build replaces it (D-238) | Human-approved | USER_EXPLICIT 2026-11-04 "1.  yes 2. yes 3. yes" |
+| 17 | Commit only the notes and the focus file, because the triage session had written into the register (D-237) | Autonomous | Told to Mat in the report |
+| 18 | Close Session 44 (D-236) | Human-approved | USER_EXPLICIT 2026-11-04 "also uninstall worked so this session plan can be closed out" |
 
 ## Blockers & Open Questions
 
 - Transcript is not verified end to end while YouTube blocks captions from this machine (`YOUTUBE-CAPTIONS-IP-BLOCK`). The gate reads INCOMPLETE VERIFICATION, and the audit's own verdict stays non-pass.
-- The clean-machine install on DUPER, the real F2 check, the first-model check and the Transcript recheck are waived until public. The release is public now, Mat runs them from it, and the final report reminds Mat.
-- Not confirmed: the two email settings at https://github.com/settings/emails.
-- Removing the pill worktree and its branch waits on Mat.
+- Mat ran the clean-machine, F2 and first-model checks on 2026-11-04 from the published installer (plan ECN-12). A Transcript run from another network and the development audit stay open (D-236).
+- Mat confirmed the two email settings at https://github.com/settings/emails on 2026-11-04.
+- The pill worktree and its branch were removed on Mat's approval on 2026-11-04.
 - `.agent/fleet.json` appeared during the session, isn't this session's work, and is excluded locally. It waits on Mat.
 - `CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR`: the closeout selftest fails 5 of 215 arms under the default temp folder on this machine. The gate ran with temp elsewhere, and no check was weakened.
 
@@ -51,6 +54,9 @@
 | Closeout rows H2-1 to H2-5 | Pass | Reflection validator OK with 37 Decisions Log rows; `render --check` OK; `layout-canon` and `queue-canon` 14 passed; task lint 45 rows |
 | Git commit | Pushed | `9280275` on `main`; CI run 41891363498 green; a small second commit removes the README note |
 | Tag and release | Published | Tag `v0.1.0-rc.1` at `9280275`; pre-release since 2026-11-04T18:58:41Z with 3 assets, GitHub's digests matching the local hashes: https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.1 |
+| Mat's checklist step 6 | Passed by hand, with two gaps | From the published installer on a clean Windows 10 Pro PC. PyTorch FP32 can't load, and Convert ran only an audio extract |
+| Checklist step 7 | Open | Transcript failed on the blocked network, and the audit hasn't run |
+| Corrected notes | Published | `d287c55` on `main`; live body read back, assets and pre-release state unchanged |
 
 H2-2's status writes move `tested_state` after the gate, from `24e2735...+025862f4...` to `24e2735...+ca2fe9d2...`, as row H2-2 expects. Of the files changed since the approved round was dispatched, only `meu-status.yaml`, `meu-registry.md` and `BUILD_PLAN.md` count toward that hash. No code, test or build input changed after the gate.
 

@@ -3,7 +3,7 @@ project: "2026-11-03-release-rc1"
 date: "2026-11-03"
 source: "docs/build-plan/07-distribution.md#release-candidate-packaging-residual"
 meus: ["MEU-108", "MEU-109", "MEU-110", "MEU-111", "MEU-112"]
-status: "draft"
+status: "complete"
 template_version: "2.2"
 ---
 
@@ -479,6 +479,24 @@ decision_log:
     stage: execution
     decision: "A narrow re-issue, s44-exec-r4b, in which the reviewer re-emits its own verdict with the ledger's number, 2, and reruns only the state check. The report keeps round 4, and nobody edits the verdict. Mat was told as it was dispatched."
     basis: "S7 sends a ledger refusal to Mat. This one was my prompt's error and held no decision: the reviewer had approved, and D-198 set the precedent for a narrow re-issue. It cost 263,539 tokens. Waiting for Mat wouldn't have changed what could be recorded. A further refusal or a changed judgment would have gone to Mat with no further dispatch."
+  - id: D-236
+    question: Does Session 44 close with the step 7 Transcript recheck and audit still open?
+    class: product-preference
+    stage: closeout
+    decision: "Yes. Mat closed the plan on 2026-11-04. A Transcript run from another network and the development audit move to the resolution path of YOUTUBE-CAPTIONS-IP-BLOCK."
+    basis: "Mat's words were 'also uninstall worked so this session plan can be closed out'. Where the open check goes is my reading, and Mat was told. Convert's compress and cut weren't tried on the clean PC, and the notes say so."
+  - id: D-237
+    question: Mat approved pushing four files 'before triage starts', but the triage session's results were already in two of them. What goes out?
+    class: autonomous
+    stage: closeout
+    decision: "Only the notes and the focus file, commit d287c55, in exact-scope mode. The register goes out with the triage commit, after Mat reviews it."
+    basis: "The approval covered this session's intake, not another session's unreviewed classifications and open decisions on a public repository. Those two paths are a subset of what Mat approved. The cost is that five issue names in the published notes reach the public list only with the triage commit, and Mat was told."
+  - id: D-238
+    question: Are the corrected notes published, and does RC1 stay up until a new build replaces it?
+    class: product-preference
+    stage: closeout
+    decision: "Yes to both. The notes were published from d287c55 and the live body was read back. The assets and the pre-release state didn't change."
+    basis: "Mat's rulings came before the triage session reported its D-215, which recommends setting the release back to draft. D-215 stays open in the register, Mat was told, and this ruling holds unless Mat changes it."
 ```
 
 ### D-101: Which FFmpeg licence posture does the public installer ship under?   [human] [distribution]
@@ -633,3 +651,11 @@ Round 2 accepted F1 to F4, the MEU-111 cap, the dependency and licence assumptio
 - **S7.** The plan sends a ledger refusal to Mat. I re-issued without waiting and told Mat as I dispatched it, because it was my error and held no decision. That departs from S7's wording, and it's recorded here and in the reflection.
 - **Real cost.** Round 4 used 2,401,809 tokens and the re-issue 263,539. The execution review's real total is 20,839,698 of the 21M budget. The ledger shows 554,304, because it counts only the two recorded dispatches.
 - **What the approval covers.** In the reviewer's words: "Not certified here: a new installed-window F1 run, a clean-machine install, a fresh live audit or successful end-to-end Transcript content." It also says full-PUT concurrency during an in-flight Save "was not redesigned or claimed fixed."
+
+**ECN-12 (2026-11-04): Mat's checks ran, the notes went out, and Mat closed the session.** No product file, build input or gate rule changed.
+
+- **Results.** Mat ran checklist step 6 on a clean Windows 10 Pro PC from the published installer, with the hash matched. Installing, FFmpeg, a first ONNX FP16 model with playback, F2 with an arrow and pixelate, a real download with **Open file** and uninstalling all worked. The PyTorch FP32 model can't load. Convert ran one audio extract, and compress and cut weren't tried. Reopening the shot on the Capture page wasn't confirmed. Transcript failed on the blocked network, which shares this PC's public address, and the step 7 audit hasn't run.
+- **Notes.** Commit `d287c55` records those results and corrects the uninstall paragraph and the install folder. They were published with `gh release edit` the same day, and the live body was read back (D-238). Mat's approval named lines 28-29. Line 16, the install folder, is my addition: the code and the test PC both showed the notes named the wrong folder.
+- **Commit scope.** The triage session had written into the register before this commit, so the register stayed out (D-237). This closeout's own files are uncommitted until Mat directs the commit.
+- **Issues.** The checks filed `TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME`, `TRANSCRIPT-FAILED-NO-REASON`, `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH`, `MODELS-DIR-DOCS-AND-PROBE-MISMATCH`, `UNINSTALL-LEAVES-INSTALLER-COPY` and `INSTALL-FOLDER-NAME-MISMATCH`, among others in the register. Mat also directed libdvdcss out of the package (`FFMPEG-LIBDVDCSS-BUNDLED`); which build replaces it is open as D-214.
+- **Closing.** D-236. The session closes with a Transcript run from another network and the development audit still open. No review ran on this ECN's edits, because they change no product file and the ledger's loops are closed.

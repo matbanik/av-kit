@@ -16,10 +16,11 @@
 | 6 | The uninstaller deletes the installer copy and runs a non-recursive `RMDir` on its folder, except under `${isUpdated}` (D-228, D-258) | Agent-decided | Triage and plan |
 | 7 | MEU-114 is proved on an installer repackaged from RC1's `win-unpacked`; MEU-125 repeats it on the full build (D-268) | Agent-decided | Plan |
 | 8 | Closeout reads an unchanged extract of the register's decision logs, because the validator refuses the register's YAML (D-272) | Agent-decided | Plan |
+| 9 | Errors always go to a file (D-247), carried out in Session 50 | Human-approved | "D-247: yes they should go to file" |
 
 ## Blockers & Open Questions
 
-- D-247 (do errors always go to a file?) goes to Mat as a Decision Brief in Session 50's plan.
+- D-247 is ruled (Mat, 2026-11-05): errors always go to a file. Session 50's plan carries it out.
 - Session 49b fixes the closeout validator's reading of the register (D-274).
 - Mat's Transcript check from another network is still open.
 
