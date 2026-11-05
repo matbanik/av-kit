@@ -2,7 +2,7 @@
 
 > **Spec source:** `docs/BUILD_PLAN.md` and `docs/build-plan/00-overview.md`–`11-page-layout.md`.
 > MEU IDs registered 2026-08-18 via `/session-grouping`. Phase 8 MEU-28–33: 2026-08-24. Phase 9 MEU-34–39: 2026-08-26.
-> Phase 10 MEU-41–49: 2026-08-28. Phase 11 MEU-50–58: 2026-09-03. Phase 6 residual MEU-61: 2026-09-20. 2026-09-30 GUI-walkthrough residuals MEU-62–70 (Phases 3/5/6/9/11). 2026-10-09 triage residuals MEU-71–91 (Phases 3/4/7/9/11). 2026-10-17 triage residuals MEU-93–98 (Phases 3/6). 2026-11-03 release candidate residuals MEU-108–111 (Phases 6/7/8/9).
+> Phase 10 MEU-41–49: 2026-08-28. Phase 11 MEU-50–58: 2026-09-03. Phase 6 residual MEU-61: 2026-09-20. 2026-09-30 GUI-walkthrough residuals MEU-62–70 (Phases 3/5/6/9/11). 2026-10-09 triage residuals MEU-71–91 (Phases 3/4/7/9/11). 2026-10-17 triage residuals MEU-93–98 (Phases 3/6). 2026-11-03 release candidate residuals MEU-108–112 (Phases 6/7/8/9). 2026-11-04 rc.2 triage residuals MEU-113–126 (Phases 3/6/7/8).
 > YAML SSOT: `.agent/context/meu-status.yaml`.
 > Each MEU maps to exactly one row below.
 
@@ -12,7 +12,7 @@
 |------|------|------|
 | P0 | MEU-1–4 | Domain first. No infrastructure until ports exist. |
 | P1 | MEU-5–13 | Adapters then services. Never import infra from domain. |
-| P2 | MEU-14–111 | API before MCP/GUI. Distribution after GUI shell. Conversion (MEU-28–33) after the YouTube toolkit exists. Capture (MEU-34–40) after Convert. Capture annotation geometry (MEU-59) after the Capture page and native picker. Capture edit-until-Save (MEU-60) after MEU-59. Queue cards (MEU-41–49) after every page exists. Page layout (MEU-50–58) after the queue cards it composes around. Login item (MEU-61) after Settings (MEU-23) and the NSIS installer (MEU-25). 2026-09-30 residuals: TTS runtime assets (MEU-62) before the TTS page residuals (MEU-63/64) and the MCP live audit (MEU-68); Capture toolbar (MEU-65) before zoom (MEU-66); flatten-with-backup (MEU-67) after MEU-60; header toggles (MEU-69) and Settings emphasis (MEU-70) last. 2026-10-17 residuals: shortcut binding (MEU-95) before palette curation (MEU-96) before common shortcuts (MEU-97); path fields (MEU-93) and theme-reactive selects (MEU-94) stand alone; TTS sideload load (MEU-98) after the device fallback (MEU-75). |
+| P2 | MEU-14–125 | API before MCP/GUI. Distribution after GUI shell. Conversion (MEU-28–33) after the YouTube toolkit exists. Capture (MEU-34–40) after Convert. Capture annotation geometry (MEU-59) after the Capture page and native picker. Capture edit-until-Save (MEU-60) after MEU-59. Queue cards (MEU-41–49) after every page exists. Page layout (MEU-50–58) after the queue cards it composes around. Login item (MEU-61) after Settings (MEU-23) and the NSIS installer (MEU-25). 2026-09-30 residuals: TTS runtime assets (MEU-62) before the TTS page residuals (MEU-63/64) and the MCP live audit (MEU-68); Capture toolbar (MEU-65) before zoom (MEU-66); flatten-with-backup (MEU-67) after MEU-60; header toggles (MEU-69) and Settings emphasis (MEU-70) last. 2026-10-17 residuals: shortcut binding (MEU-95) before palette curation (MEU-96) before common shortcuts (MEU-97); path fields (MEU-93) and theme-reactive selects (MEU-94) stand alone; TTS sideload load (MEU-98) after the device fallback (MEU-75). |
 
 ## MEU order
 
@@ -38,6 +38,12 @@
 | 3.9 | MEU-77 | `svc-tts-async-generate` | [03 §TTS async generation (residual)](03-service-layer.md#tts-async-generation-residual) | MEU-62, MEU-63, MEU-68, MEU-76 |
 | 3.10 | MEU-78 | `svc-ffmpeg-resolver` | [03 §FFmpeg resolution (residual)](03-service-layer.md#ffmpeg-resolution-residual) | MEU-13, MEU-29 |
 | 3.11 | MEU-98 | `svc-tts-sideload-load` | [03 §TTS sideload load (residual)](03-service-layer.md#tts-sideload-load-residual) | MEU-12, MEU-75 |
+| 3.12 | MEU-115 | `svc-transcript-failure-reason` | [03 §Transcript failure reason (residual)](03-service-layer.md#transcript-failure-reason-residual) | MEU-11, MEU-13, MEU-16, MEU-21, MEU-27 |
+| 3.13 | MEU-116 | `svc-transcript-block-stop` | [03 §Transcript block stop (residual)](03-service-layer.md#transcript-block-stop-residual) | MEU-11, MEU-115 |
+| 3.14 | MEU-117 | `svc-tts-build-capability` | [03 §TTS build capability (residual)](03-service-layer.md#tts-build-capability-residual) | MEU-72, MEU-75, MEU-98 |
+| 3.15 | MEU-119 | `svc-tts-load-keeps-model` | [03 §TTS load keeps the current model (residual)](03-service-layer.md#tts-load-keeps-model-residual) | MEU-62, MEU-75, MEU-98 |
+| 3.16 | MEU-121 | `svc-tts-fp16-nonfinite` | [03 §TTS ONNX FP16 audio (residual)](03-service-layer.md#tts-onnx-fp16-audio-residual) | MEU-62, MEU-72, MEU-117 |
+| 3.17 | MEU-122 | `svc-transcript-metadata` | [03 §Transcript source metadata (residual)](03-service-layer.md#transcript-source-metadata-residual) | MEU-7, MEU-11 |
 | 4.1 | MEU-14 | `api-app-auth` | [04 §App factory](04-rest-api.md#app-factory-and-lifespan) + Auth | MEU-10–13 |
 | 4.2 | MEU-15 | `api-downloads-health-settings` | [04 §Downloads](04-rest-api.md#routes--downloads) + Health + Settings | MEU-14 |
 | 4.3 | MEU-16 | `api-transcripts-tts-models` | [04 §Transcripts](04-rest-api.md#routes--transcripts) + TTS + Models | MEU-14 |
@@ -60,12 +66,19 @@
 | 6.11 | MEU-96 | `gui-command-palette-curation` | [06 §Command palette curation (residual)](06-gui.md#command-palette-curation-residual) | MEU-95, MEU-23 |
 | 6.12 | MEU-97 | `gui-common-shortcuts` | [06 §Common shortcuts (residual)](06-gui.md#common-shortcuts-residual) | MEU-95, MEU-96 |
 | 6.13 | MEU-108 | `gui-ready-probe-guard` | [06 §Ready probe (residual)](06-gui.md#ready-probe-residual) | MEU-19 |
+| 6.14 | MEU-118 | `gui-tts-device-options` | [06 §TTS device options (residual)](06-gui.md#tts-device-options-residual) | MEU-23, MEU-75, MEU-117 |
+| 6.15 | MEU-120 | `gui-models-dir-probe` | [06 §Models folder probe (residual)](06-gui.md#models-folder-probe-residual) | MEU-23 |
+| 6.16 | MEU-124 | `download-received-quality` | [06 §Downloader received quality (residual)](06-gui.md#download-received-quality-residual) | MEU-10, MEU-20 |
+| 6.17 | MEU-126 | `gui-light-accent-contrast` | [06 §Light accent contrast (residual)](06-gui.md#light-accent-contrast-residual) | MEU-26 |
 | 7.1 | MEU-24 | `dist-backend` | [07 §Backend packaging](07-distribution.md#backend-packaging-pyinstaller) | MEU-14, MEU-19 |
 | 7.2 | MEU-25 | `dist-installer` | [07 §Electron packaging](07-distribution.md#electron-packaging-electron-builder) | MEU-24, MEU-17 |
 | 7.3 | MEU-71 | `gui-mcp-setup-prompt` | [07 §MCP setup prompt (residual)](07-distribution.md#mcp-setup-prompt-residual) | MEU-23, MEU-25 |
 | 7.4 | MEU-72 | `dist-tts-onnx-runtime` | [07 §Packaged ONNX TTS runtime (residual)](07-distribution.md#packaged-onnx-tts-runtime-residual) | MEU-24, MEU-62 |
 | 7.5 | MEU-92 | `dist-mcp-server-bundle` | [07 §MCP server bundle (residual)](07-distribution.md#mcp-server-bundle-residual) | MEU-25, MEU-71 |
 | 7.6 | MEU-110 | `dist-release-candidate` | [07 §Release candidate packaging (residual)](07-distribution.md#release-candidate-packaging-residual) | MEU-25, MEU-92 |
+| 7.7 | MEU-113 | `dist-fetch-exit-codes` | [07 §Fetch script exit codes (residual)](07-distribution.md#fetch-exit-codes-residual) | MEU-25, MEU-110 |
+| 7.8 | MEU-114 | `dist-uninstall-installer-copy` | [07 §Uninstall removes the installer copy (residual)](07-distribution.md#uninstall-installer-copy-residual) | MEU-25 |
+| 7.9 | MEU-125 | `dist-release-candidate-2` | [07 §Second release candidate (residual)](07-distribution.md#second-release-candidate-residual) | MEU-110, MEU-113, MEU-114, MEU-115, MEU-116, MEU-117, MEU-118, MEU-119, MEU-120, MEU-121 |
 | 8.1 | MEU-28 | `domain-conversion` | [08 §Domain](08-video-conversion.md#domain) | MEU-4 |
 | 8.2 | MEU-29 | `infra-conversion` | [08 §Infrastructure](08-video-conversion.md#infrastructure) | MEU-28, MEU-5, MEU-8 |
 | 8.3 | MEU-30 | `svc-conversion` | [08 §Service layer](08-video-conversion.md#service-layer) | MEU-29 |
@@ -74,6 +87,7 @@
 | 8.6 | MEU-33 | `gui-convert` | [08 §Convert Page](08-video-conversion.md#convert-page-convert) | MEU-31, MEU-19, MEU-26 |
 | 8.7 | MEU-109 | `convert-output-folder` | [08 §Output folder (residual)](08-video-conversion.md#output-folder-residual) | MEU-29 |
 | 8.8 | MEU-112 | `convert-job-gpu-preference` | [08 §Encoder choice per job (residual)](08-video-conversion.md#job-encoder-choice-residual) | MEU-30, MEU-33 |
+| 8.9 | MEU-123 | `convert-extract-stream-index` | [08 §Extract stream index (residual)](08-video-conversion.md#extract-stream-index-residual) | MEU-29, MEU-30 |
 | 9.1 | MEU-34 | `domain-capture` | [09 §Domain](09-screenshot-capture.md#domain) | MEU-4 |
 | 9.2 | MEU-35 | `infra-capture` | [09 §Infrastructure](09-screenshot-capture.md#infrastructure) | MEU-34, MEU-5 |
 | 9.3 | MEU-36 | `svc-capture` | [09 §Service layer](09-screenshot-capture.md#service-layer) | MEU-35 |

@@ -590,6 +590,20 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 > - Gate: the shared `session-gate.ps1` record in the MEU-112 handoff.
 > - Plan `docs/execution/plans/2026-11-03-release-rc1/`.
 
+<a id="extract-stream-index-residual"></a>
+
+## Extract stream index (residual)
+
+> **MEU-123.** Registered 2026-11-04 from `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH`, with rider `CONVERT-EXTRACT-ENCODER-LABEL`. `media/adapter.py:634-635` passes `-map a:{stream_index}`, which counts audio tracks only, while `services/conversion.py` treats the same number as ffprobe's index across all streams: `_output_ext` at `:386` and the All audio streams plan at `:328`. So First audio stream on a normal video looks up the picture's codec and falls back to `.mka`, and All audio streams asks for tracks that don't exist.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| One meaning | `stream_index` is audio-relative everywhere. | Local Canon: triage D-227; §Extract table (`map a:0`) |
+| Extension | `_output_ext` looks the codec up by audio position, so AAC from a normal video comes out as `.m4a`, as the Extract table says. | Local Canon: triage D-227 |
+| All audio streams | The plan sends audio positions. | Local Canon: triage D-227 |
+| Encoder label (rider) | An Extract job saves no `gpu_encoder`, because it's a stream copy that uses no encoder. | Local Canon: known issue `CONVERT-EXTRACT-ENCODER-LABEL` |
+| Tests | Both modes against a real `.mp4`, with one audio track and with two. | Local Canon: triage D-227 |
+
 ---
 
 ## MEUs
@@ -604,6 +618,7 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 | MEU-33 | `gui-convert` | Rail + page + Help + Wave 8 | MEU-31, MEU-19, MEU-26 |
 | MEU-109 | `convert-output-folder` | [§Output folder (residual)](#output-folder-residual) | MEU-29 |
 | MEU-112 | `convert-job-gpu-preference` | [§Encoder choice per job (residual)](#job-encoder-choice-residual) | MEU-30, MEU-33 |
+| MEU-123 | `convert-extract-stream-index` | [§Extract stream index (residual)](#extract-stream-index-residual) | MEU-29, MEU-30 |
 
 ---
 

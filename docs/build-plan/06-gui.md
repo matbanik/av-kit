@@ -1536,6 +1536,58 @@ The following features are explicitly **deferred** to a future phase:
 > - Gate: the shared `session-gate.ps1` record in the MEU-108 handoff.
 > - Plan `docs/execution/plans/2026-11-03-release-rc1/`.
 
+<a id="tts-device-options-residual"></a>
+
+### TTS device options (residual)
+
+> **MEU-118.** Registered 2026-11-04 from `TTS-DEVICE-OPTIONS-IN-CPU-BUILD`. `SettingsPage.tsx:62` always offers auto, cuda, cpu and mps, while the shipped build runs on the CPU only.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Options | The Settings device select offers only what the backend reports for this build, from the same capability source as [MEU-117](03-service-layer.md#tts-build-capability-residual). | Local Canon: triage D-226 |
+| Stored value | A stored value the build can't honour keeps the existing device fallback ([03 §TTS device resolution](03-service-layer.md#tts-device-resolution-residual)). | Local Canon: triage D-226 |
+| Tests | A renderer test of the select with a CPU-only report and a CUDA report; a Playwright pass of the Settings select against real Electron. | Local Canon |
+
+<a id="models-folder-probe-residual"></a>
+
+### Models folder probe (residual)
+
+> **MEU-120.** Registered 2026-11-04 from `MODELS-DIR-DOCS-AND-PROBE-MISMATCH`. The backend's default for `tts.models_directory` is `~/.avkit/models` (`services/settings.py:67`). `setup-readiness.ts:51-53` has its own default, `{appData}/models`, and `probeModelsDirWritable` creates that folder (`:90`) and tests it, so the first-run check reports on a folder the backend doesn't use.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Default | The backend default `~/.avkit/models` stands, and `setup-readiness.ts` probes that same default. | Local Canon: triage D-222 |
+| No empty folder | The probe stops creating an empty folder. | Local Canon: triage D-222 |
+| No move | No files move. | Local Canon: triage D-222 |
+| Tied | A contract test ties the two defaults together. | Local Canon: triage D-222 |
+| Checklist | The next release's checklist checks the real path ([MEU-125](07-distribution.md#second-release-candidate-residual)). The RC1 checklist belongs to the release session. | Local Canon: known issue `MODELS-DIR-DOCS-AND-PROBE-MISMATCH` |
+
+<a id="download-received-quality-residual"></a>
+
+### Downloader received quality (residual)
+
+> **MEU-124.** Registered 2026-11-04 from `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY`. The row's meta line prints `row.quality` (`DownloaderPage.tsx:497-498`), the preset stored when the item was added (`services/download.py:213,235`). No field carries the file's real quality.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Stored | The file's real quality goes in a new nullable field. | Local Canon: triage D-225 |
+| Shown | The row shows requested and received together only when they differ. | Local Canon: triage D-225 |
+| Upgrade | `COLUMN_MIGRATIONS` adds the column to an existing database, as [MEU-112](08-video-conversion.md#job-encoder-choice-residual) did. Existing rows stay null and show the request as today. | Local Canon: 08 §Encoder choice per job, Upgrade rule |
+| Tests | A unit test for the stored value and for null; a migration test on an existing database; a renderer test for same, different and null. | Local Canon |
+
+<a id="light-accent-contrast-residual"></a>
+
+### Light accent contrast (residual)
+
+> **MEU-126.** Registered 2026-11-04 from `LIGHT-ACCENT-BELOW-AA-CONTRAST` (grouping D-249). In the light theme `styles.css:97` sets `--color-accent` to `#0891b2`, which puts white button labels at 3.68:1 and accent labels on their tint at 2.98:1 over the page background. Labels are `text-sm`, so the 4.5:1 floor applies. These figures are worked out from the token values, not measured in the running app.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Tokens | Light `--color-accent` is `#155e75` and `--color-accent-hover` is `#164e63`, as `_inspiration/zorivest/globals.css:144,146`. | Human-approved: triage D-235 |
+| Human check | Mat looks at the light theme before it ships. | Human-approved: triage D-235 |
+| Baseline | `ui/tests/unit/fixtures/queue-slot-baseline.json` may need a re-baseline. | Local Canon: known issue `LIGHT-ACCENT-BELOW-AA-CONTRAST` |
+| Tests | A contrast test of the two light token values: white on the accent, and the accent on its tint over the page background, each at 4.5:1 or more. | Local Canon |
+
 ## Validation Commands
 
 ```bash

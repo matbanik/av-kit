@@ -35,9 +35,9 @@ phases:
   - docs/build-plan/03-service-layer.md
   execution_plans:
   - docs/execution/plans/2026-08-19-p3-services/
-  last_updated: '2026-10-17'
+  last_updated: '2026-11-04'
   note: MEU-10–13 bound to p3-services — ready_for_review pending H1. MEU-62 residual (TTS runtime assets) registered 2026-09-30. MEU-73/74/75/77/78 residuals (TTS voice assets, language runtime, device
-    fallback, async generate, ffmpeg resolver) registered 2026-10-09. MEU-75 delivered by Session 35 tts-voice-panel. MEU-98 residual (TTS sideload load) registered 2026-10-17.
+    fallback, async generate, ffmpeg resolver) registered 2026-10-09. MEU-75 delivered by Session 35 tts-voice-panel. MEU-98 residual (TTS sideload load) registered 2026-10-17. MEU-115/116 (transcript failure reason, block stop), MEU-117/119/121 (TTS build capability, load order, FP16 audio) and MEU-122 (transcript source metadata) residuals registered 2026-11-04.
 - id: '4'
   name: REST API
   band: P2
@@ -71,10 +71,10 @@ phases:
   - docs/execution/plans/2026-08-20-p6-gui-tts-models/
   - docs/execution/plans/2026-08-21-p6-gui-settings-help/
   - docs/execution/plans/2026-09-20-p6-gui-login-item/
-  last_updated: '2026-11-03'
+  last_updated: '2026-11-04'
   note: MEU-19 p6-gui-shell; MEU-20 p6-gui-downloader; MEU-26 p6-gui-zorivest-chrome; MEU-21 p6-gui-transcript; MEU-22 p6-gui-tts-models; MEU-23 p6-gui-settings-help. MEU-61 bound to p6-gui-login-item (login-item
     residual). MEU-69 residual (header toggles) registered 2026-09-30. MEU-93–97 residuals (path fields, theme-reactive selects, shortcut binding, palette curation, common shortcuts) registered 2026-10-17.
-    MEU-108 residual (ready probe guard) registered 2026-11-03.
+    MEU-108 residual (ready probe guard) registered 2026-11-03. MEU-118/120/124/126 residuals (TTS device options, models folder probe, received quality, light accent contrast) registered 2026-11-04.
 - id: '7'
   name: Distribution
   band: P2
@@ -82,8 +82,8 @@ phases:
   - docs/build-plan/07-distribution.md
   execution_plans:
   - docs/execution/plans/2026-08-24-p7-distribution/
-  last_updated: '2026-11-03'
-  note: MEU-24–25 bound to p7-distribution. MEU-71/72 residuals (MCP setup prompt, packaged ONNX TTS runtime) registered 2026-10-09. MEU-110 residual (release candidate packaging) registered 2026-11-03.
+  last_updated: '2026-11-04'
+  note: MEU-24–25 bound to p7-distribution. MEU-71/72 residuals (MCP setup prompt, packaged ONNX TTS runtime) registered 2026-10-09. MEU-110 residual (release candidate packaging) registered 2026-11-03. MEU-113/114/125 residuals (fetch exit codes, uninstall installer copy, second release candidate) registered 2026-11-04.
 - id: '8'
   name: Video conversion
   band: P2
@@ -93,8 +93,8 @@ phases:
   - docs/execution/plans/2026-08-24-p8-conversion-engine/
   - docs/execution/plans/2026-08-26-p8-conversion-api-mcp/
   - docs/execution/plans/2026-08-26-p8-conversion-gui/
-  last_updated: '2026-11-03'
-  note: MEU-28–30 bound to p8-conversion-engine. MEU-31–32 approved p8-conversion-api-mcp. MEU-33 bound to p8-conversion-gui. MEU-109 residual (output folder) registered 2026-11-03.
+  last_updated: '2026-11-04'
+  note: MEU-28–30 bound to p8-conversion-engine. MEU-31–32 approved p8-conversion-api-mcp. MEU-33 bound to p8-conversion-gui. MEU-109 residual (output folder) registered 2026-11-03. MEU-123 residual (extract stream index) registered 2026-11-04.
 - id: '9'
   name: Screenshot capture
   band: P2
@@ -2938,6 +2938,368 @@ meus:
   closed_reason: null
   note: 'Registered 2026-11-04 from known issue CONVERT-JOB-GPU-PREFERENCE-IGNORED, on Mat''s ruling to fix it before RC1. Plan 2026-11-03-release-rc1. Approved 2026-11-04: Codex execution review, report
     round 4, ledger round 2 of 6, no findings open; gate attempt 6 reads INCOMPLETE VERIFICATION while YouTube blocks captions.'
+- row_key: MEU-113
+  id: MEU-113
+  slug: dist-fetch-exit-codes
+  phase: '7'
+  band: P2
+  matrix_item: '7.7'
+  build_ref:
+    path: build-plan/07-distribution.md
+    anchor: fetch-exit-codes-residual
+    text: Phase 7 §Fetch script exit codes (residual)
+  description: 'The fetch script returns its documented exit codes 2 to 5, and the tests assert them.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-25, MEU-110
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-25
+  - MEU-110
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from FFMPEG-LIBDVDCSS-BUNDLED (D-214) with rider FETCH-FFMPEG-EXIT-CODES; re-scoped the same day to FETCH-FFMPEG-EXIT-CODES alone when Mat kept FFmpeg as it is (D-266).'
+- row_key: MEU-114
+  id: MEU-114
+  slug: dist-uninstall-installer-copy
+  phase: '7'
+  band: P2
+  matrix_item: '7.8'
+  build_ref:
+    path: build-plan/07-distribution.md
+    anchor: uninstall-installer-copy-residual
+    text: Phase 7 §Uninstall removes the installer copy (residual)
+  description: 'customUnInstall deletes the installer copy electron-builder leaves in av-kit-ui-updater, skipping an in-place update.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-25
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-25
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from UNINSTALL-LEAVES-INSTALLER-COPY (D-228).'
+- row_key: MEU-115
+  id: MEU-115
+  slug: svc-transcript-failure-reason
+  phase: '3'
+  band: P2
+  matrix_item: '3.12'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: transcript-failure-reason-residual
+    text: Phase 3 §Transcript failure reason (residual)
+  description: 'Each transcript failure or skip maps to a short av-kit message that reaches the API, the job card and the Console; the Console keeps the model and the error text.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-11, MEU-13, MEU-16, MEU-21, MEU-27
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-11
+  - MEU-13
+  - MEU-16
+  - MEU-21
+  - MEU-27
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from TRANSCRIPT-FAILED-NO-REASON (D-218), with rider CONSOLE-FAILURE-DETAIL-LOST.'
+- row_key: MEU-116
+  id: MEU-116
+  slug: svc-transcript-block-stop
+  phase: '3'
+  band: P2
+  matrix_item: '3.13'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: transcript-block-stop-residual
+    text: Phase 3 §Transcript block stop (residual)
+  description: 'A blocked video that exhausts its retries stops the run and pauses the job with the reason; requests_per_hour becomes a rolling cap over real requests.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-11, MEU-115
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-11
+  - MEU-115
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from TRANSCRIPT-BLOCK-KEEPS-REQUESTING (D-219, D-220).'
+- row_key: MEU-117
+  id: MEU-117
+  slug: svc-tts-build-capability
+  phase: '3'
+  band: P2
+  matrix_item: '3.14'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-build-capability-residual
+    text: Phase 3 §TTS build capability (residual)
+  description: 'A build that can''t import a variant''s runtime lists it disabled with a reason and refuses its download with a 409; the dev venv keeps working.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-72, MEU-75, MEU-98
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-72
+  - MEU-75
+  - MEU-98
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME (D-217, Mat).'
+- row_key: MEU-118
+  id: MEU-118
+  slug: gui-tts-device-options
+  phase: '6'
+  band: P2
+  matrix_item: '6.14'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: tts-device-options-residual
+    text: Phase 6 §TTS device options (residual)
+  description: 'The Settings device select offers only what the backend reports for this build.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-23, MEU-75, MEU-117
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-23
+  - MEU-75
+  - MEU-117
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from TTS-DEVICE-OPTIONS-IN-CPU-BUILD (D-226).'
+- row_key: MEU-119
+  id: MEU-119
+  slug: svc-tts-load-keeps-model
+  phase: '3'
+  band: P2
+  matrix_item: '3.15'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-load-keeps-model-residual
+    text: Phase 3 §TTS load keeps the current model (residual)
+  description: 'load_model checks the weight path, the device and the runtime before it unloads, so a failed check keeps the current model.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-62, MEU-75, MEU-98
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-62
+  - MEU-75
+  - MEU-98
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from TTS-FAILED-LOAD-DROPS-MODEL (D-221). Amends the AC-75.9 expectation for a failed check.'
+- row_key: MEU-120
+  id: MEU-120
+  slug: gui-models-dir-probe
+  phase: '6'
+  band: P2
+  matrix_item: '6.15'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: models-folder-probe-residual
+    text: Phase 6 §Models folder probe (residual)
+  description: 'The first-run probe tests the backend''s real models folder and stops creating an empty one; a contract test ties the two defaults together.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-23
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-23
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from MODELS-DIR-DOCS-AND-PROBE-MISMATCH (D-222).'
+- row_key: MEU-121
+  id: MEU-121
+  slug: svc-tts-fp16-nonfinite
+  phase: '3'
+  band: P2
+  matrix_item: '3.16'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-onnx-fp16-audio-residual
+    text: Phase 3 §TTS ONNX FP16 audio (residual)
+  description: 'A fresh install preselects ONNX INT8 rather than FP16, and the cause of FP16''s non-finite audio is looked for with a fixed sentence set.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-62, MEU-72, MEU-117
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-62
+  - MEU-72
+  - MEU-117
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from TTS-ONNX-FP16-NONFINITE-AUDIO (D-239, Mat).'
+- row_key: MEU-122
+  id: MEU-122
+  slug: svc-transcript-metadata
+  phase: '3'
+  band: P2
+  matrix_item: '3.17'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: transcript-source-metadata-residual
+    text: Phase 3 §Transcript source metadata (residual)
+  description: 'Transcript titles and the channel name come from the flat enumeration add_channel already runs, with the video ID and today''s title as fallbacks.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-7, MEU-11
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-7
+  - MEU-11
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from TRANSCRIPT-TITLE-IS-VIDEO-ID and TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME (D-223, D-224).'
+- row_key: MEU-123
+  id: MEU-123
+  slug: convert-extract-stream-index
+  phase: '8'
+  band: P2
+  matrix_item: '8.9'
+  build_ref:
+    path: build-plan/08-video-conversion.md
+    anchor: extract-stream-index-residual
+    text: Phase 8 §Extract stream index (residual)
+  description: 'stream_index is audio-relative everywhere, so extract picks the right extension and tracks; an Extract job saves no encoder.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-29, MEU-30
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-29
+  - MEU-30
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from CONVERT-EXTRACT-STREAM-INDEX-MISMATCH (D-227), with rider CONVERT-EXTRACT-ENCODER-LABEL.'
+- row_key: MEU-124
+  id: MEU-124
+  slug: download-received-quality
+  phase: '6'
+  band: P2
+  matrix_item: '6.16'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: download-received-quality-residual
+    text: Phase 6 §Downloader received quality (residual)
+  description: 'The file''s real quality is stored in a new nullable field, and the row shows requested and received together only when they differ.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-10, MEU-20
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-10
+  - MEU-20
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY (D-225).'
+- row_key: MEU-125
+  id: MEU-125
+  slug: dist-release-candidate-2
+  phase: '7'
+  band: P2
+  matrix_item: '7.9'
+  build_ref:
+    path: build-plan/07-distribution.md
+    anchor: second-release-candidate-residual
+    text: Phase 7 §Second release candidate (residual)
+  description: 'The 0.1.0-rc.2 version, clean build, packaged checks, gate, notes and publish checklist; nothing publishes.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-110, MEU-113, MEU-114, MEU-115, MEU-116, MEU-117, MEU-118, MEU-119, MEU-120, MEU-121
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-110
+  - MEU-113
+  - MEU-114
+  - MEU-115
+  - MEU-116
+  - MEU-117
+  - MEU-118
+  - MEU-119
+  - MEU-120
+  - MEU-121
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from the accepted triage batching. Tag, release and upload stay with Mat.'
+- row_key: MEU-126
+  id: MEU-126
+  slug: gui-light-accent-contrast
+  phase: '6'
+  band: P2
+  matrix_item: '6.17'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: light-accent-contrast-residual
+    text: Phase 6 §Light accent contrast (residual)
+  description: 'The light theme''s accent tokens move to the colours Mat ruled, so button labels reach AA contrast.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-26
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-26
+  execution_plan: null
+  updated: '2026-11-04'
+  closed_reason: null
+  note: 'Registered 2026-11-04 from LIGHT-ACCENT-BELOW-AA-CONTRAST (D-235, Mat). Own MEU after scoping review F1 (grouping D-249).'
 summary_bands:
 - key: P0
   label: P0
@@ -2947,6 +3309,6 @@ summary_bands:
   range: MEU-5–13 (Phases 2–3)
 - key: P2
   label: P2
-  range: MEU-14–112 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
-    triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112)
+  range: MEU-14–126 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+    triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126)
 narrative_sections: []

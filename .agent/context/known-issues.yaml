@@ -11,7 +11,7 @@ issues:
     publication and a successful complete loses the retry.
   blast_radius: One interactive request per crash; the PNG is already in the inbox and the row expires on its own 120s TTL, so nothing is lost but the automatic completion.
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
   category: DEFER
   priority: P4
   related: []
@@ -33,11 +33,13 @@ issues:
     so VS Code / Cursor inject it per terminal session; clearing it in the same shell launches the window normally (title "av-kit", renderer on 127.0.0.1:5173). WORKAROUND (both symptoms): $env:ELECTRON_RUN_AS_NODE=$null
     before the command, or use a terminal opened outside the IDE. Check with [Environment]::GetEnvironmentVariable(''ELECTRON_RUN_AS_NODE'',''Process'').'
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
   category: TECH-DEBT
   priority: P3
   related: []
   meu_links: []
+  notes: 'Triage 2026-11-04: About 20 _electron.launch sites in about 19 files now, not 14, with no shared helper; ELECTRON_RUN_AS_NODE is referenced only at ui/tests/e2e/mcp-setup-prompt.test.ts:107. One
+    launch helper also gives E2E-MAIN-PROCESS-ERRORS-UNWATCHED its home.'
 - id: TOOLING-SHARED-REGISTRY-COUPLING
   title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
   severity: medium
@@ -53,7 +55,7 @@ issues:
     for the 2026-10-09 grouping stopped before any provider call with overlay_not_validated (overlay records ad9a09de…, registry in use a7c95972…). Revalidating rewrites .agent/model-registry.local.json,
     which is in Session 30''s GATED_PATHS, so it waits for Session 30''s approval; the next av-kit WINDOWS_GATE will also fail py-tests until then.'
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
     method: tools/Invoke-CodexDispatch.ps1 with AGENT_MODEL_REGISTRY_HOME=P:/.agent (C:/Temp/av-kit/dispatch/scoping-run.txt)
     result: 'overlay_not_validated: overlay ad9a09defd46… vs registry a7c95972c1e8…; no provider call, no ledger round used'
   category: TECH-DEBT
@@ -985,7 +987,7 @@ issues:
     rtk/pwsh are absent (ENV_BOUND_PY). Found by Session 27 WINDOWS_GATE attempt 1; interim fix = A-2 record rebind.'
   blast_radius: Every governance edit to AGENTS.md/GUARDRAILS.md reds the Windows py-tests stage until the 2026-09-26 records are rebound; unrelated sessions pay for it (S27 attempt 1).
   verification:
-    last_checked: '2026-10-27'
+    last_checked: '2026-11-04'
     method: Session 42 tts-sideload-load row 0 baseline at d30f62b, then the re-run at c34866b (walkthrough Baseline, plan ECN-1)
     result: 'Seen again at d30f62b (the same four REFUSE: rule map identity mismatch: AGENTS.md failures). Mat chose to rebind the pin (D-132): counts."AGENTS.md".postimage_sha256 in 2026-09-26-framework-update-adoption/rule-preservation.md
       updated and committed alone as c34866b; test_framework_adoption.py then 91 passed. The next governance edit reds them again'
@@ -993,6 +995,7 @@ issues:
   priority: P3
   related:
   - tooling-tests
+  meu_links: []
 - id: GUI-STARTUP-RELOAD-HIDDEN-WINDOW
   title: A reload during startup leaves the main window hidden and skips the rest of boot
   severity: medium
@@ -1022,11 +1025,13 @@ issues:
   blast_radius: Any fresh 'npm ci' followed directly by 'npm test' (dev machines, CI). Session 27 WINDOWS_GATE attempt 5. Gate-side fix under A-5 (serial install.js in the npm-ci stage); a repo-wide fix
     (e.g. a ui postinstall) is left to triage.
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
   category: TECH-DEBT
   priority: P3
   related:
   - tooling-tests
+  meu_links: []
+  notes: 'Triage 2026-11-04: Rechecked: ui/package.json still has no postinstall; CI is mitigated at .github/workflows/ci.yml:89-96.'
 - id: SETTINGS-TTS-ASSET-ROW-STALE
   title: Settings Dependencies TTS asset rows stay 'Downloading' after the download finishes until the page is revisited
   severity: medium
@@ -1098,7 +1103,7 @@ issues:
   blast_radius: ui/tests/e2e/download-queue.test.ts drag specs on a non-quiet Windows host, and since Session 39 also convert-queue.test.ts AC-49.29 and transcript-queue.test.ts W2-5. Each miss fails the
     fail-fast session gate at ui-electron, so the run has to be repeated.
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
   category: MONITORING
   priority: P4
   notes: 'TRIAGE 2026-10-09: Keep the A-4 diagnostics; reopen with their output on the next miss. REOPENED 2026-10-16 (Session 39 capture-new-marks gate, worktree s39-capture-new-marks; no change there
@@ -1108,6 +1113,8 @@ issues:
     Electron run. Next step: add A-4 style diagnostics to convert-queue dragOver and probe the over-target at release under load. SEEN AGAIN 2026-10-17 (Session 35 tts-voice-panel H1-2 re-run, worktree
     s35-tts-voice-panel; no change there reaches the queue pages): W2-5 hit its 180 s test timeout plus a worker teardown timeout in the full 161-test run (1 failed, 160 passed) while other worktrees ran
     on the host; alone it passed 4/4 in 13.8 s. Hang shape, not a drag overshoot. Receipts C:/Temp/av-kit/s35-gate-h1-r2fail/ and s35-gate-flake-w25.txt (walkthrough A-2).'
+  meu_links: []
+  related: []
 - id: CAPTURE-ZOOM-PAN-ORIGIN-FLAKE
   title: Capture viewport AC-66.14 middle-button pan origin occasionally off under full Electron suite load
   severity: low
@@ -1118,12 +1125,14 @@ issues:
     may not have settled, so ox after the pan was 92 px off the expected centred.ox - 40 (-920.5 vs -828.5). Not reproduced in isolation; unexplained.'
   blast_radius: ui/tests/e2e/capture-inbox.test.ts AC-66.14 in the full Electron run. A miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
   category: MONITORING
   priority: P4
   notes: 'SEEN 2026-10-17 (Session 35 tts-voice-panel H1-2 re-run after the R2 F2 correction, worktree s35-tts-voice-panel; the only change since the previous passing gate was the TTS adapter and its Python
     test): 1 failed, 160 passed in the full 161-test run; alone 5/5 passed (--repeat-each=5, 15.5 s). Receipts C:/Temp/av-kit/s35-gate-h1-r3fail/ and s35-gate-flake-ac6614.txt (walkthrough A-4). Next step
     on a repeat: log readZoom before and after the pan and wait for a stable origin instead of a fixed two frames.'
+  meu_links: []
+  related: []
 - id: MCP-PACKAGED-ENTRY-UNREACHABLE
   title: 'Installed MCP server likely never serves: entry guard misses resources/mcp-server/index.js and dist ships without node_modules'
   severity: medium
@@ -1321,7 +1330,8 @@ issues:
   meu_links:
   - MEU-68
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
+  related: []
 - id: CAPTURE-BAKE-ARROW-THIN
   title: Arrow is jagged when baked and its tip is drawn wrong (shaft runs through the head) in bake and preview
   severity: medium
@@ -2201,13 +2211,35 @@ issues:
     (file SHA-256 equals the backup). Mitigated, not resolved: the client bug is upstream (anthropics/claude-code #98978).
 
 
-    TRIAGE 2026-10-09: Track anthropics/claude-code #98978; remove DIALOG_FALLBACK only when every supported client renders elicitation.'
+    TRIAGE 2026-10-09: Track anthropics/claude-code #98978; remove DIALOG_FALLBACK only when every supported client renders elicitation.
+
+
+    Triage 2026-11-04: Upstream tracking moves: anthropics/claude-code#98978 was closed on 2026-10-11 as a duplicate of #98256, which is open. DIALOG_FALLBACK stays.'
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
   category: UPSTREAM
   priority: P3
   meu_links:
   - MEU-67
+  related: []
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-232
+      stage: triage
+      question: The tracked upstream issue closed; does anything change?
+      resolution: autonomous
+      class: two-way
+      chosen: Track anthropics/claude-code#98256 instead. Keep DIALOG_FALLBACK and UPSTREAM P3.
+      source_tag: Research-backed
+      precedents: []
+      research:
+        engine: native
+        sources:
+        - 'https://github.com/anthropics/claude-code/issues/98256 — open: capability declared but requests auto-declined in interactive VSCode sessions'
+      reasoning: '#98978 closed as a duplicate, not fixed, and #98256 is open with the same symptom. Two-way.'
+    decided_by: agent
 - id: FFMPEG-RESOLUTION-DIVERGENCE
   title: 'FFmpeg is resolved three different ways: Settings/Convert/TTS share a startup-cached adapter, the Downloader ignores the setting, and the Dependencies path echoes the raw setting'
   severity: medium
@@ -2429,14 +2461,35 @@ issues:
   root_cause: 'D-70 (Session 32): j/z voices need the misaki[ja]/[zh] extras (pyopenjtalk/fugashi, jieba/pypinyin and their dictionaries, hundreds of MB, new licence review). Session 32 lists them with
     reason language_unsupported and refuses generate with 409.'
   blast_radius: 13 Japanese and Mandarin catalog voices cannot generate in any install.
-  category: MEU-NEW
+  category: DEFER
   priority: P4
   related:
   - tts-engine
   - tts-assets
-  meu_links: []
+  meu_links:
+  - MEU-74
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-229
+      stage: triage
+      question: Register an MEU for the JA/ZH extras now that D-101 is ruled?
+      resolution: autonomous
+      class: two-way
+      chosen: No. Moves from MEU-NEW to DEFER P4, closing D-102's carry-forward.
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/grouping/2026-10-17-gui-shell-and-tts-sideload-session-grouping.md D-102 — leave for the next triage, after D-101
+      - docs/execution/plans/2026-10-14-tts-engine-runtime/implementation-plan.md:29 — D-70
+      research:
+        engine: none
+        sources: []
+      reasoning: D-101 removed the reason to wait, but the extras are hundreds of MB, nobody has asked for them, and D-70 already shows those voices disabled with a reason. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
+    decided_by: agent
 - id: FFMPEG-GPL-BUILD
   title: The installer ships a GPL-3.0 BtbN FFmpeg build (libx264/libx265)
   severity: medium
@@ -2470,15 +2523,36 @@ issues:
   root_cause: 'Session 32 LOCAL-ESPEAK: eSpeak NG is not installed on the build machine, so the live Spanish/French generates and the real-CLI ESPEAK_G2P checks were not run. Coverage is a fake runner (exact
     argv/stdin, AC-74.6) and ESPEAK_MAP_PARITY against misaki''s tables.'
   blast_radius: e/f/h/i/p voices are listed available when espeak-ng is detected; a real-CLI output mismatch would mispronounce or fail those jobs.
-  category: MEU-EXPAND
+  category: BLOCKED
   priority: P3
   related:
   - tts-engine
-  meu_links: []
+  meu_links:
+  - MEU-74
+  - MEU-98
   verification:
-    last_checked: '2026-10-27'
+    last_checked: '2026-11-04'
     method: Session 42 row 10 ESPEAK_STAGE probe, EspeakCliAdapter().status() (PATH, then Program Files, then --version)
     result: 'absent: espeak-ng: <absent> version: - (exit 3); AC-74.11 not run; row 10 [B] (b) B-10 in docs/execution/plans/2026-10-26-tts-sideload-load/task.md'
+  notes: 'Triage 2026-11-04: Blocked on Mat installing eSpeak NG 1.52 and running AC-74.11 in the dev app; Session 42''s row 10 then turns [x].'
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-230
+      stage: triage
+      question: Is this new scope?
+      resolution: autonomous
+      class: two-way
+      chosen: No. Moves from MEU-EXPAND to BLOCKED P3, on Mat's eSpeak NG install and AC-74.11. MEU-74's scope reopens only if that live run fails.
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/grouping/2026-10-17-gui-shell-and-tts-sideload-session-grouping.md D-100 — a local evidence stage
+      research:
+        engine: none
+        sources: []
+      reasoning: D-100 already made this a local evidence stage. Two-way.
+    decided_by: agent
 - id: FFMPEG-PIN-URL-404
   title: The pinned BtbN FFmpeg release URL returns 404
   severity: low
@@ -2606,13 +2680,19 @@ issues:
   priority: P3
   related:
   - ffmpeg-fetch
-  meu_links: []
+  meu_links:
+  - MEU-110
+  - MEU-113
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
     method: Ran tools/fetch_ffmpeg_windows.ps1 with a blank SHA and with a wrong SHA
     result: exit=1 for both, where 2 and 3 are documented (receipts C:/Temp/av-kit/fetch-exit-blank-sha.txt, fetch-exit-sha-mismatch.txt). Exit 5 (:56) has the same defect; exit 6 already writes to stderr
       and works. Tests assert only nonzero (tests/unit/test_packaging_installer.py:152,172).
-  notes: Use the exit-6 stderr pattern for codes 2 to 5 and assert exact codes. Batch with INSTALLER-SHIPS-FFMPEG-ZIP.
+  notes: 'Use the exit-6 stderr pattern for codes 2 to 5 and assert exact codes. Batch with INSTALLER-SHIPS-FFMPEG-ZIP.
+
+
+    Triage 2026-11-04: Rider on the FFmpeg session, which edits the same script (grouping D-99 rule). tools/fetch_ffmpeg_windows.ps1:18,32 still use Write-Error. D-266 removed the FFmpeg build later that
+    day, so MEU-113 is now this fix alone.'
 - id: NOTICES-SPACY-TRANSITIVE
   title: THIRD_PARTY_NOTICES omits most bundled backend dependencies (spaCy's transitive set, yt-dlp, FastAPI, numpy and others)
   severity: low
@@ -3152,9 +3232,10 @@ issues:
   - issue-triage-tooling
   meu_links: []
   verification:
-    last_checked: '2026-10-17'
+    last_checked: '2026-11-04'
     method: rtk uv run python tools/issue_triage.py bucket > C:/Temp/av-kit/bucket-output.txt 2>&1
     result: 'exit 1, UnicodeEncodeError: ''charmap'' codec can''t encode character ''⚠''; exit 0 with PYTHONIOENCODING=utf-8'
+  notes: 'Triage 2026-11-04: Reproduced again during this triage: a redirected --help raised UnicodeEncodeError; bucket needs PYTHONIOENCODING=utf-8 too.'
 - id: CAPTURE-E2E-LAUNCH-TEARDOWN-HANG
   title: capture-inbox Electron specs occasionally hang in launch or close under full-suite load (test and worker teardown timeouts)
   severity: low
@@ -3165,7 +3246,7 @@ issues:
     tear the worker down. No assertion or locator step fails. Not reproduced in isolation; unexplained.'
   blast_radius: ui/tests/e2e/capture-inbox.test.ts in the full Electron run (AC-67.24 and AC-67.35 seen). A miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
   verification:
-    last_checked: '2026-10-26'
+    last_checked: '2026-11-04'
     method: Session 40 gui-theme-path-fields gate runs 3 and 4 (walkthrough §Gate run 3 and §Gate run 4)
     result: 'run 3 AC-67.24 and run 4 AC-67.35: Test timeout of 60000ms exceeded, then Worker teardown timeout of 60000ms exceeded, 170 passed each. Alone: AC-67.24 --repeat-each=10 10 passed (28.2s); capture-inbox.test.ts
       39 passed (1.2m)'
@@ -3210,7 +3291,7 @@ issues:
   blast_radius: Regression coverage only. Current values are correct (CapturePage.tsx:1362, :1441, :1442). A future edit that binds the wrong chord to Capture's Save or Region hint would not fail AC-97.4.
     Fix is a test change (assert the rendered values against getCommand(...).shortcut), so it needs approval.
   verification:
-    last_checked: '2026-10-26'
+    last_checked: '2026-11-04'
     method: Session 41 execution review round 1 F1 (Medium, non-blocking), .agent/context/handoffs/2026-10-26-gui-keyboard-palette-implementation-critical-review.md
     result: An in-memory probe changed the Save and Region chords to Ctrl+O and all three presence predicates still held
   category: TECH-DEBT
@@ -3230,6 +3311,13 @@ issues:
   blast_radius: 'Measured: the live MCP audit (mcp-audit) stopped with exit 4 before any action ran; its runner now waits for the port (mcp-server/scripts/audit/backend.ts). Not measured: whether the desktop
     app''s first request can hit the same gap (ui/src/main/python-manager.ts publishes the API on this line). Candidate fix: call sock.listen() before printing the line, so early requests queue instead
     of being refused.'
+  verification:
+    last_checked: '2026-11-04'
+  category: TECH-DEBT
+  priority: P4
+  meu_links: []
+  related: []
+  notes: 'Triage 2026-11-04: Anchor stands at packages/api/src/avkit_api/cli.py:218-232. Candidate fix: sock.listen() before printing the ready line.'
 - id: MCP-IMAGE-OVER-STDIO-LIMIT
   title: avkit_capture image over about 7.86 MB drops the MCP connection
   severity: high
@@ -3252,14 +3340,59 @@ issues:
     payload_too_large tool error naming original_path.
 - id: YOUTUBE-CAPTIONS-IP-BLOCK
   title: YouTube is blocking caption requests from the maintainer's IP
-  severity: low
+  severity: medium
   component: infrastructure
   status: open
   discovered: '2026-11-03'
-  root_cause: 'The product TranscriptAdapter raises TranscriptRetryableError ''YouTube is blocking requests from your IP'' for two public videos, with both the old and the updated dependencies. Not a code
-    change: the block is on the network side.'
-  blast_radius: Transcript fails on this network until the block lifts, and the live MCP audit reports transcript.compile as a REGRESSION against the baseline because that signature is only tolerated in
-    container mode. Do not refresh the audit baseline to hide it.
+  root_cause: 'YouTube answers the caption fetch with HTTP 429 and its ''automated queries'' Sorry page. Measured on 2026-11-04 from the maintainer''s network: listing a video''s captions succeeds and the
+    video does have them, then the GET of www.youtube.com/api/timedtext gets 429, for an auto-captioned video (VSU9VjZFoLI) and a manually captioned one (jNQXAC9IVRw). The same refusal came from youtube-transcript-api
+    1.2.4 (the latest on PyPI and the version the installer ships), plain requests, browser headers, curl_cffi impersonating Chrome, Firefox and Safari, system curl over IPv4, and yt-dlp 2026.10.26 with
+    and without impersonation. The caption URL has no pot parameter and no exp=xpe, so this is not the library''s PoTokenRequired case. Video downloads from the same network work. The evidence points away
+    from a changed caption format or a broken library, and at a block on the caption endpoint for this network. Not established: whether other networks get the same answer, which is what separates a block
+    on this address from a wider YouTube change, and when or why it began. IPv6 and signed-in requests were not tried. The product adapter reports it as TranscriptRetryableError ''YouTube is blocking requests
+    from your IP''.'
+  blast_radius: 'Transcript fails on this network until the block lifts, and that includes the installed app: the published v0.1.0-rc.1 on the maintainer''s test PC, which shares this network''s one public
+    address, failed this way for two videos on 2026-11-04. That PC is not a second network and no other network has been tested, so the reach is unknown. If other networks get the same answer, Transcript
+    is broken for every user and this needs raising. The live MCP audit reports transcript.compile as a REGRESSION against the baseline because that signature is only tolerated in container mode. Do not
+    refresh the audit baseline to hide it.'
+  resolution_path: 'Decisive check, for Mat: in the installed app, add a captioned video from a different public network, such as a phone hotspot. Real captions there mean the block is bound to this address:
+    close this when this network recovers. The same failure there means a wider YouTube change: raise the severity, correct docs/releases/v0.1.0-rc.1.md:56-57 (which states it is your network) and the README,
+    and reconsider the fetch path. Upstream answers IP blocks by pointing at proxies, and one reporter on its issue 613 saw a block clear after resetting their connection; neither is verified here.'
+  category: UPSTREAM
+  priority: P2
+  related:
+  - TRANSCRIPT-FAILED-NO-REASON
+  - TRANSCRIPT-BLOCK-KEEPS-REQUESTING
+  verification:
+    last_checked: '2026-11-04'
+    method: Caption list and fetch probes with each client named in root_cause (C:/Temp/av-kit/transcript-probe/)
+    result: 429 Sorry page from every client, on both videos, from one public address. Other networks not tested.
+  meu_links:
+  - MEU-7
+  - MEU-68
+  notes: 'Triage 2026-11-04: Research: reported blocks are mostly cloud addresses and ''too many requests'' is a named cause; no report of a wide residential block was found; a 24-48 h reset is anecdotal
+    (https://skipthewatch.com/blog/youtube-transcript-api-not-working, https://github.com/jdepoix/youtube-transcript-api/issues/593). The hotspot check in resolution_path stays Mat''s; raise to high and
+    P1 if it shows the same failure.'
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-233
+      stage: triage
+      question: Do the priorities filed on 2026-11-04 stand against the Step 4 matrix?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Matrix applied. P1 to P2: TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME, TRANSCRIPT-FAILED-NO-REASON, YOUTUBE-CAPTIONS-IP-BLOCK. P2 to P3: TTS-FAILED-LOAD-DROPS-MODEL, MODELS-DIR-DOCS-AND-PROBE-MISMATCH,
+        TRANSCRIPT-BLOCK-KEEPS-REQUESTING, CONVERT-EXTRACT-STREAM-INDEX-MISMATCH. P3 to P4: CONSOLE-FAILURE-DETAIL-LOST, UNINSTALL-LEAVES-INSTALLER-COPY.'
+      source_tag: Local Canon
+      precedents:
+      - .agent/workflows/issue-triage.md Step 4 — priority matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: High standalone is P2 and medium standalone is P3 by the workflow's table. This caption issue is medium and blocks the live audit gate, so P2, and it rises to high and P1 if the hotspot
+        check shows a wider change. Two-way.
+    decided_by: agent
 - id: GUI-READY-PROBE-BLOCKS-MAIN
   title: The main window can freeze because a slow process query runs for every chunk of backend output
   severity: high
@@ -3308,6 +3441,35 @@ issues:
     FetchedTranscript has only snippets, video_id, language, language_code and is_generated, so the fallback always wins.
   blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Transcript files, compiled volume headings and contents, and the ''Last:'' label all show the ID. Not measured: whether other
     fields are affected. Compiled files stay usable but are hard to navigate.'
+  verification:
+    last_checked: '2026-11-04'
+  category: MEU-NEW
+  priority: P3
+  meu_links:
+  - MEU-7
+  - MEU-11
+  - MEU-122
+  related:
+  - TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-223
+      stage: triage
+      question: Where does the transcript's title come from?
+      resolution: autonomous
+      class: two-way
+      chosen: From the flat enumeration add_channel already runs, stored per item, with no extra request per video. The video ID stays as the fallback only.
+      source_tag: Local Canon
+      precedents:
+      - packages/infrastructure/src/avkit_infra/transcript/adapter.py:42-44 — the fallback that always wins
+      research:
+        engine: none
+        sources: []
+      reasoning: An extra request per video would add load to the endpoint family that is rate limiting. PlaylistInfo carries only video_ids today (domain/download.py, youtube/adapter.py:203-214), so it
+        gains a field. The plan must measure which URL shapes return titles. Two-way.
+    decided_by: agent
 - id: TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME
   title: A transcript job's channel name is the playlist's title
   severity: low
@@ -3318,6 +3480,34 @@ issues:
     playlist title rather than the channel's name.
   blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Per-video transcript files from a playlist run read ''channel: Blender Fundamentals 2.8'', the playlist''s title. It also
     feeds the output slug (:312). Not measured: other URL shapes, including a channel''s videos tab.'
+  verification:
+    last_checked: '2026-11-04'
+  category: MEU-NEW
+  priority: P4
+  meu_links:
+  - MEU-11
+  - MEU-122
+  related:
+  - TRANSCRIPT-TITLE-IS-VIDEO-ID
+  - TRANSCRIPT-ADD-CHANNEL-422
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-224
+      stage: triage
+      question: Where does the channel name come from?
+      resolution: autonomous
+      class: two-way
+      chosen: From the same enumeration, falling back to today's title. The existing output folder slug stays unchanged.
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/transcript.py:136-138,151 and :626 — where the name is taken and written
+      research:
+        engine: none
+        sources: []
+      reasoning: A slug change would split a channel's output across two folders. Two-way.
+    decided_by: agent
 - id: TRANSCRIPT-ADD-CHANNEL-422
   title: Adding a channel returned 422 after about 8 minutes of enumeration
   severity: low
@@ -3327,6 +3517,16 @@ issues:
   root_cause: add_channel enumerates the channel inside the add request (packages/core/src/avkit_core/services/transcript.py:129-130). Cause of the 422 not established.
   blast_radius: 'Measured once, not reproduced: `@BlenderOfficial/videos` returned 422 after about 8 minutes of enumeration while staging README screenshots on 2026-11-03. A 43-video playlist added normally
     in the same session. A replay meant to capture the error body was cut off when the app shut down, so the cause is not established. Not measured: what raised it, or the channel''s size.'
+  verification:
+    last_checked: '2026-11-04'
+  category: MONITORING
+  priority: P4
+  meu_links:
+  - MEU-11
+  related: []
+  notes: 'Triage 2026-11-04: Two leads for the next repeat, neither measured. add_channel calls extract_info non-flat (services/transcript.py:129-130, services/extract.py:34) and then enumerates flat, so
+    a whole channel may be extracted twice, which could explain the wait. ExtractError also maps to 422 (packages/api/src/avkit_api/errors.py), so the status alone does not mean a bad info type. Capture
+    the response body on repeat.'
 - id: DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
   title: A download row shows the quality you asked for, not the quality you got
   severity: medium
@@ -3337,6 +3537,33 @@ issues:
     No field carries the downloaded file's real quality.
   blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. With YouTube limiting quality under SABR, a row still showed the requested preset. A user can believe they have a higher quality
     than the file holds. Not measured: how often the two differ outside SABR.'
+  verification:
+    last_checked: '2026-11-04'
+  category: MEU-NEW
+  priority: P3
+  meu_links:
+  - MEU-20
+  - MEU-124
+  related: []
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-225
+      stage: triage
+      question: How does a row show the quality actually received?
+      resolution: autonomous
+      class: two-way
+      chosen: Store the file's real quality in a new nullable field. Show requested and received together only when they differ.
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/download.py:213,235 — only the requested preset is stored
+      - packages/infrastructure/src/avkit_infra/database/migrations.py — the migration path
+      research:
+        engine: none
+        sources: []
+      reasoning: Older rows have no measurement, so nullable keeps them truthful. Two-way.
+    decided_by: agent
 - id: TTS-DEVICE-OPTIONS-IN-CPU-BUILD
   title: The shipped build runs text to speech on the CPU only, but its device options don't say so
   severity: low
@@ -3347,6 +3574,34 @@ issues:
     (ui/src/renderer/src/features/settings/SettingsPage.tsx:62), and the TTS page offers 'auto' (ui/src/renderer/src/features/tts/TTSPage.tsx:274).
   blast_radius: 'Measured from the code and the spec file: ''auto'' can only mean CPU in the shipped build, and the README''s GPU claim was removed for that reason on 2026-11-03. Not measured: what the
     packaged Settings page does when cuda is chosen. Speech still works on the CPU.'
+  verification:
+    last_checked: '2026-11-04'
+  category: MEU-NEW
+  priority: P4
+  meu_links:
+  - MEU-75
+  - MEU-118
+  related:
+  - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-226
+      stage: triage
+      question: Which device options does a CPU build offer?
+      resolution: autonomous
+      class: two-way
+      chosen: Only what the backend reports for this build, from the same capability source as D-217. A stored value it cannot honour keeps the existing device fallback.
+      source_tag: Local Canon
+      precedents:
+      - docs/build-plan/build-priority-matrix.md 3.8 MEU-75 svc-tts-device-fallback — the fallback exists
+      - ui/src/renderer/src/features/settings/SettingsPage.tsx:62 and tts/TTSPage.tsx:274 — hard-coded options
+      research:
+        engine: none
+        sources: []
+      reasoning: Two lists of what a build can do would drift, as the models folder did. Whatever D-217 rules, this stands. Two-way.
+    decided_by: agent
 - id: TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE
   title: The TTS progress label reads 'Segments 0/1000' whatever the text's length
   severity: low
@@ -3356,6 +3611,12 @@ issues:
   root_cause: segments_total is TTS_PROGRESS_RESOLUTION (packages/core/src/avkit_core/services/tts.py:44,252), a 1000-step progress scale rather than a segment count, and ui/src/renderer/src/features/tts/TTSPage.tsx:733
     prints it as segments.
   blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Cosmetic; the progress bar itself is right.'
+  verification:
+    last_checked: '2026-11-04'
+  category: TECH-DEBT
+  priority: P4
+  meu_links: []
+  related: []
 - id: TTS-AUDIO-RANDOM-FILE-NAMES
   title: Generated audio files have random ID names
   severity: low
@@ -3364,6 +3625,12 @@ issues:
   discovered: '2026-11-03'
   root_cause: Output is written to <job id>.wav and <job id>.mp3 (packages/core/src/avkit_core/services/tts.py:327-328), and the job ID is a uuid4 (:242).
   blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Finding a clip in the output folder later means opening each one.'
+  verification:
+    last_checked: '2026-11-04'
+  category: TECH-DEBT
+  priority: P4
+  meu_links: []
+  related: []
 - id: CONVERT-POSITIONS-NOT-RENUMBERED
   title: Convert's queue numbers aren't renumbered
   severity: low
@@ -3373,6 +3640,12 @@ issues:
   root_cause: queue_position is set once at enqueue from the current list length (packages/core/src/avkit_core/services/conversion.py:172,303), and the card prints it as stored (ui/src/renderer/src/features/converter/ConvertPage.tsx:521,
     ui/src/renderer/src/components/queue/QueueCard.tsx:558).
   blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. A job keeps the number it got at enqueue, so the number stops saying how many jobs are ahead. Cosmetic: the order itself holds.'
+  verification:
+    last_checked: '2026-11-04'
+  category: TECH-DEBT
+  priority: P4
+  meu_links: []
+  related: []
 - id: CONVERT-CUT-TIME-RAW-MS
   title: A cut job's row shows its times in raw milliseconds
   severity: low
@@ -3381,6 +3654,12 @@ issues:
   discovered: '2026-11-03'
   root_cause: convertMetaSegments prints in_ms and out_ms unformatted (ui/src/renderer/src/features/converter/convert-controls.ts:203-204).
   blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Cosmetic.'
+  verification:
+    last_checked: '2026-11-04'
+  category: TECH-DEBT
+  priority: P4
+  meu_links: []
+  related: []
 - id: CONVERT-EXTRACT-ENCODER-LABEL
   title: An audio extract is labelled with a video encoder
   severity: low
@@ -3390,6 +3669,14 @@ issues:
   root_cause: _dispatch resolves a GPU encoder and saves it as gpu_encoder for every job kind (packages/core/src/avkit_core/services/conversion.py:479-487), although an extract is a stream copy that uses
     no encoder.
   blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. An extract row read hevc_nvenc. Cosmetic: the file is right.'
+  verification:
+    last_checked: '2026-11-04'
+  category: TECH-DEBT
+  priority: P4
+  meu_links:
+  - MEU-123
+  related: []
+  notes: 'Triage 2026-11-04: Rider on CONVERT-EXTRACT-STREAM-INDEX-MISMATCH, which edits the same file. _dispatch is now at services/conversion.py:486-488 (the issue cites :479-487).'
 - id: DOWNLOADER-ADVANCED-PANEL-GAP
   title: An empty gap sits under Advanced on the Downloader page
   severity: low
@@ -3398,6 +3685,12 @@ issues:
   discovered: '2026-11-03'
   root_cause: Cause not established. The panel is the Disclosure at ui/src/renderer/src/features/downloader/DownloaderPage.tsx:651-662.
   blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Visible in the main screenshot. Cosmetic. Not measured: which element holds the space.'
+  verification:
+    last_checked: '2026-11-04'
+  category: TECH-DEBT
+  priority: P4
+  meu_links: []
+  related: []
 - id: CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
   title: validate_closeout_artifacts --selftest fails when a .agent folder sits above the temp folder
   severity: low
@@ -3409,48 +3702,84 @@ issues:
   blast_radius: 'Measured: 5 of 215 selftest arms fail under the default temp folder and 0 of 215 with TMP and TEMP outside the home folder (C:/Temp/av-kit/rc1/rows/selftest-closeout-1.txt, selftest-closeout-2-tmp-elsewhere.txt).
     tests/tooling fails on this machine under the default temp. Real runs on P:/av-kit plans and CI are unaffected. Plan 2026-11-03-release-rc1 ECN-2 runs its gate with temp elsewhere rather than excusing
     the test.'
+  verification:
+    last_checked: '2026-11-04'
+  category: TECH-DEBT
+  priority: P3
+  meu_links: []
+  related: []
+  notes: 'Triage 2026-11-04: Stays live on this machine: C:/Users/Mat/.agent exists, so the self-test''s ancestor walk can find it.'
 - id: MAIN-LOG-AFTER-WINDOW-DESTROYED
   title: Backend output after the window is destroyed stops the main process behind a JavaScript error dialog
   severity: medium
   component: ui
   status: resolved
   discovered: '2026-11-04'
-  root_cause: 'onChildOutput in ui/src/main/index.ts sent each line with mainWindow?.webContents.send. mainWindow is never cleared, so ?. does not protect a destroyed window, and reading webContents from one throws TypeError: Object has been destroyed. An uncaught exception in the main process shows a modal dialog that holds the process until it is dismissed.'
-  blast_radius: 'Observed: Mat dismissed four of these dialogs during H1-2 attempt 4, in E2E runs, where AVKIT_E2E lets the window close while the backend still writes. Read from the code, not reproduced by hand: an installed copy reaches it only with Close to tray off, when the X button destroys the window and the backend writes before shutdown finishes. Not measured: how often that happens, or how many earlier gate runs showed the dialog with nobody there to see it. Present since the initial commit.'
+  root_cause: 'onChildOutput in ui/src/main/index.ts sent each line with mainWindow?.webContents.send. mainWindow is never cleared, so ?. does not protect a destroyed window, and reading webContents from
+    one throws TypeError: Object has been destroyed. An uncaught exception in the main process shows a modal dialog that holds the process until it is dismissed.'
+  blast_radius: 'Observed: Mat dismissed four of these dialogs during H1-2 attempt 4, in E2E runs, where AVKIT_E2E lets the window close while the backend still writes. Read from the code, not reproduced
+    by hand: an installed copy reaches it only with Close to tray off, when the X button destroys the window and the backend writes before shutdown finishes. Not measured: how often that happens, or how
+    many earlier gate runs showed the dialog with nobody there to see it. Present since the initial commit.'
   meu_links:
   - MEU-108
   verification:
     last_checked: '2026-11-04'
     method: AC-108.5 to AC-108.7, ready-probe-guard.test.ts and the real-Electron case backend-output-after-close.test.ts, which destroys the window and pushes a line through the real onChildOutput handler
     result: Before the fix both unit cases and the real-Electron case failed with Object has been destroyed, on the stdout and stderr streams. After it they pass, with 1129 UI tests passing.
-  resolution_path: Fixed under MEU-108 on 2026-11-04 (plan D-209, ECN-9). forwardConsoleLines in ui/src/main/python-manager.ts sends nothing to a destroyed window and catches a send that throws. The line stays in the in-memory log. The tray's Show window item has the same shape and is left as it is, because only a menu click during shutdown reaches it.
+  resolution_path: Fixed under MEU-108 on 2026-11-04 (plan D-209, ECN-9). forwardConsoleLines in ui/src/main/python-manager.ts sends nothing to a destroyed window and catches a send that throws. The line
+    stays in the in-memory log. The tray's Show window item has the same shape and is left as it is, because only a menu click during shutdown reaches it.
 - id: E2E-MAIN-PROCESS-ERRORS-UNWATCHED
   title: The E2E suite does not notice an uncaught exception in the main process
   severity: low
   component: ui
   status: open
   discovered: '2026-11-04'
-  root_cause: 'ui/tests/e2e launches Electron through Playwright and watches the pages. Nothing fails a test when the main process throws, and the error appears only as a modal dialog on the desktop. MAIN-LOG-AFTER-WINDOW-DESTROYED was found by Mat, who was at the screen, and not by any test.'
-  blast_radius: 'A main-process crash can go unnoticed through an unattended gate, or show up only as a test timeout while app.close() waits on the dialog. AC-66.14 failed that way in H1-2 attempt 4 and passed 8 of 8 repeats and H1-2 attempts 5 and 6 after the fix, which fits this explanation and does not prove it.'
+  root_cause: ui/tests/e2e launches Electron through Playwright and watches the pages. Nothing fails a test when the main process throws, and the error appears only as a modal dialog on the desktop. MAIN-LOG-AFTER-WINDOW-DESTROYED
+    was found by Mat, who was at the screen, and not by any test.
+  blast_radius: A main-process crash can go unnoticed through an unattended gate, or show up only as a test timeout while app.close() waits on the dialog. AC-66.14 failed that way in H1-2 attempt 4 and
+    passed 8 of 8 repeats and H1-2 attempts 5 and 6 after the fix, which fits this explanation and does not prove it.
   verification:
     last_checked: '2026-11-04'
-  category: DEFER
-  priority: P4
+  category: TECH-DEBT
+  priority: P3
   related:
   - MAIN-LOG-AFTER-WINDOW-DESTROYED
   - E2E-CLIPBOARD-PRIMER-EMPTY
   meu_links: []
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-231
+      stage: triage
+      question: RC1 is out, so what happens to the four issues deferred for it?
+      resolution: autonomous
+      class: two-way
+      chosen: E2E-MAIN-PROCESS-ERRORS-UNWATCHED to TECH-DEBT P3. SETTINGS-DRAFT-STALE-BASELINE and CONVERT-ADVANCED-EDIT-REPLACED to TECH-DEBT P4. E2E-CLIPBOARD-PRIMER-EMPTY to MONITORING P4, because its
+        cause is not established and it was seen once.
+      source_tag: Local Canon
+      precedents:
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md — D-208, filed low and listed in the notes for RC1
+      - .agent/context/current-focus.md Next steps 2
+      - .agent/context/known-issues.yaml CONVERT-JOB-GPU-PREFERENCE-IGNORED — D-212 precedent, AC-112.9
+      research:
+        engine: none
+        sources: []
+      reasoning: The DEFER was an RC1-era call and current-focus Next steps 2 lists them next. They lead the debt queue but stay below the new user-facing issues, which rank higher on the matrix. Two-way.
+    decided_by: agent
 - id: E2E-CLIPBOARD-PRIMER-EMPTY
   title: AC-88.12's clipboard primer read an empty clipboard for 5 s once
   severity: low
   component: ui
   status: open
   discovered: '2026-11-04'
-  root_cause: 'Not established. primeTransparentClipboard in ui/tests/e2e/capture-filmstrip-actions.test.ts writes the image once and then polls the read. In H1-2 attempt 4 the read stayed empty until the 5 s poll ended. The clipboard is shared with the whole desktop, and Mat was using the PC during that run, so another program replacing it is one candidate. Nothing tested that.'
-  blast_radius: 'One failure in H1-2 attempt 4, the first test of that run. It passed in attempts 2, 3, 5 and 6 and 8 of 8 repeats after ECN-9. A failure here stops a gate at ui-electron and costs a rerun. The primer is a precondition of the test, so it says nothing about the product.'
+  root_cause: Not established. primeTransparentClipboard in ui/tests/e2e/capture-filmstrip-actions.test.ts writes the image once and then polls the read. In H1-2 attempt 4 the read stayed empty until the
+    5 s poll ended. The clipboard is shared with the whole desktop, and Mat was using the PC during that run, so another program replacing it is one candidate. Nothing tested that.
+  blast_radius: One failure in H1-2 attempt 4, the first test of that run. It passed in attempts 2, 3, 5 and 6 and 8 of 8 repeats after ECN-9. A failure here stops a gate at ui-electron and costs a rerun.
+    The primer is a precondition of the test, so it says nothing about the product.
   verification:
     last_checked: '2026-11-04'
-  category: DEFER
+  category: MONITORING
   priority: P4
   related:
   - E2E-MAIN-PROCESS-ERRORS-UNWATCHED
@@ -3461,11 +3790,13 @@ issues:
   component: ui
   status: open
   discovered: '2026-11-04'
-  root_cause: 'useCaptureSettings.ts:83 copies the whole form into its draft on the first edit, so the form stops following a refetch and save() writes the copy. useConverterSettings had the same shape and was fixed under AC-112.9 (plan D-212), because there it sent a job to the wrong encoder. Read from the code, not reproduced for capture.'
-  blast_radius: 'Reachable when an MCP client or API call changes a capture setting while a capture settings edit is open. A later Save would write the old value of the other fields back over the newer one. No job runs differently and no file is touched. An edit made before settings load would also hold the defaults for the other fields.'
+  root_cause: useCaptureSettings.ts:83 copies the whole form into its draft on the first edit, so the form stops following a refetch and save() writes the copy. useConverterSettings had the same shape and
+    was fixed under AC-112.9 (plan D-212), because there it sent a job to the wrong encoder. Read from the code, not reproduced for capture.
+  blast_radius: Reachable when an MCP client or API call changes a capture setting while a capture settings edit is open. A later Save would write the old value of the other fields back over the newer one.
+    No job runs differently and no file is touched. An edit made before settings load would also hold the defaults for the other fields.
   verification:
     last_checked: '2026-11-04'
-  category: DEFER
+  category: TECH-DEBT
   priority: P4
   related:
   - CONVERT-JOB-GPU-PREFERENCE-IGNORED
@@ -3476,14 +3807,14 @@ issues:
   component: ui
   status: open
   discovered: '2026-11-04'
-  root_cause: 'The settings effect in ConvertPage.tsx replaces the preset, CQ, scale and audio unless presetTouched is set, and only selectPreset sets it, so an edit to CQ, Scale or Audio does not protect
-    itself. Found while fixing F1 of execution review round 2, which took the encoder out of this effect and left the others.'
-  blast_radius: 'Measured on the real page in jsdom (C:/Temp/av-kit/rc1/sibling/result.txt): CQ set to 31 went back to 25 when settings arrived late, and became 30 when the saved default preset changed to
-    mobile. Not measured: Scale and Audio, which the same effect sets the same way, or how often settings arrive after a user has edited something on a real PC. A job could run with values the user changed
+  root_cause: The settings effect in ConvertPage.tsx replaces the preset, CQ, scale and audio unless presetTouched is set, and only selectPreset sets it, so an edit to CQ, Scale or Audio does not protect
+    itself. Found while fixing F1 of execution review round 2, which took the encoder out of this effect and left the others.
+  blast_radius: 'Measured on the real page in jsdom (C:/Temp/av-kit/rc1/sibling/result.txt): CQ set to 31 went back to 25 when settings arrived late, and became 30 when the saved default preset changed
+    to mobile. Not measured: Scale and Audio, which the same effect sets the same way, or how often settings arrive after a user has edited something on a real PC. A job could run with values the user changed
     and did not notice changing back. The fields show the replaced values. Not fixed in RC1 (plan D-208); the release notes list it.'
   verification:
     last_checked: '2026-11-04'
-  category: DEFER
+  category: TECH-DEBT
   priority: P4
   related:
   - CONVERT-JOB-GPU-PREFERENCE-IGNORED
@@ -3502,12 +3833,14 @@ issues:
   verification:
     last_checked: '2026-11-04'
     method: 'AC-112.1 to AC-112.6 in tests/unit/test_conversion_service.py, tests/unit/test_ffmpeg_conversion.py and ui/tests/unit/convert-page.behavior.test.ts. AC-112.7: tools/smoke_packaged_rc.py against
-      the packaged win-unpacked backend and the installed backend. AC-112.8: delayed and changed settings in ui/tests/unit/convert-page.behavior.test.ts, and the reviewer''s reproduction exits 0 after the fix. AC-112.9: an open Output folder or Skip existing edit in the same test file, and round 3''s reproduction exits 0 after the fix.'
+      the packaged win-unpacked backend and the installed backend. AC-112.8: delayed and changed settings in ui/tests/unit/convert-page.behavior.test.ts, and the reviewer''s reproduction exits 0 after the
+      fix. AC-112.9: an open Output folder or Skip existing edit in the same test file, and round 3''s reproduction exits 0 after the fix.'
     result: 'PASS: on a PC with an NVIDIA GPU, a job with gpu_preference software ran libx265 while the default job ran hevc_nvenc, on both backends. The page''s dropdown is covered by behaviour tests,
       not by a run of the installed window.'
   resolution_path: Fixed by MEU-112 on 2026-11-04, on Mat's ruling to fix it before RC1 (in Session 44's working tree, uncommitted until Mat commits it). A job stores its own gpu_preference, _dispatch passes
     it to _resolve_encoder, and null means the setting. The column upgrades an existing database in place. Execution review round 2 then found the page losing a choice when settings arrived late or changed
-    (F1). The page now keeps only what the user picked (plan D-207, AC-112.8). Round 3 found an open Output folder or Skip existing edit freezing the saved encoder the page compared against. The settings draft now holds only what was edited (plan D-212, AC-112.9).
+    (F1). The page now keeps only what the user picked (plan D-207, AC-112.8). Round 3 found an open Output folder or Skip existing edit freezing the saved encoder the page compared against. The settings
+    draft now holds only what was edited (plan D-212, AC-112.9).
   meu_links:
   - MEU-112
 - id: GUI-READY-CHUNK-BOUNDARY
@@ -3520,3 +3853,863 @@ issues:
     not veto READY from the owned child's pipe, which the publisher treats as ownership proof. MEU-108 changed none of this.
   blast_radius: 'Measured: never seen in the real app. The Session 44 execution review''s probe reproduced all three on synthesized chunks, on both HEAD and the current module, and raised them as unchanged
     behaviour, not a regression. Not measured: whether a real backend ever splits the line.'
+  verification:
+    last_checked: '2026-11-04'
+  category: TECH-DEBT
+  priority: P4
+  meu_links: []
+  related: []
+- id: FFMPEG-LIBDVDCSS-BUNDLED
+  title: The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses it (accepted risk, D-266)
+  severity: medium
+  component: infrastructure
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'tools/fetch_ffmpeg_windows.ps1 pins BtbN''s win64 GPL build autobuild-2026-10-31-12-59. BtbN''s recipe at that build (FFmpeg-Builds 5031c6f, scripts.d/50-dvd) builds libdvdcss as a static
+    library, configures libdvdread with -Dlibdvdcss=enabled and enables all three for every GPL build of FFmpeg 7.0 or later, so the library is linked into ffmpeg.exe. The D-101 brief listed it only among
+    the GPL-only scripts and covered copyright licences, so nobody chose to ship it. Measured on the shipped binary, sha256 c46215f8889634396f0ac0acac738ef2145175e5b6caf28b3daa8ac9a9980c5f (C:/Temp/av-kit/issue-dvd/evidence.txt):
+    -version shows --enable-libdvdread and --enable-libdvdnav, -demuxers lists dvdvideo, and the file holds libdvdcss''s own strings, such as ''Could not open %s with libdvdcss.'' and DVDCSS_METHOD.'
+  blast_radius: 'Every public download: the installer on the published v0.1.0-rc.1 release and its source archive (deps/libdvdcss-811ce97a1d4d) hold it, and rc.2 and later stock builds will too. No av-kit
+    source names DVD input (no hit for ''dvd'' in packages, native, mcp-server/src, ui/src, ui/electron or tools). The legal exposure of distributing a DVD decryption library has not been assessed. Mat
+    typed ''register known issue to remove libdvdcss from the package'' on 2026-11-04, and later that day: ''I thought I deceided to do nothing about FFmpeg. If we build it we will loose on the updates
+    released by ohter builders.'' Asked whether to do nothing about FFmpeg, keeping libdvdcss in rc.2, Mat answered ''FFmpeg, keeping libdvdcss in rc.2: yes''.'
+  resolution_path: 'Accepted risk, not fixed (D-266, Mat 2026-11-04). The pin stays the stock BtbN GPL build, rc.2 ships it too and RC1 stays up (D-215). Updates stay what they were: av-kit never takes
+    a builder''s update automatically, so a newer FFmpeg means a new URL and hash and a rebuilt source set. The legal exposure stays unassessed, and Mat accepted that knowingly; this is not legal advice.
+    If the risk changes, the approved build route and its patch are parked, never run, at docs/execution/plans/2026-11-04-rc2-ffmpeg-uninstall/ with the review at .agent/context/handoffs/2026-11-04-rc2-ffmpeg-uninstall-plan-critical-review.md.
+    The notices gain one factual line in MEU-125: the build includes libdvdcss, and av-kit never uses DVD input (D-275, Mat 2026-11-05).'
+  verification:
+    last_checked: '2026-11-04'
+  category: CLOSE
+  priority: P2
+  related:
+  - FFMPEG-GPL-BUILD
+  - FFMPEG-PIN-URL-404
+  - distribution
+  meu_links:
+  - MEU-110
+  notes: 'Triage 2026-11-04: Rechecked at the pinned commit: all three scripts.d/50-dvd scripts are off for LGPL variants, and libdvdread and libdvdnav have an unconfigure branch, so the recipe''s off path
+    already exists. This machine has no Docker, which the recipe''s README requires; WSL is present. RC1 downloads at triage: installer 3, source archive 1, some of them the maintainer''s own. This describes
+    the parked build route (D-266), which was never tried.'
+  enrichment:
+    questions_asked:
+    - 'D-214: Which FFmpeg build replaces the pinned BtbN GPL build so libdvdcss leaves the package?'
+    - 'D-215: Does v0.1.0-rc.1 stay publicly downloadable until a build without libdvdcss replaces it?'
+    - 'D-266: Does FFmpeg stay the stock BtbN GPL build, with libdvdcss in it, in rc.2 and later?'
+    - 'D-275: Do the third-party notices name libdvdcss?'
+    answers:
+    - 'D-214: superseded by D-266'
+    - 'D-215: RC1 stays up, settled by D-266'
+    - 'D-266: FFmpeg, keeping libdvdcss in rc.2: yes'
+    - 'D-275: Yes, one factual line in MEU-125'
+    decision_log:
+    - id: D-214
+      stage: triage
+      question: Which FFmpeg build replaces the pinned BtbN GPL build so libdvdcss leaves the package?
+      resolution: human
+      class: one-way-door
+      chosen: Superseded by D-266 on 2026-11-04, not built. Mat first accepted this route through a blanket acceptance of a brief that offered no do-nothing option, then chose to keep FFmpeg as it is
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md:488 — D-101, Mat ruled GPL, stock BtbN month-end build, published only with complete source
+      - 'docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md:495 — D-101 brief weighed a custom minimal build: only that option shrinks the source set, but av-kit takes on a recipe, toolchain
+        and security updates'
+      research:
+        engine: exa
+        sources:
+        - https://github.com/btbn/ffmpeg-builds — README prerequisites are bash and docker; scripts.d/50-dvd at 5031c6f already returns -1 from ffbuild_enabled for LGPL variants and emits --disable-libdvdread
+          and --disable-libdvdnav
+        - https://www.gyan.dev/ffmpeg/builds — essentials list has libx264 and libx265 and no DVD library (libdvdread and libdvdnav are full-build only); GPLv3; 8.1.2 and 9.0.2 offered; the page publishes
+          no recipe for a given build
+        - https://github.com/GyanD/media-autobuild_suite — a public build suite under the same account; nothing says the published builds come from it or with which options
+        - https://www.gnu.org/licenses/gpl-3.0.txt §6(d) — offer the Corresponding Source with the object code, available 'for as long as needed'
+      reasoning: 'Only route that keeps Convert''s encoders and D-101''s definition of complete source, whose set shrinks by three dependencies. Cost: av-kit takes on a Docker build, untried. See the Step
+        8 brief. Superseded: the brief said the status quo was not an option because Mat had directed the removal. Mat''s words were ''register known issue to remove libdvdcss from the package'', which
+        registers an issue and does not rule on doing nothing. The brief also gave the update cost one clause. Mat then said: ''I thought I deceided to do nothing about FFmpeg. If we build it we will loose
+        on the updates released by ohter builders.'' The plan and its approved review stay on file for this route only.'
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+    - id: D-215
+      stage: triage
+      question: Does v0.1.0-rc.1 stay publicly downloadable until a build without libdvdcss replaces it?
+      resolution: human
+      class: one-way-door
+      chosen: RC1 stays up. No build without libdvdcss is coming. rc.2 will replace RC1 for its other fixes and carries the library too, and what happens to RC1 then stays Mat's in MEU-125's checklist
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md — D-204, Mat waived checks until public; run since, except Transcript from another network
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md:494 — D-238, Mat ruled that RC1 stays up until a new build replaces it
+      research:
+        engine: tavily
+        sources:
+        - https://www.videolan.org/legal.html — VideoLAN calls libdvdcss authorized by French decision CE 16 July 2008 n° 301843, points US readers at the Copyright Office, and says it is itself 'outside
+          US jurisdiction'
+        - https://en.wikipedia.org/wiki/RealNetworks,_Inc._v._DVD_Copy_Control_Ass%27n — a US court found RealDVD violated the DMCA anti-trafficking provisions and enjoined its distribution; CSS being cracked
+          was no defence
+        - https://en.wikipedia.org/wiki/Libdvdcss — no known legal challenge to libdvdcss itself as of June 2022; Debian, Ubuntu, Fedora and openSUSE do not ship it
+        - https://www.gnu.org/licenses/gpl-3.0.txt §6(d) — the source must stay available as long as needed for the offer, so installer and source archive should leave together
+      reasoning: 'Legal exposure is unassessed and each further download cannot be recalled, while the audience is very small and rc.2 supersedes it. Not legal advice. See the Step 8 brief. On 2026-11-04
+        the release read back as published, not draft, a pre-release, with 3 installer and 1 source archive downloads. Changing what is public on a blanket acceptance, against a specific ruling that holds
+        ''unless Mat changes it'', is not something to guess at. Settled by D-266: Mat was told that keeping FFmpeg as it is leaves RC1 up, with downloads continuing while the exposure stays unassessed,
+        and answered yes. The release was not touched.'
+      human_message_reference: 'USER_EXPLICIT 2026-11-04 ''FFmpeg, keeping libdvdcss in rc.2: yes'''
+    - id: D-266
+      stage: triage
+      question: Does FFmpeg stay the stock BtbN GPL build, with libdvdcss in it, in rc.2 and later?
+      resolution: human
+      class: one-way-door
+      chosen: Yes. FFmpeg stays the stock BtbN GPL build with libdvdcss compiled in, in rc.2 too. No build and no new pin
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md:488 — D-101, Mat ruled GPL, stock BtbN month-end build, published only with complete source
+      - 'docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md:495 — D-101 brief weighed a custom minimal build: only that option shrinks the source set, but av-kit takes on a recipe, toolchain
+        and security updates'
+      research:
+        engine: exa
+        sources:
+        - https://github.com/btbn/ffmpeg-builds — README prerequisites are bash and docker; scripts.d/50-dvd at 5031c6f already returns -1 from ffbuild_enabled for LGPL variants and emits --disable-libdvdread
+          and --disable-libdvdnav
+        - https://www.gyan.dev/ffmpeg/builds — essentials list has libx264 and libx265 and no DVD library (libdvdread and libdvdnav are full-build only); GPLv3; 8.1.2 and 9.0.2 offered; the page publishes
+          no recipe for a given build
+        - https://github.com/GyanD/media-autobuild_suite — a public build suite under the same account; nothing says the published builds come from it or with which options
+        - https://www.gnu.org/licenses/gpl-3.0.txt §6(d) — offer the Corresponding Source with the object code, available 'for as long as needed'
+      reasoning: 'Mat said: ''I thought I deceided to do nothing about FFmpeg. If we build it we will loose on the updates released by ohter builders.'' The transcripts hold no earlier decision to do nothing,
+        and the D-214 brief wrongly said the status quo was not an option. Put to Mat with the costs: av-kit already pins one exact build, so a newer FFmpeg means a new URL and hash and about an hour rebuilding
+        the source set, and a custom build adds a patch and a full build of unknown length to each update. Rc.2 and later builds keep distributing a DVD decryption library av-kit never uses. Nobody has
+        assessed the legal exposure, the brief asked Mat to accept it knowingly, and this is not legal advice. Downloads already made cannot be recalled on any route, and the GPL source duty stays. The
+        approved plan and patch are parked at docs/execution/plans/2026-11-04-rc2-ffmpeg-uninstall/ if the risk ever changes.'
+      human_message_reference: 'USER_EXPLICIT 2026-11-04 ''FFmpeg, keeping libdvdcss in rc.2: yes'''
+    - id: D-275
+      stage: triage
+      question: Do the third-party notices name libdvdcss?
+      resolution: human
+      class: one-way-door
+      chosen: 'Yes. One factual line in the FFmpeg section, in MEU-125: the build includes libdvdcss, and av-kit never uses DVD input'
+      source_tag: Human-approved
+      precedents:
+      - packaging/THIRD_PARTY_NOTICES.md:59-72 — the FFmpeg section names no individual dependency
+      - docs/execution/plans/2026-11-04-rc2-fetch-uninstall/implementation-plan.md:227 — the question was left to Mat
+      research:
+        engine: pomera_web_search (tavily, exa)
+        sources:
+        - https://www.videolan.org/legal.html — VideoLAN's legal page on libdvdcss
+        - 'https://www.psychocats.net/ubuntucat/the-legality-or-illegality-of-w32codecs-and-libdvdcss2 — quotes the VideoLAN FAQ: VLC binaries are distributed with libdvdcss included'
+        - https://www.ffmpeg.org/legal.html — FFmpeg's checklist, which it says is not the only way to comply
+      reasoning: The name is already public in four committed files and in the source archive, so the line adds prominence, not new information, and matches VLC's open practice. Alternatives were a generated
+        list of every FFmpeg dependency and no change. Whether naming it changes legal exposure was not assessed; this is not legal advice.
+      human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
+    decided_by: human
+- id: TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
+  title: The installed app offers the PyTorch voice model and downloads 327 MB, but can never load it
+  severity: high
+  component: infrastructure
+  status: open
+  discovered: '2026-11-04'
+  root_cause: docs/build-plan/07-distribution.md:227 says to list the PyTorch variant in /models/available and fail the load with a clear ModelLoadError unless the user has a supported torch install (documented
+    extra). No such extra is documented, and whether a frozen backend could import a user-installed torch has not been tried. The installer's backend has no torch or kokoro (its _internal folder has onnxruntime,
+    misaki and spacy, checked on the published RC1), so _load_pytorch raises 'PyTorch runtime is not bundled' at packages/infrastructure/src/avkit_infra/tts/adapter.py:294. That text gives no next step,
+    and tts-help-content.ts, the README and the release notes never mention PyTorch.
+  blast_radius: 'Measured on the published v0.1.0-rc.1 on the maintainer''s test PC on 2026-11-04: kokoro-v1_0.pth downloaded at 327,212,226 B and the app logged six failed loads; the two lines that show
+    a model name kokoro-pt-fp32. ONNX FP16 then downloaded, loaded and generated speech on the same machine, so TTS itself works. Read from the code, not run on a fresh install: a fresh install preselects
+    ONNX FP16 (defaultModelSelection, ui/src/renderer/src/features/tts/tts-controls.ts:108, takes the first downloaded row, else the first row by id), so reaching the dead end takes a user choosing PyTorch,
+    after which it is preselected if it is the only download. MCP reads the same /models/available. The app cannot remove the file afterwards: packages/api/src/avkit_api/routes/models.py has no delete route.'
+  resolution_path: Ruled by Mat on 2026-11-04 (D-217). A build that can't run PyTorch lists the variant disabled with a reason and refuses the model download with a 409, so it cannot start a download it
+    cannot use. Word the reason with a next step, such as choosing an ONNX model. Availability comes from whether the runtime imports, so npm run dev, which has torch in the repo's .venv, keeps working.
+    Correct docs/build-plan/07-distribution.md:30 and :227, which name an optional extra that was never built. No runtime download (TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD is closed) and no delete route.
+    Needs a new installer. Done when an installed build cannot start the download of a model it cannot load, and the dev venv still loads and generates with it.
+  category: MEU-NEW
+  priority: P2
+  related:
+  - TTS-FAILED-LOAD-DROPS-MODEL
+  - MODELS-DIR-DOCS-AND-PROBE-MISMATCH
+  - TTS-PACKAGED-RUNTIME-EXCLUDED
+  - TTS-MODEL-FLOW-GAPS
+  - TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD
+  - TTS-ONNX-FP16-NONFINITE-AUDIO
+  verification:
+    last_checked: '2026-11-04'
+  meu_links:
+  - MEU-72
+  - MEU-117
+  enrichment:
+    questions_asked:
+    - 'D-217: What does a build that cannot run PyTorch do with the PyTorch model?'
+    answers:
+    - 'D-217: disabled with a reason and a 409 on download, with no runtime download'
+    decision_log:
+    - id: D-217
+      stage: triage
+      question: What does a build that cannot run PyTorch do with the PyTorch model?
+      resolution: human
+      class: product-preference
+      chosen: List it disabled with a reason in any build that can't run it, refuse its download with a 409, and correct 07-distribution.md:30 and :227. No runtime download and no bundled torch. npm run
+        dev keeps working
+      source_tag: Human-approved
+      precedents:
+      - 'docs/execution/plans/2026-10-14-tts-engine-runtime/implementation-plan.md:29 — D-70, Mat approved: JA/ZH voices stay listed but unavailable with a reason, shown disabled, generate is a 409 before
+        any job row'
+      research:
+        engine: exa
+        sources:
+        - https://www.nngroup.com/articles/drop-down-menus/ — 'Gray out any unavailable options … explaining why'
+        - https://www.smashingmagazine.com/2024/05/hidden-vs-disabled-ux/ — 'Will a given user ever be able to interact? No → Hide', which favours the alternative here
+      reasoning: 'Mat chose this on 2026-11-04 after asking what PyTorch adds over the three ONNX variants: the same Kokoro-82M model, about 1.5x on this PC''s CPU, and no PyTorch-only feature. Mat''s word
+        was ''remove'', and ''as you originally suggested'' points at the first brief''s recommendation, recorded here. The first brief argued against dropping the row, and nothing deletes the code path,
+        so dev still runs it. Disabled with a reason follows the tts-engine-runtime D-70 pattern and leaves an explanation beside a file RC1 testers already hold, since the app cannot delete it. This reverses
+        D-236.'
+      human_message_reference: USER_EXPLICIT 2026-11-04 'OK we will go with pythorch remove as you originally suggested'
+    decided_by: human
+- id: TTS-FAILED-LOAD-DROPS-MODEL
+  title: A failed model load unloads the model that was working
+  severity: medium
+  component: infrastructure
+  status: open
+  discovered: '2026-11-04'
+  root_cause: load_model calls self.unload_model() first (packages/infrastructure/src/avkit_infra/tts/adapter.py:251), before it checks the weight path, the device or the runtime. Any load that fails after
+    that leaves nothing loaded.
+  blast_radius: 'Read from the code, and consistent with one observation: on the maintainer''s test PC on 2026-11-04, ONNX FP16 was loaded and generated speech, a later load failed, and /models/status read
+    unloaded. The events in between were not traced, so this is not a controlled reproduction. A user who tries another model and fails is left with nothing loaded, and has to notice and reload the one
+    that worked.'
+  resolution_path: 'Proposed for triage, not approved: run the checks that do not need the old model gone (weight path, device, runtime) and unload only after they pass. Loading the new model before dropping
+    the old one may not fit in GPU memory, so that part needs a decision. Test: load A, fail a load of B, and status still shows A.'
+  category: MEU-NEW
+  priority: P3
+  related:
+  - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
+  - TTS-GENERATE-FAILED-SILENT
+  verification:
+    last_checked: '2026-11-04'
+  meu_links:
+  - MEU-62
+  - MEU-98
+  - MEU-119
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-221
+      stage: triage
+      question: How does a failed load keep the current model?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Check weight path, device and runtime before unload_model. No load-before-unload. Test: load A, fail a load of B, status still shows A.'
+      source_tag: Local Canon
+      precedents:
+      - packages/infrastructure/src/avkit_infra/tts/adapter.py:251 — unload runs first today
+      research:
+        engine: none
+        sources: []
+      reasoning: The packaged build is CPU ONNX, so the GPU-memory question in the issue does not arise there. A failure after those checks can still drop the model, and the plan must state that limit.
+        Two-way.
+    decided_by: agent
+- id: MODELS-DIR-DOCS-AND-PROBE-MISMATCH
+  title: Voice models live in %USERPROFILE%\.avkit\models, but the readiness probe and checklist point at %LOCALAPPDATA%\av-kit
+  severity: medium
+  component: ui
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'The backend''s default for tts.models_directory is ~/.avkit/models (packages/core/src/avkit_core/services/settings.py:67). The Electron side has its own default: defaultModelsDirectory in
+    ui/src/main/setup-readiness.ts:51-52 returns {appData}/models, used when no settings row exists (:62, :79), and probeModelsDirWritable creates that folder (:90) and tests it. docs/releases/publish-checklist-v0.1.0-rc.1.md:133
+    checks %LOCALAPPDATA%\av-kit\models. The release notes said voice models stay in %LOCALAPPDATA%\av-kit until they were corrected and published on 2026-11-04 (d287c55).'
+  blast_radius: 'Measured on the published RC1 on the maintainer''s test PC on 2026-11-04: the model files are under %USERPROFILE%\.avkit\models, and %LOCALAPPDATA%\av-kit\models exists and is empty. Read
+    from the code: the first-run readiness check reports on a folder the backend does not use, so a real models folder that cannot be written would still pass it. Until the notes were corrected on 2026-11-04,
+    a user following them to reclaim disk after uninstalling would not find the models, which reached 534 MB on that PC. The checklist''s empty-cache check passes whether or not a model is there. Nothing
+    in the app deletes a model, and deleting the files by hand has not been tried.'
+  resolution_path: 'Proposed for triage, not approved: make the probe use the same default as the backend, and correct the checklist. Do not move existing model files. The public notes were corrected on
+    2026-11-04 (d287c55) and need nothing more.'
+  category: MEU-NEW
+  priority: P3
+  related:
+  - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
+  - UNINSTALL-LEAVES-INSTALLER-COPY
+  verification:
+    last_checked: '2026-11-04'
+  meu_links:
+  - MEU-23
+  - MEU-120
+  notes: 'Triage 2026-11-04: The wrong path at :28-29 of the notes was corrected and published the same day (d287c55).'
+  enrichment:
+    questions_asked:
+    - 'D-216: When are the public RC1 notes corrected, given the uncommitted draft with the DUPER results?'
+    answers:
+    - 'D-216: follows D-215; the corrected notes are already published'
+    decision_log:
+    - id: D-216
+      stage: triage
+      question: When are the public RC1 notes corrected, given the uncommitted draft with the DUPER results?
+      resolution: human
+      class: product-preference
+      chosen: Follow D-215. The corrected notes went out on 2026-11-04 from d287c55, before this ruling. The 'your network' wording at docs/releases/v0.1.0-rc.1.md:56-57 waits for the other-network check.
+        D-215 ended with RC1 staying up, so the draft branch does not apply
+      source_tag: Human-approved
+      precedents:
+      - .agent/context/current-focus.md Next steps 1 — Mat decides whether to publish the notes
+      research:
+        engine: none
+        sources: []
+      reasoning: Publishing is outward and Mat's. The live body still says the build has not run on a clean machine and gives the wrong models path. See the Step 8 brief.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+    - id: D-222
+      stage: triage
+      question: Which models folder is right, and what changes?
+      resolution: autonomous
+      class: two-way
+      chosen: The backend default ~/.avkit/models stands. setup-readiness.ts probes that same default and stops creating an empty folder. No files move. A contract test ties the two defaults together.
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/settings.py:67 — the backend default
+      - ui/src/main/setup-readiness.ts:51-52,62,79,90 — the second default and the probe
+      research:
+        engine: none
+        sources: []
+      reasoning: Moving the default would strand files users already hold, 534 MB on the test PC. Two defaults are what drifted, so the test covers the cause. Two-way.
+    decided_by: human
+- id: TRANSCRIPT-FAILED-NO-REASON
+  title: 'A failed transcript shows only ''Failed'': the reason is saved but never reaches the API, the page or the log'
+  severity: high
+  component: api
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'The reason is stored per video in TranscriptItem.error_message (packages/core/src/avkit_core/services/transcript.py:477, :493) and goes no further. packages/api/src/avkit_api/routes/transcripts.py
+    _aggregates returns only the done count, last title and last status; _job_out passes job.error_message, which this service never fills; and no route returns items. The Transcript feature in ui/src/renderer/src/features/transcript
+    reads no error field: TranscriptPage.tsx:122 shows ''Last: <title> <status>''. services/transcript.py has no log.error or log.warning, so the Console shows nothing either, and transcript-help-content.ts:15-17
+    covers Requeue only. A video with no captions is silent too: the adapter returns None and the item becomes Skipped with no reason (services/transcript.py:501-503). The stored text is the library''s
+    multi-paragraph message, which points at the library''s own README for proxies, so it needs a short av-kit wording rather than a pass-through.'
+  blast_radius: 'Measured on the published RC1 on the maintainer''s test PC on 2026-11-04: a job for a public video with English captions (VSU9VjZFoLI) ended Failed after 96 s, with error_message null and
+    last_item_status Failed from GET /transcripts, and empty raw and compiled folders. A second video failed the same way. The reason was found only by scanning the database file''s bytes. Every Transcript
+    user is affected: they cannot tell a YouTube block from a bug or from a video with no captions. The published notes (docs/releases/v0.1.0-rc.1.md:56-57) tell users what to do ''If you see that message'',
+    and the app never shows it. docs/releases/publish-checklist-v0.1.0-rc.1.md:171 already says the page does not show which. The gap costs more because, by design, one failed video keeps a whole channel
+    job from compiling (docs/build-plan/03-service-layer.md:236).'
+  resolution_path: 'Proposed for triage, not approved: map each failure to a short av-kit message (blocked by YouTube, so try later or on another network; no captions; video unavailable; anything else,
+    with its reason), return it from the API, show it on the job card and log it. Give Skipped the same treatment. Done when a blocked job''s card states the reason and the Console has a matching line.'
+  category: MEU-NEW
+  priority: P2
+  related:
+  - YOUTUBE-CAPTIONS-IP-BLOCK
+  - TRANSCRIPT-BLOCK-KEEPS-REQUESTING
+  - CONSOLE-FAILURE-DETAIL-LOST
+  verification:
+    last_checked: '2026-11-04'
+  meu_links:
+  - MEU-11
+  - MEU-16
+  - MEU-21
+  - MEU-115
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-218
+      stage: triage
+      question: How does a failed or skipped video's reason reach the user?
+      resolution: autonomous
+      class: two-way
+      chosen: Map each cause to a short av-kit message (blocked, no captions, unavailable, other with its reason). Return it from the API, show it on the job card and log it. Skipped gets the same treatment.
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/known-issues.yaml TTS-GENERATE-FAILED-SILENT D-3 — log the failure and render the job's error in the page's error slot
+      - AGENTS.md §Code Quality — structured logging, handle all errors
+      research:
+        engine: none
+        sources: []
+      reasoning: The same defect class as TTS-GENERATE-FAILED-SILENT, already decided there. Pass-through loses because the library's text points at its own README for proxies. Two-way.
+    - id: D-234
+      stage: triage
+      question: This triage proposes 12 new MEUs; run the Step 5.5 scoping review now?
+      resolution: autonomous
+      class: two-way
+      chosen: No. Run it as a separate Codex dispatch on the /session-grouping draft after Mat confirms the grouping, before the first /create-plan.
+      source_tag: Human-approved
+      precedents:
+      - '.agent/context/grouping/2026-10-17-gui-shell-and-tts-sideload-session-grouping.md D-103 — USER_EXPLICIT 2026-10-24 ''yes go ahead'': scoping review runs after Mat confirms the grouping'
+      - .agent/context/known-issues.yaml GUI-SHORTCUTS-ADVERTISED-UNBOUND D-85 — same call at the previous triage
+      research:
+        engine: none
+        sources: []
+      reasoning: The MEUs have no build-plan sections yet, so a reviewer has nothing to score them against. The workflow's literal trigger is met; D-103 settles the timing.
+    decided_by: agent
+- id: TRANSCRIPT-BLOCK-KEEPS-REQUESTING
+  title: A channel job keeps requesting captions after YouTube refuses, and the Requests per hour setting does nothing
+  severity: medium
+  component: core
+  status: open
+  discovered: '2026-11-04'
+  root_cause: The loop at packages/core/src/avkit_core/services/transcript.py:415-426 goes on to the next video after a failure. _fetch_item gives each blocked video up to max_retries attempts at a fixed
+    retry_delay (:472-488), and nothing carries the block over to the next video. Separately, transcript.requests_per_hour has a Settings control (ui/src/renderer/src/features/settings/SettingsPage.tsx:740),
+    a schema and an MCP setting, but no service reads it (git grep over packages, ui/src and mcp-server/src).
+  blast_radius: 'Read from the code and calculated from the defaults, not measured: during a block, a 100-video channel makes 300 attempts over about 2.75 hours (100 x (3 x 30 s + 6 s), plus one 300 s batch
+    pause) before ending Failed with nothing to show. Whether those requests prolong a block is not known. The default pacing does match the setting''s default (6 s apart with a 300 s pause after 50 is
+    about 300 videos an hour), but changing the setting has no effect, so a user who lowers it to stay under a limit is not protected.'
+  resolution_path: 'Proposed for triage, not approved: on a block, stop the run or hold it with a growing wait, and leave the remaining videos pending for a later retry. Either enforce requests_per_hour
+    or remove its control.'
+  category: MEU-NEW
+  priority: P3
+  related:
+  - YOUTUBE-CAPTIONS-IP-BLOCK
+  - TRANSCRIPT-FAILED-NO-REASON
+  verification:
+    last_checked: '2026-11-04'
+  meu_links:
+  - MEU-11
+  - MEU-116
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-219
+      stage: triage
+      question: What does a run do once YouTube blocks it?
+      resolution: autonomous
+      class: two-way
+      chosen: 'When one video exhausts max_retries on TranscriptRetryableError, stop the run: that video and the rest stay Pending and the job goes Paused with the reason. No growing wait and no new number.'
+      source_tag: Research-backed
+      precedents:
+      - docs/build-plan/03-service-layer.md:236 — one failed video keeps a whole channel job from compiling, so Pending keeps the job recoverable
+      - 'docs/build-plan/03-service-layer.md:227 — the spec''s pause path: job.status = Paused; runtime = Paused; return'
+      research:
+        engine: exa
+        sources:
+        - https://github.com/jdepoix/youtube-transcript-api — 'Same can happen to the IP of your self-hosted solution, if you are doing too many requests'
+        - 'https://transcriptapi.io/youtube-transcript-api-blocked — a block is per address: ''Not from this IP'' (proxy vendor)'
+        - https://videotranscriber.ai/blog/youtube-transcript-api-not-working — 'No amount of retrying from the same server IP' (transcript vendor)
+        - https://github.com/github/copilot-cli/issues/2760 — a long-wait 429 is effectively a stop signal
+        - https://developer.nylas.com/docs/cookbook/use-cases/build/handle-rate-limit-errors — stop or back off on repeated rate-limit answers
+      reasoning: That error only means a block (RETRYABLE_ERRORS at transcript/adapter.py:21), so the next video would meet the same answer. The Processing to Paused to Processing edge and _pause_parent
+        already exist (domain/transcript.py:26-35, services/transcript.py:577). A growing wait loses because it adds a tuning number and keeps asking. Several sources are vendors. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
+    - id: D-220
+      stage: triage
+      question: Enforce transcript.requests_per_hour or remove its control?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Enforce it as a rolling cap over real requests. Default behaviour does not change: 6 s apart with a 300 s pause after 50 is already about 300 an hour.'
+      source_tag: Local Canon
+      precedents:
+      - _inspiration/_transcript_pseudo_logic.md:69 — 'Target request rate cap'
+      - docs/build-plan/06-gui.md:1052 — setting with default 300
+      - docs/build-plan/11-page-layout.md:331 — a Transcript number on Settings
+      research:
+        engine: none
+        sources: []
+      reasoning: Canon defines it as the request rate cap and it is a public setting in the GUI, schema and MCP. Removal would drop a documented setting. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
+    decided_by: agent
+- id: CONSOLE-FAILURE-DETAIL-LOST
+  title: 'Failure details get lost: the Console ring clears on close, and it and console.log keep neither the model nor the error text'
+  severity: low
+  component: core
+  status: open
+  discovered: '2026-11-04'
+  root_cause: Console events live in an in-memory ring (packages/core/src/avkit_core/services/health.py:95), and app.log_to_file defaults to False (packages/core/src/avkit_core/services/settings.py:78).
+    The ring message and console.log keep only CONSOLE_FIELDS (job_id, error, request_id, route; health.py:42), and error holds the exception's class name. A failed load therefore reads 'tts.load_failed
+    error=ModelLoadError', without its variant_id, device or text.
+  blast_radius: 'Measured on the maintainer''s test PC on 2026-11-04: all six failed loads read that way in GET /health/console, so only the two fuller lines the maintainer copied from the app could be
+    tied to a model. The file log on that PC starts after those failures, so it holds none of them. A failure report made after closing the app has no evidence behind it.'
+  resolution_path: 'Proposed for triage, not approved: add the model and the error text to the kept fields, after checking that redaction still holds, and decide whether errors always go to a file.'
+  category: TECH-DEBT
+  priority: P4
+  related:
+  - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
+  - TRANSCRIPT-FAILED-NO-REASON
+  verification:
+    last_checked: '2026-11-04'
+  meu_links:
+  - MEU-27
+  - MEU-115
+  notes: 'Triage 2026-11-04: Rider on TRANSCRIPT-FAILED-NO-REASON, which adds the log lines this issue would truncate.'
+- id: CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
+  title: 'Audio extract reads its stream index two ways: AAC from a normal video comes out as .mka, and All audio streams targets the wrong tracks'
+  severity: medium
+  component: core
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'packages/infrastructure/src/avkit_infra/media/adapter.py:634-635 passes -map a:{stream_index}, which counts audio tracks only. packages/core/src/avkit_core/services/conversion.py treats the
+    same number as ffprobe''s index across all streams (adapter.py:452): _output_ext compares it with stream.index at :386, and the All audio streams plan returns stream.index at :328. So First audio stream,
+    on a video whose stream 0 is the picture, looks up the picture''s codec, finds nothing in EXTRACT_CONTAINER_MAP and falls back to .mka. docs/build-plan/08-video-conversion.md:176,178 asks for map a:0
+    with the container from the codec table, AAC to .m4a.'
+  blast_radius: 'Measured on the published v0.1.0-rc.1 on the maintainer''s test PC on 2026-11-04: a First audio stream extract from a local .mp4 finished Done and wrote a .mka whose header names one track,
+    A_AAC, and no picture. So the audio is right and the extension is not. Measured with the shipped FFmpeg n8.1.3-27-g8dca1586f4-20261031 on a generated .mp4 with one audio track: -map a:0 exits 0, and
+    -map a:1 exits 127 with ''matches no streams''. Read from the code, not run in the app: All audio streams asks for a:1 on that file, so it should fail; on a file with two audio tracks after the picture
+    it asks for a:1 and a:2, which would skip the first track and fail the second job. The cause of the .mka is also read from the code, since the job''s probe output was not saved.'
+  resolution_path: 'Proposed for triage, not approved: give stream_index one meaning. Audio-relative matches the adapter and the spec''s map a:0. Then look the codec up by audio position in _output_ext,
+    send audio positions from the All audio streams plan, and test both modes against a real .mp4, because the current tests stop at the command line or the request. Needs a new build.'
+  category: MEU-NEW
+  priority: P3
+  related:
+  - CONVERT-EXTRACT-ENCODER-LABEL
+  verification:
+    last_checked: '2026-11-04'
+  meu_links:
+  - MEU-29
+  - MEU-30
+  - MEU-123
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-227
+      stage: triage
+      question: What does stream_index mean?
+      resolution: autonomous
+      class: two-way
+      chosen: Audio-relative everywhere. _output_ext looks the codec up by audio position and the All audio streams plan sends audio positions. Both modes are tested against a real .mp4.
+      source_tag: Local Canon
+      precedents:
+      - docs/build-plan/08-video-conversion.md:176,178 — map a:0 with the container from the codec table
+      - packages/infrastructure/src/avkit_infra/media/adapter.py:634-635 — a:{stream_index}
+      - packages/core/src/avkit_core/services/conversion.py:328,386 — the conflicting use
+      research:
+        engine: none
+        sources: []
+      reasoning: The adapter and the spec already mean this (-map a:N), so only the service moves. The filer measured -map a:1 failing on a one-track file. Two-way.
+    decided_by: agent
+- id: UNINSTALL-LEAVES-INSTALLER-COPY
+  title: Uninstalling leaves a 340 MB copy of the installer in %LOCALAPPDATA%\av-kit-ui-updater
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-04'
+  root_cause: electron-builder 26.18.0 copies the running installer to its updater cache folder on install (ui/node_modules/app-builder-lib/templates/nsis/include/installer.nsh:93, path set in out/targets/nsis/NsisTarget.js:612),
+    and no NSIS template removes it. The customUnInstall macro in ui/build/installer.nsh deletes only the two Run registry values. ui/package.json has no electron-updater, so av-kit itself never reads the
+    copy.
+  blast_radius: 'Measured on the published v0.1.0-rc.1 on the maintainer''s test PC on 2026-11-04: after uninstalling, %LOCALAPPDATA%\av-kit-ui-updater\installer.exe is still there at 340,348,020 B with
+    the release''s SHA-256. %APPDATA%\av-kit-ui also stays (51 files, 9 MB of Chromium profile and caches), by deleteAppDataOnUninstall: false at ui/electron-builder.yml:18. docs/releases/v0.1.0-rc.1.md
+    names both in its test section since 2026-11-04 (:95-98); its uninstall paragraph at :28-30 does not. Nothing breaks; the user loses the disk space until they find the folder.'
+  resolution_path: 'Proposed for triage, not approved: delete the copy and its folder in customUnInstall, skipping the ${isUpdated} case so an in-place upgrade is untouched, and check that an upgrade still
+    works afterwards. Needs a new build. The notes already name the leftovers.'
+  category: MEU-NEW
+  priority: P4
+  related:
+  - MODELS-DIR-DOCS-AND-PROBE-MISMATCH
+  verification:
+    last_checked: '2026-11-04'
+  meu_links:
+  - MEU-25
+  - MEU-114
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-228
+      stage: triage
+      question: How does the 340 MB installer copy go away?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Delete the copy and its folder in customUnInstall, except when the uninstaller runs for an update, and check an upgrade still works on the next build. %APPDATA%\av-kit-ui stays, per deleteAppDataOnUninstall:
+        false, and the notes name it.'
+      source_tag: Local Canon
+      precedents:
+      - ui/build/installer.nsh — customUnInstall today
+      - 'ui/electron-builder.yml:18 — deleteAppDataOnUninstall: false'
+      research:
+        engine: none
+        sources: []
+      reasoning: No user data is involved and av-kit has no updater that reads the copy (no electron-updater in ui/package.json). Two-way.
+    decided_by: agent
+- id: TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS
+  title: verify --deep and discover report noise, and verify stamps last_checked without checking
+  severity: medium
+  component: infrastructure
+  status: open
+  discovered: '2026-11-04'
+  root_cause: Measured during the 2026-11-04 triage. tools/issue_triage/verify.py:192-208 treats prose in resolution_path as a file path, which gives file_missing findings. no_test_coverage fires on nearly
+    every open issue. verify.py:238-242 stamps last_checked without checking anything, so a stale method and result sit beside a fresh date. discover scans _inspiration/external_code and the mcp-server
+    bundle, and matches its own source (discover.py:25,299). tools/issue_triage/triage.py:43-48 archives only status resolved, so the dismissed TTS-VOICE-SELECT-LAYOUT-JUMP lands in triage-output.yaml's
+    actionable list, beside every TECH-DEBT, MONITORING and BLOCKED issue.
+  blast_radius: verify --deep gave 50 findings and none named a fixed issue; discover gave 14 candidates, all false. A triage has to re-read every anchor by hand, and a fresh last_checked reads as evidence
+    it is not.
+  resolution_path: 'Proposed for triage, not approved: accept only path-shaped tokens, exclude vendored and bundled trees, drop or narrow no_test_coverage, and stamp last_checked only when a check ran.'
+  category: TECH-DEBT
+  priority: P3
+  meu_links: []
+  related:
+  - issue-triage-tooling
+  verification:
+    last_checked: '2026-11-04'
+- id: LIGHT-ACCENT-BELOW-AA-CONTRAST
+  title: The light theme's accent colour puts button labels below 4.5:1 contrast
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'Worked out from the token values during the 2026-11-04 triage, not measured in the running app. ui/src/renderer/src/styles.css:97 sets light --color-accent to #0891b2 and :98 sets --color-accent-fg
+    to #ffffff. ui/src/renderer/src/components/ui/Button.tsx:15 puts white text on that colour, 3.68:1. Button.tsx:16, the default variant, puts accent text on a 12% tint of it, 3.20:1 over #ffffff and
+    2.98:1 over the page''s #f5f6fa. Labels are text-sm, so the 4.5:1 floor for normal text applies. Mat''s 2026-10-26 ruling darkened the eight light pill tokens and did not touch this one (_inspiration/zorivest/PROVENANCE.md:25).'
+  blast_radius: Light theme only; dark is the default (packages/core/src/avkit_core/services/settings.py:80). Affects 12 explicit primary buttons and every default secondary button there; SegmentedControl.tsx:44
+    uses the same pair at 15%. Nothing breaks and nobody has reported it. Queue pill labels have their own floor (docs/build-plan/10-queue-card-ui.md:122). The accent tests found pin the dark value (ui/tests/unit/chrome-zorivest.test.ts:21)
+    or the var() reference (queue-primitives.test.ts:583), not this light contrast.
+  resolution_path: 'Ruled by Mat on 2026-11-04 (D-235): --color-accent #155e75 and --color-accent-hover #164e63, as in _inspiration/zorivest/globals.css:144,146, with a look at the light theme before it
+    ships. ui/tests/unit/fixtures/queue-slot-baseline.json mentions these tokens and may need a re-baseline. Needs a new build.'
+  category: TECH-DEBT
+  priority: P4
+  meu_links:
+  - MEU-126
+  related:
+  - QUEUE-PILL-TOKEN-DRIFT
+  verification:
+    last_checked: '2026-11-04'
+  enrichment:
+    questions_asked:
+    - 'D-235: Does the light theme''s --color-accent (#0891b2) change?'
+    answers:
+    - 'D-235: the recommendation, #155e75 and #164e63'
+    decided_by: human
+    decision_log:
+    - id: D-235
+      stage: triage
+      question: Does the light theme's --color-accent (#0891b2) change? This is the current-focus candidate 'follow Zorivest as --color-accent-cyan did'.
+      resolution: human
+      class: product-preference
+      chosen: '--color-accent #155e75 and --color-accent-hover #164e63, with a look at the light theme before it ships'
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-10-10-gui-polish-residuals/human-gate-decision.md:89 — A-5 left --color-accent as it was and logged this follow-up
+      - 'docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/walkthrough.md:106 — D-91 A: Zorivest is provenance only, so following it is no reason by itself'
+      - _inspiration/zorivest/PROVENANCE.md:25 — Mat's ruling of 2026-10-26 took the darker light hexes for the eight pill tokens
+      research:
+        engine: none
+        sources: []
+      reasoning: White labels go from 3.68:1 to 7.27:1 and secondary labels from 2.98:1 to 5.63:1 on the page background, and pills and buttons share one cyan. It changes how the whole light theme looks,
+        so it is Mat's to rule. Two-way. See the Step 8 brief.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+- id: INSTALL-FOLDER-NAME-MISMATCH
+  title: The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build plan and the round-trip script say Programs\av-kit
+  severity: low
+  component: ui
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'electron-builder names a per-user one-click install folder after the package, not the product: ui/node_modules/app-builder-lib/out/targets/nsis/NsisTarget.js:270 calls getWindowsInstallationDirName(appInfo,
+    !oneClick || isPerMachine), and out/targets/targetUtil.js:40-42 returns productFilename only when that argument is true, otherwise sanitizedName. ui/electron-builder.yml sets neither oneClick nor perMachine,
+    so the folder takes ui/package.json:2 ''name: av-kit-ui'' and not ''productName: av-kit'' at ui/electron-builder.yml:2. docs/build-plan/07-distribution.md:40 and docs/execution/plans/2026-11-03-release-rc1/install-roundtrip.ps1:33
+    assume Programs\av-kit. That script installs with /D=$target at :137, so it never saw the default folder.'
+  blast_radius: 'Measured on the published v0.1.0-rc.1 on the maintainer''s test PC on 2026-11-04: the app runs from %LOCALAPPDATA%\Programs\av-kit-ui, and Programs\av-kit does not exist. Nothing breaks.
+    The notes named the wrong folder until they were corrected on 2026-11-04 (d287c55). The round-trip script''s precondition at :108 checks a folder the installer never uses, so a real leftover install
+    would not stop it.'
+  resolution_path: 'Proposed for triage, not approved: correct 07-distribution.md:40 and the script''s default to the real folder, which needs no build. Renaming the package would give Programs\av-kit but
+    needs a new build, and it would probably also move %APPDATA%\av-kit-ui and the updater folder, so check that first.'
+  category: TECH-DEBT
+  priority: P4
+  related:
+  - UNINSTALL-LEAVES-INSTALLER-COPY
+  - MODELS-DIR-DOCS-AND-PROBE-MISMATCH
+  meu_links:
+  - MEU-25
+  notes: Filed by the release session on 2026-11-04, after the triage session's intake, so triage-output.yaml does not carry it.
+  verification:
+    last_checked: '2026-11-04'
+- id: TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD
+  title: Nothing downloads the PyTorch runtime, so the PyTorch model can't run in an installed app, and Settings has no row for it
+  severity: medium
+  component: infrastructure
+  status: dismissed
+  discovered: '2026-11-04'
+  root_cause: 'The model Download button fetches one file: HF_FILE_MAP maps kokoro-pt-fp32 to kokoro-v1_0.pth (packages/infrastructure/src/avkit_infra/tts/voices.py:93), and packages/infrastructure/src/avkit_infra/model_manager/manager.py:83-87
+    downloads only that. torch and kokoro are Python packages, not model files, and the installer leaves them out on purpose (packaging/avkit-backend.spec:55-63). docs/build-plan/07-distribution.md:30 and
+    :227 name an optional extra for them, which was never built or documented. Settings > Dependencies already downloads the vocab, the spaCy model and the voice packs with a Get action (ui/src/renderer/src/features/settings/SettingsPage.tsx:1155-1171,
+    ui/src/renderer/src/features/tts/tts-assets.ts:9), and has no row for this runtime. Dev hides the gap: npm run dev runs from the repo''s .venv, which has torch 2.14.1 and kokoro 0.9.4 (ui/src/main/python-manager.ts:9).'
+  blast_radius: 'Measured from uv.lock on 2026-11-04 for Windows and Python 3.12. kokoro needs 95 packages with the misaki[en] extras, 216 MB of wheels. 38 of them are not in the local packaged backend:
+    162 MB of wheels, of which torch is 124.1 MB and transformers 13.0 MB. espeakng-loader would add 9.4 MB. 162 MB is an estimate, not a minimum: nobody has worked out what KModel needs, and a package
+    the backend bundles can still lack submodules torch expects. Unpacked in the dev venv, torch is 498 MB and transformers 56 MB. The runtime would sit outside the installer, so the 500 MB target (07-distribution.md:14,33)
+    and the packaged absence checks (:319) still hold. The PyPI Windows wheel is a CPU build (dev reports torch.cuda False), so this gives CPU PyTorch only. Nothing is blocked: ONNX FP16 generated speech
+    on the test PC, and the catalog has ONNX FP32 at the same size as PyTorch.'
+  resolution_path: 'Closed, not built. Mat ruled on 2026-11-04 to keep PyTorch out of installed builds (D-217, which reverses D-236), so nothing downloads this runtime. If it comes back, these were the
+    proposed steps, none tried: 1. Spike first: can the packaged backend import torch from a folder outside the bundle and load kokoro-v1_0.pth? Nobody has tried it. PyInstaller searches sys.path after
+    its own archive, but a native extension can still fail with ''DLL load failed''; torch adds its own lib folder itself (.venv torch/__init__.py:263). 2. Follow the spaCy pattern (packages/infrastructure/src/avkit_infra/tts/assets.py:346-368,
+    D-22): pinned wheels with the sha256 values from uv.lock, no pip, unpacked under the models directory and appended to sys.path. The set is tied to the backend''s Python (cp312) and numpy. 3. Add the
+    runtime as a Settings > Dependencies row with Get and Remove. packages/api/src/avkit_api/routes/models.py has no delete route, and this is several hundred MB on disk. 4. Starting the PyTorch model download
+    from the TTS page also fetches the runtime, so a download can''t end in a load that cannot work. 5. packages/infrastructure/src/avkit_infra/tts/adapter.py:25-29 reads torch once at import, so the load
+    has to look again after the download or ask for a restart. 6. Update 07-distribution.md:30 and :227, tts-help-content.ts, the README and packaging/THIRD_PARTY_NOTICES.md. D-237 sets what happens with
+    espeak. The misaki[ja] and [zh] extras for Japanese and Chinese voices (docs/build-plan/03-service-layer.md:447) are not covered unless Mat adds them. Needs a new installer. Done when an installed build
+    on a machine with no dev venv downloads the runtime from Settings, loads the PyTorch model, generates speech, and can remove the runtime.'
+  notes: 'Import trap, tested 2026-11-04 in the dev venv with phonemizer, espeakng_loader and misaki.espeak blocked. adapter.py:299 runs ''from kokoro import KModel'', which runs kokoro/__init__.py:23,
+    kokoro/pipeline.py:5 and misaki/espeak.py:1,3,4, so the import fails with ImportError and the app would report ''PyTorch runtime is not bundled''. The comment at adapter.py:298 says KPipeline is never
+    imported, but the package init imports it. Importing kokoro.model through a bare parent package worked with espeak still blocked, and KModel loaded kokoro-v1_0.pth: 81,810,022 parameters in 4.4 s. That
+    test covered loading only. It generated no speech and did not run in a packaged backend. Why it closed: on 2026-11-04 PyTorch gave about 1.5x CPU speed over ONNX (13.0x against 8.8x real time) with
+    the same model, for about 162 MB more to download, 600 MB on disk, a slower load and more memory. The download would have been CPU only, so it would not have delivered GPU speed. GPU speed is not filed
+    anywhere; nobody has asked for it.'
+  category: CLOSE
+  meu_links:
+  - MEU-62
+  - MEU-72
+  - MEU-73
+  related:
+  - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
+  - TTS-NON-ENGLISH-G2P-DEPS
+  - TTS-GENERATE-FAILED-SILENT
+  - TTS-PACKAGED-RUNTIME-EXCLUDED
+  - TTS-ONNX-FP16-NONFINITE-AUDIO
+  verification:
+    last_checked: '2026-11-04'
+    method: Mat's ruling
+    result: 'closed: USER_EXPLICIT 2026-11-04 ''OK we will go with pythorch remove as you originally suggested'''
+  enrichment:
+    questions_asked:
+    - 'D-236: Does the installed app get a download for the PyTorch runtime and what it needs?'
+    - 'D-237: Does ''all other dependencies'' include espeak: the GPL library that the kokoro package imports, and the eSpeak NG program?'
+    answers:
+    - 'D-236: superseded by D-217'
+    - 'D-237: no to both'
+    decided_by: human
+    decision_log:
+    - id: D-236
+      stage: triage
+      question: Does the installed app get a download for the PyTorch runtime and what it needs?
+      resolution: human
+      class: product-preference
+      chosen: Superseded by D-217 on 2026-11-04, not built. Mat first asked for the download to be filed, then chose to keep PyTorch out of installed builds
+      source_tag: Human-approved
+      precedents:
+      - 'TTS-GENERATE-FAILED-SILENT D-22 — Mat approved on 2026-09-30: managed downloads shown as Settings > Dependencies rows with a Get action, nothing bundled in the installer'
+      - docs/build-plan/07-distribution.md:30,227 — the plan already names an optional PyTorch extra, never built
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat''s request, made after asking why the PyTorch model''s download does not bring PyTorch with it. It records the direction and the filing, not an approved plan. The steps in resolution_path
+        remain proposals. Mat''s later message: ''OK we will go with pythorch remove as you originally suggested''.'
+      human_message_reference: USER_EXPLICIT 2026-11-04 'also make the download avilable in settings will all other dependencies that needs to be also filed as an issue and be part of the triage'
+    - id: D-237
+      stage: triage
+      question: 'Does ''all other dependencies'' include espeak: the GPL library that the kokoro package imports, and the eSpeak NG program?'
+      resolution: human
+      class: source-conflict
+      chosen: No to both. espeak is never downloaded or bundled, and the eSpeak NG row stays install guidance. With no runtime download, the KModel import workaround is not built
+      source_tag: Human-approved
+      precedents:
+      - 'docs/build-plan/03-service-layer.md:453 — D-61, Mat approved on 2026-10-09: espeak-ng (GPL-3.0) is never shipped in the installer or the backend bundle'
+      - 'docs/build-plan/03-service-layer.md:449 — D-71: eSpeak NG runs as a user-installed CLI subprocess'
+      - 'docs/execution/plans/2026-10-14-tts-engine-runtime/review-prompt-exec.md:41 — D-96, human: the guidance is the URL as text plus Copy link'
+      - packaging/THIRD_PARTY_NOTICES.md:7-8 — av-kit calls espeak-ng as a subprocess and never loads its library
+      research:
+        engine: exa
+        sources:
+        - https://gplv3.fsf.org/wiki/index.php/FAQ_Update — 'If modules are designed to run linked together in a shared address space, that almost surely means combining them into one program'; pipes, sockets
+          and command-line arguments normally mean separate programs. This is the FSF's view, which it says judges ultimately decide
+      reasoning: Taken literally, Mat's 'all other dependencies' includes what kokoro declares, and that pulls espeakng_loader (espeak-ng.dll, 18.8 MB unpacked, 9.4 MB wheel) and phonemizer-fork (GPLv3+
+        in its metadata) into the backend process of an MIT app (pyproject.toml:5). That conflicts with D-61's reasoning and the shipped notices, so it is Mat's to rule. The recommendation avoids the question
+        because KModel loaded without those packages in the 2026-11-04 test, though only in the dev venv and without generating speech, and the bare-parent import is not a kokoro API, so it is tied to the
+        kokoro pin. This is not legal advice. See the brief.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+- id: TTS-ONNX-FP16-NONFINITE-AUDIO
+  title: ONNX FP16 fails on some ordinary sentences with 'generated audio must be finite', and a fresh install preselects it
+  severity: high
+  component: infrastructure
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'Unknown, and not length. Measured on 2026-11-04 on CPU with onnxruntime 1.31.1 through KokoroAdapter: model_fp16.onnx (163,234,740 B, sha256 prefix ba4527a874b42b21) returned no finite samples
+    at all for some inputs, 623,400 of 623,400 on a 489-token chunk and 136,200 of 136,200 on a 95-token sentence, and did so on every run, while a 118-token sentence was fine. _as_float32_pcm (packages/infrastructure/src/avkit_infra/tts/adapter.py:148-161)
+    correctly refuses that audio, and one bad chunk fails the whole generate call (:479, :441, :160). The FP32 and INT8 files from the same pinned revision gave no failures on the same text. An older FP16
+    file (163,227,585 B) failed the same two sentences but not the chunk. Other onnxruntime versions and session options have not been tried.'
+  blast_radius: 'Measured in the dev venv on the files a fresh download gets. FP16 failed 11 of 140 sentence runs: af_heart 4/40, am_michael 2/40, af_bella 2/40, bf_emma 3/20. For a given voice the same
+    sentence fails every time. A 96-word passage failed 3 of 3 and eight shorter paragraphs passed. PyTorch FP32, ONNX FP32 and ONNX INT8 had 0 of 140 and 0 of 8. Read from the code, not run on a fresh
+    install: a fresh install preselects FP16 (defaultModelSelection, ui/src/renderer/src/features/tts/tts-controls.ts:104-117, falls back to the first row by id). FP16 did generate speech on the test PC
+    on 2026-11-04, which fits most sentences passing. Not tried: the app''s UI, the packaged backend and another PC.'
+  resolution_path: Accepted by Mat on 2026-11-04 (D-239). 1. Until the cause is known, a fresh install preselects ONNX INT8 and not FP16. Mat listens to C:/Temp/av-kit/tts-compare/listen-kokoro-onnx-int8.wav
+    first; ONNX FP32 is the alternative. 2. Look for the cause, with the failing sentences as a fixed test set. 3. If FP16 can't be made to work, what happens to the variant comes back to Mat. Needs a new
+    installer. Done when the preselected model generates the 40 test sentences and the 96-word passage on a packaged build with no failure, and the cause or the outcome for FP16 is recorded.
+  notes: 'Timing on three sentences, 12.6 s of speech, CPU: PyTorch FP32 13.0x real time, load 3.00 s, peak 1,328 MB; ONNX FP32 8.8x, load 0.67 s, peak 817 MB; ONNX INT8 8.8x, load 0.65 s, peak 583 MB;
+    FP16 failed 3 of 3. Speech length across the three working variants matched to within 0.1 s. Raw results: C:/Temp/av-kit/fp16-rate-probe.txt and fp16-nan-probe.txt, not durable.'
+  category: MEU-NEW
+  priority: P2
+  meu_links:
+  - MEU-62
+  - MEU-72
+  - MEU-121
+  related:
+  - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
+  - TTS-FAILED-LOAD-DROPS-MODEL
+  - TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD
+  verification:
+    last_checked: '2026-11-04'
+    method: 'Probe through KokoroAdapter in the dev venv with the phoneme step cached: 40 sentences on three voices, 20 on a fourth, 8 paragraphs, per variant'
+    result: FP16 11 of 140 sentence runs failed; the other three variants 0 of 140
+  enrichment:
+    questions_asked:
+    - 'D-239: Which model does a fresh install preselect while ONNX FP16 fails on some ordinary sentences?'
+    answers:
+    - 'D-239: INT8 or FP32 until the cause is known, per the recommendation Mat accepted on 2026-11-04'
+    decided_by: human
+    decision_log:
+    - id: D-239
+      stage: triage
+      question: Which model does a fresh install preselect while ONNX FP16 fails on some ordinary sentences?
+      resolution: human
+      class: product-preference
+      chosen: ONNX INT8 or ONNX FP32 until the cause is known. INT8 is the working choice, as the smallest file with the least memory. Mat listens to it first
+      source_tag: Human-approved
+      precedents:
+      - ui/src/renderer/src/features/tts/tts-controls.ts:104-117 — the fallback order that lands on FP16 today
+      - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME D-217 — Mat ruled the same day that PyTorch stays out of installed builds, which leaves only the ONNX variants
+      research:
+        engine: none
+        sources: []
+      reasoning: A user who keeps the preselected model should not hit a failure on an ordinary sentence. INT8 and FP32 had no failures in the 2026-11-04 probe and generated at the same speed. INT8 is 92
+        MB against 326 MB and peaked at 583 MB against 817 MB. Nobody has compared them by ear, so the choice between them stays with Mat's listening check.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+- id: CLOSEOUT-CHECK-REFUSES-REGISTER
+  title: The closeout check refuses known-issues.yaml as the triage tool writes it, and --decision-issue keeps only the last value
+  severity: medium
+  component: agent
+  status: open
+  discovered: '2026-11-04'
+  root_cause: 'issue_decision_log (tools/validate_closeout_artifacts.py:1480) reads known-issues.yaml with a bounded YAML grammar that refuses list items at their key''s indent and wrapped plain scalars.
+    model.save (tools/issue_triage/model.py:333-352) writes both shapes: PyYAML''s dump writes indentless lists and width=200 wraps long values. model.save rewrites the whole file, so a hand repair lasts
+    only until the next save. Separately, the check''s placeholder test refuses brace and angle-bracket text inside a log, and --decision-issue (:5556) is single-value, so repeating the flag checks only
+    the last issue.'
+  blast_radius: 'Measured 2026-11-04 with C:/Temp/av-kit/s49-issue-log-scan.py: the check refuses 64 of the 66 decision logs in the working tree and 44 of 46 at HEAD. An in-memory dump with indented lists
+    and no wrap leaves 7 refusals, all from the placeholder test: CAPTURE-FLATTEN-WITH-BACKUP, TTS-VOICE-PACK-LAZY-FETCH, MCP-TTS-GENERATE-SYNCHRONOUS, MCP-SETUP-PROMPT, QUEUE-PILL-TOKEN-DRIFT, CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
+    and UNINSTALL-LEAVES-INSTALLER-COPY (the last since reworded, D-228). Any session whose H2-2 row points the check at the register fails at the very end, after its review. Sessions 50 to 57 close issues
+    with decision logs. Plan review doesn''t reliably catch it: the parked Session 49 plan had the same row and was approved. No product code or shipped file is affected.'
+  resolution_path: 'Fixed in Session 49b, a tooling session after Session 49 and before Session 50 (D-274, Mat 2026-11-05): model.save writes indented lists without wrapping, one reformat with every parsed
+    value asserted equal, --decision-issue becomes repeatable, and the six remaining logs are reworded with the same meaning. Until then, Session 49''s D-272 writes an extract of the closed issues'' logs
+    in the reader''s grammar and runs the check once per issue.'
+  verification:
+    last_checked: '2026-11-04'
+  category: TECH-DEBT
+  priority: P3
+  related:
+  - CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
+  meu_links: []
+  notes: 'Triage 2026-11-04: Rediscovered at least four times and never tracked: docs/execution/reflections/2026-10-14-capture-chrome-reflection.md:49 (A-15 and Session 28''s A14), 2026-10-14-tts-engine-runtime-reflection.md:26,
+    2026-10-14-backend-robustness-reflection.md:120, and 2026-10-16-tts-voice-panel-reflection.md:92,98,225. Not yet in a session of the 2026-11-04 grouping.'
+  enrichment:
+    questions_asked:
+    - 'D-279: Does the closeout check''s refusal of the issue register get tracked as an issue?'
+    - 'D-274: When is the tooling fixed?'
+    answers:
+    - 'D-279: Yes, filed here'
+    - 'D-274: Session 49b, after Session 49 and before Session 50'
+    decision_log:
+    - id: D-279
+      stage: triage
+      question: Does the closeout check's refusal of the issue register get tracked as an issue?
+      resolution: autonomous
+      class: two-way
+      chosen: Yes, filed as CLOSEOUT-CHECK-REFUSES-REGISTER. When to fix it is a separate question for Mat, D-274.
+      source_tag: Local Canon
+      precedents:
+      - docs/execution/reflections/2026-11-03-release-rc1-reflection.md:45 — D-190 filed the same class of tooling defect as CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
+      - docs/execution/reflections/2026-10-14-capture-chrome-reflection.md:49 — names the triage tool and validator YAML mismatch as a missing contract
+      - docs/execution/reflections/2026-10-16-tts-voice-panel-reflection.md:225 — slim candidate on the single-value flag
+      research:
+        engine: pomera_web_search (tavily, exa)
+        sources:
+        - https://blog.codacy.com/complete-guide-to-technical-debt-tracking-for-engineering-leaders — remembering a defect is not tracking it; untracked debt compounds
+        - https://www.atlassian.com/agile/software-development/technical-debt — track debt alongside feature work
+      reasoning: 'Passes the HDP section 4 test: precedent and sources agree, filing is two-way, no product fork and no governance number. Repeated rediscovery shows that memory and reflections alone do
+        not hold it.'
+    - id: D-274
+      stage: triage
+      question: When is the tooling fixed?
+      resolution: human
+      class: governance-value
+      chosen: A tooling session, 49b, after Session 49 and before Session 50. Session 49 keeps D-272's extract
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/reflections/2026-10-14-capture-chrome-reflection.md:288 — tools/ edits were Mat's exception before (D-39)
+      - docs/execution/reflections/2026-10-16-tts-voice-panel-reflection.md:92 — D-22 repaired the form by hand, which the next model.save undoes
+      research:
+        engine: pomera_web_search (tavily, exa)
+        sources:
+        - https://pyyaml.org/wiki/PyYAMLDocumentation — the emitter's width and indent are configurable
+        - https://github.com/crdoconnor/strictyaml — a restricted YAML reader is an established pattern, so the reader need not be loosened
+      reasoning: The workaround works, so the session buys an end to a failure that otherwise arrives at the end of each of Sessions 50 to 57. Alternatives were reusing D-272 in every session, and fixing
+        it inside Session 49, which would change that plan's goal just before review.
+      human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'

@@ -523,6 +523,102 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 > - `activate_spacy_dir` tracks the `sys.path` entries it appended. On a `tts.models_directory` change it removes the old directory's entries and appends the new ones; entries it did not append are never touched (`SPACY_PATH_SWAP`, rider `TTS-SPACY-SYSPATH-STALE-DIR`).
 > - AC-98.1 to AC-98.9; AC-98.10 is the eSpeak evidence stage.
 
+<a id="transcript-failure-reason-residual"></a>
+
+## Transcript failure reason (residual)
+
+> **MEU-115.** Registered 2026-11-04 from `TRANSCRIPT-FAILED-NO-REASON`, with rider `CONSOLE-FAILURE-DETAIL-LOST`. The reason is stored per video in `TranscriptItem.error_message` (`services/transcript.py:477`) and goes no further: `_job_out` passes `job.error_message`, which this service never fills, no route returns items, and the service logs nothing. A video with no captions is silent too. The adapter returns `None` for both `TranscriptsDisabled` and `VideoUnavailable` (`NONE_ERRORS`), so today the port can't tell them apart.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Causes | Each failure or skip maps to one short av-kit message: blocked, no captions, unavailable, or other with its reason. The blocked message names a next step: try later or on another network. The library's own multi-paragraph text is not shown. | Local Canon: triage D-218 |
+| Port | The transcript port reports the cause, so no captions and unavailable are told apart. | Local Canon: triage D-218 |
+| API | The job the API returns carries the message when its last item failed or was skipped. A job ending `Failed` fills `error_message`. | Local Canon: triage D-218 |
+| Card | The Transcript job card states the message. | Local Canon: triage D-218 |
+| Log | Each failure or skip logs one line with the same message, so the Console has a line that matches the card. | Local Canon: triage D-218 |
+| Console fields (rider) | The Console ring and `console.log` keep the model and the error text, after checking that redaction still holds. Whether errors always go to a file comes to Mat as a Decision Brief in the plan. | Local Canon: known issue `CONSOLE-FAILURE-DETAIL-LOST`; grouping D-247 |
+| Done | A blocked job's card states the reason and the Console has a matching line. | Local Canon: triage D-218 |
+| Tests | Unit for each cause, with no real network; a contract test for the route; a renderer test for the card; a redaction test for the kept fields. | Local Canon |
+
+<a id="transcript-block-stop-residual"></a>
+
+## Transcript block stop (residual)
+
+> **MEU-116.** Registered 2026-11-04 from `TRANSCRIPT-BLOCK-KEEPS-REQUESTING`. `_run_parent` (`services/transcript.py:415-426`) goes on to the next video after a failure, so a block is retried `max_retries` times per video. Calculated from the defaults, not measured: a 100-video channel makes 300 attempts over about 2.75 hours. `transcript.requests_per_hour` has a Settings control, a schema and an MCP setting, and no service reads it.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Stop on block | When one video exhausts `max_retries` on `TranscriptRetryableError`, the run stops. That video and the rest stay `Pending`, and the job goes `Paused` with the reason. No growing wait and no new number. | Research-backed: triage D-219 |
+| Resume | `resume_processing` picks up the `Pending` videos, as it does after any pause. | Spec §TranscriptService |
+| Other failures | A failure that isn't a block ends that video `Failed` and the run goes on, as the run loop does today. | Spec §TranscriptService |
+| Rate cap | `transcript.requests_per_hour` is enforced as a rolling cap over real requests. Default behaviour doesn't change: 6 s apart with a 300 s pause after 50 is already about 300 an hour. | Local Canon: triage D-220 |
+| Tests | Unit with a fake port and clock: a block on the first video makes `max_retries` attempts and no request for the next video, then the job reads `Paused` with the reason; resume finishes the rest; a lowered cap delays the next request and the default cap delays nothing. | Local Canon |
+
+<a id="tts-build-capability-residual"></a>
+
+## TTS build capability (residual)
+
+> **MEU-117.** Registered 2026-11-04 from `TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME`. The installed backend has no torch or kokoro, so `_load_pytorch` (`tts/adapter.py:292-296`) always raises "PyTorch runtime is not bundled", yet `/models/available` offers the variant and `POST /models/download` fetches 327 MB for it. Mat ruled D-217 on 2026-11-04, which supersedes D-236 and closes `TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD`.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Capability | Whether a variant can run comes from whether its runtime imports in this process, from the same adapter that reports `DEVICE_PROBE`. Torch without kokoro counts as unavailable. | Human-approved: triage D-217 |
+| Listed | `GET /models/available` still lists every seeded variant. A variant this build can't run has `available: false` and a `reason` that names a next step, such as choosing an ONNX model. `ModelVariantOut` in 04 gains the two fields. | Human-approved: triage D-217; same shape as the Voice availability rule in [§TTS language runtime](#tts-language-runtime-residual) |
+| Refused | `POST /models/download` for that variant answers 409 before any download starts. | Human-approved: triage D-217 |
+| Page | The TTS page shows the row disabled with the reason, and `defaultModelSelection` skips it. | Human-approved: triage D-217 |
+| Existing file | A PyTorch file already on disk stays there and is listed disabled. There is no delete route. | Human-approved: triage D-217 |
+| Load | `POST /models/load` of that variant keeps its 422, and its message carries the same reason. | Local Canon: 01 §Domain errors (`ModelLoadError`) |
+| Dev | `npm run dev`, which runs the repo's `.venv` with torch, keeps loading and generating with the variant. | Human-approved: triage D-217 |
+| MCP | `avkit_models` actions `available` and `download` read the same routes, so MCP gets the same fields and the same 409. | Local Canon: `mcp-server/src/toolsets/models.ts` |
+| Not built | No bundled torch, no runtime download and no `KModel` import workaround. espeak is never downloaded or bundled. | Human-approved: triage D-217, D-237 |
+| Done | An installed build cannot start the download of a model it cannot load, and the dev venv still loads and generates with it. | Human-approved: triage D-217 |
+| Tests | Unit with the runtime present and absent; a contract test for the listed fields and the 409, with no job and no file written; a renderer test for the disabled row and the selection; the packaged smoke checks the 409 on a real build. | Local Canon |
+
+<a id="tts-load-keeps-model-residual"></a>
+
+## TTS load keeps the current model (residual)
+
+> **MEU-119.** Registered 2026-11-04 from `TTS-FAILED-LOAD-DROPS-MODEL`. `load_model` calls `self.unload_model()` first (`tts/adapter.py:251`), before it checks the weight path, the device or the runtime, so any failed load leaves nothing loaded.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Order | `load_model` checks the weight path, the device and the runtime before `unload_model`. No load-before-unload. | Local Canon: triage D-221 |
+| Failed check | Load A, fail a load of B on one of those checks, and status still shows A. | Local Canon: triage D-221 |
+| After the unload | A failure after the unload, while building the model or session, still leaves nothing loaded on `cpu`. | Local Canon: triage D-221 (no load-before-unload); MEU-75 AC-75.4, AC-75.5 |
+| Amended expectation | `test_ac_75_9_raising_probe_or_vocab_is_model_load_error_neg` (`tests/integration/test_tts_device_resolution.py:616-640`) loads a model, fails the device probe and asserts nothing is loaded. D-221 reverses that for a failed check, and the docstring at `tts/adapter.py:241-243` says the same. The plan names both as an amended expectation, as AGENTS §Testing requires. Independent review approved this one amendment on 2026-11-04 (grouping scoping review, round 1). It keeps the `ModelLoadError`, cause, logging and path-redaction assertions; the vocab branch at `:641-653` starts unloaded and needs no change. | Local Canon: triage D-221; AGENTS |
+| Open for the plan | `test_ac_75_9_engine_import_failure_is_model_load_error_neg` (`:735-752`) asserts nothing is loaded after an engine import fails. If the runtime check above moves those imports before the unload, that test conflicts with Failed check. The review's approval doesn't cover it, so the plan names how it's handled and takes that to independent review or Mat before changing it. | Local Canon: AGENTS; grouping scoping review, round 1 |
+| Tests | Unit: load A, then fail B on the missing weight, the failing probe and the missing runtime, with status showing A each time and no unload called; a constructor failure still reads unloaded; a contract test for `/models/load` then `/models/status`. | Local Canon |
+
+<a id="tts-onnx-fp16-audio-residual"></a>
+
+## TTS ONNX FP16 audio (residual)
+
+> **MEU-121.** Registered 2026-11-04 from `TTS-ONNX-FP16-NONFINITE-AUDIO`. FP16 returned no finite samples on 11 of 140 sentence runs, measured in the dev venv on the files a fresh download gets. `_as_float32_pcm` correctly refuses that audio (`tts/adapter.py:148-161`), so the whole generate call fails. FP32 and INT8 from the same pinned revision had no failures. The cause is unknown and isn't length. A fresh install preselects FP16 only through catalog order (`tts-controls.ts:104-121`); that was read from the code, not run on a fresh install.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Preselection | Until the cause is known, a fresh install preselects ONNX INT8 and not FP16: where the selection falls back by catalog order, INT8 comes first. ONNX FP32 is the alternative. | Human-approved: triage D-239 |
+| Listening check | Mat listens to the INT8 sample before this ships. | Human-approved: triage D-239 |
+| Cause | Look for the cause, with the failing sentences as a fixed test set. | Human-approved: triage D-239 |
+| Test set | The sentences, the 96-word passage and the probe go in the plan folder, because `C:/Temp` isn't durable. | Local Canon: known issue `TTS-ONNX-FP16-NONFINITE-AUDIO` notes |
+| FP16 outcome | If FP16 can't be made to work, what happens to the variant comes back to Mat. Nothing here removes or disables it. | Human-approved: triage D-239 |
+| Done | The preselected model generates the 40 test sentences and the 96-word passage on a packaged build with no failure, and the cause or the outcome for FP16 is recorded. | Human-approved: triage D-239 |
+| Tests | Renderer unit for `defaultModelSelection`, with nothing downloaded and with several rows downloaded; the packaged check above. | Local Canon |
+
+<a id="transcript-source-metadata-residual"></a>
+
+## Transcript source metadata (residual)
+
+> **MEU-122.** Registered 2026-11-04 from `TRANSCRIPT-TITLE-IS-VIDEO-ID` and `TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME`, one MEU because both come from one enumeration (grouping D-241). `FetchedTranscript` has no title, so the adapter's fallback to the video ID always wins (`transcript/adapter.py:42-44`). `add_channel` uses `info.title` as the channel name (`services/transcript.py:137,151`), which for a channel's videos tab is the tab's playlist title. `add_channel` already runs a flat enumeration and keeps only the IDs (`extract_video_ids`).
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Title | Each video's title comes from the flat enumeration `add_channel` already runs and is stored per item, with no extra request per video. The video ID stays as the fallback only. | Local Canon: triage D-223 |
+| Stored title | Fetching an item keeps its stored title rather than replacing it with the result's (`services/transcript.py:516`). | Local Canon: triage D-223 |
+| Channel name | `channel_name` comes from the same enumeration, falling back to today's title. | Local Canon: triage D-224 |
+| Slug | The existing output folder slug stays unchanged. | Local Canon: triage D-224 |
+| Tests | Unit with fake enumeration output: titles are stored and reach the files and the compiled headings; a missing title falls back to the ID; a missing channel falls back to today's title; the slug is unchanged; the fake counts no extra request. | Local Canon |
+
 ## What this layer must not do
 
 | Forbidden | Why |

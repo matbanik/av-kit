@@ -122,7 +122,7 @@ archived:
       - ui/src/renderer/src/components/layout/Header.tsx — palette button opens CommandPalette, not Settings
       research:
         engine: web_search
-        sources: &id001
+        sources:
         - https://w3.org/WAI/ARIA/apg/patterns/button — toggle = aria-pressed, constant label
         - https://lightningdesignsystem.com/accessibility/patterns/togglebutton — pressed state via background + aria-pressed
       reasoning: APG/SLDS/EUI agree on aria-pressed + background; the label fix removes a wrong affordance. Two-way.
@@ -294,7 +294,9 @@ archived:
       - ui/src/renderer/src/features/capture/CaptureViewport.tsx capture-chrome-tools — overflow-x-auto row
       research:
         engine: web_search
-        sources: *id001
+        sources:
+        - https://w3.org/WAI/ARIA/apg/patterns/button — toggle = aria-pressed, constant label
+        - https://lightningdesignsystem.com/accessibility/patterns/togglebutton — pressed state via background + aria-pressed
       reasoning: Contextual options bars are the image-editor norm; removes overflow without hiding functions. Two-way.
 - id: CAPTURE-FLATTEN-WITH-BACKUP
   title: 'Capture: no way to permanently apply (flatten) annotations to the image with an automatic backup'
@@ -589,6 +591,14 @@ archived:
   status: resolved
   category: TECH-DEBT
   priority: P4
+  enrichment: null
+- id: MCP-PACKAGED-ENTRY-UNREACHABLE
+  title: 'Installed MCP server likely never serves: entry guard misses resources/mcp-server/index.js and dist ships without node_modules'
+  severity: medium
+  component: mcp-server
+  status: resolved
+  category: MEU-NEW
+  priority: P2
   enrichment: null
 - id: MCP-TOOLS-LIST-EMPTY-INPUT-SCHEMA
   title: tools/list advertises an empty inputSchema for all 8 compound tools, so IDE clients see no parameters (not even action)
@@ -957,6 +967,203 @@ archived:
         engine: none
         sources: []
       reasoning: Same reconciliation rule already applied to originals. Two-way.
+- id: MCP-SETUP-PROMPT
+  title: Settings MCP setup is a hidden env-only clipboard copy; needs a viewable, universal IDE/TUI setup prompt
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-46
+      stage: triage
+      question: Replace the hidden env-only copy with a viewable setup prompt?
+      resolution: human
+      class: product-preference
+      chosen: 'Yes: a prompt shown in Settings that follows Claude Code practice and that other agents can apply to other IDE/TUI clients'
+      source_tag: Human-approved
+      precedents: []
+      research:
+        engine: none
+        sources: []
+      reasoning: The user stated the requirement; no fork remains.
+      human_message_reference: 'USER_EXPLICIT 2026-10-03 FLATTEN_LOOK F8, relayed by the local agent (known-issues root_cause: ''a prompt shown in Settings that follows Claude Code best practice and that
+        other agents can apply to other IDE and TUI platforms'')'
+    - id: D-47
+      stage: triage
+      question: Shape of the prompt
+      resolution: autonomous
+      class: two-way
+      chosen: Settings MCP card shows the prompt with the server command/path and per-client placement (project .mcp.json mcpServers for Claude Code/Cursor/Claude Desktop/Windsurf; .vscode/mcp.json servers+type
+        stdio for VS Code) using ${AVKIT_API_TOKEN} expansion; the real token is injected only by the main process on Copy and never enters the renderer
+      source_tag: Local Canon
+      precedents:
+      - ui/src/main/ipc.ts copy-mcp-config — token stays out of the renderer
+      - known-issues MCP-SETUP-PROMPT root_cause — Claude Code docs research 2026-10-03 (.mcp.json scope, mcpServers vs servers shapes, ${VAR} expansion)
+      research:
+        engine: none
+        sources: []
+      reasoning: Research in the issue converges on project .mcp.json + ${VAR}; keeping the token in main preserves the existing security boundary. Two-way.
+    - id: D-48
+      stage: triage
+      question: Which config scope does the setup prompt write by default?
+      resolution: human
+      class: source-conflict
+      chosen: User scope by default (claude mcp add --scope user, and each other client's global config); a project .mcp.json block is offered as a 'this repo only' option. Supersedes the project-scope
+        part of D-47.
+      source_tag: Human-approved
+      precedents:
+      - known-issues MCP-SETUP-PROMPT root_cause — F8 failure was a local-scope entry keyed to 'P:/av-kit' read as 'p:/av-kit'
+      - ~/.claude.json probe 2026-10-16 (C:/Temp/av-kit/mcp71-hdp/l1-claude-json-scopes.txt) — separate 'p:/av-kit' and 'P:/av-kit' project keys; the VS Code extension session loaded serena, zorivest and
+        pomera, which exist only in top-level mcpServers
+      - p:/zorivest MEU-747 / synthesis Band A — chose user scope
+      research:
+        engine: tavily
+        sources:
+        - https://code.claude.com/docs/en/mcp-quickstart — use --scope user for a server that is not tied to a project
+        - https://github.com/anthropics/claude-code/issues/18122 — drive-letter case creates duplicate project keys, so MCP servers do not load
+        - https://github.com/anthropics/claude-code/issues/46586 — the VS Code extension and the CLI disagree on drive-letter case
+      reasoning: av-kit is a desktop tool, not a repo artifact. User scope cannot hit the path-case bug, and a committed .mcp.json would carry machine-specific absolute paths. The root_cause (a) claim that
+        the extension ignores user scope did not reproduce (local probe). Local scope reproduces F8. Accepted cost - av-kit tools load in every project.
+      human_message_reference: USER_EXPLICIT 2026-10-16 'accept all'
+    - id: D-49
+      stage: triage
+      question: Does any setup-prompt block carry the token or a ${AVKIT_API_TOKEN} expansion?
+      resolution: autonomous
+      class: two-way
+      chosen: No token in any block; the server reads {app_data}/mcp-token.txt itself; AVKIT_APP_DATA is emitted only when not the default; a regex test with a fixture token. The existing Copy MCP config
+        and Pin buttons are unchanged. Supersedes the ${VAR}/inject-on-Copy part of D-47 for the prompt only.
+      source_tag: Research-backed
+      precedents:
+      - mcp-server/src/config.ts:162-170 — the token falls back to mcp-token.txt when the env var is unset
+      - docs/build-plan/06-gui.md:112 — the renderer never receives the token
+      - p5 reflection RULE-1 — public MCP text redacts every token source
+      - docs/build-plan/05-mcp-server.md:298 — the audit runner consumes copyMcpConfig env, so the button stays
+      research:
+        engine: tavily
+        sources:
+        - https://www.gmicloud.ai/en/blog/mcp-server-security-why-api-keys-in-config-files-are-a-liability — plaintext keys in config files are readable by agents
+        - https://scalar.com/learn/mcp/mcp-server-configuration — read credentials from the environment; never commit literals
+        - p:/zorivest AC-747.7 / A-11 — tokens never pass through chat
+      reasoning: A file the server already reads beats both a literal token and ${VAR} expansion (which still needs the user to set an env var). Two-way.
+    - id: D-50
+      stage: triage
+      question: What command does the prompt emit to start the MCP server?
+      resolution: human
+      class: product-preference
+      chosen: The app's own executable (process.execPath) with ELECTRON_RUN_AS_NODE=1 in env and the server path in args, in dev and packaged modes; MEU-71 also fixes the mcp-server/src/index.ts:31-34 entry
+        guard. The brief's clause 'MEU-72 keeps the dependency fix' was void when accepted (MEU-72 closed 2026-10-16 with that fix out of scope, 2026-10-14-tts-engine-runtime implementation-plan.md:418);
+        the owner of packaged dependency presence is grouping D-56 (open).
+      source_tag: Human-approved
+      precedents:
+      - known-issues MCP-PACKAGED-ENTRY-UNREACHABLE — Session 32 MCP_ENTRY_PROBE unreachable (ERR_MODULE_NOT_FOUND)
+      - p:/zorivest L-5 / A-13 — app executable + ELECTRON_RUN_AS_NODE; no npx or bare node
+      research:
+        engine: tavily
+        sources:
+        - https://github.com/wanderingstan/vibeconf-app/issues/27 — bare node in a packaged app's MCP config fails silently on machines without Node; fixed with process.execPath + ELECTRON_RUN_AS_NODE,
+          verified under a minimal PATH
+        - https://github.com/modelcontextprotocol/mcpb/issues/89 — Claude Desktop extensions bundle their runtime; system Node cannot be assumed
+        - https://forum.cursor.com/t/mcp-stdio-command-with-spaces-in-path-broken-on-windows-cmd-splits-at-space-same-mcp-json-works-in-vs-code/160842 — keep the path in args, not in command
+      reasoning: One code path, no system Node, a Windows-proven precedent. ui/ configures no Electron fuses, so RunAsNode is on by default; a test pins it.
+      human_message_reference: USER_EXPLICIT 2026-10-16 'accept all'
+    - id: D-51
+      stage: triage
+      question: Which clients get blocks, in what shape?
+      resolution: autonomous
+      class: two-way
+      chosen: Claude Code, Codex (~/.codex/config.toml [mcp_servers.avkit]), Cursor, VS Code (servers + type stdio), Claude Desktop (with the MSIX path note), Windsurf (labelled community), generic last;
+        absolute command, server path in args.
+      source_tag: Research-backed
+      precedents:
+      - p:/zorivest/docs/build-plan/05n-agent-connect.md:708 — AC-747.1 harness selector with golden tests
+      - p:/zorivest synthesis A-9, A-5 — per-client shapes, MSIX-virtualized Claude Desktop path
+      research:
+        engine: tavily
+        sources:
+        - https://www.nxcode.io/resources/news/cursor-mcp-servers-complete-guide-2026 — ~/.cursor/mcp.json global, .cursor/mcp.json project
+        - https://forum.cursor.com/t/mcp-stdio-command-with-spaces-in-path-broken-on-windows-cmd-splits-at-space-same-mcp-json-works-in-vs-code/160842 — empty args splits command on spaces on Windows
+      reasoning: Shapes are documented facts; sources and zorivest canon agree. Two-way.
+    - id: D-52
+      stage: triage
+      question: How does the prompt prove the connection?
+      resolution: autonomous
+      class: two-way
+      chosen: 'The agent calls avkit_health, reports api_base and app_data, and ends with exactly one ''RESULT: connected <api_base>'' or ''RESULT: failed (<step>, <error>)'' line; no new instance_id.'
+      source_tag: Local Canon
+      precedents:
+      - p:/zorivest AC-747.4/.6, A-6 — done means a diagnose against the intended instance
+      research:
+        engine: none
+        sources: []
+      reasoning: avkit_health already exists; an instance_id would be new API surface with no av-kit need (one instance per app_data). Two-way.
+    - id: D-53
+      stage: triage
+      question: Write safety and restart wording
+      resolution: autonomous
+      class: two-way
+      chosen: Back up to <file>.avkit-backup-<UTC> and merge, never overwrite; conditional restart line ('If the tools do not appear, quit and reopen <client>, then reply Ready').
+      source_tag: Local Canon
+      precedents:
+      - p:/zorivest AC-747.2/.3, A-10, A-12 — backup-and-merge, client-specific conditional restart
+      research:
+        engine: none
+        sources: []
+      reasoning: Directly portable; nothing av-kit-specific differs. Two-way.
+    - id: D-54
+      stage: triage
+      question: Where does the prompt live in the UI?
+      resolution: autonomous
+      class: two-way
+      chosen: Settings MCP card gets a client selector, a read-only prompt viewer and Copy prompt; copy-mcp-btn and pin-mcp-btn move under an Advanced disclosure with testids and gui-actions-index rows
+        unchanged.
+      source_tag: Local Canon
+      precedents:
+      - ui/src/renderer/src/features/settings/SettingsPage.tsx:1091-1105 — current MCP card
+      - docs/build-plan/11-page-layout.md:329 — ST row 35 testids
+      - docs/build-plan/gui-actions-index.md:92-93 — settings:copy_mcp, settings:pin_mcp
+      research:
+        engine: none
+        sources: []
+      reasoning: Keeps the D-46 viewable-prompt ruling and existing testids (regression baseline, as in AC-747.10). Two-way.
+    - id: D-57
+      stage: plan-review
+      question: Does the prompt omit AVKIT_APP_DATA when it is the default (amends D-49)?
+      resolution: autonomous
+      class: two-way
+      chosen: No. Every block emits the app's resolved AVKIT_APP_DATA (not a secret). The rest of D-49 (no token in any block) stands.
+      source_tag: Local Canon
+      precedents:
+      - ui/src/main/index.ts:150-151 — the app falls back to LOCALAPPDATA ?? <home>/AppData/Local, then av-kit
+      - mcp-server/src/config.ts:36-42 — the server uses LOCALAPPDATA only when non-blank, else ~/.avkit
+      - Codex gpt-6-astra review 2026-10-16 F1 (C:/Temp/av-kit/dispatch/mcp71-decisions-r1/final.json, not ledger-recorded) — reproduced the divergence when LOCALAPPDATA is absent
+      research:
+        engine: none
+        sources: []
+      reasoning: The two defaults diverge when a client launches the server without LOCALAPPDATA, so omission could point the server at a different descriptor and token. Emitting the path removes the dependency
+        on client env; aligning the two resolvers would also work but leaves the prompt fragile to future drift. D-49's original reasoning is kept above.
+    - id: D-58
+      stage: plan-review
+      question: Which health call proves the connection, and what does the RESULT line carry (amends D-52)?
+      resolution: autonomous
+      class: two-way
+      chosen: 'avkit_health action=dependencies must return successfully (it needs the token; any dependency availability values count). liveness alone never yields connected. The prompt ends with exactly
+        one ''RESULT: connected'' or ''RESULT: failed (<step>, <error>)'' line, where <error> is the server''s error code (for example token_missing, app_not_running). No api_base/app_data reporting: no
+        health response carries them.'
+      source_tag: Local Canon
+      precedents:
+      - packages/api/src/avkit_api/routes/health.py:27-39 — /health is unauthenticated; /health/dependencies requires the bearer token
+      - mcp-server/src/toolsets/health.ts:6 — liveness needs no token; dependencies need a token
+      - packages/api/src/avkit_api/schemas/health.py:12-54 — neither response has api_base or app_data
+      - Codex gpt-6-astra review 2026-10-16 F2 (same receipt) — liveness ok while dependencies returns token_missing
+      research:
+        engine: none
+        sources: []
+      reasoning: Only an authenticated call proves the configured entry can use the tools; reporting fields no response carries would invite the agent to invent them. D-52's original reasoning is kept above.
 - id: CAPTURE-TOOLTIPS-NOT-SHOWN
   title: No hover tooltip appears on any Capture button in the dev app
   severity: medium
@@ -1209,323 +1416,19 @@ archived:
         engine: none
         sources: []
       reasoning: The user reported the irregularity; alignment to one control height is the existing layout canon. Two-way.
-actionable:
-- id: E2E-ELECTRON-LAUNCH-FLAG
-  title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
-- id: TOOLING-SHARED-REGISTRY-COUPLING
-  title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
-  severity: medium
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P2
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-70
-      stage: triage
-      question: Does the third recurrence change this issue's priority?
-      resolution: autonomous
-      class: two-way
-      chosen: Raise to P2 and recommend the debt batch (fixture registry home) right after Session 31
-      source_tag: Local Canon
-      precedents:
-      - .agent/docs/verification-principles.md V30 — the third instance of one defect class means the defect is the mechanism
-      - Session 26 A17 and Session 30 A-12 — two earlier revalidations
-      research:
-        engine: none
-        sources: []
-      reasoning: Three recurrences in three weeks, each blocking a gate or a dispatch for reasons outside av-kit. Two-way.
-- id: TOOLING-ADOPTION-FIXTURE-LIVE-GOVERNANCE
-  title: Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the 2026-09-26 postimage
-  severity: low
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
-- id: UI-ELECTRON-LAZY-INSTALL-RACE
-  title: Electron 42 binary installs lazily on first require; parallel Vitest workers race the extraction after npm ci
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
-- id: DOWNLOAD-QUEUE-DRAG-OVER-MISS
-  title: Download-queue drag-over (A16 committed-over wait) occasionally misses on Windows
-  severity: low
-  component: ui
-  status: open
-  category: MONITORING
-  priority: P4
-  enrichment: null
-- id: CAPTURE-ZOOM-PAN-ORIGIN-FLAKE
-  title: Capture viewport AC-66.14 middle-button pan origin occasionally off under full Electron suite load
-  severity: low
-  component: ui
-  status: open
-  category: MONITORING
-  priority: P4
-  enrichment: null
-- id: MCP-PACKAGED-ENTRY-UNREACHABLE
-  title: 'Installed MCP server likely never serves: entry guard misses resources/mcp-server/index.js and dist ships without node_modules'
-  severity: medium
-  component: mcp-server
-  status: open
-  category: MEU-NEW
-  priority: P2
-  enrichment: null
-- id: MCP-AUDIT-CENSUS-PROBE-SINGLE-SHOT
-  title: MCP audit container census network proofs are single-shot, so YouTube's per-moment wall can fail a container run
-  severity: low
-  component: mcp-server
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
-- id: MCP-SETUP-PROMPT
-  title: Settings MCP setup is a hidden env-only clipboard copy; needs a viewable, universal IDE/TUI setup prompt
-  severity: medium
-  component: ui
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-46
-      stage: triage
-      question: Replace the hidden env-only copy with a viewable setup prompt?
-      resolution: human
-      class: product-preference
-      chosen: 'Yes: a prompt shown in Settings that follows Claude Code practice and that other agents can apply to other IDE/TUI clients'
-      source_tag: Human-approved
-      precedents: []
-      research:
-        engine: none
-        sources: []
-      reasoning: The user stated the requirement; no fork remains.
-      human_message_reference: 'USER_EXPLICIT 2026-10-03 FLATTEN_LOOK F8, relayed by the local agent (known-issues root_cause: ''a prompt shown in Settings that follows Claude Code best practice and that
-        other agents can apply to other IDE and TUI platforms'')'
-    - id: D-47
-      stage: triage
-      question: Shape of the prompt
-      resolution: autonomous
-      class: two-way
-      chosen: Settings MCP card shows the prompt with the server command/path and per-client placement (project .mcp.json mcpServers for Claude Code/Cursor/Claude Desktop/Windsurf; .vscode/mcp.json servers+type
-        stdio for VS Code) using ${AVKIT_API_TOKEN} expansion; the real token is injected only by the main process on Copy and never enters the renderer
-      source_tag: Local Canon
-      precedents:
-      - ui/src/main/ipc.ts copy-mcp-config — token stays out of the renderer
-      - known-issues MCP-SETUP-PROMPT root_cause — Claude Code docs research 2026-10-03 (.mcp.json scope, mcpServers vs servers shapes, ${VAR} expansion)
-      research:
-        engine: none
-        sources: []
-      reasoning: Research in the issue converges on project .mcp.json + ${VAR}; keeping the token in main preserves the existing security boundary. Two-way.
-    - id: D-48
-      stage: triage
-      question: Which config scope does the setup prompt write by default?
-      resolution: human
-      class: source-conflict
-      chosen: User scope by default (claude mcp add --scope user, and each other client's global config); a project .mcp.json block is offered as a 'this repo only' option. Supersedes the project-scope
-        part of D-47.
-      source_tag: Human-approved
-      precedents:
-      - known-issues MCP-SETUP-PROMPT root_cause — F8 failure was a local-scope entry keyed to 'P:/av-kit' read as 'p:/av-kit'
-      - ~/.claude.json probe 2026-10-16 (C:/Temp/av-kit/mcp71-hdp/l1-claude-json-scopes.txt) — separate 'p:/av-kit' and 'P:/av-kit' project keys; the VS Code extension session loaded serena, zorivest and
-        pomera, which exist only in top-level mcpServers
-      - p:/zorivest MEU-747 / synthesis Band A — chose user scope
-      research:
-        engine: tavily
-        sources:
-        - https://code.claude.com/docs/en/mcp-quickstart — use --scope user for a server that is not tied to a project
-        - https://github.com/anthropics/claude-code/issues/18122 — drive-letter case creates duplicate project keys, so MCP servers do not load
-        - https://github.com/anthropics/claude-code/issues/46586 — the VS Code extension and the CLI disagree on drive-letter case
-      reasoning: av-kit is a desktop tool, not a repo artifact. User scope cannot hit the path-case bug, and a committed .mcp.json would carry machine-specific absolute paths. The root_cause (a) claim that
-        the extension ignores user scope did not reproduce (local probe). Local scope reproduces F8. Accepted cost - av-kit tools load in every project.
-      human_message_reference: USER_EXPLICIT 2026-10-16 'accept all'
-    - id: D-49
-      stage: triage
-      question: Does any setup-prompt block carry the token or a ${AVKIT_API_TOKEN} expansion?
-      resolution: autonomous
-      class: two-way
-      chosen: No token in any block; the server reads {app_data}/mcp-token.txt itself; AVKIT_APP_DATA is emitted only when not the default; a regex test with a fixture token. The existing Copy MCP config
-        and Pin buttons are unchanged. Supersedes the ${VAR}/inject-on-Copy part of D-47 for the prompt only.
-      source_tag: Research-backed
-      precedents:
-      - mcp-server/src/config.ts:162-170 — the token falls back to mcp-token.txt when the env var is unset
-      - docs/build-plan/06-gui.md:112 — the renderer never receives the token
-      - p5 reflection RULE-1 — public MCP text redacts every token source
-      - docs/build-plan/05-mcp-server.md:298 — the audit runner consumes copyMcpConfig env, so the button stays
-      research:
-        engine: tavily
-        sources:
-        - https://www.gmicloud.ai/en/blog/mcp-server-security-why-api-keys-in-config-files-are-a-liability — plaintext keys in config files are readable by agents
-        - https://scalar.com/learn/mcp/mcp-server-configuration — read credentials from the environment; never commit literals
-        - p:/zorivest AC-747.7 / A-11 — tokens never pass through chat
-      reasoning: A file the server already reads beats both a literal token and ${VAR} expansion (which still needs the user to set an env var). Two-way.
-    - id: D-50
-      stage: triage
-      question: What command does the prompt emit to start the MCP server?
-      resolution: human
-      class: product-preference
-      chosen: The app's own executable (process.execPath) with ELECTRON_RUN_AS_NODE=1 in env and the server path in args, in dev and packaged modes; MEU-71 also fixes the mcp-server/src/index.ts:31-34 entry
-        guard. The brief's clause 'MEU-72 keeps the dependency fix' was void when accepted (MEU-72 closed 2026-10-16 with that fix out of scope, 2026-10-14-tts-engine-runtime implementation-plan.md:418);
-        the owner of packaged dependency presence is grouping D-56 (open).
-      source_tag: Human-approved
-      precedents:
-      - known-issues MCP-PACKAGED-ENTRY-UNREACHABLE — Session 32 MCP_ENTRY_PROBE unreachable (ERR_MODULE_NOT_FOUND)
-      - p:/zorivest L-5 / A-13 — app executable + ELECTRON_RUN_AS_NODE; no npx or bare node
-      research:
-        engine: tavily
-        sources:
-        - https://github.com/wanderingstan/vibeconf-app/issues/27 — bare node in a packaged app's MCP config fails silently on machines without Node; fixed with process.execPath + ELECTRON_RUN_AS_NODE,
-          verified under a minimal PATH
-        - https://github.com/modelcontextprotocol/mcpb/issues/89 — Claude Desktop extensions bundle their runtime; system Node cannot be assumed
-        - https://forum.cursor.com/t/mcp-stdio-command-with-spaces-in-path-broken-on-windows-cmd-splits-at-space-same-mcp-json-works-in-vs-code/160842 — keep the path in args, not in command
-      reasoning: One code path, no system Node, a Windows-proven precedent. ui/ configures no Electron fuses, so RunAsNode is on by default; a test pins it.
-      human_message_reference: USER_EXPLICIT 2026-10-16 'accept all'
-    - id: D-51
-      stage: triage
-      question: Which clients get blocks, in what shape?
-      resolution: autonomous
-      class: two-way
-      chosen: Claude Code, Codex (~/.codex/config.toml [mcp_servers.avkit]), Cursor, VS Code (servers + type stdio), Claude Desktop (with the MSIX path note), Windsurf (labelled community), generic last;
-        absolute command, server path in args.
-      source_tag: Research-backed
-      precedents:
-      - p:/zorivest/docs/build-plan/05n-agent-connect.md:708 — AC-747.1 harness selector with golden tests
-      - p:/zorivest synthesis A-9, A-5 — per-client shapes, MSIX-virtualized Claude Desktop path
-      research:
-        engine: tavily
-        sources:
-        - https://www.nxcode.io/resources/news/cursor-mcp-servers-complete-guide-2026 — ~/.cursor/mcp.json global, .cursor/mcp.json project
-        - https://forum.cursor.com/t/mcp-stdio-command-with-spaces-in-path-broken-on-windows-cmd-splits-at-space-same-mcp-json-works-in-vs-code/160842 — empty args splits command on spaces on Windows
-      reasoning: Shapes are documented facts; sources and zorivest canon agree. Two-way.
-    - id: D-52
-      stage: triage
-      question: How does the prompt prove the connection?
-      resolution: autonomous
-      class: two-way
-      chosen: 'The agent calls avkit_health, reports api_base and app_data, and ends with exactly one ''RESULT: connected <api_base>'' or ''RESULT: failed (<step>, <error>)'' line; no new instance_id.'
-      source_tag: Local Canon
-      precedents:
-      - p:/zorivest AC-747.4/.6, A-6 — done means a diagnose against the intended instance
-      research:
-        engine: none
-        sources: []
-      reasoning: avkit_health already exists; an instance_id would be new API surface with no av-kit need (one instance per app_data). Two-way.
-    - id: D-53
-      stage: triage
-      question: Write safety and restart wording
-      resolution: autonomous
-      class: two-way
-      chosen: Back up to <file>.avkit-backup-<UTC> and merge, never overwrite; conditional restart line ('If the tools do not appear, quit and reopen <client>, then reply Ready').
-      source_tag: Local Canon
-      precedents:
-      - p:/zorivest AC-747.2/.3, A-10, A-12 — backup-and-merge, client-specific conditional restart
-      research:
-        engine: none
-        sources: []
-      reasoning: Directly portable; nothing av-kit-specific differs. Two-way.
-    - id: D-54
-      stage: triage
-      question: Where does the prompt live in the UI?
-      resolution: autonomous
-      class: two-way
-      chosen: Settings MCP card gets a client selector, a read-only prompt viewer and Copy prompt; copy-mcp-btn and pin-mcp-btn move under an Advanced disclosure with testids and gui-actions-index rows
-        unchanged.
-      source_tag: Local Canon
-      precedents:
-      - ui/src/renderer/src/features/settings/SettingsPage.tsx:1091-1105 — current MCP card
-      - docs/build-plan/11-page-layout.md:329 — ST row 35 testids
-      - docs/build-plan/gui-actions-index.md:92-93 — settings:copy_mcp, settings:pin_mcp
-      research:
-        engine: none
-        sources: []
-      reasoning: Keeps the D-46 viewable-prompt ruling and existing testids (regression baseline, as in AC-747.10). Two-way.
-    - id: D-57
-      stage: plan-review
-      question: Does the prompt omit AVKIT_APP_DATA when it is the default (amends D-49)?
-      resolution: autonomous
-      class: two-way
-      chosen: No. Every block emits the app's resolved AVKIT_APP_DATA (not a secret). The rest of D-49 (no token in any block) stands.
-      source_tag: Local Canon
-      precedents:
-      - ui/src/main/index.ts:150-151 — the app falls back to LOCALAPPDATA ?? <home>/AppData/Local, then av-kit
-      - mcp-server/src/config.ts:36-42 — the server uses LOCALAPPDATA only when non-blank, else ~/.avkit
-      - Codex gpt-6-astra review 2026-10-16 F1 (C:/Temp/av-kit/dispatch/mcp71-decisions-r1/final.json, not ledger-recorded) — reproduced the divergence when LOCALAPPDATA is absent
-      research:
-        engine: none
-        sources: []
-      reasoning: The two defaults diverge when a client launches the server without LOCALAPPDATA, so omission could point the server at a different descriptor and token. Emitting the path removes the dependency
-        on client env; aligning the two resolvers would also work but leaves the prompt fragile to future drift. D-49's original reasoning is kept above.
-    - id: D-58
-      stage: plan-review
-      question: Which health call proves the connection, and what does the RESULT line carry (amends D-52)?
-      resolution: autonomous
-      class: two-way
-      chosen: 'avkit_health action=dependencies must return successfully (it needs the token; any dependency availability values count). liveness alone never yields connected. The prompt ends with exactly
-        one ''RESULT: connected'' or ''RESULT: failed (<step>, <error>)'' line, where <error> is the server''s error code (for example token_missing, app_not_running). No api_base/app_data reporting: no
-        health response carries them.'
-      source_tag: Local Canon
-      precedents:
-      - packages/api/src/avkit_api/routes/health.py:27-39 — /health is unauthenticated; /health/dependencies requires the bearer token
-      - mcp-server/src/toolsets/health.ts:6 — liveness needs no token; dependencies need a token
-      - packages/api/src/avkit_api/schemas/health.py:12-54 — neither response has api_base or app_data
-      - Codex gpt-6-astra review 2026-10-16 F2 (same receipt) — liveness ok while dependencies returns token_missing
-      research:
-        engine: none
-        sources: []
-      reasoning: Only an authenticated call proves the configured entry can use the tools; reporting fields no response carries would invite the agent to invent them. D-52's original reasoning is kept above.
-- id: TTS-VOICE-SELECT-LAYOUT-JUMP
-  title: TTS voice selection made the page layout jump (2026-09-30 report; recheck after MEU-64's voice combobox)
-  severity: low
-  component: ui
-  status: dismissed
-  category: null
-  priority: null
-  enrichment: null
-- id: TTS-JA-ZH-G2P-EXTRAS
-  title: Japanese and Mandarin Kokoro voices are listed but unavailable (no misaki[ja]/[zh] G2P)
-  severity: low
-  component: infrastructure
-  status: open
-  category: MEU-NEW
-  priority: P4
-  enrichment: null
 - id: FFMPEG-GPL-BUILD
   title: The installer ships a GPL-3.0 BtbN FFmpeg build (libx264/libx265)
   severity: medium
   component: infrastructure
-  status: open
+  status: resolved
   category: MEU-NEW
-  priority: P3
-  enrichment: null
-- id: TTS-ESPEAK-LIVE-PATH-UNVERIFIED
-  title: Non-English voices via the real espeak-ng CLI were never run end to end (AC-74.11)
-  severity: medium
-  component: infrastructure
-  status: open
-  category: MEU-EXPAND
   priority: P3
   enrichment: null
 - id: FFMPEG-PIN-URL-404
   title: The pinned BtbN FFmpeg release URL returns 404
   severity: low
   component: infrastructure
-  status: open
+  status: resolved
   category: BLOCKED
   priority: P3
   enrichment: null
@@ -1533,7 +1436,7 @@ actionable:
   title: The installer ships the 168 MB ffmpeg-pin.zip download archive
   severity: low
   component: infrastructure
-  status: open
+  status: resolved
   category: TECH-DEBT
   priority: P3
   enrichment: null
@@ -1541,7 +1444,7 @@ actionable:
   title: A sideloaded TTS variant is listed as downloaded but cannot be loaded (422 'model weight file is missing')
   severity: medium
   component: infrastructure
-  status: open
+  status: resolved
   category: MEU-NEW
   priority: P3
   enrichment:
@@ -1571,23 +1474,15 @@ actionable:
   title: A stale spaCy sys.path entry survives a models_directory change
   severity: low
   component: infrastructure
-  status: open
+  status: resolved
   category: TECH-DEBT
   priority: P4
-  enrichment: null
-- id: FETCH-FFMPEG-EXIT-CODES
-  title: fetch_ffmpeg_windows.ps1 exit codes 2 to 5 are never returned (Write-Error exits 1 first)
-  severity: low
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
   enrichment: null
 - id: NOTICES-SPACY-TRANSITIVE
   title: THIRD_PARTY_NOTICES omits most bundled backend dependencies (spaCy's transitive set, yt-dlp, FastAPI, numpy and others)
   severity: low
   component: infrastructure
-  status: open
+  status: resolved
   category: DOCUMENTATION
   priority: P3
   enrichment: null
@@ -1595,7 +1490,7 @@ actionable:
   title: gui-actions-audit cannot resolve a writeClipboardText settings action
   severity: low
   component: ui
-  status: open
+  status: resolved
   category: TECH-DEBT
   priority: P3
   enrichment: null
@@ -1603,7 +1498,7 @@ actionable:
   title: Zorivest MEU-662 darkened three light status-pill hexes; av-kit AC-41.3 fails until they are re-ported
   severity: medium
   component: ui
-  status: open
+  status: resolved
   category: MEU-NEW
   priority: P2
   enrichment:
@@ -1692,7 +1587,7 @@ actionable:
   title: Convert Output folder is a free-text field with no Browse; path fields bypass the PathRow standard
   severity: medium
   component: ui
-  status: open
+  status: resolved
   category: MEU-NEW
   priority: P3
   enrichment:
@@ -1721,7 +1616,7 @@ actionable:
       class: two-way
       chosen: New MEU-93 `gui-path-fields` as matrix row 6.8 under 06 §DirectoryPicker (Shared Components); batched with MEU-93 to MEU-97 as one GUI shell session
       source_tag: Local Canon
-      precedents: &id002
+      precedents:
       - 'docs/build-plan/build-priority-matrix.md:52 — row 6.7 MEU-69 gui-header-toggle-state: shell residuals land as Phase 6 rows against an 06 (residual) section'
       - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-74 — a residual goes to the phase whose build-plan file owns the behaviour, as a new MEU after the highest registered
       - docs/build-plan/06-gui.md:304-314 — palette, registry and shortcut wiring are specified in 06; 06-gui.md:1192 specifies DirectoryPicker (input + Browse)
@@ -1734,7 +1629,7 @@ actionable:
   title: 'Light theme: native dropdowns keep the dark G30 colours (#1a1a2e bg) across the app'
   severity: medium
   component: ui
-  status: open
+  status: resolved
   category: MEU-NEW
   priority: P2
   enrichment:
@@ -1767,7 +1662,10 @@ actionable:
       class: two-way
       chosen: New MEU-94 `gui-theme-reactive-selects` as matrix row 6.9 under 06 §App Shell Architecture (theme) + emerging-standards G30; batched with MEU-93 to MEU-97 as one GUI shell session
       source_tag: Local Canon
-      precedents: *id002
+      precedents:
+      - 'docs/build-plan/build-priority-matrix.md:52 — row 6.7 MEU-69 gui-header-toggle-state: shell residuals land as Phase 6 rows against an 06 (residual) section'
+      - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-74 — a residual goes to the phase whose build-plan file owns the behaviour, as a new MEU after the highest registered
+      - docs/build-plan/06-gui.md:304-314 — palette, registry and shortcut wiring are specified in 06; 06-gui.md:1192 specifies DirectoryPicker (input + Browse)
       research:
         engine: none
         sources: []
@@ -1777,7 +1675,7 @@ actionable:
   title: Ctrl+1/2/3, Ctrl+, and Ctrl+B are shown in the palette and rail but do nothing
   severity: medium
   component: ui
-  status: open
+  status: resolved
   category: MEU-NEW
   priority: P2
   enrichment:
@@ -1806,7 +1704,10 @@ actionable:
       class: two-way
       chosen: New MEU-95 `gui-shortcut-binding` as matrix row 6.10 under 06 §Command palette and action registry; batched with MEU-93 to MEU-97 as one GUI shell session
       source_tag: Local Canon
-      precedents: *id002
+      precedents:
+      - 'docs/build-plan/build-priority-matrix.md:52 — row 6.7 MEU-69 gui-header-toggle-state: shell residuals land as Phase 6 rows against an 06 (residual) section'
+      - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-74 — a residual goes to the phase whose build-plan file owns the behaviour, as a new MEU after the highest registered
+      - docs/build-plan/06-gui.md:304-314 — palette, registry and shortcut wiring are specified in 06; 06-gui.md:1192 specifies DirectoryPicker (input + Browse)
       research:
         engine: none
         sources: []
@@ -1831,7 +1732,7 @@ actionable:
   title: 'Commands palette: 40 static entries, no Appearance commands, and Clear/Cancel run without the page''s confirm'
   severity: medium
   component: ui
-  status: open
+  status: resolved
   category: MEU-NEW
   priority: P2
   enrichment:
@@ -1865,7 +1766,10 @@ actionable:
       chosen: New MEU-96 `gui-command-palette-curation` as matrix row 6.11 under 06 §Command palette and action registry + gui-actions-index.md; depends on MEU-95; batched with MEU-93 to MEU-97 as one GUI
         shell session
       source_tag: Local Canon
-      precedents: *id002
+      precedents:
+      - 'docs/build-plan/build-priority-matrix.md:52 — row 6.7 MEU-69 gui-header-toggle-state: shell residuals land as Phase 6 rows against an 06 (residual) section'
+      - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-74 — a residual goes to the phase whose build-plan file owns the behaviour, as a new MEU after the highest registered
+      - docs/build-plan/06-gui.md:304-314 — palette, registry and shortcut wiring are specified in 06; 06-gui.md:1192 specifies DirectoryPicker (input + Browse)
       research:
         engine: none
         sources: []
@@ -1908,7 +1812,7 @@ actionable:
   title: Most-used actions have no keyboard shortcut (only Ctrl+K, Ctrl+4, Ctrl+5 work today)
   severity: low
   component: ui
-  status: open
+  status: resolved
   category: MEU-NEW
   priority: P3
   enrichment:
@@ -1926,7 +1830,10 @@ actionable:
       chosen: New MEU-97 `gui-common-shortcuts` as matrix row 6.12 under 06 §Command palette and action registry + gui-actions-index.md; depends on MEU-95, MEU-96; batched with MEU-93 to MEU-97 as one GUI
         shell session
       source_tag: Local Canon
-      precedents: *id002
+      precedents:
+      - 'docs/build-plan/build-priority-matrix.md:52 — row 6.7 MEU-69 gui-header-toggle-state: shell residuals land as Phase 6 rows against an 06 (residual) section'
+      - .agent/context/known-issues.yaml QUEUE-PILL-TOKEN-DRIFT D-74 — a residual goes to the phase whose build-plan file owns the behaviour, as a new MEU after the highest registered
+      - docs/build-plan/06-gui.md:304-314 — palette, registry and shortcut wiring are specified in 06; 06-gui.md:1192 specifies DirectoryPicker (input + Browse)
       research:
         engine: none
         sources: []
@@ -1951,6 +1858,170 @@ actionable:
         - Browser convention — Ctrl+L focuses the address bar
       reasoning: Covers each page's most-used action with conventional keys; minimal leaves console/help/Browse unbound; a remappable keymap is a large feature that can follow.
       human_message_reference: AskUserQuestion 2026-10-17 'Core set (Recommended)'
+- id: PACKAGING-MCP-SNIPPET-TOKEN-STALE
+  title: test_mcp_snippet_keys (AC-25.7) still requires AVKIT_API_TOKEN in mcp.json.example, which Session 31b made token-free
+  severity: low
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: MCP-IMAGE-OVER-STDIO-LIMIT
+  title: avkit_capture image over about 7.86 MB drops the MCP connection
+  severity: high
+  component: mcp-server
+  status: resolved
+  category: null
+  priority: null
+  enrichment: null
+- id: GUI-READY-PROBE-BLOCKS-MAIN
+  title: The main window can freeze because a slow process query runs for every chunk of backend output
+  severity: high
+  component: ui
+  status: resolved
+  category: null
+  priority: null
+  enrichment: null
+- id: CONVERT-OUTPUT-DIR-MISSING
+  title: The first Convert job fails with 'ffmpeg exited 4294967294' because nothing creates the output folder
+  severity: high
+  component: infrastructure
+  status: resolved
+  category: null
+  priority: null
+  enrichment: null
+- id: MAIN-LOG-AFTER-WINDOW-DESTROYED
+  title: Backend output after the window is destroyed stops the main process behind a JavaScript error dialog
+  severity: medium
+  component: ui
+  status: resolved
+  category: null
+  priority: null
+  enrichment: null
+- id: CONVERT-JOB-GPU-PREFERENCE-IGNORED
+  title: A per-job encoder choice is ignored; only the saved setting counts
+  severity: medium
+  component: core
+  status: resolved
+  category: null
+  priority: null
+  enrichment: null
+actionable:
+- id: E2E-ELECTRON-LAUNCH-FLAG
+  title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: TOOLING-SHARED-REGISTRY-COUPLING
+  title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
+  severity: medium
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-70
+      stage: triage
+      question: Does the third recurrence change this issue's priority?
+      resolution: autonomous
+      class: two-way
+      chosen: Raise to P2 and recommend the debt batch (fixture registry home) right after Session 31
+      source_tag: Local Canon
+      precedents:
+      - .agent/docs/verification-principles.md V30 — the third instance of one defect class means the defect is the mechanism
+      - Session 26 A17 and Session 30 A-12 — two earlier revalidations
+      research:
+        engine: none
+        sources: []
+      reasoning: Three recurrences in three weeks, each blocking a gate or a dispatch for reasons outside av-kit. Two-way.
+- id: TOOLING-ADOPTION-FIXTURE-LIVE-GOVERNANCE
+  title: Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the 2026-09-26 postimage
+  severity: low
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: UI-ELECTRON-LAZY-INSTALL-RACE
+  title: Electron 42 binary installs lazily on first require; parallel Vitest workers race the extraction after npm ci
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: DOWNLOAD-QUEUE-DRAG-OVER-MISS
+  title: Download-queue drag-over (A16 committed-over wait) occasionally misses on Windows
+  severity: low
+  component: ui
+  status: open
+  category: MONITORING
+  priority: P4
+  enrichment: null
+- id: CAPTURE-ZOOM-PAN-ORIGIN-FLAKE
+  title: Capture viewport AC-66.14 middle-button pan origin occasionally off under full Electron suite load
+  severity: low
+  component: ui
+  status: open
+  category: MONITORING
+  priority: P4
+  enrichment: null
+- id: MCP-AUDIT-CENSUS-PROBE-SINGLE-SHOT
+  title: MCP audit container census network proofs are single-shot, so YouTube's per-moment wall can fail a container run
+  severity: low
+  component: mcp-server
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: TTS-VOICE-SELECT-LAYOUT-JUMP
+  title: TTS voice selection made the page layout jump (2026-09-30 report; recheck after MEU-64's voice combobox)
+  severity: low
+  component: ui
+  status: dismissed
+  category: null
+  priority: null
+  enrichment: null
+- id: TTS-ESPEAK-LIVE-PATH-UNVERIFIED
+  title: Non-English voices via the real espeak-ng CLI were never run end to end (AC-74.11)
+  severity: medium
+  component: infrastructure
+  status: open
+  category: BLOCKED
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-230
+      stage: triage
+      question: Is this new scope?
+      resolution: autonomous
+      class: two-way
+      chosen: No. Moves from MEU-EXPAND to BLOCKED P3, on Mat's eSpeak NG install and AC-74.11. MEU-74's scope reopens only if that live run fails.
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/grouping/2026-10-17-gui-shell-and-tts-sideload-session-grouping.md D-100 — a local evidence stage
+      research:
+        engine: none
+        sources: []
+      reasoning: D-100 already made this a local evidence stage. Two-way.
+    decided_by: agent
+- id: FETCH-FFMPEG-EXIT-CODES
+  title: fetch_ffmpeg_windows.ps1 exit codes 2 to 5 are never returned (Write-Error exits 1 first)
+  severity: low
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
 - id: TOOLING-TRIAGE-CLI-CP1252
   title: issue_triage.py bucket and --help crash with UnicodeEncodeError when output is redirected on Windows
   severity: low
@@ -1959,6 +2030,589 @@ actionable:
   category: TECH-DEBT
   priority: P3
   enrichment: null
+- id: CAPTURE-E2E-LAUNCH-TEARDOWN-HANG
+  title: capture-inbox Electron specs occasionally hang in launch or close under full-suite load (test and worker teardown timeouts)
+  severity: low
+  component: ui
+  status: open
+  category: MONITORING
+  priority: P4
+  enrichment: null
+- id: CAPTURE-HINT-TEST-PRESENCE-ONLY
+  title: Capture's AC-97.4 hint test checks that the shortcut props exist, not their chord values
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: BACKEND-READY-BEFORE-LISTEN
+  title: The backend prints AVKIT_READY before its socket listens, so an immediate request is refused
+  severity: low
+  component: api
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: TRANSCRIPT-TITLE-IS-VIDEO-ID
+  title: Every transcript's title is its video ID
+  severity: medium
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-223
+      stage: triage
+      question: Where does the transcript's title come from?
+      resolution: autonomous
+      class: two-way
+      chosen: From the flat enumeration add_channel already runs, stored per item, with no extra request per video. The video ID stays as the fallback only.
+      source_tag: Local Canon
+      precedents:
+      - packages/infrastructure/src/avkit_infra/transcript/adapter.py:42-44 — the fallback that always wins
+      research:
+        engine: none
+        sources: []
+      reasoning: An extra request per video would add load to the endpoint family that is rate limiting. PlaylistInfo carries only video_ids today (domain/download.py, youtube/adapter.py:203-214), so it
+        gains a field. The plan must measure which URL shapes return titles. Two-way.
+    decided_by: agent
+- id: TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME
+  title: A transcript job's channel name is the playlist's title
+  severity: low
+  component: core
+  status: open
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-224
+      stage: triage
+      question: Where does the channel name come from?
+      resolution: autonomous
+      class: two-way
+      chosen: From the same enumeration, falling back to today's title. The existing output folder slug stays unchanged.
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/transcript.py:136-138,151 and :626 — where the name is taken and written
+      research:
+        engine: none
+        sources: []
+      reasoning: A slug change would split a channel's output across two folders. Two-way.
+    decided_by: agent
+- id: TRANSCRIPT-ADD-CHANNEL-422
+  title: Adding a channel returned 422 after about 8 minutes of enumeration
+  severity: low
+  component: core
+  status: open
+  category: MONITORING
+  priority: P4
+  enrichment: null
+- id: DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
+  title: A download row shows the quality you asked for, not the quality you got
+  severity: medium
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-225
+      stage: triage
+      question: How does a row show the quality actually received?
+      resolution: autonomous
+      class: two-way
+      chosen: Store the file's real quality in a new nullable field. Show requested and received together only when they differ.
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/download.py:213,235 — only the requested preset is stored
+      - packages/infrastructure/src/avkit_infra/database/migrations.py — the migration path
+      research:
+        engine: none
+        sources: []
+      reasoning: Older rows have no measurement, so nullable keeps them truthful. Two-way.
+    decided_by: agent
+- id: TTS-DEVICE-OPTIONS-IN-CPU-BUILD
+  title: The shipped build runs text to speech on the CPU only, but its device options don't say so
+  severity: low
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-226
+      stage: triage
+      question: Which device options does a CPU build offer?
+      resolution: autonomous
+      class: two-way
+      chosen: Only what the backend reports for this build, from the same capability source as D-217. A stored value it cannot honour keeps the existing device fallback.
+      source_tag: Local Canon
+      precedents:
+      - docs/build-plan/build-priority-matrix.md 3.8 MEU-75 svc-tts-device-fallback — the fallback exists
+      - ui/src/renderer/src/features/settings/SettingsPage.tsx:62 and tts/TTSPage.tsx:274 — hard-coded options
+      research:
+        engine: none
+        sources: []
+      reasoning: Two lists of what a build can do would drift, as the models folder did. Whatever D-217 rules, this stands. Two-way.
+    decided_by: agent
+- id: TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE
+  title: The TTS progress label reads 'Segments 0/1000' whatever the text's length
+  severity: low
+  component: core
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: TTS-AUDIO-RANDOM-FILE-NAMES
+  title: Generated audio files have random ID names
+  severity: low
+  component: core
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: CONVERT-POSITIONS-NOT-RENUMBERED
+  title: Convert's queue numbers aren't renumbered
+  severity: low
+  component: core
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: CONVERT-CUT-TIME-RAW-MS
+  title: A cut job's row shows its times in raw milliseconds
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: CONVERT-EXTRACT-ENCODER-LABEL
+  title: An audio extract is labelled with a video encoder
+  severity: low
+  component: core
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: DOWNLOADER-ADVANCED-PANEL-GAP
+  title: An empty gap sits under Advanced on the Downloader page
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
+  title: validate_closeout_artifacts --selftest fails when a .agent folder sits above the temp folder
+  severity: low
+  component: agent
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: E2E-MAIN-PROCESS-ERRORS-UNWATCHED
+  title: The E2E suite does not notice an uncaught exception in the main process
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-231
+      stage: triage
+      question: RC1 is out, so what happens to the four issues deferred for it?
+      resolution: autonomous
+      class: two-way
+      chosen: E2E-MAIN-PROCESS-ERRORS-UNWATCHED to TECH-DEBT P3. SETTINGS-DRAFT-STALE-BASELINE and CONVERT-ADVANCED-EDIT-REPLACED to TECH-DEBT P4. E2E-CLIPBOARD-PRIMER-EMPTY to MONITORING P4, because its
+        cause is not established and it was seen once.
+      source_tag: Local Canon
+      precedents:
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md — D-208, filed low and listed in the notes for RC1
+      - .agent/context/current-focus.md Next steps 2
+      - .agent/context/known-issues.yaml CONVERT-JOB-GPU-PREFERENCE-IGNORED — D-212 precedent, AC-112.9
+      research:
+        engine: none
+        sources: []
+      reasoning: The DEFER was an RC1-era call and current-focus Next steps 2 lists them next. They lead the debt queue but stay below the new user-facing issues, which rank higher on the matrix. Two-way.
+    decided_by: agent
+- id: E2E-CLIPBOARD-PRIMER-EMPTY
+  title: AC-88.12's clipboard primer read an empty clipboard for 5 s once
+  severity: low
+  component: ui
+  status: open
+  category: MONITORING
+  priority: P4
+  enrichment: null
+- id: SETTINGS-DRAFT-STALE-BASELINE
+  title: An unsaved capture settings edit freezes the other capture settings at their old values
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: CONVERT-ADVANCED-EDIT-REPLACED
+  title: An Advanced edit on Convert snaps back when settings load late or the default preset changes
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: GUI-READY-CHUNK-BOUNDARY
+  title: A READY line split across output chunks can be missed, and two READY chunks publish twice
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
+  title: The installed app offers the PyTorch voice model and downloads 327 MB, but can never load it
+  severity: high
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked:
+    - 'D-217: What does a build that cannot run PyTorch do with the PyTorch model?'
+    answers:
+    - 'D-217: disabled with a reason and a 409 on download, with no runtime download'
+    decision_log:
+    - id: D-217
+      stage: triage
+      question: What does a build that cannot run PyTorch do with the PyTorch model?
+      resolution: human
+      class: product-preference
+      chosen: List it disabled with a reason in any build that can't run it, refuse its download with a 409, and correct 07-distribution.md:30 and :227. No runtime download and no bundled torch. npm run
+        dev keeps working
+      source_tag: Human-approved
+      precedents:
+      - 'docs/execution/plans/2026-10-14-tts-engine-runtime/implementation-plan.md:29 — D-70, Mat approved: JA/ZH voices stay listed but unavailable with a reason, shown disabled, generate is a 409 before
+        any job row'
+      research:
+        engine: exa
+        sources:
+        - https://www.nngroup.com/articles/drop-down-menus/ — 'Gray out any unavailable options … explaining why'
+        - https://www.smashingmagazine.com/2024/05/hidden-vs-disabled-ux/ — 'Will a given user ever be able to interact? No → Hide', which favours the alternative here
+      reasoning: 'Mat chose this on 2026-11-04 after asking what PyTorch adds over the three ONNX variants: the same Kokoro-82M model, about 1.5x on this PC''s CPU, and no PyTorch-only feature. Mat''s word
+        was ''remove'', and ''as you originally suggested'' points at the first brief''s recommendation, recorded here. The first brief argued against dropping the row, and nothing deletes the code path,
+        so dev still runs it. Disabled with a reason follows the tts-engine-runtime D-70 pattern and leaves an explanation beside a file RC1 testers already hold, since the app cannot delete it. This reverses
+        D-236.'
+      human_message_reference: USER_EXPLICIT 2026-11-04 'OK we will go with pythorch remove as you originally suggested'
+    decided_by: human
+- id: TTS-FAILED-LOAD-DROPS-MODEL
+  title: A failed model load unloads the model that was working
+  severity: medium
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-221
+      stage: triage
+      question: How does a failed load keep the current model?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Check weight path, device and runtime before unload_model. No load-before-unload. Test: load A, fail a load of B, status still shows A.'
+      source_tag: Local Canon
+      precedents:
+      - packages/infrastructure/src/avkit_infra/tts/adapter.py:251 — unload runs first today
+      research:
+        engine: none
+        sources: []
+      reasoning: The packaged build is CPU ONNX, so the GPU-memory question in the issue does not arise there. A failure after those checks can still drop the model, and the plan must state that limit.
+        Two-way.
+    decided_by: agent
+- id: MODELS-DIR-DOCS-AND-PROBE-MISMATCH
+  title: Voice models live in %USERPROFILE%\.avkit\models, but the readiness probe and checklist point at %LOCALAPPDATA%\av-kit
+  severity: medium
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked:
+    - 'D-216: When are the public RC1 notes corrected, given the uncommitted draft with the DUPER results?'
+    answers:
+    - 'D-216: follows D-215; the corrected notes are already published'
+    decision_log:
+    - id: D-216
+      stage: triage
+      question: When are the public RC1 notes corrected, given the uncommitted draft with the DUPER results?
+      resolution: human
+      class: product-preference
+      chosen: Follow D-215. The corrected notes went out on 2026-11-04 from d287c55, before this ruling. The 'your network' wording at docs/releases/v0.1.0-rc.1.md:56-57 waits for the other-network check.
+        D-215 ended with RC1 staying up, so the draft branch does not apply
+      source_tag: Human-approved
+      precedents:
+      - .agent/context/current-focus.md Next steps 1 — Mat decides whether to publish the notes
+      research:
+        engine: none
+        sources: []
+      reasoning: Publishing is outward and Mat's. The live body still says the build has not run on a clean machine and gives the wrong models path. See the Step 8 brief.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+    - id: D-222
+      stage: triage
+      question: Which models folder is right, and what changes?
+      resolution: autonomous
+      class: two-way
+      chosen: The backend default ~/.avkit/models stands. setup-readiness.ts probes that same default and stops creating an empty folder. No files move. A contract test ties the two defaults together.
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/settings.py:67 — the backend default
+      - ui/src/main/setup-readiness.ts:51-52,62,79,90 — the second default and the probe
+      research:
+        engine: none
+        sources: []
+      reasoning: Moving the default would strand files users already hold, 534 MB on the test PC. Two defaults are what drifted, so the test covers the cause. Two-way.
+    decided_by: human
+- id: TRANSCRIPT-FAILED-NO-REASON
+  title: 'A failed transcript shows only ''Failed'': the reason is saved but never reaches the API, the page or the log'
+  severity: high
+  component: api
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-218
+      stage: triage
+      question: How does a failed or skipped video's reason reach the user?
+      resolution: autonomous
+      class: two-way
+      chosen: Map each cause to a short av-kit message (blocked, no captions, unavailable, other with its reason). Return it from the API, show it on the job card and log it. Skipped gets the same treatment.
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/known-issues.yaml TTS-GENERATE-FAILED-SILENT D-3 — log the failure and render the job's error in the page's error slot
+      - AGENTS.md §Code Quality — structured logging, handle all errors
+      research:
+        engine: none
+        sources: []
+      reasoning: The same defect class as TTS-GENERATE-FAILED-SILENT, already decided there. Pass-through loses because the library's text points at its own README for proxies. Two-way.
+    - id: D-234
+      stage: triage
+      question: This triage proposes 12 new MEUs; run the Step 5.5 scoping review now?
+      resolution: autonomous
+      class: two-way
+      chosen: No. Run it as a separate Codex dispatch on the /session-grouping draft after Mat confirms the grouping, before the first /create-plan.
+      source_tag: Human-approved
+      precedents:
+      - '.agent/context/grouping/2026-10-17-gui-shell-and-tts-sideload-session-grouping.md D-103 — USER_EXPLICIT 2026-10-24 ''yes go ahead'': scoping review runs after Mat confirms the grouping'
+      - .agent/context/known-issues.yaml GUI-SHORTCUTS-ADVERTISED-UNBOUND D-85 — same call at the previous triage
+      research:
+        engine: none
+        sources: []
+      reasoning: The MEUs have no build-plan sections yet, so a reviewer has nothing to score them against. The workflow's literal trigger is met; D-103 settles the timing.
+    decided_by: agent
+- id: TRANSCRIPT-BLOCK-KEEPS-REQUESTING
+  title: A channel job keeps requesting captions after YouTube refuses, and the Requests per hour setting does nothing
+  severity: medium
+  component: core
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-219
+      stage: triage
+      question: What does a run do once YouTube blocks it?
+      resolution: autonomous
+      class: two-way
+      chosen: 'When one video exhausts max_retries on TranscriptRetryableError, stop the run: that video and the rest stay Pending and the job goes Paused with the reason. No growing wait and no new number.'
+      source_tag: Research-backed
+      precedents:
+      - docs/build-plan/03-service-layer.md:236 — one failed video keeps a whole channel job from compiling, so Pending keeps the job recoverable
+      - 'docs/build-plan/03-service-layer.md:227 — the spec''s pause path: job.status = Paused; runtime = Paused; return'
+      research:
+        engine: exa
+        sources:
+        - https://github.com/jdepoix/youtube-transcript-api — 'Same can happen to the IP of your self-hosted solution, if you are doing too many requests'
+        - 'https://transcriptapi.io/youtube-transcript-api-blocked — a block is per address: ''Not from this IP'' (proxy vendor)'
+        - https://videotranscriber.ai/blog/youtube-transcript-api-not-working — 'No amount of retrying from the same server IP' (transcript vendor)
+        - https://github.com/github/copilot-cli/issues/2760 — a long-wait 429 is effectively a stop signal
+        - https://developer.nylas.com/docs/cookbook/use-cases/build/handle-rate-limit-errors — stop or back off on repeated rate-limit answers
+      reasoning: That error only means a block (RETRYABLE_ERRORS at transcript/adapter.py:21), so the next video would meet the same answer. The Processing to Paused to Processing edge and _pause_parent
+        already exist (domain/transcript.py:26-35, services/transcript.py:577). A growing wait loses because it adds a tuning number and keeps asking. Several sources are vendors. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
+    - id: D-220
+      stage: triage
+      question: Enforce transcript.requests_per_hour or remove its control?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Enforce it as a rolling cap over real requests. Default behaviour does not change: 6 s apart with a 300 s pause after 50 is already about 300 an hour.'
+      source_tag: Local Canon
+      precedents:
+      - _inspiration/_transcript_pseudo_logic.md:69 — 'Target request rate cap'
+      - docs/build-plan/06-gui.md:1052 — setting with default 300
+      - docs/build-plan/11-page-layout.md:331 — a Transcript number on Settings
+      research:
+        engine: none
+        sources: []
+      reasoning: Canon defines it as the request rate cap and it is a public setting in the GUI, schema and MCP. Removal would drop a documented setting. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
+    decided_by: agent
+- id: CONSOLE-FAILURE-DETAIL-LOST
+  title: 'Failure details get lost: the Console ring clears on close, and it and console.log keep neither the model nor the error text'
+  severity: low
+  component: core
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
+  title: 'Audio extract reads its stream index two ways: AAC from a normal video comes out as .mka, and All audio streams targets the wrong tracks'
+  severity: medium
+  component: core
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-227
+      stage: triage
+      question: What does stream_index mean?
+      resolution: autonomous
+      class: two-way
+      chosen: Audio-relative everywhere. _output_ext looks the codec up by audio position and the All audio streams plan sends audio positions. Both modes are tested against a real .mp4.
+      source_tag: Local Canon
+      precedents:
+      - docs/build-plan/08-video-conversion.md:176,178 — map a:0 with the container from the codec table
+      - packages/infrastructure/src/avkit_infra/media/adapter.py:634-635 — a:{stream_index}
+      - packages/core/src/avkit_core/services/conversion.py:328,386 — the conflicting use
+      research:
+        engine: none
+        sources: []
+      reasoning: The adapter and the spec already mean this (-map a:N), so only the service moves. The filer measured -map a:1 failing on a one-track file. Two-way.
+    decided_by: agent
+- id: UNINSTALL-LEAVES-INSTALLER-COPY
+  title: Uninstalling leaves a 340 MB copy of the installer in %LOCALAPPDATA%\av-kit-ui-updater
+  severity: low
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-228
+      stage: triage
+      question: How does the 340 MB installer copy go away?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Delete the copy and its folder in customUnInstall, except when the uninstaller runs for an update, and check an upgrade still works on the next build. %APPDATA%\av-kit-ui stays, per deleteAppDataOnUninstall:
+        false, and the notes name it.'
+      source_tag: Local Canon
+      precedents:
+      - ui/build/installer.nsh — customUnInstall today
+      - 'ui/electron-builder.yml:18 — deleteAppDataOnUninstall: false'
+      research:
+        engine: none
+        sources: []
+      reasoning: No user data is involved and av-kit has no updater that reads the copy (no electron-updater in ui/package.json). Two-way.
+    decided_by: agent
+- id: TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS
+  title: verify --deep and discover report noise, and verify stamps last_checked without checking
+  severity: medium
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: LIGHT-ACCENT-BELOW-AA-CONTRAST
+  title: The light theme's accent colour puts button labels below 4.5:1 contrast
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked:
+    - 'D-235: Does the light theme''s --color-accent (#0891b2) change?'
+    answers:
+    - 'D-235: the recommendation, #155e75 and #164e63'
+    decided_by: human
+    decision_log:
+    - id: D-235
+      stage: triage
+      question: Does the light theme's --color-accent (#0891b2) change? This is the current-focus candidate 'follow Zorivest as --color-accent-cyan did'.
+      resolution: human
+      class: product-preference
+      chosen: '--color-accent #155e75 and --color-accent-hover #164e63, with a look at the light theme before it ships'
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-10-10-gui-polish-residuals/human-gate-decision.md:89 — A-5 left --color-accent as it was and logged this follow-up
+      - 'docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/walkthrough.md:106 — D-91 A: Zorivest is provenance only, so following it is no reason by itself'
+      - _inspiration/zorivest/PROVENANCE.md:25 — Mat's ruling of 2026-10-26 took the darker light hexes for the eight pill tokens
+      research:
+        engine: none
+        sources: []
+      reasoning: White labels go from 3.68:1 to 7.27:1 and secondary labels from 2.98:1 to 5.63:1 on the page background, and pills and buttons share one cyan. It changes how the whole light theme looks,
+        so it is Mat's to rule. Two-way. See the Step 8 brief.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+- id: INSTALL-FOLDER-NAME-MISMATCH
+  title: The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build plan and the round-trip script say Programs\av-kit
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: TTS-ONNX-FP16-NONFINITE-AUDIO
+  title: ONNX FP16 fails on some ordinary sentences with 'generated audio must be finite', and a fresh install preselects it
+  severity: high
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked:
+    - 'D-239: Which model does a fresh install preselect while ONNX FP16 fails on some ordinary sentences?'
+    answers:
+    - 'D-239: INT8 or FP32 until the cause is known, per the recommendation Mat accepted on 2026-11-04'
+    decided_by: human
+    decision_log:
+    - id: D-239
+      stage: triage
+      question: Which model does a fresh install preselect while ONNX FP16 fails on some ordinary sentences?
+      resolution: human
+      class: product-preference
+      chosen: ONNX INT8 or ONNX FP32 until the cause is known. INT8 is the working choice, as the smallest file with the least memory. Mat listens to it first
+      source_tag: Human-approved
+      precedents:
+      - ui/src/renderer/src/features/tts/tts-controls.ts:104-117 — the fallback order that lands on FP16 today
+      - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME D-217 — Mat ruled the same day that PyTorch stays out of installed builds, which leaves only the ONNX variants
+      research:
+        engine: none
+        sources: []
+      reasoning: A user who keeps the preselected model should not hit a failure on an ordinary sentence. INT8 and FP32 had no failures in the 2026-11-04 probe and generated at the same speed. INT8 is 92
+        MB against 326 MB and peaked at 583 MB against 817 MB. Nobody has compared them by ear, so the choice between them stays with Mat's listening check.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -1975,35 +2629,259 @@ deferred:
   status: mitigated
   category: UPSTREAM
   priority: P3
-  enrichment: null
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-232
+      stage: triage
+      question: The tracked upstream issue closed; does anything change?
+      resolution: autonomous
+      class: two-way
+      chosen: Track anthropics/claude-code#98256 instead. Keep DIALOG_FALLBACK and UPSTREAM P3.
+      source_tag: Research-backed
+      precedents: []
+      research:
+        engine: native
+        sources:
+        - 'https://github.com/anthropics/claude-code/issues/98256 — open: capability declared but requests auto-declined in interactive VSCode sessions'
+      reasoning: '#98978 closed as a duplicate, not fixed, and #98256 is open with the same symptom. Two-way.'
+    decided_by: agent
+- id: TTS-JA-ZH-G2P-EXTRAS
+  title: Japanese and Mandarin Kokoro voices are listed but unavailable (no misaki[ja]/[zh] G2P)
+  severity: low
+  component: infrastructure
+  status: open
+  category: DEFER
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-229
+      stage: triage
+      question: Register an MEU for the JA/ZH extras now that D-101 is ruled?
+      resolution: autonomous
+      class: two-way
+      chosen: No. Moves from MEU-NEW to DEFER P4, closing D-102's carry-forward.
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/grouping/2026-10-17-gui-shell-and-tts-sideload-session-grouping.md D-102 — leave for the next triage, after D-101
+      - docs/execution/plans/2026-10-14-tts-engine-runtime/implementation-plan.md:29 — D-70
+      research:
+        engine: none
+        sources: []
+      reasoning: D-101 removed the reason to wait, but the extras are hundreds of MB, nobody has asked for them, and D-70 already shows those voices disabled with a reason. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
+    decided_by: agent
+- id: YOUTUBE-CAPTIONS-IP-BLOCK
+  title: YouTube is blocking caption requests from the maintainer's IP
+  severity: medium
+  component: infrastructure
+  status: open
+  category: UPSTREAM
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-233
+      stage: triage
+      question: Do the priorities filed on 2026-11-04 stand against the Step 4 matrix?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Matrix applied. P1 to P2: TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME, TRANSCRIPT-FAILED-NO-REASON, YOUTUBE-CAPTIONS-IP-BLOCK. P2 to P3: TTS-FAILED-LOAD-DROPS-MODEL, MODELS-DIR-DOCS-AND-PROBE-MISMATCH,
+        TRANSCRIPT-BLOCK-KEEPS-REQUESTING, CONVERT-EXTRACT-STREAM-INDEX-MISMATCH. P3 to P4: CONSOLE-FAILURE-DETAIL-LOST, UNINSTALL-LEAVES-INSTALLER-COPY.'
+      source_tag: Local Canon
+      precedents:
+      - .agent/workflows/issue-triage.md Step 4 — priority matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: High standalone is P2 and medium standalone is P3 by the workflow's table. This caption issue is medium and blocks the live audit gate, so P2, and it rises to high and P1 if the hotspot
+        check shows a wider change. Two-way.
+    decided_by: agent
+- id: FFMPEG-LIBDVDCSS-BUNDLED
+  title: The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses it (accepted risk, D-266)
+  severity: medium
+  component: infrastructure
+  status: open
+  category: CLOSE
+  priority: P2
+  enrichment:
+    questions_asked:
+    - 'D-214: Which FFmpeg build replaces the pinned BtbN GPL build so libdvdcss leaves the package?'
+    - 'D-215: Does v0.1.0-rc.1 stay publicly downloadable until a build without libdvdcss replaces it?'
+    - 'D-266: Does FFmpeg stay the stock BtbN GPL build, with libdvdcss in it, in rc.2 and later?'
+    answers:
+    - 'D-214: superseded by D-266'
+    - 'D-215: RC1 stays up, settled by D-266'
+    - 'D-266: FFmpeg, keeping libdvdcss in rc.2: yes'
+    decision_log:
+    - id: D-214
+      stage: triage
+      question: Which FFmpeg build replaces the pinned BtbN GPL build so libdvdcss leaves the package?
+      resolution: human
+      class: one-way-door
+      chosen: Superseded by D-266 on 2026-11-04, not built. Mat first accepted this route through a blanket acceptance of a brief that offered no do-nothing option, then chose to keep FFmpeg as it is
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md:488 — D-101, Mat ruled GPL, stock BtbN month-end build, published only with complete source
+      - 'docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md:495 — D-101 brief weighed a custom minimal build: only that option shrinks the source set, but av-kit takes on a recipe, toolchain
+        and security updates'
+      research:
+        engine: exa
+        sources:
+        - https://github.com/btbn/ffmpeg-builds — README prerequisites are bash and docker; scripts.d/50-dvd at 5031c6f already returns -1 from ffbuild_enabled for LGPL variants and emits --disable-libdvdread
+          and --disable-libdvdnav
+        - https://www.gyan.dev/ffmpeg/builds — essentials list has libx264 and libx265 and no DVD library (libdvdread and libdvdnav are full-build only); GPLv3; 8.1.2 and 9.0.2 offered; the page publishes
+          no recipe for a given build
+        - https://github.com/GyanD/media-autobuild_suite — a public build suite under the same account; nothing says the published builds come from it or with which options
+        - https://www.gnu.org/licenses/gpl-3.0.txt §6(d) — offer the Corresponding Source with the object code, available 'for as long as needed'
+      reasoning: 'Only route that keeps Convert''s encoders and D-101''s definition of complete source, whose set shrinks by three dependencies. Cost: av-kit takes on a Docker build, untried. See the Step
+        8 brief. Superseded: the brief said the status quo was not an option because Mat had directed the removal. Mat''s words were ''register known issue to remove libdvdcss from the package'', which
+        registers an issue and does not rule on doing nothing. The brief also gave the update cost one clause. Mat then said: ''I thought I deceided to do nothing about FFmpeg. If we build it we will loose
+        on the updates released by ohter builders.'' The plan and its approved review stay on file for this route only.'
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+    - id: D-215
+      stage: triage
+      question: Does v0.1.0-rc.1 stay publicly downloadable until a build without libdvdcss replaces it?
+      resolution: human
+      class: one-way-door
+      chosen: RC1 stays up. No build without libdvdcss is coming. rc.2 will replace RC1 for its other fixes and carries the library too, and what happens to RC1 then stays Mat's in MEU-125's checklist
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md — D-204, Mat waived checks until public; run since, except Transcript from another network
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md:494 — D-238, Mat ruled that RC1 stays up until a new build replaces it
+      research:
+        engine: tavily
+        sources:
+        - https://www.videolan.org/legal.html — VideoLAN calls libdvdcss authorized by French decision CE 16 July 2008 n° 301843, points US readers at the Copyright Office, and says it is itself 'outside
+          US jurisdiction'
+        - https://en.wikipedia.org/wiki/RealNetworks,_Inc._v._DVD_Copy_Control_Ass%27n — a US court found RealDVD violated the DMCA anti-trafficking provisions and enjoined its distribution; CSS being cracked
+          was no defence
+        - https://en.wikipedia.org/wiki/Libdvdcss — no known legal challenge to libdvdcss itself as of June 2022; Debian, Ubuntu, Fedora and openSUSE do not ship it
+        - https://www.gnu.org/licenses/gpl-3.0.txt §6(d) — the source must stay available as long as needed for the offer, so installer and source archive should leave together
+      reasoning: 'Legal exposure is unassessed and each further download cannot be recalled, while the audience is very small and rc.2 supersedes it. Not legal advice. See the Step 8 brief. On 2026-11-04
+        the release read back as published, not draft, a pre-release, with 3 installer and 1 source archive downloads. Changing what is public on a blanket acceptance, against a specific ruling that holds
+        ''unless Mat changes it'', is not something to guess at. Settled by D-266: Mat was told that keeping FFmpeg as it is leaves RC1 up, with downloads continuing while the exposure stays unassessed,
+        and answered yes. The release was not touched.'
+      human_message_reference: 'USER_EXPLICIT 2026-11-04 ''FFmpeg, keeping libdvdcss in rc.2: yes'''
+    - id: D-266
+      stage: triage
+      question: Does FFmpeg stay the stock BtbN GPL build, with libdvdcss in it, in rc.2 and later?
+      resolution: human
+      class: one-way-door
+      chosen: Yes. FFmpeg stays the stock BtbN GPL build with libdvdcss compiled in, in rc.2 too. No build and no new pin
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md:488 — D-101, Mat ruled GPL, stock BtbN month-end build, published only with complete source
+      - 'docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md:495 — D-101 brief weighed a custom minimal build: only that option shrinks the source set, but av-kit takes on a recipe, toolchain
+        and security updates'
+      research:
+        engine: exa
+        sources:
+        - https://github.com/btbn/ffmpeg-builds — README prerequisites are bash and docker; scripts.d/50-dvd at 5031c6f already returns -1 from ffbuild_enabled for LGPL variants and emits --disable-libdvdread
+          and --disable-libdvdnav
+        - https://www.gyan.dev/ffmpeg/builds — essentials list has libx264 and libx265 and no DVD library (libdvdread and libdvdnav are full-build only); GPLv3; 8.1.2 and 9.0.2 offered; the page publishes
+          no recipe for a given build
+        - https://github.com/GyanD/media-autobuild_suite — a public build suite under the same account; nothing says the published builds come from it or with which options
+        - https://www.gnu.org/licenses/gpl-3.0.txt §6(d) — offer the Corresponding Source with the object code, available 'for as long as needed'
+      reasoning: 'Mat said: ''I thought I deceided to do nothing about FFmpeg. If we build it we will loose on the updates released by ohter builders.'' The transcripts hold no earlier decision to do nothing,
+        and the D-214 brief wrongly said the status quo was not an option. Put to Mat with the costs: av-kit already pins one exact build, so a newer FFmpeg means a new URL and hash and about an hour rebuilding
+        the source set, and a custom build adds a patch and a full build of unknown length to each update. Rc.2 and later builds keep distributing a DVD decryption library av-kit never uses. Nobody has
+        assessed the legal exposure, the brief asked Mat to accept it knowingly, and this is not legal advice. Downloads already made cannot be recalled on any route, and the GPL source duty stays. The
+        approved plan and patch are parked at docs/execution/plans/2026-11-04-rc2-ffmpeg-uninstall/ if the risk ever changes.'
+      human_message_reference: 'USER_EXPLICIT 2026-11-04 ''FFmpeg, keeping libdvdcss in rc.2: yes'''
+    decided_by: human
+- id: TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD
+  title: Nothing downloads the PyTorch runtime, so the PyTorch model can't run in an installed app, and Settings has no row for it
+  severity: medium
+  component: infrastructure
+  status: dismissed
+  category: CLOSE
+  priority: null
+  enrichment:
+    questions_asked:
+    - 'D-236: Does the installed app get a download for the PyTorch runtime and what it needs?'
+    - 'D-237: Does ''all other dependencies'' include espeak: the GPL library that the kokoro package imports, and the eSpeak NG program?'
+    answers:
+    - 'D-236: superseded by D-217'
+    - 'D-237: no to both'
+    decided_by: human
+    decision_log:
+    - id: D-236
+      stage: triage
+      question: Does the installed app get a download for the PyTorch runtime and what it needs?
+      resolution: human
+      class: product-preference
+      chosen: Superseded by D-217 on 2026-11-04, not built. Mat first asked for the download to be filed, then chose to keep PyTorch out of installed builds
+      source_tag: Human-approved
+      precedents:
+      - 'TTS-GENERATE-FAILED-SILENT D-22 — Mat approved on 2026-09-30: managed downloads shown as Settings > Dependencies rows with a Get action, nothing bundled in the installer'
+      - docs/build-plan/07-distribution.md:30,227 — the plan already names an optional PyTorch extra, never built
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat''s request, made after asking why the PyTorch model''s download does not bring PyTorch with it. It records the direction and the filing, not an approved plan. The steps in resolution_path
+        remain proposals. Mat''s later message: ''OK we will go with pythorch remove as you originally suggested''.'
+      human_message_reference: USER_EXPLICIT 2026-11-04 'also make the download avilable in settings will all other dependencies that needs to be also filed as an issue and be part of the triage'
+    - id: D-237
+      stage: triage
+      question: 'Does ''all other dependencies'' include espeak: the GPL library that the kokoro package imports, and the eSpeak NG program?'
+      resolution: human
+      class: source-conflict
+      chosen: No to both. espeak is never downloaded or bundled, and the eSpeak NG row stays install guidance. With no runtime download, the KModel import workaround is not built
+      source_tag: Human-approved
+      precedents:
+      - 'docs/build-plan/03-service-layer.md:453 — D-61, Mat approved on 2026-10-09: espeak-ng (GPL-3.0) is never shipped in the installer or the backend bundle'
+      - 'docs/build-plan/03-service-layer.md:449 — D-71: eSpeak NG runs as a user-installed CLI subprocess'
+      - 'docs/execution/plans/2026-10-14-tts-engine-runtime/review-prompt-exec.md:41 — D-96, human: the guidance is the URL as text plus Copy link'
+      - packaging/THIRD_PARTY_NOTICES.md:7-8 — av-kit calls espeak-ng as a subprocess and never loads its library
+      research:
+        engine: exa
+        sources:
+        - https://gplv3.fsf.org/wiki/index.php/FAQ_Update — 'If modules are designed to run linked together in a shared address space, that almost surely means combining them into one program'; pipes, sockets
+          and command-line arguments normally mean separate programs. This is the FSF's view, which it says judges ultimately decide
+      reasoning: Taken literally, Mat's 'all other dependencies' includes what kokoro declares, and that pulls espeakng_loader (espeak-ng.dll, 18.8 MB unpacked, 9.4 MB wheel) and phonemizer-fork (GPLv3+
+        in its metadata) into the backend process of an MIT app (pyproject.toml:5). That conflicts with D-61's reasoning and the shipped notices, so it is Mat's to rule. The recommendation avoids the question
+        because KModel loaded without those packages in the 2026-11-04 test, though only in the dev venv and without generating speech, and the bare-parent import is not a kokoro API, so it is tied to the
+        kokoro pin. This is not legal advice. See the brief.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
 proposed_batches:
-- slug: mcp-server-mcp-packaged-entry-unreachable
+- slug: infrastructure-transcript-title-is-video-id-tts-pytorch-offered-without-runtime-tts-failed-load-drops-model
   issues:
-  - MCP-PACKAGED-ENTRY-UNREACHABLE
-  component: mcp-server
-  priority_band: P2
-  complexity: S
-  has_duplicates: false
-- slug: ui-mcp-setup-prompt-queue-pill-token-drift-gui-convert-output-no-browse
-  issues:
-  - MCP-SETUP-PROMPT
-  - QUEUE-PILL-TOKEN-DRIFT
-  - GUI-CONVERT-OUTPUT-NO-BROWSE
-  - GUI-LIGHT-THEME-SELECT-STALE-DARK
-  - GUI-SHORTCUTS-ADVERTISED-UNBOUND
-  - GUI-COMMAND-PALETTE-CURATION
-  - GUI-KEYBOARD-SHORTCUTS-COMMON
-  component: ui
+  - TRANSCRIPT-TITLE-IS-VIDEO-ID
+  - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
+  - TTS-FAILED-LOAD-DROPS-MODEL
+  - TTS-ONNX-FP16-NONFINITE-AUDIO
+  component: infrastructure
   priority_band: P2
   complexity: L
   has_duplicates: true
-- slug: infrastructure-tts-ja-zh-g2p-extras-ffmpeg-gpl-build-tts-espeak-live-path-unverified
+- slug: core-transcript-channel-is-playlist-name-transcript-block-keeps-requesting-convert-extract-stream-index-mismatch
   issues:
-  - TTS-JA-ZH-G2P-EXTRAS
-  - FFMPEG-GPL-BUILD
-  - TTS-ESPEAK-LIVE-PATH-UNVERIFIED
-  - MODEL-SIDELOAD-LOAD-500
-  component: infrastructure
+  - TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME
+  - TRANSCRIPT-BLOCK-KEEPS-REQUESTING
+  - CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
+  component: core
+  priority_band: P3
+  complexity: M
+  has_duplicates: false
+- slug: ui-download-row-shows-requested-quality-tts-device-options-in-cpu-build-models-dir-docs-and-probe-mismatch
+  issues:
+  - DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
+  - TTS-DEVICE-OPTIONS-IN-CPU-BUILD
+  - MODELS-DIR-DOCS-AND-PROBE-MISMATCH
+  - UNINSTALL-LEAVES-INSTALLER-COPY
+  component: ui
   priority_band: P3
   complexity: L
   has_duplicates: true
+- slug: api-transcript-failed-no-reason
+  issues:
+  - TRANSCRIPT-FAILED-NO-REASON
+  component: api
+  priority_band: P2
+  complexity: S
+  has_duplicates: false

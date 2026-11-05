@@ -27,7 +27,7 @@ This file **locks** choices the old stub left as “OR”. If a later phase need
 | FastAPI backend (PyInstaller) | CUDA / cuDNN |
 | Bundled `ffmpeg` + `ffprobe` (Windows) | YouTube cookies |
 | `onnxruntime` (CPU) | User downloads, transcripts, TTS output |
-| `mcp-server/dist` + IDE snippet | PyTorch wheel (optional extra; see Models) |
+| `mcp-server/dist` + IDE snippet | PyTorch runtime (see Models) |
 | Empty app-data scaffold on first run | `avkit.db` from a dev machine |
 
 Disk target: **&lt; 500MB installed, without models** ([APPLICATION_PURPOSE.md §6](../../_inspiration/APPLICATION_PURPOSE.md)). Weights stay in `tts.models_directory` (default `~/.avkit/models/` or `%USERPROFILE%/.avkit/models/`).
@@ -224,11 +224,11 @@ Unchanged from the old stub, aligned with Phase 2 seed ids:
 
 **ONNX** variants load with bundled `onnxruntime`.  
 **Known gap (Session 27):** in the frozen app, `kokoro.KPipeline` is `None` because the packaging excludes torch. So even ONNX generation, which uses the pipeline's G2P, does not synthesize in the packaged build today. This contradicts the line above; it is tracked as `TTS-PACKAGED-RUNTIME-EXCLUDED` and fixed by [MEU-72](#packaged-onnx-tts-runtime-residual).  
-**PyTorch** variant: list it in `/models/available`; `load` fails with a clear `ModelLoadError` unless the user has a supported torch install (documented extra). Do not pull torch into the 500MB budget.
+**PyTorch** variant: a build that can't import the runtime lists it disabled with a reason in `/models/available` and refuses its download with a 409 ([MEU-117](03-service-layer.md#tts-build-capability-residual), triage D-217). There is no optional extra, no runtime download and no bundled torch. `npm run dev` has torch in the repo's `.venv` and loads the variant as before.
 
 Voices: first-use HF cache (`hexgrad/Kokoro-82M`). Offline after that.
 
-First-run Model Manager test (checklist): wipe `{models}` + HF cache → download INT8 or FP16 → load → one `generate`.
+First-run Model Manager test (checklist): wipe `{models}` + HF cache → download INT8 → load → one `generate`.
 
 <a id="packaged-onnx-tts-runtime-residual"></a>
 
@@ -328,6 +328,47 @@ MCP Guard / lock stays **deferred** ([06-gui.md](06-gui.md)).
 > - AC-110.1 to AC-110.22.
 > - Gate: the shared `session-gate.ps1` record in the MEU-110 handoff.
 > - Plan `docs/execution/plans/2026-11-03-release-rc1/`.
+
+<a id="fetch-exit-codes-residual"></a>
+
+### Fetch script exit codes (residual)
+
+> **MEU-113.** Registered 2026-11-04 from `FETCH-FFMPEG-EXIT-CODES`. It was first registered to build FFmpeg without libdvdcss; the same day Mat kept FFmpeg as it is, including libdvdcss, as an accepted risk (triage D-266). The approved build plan is parked, never run, at `docs/execution/plans/2026-11-04-rc2-ffmpeg-uninstall/`.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Exit codes | `fetch_ffmpeg_windows.ps1` returns its documented codes 2 to 5 through the stderr pattern exit 6 already uses. | Local Canon: known issue `FETCH-FFMPEG-EXIT-CODES` |
+| Tests | The tests assert the exact codes, not just a nonzero exit. | Local Canon: known issue `FETCH-FFMPEG-EXIT-CODES` |
+
+<a id="uninstall-installer-copy-residual"></a>
+
+### Uninstall removes the installer copy (residual)
+
+> **MEU-114.** Registered 2026-11-04 from `UNINSTALL-LEAVES-INSTALLER-COPY`. electron-builder copies the running installer to `%LOCALAPPDATA%\av-kit-ui-updater` on install (`app-builder-lib/templates/nsis/include/installer.nsh:93`), and no template removes it. `customUnInstall` in `ui/build/installer.nsh` deletes only the two Run values. Measured on the published RC1: 340,348,020 B stays after uninstall. `ui/package.json` has no `electron-updater`, so av-kit never reads the copy.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Removed | `customUnInstall` deletes the copy and its folder, skipping `${isUpdated}`. | Local Canon: triage D-228 |
+| Upgrade | An upgrade still works, checked on the next build. | Local Canon: triage D-228 |
+| Kept | `%APPDATA%\av-kit-ui` stays, per `deleteAppDataOnUninstall: false`, and the notes name it. | Local Canon: triage D-228 |
+| Tests | A pin on the macro in `ui/tests/unit/login-item-nsh.test.ts`; `install-roundtrip.ps1` checks the folder is gone after uninstall and `%APPDATA%\av-kit-ui` is still there, and an install over an existing one keeps working. | Local Canon |
+
+<a id="second-release-candidate-residual"></a>
+
+### Second release candidate (residual)
+
+> **MEU-125.** Registered 2026-11-04. The triage batching Mat accepted that day makes batches A to C its minimum, and batch A is now the two fixes in MEU-113 and MEU-114. Tag, release, upload and what happens to RC1 stay with Mat; nothing in this section publishes.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Version | `VERSION_ONE` moves to `0.1.0-rc.2` for npm and electron-builder, `0.1.0rc2` for Python and OpenAPI, tag `v0.1.0-rc.2`. | Human-approved: triage batching, Mat 2026-11-04; [§Release candidate packaging](#release-candidate-packaging-residual) |
+| Contents | MEU-113 to MEU-121 are the minimum. MEU-122 to MEU-124 and MEU-126 go in if they're done by then. | Human-approved: triage batching, Mat 2026-11-04; Local Canon: grouping D-249 for MEU-126 |
+| FFmpeg | The pin stays the stock BtbN GPL build and libdvdcss ships, an accepted risk. | Human-approved: triage D-266 |
+| Build and gate | The rules of [§Release candidate packaging](#release-candidate-packaging-residual) apply again from a clean tree: `LICENCE_LIST`, Fresh build, `BUILD_RECORD` and Packaged checks, plus the checks MEU-114, MEU-117 and MEU-121 add, including MEU-114's round trip on the full build, and a fresh gate. | Human-approved: triage batching, Mat 2026-11-04; Local Canon: Session 49 plan D-268 for the round trip |
+| Notes | New release notes say what this candidate fixes and what stays open, and carry D-216's corrections. The 'your network' wording waits for the other-network check. | Human-approved: triage D-216 |
+| Notices | The FFmpeg section of `packaging/THIRD_PARTY_NOTICES.md` gains one factual line: the build includes libdvdcss, and av-kit never uses DVD input. | Human-approved: triage D-275 |
+| Checklist | A new publish checklist gives the outward steps in order with exact commands, attaches the FFmpeg source archive for the unchanged pin, checks `~/.avkit/models` for voice models and includes what happens to RC1 once this candidate replaces it. | Human-approved: triage D-266, D-101; RC1 plan D-238; known issue `MODELS-DIR-DOCS-AND-PROBE-MISMATCH` |
+| Publishing | Nothing here tags, uploads or changes a release. | Local Canon: PROFILE E5 |
 
 ---
 
