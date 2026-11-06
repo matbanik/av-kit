@@ -329,9 +329,9 @@ archived:
       question: Backup location, naming, revert
       resolution: autonomous
       class: two-way
-      chosen: POST /captures/{id}/flatten copies original to {inbox}/.avkit-backup/{stem}.{YYYYMMDD-HHMMSS}.png, bakes over original_path, clears annotated_path + sidecar; POST .../revert restores the newest
-        backup; settings capture.flatten_backup (default on) and capture.backup_dir (default {inbox}/.avkit-backup); no retention cap (the user prunes) so no governance number is introduced; MCP mirrors
-        both actions
+      chosen: POST /captures/ID/flatten copies original to INBOX/.avkit-backup/STEM.YYYYMMDD-HHMMSS.png (ID is the capture id, INBOX the capture inbox, STEM the original's file stem), bakes over original_path,
+        clears annotated_path + sidecar; POST .../revert restores the newest backup; settings capture.flatten_backup (default on) and capture.backup_dir (default INBOX/.avkit-backup); no retention cap (the
+        user prunes) so no governance number is introduced; MCP mirrors both actions
       source_tag: Research-backed
       precedents:
       - packages/core/src/avkit_core/services/capture.py annotate_and_save — sibling-file convention
@@ -509,8 +509,8 @@ archived:
       question: Should Kokoro voice packs become managed assets?
       resolution: autonomous
       class: two-way
-      chosen: 'Yes: voices/<id>.pt is fetched through the existing managed-download path (on first selection or with the model), shown as ready/missing, and a generate with a missing pack fails fast with
-        a named reason instead of fetching mid-run'
+      chosen: 'Yes: voices/ID.pt (ID is the voice id) is fetched through the existing managed-download path (on first selection or with the model), shown as ready/missing, and a generate with a missing
+        pack fails fast with a named reason instead of fetching mid-run'
       source_tag: Local Canon
       precedents:
       - .agent/context/known-issues.yaml TTS-GENERATE-FAILED-SILENT D-22 — managed downloads + readiness rows
@@ -676,8 +676,8 @@ archived:
       question: How should TTS generation be exposed so long texts do not time out and can be cancelled?
       resolution: autonomous
       class: two-way
-      chosen: POST /tts/generate queues the job and returns it at once (Queued/Running); synthesis runs in the background; clients poll the job and DELETE /tts/{id} cancels a running job between segments;
-        MCP generate returns the job id and the GUI run bar polls
+      chosen: POST /tts/generate queues the job and returns it at once (Queued/Running); synthesis runs in the background; clients poll the job and DELETE /tts/ID (ID is the job id) cancels a running job
+        between segments; MCP generate returns the job id and the GUI run bar polls
       source_tag: Local Canon
       precedents:
       - packages/core/src/avkit_core/services/conversion.py — queued jobs with polling and cancel
@@ -999,15 +999,16 @@ archived:
       resolution: autonomous
       class: two-way
       chosen: Settings MCP card shows the prompt with the server command/path and per-client placement (project .mcp.json mcpServers for Claude Code/Cursor/Claude Desktop/Windsurf; .vscode/mcp.json servers+type
-        stdio for VS Code) using ${AVKIT_API_TOKEN} expansion; the real token is injected only by the main process on Copy and never enters the renderer
+        stdio for VS Code) using environment-variable expansion of AVKIT_API_TOKEN (a dollar sign and the name in braces); the real token is injected only by the main process on Copy and never enters the
+        renderer
       source_tag: Local Canon
       precedents:
       - ui/src/main/ipc.ts copy-mcp-config — token stays out of the renderer
-      - known-issues MCP-SETUP-PROMPT root_cause — Claude Code docs research 2026-10-03 (.mcp.json scope, mcpServers vs servers shapes, ${VAR} expansion)
+      - known-issues MCP-SETUP-PROMPT root_cause — Claude Code docs research 2026-10-03 (.mcp.json scope, mcpServers vs servers shapes, dollar-brace environment-variable expansion)
       research:
         engine: none
         sources: []
-      reasoning: Research in the issue converges on project .mcp.json + ${VAR}; keeping the token in main preserves the existing security boundary. Two-way.
+      reasoning: Research in the issue converges on project .mcp.json + dollar-brace environment-variable expansion; keeping the token in main preserves the existing security boundary. Two-way.
     - id: D-48
       stage: triage
       question: Which config scope does the setup prompt write by default?
@@ -1032,11 +1033,11 @@ archived:
       human_message_reference: USER_EXPLICIT 2026-10-16 'accept all'
     - id: D-49
       stage: triage
-      question: Does any setup-prompt block carry the token or a ${AVKIT_API_TOKEN} expansion?
+      question: Does any setup-prompt block carry the token or a dollar-brace expansion of AVKIT_API_TOKEN?
       resolution: autonomous
       class: two-way
-      chosen: No token in any block; the server reads {app_data}/mcp-token.txt itself; AVKIT_APP_DATA is emitted only when not the default; a regex test with a fixture token. The existing Copy MCP config
-        and Pin buttons are unchanged. Supersedes the ${VAR}/inject-on-Copy part of D-47 for the prompt only.
+      chosen: No token in any block; the server reads mcp-token.txt in the app data folder itself; AVKIT_APP_DATA is emitted only when not the default; a regex test with a fixture token. The existing Copy
+        MCP config and Pin buttons are unchanged. Supersedes the dollar-brace expansion and inject-on-Copy part of D-47 for the prompt only.
       source_tag: Research-backed
       precedents:
       - mcp-server/src/config.ts:162-170 — the token falls back to mcp-token.txt when the env var is unset
@@ -1049,7 +1050,7 @@ archived:
         - https://www.gmicloud.ai/en/blog/mcp-server-security-why-api-keys-in-config-files-are-a-liability — plaintext keys in config files are readable by agents
         - https://scalar.com/learn/mcp/mcp-server-configuration — read credentials from the environment; never commit literals
         - p:/zorivest AC-747.7 / A-11 — tokens never pass through chat
-      reasoning: A file the server already reads beats both a literal token and ${VAR} expansion (which still needs the user to set an env var). Two-way.
+      reasoning: A file the server already reads beats both a literal token and dollar-brace expansion (which still needs the user to set an env var). Two-way.
     - id: D-50
       stage: triage
       question: What command does the prompt emit to start the MCP server?
@@ -1093,7 +1094,8 @@ archived:
       question: How does the prompt prove the connection?
       resolution: autonomous
       class: two-way
-      chosen: 'The agent calls avkit_health, reports api_base and app_data, and ends with exactly one ''RESULT: connected <api_base>'' or ''RESULT: failed (<step>, <error>)'' line; no new instance_id.'
+      chosen: 'The agent calls avkit_health, reports api_base and app_data, and ends with exactly one ''RESULT: connected API_BASE'' or ''RESULT: failed (STEP, ERROR)'' line, the upper-case names standing
+        for the values; no new instance_id.'
       source_tag: Local Canon
       precedents:
       - p:/zorivest AC-747.4/.6, A-6 — done means a diagnose against the intended instance
@@ -1106,7 +1108,8 @@ archived:
       question: Write safety and restart wording
       resolution: autonomous
       class: two-way
-      chosen: Back up to <file>.avkit-backup-<UTC> and merge, never overwrite; conditional restart line ('If the tools do not appear, quit and reopen <client>, then reply Ready').
+      chosen: Back up to FILE.avkit-backup-UTC and merge, never overwrite; conditional restart line ('If the tools do not appear, quit and reopen CLIENT, then reply Ready'), FILE being the client's config
+        file, UTC a UTC timestamp and CLIENT the client's name.
       source_tag: Local Canon
       precedents:
       - p:/zorivest AC-747.2/.3, A-10, A-12 — backup-and-merge, client-specific conditional restart
@@ -1138,7 +1141,7 @@ archived:
       chosen: No. Every block emits the app's resolved AVKIT_APP_DATA (not a secret). The rest of D-49 (no token in any block) stands.
       source_tag: Local Canon
       precedents:
-      - ui/src/main/index.ts:150-151 — the app falls back to LOCALAPPDATA ?? <home>/AppData/Local, then av-kit
+      - ui/src/main/index.ts:150-151 — the app falls back to LOCALAPPDATA ?? the home folder's AppData/Local, then av-kit
       - mcp-server/src/config.ts:36-42 — the server uses LOCALAPPDATA only when non-blank, else ~/.avkit
       - Codex gpt-6-astra review 2026-10-16 F1 (C:/Temp/av-kit/dispatch/mcp71-decisions-r1/final.json, not ledger-recorded) — reproduced the divergence when LOCALAPPDATA is absent
       research:
@@ -1152,8 +1155,8 @@ archived:
       resolution: autonomous
       class: two-way
       chosen: 'avkit_health action=dependencies must return successfully (it needs the token; any dependency availability values count). liveness alone never yields connected. The prompt ends with exactly
-        one ''RESULT: connected'' or ''RESULT: failed (<step>, <error>)'' line, where <error> is the server''s error code (for example token_missing, app_not_running). No api_base/app_data reporting: no
-        health response carries them.'
+        one ''RESULT: connected'' or ''RESULT: failed (STEP, ERROR)'' line, where ERROR is the server''s error code (for example token_missing, app_not_running) and STEP the step that failed. No api_base/app_data
+        reporting: no health response carries them.'
       source_tag: Local Canon
       precedents:
       - packages/api/src/avkit_api/routes/health.py:27-39 — /health is unauthenticated; /health/dependencies requires the bearer token
@@ -1538,7 +1541,7 @@ archived:
       question: Does AC-41.3 keep reading the Zorivest working tree live?
       resolution: human
       class: architecture
-      chosen: Pin PILL_TOKEN_SOURCE to Zorivest commit 1f254832 (git show <sha>:ui/src/renderer/src/globals.css); re-porting becomes a deliberate bump of the sha and the hexes together
+      chosen: Pin PILL_TOKEN_SOURCE to Zorivest commit 1f254832 (git show SHA:ui/src/renderer/src/globals.css, SHA being that commit); re-porting becomes a deliberate bump of the sha and the hexes together
       source_tag: Human-approved
       precedents:
       - 'docs/execution/reflections/2026-10-16-capture-editor-options-reflection.md:171-173 (RULE-3: a test that reads another repository reads a pinned commit or a vendored copy)'
@@ -1941,6 +1944,57 @@ archived:
         sources: []
       reasoning: No user data is involved and av-kit has no updater that reads the copy (no electron-updater in ui/package.json). Two-way.
     decided_by: agent
+- id: CLOSEOUT-CHECK-REFUSES-REGISTER
+  title: The closeout check refuses known-issues.yaml as the triage tool writes it, and --decision-issue keeps only the last value
+  severity: medium
+  component: agent
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked:
+    - 'D-279: Does the closeout check''s refusal of the issue register get tracked as an issue?'
+    - 'D-274: When is the tooling fixed?'
+    answers:
+    - 'D-279: Yes, filed here'
+    - 'D-274: Session 49b, after Session 49 and before Session 50'
+    decision_log:
+    - id: D-279
+      stage: triage
+      question: Does the closeout check's refusal of the issue register get tracked as an issue?
+      resolution: autonomous
+      class: two-way
+      chosen: Yes, filed as CLOSEOUT-CHECK-REFUSES-REGISTER. When to fix it is a separate question for Mat, D-274.
+      source_tag: Local Canon
+      precedents:
+      - docs/execution/reflections/2026-11-03-release-rc1-reflection.md:45 — D-190 filed the same class of tooling defect as CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
+      - docs/execution/reflections/2026-10-14-capture-chrome-reflection.md:49 — names the triage tool and validator YAML mismatch as a missing contract
+      - docs/execution/reflections/2026-10-16-tts-voice-panel-reflection.md:225 — slim candidate on the single-value flag
+      research:
+        engine: pomera_web_search (tavily, exa)
+        sources:
+        - https://blog.codacy.com/complete-guide-to-technical-debt-tracking-for-engineering-leaders — remembering a defect is not tracking it; untracked debt compounds
+        - https://www.atlassian.com/agile/software-development/technical-debt — track debt alongside feature work
+      reasoning: 'Passes the HDP section 4 test: precedent and sources agree, filing is two-way, no product fork and no governance number. Repeated rediscovery shows that memory and reflections alone do
+        not hold it.'
+    - id: D-274
+      stage: triage
+      question: When is the tooling fixed?
+      resolution: human
+      class: governance-value
+      chosen: A tooling session, 49b, after Session 49 and before Session 50. Session 49 keeps D-272's extract
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/reflections/2026-10-14-capture-chrome-reflection.md:288 — tools/ edits were Mat's exception before (D-39)
+      - docs/execution/reflections/2026-10-16-tts-voice-panel-reflection.md:92 — D-22 repaired the form by hand, which the next model.save undoes
+      research:
+        engine: pomera_web_search (tavily, exa)
+        sources:
+        - https://pyyaml.org/wiki/PyYAMLDocumentation — the emitter's width and indent are configurable
+        - https://github.com/crdoconnor/strictyaml — a restricted YAML reader is an established pattern, so the reader need not be loosened
+      reasoning: The workaround works, so the session buys an end to a failure that otherwise arrives at the end of each of Sessions 50 to 57. Alternatives were reusing D-272 in every session, and fixing
+        it inside Session 49, which would change that plan's goal just before review.
+      human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
 actionable:
 - id: E2E-ELECTRON-LAUNCH-FLAG
   title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
@@ -2529,7 +2583,7 @@ actionable:
       source_tag: Local Canon
       precedents:
       - docs/build-plan/08-video-conversion.md:176,178 — map a:0 with the container from the codec table
-      - packages/infrastructure/src/avkit_infra/media/adapter.py:634-635 — a:{stream_index}
+      - 'packages/infrastructure/src/avkit_infra/media/adapter.py:634-635 — the stream specifier a: followed by the stream index'
       - packages/core/src/avkit_core/services/conversion.py:328,386 — the conflicting use
       research:
         engine: none
@@ -2613,57 +2667,6 @@ actionable:
       reasoning: A user who keeps the preselected model should not hit a failure on an ordinary sentence. INT8 and FP32 had no failures in the 2026-11-04 probe and generated at the same speed. INT8 is 92
         MB against 326 MB and peaked at 583 MB against 817 MB. Nobody has compared them by ear, so the choice between them stays with Mat's listening check.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
-- id: CLOSEOUT-CHECK-REFUSES-REGISTER
-  title: The closeout check refuses known-issues.yaml as the triage tool writes it, and --decision-issue keeps only the last value
-  severity: medium
-  component: agent
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked:
-    - 'D-279: Does the closeout check''s refusal of the issue register get tracked as an issue?'
-    - 'D-274: When is the tooling fixed?'
-    answers:
-    - 'D-279: Yes, filed here'
-    - 'D-274: Session 49b, after Session 49 and before Session 50'
-    decision_log:
-    - id: D-279
-      stage: triage
-      question: Does the closeout check's refusal of the issue register get tracked as an issue?
-      resolution: autonomous
-      class: two-way
-      chosen: Yes, filed as CLOSEOUT-CHECK-REFUSES-REGISTER. When to fix it is a separate question for Mat, D-274.
-      source_tag: Local Canon
-      precedents:
-      - docs/execution/reflections/2026-11-03-release-rc1-reflection.md:45 — D-190 filed the same class of tooling defect as CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
-      - docs/execution/reflections/2026-10-14-capture-chrome-reflection.md:49 — names the triage tool and validator YAML mismatch as a missing contract
-      - docs/execution/reflections/2026-10-16-tts-voice-panel-reflection.md:225 — slim candidate on the single-value flag
-      research:
-        engine: pomera_web_search (tavily, exa)
-        sources:
-        - https://blog.codacy.com/complete-guide-to-technical-debt-tracking-for-engineering-leaders — remembering a defect is not tracking it; untracked debt compounds
-        - https://www.atlassian.com/agile/software-development/technical-debt — track debt alongside feature work
-      reasoning: 'Passes the HDP section 4 test: precedent and sources agree, filing is two-way, no product fork and no governance number. Repeated rediscovery shows that memory and reflections alone do
-        not hold it.'
-    - id: D-274
-      stage: triage
-      question: When is the tooling fixed?
-      resolution: human
-      class: governance-value
-      chosen: A tooling session, 49b, after Session 49 and before Session 50. Session 49 keeps D-272's extract
-      source_tag: Human-approved
-      precedents:
-      - docs/execution/reflections/2026-10-14-capture-chrome-reflection.md:288 — tools/ edits were Mat's exception before (D-39)
-      - docs/execution/reflections/2026-10-16-tts-voice-panel-reflection.md:92 — D-22 repaired the form by hand, which the next model.save undoes
-      research:
-        engine: pomera_web_search (tavily, exa)
-        sources:
-        - https://pyyaml.org/wiki/PyYAMLDocumentation — the emitter's width and indent are configurable
-        - https://github.com/crdoconnor/strictyaml — a restricted YAML reader is an established pattern, so the reader need not be loosened
-      reasoning: The workaround works, so the session buys an end to a failure that otherwise arrives at the end of each of Sessions 50 to 57. Alternatives were reusing D-272 in every session, and fixing
-        it inside Session 49, which would change that plan's goal just before review.
-      human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only

@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 112** — Active: 45 | Mitigated: 1 | Resolved: 64
+**Total: 112** — Active: 44 | Mitigated: 1 | Resolved: 65
 
 ## Active Issues
 
@@ -23,7 +23,6 @@
 | 🟡 | `TRANSCRIPT-BLOCK-KEEPS-REQUESTING` | A channel job keeps requesting captions after YouTube refuses, and the… | core | ⬜ open | 2026-11-04 |
 | 🟡 | `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH` | Audio extract reads its stream index two ways: AAC from a normal video… | core | ⬜ open | 2026-11-04 |
 | 🟡 | `TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS` | verify --deep and discover report noise, and verify stamps last_checked… | infrastructure | ⬜ open | 2026-11-04 |
-| 🟡 | `CLOSEOUT-CHECK-REFUSES-REGISTER` | The closeout check refuses known-issues.yaml as the triage tool writes… | agent | ⬜ open | 2026-11-04 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
 | 🟢 | `E2E-ELECTRON-LAUNCH-FLAG` | ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch -… | ui | ⬜ open | 2026-09-02 |
 | 🟢 | `TOOLING-ADOPTION-FIXTURE-LIVE-GOVERNANCE` | Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the… | infrastructure | ⬜ open | 2026-09-30 |
@@ -61,9 +60,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (64)
+## Resolved (65)
 
-64 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+65 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

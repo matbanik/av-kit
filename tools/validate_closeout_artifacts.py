@@ -9,7 +9,7 @@ Five checks, selected by which arguments are supplied:
   --review F --review-state-only ...        parse the rolling review file -> state receipt
   --review F --review-state-receipt J ...   approval decided from the receipt on disk
   --reflection F --reflection-template T --reflection-schema S
-  --reflection F ... --decision-source P [--decision-source H] [--decision-issue ID]
+  --reflection F ... --decision-source P [--decision-source H] [--decision-issue ID ...]
                                             plus: every decision recorded in the plan,
                                             handoff or issue has a Decisions Log row
 
@@ -42,7 +42,7 @@ import re
 import sys
 import tempfile
 import textwrap
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import redirect_stdout
 from pathlib import Path
 from typing import NamedTuple
@@ -1551,7 +1551,7 @@ def grouping_decisions(text: str, name: str) -> list[tuple[str, str | None]]:
     return entries
 
 
-def decision_sources(paths: list[str], issue: str | None) -> dict[str, tuple[str, str]]:
+def decision_sources(paths: list[str], issues: Sequence[str]) -> dict[str, tuple[str, str]]:
     """Every decision recorded outside the reflection: ``id -> (stage, source)``.
 
     A markdown source is classified by its structure (HDP-23, HDP-25): a
@@ -1565,9 +1565,10 @@ def decision_sources(paths: list[str], issue: str | None) -> dict[str, tuple[str
     carries handoff signals or records a ``decision_log:`` -- is refused rather than
     routed by whichever check ran first, and every file is classified before any
     declaration is enforced, so the refusal names the contradiction. A YAML source
-    contributes a top-level ``decision_log:`` list, or -- with ``issue`` -- the
-    ``enrichment.decision_log`` of that one issue in a known-issues file
-    (human-decision-protocol.md §6). A plan that declares a real ``grouping_source``
+    contributes a top-level ``decision_log:`` list, or -- with ``issues`` -- the
+    ``enrichment.decision_log`` of each named issue in a known-issues file, read in
+    the order given and each under its own label; a stage that disagrees anywhere is
+    still refused (human-decision-protocol.md §6). A plan that declares a real ``grouping_source``
     binds that one file, resolved from the plan's project root: it must be among the
     sources, or the grouping's decisions would be reconciled against nothing
     (HDP-18, HDP-21) -- and a quoted §8 example in the plan never lifts that
@@ -1598,44 +1599,47 @@ def decision_sources(paths: list[str], issue: str | None) -> dict[str, tuple[str
     issue_read = False
     for path, text in texts:
         name = Path(path).name
+        # (default stage, label, entries) for each log the source holds
+        reads: list[tuple[str, str, list[tuple[str, str | None]]]]
         if path.lower().endswith((".yaml", ".yml")):
-            if ISSUES_ROOT.search(text) or (issue and ISSUES_NESTED.search(text)):
-                if not issue:
+            if ISSUES_ROOT.search(text) or (issues and ISSUES_NESTED.search(text)):
+                if not issues:
                     raise Usage(
                         f"decision source {name} is a known-issues file; pass "
                         f"--decision-issue ID to say whose enrichment.decision_log to read."
                     )
-                default_stage, label = "triage", f"issue {issue}"
-                entries = issue_decision_log(text, name, issue)
+                reads = [
+                    ("triage", f"issue {issue}", issue_decision_log(text, name, issue))
+                    for issue in issues
+                ]
                 issue_read = True
             else:
-                default_stage, label = "planning", name
                 decision_log_keys(text, f"decision source {name}")
                 entries = decision_entries(
                     yaml_sequence(text, "decision_log", name, root=True), name
                 )
+                reads = [("planning", name, entries)]
         elif kinds[path] == "grouping":
-            default_stage, label = "grouping", f"grouping {name} §8"
-            entries = grouping_decisions(text, name)
+            reads = [("grouping", f"grouping {name} §8", grouping_decisions(text, name))]
         elif kinds[path] == "handoff":
-            default_stage, label = "execution", name
-            entries = handoff_decisions(text, name)
+            reads = [("execution", name, handoff_decisions(text, name))]
         else:
-            default_stage, label = "planning", name
-            entries = fenced_decision_logs(text, name)
-        refuse_repeated_ids(entries, label)
-        for decision_id, stage in entries:
-            stage = stage or default_stage
-            previous = expected.get(decision_id)
-            if previous and previous[0] != stage:
-                raise Refuse(
-                    f"decision {decision_id} is recorded as {stage!r} in {label} but "
-                    f"{previous[0]!r} in {previous[1]}; one decision has one stage."
-                )
-            expected.setdefault(decision_id, (stage, label))
-    if issue and not issue_read:
+            reads = [("planning", name, fenced_decision_logs(text, name))]
+        for default_stage, label, entries in reads:
+            refuse_repeated_ids(entries, label)
+            for decision_id, stage in entries:
+                stage = stage or default_stage
+                previous = expected.get(decision_id)
+                if previous and previous[0] != stage:
+                    raise Refuse(
+                        f"decision {decision_id} is recorded as {stage!r} in {label} but "
+                        f"{previous[0]!r} in {previous[1]}; one decision has one stage."
+                    )
+                expected.setdefault(decision_id, (stage, label))
+    if issues and not issue_read:
         raise Refuse(
-            f"--decision-issue {issue} was given but no --decision-source is a known-issues "
+            f"--decision-issue {', '.join(issues)} was given but no --decision-source is a "
+            f"known-issues "
             f"file with a root-level issues: sequence, so its enrichment.decision_log was "
             f"not read (HDP-17)."
         )
@@ -1833,7 +1837,7 @@ def reflection_decision_rows(text: str, path: str) -> dict[str, str]:
     return recorded
 
 
-def check_decisions_log(text: str, path: str, sources: list[str], issue: str | None) -> str:
+def check_decisions_log(text: str, path: str, sources: list[str], issues: Sequence[str]) -> str:
     """Every decision recorded in a source must have a reflection row (HDP-8).
 
     The reflection's ``### Decisions Log`` is the only place the human reads the
@@ -1842,7 +1846,7 @@ def check_decisions_log(text: str, path: str, sources: list[str], issue: str | N
     enrichment but not here was made in silence, and ``None.`` is only true when
     no source recorded one.
     """
-    expected = decision_sources(sources, issue)
+    expected = decision_sources(sources, issues)
     recorded = reflection_decision_rows(text, path)
     if expected and not recorded:
         listing = ", ".join(f"{d} ({s}, {src})" for d, (s, src) in expected.items())
@@ -1874,7 +1878,7 @@ def check_reflection(
     template_path: str | None,
     schema_path: str | None,
     decision_sources_paths: list[str] | None = None,
-    decision_issue: str | None = None,
+    decision_issues: Sequence[str] = (),
 ) -> list[str]:
     notes = []
 
@@ -1971,7 +1975,7 @@ def check_reflection(
     # HDP-8: the Decisions Log heading being present says nothing about whether the
     # decisions made in the plan, the handoffs or the closed issue reached it.
     if decision_sources_paths:
-        notes.append(check_decisions_log(text, path, decision_sources_paths, decision_issue))
+        notes.append(check_decisions_log(text, path, decision_sources_paths, decision_issues))
     return notes
 
 
@@ -2055,6 +2059,15 @@ def run(args: argparse.Namespace) -> list[str]:
                 "--decision-issue names whose enrichment.decision_log to read; it needs "
                 "a known-issues file passed with --decision-source."
             )
+        issues = args.decision_issue or []
+        if any(not issue.strip() for issue in issues):
+            raise Usage("--decision-issue needs an issue ID; an empty value names no issue.")
+        repeated = sorted({issue for issue in issues if issues.count(issue) > 1})
+        if repeated:
+            raise Usage(
+                f"--decision-issue {', '.join(repeated)} is given more than once; name each "
+                f"issue once, since a repeat reads the same log twice."
+            )
         text = read_text(args.reflection, "reflection")
         return check_reflection(
             text,
@@ -2062,7 +2075,7 @@ def run(args: argparse.Namespace) -> list[str]:
             args.reflection_template,
             args.reflection_schema,
             args.decision_source,
-            args.decision_issue,
+            issues,
         )
 
     # handoff family
@@ -3970,6 +3983,69 @@ def selftest() -> int:
         ],
         must_say="has no issue NOPE-1",
     )
+    # Session 49b (D-283): a repeated --decision-issue reads every named issue.
+    both_issues = ["--decision-issue", "OTHER-ISSUE", "--decision-issue", "CORE-DEMO"]
+    issue_sources = [
+        "--reflection-template",
+        template,
+        "--decision-source",
+        decided_plan,
+        "--decision-source",
+        known_issues,
+    ]
+    arm(
+        "decision-issue-repeated-reconciled-ok",
+        "0/OK",
+        [
+            "--reflection",
+            w(
+                "both-issues.md",
+                _GOOD_REFLECTION.replace(
+                    "### Decisions Log\n\nNone.\n",
+                    _DECISIONS_LOG_ROWS
+                    + "| D-9 | triage | Other issue? | autonomous | Keep | Local Canon "
+                    "| two-way door | — |\n",
+                ),
+            ),
+            *issue_sources,
+            *both_issues,
+        ],
+        must_say="3 recorded decision(s)",
+    )
+    arm(
+        "decision-issue-repeated-first-issue-read",
+        "1/REFUSE",
+        ["--reflection", decided_reflection, *issue_sources, *both_issues],
+        must_say="missing decision D-9 (triage, recorded in issue OTHER-ISSUE)",
+    )
+    arm(
+        "decision-issue-same-id-twice-is-usage",
+        "2/USAGE",
+        [
+            "--reflection",
+            decided_reflection,
+            *issue_sources,
+            "--decision-issue",
+            "CORE-DEMO",
+            "--decision-issue",
+            "CORE-DEMO",
+        ],
+        must_say="CORE-DEMO is given more than once",
+    )
+    arm(
+        "decision-issue-absent-beside-present-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            decided_reflection,
+            *issue_sources,
+            "--decision-issue",
+            "NOPE-1",
+            "--decision-issue",
+            "CORE-DEMO",
+        ],
+        must_say="has no issue NOPE-1",
+    )
 
     # -- HDP-12: a Decisions Log row must disclose, not just enumerate ---------------
     def rows_reflection(name: str, rows: str) -> str:
@@ -5554,7 +5630,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "--decision-issue",
-        help="issue ID whose enrichment.decision_log to read from a known-issues --decision-source",
+        action="append",
+        default=None,
+        help=(
+            "issue ID whose enrichment.decision_log to read from a known-issues "
+            "--decision-source; repeat it once per issue"
+        ),
     )
     p.add_argument("--selftest", action="store_true", help="prove every refusal can fire")
     return p

@@ -236,7 +236,7 @@ Each plan follows `.agent/docs/cloud-local-collaboration.md`: gate location and 
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
 | 49 | `rc2-fetch-uninstall` | MEU-113, MEU-114 | P2 | pending | `docs/execution/plans/2026-11-04-rc2-fetch-uninstall/` |
-| 49b | `closeout-register-grammar` | none (`CLOSEOUT-CHECK-REFUSES-REGISTER`) | P3 | pending | — |
+| 49b | `closeout-register-grammar` | none (`CLOSEOUT-CHECK-REFUSES-REGISTER`) | P3 | executed | `docs/execution/plans/2026-11-05-closeout-register-grammar/` |
 | 50 | `transcript-failure-reason` | MEU-115, MEU-116 | P2 | pending | — |
 | 51 | `tts-build-capability` | MEU-117, MEU-118 | P2 | pending | — |
 | 52 | `tts-load-fp16` | MEU-119, MEU-120, MEU-121 | P2 | pending | — |

@@ -200,7 +200,7 @@ Where it lives:
 
 **Enforced, not advisory.** `tools/validate_closeout_artifacts.py --reflection … --decision-source
 {plan} --decision-source {handoff} [--decision-source {grouping-file}] [--decision-source
-known-issues.yaml --decision-issue ID]` (task row H2-2) reconciles the reflection's
+known-issues.yaml --decision-issue ID ...]` (task row H2-2) reconciles the reflection's
 `### Decisions Log` with every decision recorded in the plan's `## Decision Log`, each handoff's
 `## Decision Log`, the grouping's `## 8. Open Decisions` table (a source is a grouping by that
 heading in its structure — a heading quoted inside a fence, ``` or `~~~` and each closed
@@ -216,7 +216,9 @@ declaration — or `handoff` filename, a plan is anything else, and a grouping t
 declares a `grouping_source`, carries a handoff's signals or records a `decision_log:` key
 in any shape YAML can write one is refused rather than routed by whichever check ran
 first), and the
-closed issue's `enrichment.decision_log`: every recorded ID needs a reflection row with the
+`enrichment.decision_log` of each closed issue — `--decision-issue` is repeated once per
+issue, each named issue must be in the file, and naming one twice is a usage error: every
+recorded ID needs a reflection row with the
 same stage, every row needs its question, chosen option and reasoning filled, an unfilled
 template example is refused, and `None.` passes only when no source recorded a decision. A
 `decision_log:` is read only from a fenced ```yaml or `~~~yaml` block, indented or not (a

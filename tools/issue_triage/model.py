@@ -309,6 +309,56 @@ def validate_strict(data: dict[str, Any]) -> None:
 
 # ─── Load / Save ──────────────────────────────────────────────────────────
 
+# Characters the closeout check's reader splits lines on, besides "\n" and "\r".
+_LINE_SEPARATORS = ("\x85", "\u2028", "\u2029")
+
+
+class _SsotDumper(yaml.SafeDumper):
+    """Writes the shape the closeout check's bounded grammar reads (D-281).
+
+    Every sequence is indented under its key, a sequence that is itself a sequence item
+    starts on its own line under its dash, and a value that appears twice is written out
+    twice instead of as an anchor and an alias.
+    """
+
+    def increase_indent(self, flow: bool = False, indentless: bool = False) -> None:
+        return super().increase_indent(flow, False)
+
+    def expect_block_sequence(self) -> None:
+        if self.sequence_context and self.indention:
+            self.write_line_break()
+        super().expect_block_sequence()
+
+    def ignore_aliases(self, data: Any) -> bool:
+        return True
+
+
+def _represent_str(dumper: yaml.SafeDumper, value: str) -> yaml.ScalarNode:
+    # A line separator or a keep-chomped block would not read back as written; double
+    # quotes escape the first and hold the second on one line. A lone newline is
+    # keep-chomped too, and as the file's last value it would end the file with '...'.
+    if any(ch in value for ch in _LINE_SEPARATORS) or value.endswith("\n\n") or value == "\n":
+        return dumper.represent_scalar("tag:yaml.org,2002:str", value, style='"')
+    if "\n" in value:
+        return dumper.represent_scalar("tag:yaml.org,2002:str", value, style="|")
+    return dumper.represent_str(value)
+
+
+def _represent_dict(dumper: yaml.SafeDumper, value: dict[Any, Any]) -> yaml.MappingNode:
+    for key in value:
+        if isinstance(key, str) and (
+            key == "" or any(ch in key for ch in ("\n", "\r", *_LINE_SEPARATORS))
+        ):
+            raise IssueTriageError(
+                f"Cannot save mapping key {key!r}: an empty or multi-line key needs the "
+                "'?' key form, which the closeout check does not read"
+            )
+    return dumper.represent_dict(value)
+
+
+_SsotDumper.add_representer(str, _represent_str)
+_SsotDumper.add_representer(dict, _represent_dict)
+
 
 def load(path: Path | None = None) -> dict[str, Any]:
     """Load and validate the SSOT YAML file.
@@ -333,23 +383,28 @@ def load(path: Path | None = None) -> dict[str, Any]:
 def save(data: dict[str, Any], path: Path | None = None) -> None:
     """Validate and save the SSOT YAML file.
 
-    Re-validates before writing to prevent corruption.
+    Re-validates before writing to prevent corruption. The text is rendered first and
+    written only if it loads back equal to the data, so a refused save leaves the file
+    as it was.
     """
     validate_strict(data)
+
+    text = "# Known Issues SSOT — managed by tools/issue_triage.py\n" + yaml.dump(
+        data,
+        Dumper=_SsotDumper,
+        default_flow_style=False,
+        allow_unicode=True,
+        sort_keys=False,
+        width=10**9,
+    )
+    if yaml.safe_load(text) != data:
+        raise IssueTriageError("The rendered SSOT does not load back equal to the data; not saved")
 
     ssot_path = path or DEFAULT_SSOT_PATH
     ssot_path.parent.mkdir(parents=True, exist_ok=True)
 
     with ssot_path.open("w", encoding="utf-8", newline="\n") as f:
-        f.write("# Known Issues SSOT — managed by tools/issue_triage.py\n")
-        yaml.dump(
-            data,
-            f,
-            default_flow_style=False,
-            allow_unicode=True,
-            sort_keys=False,
-            width=200,
-        )
+        f.write(text)
 
 
 # ─── Helpers ──────────────────────────────────────────────────────────────
