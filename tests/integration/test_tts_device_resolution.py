@@ -881,3 +881,45 @@ def test_ac_98_5_success_logs_none(tmp_path: Path, engines: Engines) -> None:
             adapter.load_model(_variant(tmp_path, fmt), CPU)
         assert adapter.get_model_status().is_loaded, fmt
         assert _events(logs, "tts.load_failed") == [], logs
+
+
+# --- AC-115.9 the load failure's detail ------------------------------------------------------
+
+
+@pytest.mark.integration
+def test_ac_115_9_load_failed_carries_detail(
+    tmp_path: Path, engines: Engines, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def details(logs: list[dict[str, Any]]) -> list[tuple[str, str, str, str | None]]:
+        return [
+            (entry["variant_id"], entry["device"], entry["error"], entry.get("detail"))
+            for entry in _events(logs, "tts.load_failed")
+        ]
+
+    adapter = _adapter(tmp_path, with_cuda)
+    variant = _variant(tmp_path, ModelFormat.PyTorch)
+    _load_cuda_first(adapter, variant, engines)
+    engines.to_errors.update(
+        cuda=AssertionError("Torch not compiled with CUDA enabled"),
+        cpu=RuntimeError("cpu move failed\nsecond line"),
+    )
+    with capture_logs() as logs, pytest.raises(ModelLoadError):
+        adapter.load_model(variant, CUDA)
+    assert details(logs) == [(variant.id, "cpu", "RuntimeError", "cpu move failed")], logs
+
+    engines.to_errors.clear()
+    empty = _adapter(tmp_path, with_cuda)
+    _load_cuda_first(empty, variant, engines)
+    engines.eval_error = RuntimeError("")
+    with capture_logs() as logs, pytest.raises(ModelLoadError):
+        empty.load_model(variant, CUDA)
+    flags = [("detail" in entry, entry["error"]) for entry in _events(logs, "tts.load_failed")]
+    assert flags == [(False, "RuntimeError")], logs
+
+    absent = _adapter(tmp_path, with_cuda)
+    monkeypatch.setattr(f"{ADAPTER}.torch", None)
+    with capture_logs() as logs, pytest.raises(ModelLoadError):
+        absent.load_model(variant, CUDA)
+    assert details(logs) == [
+        (variant.id, "cuda", "ModelLoadError", "PyTorch runtime is not bundled")
+    ], logs

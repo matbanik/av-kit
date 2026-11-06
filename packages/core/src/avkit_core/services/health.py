@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 import threading
 from collections import deque
@@ -15,6 +16,7 @@ import structlog
 
 from avkit_core.domain.errors import ValidationError
 from avkit_core.domain.health import ConsoleEvent, DependencyHealth, HealthLiveness
+from avkit_core.domain.transcript import replace_links
 from avkit_core.domain.tts import (
     ESPEAK_UNAVAILABLE,
     AssetState,
@@ -39,7 +41,32 @@ REDACT_NEEDLES: tuple[str, ...] = (
 )
 # CONSOLE_FIELDS: event keys appended to the console message as ` key=value`, in this
 # order, so a failure's reason reaches the Console (MEU-62, D-13). Other keys stay off.
-CONSOLE_FIELDS: tuple[str, ...] = ("job_id", "error", "request_id", "route")
+# job_id and video_id name the transcript job and video; variant_id and device name the
+# TTS model load; error is the stored reason or error type, detail its first line of text
+# (MEU-115, D-296); request_id and route tie an API error to its request.
+CONSOLE_FIELDS: tuple[str, ...] = (
+    "job_id",
+    "video_id",
+    "variant_id",
+    "device",
+    "error",
+    "detail",
+    "request_id",
+    "route",
+)
+#: The most characters a Console field value keeps after it is made single-line.
+FIELD_LIMIT = 300
+#: Lines at these levels always go to console.log, whatever app.log_to_file holds (D-247).
+PERSIST_LEVELS: tuple[str, ...] = ("ERROR", "CRITICAL")
+#: An event with this key true also always goes to console.log. The key is never shown.
+PERSIST_FIELD = "persist"
+#: structlog method names that are not level names, and the level each one logs at.
+LEVEL_ALIASES: dict[str, str] = {
+    "exception": "ERROR",
+    "fatal": "CRITICAL",
+    "warn": "WARNING",
+}
+_LINE_BREAKS = re.compile(r"[\r\n]+")
 UoWFactory = Callable[[], UnitOfWork]
 
 
@@ -49,15 +76,24 @@ def redact_message(message: str) -> str:
     Fail-closed: once a needle appears, the needle and the remainder of the
     message are replaced so leftover secret tokens cannot survive.
     """
+    # A character can fold to several ("ß" to "ss"), so each folded position maps back to
+    # the original character it came from, and the cut lands before the needle.
+    origins = [index for index, char in enumerate(message) for _ in char.casefold()]
     lowered = message.casefold()
     hits = [lowered.find(needle) for needle in REDACT_NEEDLES if needle in lowered]
     if not hits:
         return message
-    first = min(hits)
+    first = origins[min(hits)]
     prefix = message[:first].rstrip()
     if prefix:
         return f"{prefix} [REDACTED]"
     return "[REDACTED]"
+
+
+def console_field(value: object) -> str:
+    """`value` as one line, each URL as "[link]", redacted and cut to FIELD_LIMIT."""
+    single = _LINE_BREAKS.sub(" ", str(value))
+    return redact_message(replace_links(single))[:FIELD_LIMIT]
 
 
 class HealthService:
@@ -90,8 +126,9 @@ class HealthService:
         self._download_runtime = download_runtime
         self._espeak = espeak
         self._lock = threading.Lock()
+        self._file_lock = threading.Lock()
         self._seq = 0
-        self._processing = False
+        self._guard = threading.local()
         self._ring: deque[ConsoleEvent] = deque(maxlen=ring_capacity)
         HealthService._active = self
         self._ensure_processor()
@@ -101,7 +138,11 @@ class HealthService:
             return
         current = structlog.get_config()
         processors = list(current.get("processors") or [])
-        processors.insert(0, HealthService._dispatch)
+        # Bound context (a request's request_id) is merged before the safe message is built,
+        # so no later processor can add a raw value back to the rendered line.
+        merge = structlog.contextvars.merge_contextvars
+        position = processors.index(merge) + 1 if merge in processors else 0
+        processors.insert(position, HealthService._dispatch)
         structlog.configure(
             processors=processors,
             wrapper_class=current.get("wrapper_class", structlog.stdlib.BoundLogger),
@@ -128,19 +169,22 @@ class HealthService:
         method_name: str,
         event_dict: MutableMapping[str, Any],
     ) -> MutableMapping[str, Any]:
-        with self._lock:
-            if self._processing:
-                return event_dict
-            self._processing = True
+        # A log raised while this thread processes a log passes through unprocessed.
+        if getattr(self._guard, "active", False):
+            return event_dict
+        self._guard.active = True
         try:
             raw = str(event_dict.get("event", method_name))
             fields = "".join(
-                f" {key}={event_dict[key]}" for key in CONSOLE_FIELDS if key in event_dict
+                f" {key}={console_field(event_dict[key])}"
+                for key in CONSOLE_FIELDS
+                if key in event_dict
             )
             message = redact_message(raw + fields)
             module = str(event_dict.get("module") or "app")
-            candidate = method_name.upper()
+            candidate = LEVEL_ALIASES.get(method_name, method_name.upper())
             level = candidate if candidate in LOG_LEVEL_WIRES else "INFO"
+            persist = level in PERSIST_LEVELS or event_dict.get(PERSIST_FIELD) is True
             with self._lock:
                 self._seq += 1
                 seq = self._seq
@@ -154,21 +198,26 @@ class HealthService:
                 self._ring.append(event)
             payload = {"seq": seq, "message": message, "module": module, "level": level}
             print(json.dumps(payload), file=sys.stdout)
-            if self._settings.get("app", "log_to_file") is True:
+            if persist or self._settings.get("app", "log_to_file") is True:
                 self._append_console_log(json.dumps(payload))
-            event_dict["event"] = message
-            event_dict["seq"] = seq
+            # Downstream renderers print only the safe message: no field, no traceback.
+            event_dict.clear()
+            event_dict.update({"event": message, "seq": seq, "exc_info": False})
             return event_dict
         finally:
-            with self._lock:
-                self._processing = False
+            self._guard.active = False
 
     def _append_console_log(self, line: str) -> None:
+        """Append one line. A locked or read-only file never fails the call that logged."""
         log_dir = self._app_data / "logs"
-        log_dir.mkdir(parents=True, exist_ok=True)
         path = log_dir / "console.log"
-        with path.open("a", encoding="utf-8") as handle:
-            handle.write(line + "\n")
+        with self._file_lock:
+            try:
+                log_dir.mkdir(parents=True, exist_ok=True)
+                with path.open("a", encoding="utf-8") as handle:
+                    handle.write(line + "\n")
+            except OSError:
+                return
 
     def console_snapshot(self, after_seq: object) -> list[ConsoleEvent]:
         if isinstance(after_seq, bool) or not isinstance(after_seq, int) or after_seq < 0:

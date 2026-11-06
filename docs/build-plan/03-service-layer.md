@@ -230,28 +230,43 @@ for job in list_jobs() ordered by queue_position:
       runtime = Idle; current_job_id = None; return
     honor delay_between_requests
     every batch_size: sleep pause_between_batches
-    fetch + write one item (below)
+    fetch + write one item (below)   # each request first waits for the rate cap
+    if the item's block outlasted max_retries:   # MEU-116
+      under _lock: pause requested; job.status = Paused
+      job.error_message = failure_message(blocked); runtime = Paused; return
   if all items terminal:
     if any item Failed:
       job.status = Failed   # do not compile/zip; do not promote to Done
+      job.error_message = JOB_MESSAGE   # "{n} of {total} videos failed. Last: {message}"
     else:
       compile_channel(job.id)
       zip_raw(job.id)
       job.status = Done; zip_path set
+      job.error_message = SKIPPED_JOB_MESSAGE if any item Skipped else None
+                          # "{n} of {total} videos had no transcript. Last: {message}"
   optional write_progress_export(done video_ids)
 ```
 
 `start` never picks `Paused` (that is `resume`) or `Failed` (that is `retry_failed_channel`) or `Cancelled` (that is `requeue_channel`).
+
+**Resume** moves the Paused job back to `Processing` and clears its `error_message`. A pause without a reason (the user's) leaves `error_message` as it is.
+
+**One worker (D-306).** `start_processing`, `resume_processing` and `stop_processing` set their flags and check for a live worker in one critical section under `_lock`. Each worker exit (pause, stop, idle) re-checks its flag under the same lock and, in that section, writes the runtime and marks the worker gone (`_worker_active`). So a resume either reaches the worker before it exits or finds none and starts one, and at most one worker runs. `_next_job` reads and clears the resume's pick-Processing flag under the lock. `_lock` is a plain `threading.Lock`, so nothing called inside these sections takes it again.
+
+**Rate cap (MEU-116).** Before each `get_transcript` call, retries included, the service reads `transcript.requests_per_hour`. `0` turns the cap off. Otherwise it drops request starts at or before `now − RATE_WINDOW` (3600 s, on the injected `clock`, default `time.monotonic`). While the count is at or above the cap it sleeps `min(1.0, oldest + RATE_WINDOW − now)`, then re-checks stop and pause and reads the cap again, so a stop or pause ends the wait within a second and a changed cap applies at once. With the defaults and no retries the cap delays nothing.
 
 **Boot recovery:** API lifespan sets any parent still `Processing` → `Pending` (crash). `Paused` stays `Paused` until `resume`.
 
 **One item**
 
 1. `result = transcripts.get_transcript(video_id, languages)` (languages from settings later; default `["en"]`).
-2. `None` → `Skipped` (no file).
-3. `TranscriptRetryableError` → sleep `retry_delay`, `retry_count++`, retry until `max_retries` then `Failed`.
-4. Success → write `{output_dir}/raw/{video_id}.md` via `write_text_atomic` (YAML frontmatter per [06-gui.md](06-gui.md)); set `path`, `word_count`, `title`, `language`, `Done`, `processed_at`.
-5. Discard `result.text`. `recompute_word_count`. Commit.
+2. `TranscriptSkip(cause)` → `Skipped` (no file), `error_message = failure_message(cause)`; log `transcript.item_skipped` at WARNING with `persist=True`, so it reaches `console.log` with the toggle off.
+3. `TranscriptRetryableError` → sleep `retry_delay`, `retry_count++`, `error_message = failure_message(blocked)`, retry until `max_retries`. A retry in progress logs nothing. The exhausted block leaves the item `Pending` with `retry_count = 0` and that message, logs `transcript.blocked` at ERROR and pauses the job (worker loop, MEU-116).
+4. `DomainError` → `Failed`, `error_message = failure_message(other, reason)`, where the reason is `safe_reason(redact_message(str(error)))`, or the class name when that is empty; log `transcript.item_failed` at ERROR.
+5. Success → write `{output_dir}/raw/{video_id}.md` via `write_text_atomic` (YAML frontmatter per [06-gui.md](06-gui.md)); set `path`, `word_count`, `title`, `language`, `Done`, `processed_at`, and clear `error_message`.
+6. Discard `result.text`. `recompute_word_count`. Commit.
+
+Each `transcript.item_skipped`, `transcript.item_failed` and `transcript.blocked` line carries `job_id`, `video_id` and `error=` the stored message (MEU-115, MEU-116).
 
 Frontmatter fields: `video_id`, `title`, `channel`, `url`, `date` (upload date if known, else omit or today — prefer yt-dlp date when the item title fetch has it).
 
@@ -385,7 +400,7 @@ Used by Phase 4/6. Thin.
 
 **`seq` ownership (locked):** a single process-local counter on `HealthService` (or the structlog processor it registers). Every app log is redacted, assigned the next `seq`, appended to the ring, and emitted to stdout as that same JSON object. Nothing else increments `seq`. Restart → counter returns to 1; clients treat a decreased `seq` as a new instance. Uvicorn / non-JSON stdout is **not** given a backend `seq` (Phase 6 `ipc:{n}`).
 
-Tokens, cookie bytes, and Bearer values are redacted **before** enqueue. When `app.log_to_file` is true, the same line is appended to `{app_data}/logs/console.log`.
+Tokens, cookie bytes, and Bearer values are redacted **before** enqueue. Each `CONSOLE_FIELDS` value (`job_id`, `video_id`, `variant_id`, `device`, `error`, `detail`, `request_id`, `route`) is made one line, each URL becomes "[link]", and it is redacted and cut to `FIELD_LIMIT` (300) before the whole message is redacted again. A line at a `PERSIST_LEVELS` level (`ERROR`, `CRITICAL`), or whose event carries `persist=True`, is always appended to `{app_data}/logs/console.log`; when `app.log_to_file` is true, every other line is appended too. The `persist` key is never shown. The append catches `OSError` and runs under its own lock. The method names `exception`, `fatal` and `warn` log at `ERROR`, `CRITICAL` and `WARNING`. The event handed on to structlog's stdout renderer holds only the safe message, its `seq` and `exc_info=False`, so no unkept field and no traceback reach stdout.
 
 ---
 
@@ -540,6 +555,12 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Done | A blocked job's card states the reason and the Console has a matching line. | Local Canon: triage D-218 |
 | Tests | Unit for each cause, with no real network; a contract test for the route; a renderer test for the card; a redaction test for the kept fields. | Local Canon |
 
+> **Delivered (Session 50).**
+> - The port reports the cause: a skip is a `TranscriptSkip` (no captions or unavailable), and a block raises `TranscriptRetryableError` with the short text "caption request blocked" (D-291). `failure_message` writes the four user texts in one place, and `safe_reason` keeps an other reason to one redacted line with links removed (D-292).
+> - Each skip and failure stores its message on the video and logs `transcript.item_skipped` (WARNING, persisted) or `transcript.item_failed` (ERROR) with it. A Failed job stores `JOB_MESSAGE` and a Done job with a skip stores `SKIPPED_JOB_MESSAGE` (D-295). The API returns `error_message` and `last_item_message` (D-293), and the card shows the message on line three (D-294).
+> - Rider `CONSOLE-FAILURE-DETAIL-LOST`: the Console keeps `error`, `detail`, `device` and `variant_id` as single redacted lines, stdout gets only the safe message, and ERROR lines always reach `console.log` (D-296 to D-298, D-304, D-305; Mat's ruling D-247).
+> - AC-115.1 to AC-115.19. Plan `docs/execution/plans/2026-11-05-transcript-failure-reason/`.
+
 <a id="transcript-block-stop-residual"></a>
 
 ## Transcript block stop (residual)
@@ -553,6 +574,12 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Other failures | A failure that isn't a block ends that video `Failed` and the run goes on, as the run loop does today. | Spec §TranscriptService |
 | Rate cap | `transcript.requests_per_hour` is enforced as a rolling cap over real requests. Default behaviour doesn't change: 6 s apart with a 300 s pause after 50 is already about 300 an hour. | Local Canon: triage D-220 |
 | Tests | Unit with a fake port and clock: a block on the first video makes `max_retries` attempts and no request for the next video, then the job reads `Paused` with the reason; resume finishes the rest; a lowered cap delays the next request and the default cap delays nothing. | Local Canon |
+
+> **Delivered (Session 50).**
+> - A block that outlasts `max_retries` leaves its video `Pending` with `retry_count` 0, logs `transcript.blocked` at ERROR and pauses the job with the blocked message, so no request is made for any further video until Resume. Resume clears the job's message (D-299).
+> - `requests_per_hour` is a rolling cap over every request, retries included, on an injected clock, in waits of at most a second that Stop and Pause end and that read the cap again (D-300, `RATE_WINDOW`).
+> - The worker's exits and `start`, `resume` and `stop` share one rule under `_lock`, so a Resume racing the worker's exit leaves exactly one worker (D-306).
+> - AC-116.1 to AC-116.9, with AC-11.6 and AC-11.8 amended under AC-116.6. Plan `docs/execution/plans/2026-11-05-transcript-failure-reason/`.
 
 <a id="tts-build-capability-residual"></a>
 

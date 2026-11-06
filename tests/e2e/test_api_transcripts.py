@@ -104,3 +104,39 @@ def test_ac_16_2_aggregates_without_video_ids_or_text() -> None:
     assert "video_ids" not in listed.text
     assert all("text" not in item for item in payload["items"])
     assert all("video_ids" not in item for item in payload["items"])
+
+
+def test_ac_115_8_job_out_carries_the_latest_item_message() -> None:
+    from dataclasses import replace
+
+    from avkit_core.domain.enums import TranscriptItemStatus
+
+    client, fake, _tts, _models = make_client()
+    job_text = "1 of 2 videos failed. Last: Couldn't get captions: the video is age-restricted."
+    fake.jobs = [replace(fake.jobs[0], status=TranscriptStatus.Failed, error_message=job_text)]
+    latest = fake.items[JOB_A][1]
+    failed_text = "Couldn't get captions: x."
+    skipped_text = "No captions for this video."
+    done_path = Path("C:/tmp/transcripts/raw/latest.md")
+    cases = [
+        (TranscriptItemStatus.Failed, None, failed_text, failed_text),
+        (TranscriptItemStatus.Skipped, None, skipped_text, skipped_text),
+        (TranscriptItemStatus.Pending, None, "Retrying after a block.", None),
+        (TranscriptItemStatus.Done, done_path, None, None),
+    ]
+    seen = []
+    for status, path, message, _expected in cases:
+        fake.items[JOB_A][1] = replace(latest, status=status, path=path, error_message=message)
+        one = client.get(f"/api/v1/transcripts/{JOB_A}", headers=AUTH).json()
+        listed = client.get("/api/v1/transcripts", headers=AUTH).json()["items"][0]
+        seen.append(
+            (
+                one["last_item_status"],
+                one.get("last_item_message", "<absent>"),
+                listed.get("last_item_message", "<absent>"),
+                one["error_message"],
+            )
+        )
+    assert seen == [
+        (status.value, expected, expected, job_text) for status, _path, _message, expected in cases
+    ]

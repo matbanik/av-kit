@@ -52,7 +52,7 @@ Disk target: **&lt; 500MB installed, without models** ([APPLICATION_PURPOSE.md �
 
 {app_data}/                        # %LOCALAPPDATA%/av-kit  (Phase 2)
 ├── avkit.db
-├── logs/console.log               # if app.log_to_file
+├── logs/console.log               # errors always; every line if app.log_to_file
 ├── mcp-token.txt                  # provisioned MCP Bearer (created first run)
 └── ...
 

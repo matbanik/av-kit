@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, replace
 from datetime import datetime
+from enum import StrEnum
 from pathlib import Path
 
 from avkit_core.domain.enums import TranscriptItemStatus, TranscriptStatus
@@ -164,3 +166,63 @@ class TranscriptResult:
         if not isinstance(self.text, str):
             raise ValidationError("text must be str")
         require_non_empty_str(self.language, "language")
+
+
+class TranscriptFailureCause(StrEnum):
+    """Why a video has no transcript. `failure_message` writes one text per cause."""
+
+    blocked = "blocked"
+    no_captions = "no_captions"
+    unavailable = "unavailable"
+    other = "other"
+
+
+#: The causes a skip may carry. A block or any other failure is never a skip.
+_SKIP_CAUSES = frozenset({TranscriptFailureCause.no_captions, TranscriptFailureCause.unavailable})
+
+#: The most characters `safe_reason` keeps.
+REASON_LIMIT = 200
+
+#: A URL: a `scheme://` run up to whitespace.
+_URL = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*://\S*")
+
+
+@dataclass(frozen=True)
+class TranscriptSkip:
+    """Port return for a video with no transcript. It carries its cause."""
+
+    cause: TranscriptFailureCause
+
+    def __post_init__(self) -> None:
+        require_enum(self.cause, TranscriptFailureCause, "cause")
+        if self.cause not in _SKIP_CAUSES:
+            raise ValidationError(
+                f"a transcript skip's cause must be no_captions or unavailable, not {self.cause}"
+            )
+
+
+def failure_message(cause: TranscriptFailureCause, reason: str | None = None) -> str:
+    """The user-facing text for `cause`, written only here. Only `other` uses `reason`."""
+    require_enum(cause, TranscriptFailureCause, "cause")
+    if cause is TranscriptFailureCause.blocked:
+        return (
+            "YouTube is blocking caption requests from this network. "
+            "Try again later or from another network, then Resume."
+        )
+    if cause is TranscriptFailureCause.no_captions:
+        return "No captions for this video."
+    if cause is TranscriptFailureCause.unavailable:
+        return "This video is unavailable."
+    return f"Couldn't get captions: {reason}." if reason else "Couldn't get captions."
+
+
+def replace_links(text: str) -> str:
+    """`text` with each URL as "[link]". `safe_reason` and the Console fields share this rule."""
+    return _URL.sub("[link]", text)
+
+
+def safe_reason(text: str) -> str:
+    """The first line of `text`, each URL as "[link]", cut to REASON_LIMIT. Redact it first."""
+    lines = text.splitlines()
+    first = lines[0].strip() if lines else ""
+    return replace_links(first)[:REASON_LIMIT]

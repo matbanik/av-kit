@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
@@ -1130,12 +1131,19 @@ class FakeCaptions:
         self.entered = __import__("threading").Event()
         self.release = __import__("threading").Event()
         self.retryable_left = 0
+        self.clock: Callable[[], float] | None = None
+        self.starts: list[float] = []
+        self.on_call: Callable[[int], None] | None = None
 
     def get_transcript(self, video_id: str, languages: list[str]) -> object:
         from avkit_core.domain.errors import TranscriptRetryableError
         from avkit_core.domain.transcript import TranscriptResult
 
         self.fetch_calls.append((video_id, list(languages)))
+        if self.clock is not None:
+            self.starts.append(self.clock())
+        if self.on_call is not None:
+            self.on_call(len(self.fetch_calls))
         self.entered.set()
         if self.hold:
             self.release.wait(timeout=2)
@@ -1155,13 +1163,35 @@ class FakeCaptions:
         )
 
 
+class FakeClock:
+    """A monotonic clock that only its own `sleep` advances (MEU-116 rate cap)."""
+
+    def __init__(self) -> None:
+        self.now = 0.0
+        self.sleeps: list[float] = []
+        self.on_sleep: Callable[[float], None] | None = None
+
+    def __call__(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.sleeps.append(seconds)
+        self.now += seconds
+        if self.on_sleep is not None:
+            self.on_sleep(self.now)
+
+
 def _transcript_stack(
     tmp_path: Path,
     *,
     youtube: DownloadYouTube | None = None,
     coordinator: ExtractCoordinator | None = None,
     factory: SharedFakeFactory | None = None,
+    clock: FakeClock | None = None,
+    sleep: Callable[[float], None] | None = None,
 ):
+    import inspect
+
     from avkit_core.services.transcript import TranscriptService
 
     uow = factory.uow if factory is not None else FakeUnitOfWork()
@@ -1174,14 +1204,22 @@ def _transcript_stack(
     coord = coordinator or ExtractCoordinator(yt)
     filesystem = FakeFilesystem()
     captions = FakeCaptions()
-    sleeps: list[float] = []
+    sleeps: list[float] = clock.sleeps if clock is not None else []
+    extra: dict[str, object] = {}
+    if clock is not None:
+        captions.clock = clock
+        # The MEU-116 guards run before the service takes a clock; the required tests
+        # assert the parameter first (_require_clock).
+        if "clock" in inspect.signature(TranscriptService).parameters:
+            extra["clock"] = clock
     service = TranscriptService(
         factory,
         coordinator=coord,
         captions=captions,
         filesystem=filesystem,
         settings=settings,
-        sleep=sleeps.append,
+        sleep=sleep or (clock.sleep if clock is not None else sleeps.append),
+        **extra,  # type: ignore[arg-type]
     )
     return service, settings, yt, uow, filesystem, captions, sleeps
 
@@ -1290,14 +1328,15 @@ def test_ac_11_5_requeue_and_retry(tmp_path: Path) -> None:
 
 
 def test_ac_11_6_skip_retry_and_write(tmp_path: Path) -> None:
-    from avkit_core.domain.enums import TranscriptItemStatus
+    from avkit_core.domain.enums import TranscriptItemStatus, TranscriptStatus
+    from avkit_core.domain.transcript import TranscriptFailureCause, TranscriptSkip
 
     service, settings, yt, uow, filesystem, captions, sleeps = _transcript_stack(tmp_path)
     yt.ids = ["none", "retry"]
     yt.playlist = PlaylistInfo(playlist_id="ch", title="My Channel", video_ids=list(yt.ids))
     settings.set("transcript", "max_retries", 1)
     settings.set("transcript", "retry_delay", 7)
-    captions.results["none"] = None
+    captions.results["none"] = TranscriptSkip(TranscriptFailureCause.no_captions)
     captions.retryable_left = 3
     job = service.add_channel("https://youtube.com/@retry")
     service.start_processing()
@@ -1305,8 +1344,9 @@ def test_ac_11_6_skip_retry_and_write(tmp_path: Path) -> None:
         service._thread.join(timeout=2)
     items = {item.video_id: item for item in uow.transcripts.list_items(job.id)}
     assert items["none"].status is TranscriptItemStatus.Skipped
-    assert items["retry"].status is TranscriptItemStatus.Failed
-    assert items["retry"].retry_count >= 1
+    assert items["retry"].status is TranscriptItemStatus.Pending
+    assert items["retry"].retry_count == 0
+    assert uow.transcripts.get_job(job.id).status is TranscriptStatus.Paused
     assert 7 in sleeps
     assert not any(
         item.video_id == "retry" and "hello world" in str(item) for item in items.values()
@@ -1329,13 +1369,13 @@ def test_ac_11_7_delay_and_batch_sleeps(tmp_path: Path) -> None:
 
 def test_ac_11_8_failed_parent_skips_zip(tmp_path: Path) -> None:
     from avkit_core.domain.enums import TranscriptStatus
-    from avkit_core.domain.errors import TranscriptRetryableError
+    from avkit_core.domain.errors import DomainError
 
     service, settings, yt, uow, filesystem, captions, _sleeps = _transcript_stack(tmp_path)
     yt.ids = ["ok", "bad"]
     yt.playlist = PlaylistInfo(playlist_id="ch", title="My Channel", video_ids=list(yt.ids))
     settings.set("transcript", "max_retries", 0)
-    captions.results["bad"] = TranscriptRetryableError("no")
+    captions.results["bad"] = DomainError("no")
     job = service.add_channel("https://youtube.com/@fail")
     service.start_processing()
     if service._thread is not None:
@@ -2414,3 +2454,737 @@ def test_ac_98_3_same_path_not_written(tmp_path: Path) -> None:
     assert marks == []
     assert uow.commits == before
     assert [call[0].path for call in tts_port.load_calls] == [managed]
+
+
+# --- MEU-115 failure reason: items, jobs and log lines ---------------------------------------
+
+
+def _run_reasons(
+    tmp_path: Path, ids: list[str], results: dict[str, object], *, max_retries: int = 0
+):
+    service, settings, yt, uow, _fs, captions, _sleeps = _transcript_stack(tmp_path)
+    yt.ids = list(ids)
+    yt.playlist = PlaylistInfo(playlist_id="ch", title="My Channel", video_ids=list(ids))
+    settings.set("transcript", "max_retries", max_retries)
+    captions.results.update(results)
+    job = service.add_channel("https://youtube.com/@reasons")
+    service.start_processing()
+    if service._thread is not None:
+        service._thread.join(timeout=2)
+    return job, uow
+
+
+def test_ac_115_5_items_store_the_failure_message(tmp_path: Path) -> None:
+    from avkit_core.domain.enums import TranscriptItemStatus
+    from avkit_core.domain.errors import DomainError, TranscriptRetryableError
+    from avkit_core.domain.transcript import (
+        TranscriptFailureCause,
+        TranscriptSkip,
+        failure_message,
+    )
+
+    cause = TranscriptFailureCause
+    job, uow = _run_reasons(
+        tmp_path,
+        ["none", "gone", "broken", "linked", "secret", "ok", "blocked"],
+        {
+            "none": TranscriptSkip(cause.no_captions),
+            "gone": TranscriptSkip(cause.unavailable),
+            "broken": DomainError("the video is age-restricted"),
+            "linked": DomainError("line one https://example.invalid/x?token=abc\nline two"),
+            "secret": DomainError("Authorization: Bearer SYNTHETIC_ITEM_MARKER"),
+            "blocked": TranscriptRetryableError("caption request blocked"),
+        },
+        max_retries=1,
+    )
+    items = {item.video_id: item for item in uow.transcripts.list_items(job.id)}
+    status = TranscriptItemStatus
+    assert {key: (item.status, item.error_message) for key, item in items.items()} == {
+        "none": (status.Skipped, failure_message(cause.no_captions)),
+        "gone": (status.Skipped, failure_message(cause.unavailable)),
+        "broken": (status.Failed, failure_message(cause.other, "the video is age-restricted")),
+        "linked": (status.Failed, failure_message(cause.other, "line one [link]")),
+        "secret": (status.Failed, failure_message(cause.other, "[REDACTED]")),
+        "ok": (status.Done, None),
+        "blocked": (status.Pending, failure_message(cause.blocked)),
+    }
+
+
+def test_ac_115_6_job_message_counts_failures_and_skips(tmp_path: Path) -> None:
+    from avkit_core.domain.enums import TranscriptStatus
+    from avkit_core.domain.errors import DomainError
+    from avkit_core.domain.transcript import TranscriptFailureCause, TranscriptSkip
+
+    skip = TranscriptSkip(TranscriptFailureCause.no_captions)
+    failed, failed_uow = _run_reasons(
+        tmp_path / "failed",
+        ["a", "b", "c", "d"],
+        {"a": DomainError("first reason"), "b": skip, "c": DomainError("second reason")},
+    )
+    skipped, skipped_uow = _run_reasons(tmp_path / "skipped", ["x", "y"], {"x": skip})
+    clean, clean_uow = _run_reasons(tmp_path / "clean", ["v1", "v2"], {})
+    outcomes = [
+        (uow.transcripts.get_job(job.id).status, uow.transcripts.get_job(job.id).error_message)
+        for job, uow in ((failed, failed_uow), (skipped, skipped_uow), (clean, clean_uow))
+    ]
+    assert outcomes == [
+        (
+            TranscriptStatus.Failed,
+            "2 of 4 videos failed. Last: Couldn't get captions: second reason.",
+        ),
+        (
+            TranscriptStatus.Done,
+            "1 of 2 videos had no transcript. Last: No captions for this video.",
+        ),
+        (TranscriptStatus.Done, None),
+    ]
+
+
+def test_ac_115_7_each_skip_and_failure_logs_one_line(tmp_path: Path) -> None:
+    from structlog.testing import capture_logs
+
+    from avkit_core.domain.errors import DomainError, TranscriptRetryableError
+    from avkit_core.domain.transcript import (
+        TranscriptFailureCause,
+        TranscriptSkip,
+        failure_message,
+    )
+
+    cause = TranscriptFailureCause
+    with capture_logs() as logs:
+        job, _uow = _run_reasons(
+            tmp_path,
+            ["none", "broken", "blocked", "ok"],
+            {
+                "none": TranscriptSkip(cause.no_captions),
+                "broken": DomainError("the video is age-restricted"),
+                "blocked": TranscriptRetryableError("caption request blocked"),
+            },
+            max_retries=2,
+        )
+    lines = [
+        entry
+        for entry in logs
+        if entry["event"]
+        in {"transcript.item_skipped", "transcript.item_failed", "transcript.blocked"}
+    ]
+    assert [
+        (
+            entry["event"],
+            entry["log_level"],
+            entry.get("job_id"),
+            entry.get("video_id"),
+            entry.get("error"),
+        )
+        for entry in lines
+    ] == [
+        (
+            "transcript.item_skipped",
+            "warning",
+            job.id,
+            "none",
+            failure_message(cause.no_captions),
+        ),
+        (
+            "transcript.item_failed",
+            "error",
+            job.id,
+            "broken",
+            failure_message(cause.other, "the video is age-restricted"),
+        ),
+        (
+            "transcript.blocked",
+            "error",
+            job.id,
+            "blocked",
+            failure_message(cause.blocked),
+        ),
+    ], logs
+    assert lines[0].get("persist") is True
+    assert sum(1 for entry in logs if entry.get("video_id") == "blocked") == 1, logs
+
+
+# --- MEU-115 Console rider -------------------------------------------------------------------
+
+
+def _health(tmp_path: Path, *, log_to_file: bool = False) -> HealthService:
+    factory = SharedFakeFactory(FakeUnitOfWork())
+    settings = SettingsService(factory)
+    settings.set("app", "log_to_file", log_to_file)
+    return HealthService(
+        factory,
+        app_data=tmp_path,
+        settings=settings,
+        media=FakeMedia(),
+        youtube=FakeYouTube(),
+        assets=FakeAssets(),
+        download_runtime=idle_runtime,
+    )
+
+
+def _messages(health: HealthService, prefix: str) -> list[str]:
+    events = health.console_snapshot(0)
+    return [event.message for event in events if event.message.startswith(prefix)]
+
+
+def _console_lines(app_data: Path) -> list[dict[str, object]]:
+    import json
+
+    path = app_data / "logs" / "console.log"
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+
+
+def test_ac_115_9_console_fields_in_order_single_line_and_cut(tmp_path: Path) -> None:
+    import structlog
+
+    from avkit_core.services import health as health_module
+
+    assert hasattr(health_module, "FIELD_LIMIT")
+    assert health_module.FIELD_LIMIT == 300
+    assert health_module.CONSOLE_FIELDS == (
+        "job_id",
+        "video_id",
+        "variant_id",
+        "device",
+        "error",
+        "detail",
+        "request_id",
+        "route",
+    )
+    health = _health(tmp_path)
+    log = structlog.get_logger(module="fields")
+    log.error(
+        "probe.order",
+        route="/r",
+        request_id="q",
+        detail="d",
+        error="e",
+        device="cpu",
+        variant_id="var",
+        video_id="vid",
+        job_id="job",
+        other="dropped",
+    )
+    log.error(
+        "probe.shape",
+        detail="first\r\n\nsecond\rthird https://example.invalid/a?b=c end",
+        error="x" * 400,
+    )
+    assert _messages(health, "probe.order") == [
+        "probe.order job_id=job video_id=vid variant_id=var device=cpu error=e detail=d "
+        "request_id=q route=/r"
+    ]
+    assert _messages(health, "probe.shape") == [
+        "probe.shape error=" + "x" * 300 + " detail=first second third [link] end"
+    ]
+
+
+def test_ac_115_10_secrets_reach_no_console_surface(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import json
+    import re
+
+    import structlog
+
+    ansi = re.compile(r"\x1b\[[0-9;]*m")
+    rendered = re.compile(r"\S+ \S+ \[[a-z]+ *\] (?P<message>.*?) +seq=(?P<seq>\d+)")
+    markers = (
+        "SYNTHETIC_VIDEO_MARKER",
+        "SYNTHETIC_COOKIE_MARKER",
+        "SYNTHETIC_BEARER_MARKER",
+        "SYNTHETIC_URL_MARKER",
+        "SYNTHETIC_UNKEPT_MARKER",
+        "SYNTHETIC_TRACE_MARKER",
+    )
+    health = _health(tmp_path, log_to_file=True)
+    log = structlog.get_logger()
+    log.error("probe.kept", video_id="vid-kept", detail="kept detail")
+    assert _messages(health, "probe.kept") == ["probe.kept video_id=vid-kept detail=kept detail"]
+    log.error(
+        "probe.secret",
+        video_id="avkit_token=SYNTHETIC_VIDEO_MARKER",
+        error="cookie: SID=SYNTHETIC_COOKIE_MARKER",
+        detail="Authorization: Bearer SYNTHETIC_BEARER_MARKER",
+    )
+    log.warning(
+        "probe.url",
+        detail="see https://example.invalid/caption?token=SYNTHETIC_URL_MARKER now",
+        unkept="SYNTHETIC_UNKEPT_MARKER",
+    )
+    try:
+        raise ValueError("SYNTHETIC_TRACE_MARKER")
+    except ValueError:
+        log.exception("probe.trace")
+    ring = health.console_snapshot(0)
+    stdout = capsys.readouterr().out
+    filed = (tmp_path / "logs" / "console.log").read_text(encoding="utf-8")
+    surfaces = {"ring": " ".join(event.message for event in ring), "stdout": stdout, "file": filed}
+    leaks = {
+        name: [item for item in (*markers, "Traceback") if item in text]
+        for name, text in surfaces.items()
+    }
+    assert leaks == {"ring": [], "stdout": [], "file": []}
+    safe = {(event.message, event.seq) for event in ring}
+    for raw in stdout.splitlines():
+        line = ansi.sub("", raw)
+        if line.startswith("{"):
+            assert set(json.loads(line)) == {"seq", "message", "module", "level"}, line
+            continue
+        match = rendered.fullmatch(line)
+        assert match is not None, line
+        assert (match["message"], int(match["seq"])) in safe, line
+
+
+#: Each character case-folds to more than one character (D-296 review F2).
+FOLDING_PREFIXES = {"sharp-s": "\u00df" * 64, "dotted-i": "\u0130" * 40, "ffi": "\ufb03" * 30}
+
+
+@pytest.mark.parametrize("prefix", FOLDING_PREFIXES.values(), ids=FOLDING_PREFIXES.keys())
+def test_ac_115_10_case_folding_prefix_still_redacts(prefix: str) -> None:
+    from avkit_core.services.health import console_field, redact_message
+
+    secret = prefix + " Bearer SYNTHETIC_FOLD_MARKER"
+    assert redact_message(secret) == prefix + " [REDACTED]"
+    assert redact_message(prefix + "BEARER") == prefix + " [REDACTED]"
+    assert "SYNTHETIC" not in console_field(secret)
+
+
+def test_ac_115_10_context_bound_values_reach_no_stdout_line(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import re
+
+    import structlog
+
+    ansi = re.compile(r"\x1b\[[0-9;]*m")
+    rendered = re.compile(r"\S+ \S+ \[[a-z]+ *\] (?P<message>.*?) +seq=(?P<seq>\d+)")
+    health = _health(tmp_path, log_to_file=True)
+    log = structlog.get_logger()
+    structlog.contextvars.bind_contextvars(request_id="req-ctx")
+    try:
+        log.error("probe.context")
+        structlog.contextvars.bind_contextvars(request_id="Bearer SYNTHETIC_CONTEXT_MARKER")
+        log.error("probe.hostile")
+    finally:
+        structlog.contextvars.unbind_contextvars("request_id")
+    assert _messages(health, "probe.") == [
+        "probe.context request_id=req-ctx",
+        "probe.hostile request_id=[REDACTED]",
+    ]
+    stdout = capsys.readouterr().out
+    filed = (tmp_path / "logs" / "console.log").read_text(encoding="utf-8")
+    assert [
+        name for name, text in {"stdout": stdout, "file": filed}.items() if "SYNTHETIC" in text
+    ] == []
+    safe = {(event.message, event.seq) for event in health.console_snapshot(0)}
+    for raw in stdout.splitlines():
+        line = ansi.sub("", raw)
+        if line.startswith("{"):
+            continue
+        match = rendered.fullmatch(line)
+        assert match is not None, line
+        assert (match["message"], int(match["seq"])) in safe, line
+
+
+def test_ac_115_11_errors_and_flagged_lines_always_reach_the_file(tmp_path: Path) -> None:
+    import structlog
+
+    from avkit_core.services import health as health_module
+
+    for name in ("PERSIST_LEVELS", "PERSIST_FIELD", "LEVEL_ALIASES"):
+        assert hasattr(health_module, name), name
+    assert health_module.PERSIST_LEVELS == ("ERROR", "CRITICAL")
+    assert health_module.PERSIST_FIELD == "persist"
+    assert dict(health_module.LEVEL_ALIASES) == {
+        "exception": "ERROR",
+        "fatal": "CRITICAL",
+        "warn": "WARNING",
+    }
+    health = _health(tmp_path)
+    log = structlog.get_logger(module="file")
+    log.error("keep.error")
+    try:
+        raise ValueError("boom")
+    except ValueError:
+        log.exception("keep.exception")
+    log.warning("keep.flagged", persist=True)
+    log.warning("drop.warning")
+    log.info("drop.info")
+    assert [line["message"] for line in _console_lines(tmp_path)] == [
+        "keep.error",
+        "keep.exception",
+        "keep.flagged",
+    ]
+    ring = health.console_snapshot(0)
+    assert {event.message: event.level for event in ring}["keep.exception"] == "ERROR"
+    assert [event.message for event in ring if "persist" in event.message] == []
+
+
+def test_ac_115_12_append_failure_never_raises(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import structlog
+
+    health = _health(tmp_path, log_to_file=True)
+    (tmp_path / "logs" / "console.log").mkdir(parents=True)
+    log = structlog.get_logger(module="file")
+    raised: OSError | None = None
+    try:
+        log.error("append.blocked")
+    except OSError as exc:
+        raised = exc
+    assert raised is None
+    assert _messages(health, "append.blocked") == ["append.blocked"]
+    assert '"message": "append.blocked"' in capsys.readouterr().out
+
+
+def test_ac_115_13_two_threads_both_reach_the_ring(tmp_path: Path) -> None:
+    import threading
+
+    import structlog
+
+    health = _health(tmp_path)
+    entered = threading.Event()
+    release = threading.Event()
+
+    class Blocker:
+        def __str__(self) -> str:
+            entered.set()
+            release.wait(timeout=2)
+            return "held"
+
+    log = structlog.get_logger(module="threads")
+    first = threading.Thread(target=lambda: log.info("thread.first", error=Blocker()))
+    first.start()
+    try:
+        assert entered.wait(timeout=2)
+        log.info("thread.second")
+    finally:
+        release.set()
+        first.join(timeout=5)
+    messages = {event.message for event in health.console_snapshot(0)}
+    assert {"thread.first error=held", "thread.second"} <= messages, messages
+
+
+# --- MEU-116 block stop and rate cap ----------------------------------------------------------
+
+
+def _set_ids(yt: DownloadYouTube, ids: list[str]) -> None:
+    yt.ids = list(ids)
+    yt.playlist = PlaylistInfo(playlist_id="ch", title="My Channel", video_ids=list(ids))
+
+
+def _join(service: object, timeout: float = 10) -> None:
+    thread = service._thread  # type: ignore[attr-defined]
+    if thread is not None:
+        thread.join(timeout=timeout)
+
+
+def _wait_until(predicate: Callable[[], bool], timeout: float = 5) -> bool:
+    import time
+
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if predicate():
+            return True
+        time.sleep(0.01)
+    return predicate()
+
+
+def _require_clock() -> None:
+    import inspect
+
+    from avkit_core.services.transcript import TranscriptService
+
+    assert "clock" in inspect.signature(TranscriptService).parameters
+
+
+def _blocked_run(tmp_path: Path):
+    service, settings, yt, uow, _fs, captions, _sleeps = _transcript_stack(tmp_path)
+    _set_ids(yt, ["first", "second"])
+    settings.set("transcript", "max_retries", 3)
+    captions.retryable_left = 10**6
+    job = service.add_channel("https://youtube.com/@blocked")
+    service.start_processing()
+    _join(service)
+    return service, uow, captions, job
+
+
+def test_ac_116_1_exhausted_block_pauses_the_job(tmp_path: Path) -> None:
+    from avkit_core.domain.enums import TranscriptItemStatus, TranscriptStatus
+    from avkit_core.domain.transcript import TranscriptFailureCause, failure_message
+
+    service, uow, captions, job = _blocked_run(tmp_path)
+    blocked = failure_message(TranscriptFailureCause.blocked)
+    calls = [video_id for video_id, _languages in captions.fetch_calls]
+    parent = uow.transcripts.get_job(job.id)
+    items = [
+        (item.video_id, item.status, item.retry_count, item.error_message)
+        for item in uow.transcripts.list_items(job.id)
+    ]
+    assert (calls.count("first"), calls.count("second")) == (3, 0)
+    assert (parent.status, parent.error_message) == (TranscriptStatus.Paused, blocked)
+    assert items == [
+        ("first", TranscriptItemStatus.Pending, 0, blocked),
+        ("second", TranscriptItemStatus.Pending, 0, None),
+    ]
+    assert service.get_processor_state().state is QueueProcessorState.Paused
+
+
+def test_ac_116_2_resume_after_a_block_finishes_the_job(tmp_path: Path) -> None:
+    from avkit_core.domain.enums import TranscriptItemStatus, TranscriptStatus
+
+    service, uow, captions, job = _blocked_run(tmp_path)
+    assert uow.transcripts.get_job(job.id).status is TranscriptStatus.Paused
+    captions.retryable_left = 0
+    service.resume_processing()
+    _join(service)
+    parent = uow.transcripts.get_job(job.id)
+    assert (parent.status, parent.error_message) == (TranscriptStatus.Done, None)
+    assert [(item.status, item.error_message) for item in uow.transcripts.list_items(job.id)] == [
+        (TranscriptItemStatus.Done, None),
+        (TranscriptItemStatus.Done, None),
+    ]
+
+
+def test_ac_116_3_other_failure_fails_the_video_and_the_run_goes_on(tmp_path: Path) -> None:
+    from avkit_core.domain.enums import TranscriptItemStatus
+    from avkit_core.domain.errors import DomainError
+
+    job, uow = _run_reasons(
+        tmp_path, ["bad", "next"], {"bad": DomainError("the video is age-restricted")}
+    )
+    items = {item.video_id: item.status for item in uow.transcripts.list_items(job.id)}
+    assert items == {"bad": TranscriptItemStatus.Failed, "next": TranscriptItemStatus.Done}
+
+
+def _capped(tmp_path: Path, ids: list[str], cap: float):
+    clock = FakeClock()
+    service, settings, yt, uow, _fs, captions, _sleeps = _transcript_stack(tmp_path, clock=clock)
+    _set_ids(yt, ids)
+    settings.set("transcript", "delay_between_requests", 0)
+    settings.set("transcript", "batch_size", 0)
+    settings.set("transcript", "requests_per_hour", cap)
+    return service, settings, uow, captions, clock
+
+
+def _run_capped(service: object) -> object:
+    job = service.add_channel("https://youtube.com/@capped")  # type: ignore[attr-defined]
+    service.start_processing()  # type: ignore[attr-defined]
+    _join(service)
+    return job
+
+
+def test_ac_116_4_third_request_waits_until_the_first_is_an_hour_old(tmp_path: Path) -> None:
+    _require_clock()
+    service, _settings, _uow, captions, _clock = _capped(tmp_path, ["a", "b", "c"], 2)
+    _run_capped(service)
+    assert captions.starts == [0.0, 0.0, 3600.0]
+
+
+def test_ac_116_4_a_retry_counts_as_a_request(tmp_path: Path) -> None:
+    _require_clock()
+    service, settings, _uow, captions, _clock = _capped(tmp_path, ["a", "b"], 2)
+    settings.set("transcript", "max_retries", 3)
+    settings.set("transcript", "retry_delay", 5)
+    captions.retryable_left = 1
+    _run_capped(service)
+    assert captions.starts == [0.0, 5.0, 3600.0]
+
+
+def test_ac_116_4_a_cap_of_zero_never_waits(tmp_path: Path) -> None:
+    _require_clock()
+    service, _settings, _uow, captions, clock = _capped(tmp_path, ["a", "b", "c"], 0)
+    _run_capped(service)
+    assert (captions.starts, max(clock.sleeps, default=0.0)) == ([0.0, 0.0, 0.0], 0.0)
+
+
+def test_ac_116_4_a_lowered_cap_is_read_for_the_next_request(tmp_path: Path) -> None:
+    _require_clock()
+    service, settings, _uow, captions, _clock = _capped(tmp_path, ["a", "b"], 300)
+    captions.on_call = lambda _count: settings.set("transcript", "requests_per_hour", 1)
+    _run_capped(service)
+    assert captions.starts == [0.0, 3600.0]
+
+
+@pytest.mark.parametrize(
+    ("action", "status"),
+    [("pause_processing", "Paused"), ("stop_processing", "Cancelled")],
+    ids=["pause", "stop"],
+)
+def test_ac_116_4_stop_or_pause_ends_a_cap_wait(tmp_path: Path, action: str, status: str) -> None:
+    _require_clock()
+    service, _settings, uow, captions, clock = _capped(tmp_path, ["a", "b"], 1)
+    fired: list[float] = []
+
+    def at_100(now: float) -> None:
+        if now >= 100 and not fired:
+            fired.append(now)
+            getattr(service, action)()
+
+    clock.on_sleep = at_100
+    job = _run_capped(service)
+    calls = [video_id for video_id, _languages in captions.fetch_calls]
+    parent = uow.transcripts.get_job(job.id)  # type: ignore[attr-defined]
+    assert (fired, calls, parent.status.value) == ([100.0], ["a"], status)
+    assert clock.now <= fired[0] + 1.0
+
+
+@pytest.mark.parametrize("raised", [5, 0])
+def test_ac_116_4_a_raised_or_cleared_cap_ends_the_wait(tmp_path: Path, raised: int) -> None:
+    _require_clock()
+    service, settings, _uow, captions, clock = _capped(tmp_path, ["a", "b"], 1)
+    fired: list[float] = []
+
+    def at_100(now: float) -> None:
+        if now >= 100 and not fired:
+            fired.append(now)
+            settings.set("transcript", "requests_per_hour", raised)
+
+    clock.on_sleep = at_100
+    _run_capped(service)
+    assert captions.starts == [0.0, 100.0]
+
+
+def _four_hundred(tmp_path: Path, *, retries: int):
+    from avkit_core.domain.enums import TranscriptStatus
+
+    clock = FakeClock()
+    service, _settings, yt, uow, _fs, captions, _sleeps = _transcript_stack(tmp_path, clock=clock)
+    _set_ids(yt, [f"v{index}" for index in range(400)])
+    captions.retryable_left = retries
+    job = service.add_channel("https://youtube.com/@four-hundred")
+    service.start_processing()
+    _join(service, timeout=120)
+    assert uow.transcripts.get_job(job.id).status is TranscriptStatus.Done
+    return captions, clock
+
+
+def test_ac_116_5_default_cap_delays_nothing_without_retries(tmp_path: Path) -> None:
+    captions, clock = _four_hundred(tmp_path, retries=0)
+    assert len(captions.fetch_calls) == 400
+    assert set(clock.sleeps) <= {0.0, 6.0, 300.0}, sorted(set(clock.sleeps))
+
+
+def test_ac_116_9_a_retry_makes_the_default_cap_wait(tmp_path: Path) -> None:
+    _require_clock()
+    captions, _clock = _four_hundred(tmp_path, retries=1)
+    starts = captions.starts
+    assert len(starts) == 401
+    assert starts[300] == pytest.approx(3600.0)
+    busiest = max(sum(1 for start in starts if end - 3600 < start <= end) for end in starts)
+    assert busiest <= 300
+
+
+def _race_stack(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    sleep: Callable[[float], None] | None = None,
+):
+    import threading
+
+    service, settings, yt, uow, _fs, captions, _sleeps = _transcript_stack(tmp_path, sleep=sleep)
+    _set_ids(yt, ["first", "second"])
+    settings.set("transcript", "max_retries", 1)
+    captions.retryable_left = 10**6
+    workers = {"active": 0, "most": 0}
+    guard = threading.Lock()
+    original = service._worker
+
+    def counted() -> None:
+        with guard:
+            workers["active"] += 1
+            workers["most"] = max(workers["most"], workers["active"])
+        try:
+            original()
+        finally:
+            with guard:
+                workers["active"] -= 1
+
+    monkeypatch.setattr(service, "_worker", counted)
+    return service, uow, captions, workers
+
+
+def _assert_race_finished(
+    service: object, uow: FakeUnitOfWork, job_id: str, workers: dict[str, int]
+) -> None:
+    from avkit_core.domain.enums import TranscriptItemStatus, TranscriptStatus
+
+    def finished() -> bool:
+        state = service.get_processor_state().state  # type: ignore[attr-defined]
+        return state is QueueProcessorState.Idle and workers["active"] == 0
+
+    _wait_until(finished)
+    parent = uow.transcripts.get_job(job_id)
+    assert (
+        parent.status,
+        [item.status for item in uow.transcripts.list_items(job_id)],
+        service.get_processor_state().state,  # type: ignore[attr-defined]
+        workers["most"],
+    ) == (
+        TranscriptStatus.Done,
+        [TranscriptItemStatus.Done, TranscriptItemStatus.Done],
+        QueueProcessorState.Idle,
+        1,
+    )
+
+
+def test_ac_116_8_resume_while_the_worker_publishes_the_pause(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import threading
+
+    from avkit_core.domain.enums import TranscriptStatus
+
+    service, uow, captions, workers = _race_stack(tmp_path, monkeypatch)
+    published = threading.Event()
+    release = threading.Event()
+    original = service._pause_parent
+
+    def held(*args: object, **kwargs: object) -> None:
+        original(*args, **kwargs)
+        published.set()
+        release.wait(timeout=5)
+
+    monkeypatch.setattr(service, "_pause_parent", held)
+    job = service.add_channel("https://youtube.com/@race-a")
+    try:
+        service.start_processing()
+        assert published.wait(timeout=2)
+        assert uow.transcripts.get_job(job.id).status is TranscriptStatus.Paused
+        service.resume_processing()
+        captions.retryable_left = 0
+    finally:
+        release.set()
+    _assert_race_finished(service, uow, job.id, workers)
+
+
+def test_ac_116_8_resume_while_the_worker_sleeps_after_the_job(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import threading
+
+    from avkit_core.domain.enums import TranscriptStatus
+
+    held = threading.Event()
+    release = threading.Event()
+
+    def sleep(seconds: float) -> None:
+        if seconds == 0 and not held.is_set():
+            held.set()
+            release.wait(timeout=5)
+
+    service, uow, captions, workers = _race_stack(tmp_path, monkeypatch, sleep=sleep)
+    job = service.add_channel("https://youtube.com/@race-b")
+    try:
+        service.start_processing()
+        assert held.wait(timeout=2)
+        assert uow.transcripts.get_job(job.id).status is TranscriptStatus.Paused
+        service.resume_processing()
+        captions.retryable_left = 0
+    finally:
+        release.set()
+    _assert_race_finished(service, uow, job.id, workers)

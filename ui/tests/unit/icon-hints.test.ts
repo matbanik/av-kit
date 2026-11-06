@@ -145,7 +145,9 @@ function transcriptItem(id: string, name: string, position: number): TranscriptL
     zip_path: null,
     last_title: null,
     last_item_status: null,
+    last_item_message: null,
     queue_position: position,
+    error_message: null,
     compiled_path: null,
   }
 }

@@ -5,20 +5,41 @@ from __future__ import annotations
 import structlog
 from youtube_transcript_api import YouTubeTranscriptApi
 from youtube_transcript_api._errors import (
+    AgeRestricted,
+    FailedToCreateConsentCookie,
+    InvalidVideoId,
     IpBlocked,
     NoTranscriptFound,
+    PoTokenRequired,
     RequestBlocked,
     TranscriptsDisabled,
     VideoUnavailable,
+    VideoUnplayable,
+    YouTubeDataUnparsable,
+    YouTubeRequestFailed,
 )
 
 from avkit_core.domain.errors import DomainError, TranscriptRetryableError, ValidationError
-from avkit_core.domain.transcript import TranscriptResult
+from avkit_core.domain.transcript import TranscriptFailureCause, TranscriptResult, TranscriptSkip
 
 log = structlog.get_logger(module="transcript")
 
-NONE_ERRORS = (TranscriptsDisabled, VideoUnavailable)
+NO_CAPTIONS_ERRORS = (TranscriptsDisabled, NoTranscriptFound)
+#: In youtube-transcript-api 1.2.4 an HTTP 429 raises IpBlocked, so a rate limit is a block.
 RETRYABLE_ERRORS = (RequestBlocked, IpBlocked)
+BLOCKED_TEXT = "caption request blocked"
+
+#: The short reason each named library error gives. Any other error gives its class name; the
+#: library's own text never crosses the port, because it can hold a URL with a query token.
+LIBRARY_REASONS: dict[type[Exception], str] = {
+    AgeRestricted: "the video is age-restricted",
+    VideoUnplayable: "the video can't be played",
+    PoTokenRequired: "YouTube asked for a PO token",
+    InvalidVideoId: "the video ID isn't valid",
+    YouTubeDataUnparsable: "YouTube's reply couldn't be read",
+    YouTubeRequestFailed: "the request to YouTube failed",
+    FailedToCreateConsentCookie: "YouTube's consent page couldn't be passed",
+}
 
 
 def _snippet_text(item: object) -> str:
@@ -46,9 +67,11 @@ def _to_result(video_id: str, fetched: object) -> TranscriptResult:
 
 
 class TranscriptAdapter:
-    """Instance-API transcript fetch. Returns None for disabled/missing captions."""
+    """Instance-API transcript fetch. A video with no transcript returns a typed skip."""
 
-    def get_transcript(self, video_id: str, languages: list[str]) -> TranscriptResult | None:
+    def get_transcript(
+        self, video_id: str, languages: list[str]
+    ) -> TranscriptResult | TranscriptSkip:
         if not isinstance(video_id, str) or video_id == "":
             raise ValidationError("video_id must be a non-empty str")
         if not isinstance(languages, list) or not all(isinstance(item, str) for item in languages):
@@ -67,22 +90,18 @@ class TranscriptAdapter:
                     return _to_result(video_id, fetched)
                 except NoTranscriptFound:
                     continue
-                except NONE_ERRORS:
-                    return None
             listed = api.list(video_id)
             for transcript in listed:
                 fetched = transcript.fetch()
                 return _to_result(video_id, fetched)
-            return None
+            return TranscriptSkip(TranscriptFailureCause.no_captions)
         except RETRYABLE_ERRORS as exc:
-            raise TranscriptRetryableError(str(exc) or "transcript request blocked") from exc
-        except NONE_ERRORS:
-            return None
-        except NoTranscriptFound:
-            return None
-        except TranscriptRetryableError:
-            raise
+            raise TranscriptRetryableError(BLOCKED_TEXT) from exc
+        except NO_CAPTIONS_ERRORS:
+            return TranscriptSkip(TranscriptFailureCause.no_captions)
+        except VideoUnavailable:
+            return TranscriptSkip(TranscriptFailureCause.unavailable)
         except DomainError:
             raise
         except Exception as exc:
-            raise DomainError(str(exc) or "transcript fetch failed") from exc
+            raise DomainError(LIBRARY_REASONS.get(type(exc), type(exc).__name__)) from exc

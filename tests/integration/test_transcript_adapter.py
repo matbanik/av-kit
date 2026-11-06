@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import importlib
 import inspect
 import re
 import tomllib
@@ -167,9 +168,13 @@ def test_ac_7_3_language_order_then_en_then_list(monkeypatch: pytest.MonkeyPatch
 
 
 @pytest.mark.integration
-def test_ac_7_4_disabled_missing_unavailable_return_none(
+def test_ac_7_4_disabled_missing_unavailable_return_typed_skips(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    # Amended in Session 50 (AC-115.2): the port reports the cause, so a skip is typed.
+    transcript = importlib.import_module("avkit_core.domain.transcript")
+    for name in ("TranscriptFailureCause", "TranscriptSkip"):
+        assert hasattr(transcript, name), f"avkit_core.domain.transcript has no {name}"
     from youtube_transcript_api._errors import (
         NoTranscriptFound,
         TranscriptsDisabled,
@@ -178,15 +183,17 @@ def test_ac_7_4_disabled_missing_unavailable_return_none(
 
     from avkit_infra.transcript.adapter import TranscriptAdapter
 
+    cause = transcript.TranscriptFailureCause
     before = list(tmp_path.rglob("*"))
-    for exc in (
-        TranscriptsDisabled("vid"),
-        NoTranscriptFound("vid", ["en"], []),
-        VideoUnavailable("vid"),
+    for exc, expected in (
+        (TranscriptsDisabled("vid"), cause.no_captions),
+        (NoTranscriptFound("vid", ["en"], []), cause.no_captions),
+        (VideoUnavailable("vid"), cause.unavailable),
     ):
         api = _FakeApi(fetch_error=exc)
         monkeypatch.setattr("avkit_infra.transcript.adapter.YouTubeTranscriptApi", lambda: api)
-        assert TranscriptAdapter().get_transcript("vid12345678", ["en"]) is None
+        result = TranscriptAdapter().get_transcript("vid12345678", ["en"])
+        assert result == transcript.TranscriptSkip(expected)
     after = list(tmp_path.rglob("*"))
     assert after == before
     source = ADAPTER_PATH.read_text(encoding="utf-8")
@@ -302,3 +309,101 @@ def test_ac_7_8_no_uow_and_library_confined_to_transcript() -> None:
     core_src = REPO_ROOT / "packages" / "core" / "src"
     assert _import_hits_outside(infra_src, "youtube_transcript_api", "transcript") == []
     assert _import_hits_outside(core_src, "youtube_transcript_api", None) == []
+
+
+@pytest.mark.integration
+def test_ac_115_2_skips_carry_no_captions_or_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    transcript = importlib.import_module("avkit_core.domain.transcript")
+    for name in ("TranscriptFailureCause", "TranscriptSkip"):
+        assert hasattr(transcript, name), f"avkit_core.domain.transcript has no {name}"
+    from youtube_transcript_api._errors import (
+        NoTranscriptFound,
+        TranscriptsDisabled,
+        VideoUnavailable,
+    )
+
+    from avkit_infra.transcript.adapter import TranscriptAdapter
+
+    cause = transcript.TranscriptFailureCause
+    empty = _FakeApi()
+    cases = (
+        ("disabled", _FakeApi(fetch_error=TranscriptsDisabled("vid")), cause.no_captions),
+        ("missing", _FakeApi(fetch_error=NoTranscriptFound("vid", [], [])), cause.no_captions),
+        ("empty listing", empty, cause.no_captions),
+        ("listing disabled", _FakeApi(list_error=TranscriptsDisabled("vid")), cause.no_captions),
+        ("unavailable", _FakeApi(fetch_error=VideoUnavailable("vid")), cause.unavailable),
+    )
+    for label, api, expected in cases:
+        monkeypatch.setattr(
+            "avkit_infra.transcript.adapter.YouTubeTranscriptApi", lambda api=api: api
+        )
+        result = TranscriptAdapter().get_transcript("vid12345678", ["en"])
+        assert result == transcript.TranscriptSkip(expected), label
+    assert empty.fetch_calls == [["en"]]
+    assert empty.list_calls == 1
+
+
+@pytest.mark.integration
+def test_ac_115_3_block_raises_short_retryable_text(monkeypatch: pytest.MonkeyPatch) -> None:
+    from youtube_transcript_api._errors import IpBlocked, RequestBlocked
+
+    from avkit_infra.transcript.adapter import TranscriptAdapter
+
+    for blocked in (RequestBlocked("vid12345678"), IpBlocked("vid12345678")):
+        api = _FakeApi(fetch_error=blocked)
+        monkeypatch.setattr(
+            "avkit_infra.transcript.adapter.YouTubeTranscriptApi", lambda api=api: api
+        )
+        with pytest.raises(TranscriptRetryableError) as err:
+            TranscriptAdapter().get_transcript("vid12345678", ["en"])
+        assert str(err.value) == "caption request blocked", type(blocked).__name__
+        assert err.value.__cause__ is blocked
+
+
+@pytest.mark.integration
+def test_ac_115_4_other_errors_carry_a_short_reason(monkeypatch: pytest.MonkeyPatch) -> None:
+    adapter = importlib.import_module("avkit_infra.transcript.adapter")
+    assert hasattr(adapter, "LIBRARY_REASONS"), (
+        "avkit_infra.transcript.adapter has no LIBRARY_REASONS"
+    )
+    import requests
+    from youtube_transcript_api import _errors as library
+
+    marker = "https://example.invalid/caption?token=SYNTHETIC_API_MARKER"
+    named = (
+        (library.AgeRestricted("vid12345678"), "the video is age-restricted"),
+        (library.VideoUnplayable("vid12345678", "Sign in", ["sub"]), "the video can't be played"),
+        (library.PoTokenRequired("vid12345678"), "YouTube asked for a PO token"),
+        (library.InvalidVideoId("vid12345678"), "the video ID isn't valid"),
+        (library.YouTubeDataUnparsable("vid12345678"), "YouTube's reply couldn't be read"),
+        (
+            library.YouTubeRequestFailed("vid12345678", requests.HTTPError(f"500 for {marker}")),
+            "the request to YouTube failed",
+        ),
+        (
+            library.FailedToCreateConsentCookie("vid12345678"),
+            "YouTube's consent page couldn't be passed",
+        ),
+    )
+    keys = {getattr(key, "__name__", key) for key in adapter.LIBRARY_REASONS}
+    assert keys == {type(exc).__name__ for exc, _ in named}
+    cases = (
+        *named,
+        (library.NotTranslatable("vid12345678"), "NotTranslatable"),
+        (library.TranslationLanguageNotAvailable("vid12345678"), "TranslationLanguageNotAvailable"),
+        (requests.ConnectionError(marker), "ConnectionError"),
+        (ValueError(f"bad reply from {marker}"), "ValueError"),
+    )
+    for exc, reason in cases:
+        api = _FakeApi(fetch_error=exc)
+        monkeypatch.setattr(
+            "avkit_infra.transcript.adapter.YouTubeTranscriptApi", lambda api=api: api
+        )
+        with pytest.raises(DomainError) as err:
+            adapter.TranscriptAdapter().get_transcript("vid12345678", ["en"])
+        assert type(err.value) is DomainError, reason
+        assert str(err.value) == reason
+        assert err.value.__cause__ is exc
+        assert "SYNTHETIC_API_MARKER" not in str(err.value)

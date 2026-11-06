@@ -26,4 +26,9 @@ export const TRANSCRIPT_HELP_SECTIONS: HelpSection[] = [
     title: 'Rate limits',
     body: 'Adjust requests per hour and batch delays in settings to stay under YouTube transcript rate limits.',
   },
+  {
+    id: 'blocked',
+    title: 'Blocked caption requests',
+    body: 'When YouTube blocks caption requests, the job pauses with that reason and makes no more requests. Resume tries again; another network often works sooner.',
+  },
 ]

@@ -3003,10 +3003,10 @@ meus:
     anchor: transcript-failure-reason-residual
     text: Phase 3 §Transcript failure reason (residual)
   description: Each transcript failure or skip maps to a short av-kit message that reaches the API, the job card and the Console; the Console keeps the model and the error text.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-11, MEU-13, MEU-16, MEU-21, MEU-27
   dependency_parse_status: parsed
@@ -3016,10 +3016,12 @@ meus:
   - MEU-16
   - MEU-21
   - MEU-27
-  execution_plan: null
-  updated: '2026-11-04'
+  execution_plan: docs/execution/plans/2026-11-05-transcript-failure-reason/
+  updated: '2026-11-06'
   closed_reason: null
-  note: Registered 2026-11-04 from TRANSCRIPT-FAILED-NO-REASON (D-218), with rider CONSOLE-FAILURE-DETAIL-LOST.
+  note: 'Registered 2026-11-04 from TRANSCRIPT-FAILED-NO-REASON (D-218), with rider CONSOLE-FAILURE-DETAIL-LOST. Plan 2026-11-05-transcript-failure-reason (Session 50). Approved 2026-11-06: Codex execution
+    review round 2 of 8, intent achieved, after round 1''s F1 (bound request_id reached stdout raw) and F2 (case-fold offset in redact_message) were fixed (D-307, D-308): every failure and skip carries
+    one message to the API, the card, the Console and console.log, AC-115.1 to AC-115.19.'
 - row_key: MEU-116
   id: MEU-116
   slug: svc-transcript-block-stop
@@ -3031,20 +3033,21 @@ meus:
     anchor: transcript-block-stop-residual
     text: Phase 3 §Transcript block stop (residual)
   description: A blocked video that exhausts its retries stops the run and pauses the job with the reason; requests_per_hour becomes a rolling cap over real requests.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-11, MEU-115
   dependency_parse_status: parsed
   depends_on:
   - MEU-11
   - MEU-115
-  execution_plan: null
-  updated: '2026-11-04'
+  execution_plan: docs/execution/plans/2026-11-05-transcript-failure-reason/
+  updated: '2026-11-06'
   closed_reason: null
-  note: Registered 2026-11-04 from TRANSCRIPT-BLOCK-KEEPS-REQUESTING (D-219, D-220).
+  note: 'Registered 2026-11-04 from TRANSCRIPT-BLOCK-KEEPS-REQUESTING (D-219, D-220). Plan 2026-11-05-transcript-failure-reason (Session 50). Approved 2026-11-06: Codex execution review round 2 of 8, intent
+    achieved, no findings against MEU-116: a block pauses the job before the next request and requests_per_hour is a rolling cap, AC-116.1 to AC-116.9.'
 - row_key: MEU-117
   id: MEU-117
   slug: svc-tts-build-capability

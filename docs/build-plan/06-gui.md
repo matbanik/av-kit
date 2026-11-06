@@ -323,7 +323,7 @@ Adapt Zorivest `HelpSearchField`, `useHelpSearch`, `*HelpCard.tsx`, `*-help-cont
 | Page | Content module | Topics (minimum) |
 |------|----------------|------------------|
 | Downloader | `downloader-help-content.ts` | URL types, SABR, cookies, archive, pause vs cancel |
-| Transcript | `transcript-help-content.ts` | Resume via items, Stop → Cancelled + requeue, compile/zip, rate limits |
+| Transcript | `transcript-help-content.ts` | Resume via items, Stop → Cancelled + requeue, compile/zip, rate limits, blocked caption requests (the job pauses; Resume tries again) |
 | TTS | `tts-help-content.ts` | Prepare steps, voices/lang_code, model download vs load, file/paste |
 | Convert | `converter-help-content.ts` | Presets, GPU auto, cut copy vs re-encode, extract containers, sequential queue — [08](08-video-conversion.md) |
 | Capture | `capture-help-content.ts` | F2 vs ShareX, inbox, annotation tools, original vs annotated, tray — [09](09-screenshot-capture.md) |
@@ -344,7 +344,7 @@ A shared log viewer as a right side sheet. Closed by default (unmounted). Header
 | Module prefix tags | `[Downloader]`, `[Transcript]`, `[TTS]`, `[Convert]`, `[Capture]`, `[yt-dlp]` | All source apps + Phase 8/9 |
 | yt-dlp debug toggle | Separate checkbox: "Show yt-dlp debug output" | [_downloader_pseudo_logic.md §9](../../_inspiration/_downloader_pseudo_logic.md) |
 | Search/filter | Text search within displayed logs | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
-| Log to file | Toggle to persist console output to `{app_data}/logs/console.log` | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
+| Log to file | Errors (and lines flagged `persist`) always go to `{app_data}/logs/console.log`; the toggle adds every other line | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
 | Clear button | Clears current log display (not backend logs) | All three source apps |
 | Copy to clipboard | Copy selected or all log lines | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
 | Expand / collapse | Single toggle on the panel header left; expand fills the content row (`w-full`, hides `main`); collapse restores the 40% drawer and keeps the pane mounted | Zorivest Trade drawer; MEU-27 |
@@ -360,7 +360,7 @@ A shared log viewer as a right side sheet. Closed by default (unmounted). Header
 3. Electron main tails owned-child stdout. Lines **with** `seq` are the same events as the ring — drop them on the IPC path (renderer already has them from REST) or forward and let the UI key by `seq` (no second allocator).
 4. Lines **without** `seq` (uvicorn access, foreign noise) are tagged `source: stdout` and `id: ipc:{n}` (main-process counter). They **never** reuse backend `seq`. Do not dedup them against the ring.
 5. `useBackendLogs` keys ring events by `seq` and stdout-only by `ipc:*`. Clear affects the **view** only.
-6. File persist is backend-side when `app.log_to_file` is true (`{app_data}/logs/console.log`).
+6. File persist is backend-side (`{app_data}/logs/console.log`): ERROR and CRITICAL lines, and lines flagged `persist=True`, always; every other line when `app.log_to_file` is true. The panel's line reads "Errors always go to {app_data}/logs/console.log. Turn this on for every line."
 7. Redact Bearer tokens, cookie bytes, and MCP token values before display.
 
 ### Module Internal Navigation
@@ -687,7 +687,8 @@ Do not read `isProcessing` before `data` exists (temporal dead zone). Cover acti
 | Rate display | From rate limiting settings | `1 req/{delay}s` |
 | Batch progress | Service-computed on `GET /transcripts/{id}` if present | Optional; do not invent a second store |
 | ETA | Computed from rate + remaining pending items | Estimated time to completion |
-| Last processed | `last_title` + `last_item_status` | "JavaScript in 100 Seconds" ✅ |
+| Last processed | `last_title` + `last_item_status` + `last_item_message` on the Processing card (`last-title`: "Last: {title} {status} · {message}", leaving out any null part) | "JavaScript in 100 Seconds" ✅ |
+| Job message | `error_message` on a Failed, Paused or Done card that has one (`job-message`, in place of the output tree; a Done card has one only when a video was skipped). "Open folder" in the menu keeps the folder reachable | "2 of 4 videos failed. Last: Couldn't get captions: the video is age-restricted." |
 | Output path | `TranscriptJob.output_dir` | Directory containing raw + compiled output |
 
 ### Channel Queue Management
@@ -1005,6 +1006,7 @@ Lazy route `/capture`, rail item below Convert, `Ctrl+5`. Inbox path + hotkey + 
 │  │                                                                                  ││
 │  │  Default Log Level    [INFO ▼]      DEBUG | INFO | WARNING | ERROR | CRITICAL    ││
 │  │  Log to File          [□]           Persist to {app_data}/logs/console.log       ││
+│  │                                     Errors are always written to this file.      ││
 │  │  Console Visible      [●]           Show console panel on startup                ││
 │  │                                                                                  ││
 │  └──────────────────────────────────────────────────────────────────────────────────┘│
@@ -1074,7 +1076,7 @@ Logical keys below are `namespace.leaf`. Persist with `PUT /api/v1/settings/{nam
 | `capture.copy_to_clipboard` | `boolean` | `false` | Phase 9 |
 | `capture.close_to_tray` | `boolean` | `true` | Phase 9 |
 | `app.log_level` | `string` | `INFO` | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
-| `app.log_to_file` | `boolean` | `false` | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
+| `app.log_to_file` | `boolean` | `false` (errors always go to the file; true adds every other line) | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
 | `app.console_visible` | `boolean` | `true` | [Downloader §8](../../_inspiration/_downloader_pseudo_logic.md) |
 | `ui.theme` | `string` | `dark` | — |
 | `ui.rail.collapsed` | `boolean` | `false` | — |

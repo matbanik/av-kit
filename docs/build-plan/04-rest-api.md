@@ -224,7 +224,7 @@ No per-video item routes. Progress fields on the job out are enough for cards.
 
 ### `TranscriptJobOut`
 
-`id`, `channel_url`, `channel_name`, `status` (`Pending`\|`Processing`\|`Done`\|`Failed`\|`Paused`\|`Cancelled`), `output_dir`, `video_count`, `transcripts_done` (from `progress_counts`), `word_count`, `zip_path` (str\|null), `last_title` (str\|null), `last_item_status` (str\|null), `queue_position`, `error_message`, `created_at`, `updated_at`.
+`id`, `channel_url`, `channel_name`, `status` (`Pending`\|`Processing`\|`Done`\|`Failed`\|`Paused`\|`Cancelled`), `output_dir`, `video_count`, `transcripts_done` (from `progress_counts`), `word_count`, `zip_path` (str\|null), `last_title` (str\|null), `last_item_status` (str\|null), `last_item_message` (str\|null: the latest item's `error_message` when it is `Failed` or `Skipped`, else null), `queue_position`, `error_message`, `created_at`, `updated_at`.
 
 Do **not** return `video_ids`, `processed_ids`, or transcript bodies. `transcripts_done` is `COUNT(items WHERE status=Done)`, not `progress.json`.
 

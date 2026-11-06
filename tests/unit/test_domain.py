@@ -1585,3 +1585,53 @@ def test_ac_42_5_download_reset_failed_refuses_non_requeueable() -> None:
         message = str(caught.value)
         for member in REQUEUEABLE_DOWNLOAD_STATUSES:
             assert member.value in message
+
+
+@pytest.mark.unit
+def test_ac_115_1_failure_messages_skip_causes_and_safe_reason() -> None:
+    transcript = importlib.import_module("avkit_core.domain.transcript")
+    for name in (
+        "TranscriptFailureCause",
+        "TranscriptSkip",
+        "failure_message",
+        "safe_reason",
+        "REASON_LIMIT",
+    ):
+        assert hasattr(transcript, name), f"avkit_core.domain.transcript has no {name}"
+    from dataclasses import FrozenInstanceError
+    from enum import StrEnum
+
+    from avkit_core.domain.errors import ValidationError
+
+    cause = transcript.TranscriptFailureCause
+    message = transcript.failure_message
+    assert issubclass(cause, StrEnum)
+    assert [member.value for member in cause] == ["blocked", "no_captions", "unavailable", "other"]
+    assert message(cause.blocked) == (
+        "YouTube is blocking caption requests from this network. "
+        "Try again later or from another network, then Resume."
+    )
+    assert message(cause.no_captions) == "No captions for this video."
+    assert message(cause.unavailable) == "This video is unavailable."
+    assert message(cause.other, "the video is age-restricted") == (
+        "Couldn't get captions: the video is age-restricted."
+    )
+    assert message(cause.other) == "Couldn't get captions."
+    assert message(cause.other, None) == "Couldn't get captions."
+    for allowed in (cause.no_captions, cause.unavailable):
+        skip = transcript.TranscriptSkip(allowed)
+        assert skip.cause is allowed
+        assert skip == transcript.TranscriptSkip(allowed)
+        with pytest.raises(FrozenInstanceError):
+            skip.cause = cause.other  # type: ignore[misc]
+    for refused in (cause.blocked, cause.other):
+        with pytest.raises(ValidationError):
+            transcript.TranscriptSkip(refused)
+    safe = transcript.safe_reason
+    assert transcript.REASON_LIMIT == 200
+    assert safe("first line\nsecond line") == "first line"
+    linked = "see https://example.invalid/a?token=SYNTHETIC_API_MARKER and http://x.invalid"
+    assert safe(linked) == "see [link] and [link]"
+    assert safe("x" * 500) == "x" * 200
+    # The URL is replaced before the cut, so a cut never leaves part of a URL.
+    assert safe("y" * 190 + " https://example.invalid/" + "z" * 50) == "y" * 190 + " [link]"

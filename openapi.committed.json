@@ -2962,6 +2962,17 @@
             "title": "Id",
             "type": "string"
           },
+          "last_item_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Item Message"
+          },
           "last_item_status": {
             "anyOf": [
               {
@@ -3036,6 +3047,7 @@
           "zip_path",
           "last_title",
           "last_item_status",
+          "last_item_message",
           "queue_position",
           "error_message",
           "created_at",

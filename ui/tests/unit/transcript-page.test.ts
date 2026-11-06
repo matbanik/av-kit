@@ -42,6 +42,7 @@ const WAVE2_EXTRA_TESTIDS = [
   'rate-display',
   'eta-display',
   'last-title',
+  'job-message',
   'channel-url-hint',
   'remove-confirm-btn',
   'remove-confirm-cancel',

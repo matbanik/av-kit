@@ -121,10 +121,16 @@ def _log_fallback(variant: ModelVariant, requested: str, reason: str) -> None:
 
 
 def _log_load_failed(variant: ModelVariant, device: str, exc: BaseException) -> None:
-    """`LOG_CAUSE`: a `ModelLoadError` with a cause logs the cause's type, else `exc`'s own."""
+    """`LOG_CAUSE`: a `ModelLoadError` with a cause logs the cause's type, else `exc`'s own.
+
+    `detail` is the first line of that same exception's text; an empty text adds none.
+    """
     cause = exc.__cause__ if isinstance(exc, ModelLoadError) else None
-    error = type(cause if cause is not None else exc).__name__
-    log.error("tts.load_failed", variant_id=variant.id, device=device, error=error)
+    source = cause if cause is not None else exc
+    error = type(source).__name__
+    lines = str(source).strip().splitlines()
+    fields = {"detail": lines[0].strip()} if lines else {}
+    log.error("tts.load_failed", variant_id=variant.id, device=device, error=error, **fields)
 
 
 def _onnx_providers(device_name: str) -> list[str]:

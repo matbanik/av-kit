@@ -475,3 +475,6 @@ export const CAPTURE_HANDLE_RESIZE_SE = 'capture-handle-resize-se'
 export const CAPTURE_HANDLE_RESIZE_S = 'capture-handle-resize-s'
 export const CAPTURE_HANDLE_RESIZE_SW = 'capture-handle-resize-sw'
 export const CAPTURE_HANDLE_RESIZE_W = 'capture-handle-resize-w'
+
+// MEU-115 Transcript failure reason (additive IDs).
+export const JOB_MESSAGE = 'job-message'

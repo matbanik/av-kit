@@ -1,0 +1,8 @@
+?? .agent/context/handoffs/2026-11-05-transcript-failure-reason-plan-critical-review.md
+?? docs/execution/plans/2026-11-05-transcript-failure-reason/baseline.ps1
+?? docs/execution/plans/2026-11-05-transcript-failure-reason/baseline.sha
+?? docs/execution/plans/2026-11-05-transcript-failure-reason/identity.py
+?? docs/execution/plans/2026-11-05-transcript-failure-reason/implementation-plan.md
+?? docs/execution/plans/2026-11-05-transcript-failure-reason/real-log-check.py
+?? docs/execution/plans/2026-11-05-transcript-failure-reason/red-check.py
+?? docs/execution/plans/2026-11-05-transcript-failure-reason/task.md

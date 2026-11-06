@@ -18,6 +18,7 @@ type SeamJob = {
   zip_path: string | null
   last_title: string | null
   last_item_status: string | null
+  last_item_message: string | null
   queue_position: number
   compiled_path?: string | null
   error_message: string | null
@@ -37,6 +38,7 @@ const e2eJob: SeamJob = {
   zip_path: 'C:/out/e2e/e2e_raw.zip',
   last_title: 'E2E last',
   last_item_status: 'Done',
+  last_item_message: null,
   queue_position: 1,
   compiled_path: 'C:/out/e2e/compiled/e2e_vol1.md',
   error_message: null,
@@ -628,5 +630,18 @@ test('AC-55.7 empty state focuses the field and the header wraps at a narrow win
   const headerBox = await header.boundingBox()
   const groupBox = await group.boundingBox()
   expect(groupBox && headerBox ? groupBox.x + groupBox.width <= headerBox.x + headerBox.width + 1 : false).toBe(true)
+  await app.close()
+})
+
+test('AC-115.17 a Failed job with an error message shows it in job-message', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await installTranscriptSeam(page)
+  await openTranscript(page)
+  const message = "2 of 4 videos failed. Last: Couldn't get captions: the video is age-restricted."
+  await setQueue(page, [{ ...failedJob, error_message: message }], { state: 'Idle', current_job_id: null })
+  const failed = channel(page, 'Charlie')
+  await expect(failed.getByTestId('job-message')).toHaveText(message)
+  await expect(failed.getByTestId('output-tree')).toHaveCount(0)
   await app.close()
 })

@@ -208,7 +208,7 @@ export function ConsolePanel({
           />
           Log to file
         </label>
-        <p data-testid="console-log-file-path">Persist to {CONSOLE_LOG_FILE_SPEC_PATH}</p>
+        <p data-testid="console-log-file-path">Errors always go to {CONSOLE_LOG_FILE_SPEC_PATH}. Turn this on for every line.</p>
       </div>
       <pre
         data-testid="console-output"

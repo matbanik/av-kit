@@ -79,6 +79,7 @@ export const TRANSCRIPT_TEST_IDS = [
   'rate-display',
   'eta-display',
   'last-title',
+  'job-message',
   'channel-url-hint',
   'remove-confirm-btn',
   'remove-confirm-cancel',
@@ -111,15 +112,24 @@ function errorMessage(caught: unknown): string {
   return caught instanceof ApiError || caught instanceof Error ? caught.message : String(caught)
 }
 
+/** The job statuses whose `error_message` replaces the output tree on line 3 (D-294). */
+const JOB_MESSAGE_STATUSES: ReadonlySet<string> = new Set(['Failed', 'Paused', 'Done'])
+
 /**
- * Line 3 of a card (TR5): the last title on the Processing card, otherwise the
- * output root with both full raw/compiled paths kept in accessible text.
+ * Line 3 of a card (TR5): the job's message on a Failed, Paused or Done card that
+ * has one; the last title, status and item message on the Processing card;
+ * otherwise the output root with both full raw/compiled paths kept in accessible text.
  */
 function CardDetail({ item }: { item: TranscriptListItem }): ReactElement {
-  if (asJobStatus(item.status) === 'Processing' && item.last_title) {
+  const status = asJobStatus(item.status)
+  if (JOB_MESSAGE_STATUSES.has(status) && item.error_message) {
+    return <span data-testid="job-message">{item.error_message}</span>
+  }
+  if (status === 'Processing' && (item.last_title || item.last_item_message)) {
+    const head = ['Last:', item.last_title, item.last_item_status].filter((part) => part).join(' ')
     return (
       <span data-testid="last-title">
-        {[`Last: ${item.last_title}`, item.last_item_status].filter((part) => part).join(' ')}
+        {item.last_item_message ? `${head} · ${item.last_item_message}` : head}
       </span>
     )
   }

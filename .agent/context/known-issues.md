@@ -3,14 +3,13 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 112** — Active: 44 | Mitigated: 1 | Resolved: 65
+**Total: 112** — Active: 41 | Mitigated: 1 | Resolved: 68
 
 ## Active Issues
 
 | Sev | ID | Title | Component | Status | Discovered |
 |-----|-----|-------|-----------|--------|------------|
 | 🟠 | `TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME` | The installed app offers the PyTorch voice model and downloads 327 MB,… | infrastructure | ⬜ open | 2026-11-04 |
-| 🟠 | `TRANSCRIPT-FAILED-NO-REASON` | A failed transcript shows only 'Failed': the reason is saved but never… | api | ⬜ open | 2026-11-04 |
 | 🟠 | `TTS-ONNX-FP16-NONFINITE-AUDIO` | ONNX FP16 fails on some ordinary sentences with 'generated audio must b… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | ⬜ open | 2026-09-30 |
 | 🟡 | `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` | Non-English voices via the real espeak-ng CLI were never run end to end… | infrastructure | ⬜ open | 2026-10-15 |
@@ -20,7 +19,6 @@
 | 🟡 | `FFMPEG-LIBDVDCSS-BUNDLED` | The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟡 | `TTS-FAILED-LOAD-DROPS-MODEL` | A failed model load unloads the model that was working | infrastructure | ⬜ open | 2026-11-04 |
 | 🟡 | `MODELS-DIR-DOCS-AND-PROBE-MISMATCH` | Voice models live in %USERPROFILE%\.avkit\models, but the readiness pro… | ui | ⬜ open | 2026-11-04 |
-| 🟡 | `TRANSCRIPT-BLOCK-KEEPS-REQUESTING` | A channel job keeps requesting captions after YouTube refuses, and the… | core | ⬜ open | 2026-11-04 |
 | 🟡 | `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH` | Audio extract reads its stream index two ways: AAC from a normal video… | core | ⬜ open | 2026-11-04 |
 | 🟡 | `TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS` | verify --deep and discover report noise, and verify stamps last_checked… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
@@ -50,7 +48,6 @@
 | 🟢 | `SETTINGS-DRAFT-STALE-BASELINE` | An unsaved capture settings edit freezes the other capture settings at… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `CONVERT-ADVANCED-EDIT-REPLACED` | An Advanced edit on Convert snaps back when settings load late or the d… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `GUI-READY-CHUNK-BOUNDARY` | A READY line split across output chunks can be missed, and two READY ch… | ui | ⬜ open | 2026-11-04 |
-| 🟢 | `CONSOLE-FAILURE-DETAIL-LOST` | Failure details get lost: the Console ring clears on close, and it and… | core | ⬜ open | 2026-11-04 |
 | 🟢 | `LIGHT-ACCENT-BELOW-AA-CONTRAST` | The light theme's accent colour puts button labels below 4.5:1 contrast | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `INSTALL-FOLDER-NAME-MISMATCH` | The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build pla… | ui | ⬜ open | 2026-11-04 |
 
@@ -60,9 +57,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (65)
+## Resolved (68)
 
-65 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+68 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

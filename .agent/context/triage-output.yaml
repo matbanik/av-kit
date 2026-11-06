@@ -1917,6 +1917,103 @@ archived:
   category: null
   priority: null
   enrichment: null
+- id: TRANSCRIPT-FAILED-NO-REASON
+  title: 'A failed transcript shows only ''Failed'': the reason is saved but never reaches the API, the page or the log'
+  severity: high
+  component: api
+  status: resolved
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-218
+      stage: triage
+      question: How does a failed or skipped video's reason reach the user?
+      resolution: autonomous
+      class: two-way
+      chosen: Map each cause to a short av-kit message (blocked, no captions, unavailable, other with its reason). Return it from the API, show it on the job card and log it. Skipped gets the same treatment.
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/known-issues.yaml TTS-GENERATE-FAILED-SILENT D-3 — log the failure and render the job's error in the page's error slot
+      - AGENTS.md §Code Quality — structured logging, handle all errors
+      research:
+        engine: none
+        sources: []
+      reasoning: The same defect class as TTS-GENERATE-FAILED-SILENT, already decided there. Pass-through loses because the library's text points at its own README for proxies. Two-way.
+    - id: D-234
+      stage: triage
+      question: This triage proposes 12 new MEUs; run the Step 5.5 scoping review now?
+      resolution: autonomous
+      class: two-way
+      chosen: No. Run it as a separate Codex dispatch on the /session-grouping draft after Mat confirms the grouping, before the first /create-plan.
+      source_tag: Human-approved
+      precedents:
+      - '.agent/context/grouping/2026-10-17-gui-shell-and-tts-sideload-session-grouping.md D-103 — USER_EXPLICIT 2026-10-24 ''yes go ahead'': scoping review runs after Mat confirms the grouping'
+      - .agent/context/known-issues.yaml GUI-SHORTCUTS-ADVERTISED-UNBOUND D-85 — same call at the previous triage
+      research:
+        engine: none
+        sources: []
+      reasoning: The MEUs have no build-plan sections yet, so a reviewer has nothing to score them against. The workflow's literal trigger is met; D-103 settles the timing.
+    decided_by: agent
+- id: TRANSCRIPT-BLOCK-KEEPS-REQUESTING
+  title: A channel job keeps requesting captions after YouTube refuses, and the Requests per hour setting does nothing
+  severity: medium
+  component: core
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-219
+      stage: triage
+      question: What does a run do once YouTube blocks it?
+      resolution: autonomous
+      class: two-way
+      chosen: 'When one video exhausts max_retries on TranscriptRetryableError, stop the run: that video and the rest stay Pending and the job goes Paused with the reason. No growing wait and no new number.'
+      source_tag: Research-backed
+      precedents:
+      - docs/build-plan/03-service-layer.md:236 — one failed video keeps a whole channel job from compiling, so Pending keeps the job recoverable
+      - 'docs/build-plan/03-service-layer.md:227 — the spec''s pause path: job.status = Paused; runtime = Paused; return'
+      research:
+        engine: exa
+        sources:
+        - https://github.com/jdepoix/youtube-transcript-api — 'Same can happen to the IP of your self-hosted solution, if you are doing too many requests'
+        - 'https://transcriptapi.io/youtube-transcript-api-blocked — a block is per address: ''Not from this IP'' (proxy vendor)'
+        - https://videotranscriber.ai/blog/youtube-transcript-api-not-working — 'No amount of retrying from the same server IP' (transcript vendor)
+        - https://github.com/github/copilot-cli/issues/2760 — a long-wait 429 is effectively a stop signal
+        - https://developer.nylas.com/docs/cookbook/use-cases/build/handle-rate-limit-errors — stop or back off on repeated rate-limit answers
+      reasoning: That error only means a block (RETRYABLE_ERRORS at transcript/adapter.py:21), so the next video would meet the same answer. The Processing to Paused to Processing edge and _pause_parent
+        already exist (domain/transcript.py:26-35, services/transcript.py:577). A growing wait loses because it adds a tuning number and keeps asking. Several sources are vendors. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
+    - id: D-220
+      stage: triage
+      question: Enforce transcript.requests_per_hour or remove its control?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Enforce it as a rolling cap over real requests. Default behaviour does not change: 6 s apart with a 300 s pause after 50 is already about 300 an hour.'
+      source_tag: Local Canon
+      precedents:
+      - _inspiration/_transcript_pseudo_logic.md:69 — 'Target request rate cap'
+      - docs/build-plan/06-gui.md:1052 — setting with default 300
+      - docs/build-plan/11-page-layout.md:331 — a Transcript number on Settings
+      research:
+        engine: none
+        sources: []
+      reasoning: Canon defines it as the request rate cap and it is a public setting in the GUI, schema and MCP. Removal would drop a documented setting. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
+    decided_by: agent
+- id: CONSOLE-FAILURE-DETAIL-LOST
+  title: 'Failure details get lost: the Console ring clears on close, and it and console.log keep neither the model nor the error text'
+  severity: low
+  component: core
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
 - id: UNINSTALL-LEAVES-INSTALLER-COPY
   title: Uninstalling leaves a 340 MB copy of the installer in %LOCALAPPDATA%\av-kit-ui-updater
   severity: low
@@ -2466,103 +2563,6 @@ actionable:
         sources: []
       reasoning: Moving the default would strand files users already hold, 534 MB on the test PC. Two defaults are what drifted, so the test covers the cause. Two-way.
     decided_by: human
-- id: TRANSCRIPT-FAILED-NO-REASON
-  title: 'A failed transcript shows only ''Failed'': the reason is saved but never reaches the API, the page or the log'
-  severity: high
-  component: api
-  status: open
-  category: MEU-NEW
-  priority: P2
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-218
-      stage: triage
-      question: How does a failed or skipped video's reason reach the user?
-      resolution: autonomous
-      class: two-way
-      chosen: Map each cause to a short av-kit message (blocked, no captions, unavailable, other with its reason). Return it from the API, show it on the job card and log it. Skipped gets the same treatment.
-      source_tag: Local Canon
-      precedents:
-      - .agent/context/known-issues.yaml TTS-GENERATE-FAILED-SILENT D-3 — log the failure and render the job's error in the page's error slot
-      - AGENTS.md §Code Quality — structured logging, handle all errors
-      research:
-        engine: none
-        sources: []
-      reasoning: The same defect class as TTS-GENERATE-FAILED-SILENT, already decided there. Pass-through loses because the library's text points at its own README for proxies. Two-way.
-    - id: D-234
-      stage: triage
-      question: This triage proposes 12 new MEUs; run the Step 5.5 scoping review now?
-      resolution: autonomous
-      class: two-way
-      chosen: No. Run it as a separate Codex dispatch on the /session-grouping draft after Mat confirms the grouping, before the first /create-plan.
-      source_tag: Human-approved
-      precedents:
-      - '.agent/context/grouping/2026-10-17-gui-shell-and-tts-sideload-session-grouping.md D-103 — USER_EXPLICIT 2026-10-24 ''yes go ahead'': scoping review runs after Mat confirms the grouping'
-      - .agent/context/known-issues.yaml GUI-SHORTCUTS-ADVERTISED-UNBOUND D-85 — same call at the previous triage
-      research:
-        engine: none
-        sources: []
-      reasoning: The MEUs have no build-plan sections yet, so a reviewer has nothing to score them against. The workflow's literal trigger is met; D-103 settles the timing.
-    decided_by: agent
-- id: TRANSCRIPT-BLOCK-KEEPS-REQUESTING
-  title: A channel job keeps requesting captions after YouTube refuses, and the Requests per hour setting does nothing
-  severity: medium
-  component: core
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-219
-      stage: triage
-      question: What does a run do once YouTube blocks it?
-      resolution: autonomous
-      class: two-way
-      chosen: 'When one video exhausts max_retries on TranscriptRetryableError, stop the run: that video and the rest stay Pending and the job goes Paused with the reason. No growing wait and no new number.'
-      source_tag: Research-backed
-      precedents:
-      - docs/build-plan/03-service-layer.md:236 — one failed video keeps a whole channel job from compiling, so Pending keeps the job recoverable
-      - 'docs/build-plan/03-service-layer.md:227 — the spec''s pause path: job.status = Paused; runtime = Paused; return'
-      research:
-        engine: exa
-        sources:
-        - https://github.com/jdepoix/youtube-transcript-api — 'Same can happen to the IP of your self-hosted solution, if you are doing too many requests'
-        - 'https://transcriptapi.io/youtube-transcript-api-blocked — a block is per address: ''Not from this IP'' (proxy vendor)'
-        - https://videotranscriber.ai/blog/youtube-transcript-api-not-working — 'No amount of retrying from the same server IP' (transcript vendor)
-        - https://github.com/github/copilot-cli/issues/2760 — a long-wait 429 is effectively a stop signal
-        - https://developer.nylas.com/docs/cookbook/use-cases/build/handle-rate-limit-errors — stop or back off on repeated rate-limit answers
-      reasoning: That error only means a block (RETRYABLE_ERRORS at transcript/adapter.py:21), so the next video would meet the same answer. The Processing to Paused to Processing edge and _pause_parent
-        already exist (domain/transcript.py:26-35, services/transcript.py:577). A growing wait loses because it adds a tuning number and keeps asking. Several sources are vendors. Two-way.
-      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
-    - id: D-220
-      stage: triage
-      question: Enforce transcript.requests_per_hour or remove its control?
-      resolution: autonomous
-      class: two-way
-      chosen: 'Enforce it as a rolling cap over real requests. Default behaviour does not change: 6 s apart with a 300 s pause after 50 is already about 300 an hour.'
-      source_tag: Local Canon
-      precedents:
-      - _inspiration/_transcript_pseudo_logic.md:69 — 'Target request rate cap'
-      - docs/build-plan/06-gui.md:1052 — setting with default 300
-      - docs/build-plan/11-page-layout.md:331 — a Transcript number on Settings
-      research:
-        engine: none
-        sources: []
-      reasoning: Canon defines it as the request rate cap and it is a public setting in the GUI, schema and MCP. Removal would drop a documented setting. Two-way.
-      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
-    decided_by: agent
-- id: CONSOLE-FAILURE-DETAIL-LOST
-  title: 'Failure details get lost: the Console ring clears on close, and it and console.log keep neither the model nor the error text'
-  severity: low
-  component: core
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment: null
 - id: CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
   title: 'Audio extract reads its stream index two ways: AAC from a normal video comes out as .mka, and All audio streams targets the wrong tracks'
   severity: medium
@@ -2934,10 +2934,9 @@ proposed_batches:
   priority_band: P2
   complexity: L
   has_duplicates: true
-- slug: core-transcript-channel-is-playlist-name-transcript-block-keeps-requesting-convert-extract-stream-index-mismatch
+- slug: core-transcript-channel-is-playlist-name-convert-extract-stream-index-mismatch
   issues:
   - TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME
-  - TRANSCRIPT-BLOCK-KEEPS-REQUESTING
   - CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
   component: core
   priority_band: P3
@@ -2952,10 +2951,3 @@ proposed_batches:
   priority_band: P3
   complexity: M
   has_duplicates: true
-- slug: api-transcript-failed-no-reason
-  issues:
-  - TRANSCRIPT-FAILED-NO-REASON
-  component: api
-  priority_band: P2
-  complexity: S
-  has_duplicates: false

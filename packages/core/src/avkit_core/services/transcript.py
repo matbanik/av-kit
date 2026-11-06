@@ -6,6 +6,7 @@ import re
 import threading
 import time
 import zipfile
+from collections import deque
 from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -24,15 +25,30 @@ from avkit_core.domain.errors import (
     ValidationError,
 )
 from avkit_core.domain.queue import QueueRuntime
-from avkit_core.domain.transcript import TranscriptItem, TranscriptJob, TranscriptResult
+from avkit_core.domain.transcript import (
+    TranscriptFailureCause,
+    TranscriptItem,
+    TranscriptJob,
+    TranscriptResult,
+    TranscriptSkip,
+    failure_message,
+    safe_reason,
+)
 from avkit_core.ports.filesystem import FilesystemPort
 from avkit_core.ports.storage import UnitOfWork
 from avkit_core.ports.transcript import TranscriptPort
 from avkit_core.services.extract import ExtractCoordinator
+from avkit_core.services.health import redact_message
 from avkit_core.services.settings import SettingsService
 
 COMPILE_READ_MAX_BYTES = 20 * 1024 * 1024
 TRANSCRIPT_LANGUAGES_DEFAULT = ["en"]
+#: A Failed job's `error_message`. `Last` is the message of the Failed item processed last.
+JOB_MESSAGE = "{n} of {total} videos failed. Last: {message}"
+#: A Done job's `error_message` when at least one video was skipped.
+SKIPPED_JOB_MESSAGE = "{n} of {total} videos had no transcript. Last: {message}"
+#: Seconds in the rolling window of `transcript.requests_per_hour` (MEU-116).
+RATE_WINDOW = 3600.0
 UoWFactory = Callable[[], UnitOfWork]
 log = structlog.get_logger(module="transcript")
 
@@ -79,6 +95,7 @@ class TranscriptService:
         filesystem: FilesystemPort,
         settings: SettingsService,
         sleep: Callable[[float], None] | None = None,
+        clock: Callable[[], float] | None = None,
     ) -> None:
         self._uow_factory = uow_factory
         self._coordinator = coordinator
@@ -86,6 +103,8 @@ class TranscriptService:
         self._filesystem = filesystem
         self._settings = settings
         self._sleep = sleep or time.sleep
+        self._clock = clock or time.monotonic
+        self._request_starts: deque[float] = deque()
         self._runtime = QueueRuntime(
             queue_name="transcripts",
             state=QueueProcessorState.Idle,
@@ -95,6 +114,8 @@ class TranscriptService:
         self._stop = False
         self._pick_processing = False
         self._thread: threading.Thread | None = None
+        # True from a worker's start until it decides, under `_lock`, to exit (D-306).
+        self._worker_active = False
         self._lock = threading.Lock()
 
     def get_processor_state(self) -> QueueRuntime:
@@ -197,32 +218,36 @@ class TranscriptService:
                 state=QueueProcessorState.Processing,
                 current_job_id=None,
             )
-            if self._thread is None or not self._thread.is_alive():
-                self._thread = threading.Thread(target=self._worker, daemon=True)
-                self._thread.start()
+            self._ensure_worker()
 
     def pause_processing(self) -> None:
         self._pause = True
 
     def resume_processing(self) -> None:
-        paused: TranscriptJob | None = None
-        with self._uow_factory() as uow:
-            for job in uow.transcripts.list_jobs_ordered():
-                if job.status is TranscriptStatus.Paused:
-                    paused = job
-                    break
-        if self._runtime.state is not QueueProcessorState.Paused and paused is None:
-            raise ConflictError("resume_processing requires Paused")
-        if paused is not None:
-            with self._uow_factory() as uow:
-                latest = uow.transcripts.get_job(paused.id)
-                if latest is None or latest.status is not TranscriptStatus.Paused:
-                    raise ConflictError("resume_processing requires Paused")
-                uow.transcripts.save_job(
-                    replace(latest.transition(TranscriptStatus.Processing), updated_at=_now())
-                )
-                uow.commit()
+        # One critical section with the worker's exits (D-306): either the worker sees
+        # this resume before it exits, or this resume sees no worker and starts one.
         with self._lock:
+            paused: TranscriptJob | None = None
+            with self._uow_factory() as uow:
+                for job in uow.transcripts.list_jobs_ordered():
+                    if job.status is TranscriptStatus.Paused:
+                        paused = job
+                        break
+            if self._runtime.state is not QueueProcessorState.Paused and paused is None:
+                raise ConflictError("resume_processing requires Paused")
+            if paused is not None:
+                with self._uow_factory() as uow:
+                    latest = uow.transcripts.get_job(paused.id)
+                    if latest is None or latest.status is not TranscriptStatus.Paused:
+                        raise ConflictError("resume_processing requires Paused")
+                    uow.transcripts.save_job(
+                        replace(
+                            latest.transition(TranscriptStatus.Processing),
+                            error_message=None,
+                            updated_at=_now(),
+                        )
+                    )
+                    uow.commit()
             self._pause = False
             self._stop = False
             self._pick_processing = True
@@ -231,15 +256,21 @@ class TranscriptService:
                 state=QueueProcessorState.Processing,
                 current_job_id=paused.id if paused is not None else None,
             )
-            if self._thread is None or not self._thread.is_alive():
-                self._thread = threading.Thread(target=self._worker, daemon=True)
-                self._thread.start()
+            self._ensure_worker()
 
     def stop_processing(self) -> None:
-        self._stop = True
-        thread = self._thread
-        if thread is None or not thread.is_alive():
-            self._apply_stop()
+        with self._lock:
+            self._stop = True
+            if not self._worker_active:
+                self._apply_stop()
+
+    def _ensure_worker(self) -> None:
+        """Start a worker unless one is active. The caller holds `_lock`."""
+        if self._worker_active:
+            return
+        self._worker_active = True
+        self._thread = threading.Thread(target=self._worker, daemon=True)
+        self._thread.start()
 
     def requeue_channel(self, job_id: str) -> TranscriptJob:
         with self._uow_factory() as uow:
@@ -353,41 +384,68 @@ class TranscriptService:
         return zip_path
 
     def _worker(self) -> None:
+        # Each exit re-checks its flag under `_lock` and gives up the worker slot in the
+        # same critical section, so a resume or start racing it is never lost (D-306).
         try:
             while True:
                 if self._stop:
-                    self._apply_stop()
-                    return
+                    with self._lock:
+                        if self._stop:
+                            self._apply_stop()
+                            self._stop = False
+                            self._worker_active = False
+                            return
+                    continue
                 if self._pause:
-                    self._pause_current()
-                    return
+                    with self._lock:
+                        if self._pause:
+                            self._pause_current()
+                            self._worker_active = False
+                            return
+                    continue
                 job = self._next_job()
                 if job is None:
-                    self._runtime = QueueRuntime(
-                        queue_name="transcripts",
-                        state=QueueProcessorState.Idle,
-                        current_job_id=None,
-                    )
-                    return
+                    with self._lock:
+                        if not self._pick_processing:
+                            self._runtime = QueueRuntime(
+                                queue_name="transcripts",
+                                state=QueueProcessorState.Idle,
+                                current_job_id=None,
+                            )
+                            self._worker_active = False
+                            return
+                    continue
                 self._run_parent(job)
-                self._pick_processing = False
                 self._sleep(0)
         finally:
-            if self._stop:
-                self._runtime = QueueRuntime(
-                    queue_name="transcripts",
-                    state=QueueProcessorState.Idle,
-                    current_job_id=None,
-                )
-                self._stop = False
+            with self._lock:
+                # Reached with the slot still held only when an exception ended the loop.
+                if self._worker_active and self._thread is threading.current_thread():
+                    self._worker_active = False
+                    if self._stop:
+                        self._runtime = QueueRuntime(
+                            queue_name="transcripts",
+                            state=QueueProcessorState.Idle,
+                            current_job_id=None,
+                        )
+                        self._stop = False
 
     def _next_job(self) -> TranscriptJob | None:
+        # Read and clear before the jobs are read, so a resume landing after this point
+        # sets the flag again and the idle exit goes round (D-306).
+        with self._lock:
+            pick_processing = self._pick_processing
+            self._pick_processing = False
         with self._uow_factory() as uow:
             jobs = uow.transcripts.list_jobs_ordered()
         for job in jobs:
-            if self._pick_processing and job.status is TranscriptStatus.Processing:
+            if pick_processing and job.status is TranscriptStatus.Processing:
                 return job
             if job.status is TranscriptStatus.Pending:
+                if pick_processing:
+                    # The resumed job comes later in the queue; keep it selectable.
+                    with self._lock:
+                        self._pick_processing = True
                 return job
         return None
 
@@ -423,15 +481,27 @@ class TranscriptService:
                 self._sleep(delay)
                 if batch_size > 0 and index % batch_size == 0:
                     self._sleep(batch_pause)
-            self._fetch_item(job.id, item)
+            if self._fetch_item(job.id, item):
+                # A block that outlasted its retries stops the run: no request for the next
+                # video of this job or any other until Resume (MEU-116). Under `_lock`, so a
+                # Resume either lands after this pause or finds the job still Processing.
+                with self._lock:
+                    self._pause = True
+                    self._pause_parent(job.id, failure_message(TranscriptFailureCause.blocked))
+                return
         with self._uow_factory() as uow:
             latest = uow.transcripts.get_job(job.id)
             items = uow.transcripts.list_items(job.id) if latest is not None else []
             if latest is None:
                 return
-            if any(item.status is TranscriptItemStatus.Failed for item in items):
+            failed_message = _job_message(JOB_MESSAGE, items, TranscriptItemStatus.Failed)
+            if failed_message is not None:
                 uow.transcripts.save_job(
-                    replace(latest.transition(TranscriptStatus.Failed), updated_at=_now())
+                    replace(
+                        latest.transition(TranscriptStatus.Failed),
+                        error_message=failed_message,
+                        updated_at=_now(),
+                    )
                 )
                 uow.commit()
                 return
@@ -454,63 +524,88 @@ class TranscriptService:
                     current.transition(TranscriptStatus.Done),
                     zip_path=zip_path,
                     word_count=sum(item.word_count for item in items),
+                    error_message=_job_message(
+                        SKIPPED_JOB_MESSAGE, items, TranscriptItemStatus.Skipped
+                    ),
                     updated_at=_now(),
                 )
             )
             uow.commit()
 
-    def _fetch_item(self, job_id: str, item: TranscriptItem) -> None:
+    def _fetch_item(self, job_id: str, item: TranscriptItem) -> bool:
+        """Fetch one video. True when a block outlasted `max_retries` (the item stays Pending)."""
         max_retries = _as_int(self._settings.get("transcript", "max_retries"))
         retry_delay = _as_float(self._settings.get("transcript", "retry_delay"))
         languages = list(TRANSCRIPT_LANGUAGES_DEFAULT)
         current = item
         while True:
             if self._stop or self._pause:
-                return
+                return False
+            if not self._await_request_slot():
+                return False
             try:
                 result = self._captions.get_transcript(current.video_id, languages)
-            except TranscriptRetryableError as exc:
+            except TranscriptRetryableError:
                 self._sleep(retry_delay)
-                current = replace(
-                    current,
-                    retry_count=current.retry_count + 1,
-                    error_message=str(exc),
-                )
-                self._save_item(current)
-                if max_retries <= 0 or current.retry_count >= max_retries:
-                    self._save_item(
-                        replace(
-                            current.transition(TranscriptItemStatus.Failed),
-                            processed_at=_now(),
-                        )
+                blocked = failure_message(TranscriptFailureCause.blocked)
+                retry_count = current.retry_count + 1
+                if max_retries <= 0 or retry_count >= max_retries:
+                    self._save_item(replace(current, retry_count=0, error_message=blocked))
+                    log.error(
+                        "transcript.blocked",
+                        job_id=job_id,
+                        video_id=current.video_id,
+                        error=blocked,
                     )
-                    return
+                    return True
+                current = replace(current, retry_count=retry_count, error_message=blocked)
+                self._save_item(current)
                 continue
             except DomainError as exc:
+                reason = safe_reason(redact_message(str(exc))) or type(exc).__name__
+                message = failure_message(TranscriptFailureCause.other, reason)
                 self._save_item(
                     replace(
                         current.transition(TranscriptItemStatus.Failed),
-                        error_message=str(exc),
+                        error_message=message,
                         processed_at=_now(),
                     )
                 )
-                return
+                log.error(
+                    "transcript.item_failed",
+                    job_id=job_id,
+                    video_id=current.video_id,
+                    error=message,
+                )
+                return False
             break
         if self._stop or self._pause:
-            return
-        if result is None:
+            return False
+        if isinstance(result, TranscriptSkip):
+            message = failure_message(result.cause)
             self._save_item(
-                replace(current.transition(TranscriptItemStatus.Skipped), processed_at=_now())
+                replace(
+                    current.transition(TranscriptItemStatus.Skipped),
+                    error_message=message,
+                    processed_at=_now(),
+                )
             )
-            return
+            log.warning(
+                "transcript.item_skipped",
+                job_id=job_id,
+                video_id=current.video_id,
+                error=message,
+                persist=True,
+            )
+            return False
         with self._uow_factory() as uow:
             job = uow.transcripts.get_job(job_id)
         if job is None:
-            return
+            return False
         path = job.output_dir / "raw" / f"{result.video_id}.md"
         self._filesystem.write_text_atomic(path, _raw_markdown(job, result))
         if self._stop or self._pause:
-            return
+            return False
         done = replace(
             replace(current, path=path).transition(TranscriptItemStatus.Done),
             title=result.title,
@@ -521,6 +616,26 @@ class TranscriptService:
         )
         self._save_item(done)
         self._recompute_word_count(job_id)
+        return False
+
+    def _await_request_slot(self) -> bool:
+        """Wait until a request fits `requests_per_hour` over the last `RATE_WINDOW` seconds.
+
+        Reads the cap on every pass, so a lowered, raised or cleared cap applies to a wait
+        already under way. Sleeps in slices of at most a second; False when Stop or Pause
+        ends the wait.
+        """
+        while True:
+            cap = _as_float(self._settings.get("transcript", "requests_per_hour"))
+            now = self._clock()
+            while self._request_starts and self._request_starts[0] <= now - RATE_WINDOW:
+                self._request_starts.popleft()
+            if cap <= 0 or len(self._request_starts) < cap:
+                self._request_starts.append(now)
+                return True
+            self._sleep(min(1.0, self._request_starts[0] + RATE_WINDOW - now))
+            if self._stop or self._pause:
+                return False
 
     def _save_item(self, item: TranscriptItem) -> None:
         with self._uow_factory() as uow:
@@ -574,13 +689,15 @@ class TranscriptService:
             current_job_id=None,
         )
 
-    def _pause_parent(self, job_id: str) -> None:
+    def _pause_parent(self, job_id: str, reason: str | None = None) -> None:
+        """Pause the job; `reason` (a block's message) replaces its `error_message`."""
         with self._uow_factory() as uow:
             job = uow.transcripts.get_job(job_id)
             if job is not None and job.status is TranscriptStatus.Processing:
-                uow.transcripts.save_job(
-                    replace(job.transition(TranscriptStatus.Paused), updated_at=_now())
-                )
+                paused = replace(job.transition(TranscriptStatus.Paused), updated_at=_now())
+                if reason is not None:
+                    paused = replace(paused, error_message=reason)
+                uow.transcripts.save_job(paused)
                 uow.commit()
         self._runtime = QueueRuntime(
             queue_name="transcripts",
@@ -612,6 +729,18 @@ class TranscriptService:
             video_count=len(items),
             word_count=sum(item.word_count for item in items),
         )
+
+
+def _job_message(
+    template: str, items: list[TranscriptItem], status: TranscriptItemStatus
+) -> str | None:
+    """`template` over the items in `status`; `Last` is the one processed last, ties by order."""
+    matching = [(index, item) for index, item in enumerate(items) if item.status is status]
+    if not matching:
+        return None
+    earliest = datetime.min.replace(tzinfo=UTC)
+    _, last = max(matching, key=lambda pair: (pair[1].processed_at or earliest, pair[0]))
+    return template.format(n=len(matching), total=len(items), message=last.error_message)
 
 
 def _raw_markdown(job: TranscriptJob, result: TranscriptResult) -> str:

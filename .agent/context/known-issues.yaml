@@ -3634,11 +3634,11 @@ issues:
     title: 'A failed transcript shows only ''Failed'': the reason is saved but never reaches the API, the page or the log'
     severity: high
     component: api
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: 'The reason is stored per video in TranscriptItem.error_message (packages/core/src/avkit_core/services/transcript.py:477, :493) and goes no further. packages/api/src/avkit_api/routes/transcripts.py _aggregates returns only the done count, last title and last status; _job_out passes job.error_message, which this service never fills; and no route returns items. The Transcript feature in ui/src/renderer/src/features/transcript reads no error field: TranscriptPage.tsx:122 shows ''Last: <title> <status>''. services/transcript.py has no log.error or log.warning, so the Console shows nothing either, and transcript-help-content.ts:15-17 covers Requeue only. A video with no captions is silent too: the adapter returns None and the item becomes Skipped with no reason (services/transcript.py:501-503). The stored text is the library''s multi-paragraph message, which points at the library''s own README for proxies, so it needs a short av-kit wording rather than a pass-through.'
     blast_radius: 'Measured on the published RC1 on the maintainer''s test PC on 2026-11-04: a job for a public video with English captions (VSU9VjZFoLI) ended Failed after 96 s, with error_message null and last_item_status Failed from GET /transcripts, and empty raw and compiled folders. A second video failed the same way. The reason was found only by scanning the database file''s bytes. Every Transcript user is affected: they cannot tell a YouTube block from a bug or from a video with no captions. The published notes (docs/releases/v0.1.0-rc.1.md:56-57) tell users what to do ''If you see that message'', and the app never shows it. docs/releases/publish-checklist-v0.1.0-rc.1.md:171 already says the page does not show which. The gap costs more because, by design, one failed video keeps a whole channel job from compiling (docs/build-plan/03-service-layer.md:236).'
-    resolution_path: 'Proposed for triage, not approved: map each failure to a short av-kit message (blocked by YouTube, so try later or on another network; no captions; video unavailable; anything else, with its reason), return it from the API, show it on the job card and log it. Give Skipped the same treatment. Done when a blocked job''s card states the reason and the Console has a matching line.'
+    resolution_path: 'Fixed in Session 50 on 2026-11-06 (plan 2026-11-05-transcript-failure-reason, MEU-115, D-291 to D-295): the port reports the cause (TranscriptSkip and a short block text), each failure or skip stores one short av-kit message and logs a matching line, the API returns error_message and last_item_message, and the Transcript card shows the message on line three.'
     category: MEU-NEW
     priority: P2
     related:
@@ -3646,7 +3646,9 @@ issues:
       - TRANSCRIPT-BLOCK-KEEPS-REQUESTING
       - CONSOLE-FAILURE-DETAIL-LOST
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-06'
+      method: 'Session 50 Green receipts with fake ports and no network (plan 2026-11-05-transcript-failure-reason): task row 9 C:/Temp/av-kit/s50-block-green.txt (tests/unit/test_services.py, tests/integration/test_transcript_block_done.py, tests/integration/test_transcript_adapter.py, tests/e2e/test_api_transcripts.py), with rows 2, 4, 6 and 7 (s50-port-green.txt, s50-svc-green.txt, s50-ui-green.txt, s50-r7-e2e.txt)'
+      result: 'Row 9: 113 passed, pyright 0 errors, real console.log unchanged. AC-116.7 pins the done condition: the API''s job for a blocked run reads Paused with error_message ''YouTube is blocking caption requests from this network. Try again later or from another network, then Resume.'', and the Console ring and console.log each hold one matching transcript.blocked ERROR line. Row 7''s Electron E2E (11 passed) shows the message in the card''s job-message line.'
     meu_links:
       - MEU-11
       - MEU-16
@@ -3689,18 +3691,20 @@ issues:
     title: A channel job keeps requesting captions after YouTube refuses, and the Requests per hour setting does nothing
     severity: medium
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: The loop at packages/core/src/avkit_core/services/transcript.py:415-426 goes on to the next video after a failure. _fetch_item gives each blocked video up to max_retries attempts at a fixed retry_delay (:472-488), and nothing carries the block over to the next video. Separately, transcript.requests_per_hour has a Settings control (ui/src/renderer/src/features/settings/SettingsPage.tsx:740), a schema and an MCP setting, but no service reads it (git grep over packages, ui/src and mcp-server/src).
     blast_radius: 'Read from the code and calculated from the defaults, not measured: during a block, a 100-video channel makes 300 attempts over about 2.75 hours (100 x (3 x 30 s + 6 s), plus one 300 s batch pause) before ending Failed with nothing to show. Whether those requests prolong a block is not known. The default pacing does match the setting''s default (6 s apart with a 300 s pause after 50 is about 300 videos an hour), but changing the setting has no effect, so a user who lowers it to stay under a limit is not protected.'
-    resolution_path: 'Proposed for triage, not approved: on a block, stop the run or hold it with a growing wait, and leave the remaining videos pending for a later retry. Either enforce requests_per_hour or remove its control.'
+    resolution_path: 'Fixed in Session 50 on 2026-11-06 (plan 2026-11-05-transcript-failure-reason, MEU-116, D-299, D-300, D-306): a block that outlasts max_retries leaves the video Pending, logs transcript.blocked and pauses the job with the reason, so no further request is made until Resume. transcript.requests_per_hour is enforced as a rolling cap over every request, and the worker''s exits and the entry points share one lock.'
     category: MEU-NEW
     priority: P3
     related:
       - YOUTUBE-CAPTIONS-IP-BLOCK
       - TRANSCRIPT-FAILED-NO-REASON
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-06'
+      method: Session 50 task row 9 receipt C:/Temp/av-kit/s50-block-green.txt (plan 2026-11-05-transcript-failure-reason; fake port and fake clock, no network)
+      result: '113 passed, pyright 0 errors. AC-116.1: a block on the first video makes max_retries calls and none for the next, the job reads Paused with the reason and both videos stay Pending; AC-116.2: Resume finishes them; AC-116.4 and AC-116.9: requests_per_hour caps a rolling hour, retries included; AC-116.5: the default cap delays nothing over 400 videos; AC-116.8: a Resume racing the worker''s exit leaves one worker and a Done queue.'
     meu_links:
       - MEU-11
       - MEU-116
@@ -3749,18 +3753,20 @@ issues:
     title: 'Failure details get lost: the Console ring clears on close, and it and console.log keep neither the model nor the error text'
     severity: low
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: Console events live in an in-memory ring (packages/core/src/avkit_core/services/health.py:95), and app.log_to_file defaults to False (packages/core/src/avkit_core/services/settings.py:78). The ring message and console.log keep only CONSOLE_FIELDS (job_id, error, request_id, route; health.py:42), and error holds the exception's class name. A failed load therefore reads 'tts.load_failed error=ModelLoadError', without its variant_id, device or text.
     blast_radius: 'Measured on the maintainer''s test PC on 2026-11-04: all six failed loads read that way in GET /health/console, so only the two fuller lines the maintainer copied from the app could be tied to a model. The file log on that PC starts after those failures, so it holds none of them. A failure report made after closing the app has no evidence behind it.'
-    resolution_path: 'Proposed for triage, not approved: add the model and the error text to the kept fields, after checking that redaction still holds, and decide whether errors always go to a file.'
+    resolution_path: 'Fixed in Session 50 on 2026-11-06 (plan 2026-11-05-transcript-failure-reason, MEU-115 rider, D-296 to D-298, D-304, D-305; Mat''s ruling D-247): CONSOLE_FIELDS keeps the error text and the model, each value one redacted line, the event passed to stdout holds only the safe message, and errors always go to console.log while Log to file adds every other line.'
     category: TECH-DEBT
     priority: P4
     related:
       - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
       - TRANSCRIPT-FAILED-NO-REASON
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-06'
+      method: 'Session 50 Green receipts (plan 2026-11-05-transcript-failure-reason): task row 4 C:/Temp/av-kit/s50-svc-green.txt and row 9 C:/Temp/av-kit/s50-block-green.txt'
+      result: 'Row 4: 187 passed; row 9: 113 passed, with real console.log unchanged. The Console ring and console.log keep error, detail, device and variant_id after redaction and URL removal, stdout carries only the safe message, and ERROR lines reach console.log with app.log_to_file off (AC-116.7 reads the same transcript.blocked line from both).'
     meu_links:
       - MEU-27
       - MEU-115

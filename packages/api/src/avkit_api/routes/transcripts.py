@@ -22,19 +22,23 @@ from avkit_core.domain.enums import TranscriptItemStatus
 router = APIRouter(prefix="/transcripts", dependencies=[Depends(require_bearer)])
 
 
-def _aggregates(items: list[Any]) -> tuple[int, str | None, str | None]:
+_MESSAGE_STATUSES = frozenset({TranscriptItemStatus.Failed, TranscriptItemStatus.Skipped})
+
+
+def _aggregates(items: list[Any]) -> tuple[int, str | None, str | None, str | None]:
     done = sum(1 for item in items if item.status is TranscriptItemStatus.Done)
     if not items:
-        return done, None, None
+        return done, None, None, None
     dated = [item for item in items if item.processed_at is not None]
     chosen = max(dated, key=lambda item: item.processed_at) if dated else items[-1]
     title = chosen.title
-    return done, title, chosen.status.value
+    message = chosen.error_message if chosen.status in _MESSAGE_STATUSES else None
+    return done, title, chosen.status.value, message
 
 
 def _job_out(transcript: Any, job: Any) -> TranscriptJobOut:
     items = transcript.list_items(job.id)
-    done, last_title, last_status = _aggregates(items)
+    done, last_title, last_status, last_message = _aggregates(items)
     zip_path = None if job.zip_path is None else str(job.zip_path)
     return TranscriptJobOut(
         id=job.id,
@@ -48,6 +52,7 @@ def _job_out(transcript: Any, job: Any) -> TranscriptJobOut:
         zip_path=zip_path,
         last_title=last_title,
         last_item_status=last_status,
+        last_item_message=last_message,
         queue_position=job.queue_position,
         error_message=job.error_message,
         created_at=format_iso(job.created_at),

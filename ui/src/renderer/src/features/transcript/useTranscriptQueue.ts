@@ -17,7 +17,9 @@ export type TranscriptListItem = {
   zip_path: string | null
   last_title: string | null
   last_item_status: string | null
+  last_item_message: string | null
   queue_position: number
+  error_message: string | null
   compiled_path?: string | null
 }
 

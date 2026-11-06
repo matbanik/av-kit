@@ -317,14 +317,15 @@ Implement **only** the types in [Phase 1 `domain/errors`](01-domain-layer.md). D
 | `DownloadCancelledError` | download + stop flag | `Cancelled` |
 | `SABRDetectedError` | optional; or flag on result | session `SABRStatus` + maybe `QualityBlocked` |
 | `CookieTestError` | browser locked / bad file (alias `CookieAccessError`) | 422 / Failed with message |
-| `TranscriptsDisabledError` | transcript adapter | `TranscriptItemStatus.Skipped` |
-| `NoTranscriptFoundError` | transcript adapter | `Skipped` |
-| `TranscriptRetryableError` | network / 429 | increment `retry_count` |
+| `TranscriptsDisabledError` | not raised by `TranscriptAdapter` (it returns a `TranscriptSkip`) | `TranscriptItemStatus.Skipped` |
+| `NoTranscriptFoundError` | not raised by `TranscriptAdapter` (it returns a `TranscriptSkip`) | `Skipped` |
+| `TranscriptRetryableError` | transcript adapter: `RequestBlocked` / `IpBlocked` (a 429 raises `IpBlocked`), text "caption request blocked" | increment `retry_count` |
+| `DomainError` | transcript adapter: any other error, text a `LIBRARY_REASONS` reason or the class name | `Failed` with `failure_message(other, reason)` |
 | `FFmpegNotFoundError` | media adapter | disable audio formats / TTS MP3 |
 | `ModelLoadError` | Kokoro adapter | `TTSStatus.Failed` / model UI error |
 | `ModelDownloadError` | model manager | variant stays `is_downloaded=False` |
 
-`TranscriptPort.get_transcript` returns `None` for disabled/missing captions (Phase 1 = skip). Raise `TranscriptRetryableError` only for transient failures. Do **not** raise `TranscriptsDisabledError` / `NoTranscriptFoundError` from this method — those names exist for adapters that cannot return `None`; `get_transcript` uses `None`.
+`TranscriptPort.get_transcript` returns a `TranscriptResult`, or a `TranscriptSkip` carrying its `TranscriptFailureCause` ([01](01-domain-layer.md)) for a video with no transcript: `TranscriptsDisabled`, `NoTranscriptFound` and a listing with no transcript give `no_captions`, and `VideoUnavailable` gives `unavailable`. `RequestBlocked` and `IpBlocked` raise `TranscriptRetryableError("caption request blocked")`; youtube-transcript-api 1.2.4 raises `IpBlocked` for an HTTP 429, so a rate limit counts as a block. Every other error raises `DomainError(reason)`, where the reason is the adapter's `LIBRARY_REASONS` text (`AgeRestricted`, `VideoUnplayable`, `PoTokenRequired`, `InvalidVideoId`, `YouTubeDataUnparsable`, `YouTubeRequestFailed`, `FailedToCreateConsentCookie`) or else the exception's class name. The library's own text never crosses the port, because it can hold a URL with a query token; the library error stays as `__cause__`. Do **not** raise `TranscriptsDisabledError` / `NoTranscriptFoundError` from this method — those names exist for adapters that cannot return a skip.
 
 ---
 

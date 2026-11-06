@@ -38,7 +38,9 @@ function item(overrides: Partial<TranscriptListItem> & Pick<TranscriptListItem, 
     zip_path: null,
     last_title: null,
     last_item_status: null,
+    last_item_message: null,
     queue_position: 1,
+    error_message: null,
     compiled_path: null,
     ...overrides,
   }
@@ -554,5 +556,45 @@ describe('MEU-55 transcript page composition', () => {
     expect(controls).not.toBeNull()
     expect(controls.className).toContain('min-h-0')
     expect(controls.contains(list)).toBe(false)
+  })
+
+  it('AC-115.14 card line three shows the job message, or the last item message while Processing', async () => {
+    const blocked =
+      'YouTube is blocking caption requests from this network. Try again later or from another network, then Resume.'
+    const failed = "2 of 4 videos failed. Last: Couldn't get captions: the video is age-restricted."
+    const skipped = '1 of 1 videos had no transcript. Last: No captions for this video.'
+    items = [
+      item({ id: 'f', channel_name: 'Foxtrot', status: 'Failed', error_message: failed, queue_position: 1 }),
+      item({ id: 'p', channel_name: 'Papa', status: 'Paused', error_message: blocked, queue_position: 2 }),
+      item({ id: 's', channel_name: 'Sierra', status: 'Done', error_message: skipped, queue_position: 3 }),
+      item({
+        id: 't', channel_name: 'Tango', status: 'Processing', last_title: 'Episode 3', last_item_status: 'Skipped',
+        last_item_message: 'No captions for this video.', queue_position: 4,
+      }),
+      item({
+        id: 'u', channel_name: 'Uniform', status: 'Processing', last_item_status: 'Failed',
+        last_item_message: "Couldn't get captions: the video is age-restricted.", queue_position: 5,
+      }),
+      item({ id: 'v', channel_name: 'Victor', status: 'Done', video_count: 2, transcripts_done: 2, queue_position: 6 }),
+    ]
+    await renderPage()
+    for (const [name, message] of [['Foxtrot', failed], ['Papa', blocked], ['Sierra', skipped]]) {
+      const found = card(name)
+      expect(within(found).queryByTestId('job-message')?.textContent, name).toBe(message)
+      expect(within(found).queryByTestId('output-tree'), name).toBeNull()
+      expect(within(found).queryByTestId('last-title'), name).toBeNull()
+    }
+    expect(within(card('Tango')).queryByTestId('last-title')?.textContent).toBe(
+      'Last: Episode 3 Skipped · No captions for this video.',
+    )
+    expect(within(card('Uniform')).queryByTestId('last-title')?.textContent).toBe(
+      "Last: Failed · Couldn't get captions: the video is age-restricted.",
+    )
+    for (const name of ['Tango', 'Uniform', 'Victor']) {
+      expect(within(card(name)).queryByTestId('job-message'), name).toBeNull()
+    }
+    const victor = card('Victor')
+    expect(within(victor).queryByTestId('output-tree')?.textContent).toContain('C:/t/Victor · raw · compiled')
+    expect(within(victor).queryByTestId('last-title')).toBeNull()
   })
 })

@@ -1042,7 +1042,7 @@ export function SettingsPage() {
             <FormRow
               id="settings-log-to-file"
               label="Log to file"
-              hint="This path is fixed by the app and cannot be changed."
+              hint="Errors are always written to this file. Turn on Log to file to write every Console line there too."
               suffix={
                 <>
                   <span className="min-w-0 truncate font-mono text-xs text-fg-muted" data-testid="settings-log-file-path">

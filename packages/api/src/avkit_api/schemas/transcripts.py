@@ -33,6 +33,7 @@ class TranscriptJobOut(ApiModel):
     zip_path: str | None
     last_title: str | None
     last_item_status: str | None
+    last_item_message: str | None
     queue_position: int
     error_message: str | None
     created_at: str

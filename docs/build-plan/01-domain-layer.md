@@ -38,7 +38,7 @@ This file **supersedes** the entity field lists in [Phase 0](00-overview.md) and
 |-------|----------------|-----|
 | Transcript text, audio PCM, video bytes | Files under the job destination | Job row holds `path` only |
 | `progress.json` as source of truth | Optional **write-through export** under the channel folder | Resume is `TranscriptItem` rows. See [Spec conflict](#spec-conflict-progressjson) |
-| Console log lines | `{app_data}/logs/console.log` | Settings toggle only |
+| Console log lines | `{app_data}/logs/console.log` | Errors (`PERSIST_LEVELS`) and lines flagged `persist=True` always; every other line only with the `app.log_to_file` toggle |
 | Window geometry, rail, console height | electron-store | UI persist, not domain |
 | Cookie contents, Bearer tokens | Never | Jobs may record cookie *mode* via settings, not secrets |
 | `POST /tts/prepare` preview | Stateless response | Not a job |

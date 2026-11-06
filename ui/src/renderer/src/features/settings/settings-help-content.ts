@@ -19,7 +19,7 @@ export const SETTINGS_HELP_SECTIONS: HelpSection[] = [
   {
     id: 'console',
     title: 'Console and logging',
-    body: 'Set log_level, log_to_file, and console_visible under app settings. File persist writes to {app_data}/logs/console.log — that path is not configurable. Open the console panel from the header.',
+    body: 'Set log_level, log_to_file, and console_visible under app settings. Errors are always written to {app_data}/logs/console.log; Log to file adds every other line. That path is not configurable. Open the console panel from the header.',
   },
   {
     id: 'startup',
