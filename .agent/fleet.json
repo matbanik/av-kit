@@ -1,0 +1,28 @@
+{
+  "v": 1,
+  "project": "av-kit",
+  "requires": ["git", "uv", "node", "npm"],
+  "commands": {
+    "setup": [
+      ["uv", "sync", "--frozen", "--all-packages"],
+      ["npm", "--prefix", "ui", "ci"],
+      ["npm", "--prefix", "mcp-server", "ci"]
+    ],
+    "check-py": [
+      ["uv", "run", "pyright", "packages/"],
+      ["uv", "run", "ruff", "check", "packages/", "tests/"],
+      ["uv", "run", "pytest", "tests/", "-x", "--tb=short", "-q"]
+    ],
+    "check-ui": [
+      ["npm", "--prefix", "ui", "run", "typecheck"],
+      ["npm", "--prefix", "ui", "run", "lint"],
+      ["npm", "--prefix", "ui", "run", "test"],
+      ["npm", "--prefix", "ui", "run", "build"]
+    ],
+    "check-mcp": [
+      ["npm", "--prefix", "mcp-server", "run", "typecheck"],
+      ["npm", "--prefix", "mcp-server", "run", "test"],
+      ["npm", "--prefix", "mcp-server", "run", "build"]
+    ]
+  }
+}
