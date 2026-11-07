@@ -8,7 +8,10 @@ except AC-75.10, which reads the live runtimes.
 from __future__ import annotations
 
 import sys
+import threading
+import time
 import types
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -17,6 +20,7 @@ import numpy as np
 import pytest
 from structlog.testing import capture_logs
 
+from avkit_core.domain import tts as domain_tts
 from avkit_core.domain.enums import DeviceType, ModelFormat, ModelPrecision
 from avkit_core.domain.errors import ModelLoadError
 from avkit_core.domain.tts import ModelStatus, ModelVariant, VoiceConfig
@@ -804,6 +808,12 @@ def _load_failed(logs: list[dict[str, Any]]) -> list[tuple[str, str, str]]:
     ]
 
 
+def _pytorch_reason() -> str:
+    """`MODEL_REASONS[PyTorch]`: a PyTorch load without its runtime says this (AC-117.4)."""
+    assert hasattr(domain_tts, "MODEL_REASONS"), "avkit_core.domain.tts has no MODEL_REASONS"
+    return domain_tts.MODEL_REASONS[ModelFormat.PyTorch]
+
+
 @pytest.mark.integration
 @pytest.mark.parametrize("missing", ["path_none", "no_file"])
 def test_ac_98_4_missing_weight_logs_load_failed(
@@ -828,12 +838,13 @@ def test_ac_98_4_missing_weight_logs_load_failed(
 def test_ac_98_5_torch_absent_logs(
     tmp_path: Path, engines: Engines, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    reason = _pytorch_reason()
     adapter = _adapter(tmp_path, with_cuda)
     pytorch = _variant(tmp_path, ModelFormat.PyTorch)
     monkeypatch.setattr(f"{ADAPTER}.torch", None)
     with capture_logs() as logs, pytest.raises(ModelLoadError) as raised:
         adapter.load_model(pytorch, CUDA)
-    assert str(raised.value) == "PyTorch runtime is not bundled"
+    assert str(raised.value) == reason
     # The resolved target device, as the other `_load_pytorch` failures log it.
     assert _load_failed(logs) == [(pytorch.id, "cuda", "ModelLoadError")], logs
     assert engines.calls == []
@@ -844,13 +855,14 @@ def test_ac_98_5_torch_absent_logs(
 def test_ac_98_5_kokoro_import_logs(
     tmp_path: Path, engines: Engines, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    reason = _pytorch_reason()
     adapter = _adapter(tmp_path, with_cuda)
     pytorch = _variant(tmp_path, ModelFormat.PyTorch)
     missing = ImportError("No module named 'kokoro'")
     monkeypatch.setitem(sys.modules, "kokoro", _kokoro_failing_import(missing))
     with capture_logs() as logs, pytest.raises(ModelLoadError) as raised:
         adapter.load_model(pytorch, CUDA)
-    assert str(raised.value) == "PyTorch runtime is not bundled"
+    assert str(raised.value) == reason
     assert raised.value.__cause__ is missing
     assert _load_failed(logs) == [(pytorch.id, "cuda", "ImportError")], logs
     assert engines.calls == []
@@ -916,10 +928,120 @@ def test_ac_115_9_load_failed_carries_detail(
     flags = [("detail" in entry, entry["error"]) for entry in _events(logs, "tts.load_failed")]
     assert flags == [(False, "RuntimeError")], logs
 
+    reason = _pytorch_reason()
     absent = _adapter(tmp_path, with_cuda)
     monkeypatch.setattr(f"{ADAPTER}.torch", None)
     with capture_logs() as logs, pytest.raises(ModelLoadError):
         absent.load_model(variant, CUDA)
-    assert details(logs) == [
-        (variant.id, "cuda", "ModelLoadError", "PyTorch runtime is not bundled")
-    ], logs
+    assert details(logs) == [(variant.id, "cuda", "ModelLoadError", reason)], logs
+
+
+# --- AC-117.2 / 117.3 RUNTIME_PROBE, RUNTIME_PRESENT (Session 51, MEU-117) -------------------
+
+
+class _KokoroRequests:
+    """A `sys.meta_path` finder that records each `kokoro` import request and refuses it."""
+
+    def __init__(self) -> None:
+        self.names: list[str] = []
+
+    def find_spec(self, name: str, path: object = None, target: object = None) -> None:
+        if name.split(".")[0] == "kokoro":
+            self.names.append(name)
+            raise ModuleNotFoundError(f"blocked by the test: {name}")
+
+
+@pytest.mark.integration
+def test_ac_117_2_runtime_imports(engines: Engines, monkeypatch: pytest.MonkeyPatch) -> None:
+    from avkit_infra.tts import adapter as adapter_mod
+
+    assert hasattr(adapter_mod, "runtime_imports"), f"{ADAPTER} has no runtime_imports"
+    probe = adapter_mod.runtime_imports
+    # A torch and a `kokoro` holding `KModel` (the `engines` fixture): present, no log.
+    with capture_logs() as logs:
+        assert probe(ModelFormat.PyTorch) is True
+    assert logs == []
+
+    requests = _KokoroRequests()
+    monkeypatch.delitem(sys.modules, "kokoro")
+    monkeypatch.setattr(sys, "meta_path", [requests, *sys.meta_path])
+    with capture_logs() as logs:
+        assert probe(ModelFormat.ONNX) is True
+    assert (logs, requests.names) == ([], [])
+    monkeypatch.setattr(f"{ADAPTER}.torch", None)
+    with capture_logs() as logs:
+        assert probe(ModelFormat.PyTorch) is False
+    assert (logs, requests.names) == ([], [])
+
+    monkeypatch.setattr(f"{ADAPTER}.torch", _fake_torch(cuda=False, mps=False))
+    for error in (ImportError("SYNTHETIC_IMPORT_MARKER"), OSError("SYNTHETIC_IMPORT_MARKER")):
+        monkeypatch.setitem(sys.modules, "kokoro", _kokoro_failing_import(error))
+        with capture_logs() as logs:
+            assert probe(ModelFormat.PyTorch) is False
+        failed = _events(logs, "tts.runtime_probe_failed")
+        fields = [(entry["log_level"], entry["format"], entry["error"]) for entry in failed]
+        assert fields == [("warning", "PyTorch", type(error).__name__)], logs
+        assert len(logs) == 1, logs
+        assert "SYNTHETIC_IMPORT_MARKER" not in repr(logs)
+    assert engines.calls == []
+
+
+@pytest.mark.integration
+def test_ac_117_3_runtime_present_probes_once_per_format(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from avkit_infra.tts.adapter import KokoroAdapter
+
+    assert hasattr(KokoroAdapter, "runtime_present"), "KokoroAdapter has no runtime_present"
+    answers = {ModelFormat.PyTorch: False, ModelFormat.ONNX: True}
+    calls: list[ModelFormat] = []
+
+    def probe(fmt: ModelFormat) -> bool:
+        calls.append(fmt)
+        time.sleep(0.05)  # Holds the first caller in the probe while the others arrive.
+        return answers[fmt]
+
+    adapter = KokoroAdapter(onnx_vocab_path=tmp_path / "config.json", runtime_probe=probe)
+    formats = [ModelFormat.PyTorch, ModelFormat.ONNX] * 4
+    gate = threading.Barrier(len(formats), timeout=10)
+
+    def ask(fmt: ModelFormat) -> bool:
+        gate.wait()
+        return adapter.runtime_present(fmt)
+
+    with ThreadPoolExecutor(max_workers=len(formats)) as pool:
+        futures = [pool.submit(ask, fmt) for fmt in formats]
+        got = [future.result(timeout=30) for future in futures]
+    assert got == [answers[fmt] for fmt in formats]
+    assert sorted(calls) == sorted(answers)
+    assert [adapter.runtime_present(fmt) for fmt in answers] == list(answers.values())
+    assert len(calls) == 2
+
+    # A probe that raises propagates and stores nothing, so the next call probes again.
+    failures = [RuntimeError("probe failed")]
+
+    def flaky(fmt: ModelFormat) -> bool:
+        calls.append(fmt)
+        if failures:
+            raise failures.pop()
+        return True
+
+    calls.clear()
+    retried = KokoroAdapter(onnx_vocab_path=tmp_path / "config.json", runtime_probe=flaky)
+    with pytest.raises(RuntimeError, match="probe failed"):
+        retried.runtime_present(ModelFormat.PyTorch)
+    assert retried.runtime_present(ModelFormat.PyTorch) is True
+    assert calls == [ModelFormat.PyTorch, ModelFormat.PyTorch]
+
+    # With no probe injected, the adapter binds the module's `runtime_imports` when built.
+    seen: list[ModelFormat] = []
+
+    def imports(fmt: ModelFormat) -> bool:
+        seen.append(fmt)
+        return fmt is ModelFormat.ONNX
+
+    monkeypatch.setattr(f"{ADAPTER}.runtime_imports", imports)
+    default = KokoroAdapter(onnx_vocab_path=tmp_path / "config.json")
+    assert default.runtime_present(ModelFormat.PyTorch) is False
+    assert default.runtime_present(ModelFormat.ONNX) is True
+    assert seen == [ModelFormat.PyTorch, ModelFormat.ONNX]

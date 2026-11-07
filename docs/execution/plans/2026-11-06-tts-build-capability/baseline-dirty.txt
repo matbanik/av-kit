@@ -1,0 +1,9 @@
+?? .agent/context/handoffs/2026-11-06-tts-build-capability-plan-critical-review.md
+?? docs/execution/plans/2026-11-06-tts-build-capability/baseline.ps1
+?? docs/execution/plans/2026-11-06-tts-build-capability/baseline.sha
+?? docs/execution/plans/2026-11-06-tts-build-capability/dev-pytorch-check.py
+?? docs/execution/plans/2026-11-06-tts-build-capability/identity.py
+?? docs/execution/plans/2026-11-06-tts-build-capability/implementation-plan.md
+?? docs/execution/plans/2026-11-06-tts-build-capability/models-snapshot.py
+?? docs/execution/plans/2026-11-06-tts-build-capability/red-check.py
+?? docs/execution/plans/2026-11-06-tts-build-capability/task.md

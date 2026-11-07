@@ -886,3 +886,35 @@ test('AC-94.9 TTS cold boot with no mirror holds the route until the theme', asy
   await expectThemeColours(page, 'light', THEME_FLOORS.tts)
   await app.close()
 })
+
+// MEU-117 (Session 51): MODEL_FIELDS in the model select.
+test('AC-117.14 an unavailable PyTorch row is a disabled option with its reason, and an ONNX row is selected', async () => {
+  // MODEL_REASONS[PyTorch] (packages/core/src/avkit_core/domain/tts.py, D-310).
+  const reason = "This build can't run PyTorch models. Choose an ONNX model."
+  const app = await launchApp()
+  try {
+    const page = await app.firstWindow()
+    await installTtsSeam(page)
+    // Setup only: nothing loaded, and the PyTorch row first, downloaded and served unavailable,
+    // so each selection rule would reach it before an ONNX row.
+    await page.evaluate((text) => {
+      const state = window as unknown as { __e2eLoaded: boolean; __e2eCatalog: Array<Record<string, unknown>> }
+      state.__e2eLoaded = false
+      const pytorch = state.__e2eCatalog.find((row) => row.id === 'kokoro-pt-fp32')
+      const rest = state.__e2eCatalog.filter((row) => row.id !== 'kokoro-pt-fp32')
+      state.__e2eCatalog = [
+        { ...pytorch, is_downloaded: true, path: 'C:/models/pt', available: false, reason: text },
+        ...rest.map((row) => ({ ...row, available: true, reason: null })),
+      ]
+    }, reason)
+    await openTts(page)
+    const select = page.getByTestId('model-select')
+    const pytorch = select.locator('option[value="kokoro-pt-fp32"]')
+    await expect(pytorch).toHaveText(`PyTorch FP32 — ${reason}`)
+    await expect(pytorch).toBeDisabled()
+    await expect(select.locator('option[value="kokoro-onnx-fp32"]')).toBeEnabled()
+    await expect(select).toHaveValue('kokoro-onnx-fp32')
+  } finally {
+    await app.close()
+  }
+})

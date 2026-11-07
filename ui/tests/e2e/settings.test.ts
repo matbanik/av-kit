@@ -34,16 +34,21 @@ async function launchApp() {
 
 // Setup-only (MEU-62): optional TTS asset rows; the default seam keeps the two-row backend shape.
 type AssetRows = Record<string, { available: boolean; version: string | null; state: string }>
+// Setup-only (MEU-118): an optional `GET /models/available` report and stored `tts.device`.
+// Without a catalog the seam doesn't answer that route, as before.
+type CatalogRows = Array<Record<string, unknown>>
+type SeamData = { assetRows: AssetRows; catalog: CatalogRows | null; device: string | null }
 
 async function installSettingsSeam(
   page: Page,
   assets: AssetRows = {},
-  options: { themeProbe?: ThemeProbeMode } = {},
+  options: { themeProbe?: ThemeProbeMode; catalog?: CatalogRows; device?: string } = {},
 ): Promise<void> {
   if (options.themeProbe) {
     await addThemeProbe(page, options.themeProbe)
   }
-  await page.addInitScript((assetRows: AssetRows) => {
+  const data: SeamData = { assetRows: assets, catalog: options.catalog ?? null, device: options.device ?? null }
+  await page.addInitScript(({ assetRows, catalog, device }: SeamData) => {
     const state = window as unknown as {
       __e2eSeamInstalled?: boolean
       __e2eCalls?: Array<{ url: string; method: string; bodyKeys?: string[]; body?: Record<string, unknown> }>
@@ -79,7 +84,8 @@ async function installSettingsSeam(
         url.includes('/settings') ||
         url.includes('/downloads/apply-defaults') ||
         url.includes('/health/dependencies') ||
-        url.includes('/models/download')
+        url.includes('/models/download') ||
+        (catalog !== null && url.includes('/models/available'))
       if (!protectedHit) {
         return new Response(JSON.stringify({ error: { code: 'E2E', message: 'unexpected' } }), {
           status: 599,
@@ -101,7 +107,7 @@ async function installSettingsSeam(
         return json({ output_dir: 'C:/Transcripts' })
       }
       if (url.includes('/settings/tts') && method === 'GET') {
-        return json({ models_directory: 'C:/models', chunk_max_chars: 250 })
+        return json({ models_directory: 'C:/models', chunk_max_chars: 250, ...(device === null ? {} : { device }) })
       }
       if (url.includes('/settings/app') && method === 'GET') {
         return json({ log_level: 'INFO', log_to_file: false, console_visible: true })
@@ -132,9 +138,12 @@ async function installSettingsSeam(
       if (url.includes('/models/download') && method === 'POST') {
         return json({ variant: null, asset: body.asset ?? null }, 202)
       }
+      if (catalog !== null && url.includes('/models/available') && method === 'GET') {
+        return json({ items: catalog })
+      }
       return new Response('E2E_SEAM_UNHANDLED', { status: 599 })
     }
-  }, assets)
+  }, data)
   await page.reload()
   await page.getByTestId('app-shell').waitFor()
 }
@@ -778,5 +787,103 @@ test('AC-96.13 APPEARANCE Ctrl+Shift+L and the palette Appearance: Dark save the
   await page.getByRole('dialog').getByRole('button', { name: 'Appearance: Dark' }).click()
   await expect(page.locator('html')).toHaveClass(/dark/)
   await expect.poll(async () => uiThemePuts(page)).toEqual(['light', 'dark'])
+  await app.close()
+})
+
+// MEU-118 (Session 51): DEVICE_OPTIONS in Electron. The Settings device select offers what
+// `GET /models/available` reports for this build (AC-118.5).
+
+const PYTORCH_REASON = "This build can't run PyTorch models. Choose an ONNX model."
+
+function catalogRow(id: string, devices: string[], available = true): Record<string, unknown> {
+  return {
+    id,
+    name: id,
+    format: id.includes('onnx') ? 'ONNX' : 'PyTorch',
+    precision: 'FP32',
+    size_bytes: 1,
+    path: null,
+    is_downloaded: false,
+    devices,
+    available,
+    reason: available ? null : PYTORCH_REASON,
+  }
+}
+
+// A packaged CPU build: the PyTorch row is unavailable, the ONNX rows list auto and cpu.
+const CPU_ONLY_REPORT = [
+  catalogRow('kokoro-pt-fp32', ['auto', 'cpu'], false),
+  catalogRow('kokoro-onnx-fp32', ['auto', 'cpu']),
+  catalogRow('kokoro-onnx-int8', ['auto', 'cpu']),
+]
+
+const DEVICE_REPORTS = [
+  { name: 'a CPU-only report', report: CPU_ONLY_REPORT, expected: ['auto', 'cpu'] },
+  {
+    name: 'a CUDA report',
+    report: [catalogRow('kokoro-pt-fp32', ['auto', 'cuda', 'cpu']), catalogRow('kokoro-onnx-fp32', ['auto', 'cuda', 'cpu'])],
+    expected: ['auto', 'cuda', 'cpu'],
+  },
+  {
+    name: 'an unavailable PyTorch row with all four devices plus an ONNX row with auto and cpu',
+    report: [
+      catalogRow('kokoro-pt-fp32', ['auto', 'cuda', 'cpu', 'mps'], false),
+      catalogRow('kokoro-onnx-fp32', ['auto', 'cpu']),
+    ],
+    expected: ['auto', 'cpu'],
+  },
+]
+
+// A settings PUT is debounced (`DEBOUNCE_MS`, 300 ms); this waits well past one window.
+const PAST_DEBOUNCE_MS = 1_000
+
+const reportGets = (call: SeamCall): boolean => call.url.includes('/models/available') && call.method === 'GET'
+
+async function deviceValues(page: Page): Promise<string[]> {
+  return page
+    .getByTestId('settings-leaf-device')
+    .locator('option')
+    .evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value))
+}
+
+async function ttsPuts(page: Page): Promise<unknown[]> {
+  const calls = await page.evaluate(
+    () =>
+      (window as unknown as { __e2eCalls?: Array<{ url: string; method: string; body?: Record<string, unknown> }> })
+        .__e2eCalls ?? [],
+  )
+  return calls.filter((row) => row.url.includes('/settings/tts') && row.method === 'PUT').map((row) => row.body)
+}
+
+for (const { name, report, expected } of DEVICE_REPORTS) {
+  test(`AC-118.5 ${name} offers ${expected.join(', ')}`, async () => {
+    const app = await launchApp()
+    const page = await app.firstWindow()
+    await installSettingsSeam(page, {}, { catalog: report })
+    await openSettings(page)
+    await expect.poll(() => countCalls(page, reportGets), { timeout: 5_000 }).toBeGreaterThanOrEqual(1)
+    await expect.poll(() => deviceValues(page), { timeout: 5_000 }).toEqual(expected)
+    // Still the same once the report has landed, not only before it.
+    await page.waitForTimeout(PAST_DEBOUNCE_MS)
+    expect(await deviceValues(page)).toEqual(expected)
+    await app.close()
+  })
+}
+
+test('AC-118.5 a stored cuda with a CPU-only report shows auto with no PUT, and choosing cpu PUTs it', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await installSettingsSeam(page, {}, { catalog: CPU_ONLY_REPORT, device: 'cuda' })
+  await openSettings(page)
+  const select = page.getByTestId('settings-leaf-device')
+  // Until the report lands the select lists the stored cuda; once it has, cuda isn't offered.
+  await expect.poll(() => deviceValues(page), { timeout: 5_000 }).toEqual(['auto', 'cpu'])
+  await expect(select).toHaveValue('auto')
+  await page.waitForTimeout(PAST_DEBOUNCE_MS)
+  expect(await ttsPuts(page)).toEqual([])
+  await select.selectOption('cpu')
+  await expect.poll(() => ttsPuts(page), { timeout: 5_000 }).toEqual([{ device: 'cpu' }])
+  await page.waitForTimeout(PAST_DEBOUNCE_MS)
+  expect(await ttsPuts(page)).toEqual([{ device: 'cpu' }])
   await app.close()
 })

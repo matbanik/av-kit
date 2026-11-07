@@ -875,11 +875,11 @@ LM Studio-inspired workflow: Browse → Download → Load → Use → Unload
 | Loaded model | `GET /api/v1/models/status` | Shows currently loaded model or "None" |
 | Device | `GET /api/v1/models/status` | CUDA / MPS / CPU with GPU name |
 | VRAM/RAM usage | `GET /api/v1/models/status` | Memory consumption of loaded model |
-| Available models | `GET /api/v1/models/available` | Four seeded variants: PyTorch FP32, ONNX FP32, ONNX FP16, ONNX INT8 |
+| Available models | `GET /api/v1/models/available` | Four seeded variants: PyTorch FP32, ONNX FP32, ONNX FP16, ONNX INT8. A variant this build can't run (`available: false`) is listed disabled, with its `reason` in place of its state |
 | Download status | `GET /api/v1/models/download-runtime` | Bind percent to the row whose `id === runtime.variant_id`. Other rows stay Get/Ready. Poll 1s while `Downloading` |
 | Load button | Per-model | `POST /api/v1/models/load` with device preference |
 | Unload button | Global | `POST /api/v1/models/unload` |
-| Device selector | `select` | Auto / CUDA / CPU (shown during load action) |
+| Device selector | `select` | Auto, then CUDA, CPU or MPS as the selected variant reports (shown during load action) |
 
 ### Voice Selector Grid
 
@@ -1064,7 +1064,7 @@ Logical keys below are `namespace.leaf`. Persist with `PUT /api/v1/settings/{nam
 | `tts.speed` | `number` | `1.0` | [Kokoro §2](../../_inspiration/_kokoro_production_settings.md) |
 | `tts.output_format` | `string` | `MP3` | — |
 | `tts.output_path` | `string` | `~/Documents` | [TTS §7](../../_inspiration/_tts_pseudo_logic.md) |
-| `tts.device` | `string` | `auto` | — |
+| `tts.device` | `string` | `auto` | The select offers what the backend reports for this build (`DEVICE_OPTIONS`); a stored value it can't offer shows as `auto` and is kept |
 | `tts.chunk_max_chars` | `number` | `250` | [Cleanup §10](../../_inspiration/_text_cleanup_pseudo_logic.md) |
 | `tts.input_text` | `string` | `""` | [TTS §7](../../_inspiration/_tts_pseudo_logic.md) — last entered text saved for resume after restart |
 | `converter.output_dir` | `string` | `~/Videos/av-kit` | [08-video-conversion.md](08-video-conversion.md) |
@@ -1549,6 +1549,13 @@ The following features are explicitly **deferred** to a future phase:
 | Options | The Settings device select offers only what the backend reports for this build, from the same capability source as [MEU-117](03-service-layer.md#tts-build-capability-residual). | Local Canon: triage D-226 |
 | Stored value | A stored value the build can't honour keeps the existing device fallback ([03 §TTS device resolution](03-service-layer.md#tts-device-resolution-residual)). | Local Canon: triage D-226 |
 | Tests | A renderer test of the select with a CPU-only report and a CUDA report; a Playwright pass of the Settings select against real Electron. | Local Canon |
+
+> **Delivered (Session 51).**
+> - `ui/src/renderer/src/features/tts/tts-devices.ts` holds `DEVICE_ORDER`, `DEVICE_FLOOR` and `buildDevices` (`DEVICE_OPTIONS`). The Settings device select takes its options from `GET /models/available`, the TTS page's cached query, and leaves out the devices of a row this build can't run (D-313, D-314).
+> - Until the report arrives, or if it fails, the select offers `auto` and `cpu` plus the stored value. Once it arrives, a stored value it can't offer shows as `auto` and nothing is written, so the load keeps the device fallback (D-314).
+> - The TTS page's fallback for a row without devices is `DEVICE_FLOOR` (D-317).
+> - `ui/tests/unit/tts-devices.test.ts`, AC-118.1; `ui/tests/unit/settings-tts-device.test.ts`, AC-118.2 and AC-118.3; the `tts-page.behavior.test.ts` guard, AC-118.4; `ui/tests/e2e/settings.test.ts` in real Electron, AC-118.5.
+> - Plan `docs/execution/plans/2026-11-06-tts-build-capability/`.
 
 <a id="models-folder-probe-residual"></a>
 

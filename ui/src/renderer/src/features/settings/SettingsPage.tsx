@@ -24,7 +24,8 @@ import {
   type TtsAssetRow,
 } from '../tts/tts-assets'
 import { postDownloadAsset } from '../tts/tts-commands'
-import { useRefreshDependenciesOnSettle } from '../tts/useTtsJob'
+import { buildDevices } from '../tts/tts-devices'
+import { useModelsAvailable, useRefreshDependenciesOnSettle } from '../tts/useTtsJob'
 import { GPU_PREF_WIRES, PRESET_LABELS, PRESET_WIRES, type GpuPrefWire, type PresetWire } from '../converter/convert-presets'
 import {
   COOKIE_BROWSERS,
@@ -59,7 +60,6 @@ import { useTailSpacer } from './settings-tail-spacer'
 import { SETTINGS_ERROR_EVENT, useSettingsPage } from './useSettingsPage'
 
 const LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] as const
-const TTS_DEVICES = ['auto', 'cuda', 'cpu', 'mps'] as const
 const TTS_OUTPUT_FORMATS = ['MP3', 'WAV'] as const
 const ANNOTATED_FORMAT_LABELS: Record<AnnotatedFormat, string> = { png: 'PNG', jpeg: 'JPEG', webp: 'WebP' }
 const ANNOTATED_FORMAT_OPTIONS = ANNOTATED_FORMATS.map((wire) => ({ value: wire, label: ANNOTATED_FORMAT_LABELS[wire] }))
@@ -372,6 +372,14 @@ export function SettingsPage() {
   const downloader = downloaderQuery.data
   const transcript = transcriptQuery.data
   const tts = ttsQuery.data
+  const modelsQuery = useModelsAvailable()
+  const storedDevice = tts?.device ?? 'auto'
+  // DEVICE_OPTIONS (D-314): what this build reports; until the report arrives, or if it fails,
+  // the floor plus the stored value. A stored value it can't offer shows as auto and is kept.
+  const deviceOptions = modelsQuery.isSuccess
+    ? buildDevices(modelsQuery.data.items)
+    : buildDevices([{ devices: [storedDevice] }])
+  const deviceValue = deviceOptions.includes(storedDevice) ? storedDevice : 'auto'
   const appSettings = appQuery.data
   const uiSettings = uiQuery.data
 
@@ -829,8 +837,8 @@ export function SettingsPage() {
             id="settings-device"
             label="Device"
             testId="settings-leaf-device"
-            options={TTS_DEVICES.map((option) => ({ value: option, label: option }))}
-            value={tts?.device ?? 'auto'}
+            options={deviceOptions.map((option) => ({ value: option, label: option }))}
+            value={deviceValue}
             onChange={(value) => {
               schedulePut('tts', { device: value })
             }}

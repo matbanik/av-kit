@@ -45,6 +45,7 @@ import {
   STATUS_COLORS,
   type ModelAction,
 } from './tts-controls'
+import { DEVICE_FLOOR } from './tts-devices'
 import { TTS_HELP_SECTIONS } from './tts-help-content'
 import { CLEANUP_LABELS, PREPARE_DEFAULT_ON, PREPARE_STEPS } from './tts-prepare'
 import { resolveRunBarSlot, runBarError } from './tts-run-bar'
@@ -271,7 +272,7 @@ export function TTSPage() {
   const selectedModel = catalog.find((item) => item.id === selectedModelId)
   // The select lists the selected row's devices. A stored device the row cannot use shows and
   // loads as `auto`; the setting itself is kept for rows that offer it (D-13).
-  const deviceOptions = selectedModel?.devices ?? ['auto', 'cpu']
+  const deviceOptions = selectedModel?.devices ?? DEVICE_FLOOR
   const effectiveDevice = deviceOptions.includes(device) ? device : 'auto'
   const modelAction =
     selectedModel === undefined
@@ -463,12 +464,18 @@ export function TTSPage() {
                 label="Model"
                 options={catalog.map((item) => ({
                   value: item.id,
-                  label: `${item.name} — ${modelStateSuffix({
-                    rowId: item.id,
-                    isDownloaded: item.is_downloaded,
-                    loadedVariantId: activeVariantId,
-                    runtime: runtimeQuery.data,
-                  })}`,
+                  // MODEL_FIELDS: a row this build can't run is disabled, its reason in place of its state.
+                  label: `${item.name} — ${
+                    item.available === false && item.reason
+                      ? item.reason
+                      : modelStateSuffix({
+                          rowId: item.id,
+                          isDownloaded: item.is_downloaded,
+                          loadedVariantId: activeVariantId,
+                          runtime: runtimeQuery.data,
+                        })
+                  }`,
+                  disabled: item.available === false,
                 }))}
                 value={selectedModelId ?? ''}
                 onChange={(event) => {

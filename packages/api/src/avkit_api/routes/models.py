@@ -26,7 +26,8 @@ from avkit_core.domain.wire import DEVICE_WIRE_MAP
 CONFLICT_409: dict[int | str, dict[str, Any]] = {
     409: {
         "description": (
-            "Conflict: a download is in flight, or a TTS asset is missing or already ready"
+            "Conflict: a download is in flight, a TTS asset is missing or already ready, "
+            "or the variant can't run in this build"
         ),
     },
 }
@@ -39,8 +40,10 @@ _DEVICE_TO_WIRE: dict[DeviceType, DeviceWire] = {
 router = APIRouter(prefix="/models", dependencies=[Depends(require_bearer)])
 
 
-def _variant_out(variant: Any, devices: tuple[DeviceType, ...]) -> ModelVariantOut:
+def _variant_out(variant: Any, models: Any) -> ModelVariantOut:
     path = None if variant.path is None else str(variant.path)
+    devices: tuple[DeviceType, ...] = models.available_devices(variant.format)
+    availability = models.availability(variant.format)
     return ModelVariantOut(
         id=variant.id,
         name=variant.name,
@@ -50,29 +53,21 @@ def _variant_out(variant: Any, devices: tuple[DeviceType, ...]) -> ModelVariantO
         path=path,
         is_downloaded=variant.is_downloaded,
         devices=[_DEVICE_TO_WIRE[device] for device in devices],
+        available=availability.available,
+        reason=availability.reason,
     )
 
 
 @router.get("/available", response_model=ModelListOut)
 def list_available(models: Any = Depends(get_model_service)) -> ModelListOut:
     """Return the catalog union sideload."""
-    return ModelListOut(
-        items=[
-            _variant_out(item, models.available_devices(item.format))
-            for item in models.list_available()
-        ]
-    )
+    return ModelListOut(items=[_variant_out(item, models) for item in models.list_available()])
 
 
 @router.get("/downloaded", response_model=ModelListOut)
 def list_downloaded(models: Any = Depends(get_model_service)) -> ModelListOut:
     """Return downloaded variants."""
-    return ModelListOut(
-        items=[
-            _variant_out(item, models.available_devices(item.format))
-            for item in models.list_downloaded()
-        ]
-    )
+    return ModelListOut(items=[_variant_out(item, models) for item in models.list_downloaded()])
 
 
 @router.post(
@@ -85,15 +80,17 @@ def download_model(
     body: ModelDownloadIn,
     models: Any = Depends(get_model_service),
 ) -> ModelDownloadAcceptedOut:
-    """Accept a variant or TTS-asset download immediately. 409 if one is in flight."""
+    """Accept a variant or TTS-asset download immediately.
+
+    409 if one is in flight, or the variant can't run in this build.
+    """
     if body.asset is not None:
         models.download_asset(TtsAsset(body.asset))
         return ModelDownloadAcceptedOut(variant=None, asset=body.asset)
     if body.variant_id is None:  # unreachable: ModelDownloadIn requires exactly one target
         raise ValueError("download body has neither variant_id nor asset")
     variant = models.download(body.variant_id)
-    devices = models.available_devices(variant.format)
-    return ModelDownloadAcceptedOut(variant=_variant_out(variant, devices))
+    return ModelDownloadAcceptedOut(variant=_variant_out(variant, models))
 
 
 @router.post("/load", response_model=ModelStatusOut, responses=CONFLICT_409)

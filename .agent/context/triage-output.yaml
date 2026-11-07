@@ -1901,6 +1901,32 @@ archived:
   category: null
   priority: null
   enrichment: null
+- id: TTS-DEVICE-OPTIONS-IN-CPU-BUILD
+  title: The shipped build runs text to speech on the CPU only, but its device options don't say so
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-226
+      stage: triage
+      question: Which device options does a CPU build offer?
+      resolution: autonomous
+      class: two-way
+      chosen: Only what the backend reports for this build, from the same capability source as D-217. A stored value it cannot honour keeps the existing device fallback.
+      source_tag: Local Canon
+      precedents:
+      - docs/build-plan/build-priority-matrix.md 3.8 MEU-75 svc-tts-device-fallback — the fallback exists
+      - ui/src/renderer/src/features/settings/SettingsPage.tsx:62 and tts/TTSPage.tsx:274 — hard-coded options
+      research:
+        engine: none
+        sources: []
+      reasoning: Two lists of what a build can do would drift, as the models folder did. Whatever D-217 rules, this stands. Two-way.
+    decided_by: agent
 - id: MAIN-LOG-AFTER-WINDOW-DESTROYED
   title: Backend output after the window is destroyed stops the main process behind a JavaScript error dialog
   severity: medium
@@ -1917,6 +1943,41 @@ archived:
   category: null
   priority: null
   enrichment: null
+- id: TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
+  title: The installed app offers the PyTorch voice model and downloads 327 MB, but can never load it
+  severity: high
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked:
+    - 'D-217: What does a build that cannot run PyTorch do with the PyTorch model?'
+    answers:
+    - 'D-217: disabled with a reason and a 409 on download, with no runtime download'
+    decision_log:
+    - id: D-217
+      stage: triage
+      question: What does a build that cannot run PyTorch do with the PyTorch model?
+      resolution: human
+      class: product-preference
+      chosen: List it disabled with a reason in any build that can't run it, refuse its download with a 409, and correct 07-distribution.md:30 and :227. No runtime download and no bundled torch. npm run
+        dev keeps working
+      source_tag: Human-approved
+      precedents:
+      - 'docs/execution/plans/2026-10-14-tts-engine-runtime/implementation-plan.md:29 — D-70, Mat approved: JA/ZH voices stay listed but unavailable with a reason, shown disabled, generate is a 409 before
+        any job row'
+      research:
+        engine: exa
+        sources:
+        - https://www.nngroup.com/articles/drop-down-menus/ — 'Gray out any unavailable options … explaining why'
+        - https://www.smashingmagazine.com/2024/05/hidden-vs-disabled-ux/ — 'Will a given user ever be able to interact? No → Hide', which favours the alternative here
+      reasoning: 'Mat chose this on 2026-11-04 after asking what PyTorch adds over the three ONNX variants: the same Kokoro-82M model, about 1.5x on this PC''s CPU, and no PyTorch-only feature. Mat''s word
+        was ''remove'', and ''as you originally suggested'' points at the first brief''s recommendation, recorded here. The first brief argued against dropping the row, and nothing deletes the code path,
+        so dev still runs it. Disabled with a reason follows the tts-engine-runtime D-70 pattern and leaves an explanation beside a file RC1 testers already hold, since the app cannot delete it. This reverses
+        D-236.'
+      human_message_reference: USER_EXPLICIT 2026-11-04 'OK we will go with pythorch remove as you originally suggested'
+    decided_by: human
 - id: TRANSCRIPT-FAILED-NO-REASON
   title: 'A failed transcript shows only ''Failed'': the reason is saved but never reaches the API, the page or the log'
   severity: high
@@ -2317,32 +2378,6 @@ actionable:
         sources: []
       reasoning: Older rows have no measurement, so nullable keeps them truthful. Two-way.
     decided_by: agent
-- id: TTS-DEVICE-OPTIONS-IN-CPU-BUILD
-  title: The shipped build runs text to speech on the CPU only, but its device options don't say so
-  severity: low
-  component: ui
-  status: open
-  category: MEU-NEW
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-226
-      stage: triage
-      question: Which device options does a CPU build offer?
-      resolution: autonomous
-      class: two-way
-      chosen: Only what the backend reports for this build, from the same capability source as D-217. A stored value it cannot honour keeps the existing device fallback.
-      source_tag: Local Canon
-      precedents:
-      - docs/build-plan/build-priority-matrix.md 3.8 MEU-75 svc-tts-device-fallback — the fallback exists
-      - ui/src/renderer/src/features/settings/SettingsPage.tsx:62 and tts/TTSPage.tsx:274 — hard-coded options
-      research:
-        engine: none
-        sources: []
-      reasoning: Two lists of what a build can do would drift, as the models folder did. Whatever D-217 rules, this stands. Two-way.
-    decided_by: agent
 - id: TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE
   title: The TTS progress label reads 'Segments 0/1000' whatever the text's length
   severity: low
@@ -2459,41 +2494,6 @@ actionable:
   category: TECH-DEBT
   priority: P4
   enrichment: null
-- id: TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
-  title: The installed app offers the PyTorch voice model and downloads 327 MB, but can never load it
-  severity: high
-  component: infrastructure
-  status: open
-  category: MEU-NEW
-  priority: P2
-  enrichment:
-    questions_asked:
-    - 'D-217: What does a build that cannot run PyTorch do with the PyTorch model?'
-    answers:
-    - 'D-217: disabled with a reason and a 409 on download, with no runtime download'
-    decision_log:
-    - id: D-217
-      stage: triage
-      question: What does a build that cannot run PyTorch do with the PyTorch model?
-      resolution: human
-      class: product-preference
-      chosen: List it disabled with a reason in any build that can't run it, refuse its download with a 409, and correct 07-distribution.md:30 and :227. No runtime download and no bundled torch. npm run
-        dev keeps working
-      source_tag: Human-approved
-      precedents:
-      - 'docs/execution/plans/2026-10-14-tts-engine-runtime/implementation-plan.md:29 — D-70, Mat approved: JA/ZH voices stay listed but unavailable with a reason, shown disabled, generate is a 409 before
-        any job row'
-      research:
-        engine: exa
-        sources:
-        - https://www.nngroup.com/articles/drop-down-menus/ — 'Gray out any unavailable options … explaining why'
-        - https://www.smashingmagazine.com/2024/05/hidden-vs-disabled-ux/ — 'Will a given user ever be able to interact? No → Hide', which favours the alternative here
-      reasoning: 'Mat chose this on 2026-11-04 after asking what PyTorch adds over the three ONNX variants: the same Kokoro-82M model, about 1.5x on this PC''s CPU, and no PyTorch-only feature. Mat''s word
-        was ''remove'', and ''as you originally suggested'' points at the first brief''s recommendation, recorded here. The first brief argued against dropping the row, and nothing deletes the code path,
-        so dev still runs it. Disabled with a reason follows the tts-engine-runtime D-70 pattern and leaves an explanation beside a file RC1 testers already hold, since the app cannot delete it. This reverses
-        D-236.'
-      human_message_reference: USER_EXPLICIT 2026-11-04 'OK we will go with pythorch remove as you originally suggested'
-    decided_by: human
 - id: TTS-FAILED-LOAD-DROPS-MODEL
   title: A failed model load unloads the model that was working
   severity: medium
@@ -2924,15 +2924,14 @@ deferred:
         kokoro pin. This is not legal advice. See the brief.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
 proposed_batches:
-- slug: infrastructure-transcript-title-is-video-id-tts-pytorch-offered-without-runtime-tts-failed-load-drops-model
+- slug: infrastructure-transcript-title-is-video-id-tts-failed-load-drops-model-tts-onnx-fp16-nonfinite-audio
   issues:
   - TRANSCRIPT-TITLE-IS-VIDEO-ID
-  - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
   - TTS-FAILED-LOAD-DROPS-MODEL
   - TTS-ONNX-FP16-NONFINITE-AUDIO
   component: infrastructure
   priority_band: P2
-  complexity: L
+  complexity: M
   has_duplicates: true
 - slug: core-transcript-channel-is-playlist-name-convert-extract-stream-index-mismatch
   issues:
@@ -2942,12 +2941,11 @@ proposed_batches:
   priority_band: P3
   complexity: M
   has_duplicates: false
-- slug: ui-download-row-shows-requested-quality-tts-device-options-in-cpu-build-models-dir-docs-and-probe-mismatch
+- slug: ui-download-row-shows-requested-quality-models-dir-docs-and-probe-mismatch
   issues:
   - DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
-  - TTS-DEVICE-OPTIONS-IN-CPU-BUILD
   - MODELS-DIR-DOCS-AND-PROBE-MISMATCH
   component: ui
   priority_band: P3
   complexity: M
-  has_duplicates: true
+  has_duplicates: false

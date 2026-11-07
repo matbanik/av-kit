@@ -5,6 +5,8 @@ import { useDocumentTheme, type UiTheme } from '../../lib/theme'
 export type SelectOption = {
   value: string
   label: string
+  /** The option is listed but can't be chosen; it keeps the G30 pair (D-320). */
+  disabled?: boolean
 }
 
 export type SelectInputProps = Omit<SelectHTMLAttributes<HTMLSelectElement>, 'children'> & {
@@ -57,7 +59,7 @@ export const SelectInput = forwardRef<HTMLSelectElement, SelectInputProps>(funct
       </label>
       <select ref={ref} id={id} className={classes} style={mergedSelectStyle} {...props}>
         {options.map((opt) => (
-          <option key={opt.value} value={opt.value} style={g30}>
+          <option key={opt.value} value={opt.value} disabled={opt.disabled} style={g30}>
             {opt.label}
           </option>
         ))}

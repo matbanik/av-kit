@@ -3125,12 +3125,15 @@ issues:
     title: The shipped build runs text to speech on the CPU only, but its device options don't say so
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: The packaged backend bundles the CPU onnxruntime (packages/infrastructure/pyproject.toml:16) and excludes torch (packaging/avkit-backend.spec). Settings always offers auto, cuda, cpu and mps (ui/src/renderer/src/features/settings/SettingsPage.tsx:62), and the TTS page offers 'auto' (ui/src/renderer/src/features/tts/TTSPage.tsx:274).
     blast_radius: 'Measured from the code and the spec file: ''auto'' can only mean CPU in the shipped build, and the README''s GPU claim was removed for that reason on 2026-11-03. Not measured: what the packaged Settings page does when cuda is chosen. Speech still works on the CPU.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-06'
+      method: 'Session 51 task row 12 receipt C:/Temp/av-kit/s51-r12-e2e.txt (plan 2026-11-06-tts-build-capability): ui/tests/e2e/settings.test.ts in real Electron with a seam answering GET /models/available; row 11 receipt C:/Temp/av-kit/s51-devices-green.txt for the unit tests'
+      result: 'Row 12: 23 passed. AC-118.5: a CPU-only report offers auto and cpu, a CUDA report offers auto, cuda and cpu, an unavailable PyTorch row listing all four devices plus an ONNX row with auto and cpu offers auto and cpu, and a stored cuda with a CPU-only report shows auto and sends no PUT, while choosing cpu sends one PUT with the device. Row 11: 112 files, 1163 tests passed, with AC-118.1 to AC-118.4.'
+    resolution_path: 'Fixed in Session 51 on 2026-11-06 under triage D-226 (plan 2026-11-06-tts-build-capability, MEU-118, D-313, D-314, D-317): the Settings device select offers DEVICE_FLOOR plus the devices of each row GET /models/available reports as available, in DEVICE_ORDER, so the shipped CPU build offers auto and cpu; a stored value it can''t offer shows as auto and is kept, and the load keeps the device fallback.'
     category: MEU-NEW
     priority: P4
     meu_links:
@@ -3495,11 +3498,11 @@ issues:
     title: The installed app offers the PyTorch voice model and downloads 327 MB, but can never load it
     severity: high
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: docs/build-plan/07-distribution.md:227 says to list the PyTorch variant in /models/available and fail the load with a clear ModelLoadError unless the user has a supported torch install (documented extra). No such extra is documented, and whether a frozen backend could import a user-installed torch has not been tried. The installer's backend has no torch or kokoro (its _internal folder has onnxruntime, misaki and spacy, checked on the published RC1), so _load_pytorch raises 'PyTorch runtime is not bundled' at packages/infrastructure/src/avkit_infra/tts/adapter.py:294. That text gives no next step, and tts-help-content.ts, the README and the release notes never mention PyTorch.
     blast_radius: 'Measured on the published v0.1.0-rc.1 on the maintainer''s test PC on 2026-11-04: kokoro-v1_0.pth downloaded at 327,212,226 B and the app logged six failed loads; the two lines that show a model name kokoro-pt-fp32. ONNX FP16 then downloaded, loaded and generated speech on the same machine, so TTS itself works. Read from the code, not run on a fresh install: a fresh install preselects ONNX FP16 (defaultModelSelection, ui/src/renderer/src/features/tts/tts-controls.ts:108, takes the first downloaded row, else the first row by id), so reaching the dead end takes a user choosing PyTorch, after which it is preselected if it is the only download. MCP reads the same /models/available. The app cannot remove the file afterwards: packages/api/src/avkit_api/routes/models.py has no delete route.'
-    resolution_path: Ruled by Mat on 2026-11-04 (D-217). A build that can't run PyTorch lists the variant disabled with a reason and refuses the model download with a 409, so it cannot start a download it cannot use. Word the reason with a next step, such as choosing an ONNX model. Availability comes from whether the runtime imports, so npm run dev, which has torch in the repo's .venv, keeps working. Correct docs/build-plan/07-distribution.md:30 and :227, which name an optional extra that was never built. No runtime download (TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD is closed) and no delete route. Needs a new installer. Done when an installed build cannot start the download of a model it cannot load, and the dev venv still loads and generates with it.
+    resolution_path: 'Fixed in Session 51 on 2026-11-06 under Mat''s ruling D-217 (2026-11-04, in this issue''s decision log) (plan 2026-11-06-tts-build-capability, MEU-117, D-309 to D-312, D-315, D-316, D-318, D-320): the adapter reports whether each format''s runtime imports in this process, a variant whose runtime is missing is listed with available false and a fixed reason, its download answers 409 before any work and its load 422 with the same reason, and the TTS page lists it disabled with the reason and never selects it.'
     category: MEU-NEW
     priority: P2
     related:
@@ -3510,7 +3513,9 @@ issues:
       - TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD
       - TTS-ONNX-FP16-NONFINITE-AUDIO
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-06'
+      method: 'Session 51 task row 8 receipts C:/Temp/av-kit/s51-smoke-green.txt and s51-smoke-green.json (plan 2026-11-06-tts-build-capability): tools/smoke_packaged_tts.py --phase capability on a fresh onedir from tools/package_backend.py, copied outside the checkout, offline behind dead proxies, with a 16-byte stub kokoro-v1_0.pth and no download; row 9 receipt C:/Temp/av-kit/s51-r9-dev.txt for the dev venv'
+      result: 'Row 8 PASS: GET /models/available lists the four seeded variants, kokoro-pt-fp32 with available false, the reason "This build can''t run PyTorch models. Choose an ONNX model." and is_downloaded true; POST /models/download for it answers 409 ConflictError with the reason, the download runtime stays Idle and the models folder is unchanged; POST /models/load answers 422 ModelLoadError with the reason; the backend logs model.download_refused and model.load_refused. The same phase on the pre-session onedir stopped at listed_fields (s51-smoke-red.json). Row 9 PASS strict: the dev venv lists the variant available, loads it on cpu and generates a WAV.'
     meu_links:
       - MEU-72
       - MEU-117

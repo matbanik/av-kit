@@ -329,3 +329,33 @@ class ModelVariant:
         require_non_negative_int(self.size_bytes, "size_bytes")
         require_optional_path(self.path, "path")
         require_bool(self.is_downloaded, "is_downloaded")
+
+
+#: `MODEL_REASONS` (D-310): why a variant of each format can't run in this build. Fixed av-kit
+#: text that names the next step; it never holds exception text.
+MODEL_REASONS: dict[ModelFormat, str] = {
+    ModelFormat.PyTorch: "This build can't run PyTorch models. Choose an ONNX model.",
+    ModelFormat.ONNX: "This build can't run ONNX models. Reinstall av-kit.",
+}
+
+
+@dataclass(frozen=True)
+class ModelAvailability:
+    """`AVAILABILITY`: whether a variant can run in this build; `reason` is set exactly when not."""
+
+    available: bool
+    reason: str | None
+
+    def __post_init__(self) -> None:
+        require_bool(self.available, "available")
+        if self.reason is not None:
+            require_non_empty_str(self.reason, "reason")
+        if self.available != (self.reason is None):
+            raise ValidationError("reason must be set exactly when the model is unavailable")
+
+
+def model_availability(fmt: ModelFormat, runtime_present: bool) -> ModelAvailability:
+    """`AVAILABILITY` for a variant of `fmt`, given whether this process has its runtime."""
+    if runtime_present:
+        return ModelAvailability(True, None)
+    return ModelAvailability(False, MODEL_REASONS[fmt])

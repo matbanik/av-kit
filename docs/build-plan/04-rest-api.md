@@ -272,15 +272,15 @@ Optional nested `items: list[TranscriptItemOut]` only on `GET /{id}` if the GUI 
 |--------|------|---------|---------|
 | `GET` | `/models/available` | `list_available` | 200 `{ items: ModelVariantOut[] }` |
 | `GET` | `/models/downloaded` | `list_downloaded` | 200 `{ items }` |
-| `POST` | `/models/download` | `download` | 202 `{ variant }` | Body `{ "variant_id": "kokoro-onnx-fp16" }`. 409 if another download is in flight |
-| `POST` | `/models/load` | `load` | 200 `ModelStatusOut` | `{ "variant_id", "device": "auto"\|"cuda"\|"cpu"\|"mps" }` |
+| `POST` | `/models/download` | `download` | 202 `{ variant }` | Body `{ "variant_id": "kokoro-onnx-fp16" }`. 409 if another download is in flight or the variant can't run in this build (the reason as message) |
+| `POST` | `/models/load` | `load` | 200 `ModelStatusOut` | `{ "variant_id", "device": "auto"\|"cuda"\|"cpu"\|"mps" }`. 422 with the reason for a variant this build can't run |
 | `POST` | `/models/unload` | `unload` | 204 | |
 | `GET` | `/models/status` | `get_status` | 200 `ModelStatusOut` | Loaded model only |
 | `GET` | `/models/download-runtime` | `get_download_runtime` | 200 `ModelDownloadRuntimeOut` | Session; poll 1s while `Downloading` |
 
 ### `ModelVariantOut`
 
-`id`, `name`, `format`, `precision`, `size_bytes`, `path`, `is_downloaded`. No `is_loaded` on the variant (that is `ModelStatusOut`).
+`id`, `name`, `format`, `precision`, `size_bytes`, `path`, `is_downloaded`, `devices`, `available` and `reason`. `reason` is set exactly when `available` is false, and says why this build can't run the variant. No `is_loaded` on the variant (that is `ModelStatusOut`).
 
 ### `ModelStatusOut`
 

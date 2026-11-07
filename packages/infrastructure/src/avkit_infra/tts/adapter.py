@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import math
 import re
+import threading
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Protocol
@@ -30,7 +31,7 @@ except ModuleNotFoundError:
 
 from avkit_core.domain.enums import DeviceType, ModelFormat
 from avkit_core.domain.errors import ModelLoadError, ValidationError
-from avkit_core.domain.tts import ModelStatus, ModelVariant, VoiceConfig
+from avkit_core.domain.tts import MODEL_REASONS, ModelStatus, ModelVariant, VoiceConfig
 from avkit_infra.tts.assets import ONNX_VOCAB_FILE, ONNX_VOCAB_REPO
 from avkit_infra.tts.espeak import EspeakCliAdapter
 from avkit_infra.tts.g2p import KokoroG2p, split_phonemes
@@ -49,7 +50,9 @@ __all__ = [
     "KokoroAdapter",
     "ONNX_VOCAB_FILE",
     "ONNX_VOCAB_REPO",
+    "RuntimeProbe",
     "runtime_devices",
+    "runtime_imports",
 ]
 
 MAX_ONNX_INPUT_IDS = 510
@@ -62,6 +65,7 @@ class PhonemeSource(Protocol):
 
 
 DeviceProbe = Callable[[ModelFormat], tuple[DeviceType, ...]]
+RuntimeProbe = Callable[[ModelFormat], bool]
 
 # `DEVICE_ORDER`: probe results are listed in this order.
 _DEVICE_ORDER = (DeviceType.Auto, DeviceType.CUDA, DeviceType.CPU, DeviceType.MPS)
@@ -94,6 +98,27 @@ def runtime_devices(fmt: ModelFormat) -> tuple[DeviceType, ...]:
         ):
             found.add(DeviceType.MPS)
     return tuple(device for device in _DEVICE_ORDER if device in found)
+
+
+def runtime_imports(fmt: ModelFormat) -> bool:
+    """`RUNTIME_PROBE`: whether this process can import the runtime that loads `fmt`.
+
+    ONNX is always present, because onnxruntime is imported with this module. PyTorch needs
+    torch and kokoro's `KModel` (`TORCH_PATH`). Without torch it returns `False` before any
+    kokoro import (`IMPORT_HYGIENE`). An import that raises returns `False` and logs
+    `tts.runtime_probe_failed` with the exception's class name only, as its text can hold a
+    local path.
+    """
+    if fmt is ModelFormat.ONNX:
+        return True
+    if torch is None:
+        return False
+    try:
+        from kokoro import KModel  # noqa: F401  (the import is the probe)
+    except Exception as exc:
+        log.warning("tts.runtime_probe_failed", format=fmt.value, error=type(exc).__name__)
+        return False
+    return True
 
 
 def _query(fmt: ModelFormat, device: DeviceType, ask: Callable[[], bool]) -> bool:
@@ -189,6 +214,7 @@ class KokoroAdapter:
         vocab_path: Callable[[], Path] | None = None,
         g2p: PhonemeSource | None = None,
         device_probe: DeviceProbe | None = None,
+        runtime_probe: RuntimeProbe | None = None,
     ) -> None:
         """Create the adapter.
 
@@ -199,9 +225,13 @@ class KokoroAdapter:
             g2p: The phoneme source (default: `KokoroG2p` over the eSpeak NG CLI, built on
                 first use).
             device_probe: Which devices exist per format (default: `runtime_devices`).
+            runtime_probe: Whether a format's runtime imports (default: `runtime_imports`).
         """
         self._onnx_vocab_path = onnx_vocab_path
         self._device_probe: DeviceProbe = device_probe or runtime_devices
+        self._runtime_probe: RuntimeProbe = runtime_probe or runtime_imports
+        self._runtime_lock = threading.Lock()
+        self._runtime_present: dict[ModelFormat, bool] = {}
         self._vocab_resolver = vocab_path
         self._g2p = g2p
         self._variant: ModelVariant | None = None
@@ -240,6 +270,18 @@ class KokoroAdapter:
 
     def available_devices(self, fmt: ModelFormat) -> tuple[DeviceType, ...]:
         return self._device_probe(fmt)
+
+    def runtime_present(self, fmt: ModelFormat) -> bool:
+        """`RUNTIME_PRESENT`: the runtime probe's answer, probed at most once per format.
+
+        A probe that raises propagates and stores nothing, so the next call probes again.
+        """
+        with self._runtime_lock:
+            present = self._runtime_present.get(fmt)
+            if present is None:
+                present = self._runtime_probe(fmt)
+                self._runtime_present[fmt] = present
+            return present
 
     def load_model(self, variant: ModelVariant, device: DeviceType) -> None:
         """Load `variant`, falling back to CPU (`DEVICE_RESOLVE`, `LOAD_FALLBACK`).
@@ -297,7 +339,7 @@ class KokoroAdapter:
 
     def _load_pytorch(self, variant: ModelVariant, path: Path, target: str) -> tuple[Any, str]:
         if torch is None:
-            absent = ModelLoadError("PyTorch runtime is not bundled")
+            absent = ModelLoadError(MODEL_REASONS[ModelFormat.PyTorch])
             _log_load_failed(variant, target, absent)
             raise absent
         try:
@@ -305,7 +347,7 @@ class KokoroAdapter:
             from kokoro import KModel
         except ImportError as exc:
             _log_load_failed(variant, target, exc)
-            raise ModelLoadError("PyTorch runtime is not bundled") from exc
+            raise ModelLoadError(MODEL_REASONS[ModelFormat.PyTorch]) from exc
         except Exception as exc:
             # The engine is present but failed to initialize (a native DLL, say): a failed load.
             _log_load_failed(variant, target, exc)

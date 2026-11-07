@@ -28,6 +28,7 @@ from avkit_core.domain.settings import SETTING_NAMESPACES
 from avkit_core.domain.transcript import TranscriptItem, TranscriptJob
 from avkit_core.domain.tts import (
     AssetState,
+    ModelAvailability,
     ModelDownloadRuntime,
     ModelStatus,
     ModelVariant,
@@ -367,6 +368,11 @@ class FakeModels(_Lifecycle):
         # TA-2 (Session 35, MEU-75): every route that builds `ModelVariantOut` asks for this.
         del fmt
         return (DeviceType.Auto, DeviceType.CPU)
+
+    def availability(self, fmt: ModelFormat) -> ModelAvailability:
+        # TA-3 (Session 51, MEU-117): every route that builds `ModelVariantOut` asks for this.
+        del fmt
+        return ModelAvailability(True, None)
 
     def download(self, variant_id: str) -> ModelVariant:
         if self.downloading:

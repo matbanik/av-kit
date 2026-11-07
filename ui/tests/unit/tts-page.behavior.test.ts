@@ -15,6 +15,7 @@ import userEvent from '@testing-library/user-event'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { g30StylesFor } from '../../src/renderer/src/components/ui/SelectInput'
 import { TTSPage } from '../../src/renderer/src/features/tts/TTSPage'
 import { PREPARE_STEPS } from '../../src/renderer/src/features/tts/tts-prepare'
 import { expectBoundHint } from './helpers/bound-hint'
@@ -882,5 +883,47 @@ describe('MEU-56 TTS page composition', () => {
     await vi.waitFor(() => {
       expect((byTestId('browse-output-btn') as HTMLButtonElement).disabled).toBe(false)
     })
+  })
+
+  // MEU-117 (Session 51): a variant this build can't run is listed, disabled, with its reason.
+  it('AC-117.12 an unavailable row is a disabled option with its reason, and an ONNX row is selected', async () => {
+    // MODEL_REASONS[PyTorch] (packages/core/src/avkit_core/domain/tts.py, D-310).
+    const reason = "This build can't run PyTorch models. Choose an ONNX model."
+    loaded = false
+    catalog = [
+      { ...CATALOG[0], is_downloaded: true, available: false, reason } as unknown as CatalogRow,
+      { ...CATALOG[1], available: true, reason: null } as unknown as CatalogRow,
+    ]
+    await renderPage()
+    await vi.waitFor(() => {
+      expect(optionLabels()).toEqual([`PyTorch FP32 — ${reason}`, 'ONNX FP16 — downloaded'])
+    })
+    const select = byTestId('model-select') as HTMLSelectElement
+    expect(Array.from(select.options).map((option) => [option.value, option.disabled])).toEqual([
+      ['kokoro-v1.0-pt-fp32', true],
+      ['kokoro-v1.0-onnx-fp16', false],
+    ])
+    expect(select.value).toBe('kokoro-v1.0-onnx-fp16')
+    const pair = g30StylesFor(document.documentElement.classList.contains('dark') ? 'dark' : 'light')
+    const probe = document.createElement('div')
+    probe.style.backgroundColor = pair.backgroundColor
+    probe.style.color = pair.color
+    for (const option of Array.from(select.options)) {
+      expect({ backgroundColor: option.style.backgroundColor, color: option.style.color }, option.value).toEqual({
+        backgroundColor: probe.style.backgroundColor,
+        color: probe.style.color,
+      })
+    }
+  })
+
+  // MEU-118 (Session 51): the page's fallback is the literal floor; this guard doesn't import
+  // tts-devices, so a change to DEVICE_FLOOR fails here (D-317).
+  it('AC-118.4 a selected row without devices lists auto and cpu, and a row listing cuda lists it', async () => {
+    catalog = [withDevices(CATALOG[0], ['auto', 'cuda', 'cpu']), CATALOG[1]]
+    await renderPage()
+    await selectedModelIs('kokoro-v1.0-onnx-fp16')
+    expect(deviceValues()).toEqual(['auto', 'cpu'])
+    await user.selectOptions(byTestId('model-select'), 'kokoro-v1.0-pt-fp32')
+    expect(deviceValues()).toEqual(['auto', 'cuda', 'cpu'])
   })
 })

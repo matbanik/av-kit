@@ -3059,10 +3059,10 @@ meus:
     anchor: tts-build-capability-residual
     text: Phase 3 §TTS build capability (residual)
   description: A build that can't import a variant's runtime lists it disabled with a reason and refuses its download with a 409; the dev venv keeps working.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-72, MEU-75, MEU-98
   dependency_parse_status: parsed
@@ -3070,10 +3070,12 @@ meus:
   - MEU-72
   - MEU-75
   - MEU-98
-  execution_plan: null
-  updated: '2026-11-04'
+  execution_plan: docs/execution/plans/2026-11-06-tts-build-capability/
+  updated: '2026-11-06'
   closed_reason: null
-  note: Registered 2026-11-04 from TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME (D-217, Mat).
+  note: 'Registered 2026-11-04 from TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME (D-217, Mat). Plan 2026-11-06-tts-build-capability (Session 51). Approved 2026-11-06: Codex execution review round 1 of 6, intent
+    achieved, no findings: a variant whose runtime doesn''t import in this process is listed unavailable with a reason, its download is refused with a 409 before any job or file exists and its load keeps
+    the 422; the packaged build refuses kokoro-pt-fp32 and the dev venv still loads and generates with it, AC-117.1 to AC-117.16.'
 - row_key: MEU-118
   id: MEU-118
   slug: gui-tts-device-options
@@ -3085,10 +3087,10 @@ meus:
     anchor: tts-device-options-residual
     text: Phase 6 §TTS device options (residual)
   description: The Settings device select offers only what the backend reports for this build.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-23, MEU-75, MEU-117
   dependency_parse_status: parsed
@@ -3096,10 +3098,11 @@ meus:
   - MEU-23
   - MEU-75
   - MEU-117
-  execution_plan: null
-  updated: '2026-11-04'
+  execution_plan: docs/execution/plans/2026-11-06-tts-build-capability/
+  updated: '2026-11-06'
   closed_reason: null
-  note: Registered 2026-11-04 from TTS-DEVICE-OPTIONS-IN-CPU-BUILD (D-226).
+  note: 'Registered 2026-11-04 from TTS-DEVICE-OPTIONS-IN-CPU-BUILD (D-226). Plan 2026-11-06-tts-build-capability (Session 51). Approved 2026-11-06: Codex execution review round 1 of 6, intent achieved,
+    no findings: the Settings device select offers only the devices that a runnable variant reports, and a stored value this build can''t honour shows as auto without a write, AC-118.1 to AC-118.5.'
 - row_key: MEU-119
   id: MEU-119
   slug: svc-tts-load-keeps-model

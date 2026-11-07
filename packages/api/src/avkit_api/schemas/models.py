@@ -46,6 +46,10 @@ class ModelVariantOut(ApiModel):
     is_downloaded: bool
     # The devices this variant's format can load on here (`DEVICE_FIELD`).
     devices: list[DeviceWire]
+    # Whether this build can run the variant (`MODEL_FIELDS`); `reason` is set exactly when
+    # `available` is false, and says why and what to do instead.
+    available: bool
+    reason: str | None
 
 
 class ModelListOut(ApiModel):

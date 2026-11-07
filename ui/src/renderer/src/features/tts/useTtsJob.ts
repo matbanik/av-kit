@@ -56,6 +56,10 @@ export type CatalogItem = {
   is_downloaded: boolean
   /** Devices this row can load on (wire names, `auto` first); absent means `auto` and `cpu`. */
   devices?: string[]
+  /** Whether this build can run the row (`MODEL_FIELDS`); absent counts as available. */
+  available?: boolean
+  /** Why this build can't run the row; set exactly when `available` is false. */
+  reason?: string | null
 }
 
 type PollQuery = {

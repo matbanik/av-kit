@@ -1630,6 +1630,8 @@ class FakeTTSPort:
         # TA-4 (Session 35, MEU-75)
         self.devices: tuple[object, ...] = (DeviceType.Auto, DeviceType.CPU)
         self.device_calls: list[object] = []
+        # TA-3 (Session 51, MEU-117): the formats whose runtime this fake build lacks.
+        self.absent: set[object] = set()
 
     def load_model(self, variant: object, device: object) -> None:
         self.load_calls.append((variant, device))
@@ -1663,6 +1665,9 @@ class FakeTTSPort:
     def available_devices(self, fmt: object) -> tuple[object, ...]:
         self.device_calls.append(fmt)
         return self.devices
+
+    def runtime_present(self, fmt: object) -> bool:
+        return fmt not in self.absent
 
 
 class FakeCatalog:
@@ -3188,3 +3193,96 @@ def test_ac_116_8_resume_while_the_worker_sleeps_after_the_job(
     finally:
         release.set()
     _assert_race_finished(service, uow, job.id, workers)
+
+
+# --- AC-117.6 / 117.7 MODEL_REFUSAL (Session 51, MEU-117) ------------------------------------
+
+
+def test_ac_117_6_download_refuses_a_variant_this_build_cannot_run(tmp_path: Path) -> None:
+    from structlog.testing import capture_logs
+
+    from avkit_core.domain.enums import ModelFormat
+    from avkit_core.domain.tts import MODEL_REASONS
+
+    _service, models, tts_port, catalog, _fs, _media, _uow = _tts_stack(tmp_path)
+    reason = MODEL_REASONS[ModelFormat.PyTorch]
+    tts_port.absent = {ModelFormat.PyTorch}
+    with capture_logs() as logs, pytest.raises(ConflictError) as raised:
+        models.download("kokoro-pt-fp32")
+    assert str(raised.value) == reason
+    assert models.get_download_runtime().state == "Idle"
+    assert models._thread is None
+    assert not catalog.entered.is_set()
+    assert [
+        (entry["log_level"], entry.get("variant_id"), entry.get("detail"))
+        for entry in logs
+        if entry["event"] == "model.download_refused"
+    ] == [("warning", "kokoro-pt-fp32", reason)]
+    with pytest.raises(NotFoundError):
+        models.download("kokoro-missing")
+
+    # With the runtime present the download starts as today, and while it runs the in-flight
+    # 409 comes before the build check.
+    tts_port.absent = set()
+    catalog.hold = True
+    assert models.download("kokoro-pt-fp32").id == "kokoro-pt-fp32"
+    assert models.get_download_runtime().state == "Downloading"
+    assert catalog.entered.wait(timeout=2)
+    tts_port.absent = {ModelFormat.PyTorch}
+    try:
+        with capture_logs() as busy_logs, pytest.raises(ConflictError) as busy:
+            models.download("kokoro-pt-fp32")
+    finally:
+        catalog.release.set()
+        if models._thread is not None:
+            models._thread.join(timeout=2)
+    assert str(busy.value) == "a model download is already in progress"
+    assert [entry for entry in busy_logs if entry["event"] == "model.download_refused"] == []
+    assert models.get_download_runtime().state == "Idle"
+
+
+def test_ac_117_7_load_refuses_a_variant_this_build_cannot_run_first(tmp_path: Path) -> None:
+    from structlog.testing import capture_logs
+
+    from avkit_core.domain.enums import DeviceType, ModelFormat
+    from avkit_core.domain.errors import DomainError
+    from avkit_core.domain.tts import LEGACY_ONNX_DIR, MODEL_REASONS, AssetState, TtsAsset
+
+    _service, models, tts_port, _catalog, _fs, _media, uow = _tts_stack(tmp_path)
+    models_dir = tmp_path / "models"
+    uow.models.mark_downloaded("kokoro-pt-fp32", models_dir / "kokoro-v1_0.pth")
+    # A v0.19 path, so the ONNX row would meet the legacy 409 if the build check came later.
+    _seed_onnx_row(uow, models_dir / LEGACY_ONNX_DIR / "model_quantized.onnx", downloaded=True)
+    assets = models._assets
+    assets.states[TtsAsset.ONNX_VOCAB] = AssetState.MISSING
+    assets.states[TtsAsset.SPACY_MODEL] = AssetState.MISSING
+    tts_port.absent = {ModelFormat.PyTorch, ModelFormat.ONNX}
+    refused: list[tuple[str, DomainError]] = []
+    with capture_logs() as logs:
+        for variant_id in ("kokoro-pt-fp32", "kokoro-onnx-int8"):
+            with pytest.raises(DomainError) as raised:
+                models.load(variant_id, DeviceType.CPU)
+            refused.append((variant_id, raised.value))
+    assert [(variant_id, type(error).__name__, str(error)) for variant_id, error in refused] == [
+        ("kokoro-pt-fp32", "ModelLoadError", MODEL_REASONS[ModelFormat.PyTorch]),
+        ("kokoro-onnx-int8", "ModelLoadError", MODEL_REASONS[ModelFormat.ONNX]),
+    ]
+    assert tts_port.load_calls == []
+    assert assets.downloads == []
+    assert models.get_download_runtime().state == "Idle"
+    assert [
+        (entry["log_level"], entry.get("variant_id"), entry.get("detail"))
+        for entry in logs
+        if entry["event"] == "model.load_refused"
+    ] == [
+        ("warning", "kokoro-pt-fp32", MODEL_REASONS[ModelFormat.PyTorch]),
+        ("warning", "kokoro-onnx-int8", MODEL_REASONS[ModelFormat.ONNX]),
+    ]
+    with pytest.raises(NotFoundError):
+        models.load("kokoro-missing", DeviceType.CPU)
+
+    tts_port.absent = set()
+    assets.states[TtsAsset.ONNX_VOCAB] = AssetState.READY
+    assets.states[TtsAsset.SPACY_MODEL] = AssetState.READY
+    models.load("kokoro-pt-fp32", DeviceType.CPU)
+    assert [variant.id for variant, _device in tts_port.load_calls] == ["kokoro-pt-fp32"]

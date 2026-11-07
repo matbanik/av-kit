@@ -160,3 +160,62 @@ def test_ac_75_1_pytorch_probe_without_torch_is_auto_and_cpu() -> None:
     )
     assert done.returncode == 0, done.stderr[-4000:]
     assert json.loads(done.stdout.strip().splitlines()[-1]) == ["Auto", "CPU"]
+
+
+RUNTIME_SCRIPT = r"""
+import importlib.util
+import json
+import sys
+
+for name in ("torch", "phonemizer", "espeakng_loader"):
+    sys.modules[name] = None
+
+
+class KokoroRequests:
+    def __init__(self):
+        self.names = []
+
+    def find_spec(self, name, path=None, target=None):
+        if name.split(".")[0] == "kokoro":
+            self.names.append(name)
+        return None
+
+
+requests = KokoroRequests()
+sys.meta_path.insert(0, requests)
+
+from avkit_core.domain.enums import ModelFormat  # noqa: E402
+from avkit_infra.tts.adapter import KokoroAdapter  # noqa: E402
+
+adapter = KokoroAdapter()
+present = {fmt.value: adapter.runtime_present(fmt) for fmt in ModelFormat}
+names = list(requests.names)
+loaded = "kokoro" in sys.modules
+# kokoro stays importable: only the probe's own requests are counted above.
+findable = importlib.util.find_spec("kokoro") is not None
+print(json.dumps({"present": present, "requests": names, "loaded": loaded, "findable": findable}))
+"""
+
+
+@pytest.mark.integration
+def test_ac_117_5_runtime_present_without_torch_requests_no_kokoro() -> None:
+    from avkit_infra.tts.adapter import KokoroAdapter
+
+    assert hasattr(KokoroAdapter, "runtime_present"), "KokoroAdapter has no runtime_present"
+    done = subprocess.run(
+        [sys.executable, "-c", RUNTIME_SCRIPT],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=300,
+        check=False,
+    )
+    assert done.returncode == 0, done.stderr[-4000:]
+    assert json.loads(done.stdout.strip().splitlines()[-1]) == {
+        "present": {"PyTorch": False, "ONNX": True},
+        "requests": [],
+        "loaded": False,
+        "findable": True,
+    }

@@ -14,9 +14,22 @@ function desc(action: string, method: string, path: string): string {
 }
 
 export const modelsDescriptions: Record<string, string> = {
-  "avkit_models.available": desc("available", "GET", "/models/available"),
+  "avkit_models.available": [
+    "Workflow: available → download → load, then TTS; action available is GET /models/available.",
+    "Prerequisite: disk space; variant_id min 1 on download/load; MCP token required.",
+    "Returns: JSON from GET /models/available (variant metadata, never model bytes);",
+    "each variant has devices, available and reason, where reason says why this build can't run it",
+    "and is null when available is true.",
+    "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
+  ].join(" "),
   "avkit_models.downloaded": desc("downloaded", "GET", "/models/downloaded"),
-  "avkit_models.download": desc("download", "POST", "/models/download"),
+  "avkit_models.download": [
+    "Workflow: available → download → load, then TTS; action download is POST /models/download.",
+    "Prerequisite: disk space; variant_id min 1 on download/load; MCP token required.",
+    "Returns: JSON from POST /models/download (variant metadata, never model bytes);",
+    "409 when a download runs, or for a variant this build can't run, with the reason as message.",
+    "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
+  ].join(" "),
   "avkit_models.download_runtime": desc("download_runtime", "GET", "/models/download-runtime"),
   "avkit_models.load": desc("load", "POST", "/models/load"),
   "avkit_models.unload": desc("unload", "POST", "/models/unload"),

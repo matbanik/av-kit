@@ -186,9 +186,9 @@ There is no per-video queue action (Phase 1: `TranscriptItem` is a child record)
 
 | action | REST |
 |--------|------|
-| `available` | `GET /models/available` |
+| `available` | `GET /models/available` (each variant carries `devices`, `available` and `reason`) |
 | `downloaded` | `GET /models/downloaded` |
-| `download` | `POST /models/download` `{ variant_id }` |
+| `download` | `POST /models/download` `{ variant_id }` (409 with the reason for a variant this build can't run) |
 | `download_runtime` | `GET /models/download-runtime` |
 | `load` | `POST /models/load` `{ variant_id, device }` |
 | `unload` | `POST /models/unload` |

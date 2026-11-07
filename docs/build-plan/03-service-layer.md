@@ -585,7 +585,7 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 
 ## TTS build capability (residual)
 
-> **MEU-117.** Registered 2026-11-04 from `TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME`. The installed backend has no torch or kokoro, so `_load_pytorch` (`tts/adapter.py:292-296`) always raises "PyTorch runtime is not bundled", yet `/models/available` offers the variant and `POST /models/download` fetches 327 MB for it. Mat ruled D-217 on 2026-11-04, which supersedes D-236 and closes `TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD`.
+> **MEU-117.** Registered 2026-11-04 from `TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME`. The installed backend has no torch or kokoro, so `_load_pytorch` (`tts/adapter.py:340-350`) always raises "PyTorch runtime is not bundled", yet `/models/available` offers the variant and `POST /models/download` fetches 327 MB for it. Mat ruled D-217 on 2026-11-04, which supersedes D-236 and closes `TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD`.
 
 | Rule | Contract | Source |
 |------|----------|--------|
@@ -600,6 +600,14 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Not built | No bundled torch, no runtime download and no `KModel` import workaround. espeak is never downloaded or bundled. | Human-approved: triage D-217, D-237 |
 | Done | An installed build cannot start the download of a model it cannot load, and the dev venv still loads and generates with it. | Human-approved: triage D-217 |
 | Tests | Unit with the runtime present and absent; a contract test for the listed fields and the 409, with no job and no file written; a renderer test for the disabled row and the selection; the packaged smoke checks the 409 on a real build. | Local Canon |
+
+> **Delivered (Session 51).**
+> - `runtime_imports` in `tts/adapter.py` (`RUNTIME_PROBE`) reports whether a format's runtime imports in this process. PyTorch without torch answers no without importing kokoro, and a failed kokoro import logs `tts.runtime_probe_failed` with the class name only. The adapter asks it once per format under a lock, through `TTSPort.runtime_present` (`RUNTIME_PRESENT`, D-309).
+> - `MODEL_REASONS` and `ModelAvailability` in `domain/tts.py` hold the two fixed reason texts (D-310), and the adapter's own refusal now uses the PyTorch text (D-312, option A).
+> - Before any work, `ModelService.download` answers 409 `ConflictError` and `load` answers 422 `ModelLoadError` with the reason, and each logs `model.download_refused` or `model.load_refused` (`MODEL_REFUSAL`, D-311). Every route that returns a variant carries `available` and `reason` (`MODEL_FIELDS`), and the MCP `available` and `download` descriptions name them (D-318).
+> - The TTS page lists an unavailable row disabled with its reason, and `defaultModelSelection` skips it (D-320).
+> - `tools/smoke_packaged_tts.py --phase capability` (`CAPABILITY_SMOKE`) proved the listing, both refusals and their log lines on a fresh frozen build. The dev venv still loads and generates with the PyTorch variant (`DEV_CHECK`) (D-315, D-316).
+> - AC-117.1 to AC-117.16. Plan `docs/execution/plans/2026-11-06-tts-build-capability/`.
 
 <a id="tts-load-keeps-model-residual"></a>
 

@@ -13,16 +13,19 @@ from avkit_core.domain.enums import DeviceType, ModelFormat
 from avkit_core.domain.errors import (
     ConflictError,
     ModelDownloadError,
+    ModelLoadError,
     NotFoundError,
     ValidationError,
 )
 from avkit_core.domain.tts import (
     AssetState,
+    ModelAvailability,
     ModelDownloadRuntime,
     ModelStatus,
     ModelVariant,
     TtsAsset,
     is_legacy_onnx_path,
+    model_availability,
 )
 from avkit_core.ports.models import ModelCatalogPort
 from avkit_core.ports.storage import UnitOfWork
@@ -105,6 +108,10 @@ class ModelService:
     def available_devices(self, fmt: ModelFormat) -> tuple[DeviceType, ...]:
         return self._tts.available_devices(fmt)
 
+    def availability(self, fmt: ModelFormat) -> ModelAvailability:
+        """`AVAILABILITY` of `fmt` in this build, from the port's `RUNTIME_PRESENT`."""
+        return model_availability(fmt, self._tts.runtime_present(fmt))
+
     def list_available(self) -> list[ModelVariant]:
         """Catalog union sideload. A variant counts as downloaded only with a valid vocab.
 
@@ -140,6 +147,9 @@ class ModelService:
 
         Raises:
             NotFoundError: unknown variant.
+            ModelLoadError: the variant can't run in this build (`MODEL_REFUSAL`, the reason
+                as message). It is checked first, as a vocab 409 would ask for an asset the
+                build can't use; the port is never called.
             ConflictError: `LEGACY_MODEL_409` (the row's path is a v0.19 file) or
                 `ASSET_MISSING_ERROR(ONNX_VOCAB)`; the port is never called.
         """
@@ -149,6 +159,11 @@ class ModelService:
             variant = uow.models.get(variant_id)
         if variant is None:
             raise NotFoundError(f"model variant {variant_id} not found")
+        # `reason` is set exactly when this build can't run the variant (`AVAILABILITY`).
+        reason = self.availability(variant.format).reason
+        if reason is not None:
+            log.warning("model.load_refused", variant_id=variant.id, detail=reason)
+            raise ModelLoadError(reason)
         if _is_legacy(variant, models_dir):
             raise ConflictError(f"model variant {variant_id} needs a re-download (v0.19 file)")
         if self._assets.state(TtsAsset.ONNX_VOCAB, models_dir) is not AssetState.READY:
@@ -199,8 +214,19 @@ class ModelService:
         self._tts.unload_model()
 
     def download(self, variant_id: str) -> ModelVariant:
-        """Start a variant download: weights, the vocab if missing, then `MODEL_CHAINS_PACKS`."""
+        """Start a variant download: weights, the vocab if missing, then `MODEL_CHAINS_PACKS`.
+
+        Raises:
+            ConflictError: a download is in flight, or the variant can't run in this build
+                (`MODEL_REFUSAL`, the reason as message); nothing starts and no file is written.
+            NotFoundError: unknown variant.
+        """
         dest_dir = models_directory(self._settings)
+        # Warm the runtime probe before the lock: the first PyTorch probe imports kokoro.
+        with self._uow_factory() as uow:
+            row = uow.models.get(variant_id)
+        if row is not None:
+            self._tts.runtime_present(row.format)
         with self._lock:
             if self._runtime.state == "Downloading":
                 raise ConflictError("a model download is already in progress")
@@ -208,6 +234,10 @@ class ModelService:
                 variant = uow.models.get(variant_id)
             if variant is None:
                 raise NotFoundError(f"model variant {variant_id} not found")
+            reason = self.availability(variant.format).reason
+            if reason is not None:
+                log.warning("model.download_refused", variant_id=variant.id, detail=reason)
+                raise ConflictError(reason)
             self._start_locked(variant, None, dest_dir)
             return variant
 

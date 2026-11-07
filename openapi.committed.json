@@ -1883,6 +1883,10 @@
         "additionalProperties": false,
         "description": "Catalog or downloaded variant.",
         "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
           "devices": {
             "items": {
               "enum": [
@@ -1927,6 +1931,17 @@
             "title": "Precision",
             "type": "string"
           },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
           "size_bytes": {
             "title": "Size Bytes",
             "type": "integer"
@@ -1940,7 +1955,9 @@
           "size_bytes",
           "path",
           "is_downloaded",
-          "devices"
+          "devices",
+          "available",
+          "reason"
         ],
         "title": "ModelVariantOut",
         "type": "object"
@@ -5404,7 +5421,7 @@
     },
     "/api/v1/models/download": {
       "post": {
-        "description": "Accept a variant or TTS-asset download immediately. 409 if one is in flight.",
+        "description": "Accept a variant or TTS-asset download immediately.\n\n409 if one is in flight, or the variant can't run in this build.",
         "operationId": "download_model_api_v1_models_download_post",
         "requestBody": {
           "content": {
@@ -5428,7 +5445,7 @@
             "description": "Successful Response"
           },
           "409": {
-            "description": "Conflict: a download is in flight, or a TTS asset is missing or already ready"
+            "description": "Conflict: a download is in flight, a TTS asset is missing or already ready, or the variant can't run in this build"
           },
           "422": {
             "content": {
@@ -5523,7 +5540,7 @@
             "description": "Successful Response"
           },
           "409": {
-            "description": "Conflict: a download is in flight, or a TTS asset is missing or already ready"
+            "description": "Conflict: a download is in flight, a TTS asset is missing or already ready, or the variant can't run in this build"
           },
           "422": {
             "content": {

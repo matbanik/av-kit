@@ -3,13 +3,12 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 112** — Active: 41 | Mitigated: 1 | Resolved: 68
+**Total: 112** — Active: 39 | Mitigated: 1 | Resolved: 70
 
 ## Active Issues
 
 | Sev | ID | Title | Component | Status | Discovered |
 |-----|-----|-------|-----------|--------|------------|
-| 🟠 | `TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME` | The installed app offers the PyTorch voice model and downloads 327 MB,… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟠 | `TTS-ONNX-FP16-NONFINITE-AUDIO` | ONNX FP16 fails on some ordinary sentences with 'generated audio must b… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | ⬜ open | 2026-09-30 |
 | 🟡 | `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` | Non-English voices via the real espeak-ng CLI were never run end to end… | infrastructure | ⬜ open | 2026-10-15 |
@@ -35,7 +34,6 @@
 | 🟢 | `BACKEND-READY-BEFORE-LISTEN` | The backend prints AVKIT_READY before its socket listens, so an immedia… | api | ⬜ open | 2026-11-03 |
 | 🟢 | `TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME` | A transcript job's channel name is the playlist's title | core | ⬜ open | 2026-11-03 |
 | 🟢 | `TRANSCRIPT-ADD-CHANNEL-422` | Adding a channel returned 422 after about 8 minutes of enumeration | core | ⬜ open | 2026-11-03 |
-| 🟢 | `TTS-DEVICE-OPTIONS-IN-CPU-BUILD` | The shipped build runs text to speech on the CPU only, but its device o… | ui | ⬜ open | 2026-11-03 |
 | 🟢 | `TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE` | The TTS progress label reads 'Segments 0/1000' whatever the text's leng… | core | ⬜ open | 2026-11-03 |
 | 🟢 | `TTS-AUDIO-RANDOM-FILE-NAMES` | Generated audio files have random ID names | core | ⬜ open | 2026-11-03 |
 | 🟢 | `CONVERT-POSITIONS-NOT-RENUMBERED` | Convert's queue numbers aren't renumbered | core | ⬜ open | 2026-11-03 |
@@ -57,9 +55,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (68)
+## Resolved (70)
 
-68 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+70 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

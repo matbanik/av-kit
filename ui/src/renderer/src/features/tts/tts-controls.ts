@@ -103,19 +103,24 @@ export function modelStateSuffix(input: {
 
 /**
  * Default picker selection: the user's choice while it is still in the catalog, else the
- * loaded variant, else the first downloaded one, else the first in the catalog.
+ * loaded variant, else the first downloaded one, else the first in the catalog. The chosen,
+ * first-downloaded and first-row rules skip a row this build can't run (`available: false`),
+ * and with no runnable row the result is `null`. The loaded row is kept: a load of an
+ * unavailable variant is refused, so a loaded row could run when it loaded.
  */
 export function defaultModelSelection(input: {
   chosen: string | null
   loadedVariantId: string | null
-  catalog: ReadonlyArray<{ id: string; is_downloaded: boolean }>
+  catalog: ReadonlyArray<{ id: string; is_downloaded: boolean; available?: boolean }>
 }): string | null {
   const ids = input.catalog.map((row) => row.id)
-  if (input.chosen !== null && ids.includes(input.chosen)) {
+  // A row without `available` counts as available.
+  const runnable = input.catalog.filter((row) => row.available !== false)
+  if (input.chosen !== null && runnable.some((row) => row.id === input.chosen)) {
     return input.chosen
   }
   if (input.loadedVariantId !== null && ids.includes(input.loadedVariantId)) {
     return input.loadedVariantId
   }
-  return input.catalog.find((row) => row.is_downloaded)?.id ?? input.catalog[0]?.id ?? null
+  return runnable.find((row) => row.is_downloaded)?.id ?? runnable[0]?.id ?? null
 }

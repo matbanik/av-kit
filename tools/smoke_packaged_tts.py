@@ -11,6 +11,13 @@ process with every proxy pointed at a dead port. It loads `kokoro-onnx-int8` on 
 one English WAV from the cached models. A voice-pack download into an empty folder must then fail,
 which proves that the dead proxies held.
 
+`--phase capability` is `CAPABILITY_SMOKE` (MEU-117). It starts the backend copy in `--backend-dir`
+behind the same dead proxies, with a 16-byte stub PyTorch weights file and a vocab in an empty
+`--models-dir`. It checks, stopping at the first failure, that the PyTorch row is listed
+unavailable with its reason (`listed_fields`), that its download answers 409 and writes nothing
+(`download_refused`), that its load answers 422 (`load_refused`), and that the backend logs both
+refusals (`logged`).
+
 Each phase writes one JSON object to `--out`; `validate-task.ps1 -Check package-smoke` merges them.
 Exit 0 means the phase passed.
 """
@@ -31,6 +38,7 @@ import urllib.error
 import urllib.request
 import wave
 from collections import deque
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -52,6 +60,11 @@ READY_TIMEOUT_S = 120.0
 DOWNLOAD_TIMEOUT_S = 1800.0
 GENERATE_TIMEOUT_S = 300.0
 PROBE_TIMEOUT_S = 60.0
+PYTORCH_VARIANT_ID = "kokoro-pt-fp32"
+PYTORCH_STUB = "kokoro-v1_0.pth"
+PYTORCH_STUB_BYTES = 16
+REFUSAL_EVENTS = ("model.download_refused", "model.load_refused")
+LOG_WAIT_S = 10.0
 
 
 def _now() -> str:
@@ -410,19 +423,208 @@ def phase_offline(backend_dir: Path, models_dir: Path) -> dict[str, Any]:
     return result
 
 
+def _tree(root: Path) -> list[list[Any]]:
+    """Each path under `root` with its size and mtime (directories have neither)."""
+    rows: list[list[Any]] = []
+    for path in sorted(root.rglob("*")):
+        stat = path.stat()
+        if path.is_dir():
+            rows.append([path.relative_to(root).as_posix() + "/", None, None])
+        else:
+            rows.append([path.relative_to(root).as_posix(), stat.st_size, stat.st_mtime_ns])
+    return rows
+
+
+def _error_fields(payload: Any) -> tuple[Any, Any]:
+    error = payload.get("error") if isinstance(payload, dict) else None
+    if not isinstance(error, dict):
+        return None, None
+    return error.get("code"), error.get("message")
+
+
+def _check_listed(
+    backend: Backend, reason: str, seed_ids: list[str]
+) -> tuple[dict[str, Any], list[str]]:
+    items = backend.ok("GET", "/models/available")["items"]
+    seen = {
+        item["id"]: {
+            key: item.get(key, "<absent>") for key in ("available", "reason", "is_downloaded")
+        }
+        for item in items
+    }
+    problems: list[str] = []
+    if sorted(seen) != sorted(seed_ids):
+        problems.append(f"listed {sorted(seen)}, not the seeded {sorted(seed_ids)}")
+    pytorch = seen.get(PYTORCH_VARIANT_ID)
+    if pytorch != {"available": False, "reason": reason, "is_downloaded": True}:
+        problems.append(f"{PYTORCH_VARIANT_ID} reads {pytorch}")
+    for variant_id, row in seen.items():
+        if variant_id != PYTORCH_VARIANT_ID and (row["available"], row["reason"]) != (True, None):
+            problems.append(f"{variant_id} reads {row}")
+    return seen, problems
+
+
+def _check_download_refused(
+    backend: Backend, reason: str, models_dir: Path
+) -> tuple[dict[str, Any], list[str]]:
+    before = _tree(models_dir)
+    status, payload = backend.request(
+        "POST", "/models/download", {"variant_id": PYTORCH_VARIANT_ID}
+    )
+    code, message = _error_fields(payload)
+    runtime = backend.ok("GET", "/models/download-runtime")
+    after = _tree(models_dir)
+    seen = {
+        "status": status,
+        "code": code,
+        "message": message,
+        "runtime_state": runtime.get("state"),
+        "files_unchanged": after == before,
+    }
+    problems: list[str] = []
+    if (status, code, message) != (409, "ConflictError", reason):
+        problems.append(f"download answered {status} {code}: {message}")
+    if seen["runtime_state"] != "Idle":
+        problems.append(f"download runtime reads {seen['runtime_state']}, not Idle")
+    if not seen["files_unchanged"]:
+        problems.append(f"models_dir changed: {before} -> {after}")
+    return seen, problems
+
+
+def _check_load_refused(
+    backend: Backend, reason: str, stub: Path
+) -> tuple[dict[str, Any], list[str]]:
+    status, payload = backend.request(
+        "POST", "/models/load", {"variant_id": PYTORCH_VARIANT_ID, "device": "cpu"}
+    )
+    code, message = _error_fields(payload)
+    rows = {item["id"]: item for item in backend.ok("GET", "/models/available")["items"]}
+    seen = {
+        "status": status,
+        "code": code,
+        "message": message,
+        "stub_bytes": stub.stat().st_size if stub.is_file() else None,
+        "is_downloaded": rows.get(PYTORCH_VARIANT_ID, {}).get("is_downloaded"),
+    }
+    problems: list[str] = []
+    if (status, code, message) != (422, "ModelLoadError", reason):
+        problems.append(f"load answered {status} {code}: {message}")
+    if seen["stub_bytes"] != PYTORCH_STUB_BYTES:
+        problems.append(f"the stub reads {seen['stub_bytes']} bytes, not {PYTORCH_STUB_BYTES}")
+    if seen["is_downloaded"] is not True:
+        problems.append(f"{PYTORCH_VARIANT_ID} is_downloaded reads {seen['is_downloaded']}")
+    return seen, problems
+
+
+def _check_logged(backend: Backend) -> tuple[dict[str, bool], list[str]]:
+    # The drain thread reads the backend's output, so a line can land just after the response.
+    deadline = time.monotonic() + LOG_WAIT_S
+    while True:
+        lines = list(backend.log)
+        seen = {event: any(event in line for line in lines) for event in REFUSAL_EVENTS}
+        if all(seen.values()) or time.monotonic() >= deadline:
+            break
+        time.sleep(0.25)
+    return seen, [
+        f"no {event} line in the backend output" for event, found in seen.items() if not found
+    ]
+
+
+def phase_capability(backend_dir: Path, models_dir: Path) -> dict[str, Any]:
+    """`CAPABILITY_SMOKE`: the frozen backend lists and refuses a variant it can't run."""
+    from avkit_core.domain.enums import ModelFormat
+    from avkit_core.domain.tts import MODEL_REASONS
+    from avkit_infra.database.engine import SEED_VARIANTS
+
+    reason = MODEL_REASONS[ModelFormat.PyTorch]
+    seed_ids = [row[0] for row in SEED_VARIANTS]
+    run_dir = backend_dir.parent
+    result: dict[str, Any] = {
+        "phase": "capability",
+        "passed": False,
+        "started": _now(),
+        "backend_dir": str(backend_dir.resolve()),
+        "models_dir": str(models_dir.resolve()),
+        "checks": {},
+        "failed_check": None,
+        "errors": [],
+    }
+    errors: list[str] = result["errors"]
+    real_models = (Path.home() / ".avkit" / "models").resolve()
+    if backend_dir.resolve().is_relative_to(REPO_ROOT):
+        errors.append(f"backend_dir {backend_dir} is inside the checkout {REPO_ROOT}")
+    for root, label in ((REPO_ROOT, "the checkout"), (real_models, "the real models folder")):
+        if models_dir.resolve().is_relative_to(root):
+            errors.append(f"models_dir {models_dir} is inside {label} {root}")
+    if models_dir.exists() and (not models_dir.is_dir() or any(models_dir.iterdir())):
+        errors.append(f"models_dir {models_dir} exists and is not an empty folder")
+    exe = backend_dir / EXE_NAME
+    if not exe.is_file():
+        errors.append(f"missing {exe}")
+    if not errors:
+        result["forbidden_dirs"] = _forbidden_dirs(backend_dir / "_internal")
+        if result["forbidden_dirs"]:
+            errors.append(f"forbidden _internal dirs: {result['forbidden_dirs']}")
+    if errors:
+        result["finished"] = _now()
+        return result
+
+    models_dir.mkdir(parents=True, exist_ok=True)
+    stub = models_dir / PYTORCH_STUB
+    stub.write_bytes(bytes(PYTORCH_STUB_BYTES))
+    # A vocab, so the PyTorch row reads downloaded (a variant needs a valid vocab to).
+    (models_dir / "config.json").write_text(json.dumps({"vocab": {"a": 1}}), encoding="utf-8")
+    env, proxy = _offline_env(run_dir)
+    result["proxy"] = proxy
+    app_data = run_dir / "app-data"
+    shutil.rmtree(app_data, ignore_errors=True)
+    backend = Backend(exe, app_data=app_data, cwd=run_dir, env=env)
+    checks: list[tuple[str, Callable[[], tuple[Any, list[str]]]]] = [
+        ("listed_fields", lambda: _check_listed(backend, reason, seed_ids)),
+        ("download_refused", lambda: _check_download_refused(backend, reason, models_dir)),
+        ("load_refused", lambda: _check_load_refused(backend, reason, stub)),
+        ("logged", lambda: _check_logged(backend)),
+    ]
+    try:
+        backend.put_tts_settings(models_directory=str(models_dir))
+        for name, check in checks:
+            try:
+                seen, problems = check()
+            except Exception as exc:  # recorded as this check's failure
+                seen, problems = None, [f"{type(exc).__name__}: {exc}"]
+            result["checks"][name] = seen
+            if problems:
+                result["failed_check"] = name
+                errors.extend(f"{name}: {problem}" for problem in problems)
+                break
+    except Exception as exc:  # recorded in the result; the phase fails
+        errors.append(f"{type(exc).__name__}: {exc}")
+    finally:
+        backend.stop()
+        result["backend_tail"] = backend.tail()
+    result["passed"] = not errors
+    result["finished"] = _now()
+    return result
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--phase", choices=("online", "offline"), required=True)
+    parser.add_argument("--phase", choices=("online", "offline", "capability"), required=True)
     parser.add_argument("--models-dir", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
-    parser.add_argument("--backend-dir", type=Path, help="offline: the copied onedir to run")
+    parser.add_argument(
+        "--backend-dir", type=Path, help="offline and capability: the copied onedir to run"
+    )
     args = parser.parse_args(argv)
     if args.phase == "online":
         result = phase_online(args.models_dir)
     else:
         if args.backend_dir is None:
-            parser.error("--phase offline requires --backend-dir")
-        result = phase_offline(args.backend_dir, args.models_dir)
+            parser.error(f"--phase {args.phase} requires --backend-dir")
+        if args.phase == "offline":
+            result = phase_offline(args.backend_dir, args.models_dir)
+        else:
+            result = phase_capability(args.backend_dir, args.models_dir)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(result, indent=2), encoding="utf-8")
     print(json.dumps({k: v for k, v in result.items() if k != "backend_tail"}, indent=2))

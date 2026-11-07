@@ -1158,6 +1158,7 @@ TTS_PORT_METHODS = (
     "list_voices",
     "get_model_status",
     "available_devices",  # TA-3 (Session 35, MEU-75)
+    "runtime_present",  # TA-3 (Session 51, MEU-117)
 )
 MEDIA_PORT_METHODS = (
     "is_available",
@@ -1635,3 +1636,33 @@ def test_ac_115_1_failure_messages_skip_causes_and_safe_reason() -> None:
     assert safe("x" * 500) == "x" * 200
     # The URL is replaced before the cut, so a cut never leaves part of a URL.
     assert safe("y" * 190 + " https://example.invalid/" + "z" * 50) == "y" * 190 + " [link]"
+
+
+@pytest.mark.unit
+def test_ac_117_1_model_availability_and_reasons() -> None:
+    domain_tts = importlib.import_module("avkit_core.domain.tts")
+    for name in ("ModelAvailability", "model_availability", "MODEL_REASONS"):
+        assert hasattr(domain_tts, name), f"avkit_core.domain.tts has no {name}"
+    from dataclasses import FrozenInstanceError
+
+    from avkit_core.domain.enums import ModelFormat
+    from avkit_core.domain.errors import ValidationError
+
+    reasons = domain_tts.MODEL_REASONS
+    assert set(reasons) == set(ModelFormat)
+    assert reasons[ModelFormat.PyTorch] == (
+        "This build can't run PyTorch models. Choose an ONNX model."
+    )
+    assert reasons[ModelFormat.ONNX] == "This build can't run ONNX models. Reinstall av-kit."
+    availability = domain_tts.ModelAvailability
+    refused = domain_tts.model_availability(ModelFormat.PyTorch, False)
+    assert (refused.available, refused.reason) == (False, reasons[ModelFormat.PyTorch])
+    for fmt in ModelFormat:
+        present = domain_tts.model_availability(fmt, True)
+        assert (present.available, present.reason) == (True, None), fmt
+        assert domain_tts.model_availability(fmt, False) == availability(False, reasons[fmt])
+    with pytest.raises(FrozenInstanceError):
+        refused.available = True
+    for available, reason in ((True, "x"), (False, None), (False, "")):
+        with pytest.raises(ValidationError):
+            availability(available, reason)

@@ -221,3 +221,19 @@ def test_ac_75_8_unknown_device_is_422_neg() -> None:
     )
     assert response.status_code == 422
     _assert_envelope(response.json())
+
+
+def test_ac_117_9_openapi_lists_availability_and_the_build_409() -> None:
+    document = json.loads(OPENAPI.read_text(encoding="utf-8"))
+    schema = document["components"]["schemas"]["ModelVariantOut"]
+    properties = schema["properties"]
+    assert "available" in properties and "reason" in properties, sorted(properties)
+    assert {"available", "reason"} <= set(schema.get("required", [])), schema.get("required")
+    assert properties["available"].get("type") == "boolean", properties["available"]
+    reason = properties["reason"]
+    assert sorted(option.get("type") for option in reason.get("anyOf", [])) == [
+        "null",
+        "string",
+    ], reason
+    conflict = document["paths"]["/api/v1/models/download"]["post"]["responses"]["409"]
+    assert "the variant can't run in this build" in conflict["description"], conflict

@@ -42,6 +42,10 @@ class TTSPort(Protocol):
         """The devices `fmt` can load on in this process (`DEVICE_PROBE`)."""
         ...
 
+    def runtime_present(self, fmt: ModelFormat) -> bool:
+        """Whether this process can import the runtime that loads `fmt` (`RUNTIME_PRESENT`)."""
+        ...
+
 
 class TtsAssetPort(Protocol):
     """Kokoro runtime assets (vocab/config file, spaCy model) under the models directory.
