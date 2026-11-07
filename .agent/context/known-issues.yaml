@@ -3546,18 +3546,20 @@ issues:
     title: A failed model load unloads the model that was working
     severity: medium
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: load_model calls self.unload_model() first (packages/infrastructure/src/avkit_infra/tts/adapter.py:251), before it checks the weight path, the device or the runtime. Any load that fails after that leaves nothing loaded.
     blast_radius: 'Read from the code, and consistent with one observation: on the maintainer''s test PC on 2026-11-04, ONNX FP16 was loaded and generated speech, a later load failed, and /models/status read unloaded. The events in between were not traced, so this is not a controlled reproduction. A user who tries another model and fails is left with nothing loaded, and has to notice and reload the one that worked.'
-    resolution_path: 'Proposed for triage, not approved: run the checks that do not need the old model gone (weight path, device, runtime) and unload only after they pass. Loading the new model before dropping the old one may not fit in GPU memory, so that part needs a decision. Test: load A, fail a load of B, and status still shows A.'
+    resolution_path: 'Fixed in Session 52 on 2026-11-07 under triage D-221 (plan 2026-11-06-tts-load-fp16, MEU-119, D-322 to D-325, D-335): load_model runs the weight, device, format and runtime checks before unload_model, so a failed check keeps the current model loaded; a failure after the unload, while the model or session is built, still leaves nothing loaded; and console_field replaces the home folder with ~ in the detail a failed load returns.'
     category: MEU-NEW
     priority: P3
     related:
       - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
       - TTS-GENERATE-FAILED-SILENT
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-07'
+      method: 'Session 52 task row 2 receipts C:/Temp/av-kit/s52-load-green.txt and s52-load-types.txt (plan 2026-11-06-tts-load-fp16): tests/integration/test_tts_device_resolution.py and tests/e2e/test_api_model_load_keeps.py, with fakes and a monkeypatched session; row 2b receipts s52-scrub-green.txt and s52-scrub-home-tmp.txt, the second run with TMP and TEMP under the home folder; row 2 snapshot s52-r2-models.txt'
+      result: 'Row 2: 238 passed, pyright 0 errors. AC-119.1 to AC-119.5: load A, fail a load of B on the missing weight, the failing device probe, the format check or the missing runtime, and status still shows A on its device with no unload called; AC-119.6: one runtime probe per load; AC-119.7 and AC-119.8: a failure while the model or session is built still leaves nothing loaded on cpu; AC-119.9: /models/load then /models/status keep A. Row 2b: 117 passed, and 230 passed with TEMP under the home folder: AC-119.10, the missing-weight detail reads ~ for the home folder. Snapshot: 159 files, 0 changes.'
     meu_links:
       - MEU-62
       - MEU-98
@@ -3584,18 +3586,20 @@ issues:
     title: Voice models live in %USERPROFILE%\.avkit\models, but the readiness probe and checklist point at %LOCALAPPDATA%\av-kit
     severity: medium
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: 'The backend''s default for tts.models_directory is ~/.avkit/models (packages/core/src/avkit_core/services/settings.py:67). The Electron side has its own default: defaultModelsDirectory in ui/src/main/setup-readiness.ts:51-52 returns {appData}/models, used when no settings row exists (:62, :79), and probeModelsDirWritable creates that folder (:90) and tests it. docs/releases/publish-checklist-v0.1.0-rc.1.md:133 checks %LOCALAPPDATA%\av-kit\models. The release notes said voice models stay in %LOCALAPPDATA%\av-kit until they were corrected and published on 2026-11-04 (d287c55).'
     blast_radius: 'Measured on the published RC1 on the maintainer''s test PC on 2026-11-04: the model files are under %USERPROFILE%\.avkit\models, and %LOCALAPPDATA%\av-kit\models exists and is empty. Read from the code: the first-run readiness check reports on a folder the backend does not use, so a real models folder that cannot be written would still pass it. Until the notes were corrected on 2026-11-04, a user following them to reclaim disk after uninstalling would not find the models, which reached 534 MB on that PC. The checklist''s empty-cache check passes whether or not a model is there. Nothing in the app deletes a model, and deleting the files by hand has not been tried.'
-    resolution_path: 'Proposed for triage, not approved: make the probe use the same default as the backend, and correct the checklist. Do not move existing model files. The public notes were corrected on 2026-11-04 (d287c55) and need nothing more.'
+    resolution_path: 'Fixed in Session 52 on 2026-11-07 under triage D-222 (plan 2026-11-06-tts-load-fp16, MEU-120, D-326 to D-328): the desktop app''s default models folder is the backend''s ~/.avkit/models, and its readiness probe creates no folder; a missing folder is probed in its nearest existing folder. No files move, and a stored tts.models_directory is kept.'
     category: MEU-NEW
     priority: P3
     related:
       - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
       - UNINSTALL-LEAVES-INSTALLER-COPY
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-07'
+      method: 'Session 52 task row 4 receipts C:/Temp/av-kit/s52-probe-green.txt, s52-probe-types.txt and s52-probe-lint.txt (plan 2026-11-06-tts-load-fp16): ui/tests/unit/setup-readiness.test.ts and the readiness producers; row 5 receipts s52-r5-build.txt and s52-r5-e2e.txt for the settings E2E on the built app in real Electron, and s52-r5-models.txt for the real models folder'
+      result: 'Row 4: 2 files, 11 tests passed, typecheck and lint clean. AC-120.1: DEFAULT_MODELS_DIRECTORY equals the tts.models_directory default in settings.py, ~/.avkit/models; AC-120.2: defaultModelsDirectory() is join(homedir(), ''.avkit'', ''models''); AC-120.3: readTtsModelsDirectory with no database, or no row, returns it; AC-120.4: a missing folder two levels under a writable folder reads true and nothing is created; AC-120.5: a missing folder under a regular file reads false and creates nothing; AC-120.6: an existing folder reads true and holds no probe file afterwards. Row 5: 23 passed; snapshot 159 files, 0 changes.'
     meu_links:
       - MEU-23
       - MEU-120
@@ -4012,14 +4016,15 @@ issues:
       - MEU-62
       - MEU-72
       - MEU-121
+      - MEU-127
     related:
       - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
       - TTS-FAILED-LOAD-DROPS-MODEL
       - TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD
     verification:
-      last_checked: '2026-11-04'
-      method: 'Probe through KokoroAdapter in the dev venv with the phoneme step cached: 40 sentences on three voices, 20 on a fourth, 8 paragraphs, per variant'
-      result: FP16 11 of 140 sentence runs failed; the other three variants 0 of 140
+      last_checked: '2026-11-07'
+      method: 'Session 52 task rows 9 to 11 (plan 2026-11-06-tts-load-fp16): row 9 receipts C:/Temp/av-kit/s52-smoke-red.txt and s52-smoke-red.json, and row 10 receipts s52-smoke-green.txt and s52-smoke-green.json, from tools/smoke_packaged_tts.py --phase sentences (149 jobs: the 40 sentences in three voices, the first 20 in a fourth, 8 paragraphs and the 96-word passage) on a fresh onedir, offline, on copies outside the checkout; row 11 receipts s52-spike.txt, s52-spike-summary.json and s52-spike-<id>.json from the plan''s fp16-spike.py, offline on the same copies, with E5''s two hashed pins installed into a Temp target'
+      result: 'Row 9, FP16: 12 of 149 jobs failed, each on "generated audio must be finite": the rate probe''s 11 sentences (af_heart #0, #14, #22, #23; am_michael #0, #37; af_bella #24, #33; bf_emma #9, #12, #18) and the passage. Row 10, INT8: 149 of 149 passed. Row 11 stopped at done with no candidate setting: E0, ORT 1.31.1 with defaults, reproduced the 11; E1 ORT_DISABLE_ALL, ORT_ENABLE_BASIC and ORT_ENABLE_EXTENDED failed 15, 16 and 16, each a different set; E2 (ORT 1.24.4, 1.29.0) not run, the wheels aren''t in the offline cache; E3: most style and speed changes near a failing sentence pass; E4 intra_op_num_threads=1 failed 16, a different set, and enable_cpu_mem_arena=False failed E0''s 11; E5 reproduced the failure with every node output exposed, and in all 11 pairs the first non-finite output is /decoder/decoder/generator/Div, whose two inputs are finite, so the FP16 graph divides by a zero or near-zero denominator there. No S5 mark; snapshot 159 files, 0 changes. The FP16 outcome is with Mat (D-239).'
     enrichment:
       questions_asked:
         - 'D-239: Which model does a fresh install preselect while ONNX FP16 fails on some ordinary sentences?'
@@ -4103,3 +4108,69 @@ issues:
               - https://github.com/crdoconnor/strictyaml — a restricted YAML reader is an established pattern, so the reader need not be loosened
           reasoning: The workaround works, so the session buys an end to a failure that otherwise arrives at the end of each of Sessions 50 to 57. Alternatives were reusing D-272 in every session, and fixing it inside Session 49, which would change that plan's goal just before review.
           human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
+  - id: GUI-MODELS-PROBE-LEFTOVER-FILE
+    title: The models-folder write probe leaves its file behind when the write or the access check fails
+    severity: medium
+    component: ui
+    status: resolved
+    discovered: '2026-11-07'
+    root_cause: probeModelsDirWritable (ui/src/main/setup-readiness.ts:101-117) writes .write-probe-<uuid> (:110) into the models folder or, when that folder does not exist yet, into its nearest existing ancestor (D-327, MEU-120), and deletes it only on the success path (:112). If writeFileSync creates the file and then throws, or accessSync fails after the write, the catch returns false without trying to delete it. The gap is inherited from the existing-folder probe; MEU-120 made the ancestor the target, which on a fresh install can be the home folder.
+    blast_radius: 'Measured: the Session 52 execution review, round 1 finding F1 (.agent/context/handoffs/2026-11-06-tts-load-fp16-implementation-critical-review.md), reproduced both cases with scratch fault probes. Never seen in the real app. The readiness answer stays false, which is conservative, and no folder is created; the cost is one small stray file per failed probe, in the models folder or the nearest existing folder above it, possibly the user''s home folder. Not measured: how often a real write fails after creating its file.'
+    verification:
+      last_checked: '2026-11-07'
+      method: 'Session 52 task row C1 receipts C:/Temp/av-kit/s52-c1-red.txt and s52-c1-red-check.txt, and row C2 receipts s52-c2-green.txt, s52-c2-types.txt and s52-c2-lint.txt (plan 2026-11-06-tts-load-fp16): ui/tests/unit/setup-readiness.test.ts, with node:fs mocked so that one writeFileSync or accessSync call fails and every other call runs the real function'
+      result: 'Row C1: 2 failed by assertion and 10 passed; each failing case left one .write-probe-<uuid> file. Row C2: 2 files, 13 tests passed, typecheck and lint clean. AC-120.4 fault: a write that creates the probe and then throws reads false and leaves the folder empty. AC-120.6 fault: an access check that fails after the write reads false and leaves no probe file. AC-120.4 and AC-120.6 still read true with no file left.'
+    resolution_path: 'Fixed in Session 52 on 2026-11-07 on Mat''s D-340 ruling (plan 2026-11-06-tts-load-fp16, MEU-120, D-342): probeModelsDirWritable names the probe path before its try, and when the write or the access check fails it removes the file with rmSync(probe, { force: true }) before returning false. If the unlink itself fails, the answer is still false and the same removal is tried once.'
+    category: TECH-DEBT
+    priority: P3
+    related:
+      - MODELS-DIR-DOCS-AND-PROBE-MISMATCH
+    meu_links: []
+  - id: SMOKE-TTS-WAV-HEADER-TRUSTED
+    title: The packaged TTS smoke takes a WAV's frame count from its header, so a header-only file passes
+    severity: medium
+    component: infrastructure
+    status: resolved
+    discovered: '2026-11-07'
+    root_cause: SENTENCE_SMOKE in tools/smoke_packaged_tts.py reads each Done job's frame count with wave.getnframes() (:357), which reports the header's declared count, and accepts the job when that count is positive (:710). It never checks that the file holds that many frames of PCM data. MEU-121 added this check (AC-121.8).
+    blast_radius: 'Measured: the Session 52 execution review, round 1 finding F2 (.agent/context/handoffs/2026-11-06-tts-load-fp16-implementation-critical-review.md, mechanism task-row-completion-predicate), built a 44-byte WAV declaring 100 frames with no PCM bytes, returned by a synthetic Done job; it gave wav_samples=100 and passed. The review then read every retained WAV from both INT8 runs and found 149 + 149 complete, nonempty payloads, so this session''s smoke evidence stands. Exposure: a later truncated-output or writer regression could pass the smoke. MEU-125 repeats the smoke at the rc.2 gate (D-315).'
+    verification:
+      last_checked: '2026-11-07'
+      method: 'Session 52 task row C3 receipts C:/Temp/av-kit/s52-c3-red.txt and s52-c3-red-check.txt, and row C4 receipts s52-c4-green.txt and s52-c4-lint.txt (plan 2026-11-06-tts-load-fp16): tests/tooling/test_smoke_packaged_tts.py, calling _generate with a fake backend whose Done job returns a crafted WAV in the output folder'
+      result: 'Row C3: 2 failed by assertion, (100, None) != (0, 100), and 1 passed. Row C4: 3 passed, ruff clean. A 44-byte header that declares 100 frames, and the same header with 50 frames of payload, each count 0 samples with wav_declared 100, so the sentences phase refuses the job; a complete 100-frame WAV counts 100.'
+    resolution_path: 'Fixed in Session 52 on 2026-11-07 on Mat''s D-340 ruling (plan 2026-11-06-tts-load-fp16, MEU-121, D-343): _generate reads each WAV''s payload and counts its frames only when the payload holds every frame the header declares, else 0. The sentences phase refuses 0 samples, and the offline phase refuses 8,000 or fewer. wav_declared keeps the header''s count.'
+    category: TECH-DEBT
+    priority: P3
+    related:
+      - TTS-ONNX-FP16-NONFINITE-AUDIO
+    meu_links: []
+  - id: CONSOLE-HOME-SCRUB-SHORT-FORM
+    title: The Console's home-folder scrub misses the 8.3 short form of the home folder
+    severity: low
+    component: core
+    status: open
+    discovered: '2026-11-07'
+    root_cause: scrub_home (packages/core/src/avkit_core/services/health.py:104-117), which console_field runs before its other rules (HOME_SCRUB, D-335, MEU-119), matches the home folder only as Path.home() spells it. Windows can also name the same folder by its 8.3 short form, which keeps the first letters of a long user name, so a path that arrives in that form, such as a tts.models_directory saved that way, reaches the Console and console.log with that part of the user name.
+    blast_radius: Found by Session 52's own review of D-335, recorded at 03-service-layer.md's HOME_SCRUB note and briefed as D-337 (docs/execution/plans/2026-11-06-tts-load-fp16/closeout-decisions.md). Not reproduced on a real install. The long form is scrubbed (AC-119.10); exposure needs a path in short form and a user name long enough to have one. Mat ruled on 2026-11-07 that scrub_home also matches the short form (GetShortPathNameW, cached, Windows only), in a row of its own with a Red, in a later plan.
+    verification:
+      last_checked: '2026-11-07'
+    category: TECH-DEBT
+    priority: P3
+    related:
+      - TTS-FAILED-LOAD-DROPS-MODEL
+    meu_links: []
+  - id: TRACKED-FILES-HOLD-HOME-PATH
+    title: Tracked files name the maintainer's Windows home folder in full, user name included
+    severity: low
+    component: agent
+    status: open
+    discovered: '2026-11-07'
+    root_cause: 'Handoffs, critical reviews, session digests, plan files (mcp-audit-summary.json, baseline and gate comments, a models snapshot), two lines of docs/build-plan/06-gui.md, the git-workflow skill, this register and two UI unit tests write the home folder as the full Windows path rather than as ~. Nothing checks a tracked file for it: the Console scrub (D-335) covers runtime output only.'
+    blast_radius: 'Measured on 2026-11-07 with git grep over the tracked tree, outside .agent/fleet/hub: 56 files, 119 lines. Session 52 adds three lines in two new files, a plan review kept byte for byte and the models snapshot. The repository is public and the old history keeps every earlier instance, so a fix limits new exposure only. Mat ruled on 2026-11-07 that Session 52''s files are committed as they are and the next triage takes this up.'
+    verification:
+      last_checked: '2026-11-07'
+    category: TECH-DEBT
+    priority: P4
+    related:
+      - CONSOLE-HOME-SCRUB-SHORT-FORM
+    meu_links: []

@@ -3114,10 +3114,10 @@ meus:
     anchor: tts-load-keeps-model-residual
     text: Phase 3 §TTS load keeps the current model (residual)
   description: load_model checks the weight path, the device and the runtime before it unloads, so a failed check keeps the current model.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-62, MEU-75, MEU-98
   dependency_parse_status: parsed
@@ -3125,10 +3125,12 @@ meus:
   - MEU-62
   - MEU-75
   - MEU-98
-  execution_plan: null
-  updated: '2026-11-04'
+  execution_plan: docs/execution/plans/2026-11-06-tts-load-fp16/
+  updated: '2026-11-07'
   closed_reason: null
-  note: Registered 2026-11-04 from TTS-FAILED-LOAD-DROPS-MODEL (D-221). Amends the AC-75.9 expectation for a failed check.
+  note: 'Registered 2026-11-04 from TTS-FAILED-LOAD-DROPS-MODEL (D-221). Amends the AC-75.9 expectation for a failed check. Plan 2026-11-06-tts-load-fp16 (Session 52). Approved 2026-11-07: Codex execution
+    review round 1 of 6, intent achieved, no findings on this MEU: a load that fails its weight, device, format or runtime check keeps the loaded model, and the Console shows the home folder as ~, AC-119.1
+    to AC-119.10.'
 - row_key: MEU-120
   id: MEU-120
   slug: gui-models-dir-probe
@@ -3140,19 +3142,21 @@ meus:
     anchor: models-folder-probe-residual
     text: Phase 6 §Models folder probe (residual)
   description: The first-run probe tests the backend's real models folder and stops creating an empty one; a contract test ties the two defaults together.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-23
   dependency_parse_status: parsed
   depends_on:
   - MEU-23
-  execution_plan: null
-  updated: '2026-11-04'
+  execution_plan: docs/execution/plans/2026-11-06-tts-load-fp16/
+  updated: '2026-11-07'
   closed_reason: null
-  note: Registered 2026-11-04 from MODELS-DIR-DOCS-AND-PROBE-MISMATCH (D-222).
+  note: 'Registered 2026-11-04 from MODELS-DIR-DOCS-AND-PROBE-MISMATCH (D-222). Plan 2026-11-06-tts-load-fp16 (Session 52). Approved 2026-11-07: Codex execution review round 1 of 6, intent achieved: the
+    first-run check probes ~/.avkit/models and creates no folder, AC-120.1 to AC-120.6. One non-blocking Medium, F1 (the probe file is left behind when the write or the access check fails), is filed as
+    GUI-MODELS-PROBE-LEFTOVER-FILE and fixed before the commit on Mat''s D-340 ruling (task rows C1 and C2, D-342); the execution review''s round 2 rechecks it.'
 - row_key: MEU-121
   id: MEU-121
   slug: svc-tts-fp16-nonfinite
@@ -3164,10 +3168,10 @@ meus:
     anchor: tts-onnx-fp16-audio-residual
     text: Phase 3 §TTS ONNX FP16 audio (residual)
   description: A fresh install preselects ONNX INT8 rather than FP16, and the cause of FP16's non-finite audio is looked for with a fixed sentence set.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-62, MEU-72, MEU-117
   dependency_parse_status: parsed
@@ -3175,10 +3179,12 @@ meus:
   - MEU-62
   - MEU-72
   - MEU-117
-  execution_plan: null
-  updated: '2026-11-04'
+  execution_plan: docs/execution/plans/2026-11-06-tts-load-fp16/
+  updated: '2026-11-07'
   closed_reason: null
-  note: Registered 2026-11-04 from TTS-ONNX-FP16-NONFINITE-AUDIO (D-239, Mat).
+  note: 'Registered 2026-11-04 from TTS-ONNX-FP16-NONFINITE-AUDIO (D-239, Mat). Plan 2026-11-06-tts-load-fp16 (Session 52). Approved 2026-11-07: Codex execution review round 1 of 6, intent achieved: a fresh
+    install preselects ONNX INT8, and the packaged sentences smoke passes 149 of 149 on INT8 after failing 12 on FP16, AC-121.1 to AC-121.9. The spike places FP16''s first non-finite output at /decoder/decoder/generator/Div;
+    the issue stays open, and its guard is MEU-127 (D-336, Mat). One non-blocking Medium, F2 (the smoke takes a WAV frame count from its header), is filed as SMOKE-TTS-WAV-HEADER-TRUSTED and fixed before the commit on Mat''s D-340 ruling (task rows C3 and C4, D-343); the execution review''s round 2 rechecks it.'
 - row_key: MEU-122
   id: MEU-122
   slug: svc-transcript-metadata
@@ -3311,6 +3317,30 @@ meus:
   updated: '2026-11-04'
   closed_reason: null
   note: Registered 2026-11-04 from LIGHT-ACCENT-BELOW-AA-CONTRAST (D-235, Mat). Own MEU after scoping review F1 (grouping D-249).
+- row_key: MEU-127
+  id: MEU-127
+  slug: svc-tts-fp16-phase-guard
+  phase: '3'
+  band: P2
+  matrix_item: '3.18'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-fp16-phase-guard-residual
+    text: Phase 3 §TTS FP16 phase guard (residual)
+  description: A spike counts FP16's zero denominators at the decoder's phase Div and tries a guarded phase computation on a copy of the graph; what ships comes back to Mat.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-121
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-121
+  execution_plan: null
+  updated: '2026-11-07'
+  closed_reason: null
+  note: Registered 2026-11-07 from TTS-ONNX-FP16-NONFINITE-AUDIO (D-336, Mat), the follow-up to Session 52's spike. Spike first.
 summary_bands:
 - key: P0
   label: P0
@@ -3320,6 +3350,6 @@ summary_bands:
   range: MEU-5–13 (Phases 2–3)
 - key: P2
   label: P2
-  range: MEU-14–126 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
-    triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126)
+  range: MEU-14–127 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+    triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127)
 narrative_sections: []

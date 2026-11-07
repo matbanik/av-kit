@@ -56,6 +56,8 @@ CONSOLE_FIELDS: tuple[str, ...] = (
 )
 #: The most characters a Console field value keeps after it is made single-line.
 FIELD_LIMIT = 300
+#: Whether the home folder matches in any case; Windows paths ignore case (D-335).
+HOME_IGNORES_CASE = sys.platform == "win32"
 #: Lines at these levels always go to console.log, whatever app.log_to_file holds (D-247).
 PERSIST_LEVELS: tuple[str, ...] = ("ERROR", "CRITICAL")
 #: An event with this key true also always goes to console.log. The key is never shown.
@@ -67,6 +69,7 @@ LEVEL_ALIASES: dict[str, str] = {
     "warn": "WARNING",
 }
 _LINE_BREAKS = re.compile(r"[\r\n]+")
+_SEPARATORS = re.compile(r"[\\/]+")
 UoWFactory = Callable[[], UnitOfWork]
 
 
@@ -90,10 +93,37 @@ def redact_message(message: str) -> str:
     return "[REDACTED]"
 
 
+def home_folder() -> str:
+    """The user's home folder, or "" when it cannot be found."""
+    try:
+        return str(Path.home())
+    except RuntimeError:
+        return ""
+
+
+def scrub_home(text: str) -> str:
+    """`text` with the home folder as "~" where it starts a path (`HOME_SCRUB`, D-335).
+
+    Its parts match joined by `\\`, `/` or a doubled `\\\\` (an `OSError` quotes its path that
+    way). A match follows no word character, separator, `.`, `~` or `-`, and is followed by
+    a separator, a quote or the end, so a longer user name or a nested path is kept. A home
+    folder with no separator, such as a bare drive, changes nothing.
+    """
+    home = home_folder().rstrip("\\/")
+    if not _SEPARATORS.search(home):
+        return text
+    parts = [re.escape(part) for part in _SEPARATORS.split(home)]
+    pattern = r"(?<![\w\\/.~-])" + r"(?:\\\\|\\|/)".join(parts) + r"(?=[\\/'\"]|$)"
+    return re.sub(pattern, "~", text, flags=re.IGNORECASE if HOME_IGNORES_CASE else 0)
+
+
 def console_field(value: object) -> str:
-    """`value` as one line, each URL as "[link]", redacted and cut to FIELD_LIMIT."""
+    """`value` as one line, the home folder as "~", each URL as "[link]", redacted and cut.
+
+    The scrub runs before the FIELD_LIMIT cut, so the cut keeps no part of a user name.
+    """
     single = _LINE_BREAKS.sub(" ", str(value))
-    return redact_message(replace_links(single))[:FIELD_LIMIT]
+    return redact_message(replace_links(scrub_home(single)))[:FIELD_LIMIT]
 
 
 class HealthService:

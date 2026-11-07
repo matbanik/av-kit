@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 112** — Active: 39 | Mitigated: 1 | Resolved: 70
+**Total: 116** — Active: 39 | Mitigated: 1 | Resolved: 74
 
 ## Active Issues
 
@@ -16,8 +16,6 @@
 | 🟡 | `TRANSCRIPT-TITLE-IS-VIDEO-ID` | Every transcript's title is its video ID | infrastructure | ⬜ open | 2026-11-03 |
 | 🟡 | `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY` | A download row shows the quality you asked for, not the quality you got | ui | ⬜ open | 2026-11-03 |
 | 🟡 | `FFMPEG-LIBDVDCSS-BUNDLED` | The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses… | infrastructure | ⬜ open | 2026-11-04 |
-| 🟡 | `TTS-FAILED-LOAD-DROPS-MODEL` | A failed model load unloads the model that was working | infrastructure | ⬜ open | 2026-11-04 |
-| 🟡 | `MODELS-DIR-DOCS-AND-PROBE-MISMATCH` | Voice models live in %USERPROFILE%\.avkit\models, but the readiness pro… | ui | ⬜ open | 2026-11-04 |
 | 🟡 | `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH` | Audio extract reads its stream index two ways: AAC from a normal video… | core | ⬜ open | 2026-11-04 |
 | 🟡 | `TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS` | verify --deep and discover report noise, and verify stamps last_checked… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
@@ -48,6 +46,8 @@
 | 🟢 | `GUI-READY-CHUNK-BOUNDARY` | A READY line split across output chunks can be missed, and two READY ch… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `LIGHT-ACCENT-BELOW-AA-CONTRAST` | The light theme's accent colour puts button labels below 4.5:1 contrast | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `INSTALL-FOLDER-NAME-MISMATCH` | The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build pla… | ui | ⬜ open | 2026-11-04 |
+| 🟢 | `CONSOLE-HOME-SCRUB-SHORT-FORM` | The Console's home-folder scrub misses the 8.3 short form of the home f… | core | ⬜ open | 2026-11-07 |
+| 🟢 | `TRACKED-FILES-HOLD-HOME-PATH` | Tracked files name the maintainer's Windows home folder in full, user n… | agent | ⬜ open | 2026-11-07 |
 
 ## Mitigated / Workaround
 
@@ -55,9 +55,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (70)
+## Resolved (74)
 
-70 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+74 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

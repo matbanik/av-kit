@@ -1978,6 +1978,75 @@ archived:
         D-236.'
       human_message_reference: USER_EXPLICIT 2026-11-04 'OK we will go with pythorch remove as you originally suggested'
     decided_by: human
+- id: TTS-FAILED-LOAD-DROPS-MODEL
+  title: A failed model load unloads the model that was working
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-221
+      stage: triage
+      question: How does a failed load keep the current model?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Check weight path, device and runtime before unload_model. No load-before-unload. Test: load A, fail a load of B, status still shows A.'
+      source_tag: Local Canon
+      precedents:
+      - packages/infrastructure/src/avkit_infra/tts/adapter.py:251 — unload runs first today
+      research:
+        engine: none
+        sources: []
+      reasoning: The packaged build is CPU ONNX, so the GPU-memory question in the issue does not arise there. A failure after those checks can still drop the model, and the plan must state that limit.
+        Two-way.
+    decided_by: agent
+- id: MODELS-DIR-DOCS-AND-PROBE-MISMATCH
+  title: Voice models live in %USERPROFILE%\.avkit\models, but the readiness probe and checklist point at %LOCALAPPDATA%\av-kit
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked:
+    - 'D-216: When are the public RC1 notes corrected, given the uncommitted draft with the DUPER results?'
+    answers:
+    - 'D-216: follows D-215; the corrected notes are already published'
+    decision_log:
+    - id: D-216
+      stage: triage
+      question: When are the public RC1 notes corrected, given the uncommitted draft with the DUPER results?
+      resolution: human
+      class: product-preference
+      chosen: Follow D-215. The corrected notes went out on 2026-11-04 from d287c55, before this ruling. The 'your network' wording at docs/releases/v0.1.0-rc.1.md:56-57 waits for the other-network check.
+        D-215 ended with RC1 staying up, so the draft branch does not apply
+      source_tag: Human-approved
+      precedents:
+      - .agent/context/current-focus.md Next steps 1 — Mat decides whether to publish the notes
+      research:
+        engine: none
+        sources: []
+      reasoning: Publishing is outward and Mat's. The live body still says the build has not run on a clean machine and gives the wrong models path. See the Step 8 brief.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+    - id: D-222
+      stage: triage
+      question: Which models folder is right, and what changes?
+      resolution: autonomous
+      class: two-way
+      chosen: The backend default ~/.avkit/models stands. setup-readiness.ts probes that same default and stops creating an empty folder. No files move. A contract test ties the two defaults together.
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/settings.py:67 — the backend default
+      - ui/src/main/setup-readiness.ts:51-52,62,79,90 — the second default and the probe
+      research:
+        engine: none
+        sources: []
+      reasoning: Moving the default would strand files users already hold, 534 MB on the test PC. Two defaults are what drifted, so the test covers the cause. Two-way.
+    decided_by: human
 - id: TRANSCRIPT-FAILED-NO-REASON
   title: 'A failed transcript shows only ''Failed'': the reason is saved but never reaches the API, the page or the log'
   severity: high
@@ -2494,75 +2563,6 @@ actionable:
   category: TECH-DEBT
   priority: P4
   enrichment: null
-- id: TTS-FAILED-LOAD-DROPS-MODEL
-  title: A failed model load unloads the model that was working
-  severity: medium
-  component: infrastructure
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-221
-      stage: triage
-      question: How does a failed load keep the current model?
-      resolution: autonomous
-      class: two-way
-      chosen: 'Check weight path, device and runtime before unload_model. No load-before-unload. Test: load A, fail a load of B, status still shows A.'
-      source_tag: Local Canon
-      precedents:
-      - packages/infrastructure/src/avkit_infra/tts/adapter.py:251 — unload runs first today
-      research:
-        engine: none
-        sources: []
-      reasoning: The packaged build is CPU ONNX, so the GPU-memory question in the issue does not arise there. A failure after those checks can still drop the model, and the plan must state that limit.
-        Two-way.
-    decided_by: agent
-- id: MODELS-DIR-DOCS-AND-PROBE-MISMATCH
-  title: Voice models live in %USERPROFILE%\.avkit\models, but the readiness probe and checklist point at %LOCALAPPDATA%\av-kit
-  severity: medium
-  component: ui
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked:
-    - 'D-216: When are the public RC1 notes corrected, given the uncommitted draft with the DUPER results?'
-    answers:
-    - 'D-216: follows D-215; the corrected notes are already published'
-    decision_log:
-    - id: D-216
-      stage: triage
-      question: When are the public RC1 notes corrected, given the uncommitted draft with the DUPER results?
-      resolution: human
-      class: product-preference
-      chosen: Follow D-215. The corrected notes went out on 2026-11-04 from d287c55, before this ruling. The 'your network' wording at docs/releases/v0.1.0-rc.1.md:56-57 waits for the other-network check.
-        D-215 ended with RC1 staying up, so the draft branch does not apply
-      source_tag: Human-approved
-      precedents:
-      - .agent/context/current-focus.md Next steps 1 — Mat decides whether to publish the notes
-      research:
-        engine: none
-        sources: []
-      reasoning: Publishing is outward and Mat's. The live body still says the build has not run on a clean machine and gives the wrong models path. See the Step 8 brief.
-      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
-    - id: D-222
-      stage: triage
-      question: Which models folder is right, and what changes?
-      resolution: autonomous
-      class: two-way
-      chosen: The backend default ~/.avkit/models stands. setup-readiness.ts probes that same default and stops creating an empty folder. No files move. A contract test ties the two defaults together.
-      source_tag: Local Canon
-      precedents:
-      - packages/core/src/avkit_core/services/settings.py:67 — the backend default
-      - ui/src/main/setup-readiness.ts:51-52,62,79,90 — the second default and the probe
-      research:
-        engine: none
-        sources: []
-      reasoning: Moving the default would strand files users already hold, 534 MB on the test PC. Two defaults are what drifted, so the test covers the cause. Two-way.
-    decided_by: human
 - id: CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
   title: 'Audio extract reads its stream index two ways: AAC from a normal video comes out as .mka, and All audio streams targets the wrong tracks'
   severity: medium
@@ -2924,15 +2924,14 @@ deferred:
         kokoro pin. This is not legal advice. See the brief.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
 proposed_batches:
-- slug: infrastructure-transcript-title-is-video-id-tts-failed-load-drops-model-tts-onnx-fp16-nonfinite-audio
+- slug: infrastructure-transcript-title-is-video-id-tts-onnx-fp16-nonfinite-audio
   issues:
   - TRANSCRIPT-TITLE-IS-VIDEO-ID
-  - TTS-FAILED-LOAD-DROPS-MODEL
   - TTS-ONNX-FP16-NONFINITE-AUDIO
   component: infrastructure
   priority_band: P2
   complexity: M
-  has_duplicates: true
+  has_duplicates: false
 - slug: core-transcript-channel-is-playlist-name-convert-extract-stream-index-mismatch
   issues:
   - TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME
@@ -2941,11 +2940,10 @@ proposed_batches:
   priority_band: P3
   complexity: M
   has_duplicates: false
-- slug: ui-download-row-shows-requested-quality-models-dir-docs-and-probe-mismatch
+- slug: ui-download-row-shows-requested-quality
   issues:
   - DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
-  - MODELS-DIR-DOCS-AND-PROBE-MISMATCH
   component: ui
   priority_band: P3
-  complexity: M
+  complexity: S
   has_duplicates: false

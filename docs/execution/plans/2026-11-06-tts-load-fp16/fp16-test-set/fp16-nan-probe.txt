@@ -1,0 +1,37 @@
+onnxruntime 1.31.1 | chunks [489] | sentence lengths [54, 66, 95, 118, 96, 55]
+
+--- fp16 app path | 163,234,740 B | sha256 ba4527a874b42b21 | style input type ['tensor(float)']
+chunks[0] tokens 489 | samples  623400 | bad per run [623400, 623400, 623400] | repeatable True first bad sample 0
+sentences[0] tokens  54 | samples   82800 | bad per run [0, 0, 0] | repeatable True 
+sentences[1] tokens  66 | samples  101400 | bad per run [0, 0, 0] | repeatable True 
+sentences[2] tokens  95 | samples  136200 | bad per run [136200, 136200, 136200] | repeatable True first bad sample 0
+sentences[3] tokens 118 | samples  162000 | bad per run [0, 0, 0] | repeatable True 
+sentences[4] tokens  96 | samples  141000 | bad per run [141000, 141000, 141000] | repeatable True first bad sample 0
+sentences[5] tokens  55 | samples   82800 | bad per run [0, 0, 0] | repeatable True 
+
+--- fp16 old path | 163,227,585 B | sha256 fe5c2134605431ee | style input type ['tensor(float)']
+chunks[0] tokens 489 | samples  652200 | bad per run [0, 0, 0] | repeatable True 
+sentences[0] tokens  54 | samples   86400 | bad per run [0, 0, 0] | repeatable True 
+sentences[1] tokens  66 | samples  121800 | bad per run [0, 0, 0] | repeatable True 
+sentences[2] tokens  95 | samples  148200 | bad per run [148200, 148200, 148200] | repeatable True first bad sample 0
+sentences[3] tokens 118 | samples  178200 | bad per run [0, 0, 0] | repeatable True 
+sentences[4] tokens  96 | samples  156600 | bad per run [156600, 156600, 156600] | repeatable True first bad sample 0
+sentences[5] tokens  55 | samples   93000 | bad per run [0, 0, 0] | repeatable True 
+
+--- fp32 old path | 325,525,037 B | sha256 53a71ac22a70778d | style input type ['tensor(float)']
+chunks[0] tokens 489 | samples  650400 | bad per run [0, 0, 0] | repeatable True 
+sentences[0] tokens  54 | samples   86400 | bad per run [0, 0, 0] | repeatable True 
+sentences[1] tokens  66 | samples  121800 | bad per run [0, 0, 0] | repeatable True 
+sentences[2] tokens  95 | samples  148200 | bad per run [0, 0, 0] | repeatable True 
+sentences[3] tokens 118 | samples  176400 | bad per run [0, 0, 0] | repeatable True 
+sentences[4] tokens  96 | samples  156600 | bad per run [0, 0, 0] | repeatable True 
+sentences[5] tokens  55 | samples   93000 | bad per run [0, 0, 0] | repeatable True 
+
+--- int8 old path | 92,360,543 B | sha256 0d55b15d4b735d61 | style input type ['tensor(float)']
+chunks[0] tokens 489 | samples  658200 | bad per run [0, 0, 0] | repeatable True 
+sentences[0] tokens  54 | samples   85200 | bad per run [0, 0, 0] | repeatable True 
+sentences[1] tokens  66 | samples  121800 | bad per run [0, 0, 0] | repeatable True 
+sentences[2] tokens  95 | samples  146400 | bad per run [0, 0, 0] | repeatable True 
+sentences[3] tokens 118 | samples  188400 | bad per run [0, 0, 0] | repeatable True 
+sentences[4] tokens  96 | samples  159600 | bad per run [0, 0, 0] | repeatable True 
+sentences[5] tokens  55 | samples   93600 | bad per run [0, 0, 0] | repeatable True 

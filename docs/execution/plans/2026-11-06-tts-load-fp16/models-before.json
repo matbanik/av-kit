@@ -1,0 +1,641 @@
+{
+ "root": "C:\\Users\\Mat\\.avkit\\models",
+ "files": {
+  ".cache/huggingface/.gitignore": [
+   1,
+   1787268327870970500
+  ],
+  ".cache/huggingface/CACHEDIR.TAG": [
+   195,
+   1787268327870970500
+  ],
+  ".cache/huggingface/download/config.json.metadata": [
+   102,
+   1790821140538140200
+  ],
+  ".cache/huggingface/download/kokoro-v1_0.pth.metadata": [
+   128,
+   1787268345674384400
+  ],
+  ".cache/huggingface/download/onnx/model.onnx.metadata": [
+   127,
+   1787268334322264000
+  ],
+  ".cache/huggingface/download/onnx/model_fp16.onnx.metadata": [
+   128,
+   1787368772012515400
+  ],
+  ".cache/huggingface/download/onnx/model_quantized.onnx.metadata": [
+   128,
+   1790772035377056600
+  ],
+  "config.json": [
+   2351,
+   1790821140536635100
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/.gitignore": [
+   1,
+   1792206323270037800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/CACHEDIR.TAG": [
+   195,
+   1792206323270037800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/onnx/model_fp16.onnx.metadata": [
+   128,
+   1792206326837880400
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_alloy.bin.metadata": [
+   127,
+   1792206327605616200
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_aoede.bin.metadata": [
+   128,
+   1792206327984651900
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_bella.bin.metadata": [
+   128,
+   1792206328317499800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_heart.bin.metadata": [
+   127,
+   1792206327239746000
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_jessica.bin.metadata": [
+   127,
+   1792206328777837000
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_kore.bin.metadata": [
+   127,
+   1792206329233782100
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_nicole.bin.metadata": [
+   128,
+   1792206329555349100
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_nova.bin.metadata": [
+   128,
+   1792206329907202200
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_river.bin.metadata": [
+   126,
+   1792206330287470100
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_sarah.bin.metadata": [
+   128,
+   1792206330634329100
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/af_sky.bin.metadata": [
+   128,
+   1792206330978621100
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/am_adam.bin.metadata": [
+   128,
+   1792206331417448800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/am_echo.bin.metadata": [
+   128,
+   1792206331799902400
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/am_eric.bin.metadata": [
+   128,
+   1792206332182565100
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/am_fenrir.bin.metadata": [
+   128,
+   1792206332574294600
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/am_liam.bin.metadata": [
+   128,
+   1792206332978991600
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/am_michael.bin.metadata": [
+   128,
+   1792206333390721800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/am_onyx.bin.metadata": [
+   128,
+   1792206333789221300
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/am_puck.bin.metadata": [
+   128,
+   1792206334129710400
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/am_santa.bin.metadata": [
+   128,
+   1792206334549488300
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/bf_alice.bin.metadata": [
+   128,
+   1792206334909423400
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/bf_emma.bin.metadata": [
+   128,
+   1792206335252365900
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/bf_isabella.bin.metadata": [
+   126,
+   1792206335642289800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/bf_lily.bin.metadata": [
+   128,
+   1792206336051402300
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/bm_daniel.bin.metadata": [
+   128,
+   1792206336398054600
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/bm_fable.bin.metadata": [
+   128,
+   1792206336798119800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/bm_george.bin.metadata": [
+   127,
+   1792206337160273200
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/bm_lewis.bin.metadata": [
+   126,
+   1792206337537070100
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/ef_dora.bin.metadata": [
+   128,
+   1792206343141029400
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/em_alex.bin.metadata": [
+   127,
+   1792206343524988800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/em_santa.bin.metadata": [
+   128,
+   1792206343889534700
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/ff_siwis.bin.metadata": [
+   127,
+   1792206344256566000
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/hf_alpha.bin.metadata": [
+   128,
+   1792206344602636700
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/hf_beta.bin.metadata": [
+   128,
+   1792206345031529400
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/hm_omega.bin.metadata": [
+   128,
+   1792206345400588700
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/hm_psi.bin.metadata": [
+   128,
+   1792206345791283200
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/if_sara.bin.metadata": [
+   128,
+   1792206346168121800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/im_nicola.bin.metadata": [
+   127,
+   1792206346598505900
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/jf_alpha.bin.metadata": [
+   128,
+   1792206337963319500
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/jf_gongitsune.bin.metadata": [
+   128,
+   1792206338320482700
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/jf_nezumi.bin.metadata": [
+   127,
+   1792206338751367200
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/jf_tebukuro.bin.metadata": [
+   128,
+   1792206339116892400
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/jm_kumo.bin.metadata": [
+   127,
+   1792206339483850900
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/pf_dora.bin.metadata": [
+   128,
+   1792206346958802200
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/pm_alex.bin.metadata": [
+   127,
+   1792206347321296800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/pm_santa.bin.metadata": [
+   128,
+   1792206347818318900
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/zf_xiaobei.bin.metadata": [
+   128,
+   1792206339877190000
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/zf_xiaoni.bin.metadata": [
+   128,
+   1792206340352370300
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/zf_xiaoxiao.bin.metadata": [
+   128,
+   1792206340744815500
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/zf_xiaoyi.bin.metadata": [
+   128,
+   1792206341224792500
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/zm_yunjian.bin.metadata": [
+   128,
+   1792206341631081400
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/zm_yunxi.bin.metadata": [
+   127,
+   1792206342030905200
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/zm_yunxia.bin.metadata": [
+   127,
+   1792206342410904800
+  ],
+  "kokoro-v1.0-onnx/.cache/huggingface/download/voices/zm_yunyang.bin.metadata": [
+   128,
+   1792206342792641400
+  ],
+  "kokoro-v1.0-onnx/onnx/model_fp16.onnx": [
+   163234740,
+   1792206326833863700
+  ],
+  "kokoro-v1.0-onnx/voices/af_alloy.bin": [
+   522240,
+   1792206327602843800
+  ],
+  "kokoro-v1.0-onnx/voices/af_aoede.bin": [
+   522240,
+   1792206327982114000
+  ],
+  "kokoro-v1.0-onnx/voices/af_bella.bin": [
+   522240,
+   1792206328315497500
+  ],
+  "kokoro-v1.0-onnx/voices/af_heart.bin": [
+   522240,
+   1792206327237234800
+  ],
+  "kokoro-v1.0-onnx/voices/af_jessica.bin": [
+   522240,
+   1792206328775335200
+  ],
+  "kokoro-v1.0-onnx/voices/af_kore.bin": [
+   522240,
+   1792206329230262200
+  ],
+  "kokoro-v1.0-onnx/voices/af_nicole.bin": [
+   522240,
+   1792206329552347700
+  ],
+  "kokoro-v1.0-onnx/voices/af_nova.bin": [
+   522240,
+   1792206329905199200
+  ],
+  "kokoro-v1.0-onnx/voices/af_river.bin": [
+   522240,
+   1792206330284449200
+  ],
+  "kokoro-v1.0-onnx/voices/af_sarah.bin": [
+   522240,
+   1792206330631814200
+  ],
+  "kokoro-v1.0-onnx/voices/af_sky.bin": [
+   522240,
+   1792206330976335800
+  ],
+  "kokoro-v1.0-onnx/voices/am_adam.bin": [
+   522240,
+   1792206331414445200
+  ],
+  "kokoro-v1.0-onnx/voices/am_echo.bin": [
+   522240,
+   1792206331797890800
+  ],
+  "kokoro-v1.0-onnx/voices/am_eric.bin": [
+   522240,
+   1792206332178554700
+  ],
+  "kokoro-v1.0-onnx/voices/am_fenrir.bin": [
+   522240,
+   1792206332571776100
+  ],
+  "kokoro-v1.0-onnx/voices/am_liam.bin": [
+   522240,
+   1792206332976988900
+  ],
+  "kokoro-v1.0-onnx/voices/am_michael.bin": [
+   522240,
+   1792206333387718000
+  ],
+  "kokoro-v1.0-onnx/voices/am_onyx.bin": [
+   522240,
+   1792206333786711000
+  ],
+  "kokoro-v1.0-onnx/voices/am_puck.bin": [
+   522240,
+   1792206334127708000
+  ],
+  "kokoro-v1.0-onnx/voices/am_santa.bin": [
+   522240,
+   1792206334547487800
+  ],
+  "kokoro-v1.0-onnx/voices/bf_alice.bin": [
+   522240,
+   1792206334905847400
+  ],
+  "kokoro-v1.0-onnx/voices/bf_emma.bin": [
+   522240,
+   1792206335250262600
+  ],
+  "kokoro-v1.0-onnx/voices/bf_isabella.bin": [
+   522240,
+   1792206335639784200
+  ],
+  "kokoro-v1.0-onnx/voices/bf_lily.bin": [
+   522240,
+   1792206336049402300
+  ],
+  "kokoro-v1.0-onnx/voices/bm_daniel.bin": [
+   522240,
+   1792206336396057200
+  ],
+  "kokoro-v1.0-onnx/voices/bm_fable.bin": [
+   522240,
+   1792206336796118600
+  ],
+  "kokoro-v1.0-onnx/voices/bm_george.bin": [
+   522240,
+   1792206337158742200
+  ],
+  "kokoro-v1.0-onnx/voices/bm_lewis.bin": [
+   522240,
+   1792206337535063000
+  ],
+  "kokoro-v1.0-onnx/voices/ef_dora.bin": [
+   522240,
+   1792206343139013900
+  ],
+  "kokoro-v1.0-onnx/voices/em_alex.bin": [
+   522240,
+   1792206343521460000
+  ],
+  "kokoro-v1.0-onnx/voices/em_santa.bin": [
+   522240,
+   1792206343887535000
+  ],
+  "kokoro-v1.0-onnx/voices/ff_siwis.bin": [
+   522240,
+   1792206344254065300
+  ],
+  "kokoro-v1.0-onnx/voices/hf_alpha.bin": [
+   522240,
+   1792206344600620800
+  ],
+  "kokoro-v1.0-onnx/voices/hf_beta.bin": [
+   522240,
+   1792206345029026900
+  ],
+  "kokoro-v1.0-onnx/voices/hm_omega.bin": [
+   522240,
+   1792206345399080700
+  ],
+  "kokoro-v1.0-onnx/voices/hm_psi.bin": [
+   522240,
+   1792206345788763600
+  ],
+  "kokoro-v1.0-onnx/voices/if_sara.bin": [
+   522240,
+   1792206346165616500
+  ],
+  "kokoro-v1.0-onnx/voices/im_nicola.bin": [
+   522240,
+   1792206346595972400
+  ],
+  "kokoro-v1.0-onnx/voices/jf_alpha.bin": [
+   522240,
+   1792206337961260700
+  ],
+  "kokoro-v1.0-onnx/voices/jf_gongitsune.bin": [
+   522240,
+   1792206338316974400
+  ],
+  "kokoro-v1.0-onnx/voices/jf_nezumi.bin": [
+   522240,
+   1792206338748267700
+  ],
+  "kokoro-v1.0-onnx/voices/jf_tebukuro.bin": [
+   522240,
+   1792206339113887200
+  ],
+  "kokoro-v1.0-onnx/voices/jm_kumo.bin": [
+   522240,
+   1792206339481342500
+  ],
+  "kokoro-v1.0-onnx/voices/pf_dora.bin": [
+   522240,
+   1792206346956794100
+  ],
+  "kokoro-v1.0-onnx/voices/pm_alex.bin": [
+   522240,
+   1792206347319296400
+  ],
+  "kokoro-v1.0-onnx/voices/pm_santa.bin": [
+   522240,
+   1792206347815319300
+  ],
+  "kokoro-v1.0-onnx/voices/zf_xiaobei.bin": [
+   522240,
+   1792206339872673800
+  ],
+  "kokoro-v1.0-onnx/voices/zf_xiaoni.bin": [
+   522240,
+   1792206340349369900
+  ],
+  "kokoro-v1.0-onnx/voices/zf_xiaoxiao.bin": [
+   522240,
+   1792206340742301700
+  ],
+  "kokoro-v1.0-onnx/voices/zf_xiaoyi.bin": [
+   522240,
+   1792206341222790500
+  ],
+  "kokoro-v1.0-onnx/voices/zm_yunjian.bin": [
+   522240,
+   1792206341629077800
+  ],
+  "kokoro-v1.0-onnx/voices/zm_yunxi.bin": [
+   522240,
+   1792206342026866300
+  ],
+  "kokoro-v1.0-onnx/voices/zm_yunxia.bin": [
+   522240,
+   1792206342407397900
+  ],
+  "kokoro-v1.0-onnx/voices/zm_yunyang.bin": [
+   522240,
+   1792206342790624200
+  ],
+  "kokoro-v1_0.pth": [
+   327212226,
+   1787268345673382800
+  ],
+  "onnx/model.onnx": [
+   325525037,
+   1787268334312730400
+  ],
+  "onnx/model_fp16.onnx": [
+   163227585,
+   1787368772004493300
+  ],
+  "onnx/model_quantized.onnx": [
+   92360543,
+   1790772035369052000
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/__init__.py": [
+   237,
+   1790821144618100700
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/accuracy.json": [
+   6341,
+   1790821144622107600
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/attribute_ruler/patterns": [
+   14735,
+   1790821144625195100
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/config.cfg": [
+   5527,
+   1790821144623107000
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/lemmatizer/lookups/lookups.bin": [
+   972893,
+   1790821144629209700
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/LICENSE": [
+   1056,
+   1790821144620107400
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/LICENSES_SOURCES": [
+   2347,
+   1790821144620107400
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/meta.json": [
+   10106,
+   1790821144624104600
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/ner/cfg": [
+   221,
+   1790821144629716100
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/ner/model": [
+   6154601,
+   1790821144648887500
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/ner/moves": [
+   1064,
+   1790821144649890500
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/parser/cfg": [
+   222,
+   1790821144650891300
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/parser/model": [
+   319909,
+   1790821144651891100
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/parser/moves": [
+   1571,
+   1790821144652890200
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/README.md": [
+   2587,
+   1790821144621108300
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/senter/cfg": [
+   23,
+   1790821144652890200
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/senter/model": [
+   197089,
+   1790821144654396900
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/tagger/cfg": [
+   615,
+   1790821144655403600
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/tagger/model": [
+   19829,
+   1790821144655403600
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/tok2vec/cfg": [
+   4,
+   1790821144656402400
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/tok2vec/model": [
+   6269370,
+   1790821144675812700
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/tokenizer": [
+   77066,
+   1790821144624104600
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/vocab/key2row": [
+   1,
+   1790821144676811100
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/vocab/lookups.bin": [
+   70040,
+   1790821144676811100
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/vocab/strings.json": [
+   1103983,
+   1790821144681317600
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/vocab/vectors": [
+   128,
+   1790821144682318600
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/en_core_web_sm-3.8.0/vocab/vectors.cfg": [
+   22,
+   1790821144682318600
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm/meta.json": [
+   10106,
+   1790821144619107900
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.dist-info/entry_points.txt": [
+   47,
+   1790821144686825800
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.dist-info/LICENSE": [
+   1056,
+   1790821144683316800
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.dist-info/LICENSES_SOURCES": [
+   2347,
+   1790821144683316800
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.dist-info/METADATA": [
+   2922,
+   1790821144684819100
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.dist-info/RECORD": [
+   3547,
+   1790821144687824000
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.dist-info/top_level.txt": [
+   15,
+   1790821144686825800
+  ],
+  "spacy/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0.dist-info/WHEEL": [
+   91,
+   1790821144685823500
+  ]
+ }
+}

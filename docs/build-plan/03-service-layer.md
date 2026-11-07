@@ -624,6 +624,16 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Open for the plan | `test_ac_75_9_engine_import_failure_is_model_load_error_neg` (`:735-752`) asserts nothing is loaded after an engine import fails. If the runtime check above moves those imports before the unload, that test conflicts with Failed check. The review's approval doesn't cover it, so the plan names how it's handled and takes that to independent review or Mat before changing it. | Local Canon: AGENTS; grouping scoping review, round 1 |
 | Tests | Unit: load A, then fail B on the missing weight, the failing probe and the missing runtime, with status showing A each time and no unload called; a constructor failure still reads unloaded; a contract test for `/models/load` then `/models/status`. | Local Canon |
 
+> **Delivered (Session 52).**
+> - `LOAD_CHECKS`: `load_model` runs the weight check, the device probe, the format check and the runtime check before `unload_model` (`tts/adapter.py:302-331`, the unload at `:332`). The runtime check reads MEU-117's `runtime_present` memo (D-322). A runtime probe that raises logs only its class and raises "TTS runtime probe failed" (D-323).
+> - `LOAD_KEEPS`: a load that fails one of `LOAD_CHECKS` leaves A loaded on its device. AC-119.1 to AC-119.5 pin it for each check, AC-119.6 pins one runtime probe per load, and AC-119.9 pins it over `/models/load` then `/models/status` (`tests/e2e/test_api_model_load_keeps.py`).
+> - The D-221 limit: a failure after the unload, while the model or session is built, still leaves nothing loaded on `cpu` (AC-119.7, AC-119.8). The docstring says so (`adapter.py:289-294`, D-325).
+> - The amended test: `test_ac_75_9_raising_probe_or_vocab_is_model_load_error_neg` now asserts A still loaded on `cuda` (`tests/integration/test_tts_device_resolution.py:647`). Its `ModelLoadError`, cause, logging and path assertions stay, and the vocab half (`:649-661`) is unchanged.
+> - D-324 A′: `test_ac_75_9_engine_import_failure_is_model_load_error_neg` and `test_ac_98_5_kokoro_import_logs` pass a runtime probe that says yes (`:749`, `:865`). That is setup only: every assertion stays, and the two tests pin the import failure after the unload.
+> - `HOME_SCRUB` (D-335): `console_field` replaces the home folder with `~` before the link, redaction and length rules (`services/health.py:96-126`), so the missing-weight `detail` reads `~\.avkit\models\…`. The six log sites and AC-115.9 are unchanged (AC-119.10). An 8.3 short form of the home folder isn't matched, so a `tts.models_directory` saved in that form reaches `detail` as saved. Mat ruled that the short form is matched in a row of its own with a Red, in a later plan (D-337, 2026-11-07); it is filed as `CONSOLE-HOME-SCRUB-SHORT-FORM`.
+> - The registered text above cites the 2026-11-04 tree. At `b6c3895` the unload was at `adapter.py:299` and the docstring at `:289-291`; the tests were at `:620-643` (amended), `:645-657` (the vocab half) and `:738-756` (the open test).
+> - AC-119.1 to AC-119.10. Plan `docs/execution/plans/2026-11-06-tts-load-fp16/`.
+
 <a id="tts-onnx-fp16-audio-residual"></a>
 
 ## TTS ONNX FP16 audio (residual)
@@ -640,6 +650,16 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Done | The preselected model generates the 40 test sentences and the 96-word passage on a packaged build with no failure, and the cause or the outcome for FP16 is recorded. | Human-approved: triage D-239 |
 | Tests | Renderer unit for `defaultModelSelection`, with nothing downloaded and with several rows downloaded; the packaged check above. | Local Canon |
 
+> **Delivered (Session 52).**
+> - `PRESELECT_ORDER` is `['kokoro-onnx-int8', 'kokoro-onnx-fp32']` (`ui/src/renderer/src/features/tts/tts-controls.ts:108`). `defaultModelSelection` (`:118`) ranks the runnable rows by it for the first-downloaded and first-row fallbacks (`:132`), so a fresh install preselects INT8 (AC-121.1 to AC-121.5, and AC-121.6 on the built app). FP16 is still offered, and a fresh install keeps it when it is the only downloaded row (D-330).
+> - The listening check: Mat chose INT8 after hearing the sample (D-331, 2026-11-07).
+> - `SENTENCE_SMOKE` (`tools/smoke_packaged_tts.py --phase sentences`), on a fresh onedir: FP16 failed 12 of 149 jobs, every one on "generated audio must be finite". They were the rate probe's 11 sentences and the 96-word passage (AC-121.7). INT8 passed all 149 (AC-121.8).
+> - The spike (`fp16-spike.py`, AC-121.9) stopped at `done`. No setting it tried stopped the failures. ORT 1.31.1 with default settings reproduced the probe's 11 failures (E0). Each graph optimization level (E1: 15, 16 and 16 failures) and a single intra-op thread (E4: 16) changed which pairs failed, but some still failed each time. Turning off the memory arena (E4) gave E0's 11. E2 (ORT 1.24.4 and 1.29.0) didn't run, because those wheels aren't in the offline cache. E3 tried small style and speed changes around each failing sentence, and most of them passed. E5 found where every failing pair first goes non-finite: the output of `/decoder/decoder/generator/Div`, whose two inputs are both finite. So FP16 divides by a zero or near-zero denominator there. What happens to FP16 is Mat's decision (D-239).
+> - D-336 (Mat, 2026-11-07): FP16 stays as shipped, offered and never preselected while INT8 or FP32 can run, and `TTS-ONNX-FP16-NONFINITE-AUDIO` stays open. The guarded phase computation is MEU-127, spike first.
+> - Review round 1 F2 (D-340, D-343): the sentences smoke counts a WAV's frames only when its payload holds every frame the header declares (`tools/smoke_packaged_tts.py:357-365`), so a header-only or truncated file fails AC-121.8. `tests/tooling/test_smoke_packaged_tts.py` covers both and a complete file.
+> - The registered text above cites the 2026-11-04 tree. At `b6c3895`, `_as_float32_pcm` was at `adapter.py:179-192` and the catalog-order fallback at `tts-controls.ts:104-125`.
+> - AC-121.1 to AC-121.9. Plan `docs/execution/plans/2026-11-06-tts-load-fp16/`.
+
 <a id="transcript-source-metadata-residual"></a>
 
 ## Transcript source metadata (residual)
@@ -653,6 +673,20 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Channel name | `channel_name` comes from the same enumeration, falling back to today's title. | Local Canon: triage D-224 |
 | Slug | The existing output folder slug stays unchanged. | Local Canon: triage D-224 |
 | Tests | Unit with fake enumeration output: titles are stored and reach the files and the compiled headings; a missing title falls back to the ID; a missing channel falls back to today's title; the slug is unchanged; the fake counts no extra request. | Local Canon |
+
+<a id="tts-fp16-phase-guard-residual"></a>
+
+## TTS FP16 phase guard (residual)
+
+> **MEU-127.** Registered 2026-11-07 from `TTS-ONNX-FP16-NONFINITE-AUDIO` on Mat's D-336 ruling (Session 52). In Session 52's spike (E5), every failing FP16 pair first went non-finite at the output of `/decoder/decoder/generator/Div`, whose two inputs were finite. That node is the exported `atan2` of the phase, `Div(imag, real)`, so in FP16 `real` reaches zero or near zero there. FP32 and INT8 don't fail.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Spike first | A spike counts the zero and near-zero denominators at that node on the failing pairs, patches the phase computation in a copy of the FP16 graph so it no longer divides by them, reruns the 149 `--phase sentences` jobs on the patched graph, and Mat listens to its output. | Human-approved: D-336 |
+| FP16 stays | Until then FP16 stays as shipped: offered, never preselected while INT8 or FP32 can run (D-330, D-331). | Human-approved: D-336 |
+| Upstream | Nothing is posted to the model's Hugging Face discussion. | Human-approved: D-336 |
+| Outcome | What ships, a patched graph or nothing, comes back to Mat with the spike's counts. | Human-approved: D-336 |
+| Tests | The packaged `--phase sentences` smoke on the patched FP16 graph, 149 jobs, each WAV with its full payload (AC-121.8). | Local Canon |
 
 ## What this layer must not do
 

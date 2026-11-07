@@ -1,0 +1,76 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+pinned onnx-community/Kokoro-82M-v1.0-ONNX 1939ad2a8e416c0acfeecc08a694d14ef25f2231
+  onnx/model.onnx 325,532,232 B 5.5 s
+  onnx/model_quantized.onnx 92,361,116 B 2.3 s
+P:\av-kit\.venv\Lib\site-packages\torch\jit\_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+sentences 40 tokens 33 to 125 | paragraphs 8
+P:\av-kit\.venv\Lib\site-packages\torch\nn\modules\rnn.py:1011: UserWarning: dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1, but got dropout=0.2 and num_layers=1
+  super().__init__("LSTM", *args, **kwargs)
+P:\av-kit\.venv\Lib\site-packages\torch\nn\utils\weight_norm.py:145: FutureWarning: `torch.nn.utils.weight_norm` is deprecated in favor of `torch.nn.utils.parametrizations.weight_norm`.
+  WeightNorm.apply(module, name, dim)
+
+variant | voice | sentences failing | speech s | failing token counts
+2026-11-04 17:35:59 [info     ] tts.load_model                 device=cpu module=tts variant_id=kokoro-pt-fp32
+kokoro-pt-fp32 | af_heart | 0/40 | 207.8 | []
+kokoro-pt-fp32 | am_michael | 0/40 | 235.0 | []
+kokoro-pt-fp32 | af_bella | 0/40 | 221.9 | []
+kokoro-pt-fp32 | af_heart paragraphs | 0/8 failing
+2026-11-04 17:37:19 [info     ] tts.load_model                 device=cpu module=tts variant_id=kokoro-pt-fp32
+kokoro-pt-fp32 | bf_emma | 0/20 failing
+2026-11-04 17:37:28 [info     ] tts.load_model                 device=cpu module=tts variant_id=kokoro-onnx-fp32
+kokoro-onnx-fp32 | af_heart | 0/40 | 207.8 | []
+kokoro-onnx-fp32 | am_michael | 0/40 | 235.0 | []
+kokoro-onnx-fp32 | af_bella | 0/40 | 221.9 | []
+kokoro-onnx-fp32 | af_heart paragraphs | 0/8 failing
+2026-11-04 17:39:08 [info     ] tts.load_model                 device=cpu module=tts variant_id=kokoro-onnx-fp32
+kokoro-onnx-fp32 | bf_emma | 0/20 failing
+2026-11-04 17:39:20 [info     ] tts.load_model                 device=cpu module=tts variant_id=kokoro-onnx-fp16
+kokoro-onnx-fp16 | af_heart | 4/40 | 187.9 | [53, 80, 93, 102]
+kokoro-onnx-fp16 | am_michael | 2/40 | 222.7 | [53, 119]
+kokoro-onnx-fp16 | af_bella | 2/40 | 211.8 | [100, 53]
+kokoro-onnx-fp16 | af_heart paragraphs | 0/8 failing
+2026-11-04 17:41:01 [info     ] tts.load_model                 device=cpu module=tts variant_id=kokoro-onnx-fp16
+kokoro-onnx-fp16 | bf_emma | 3/20 failing
+2026-11-04 17:41:12 [info     ] tts.load_model                 device=cpu module=tts variant_id=kokoro-onnx-int8
+kokoro-onnx-int8 | af_heart | 0/40 | 207.8 | []
+kokoro-onnx-int8 | am_michael | 0/40 | 235.1 | []
+kokoro-onnx-int8 | af_bella | 0/40 | 221.8 | []
+kokoro-onnx-int8 | af_heart paragraphs | 0/8 failing
+2026-11-04 17:42:50 [info     ] tts.load_model                 device=cpu module=tts variant_id=kokoro-onnx-int8
+kokoro-onnx-int8 | bf_emma | 0/20 failing
+
+timing in a fresh process per variant, on sentences every variant finished
+kokoro-pt-fp32     file  327 MB | import 0.0 s | load 3.00 s | gen 0.97 s | speech 12.57 s | 13.0x real | peak 1328 MB | all runs gen [0.97, 0.96, 1.11]
+kokoro-onnx-fp32   file  326 MB | import 0.0 s | load 0.67 s | gen 1.43 s | speech 12.57 s | 8.8x real | peak 817 MB | all runs gen [1.43, 1.43, 1.42]
+TIME FAILED kokoro-onnx-fp16 79, in generate
+    pieces.append(self._onnx_chunk(chunk, voice, speed, session))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "P:\av-kit\packages\infrastructure\src\avkit_infra\tts\adapter.py", line 441, in _onnx_chunk
+    return _as_float32_pcm(outputs[0] if outputs else [])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "P:\av-kit\packages\infrastructure\src\avkit_infra\tts\adapter.py", line 160, in _as_float32_pcm
+    raise ValidationError("generated audio must be finite")
+avkit_core.domain.errors.ValidationError: generated audio must be finite
+
+TIME FAILED kokoro-onnx-fp16 79, in generate
+    pieces.append(self._onnx_chunk(chunk, voice, speed, session))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "P:\av-kit\packages\infrastructure\src\avkit_infra\tts\adapter.py", line 441, in _onnx_chunk
+    return _as_float32_pcm(outputs[0] if outputs else [])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "P:\av-kit\packages\infrastructure\src\avkit_infra\tts\adapter.py", line 160, in _as_float32_pcm
+    raise ValidationError("generated audio must be finite")
+avkit_core.domain.errors.ValidationError: generated audio must be finite
+
+TIME FAILED kokoro-onnx-fp16 79, in generate
+    pieces.append(self._onnx_chunk(chunk, voice, speed, session))
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "P:\av-kit\packages\infrastructure\src\avkit_infra\tts\adapter.py", line 441, in _onnx_chunk
+    return _as_float32_pcm(outputs[0] if outputs else [])
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "P:\av-kit\packages\infrastructure\src\avkit_infra\tts\adapter.py", line 160, in _as_float32_pcm
+    raise ValidationError("generated audio must be finite")
+avkit_core.domain.errors.ValidationError: generated audio must be finite
+
+kokoro-onnx-int8   file   92 MB | import 0.0 s | load 0.65 s | gen 1.44 s | speech 12.68 s | 8.8x real | peak 583 MB | all runs gen [1.44, 1.45, 1.4]

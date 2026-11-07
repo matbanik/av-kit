@@ -1,0 +1,100 @@
+{
+  "about": "Session 52 MEU-121 fixed test set. The 40 sentences, the 8 paragraphs that join them five at a time, and the 96-word passage. Copied from the 2026-11-04 probes in this folder.",
+  "sentences": [
+    "The kettle clicked off just as the phone began to ring.",
+    "Nobody at the table wanted to be the first to speak.",
+    "He checked the map twice before turning onto the gravel road.",
+    "Rain tapped against the window for most of the afternoon.",
+    "We should leave early if we want to avoid the traffic near the bridge.",
+    "Her first job was sorting letters at the small post office on the corner.",
+    "The museum closes at five, but the gift shop stays open a little longer.",
+    "After the storm, the whole street smelled of wet leaves and cut grass.",
+    "I could not remember where I had put the keys, so I looked in every coat pocket.",
+    "The children built a tower out of old boxes and painted it bright green.",
+    "When the lights came back on, everyone in the room started talking at the same time.",
+    "A narrow path runs along the river and comes out behind the old mill.",
+    "The doctor said the results looked good and asked him to come back in six months.",
+    "She kept the photograph in a drawer and only took it out when she was alone.",
+    "The bakery on the square sells out of bread by nine o'clock on most Saturdays.",
+    "They spent the whole summer repairing the roof, the fence and the broken garden gate.",
+    "If the train is delayed again, I will take the bus and meet you at the station.",
+    "The old dog slept by the door and lifted his head whenever someone walked past the house.",
+    "Most of the books in the shop had been bought from families who were moving away.",
+    "He poured two cups of coffee, sat down at the kitchen table, and opened the letter from the bank.",
+    "The teacher wrote the date on the board and waited for the class to settle down before she began.",
+    "By the end of the week we had learned the names of all the streets between the harbour and the market.",
+    "The mountain looks close from the village, but it takes most of a day to walk to the foot of it.",
+    "My grandmother always said that a good soup needs time, patience, and more salt than you would expect.",
+    "The committee met on Tuesday to discuss the budget, the new car park, and the repairs to the town hall.",
+    "Every spring the river rises over the lower fields, and the farmers move their animals up to higher ground.",
+    "Although the film received poor reviews when it came out, it has since found a large and loyal audience.",
+    "The engineer explained that the bridge had been designed to move slightly in strong winds, which surprised most of the visitors.",
+    "On clear nights you can see the lights of the fishing boats far out on the water, moving slowly along the horizon.",
+    "She had meant to call him back that evening, but the day had been long and she fell asleep on the sofa with the television on.",
+    "What time does the last ferry leave?",
+    "Please put the boxes in the hall.",
+    "That was the best meal we had all year!",
+    "Do you know whether the library is open on Sundays?",
+    "The results were published in March, and the authors have since corrected two small errors in the second table.",
+    "Sound travels faster through water than through air, which is why whales can hear each other across great distances.",
+    "Bees return to the hive and perform a short dance that tells the others where the flowers can be found.",
+    "The company moved its offices to the edge of town last year, and many of the staff now drive to work instead of walking.",
+    "He played the same three songs on the piano every evening, and after a while the neighbours began to hum along through the wall.",
+    "Before you start the machine, check that the door is closed and that the water tank has been filled to the marked line."
+  ],
+  "paragraphs": [
+    "The kettle clicked off just as the phone began to ring. Nobody at the table wanted to be the first to speak. He checked the map twice before turning onto the gravel road. Rain tapped against the window for most of the afternoon. We should leave early if we want to avoid the traffic near the bridge.",
+    "Her first job was sorting letters at the small post office on the corner. The museum closes at five, but the gift shop stays open a little longer. After the storm, the whole street smelled of wet leaves and cut grass. I could not remember where I had put the keys, so I looked in every coat pocket. The children built a tower out of old boxes and painted it bright green.",
+    "When the lights came back on, everyone in the room started talking at the same time. A narrow path runs along the river and comes out behind the old mill. The doctor said the results looked good and asked him to come back in six months. She kept the photograph in a drawer and only took it out when she was alone. The bakery on the square sells out of bread by nine o'clock on most Saturdays.",
+    "They spent the whole summer repairing the roof, the fence and the broken garden gate. If the train is delayed again, I will take the bus and meet you at the station. The old dog slept by the door and lifted his head whenever someone walked past the house. Most of the books in the shop had been bought from families who were moving away. He poured two cups of coffee, sat down at the kitchen table, and opened the letter from the bank.",
+    "The teacher wrote the date on the board and waited for the class to settle down before she began. By the end of the week we had learned the names of all the streets between the harbour and the market. The mountain looks close from the village, but it takes most of a day to walk to the foot of it. My grandmother always said that a good soup needs time, patience, and more salt than you would expect. The committee met on Tuesday to discuss the budget, the new car park, and the repairs to the town hall.",
+    "Every spring the river rises over the lower fields, and the farmers move their animals up to higher ground. Although the film received poor reviews when it came out, it has since found a large and loyal audience. The engineer explained that the bridge had been designed to move slightly in strong winds, which surprised most of the visitors. On clear nights you can see the lights of the fishing boats far out on the water, moving slowly along the horizon. She had meant to call him back that evening, but the day had been long and she fell asleep on the sofa with the television on.",
+    "What time does the last ferry leave? Please put the boxes in the hall. That was the best meal we had all year! Do you know whether the library is open on Sundays? The results were published in March, and the authors have since corrected two small errors in the second table.",
+    "Sound travels faster through water than through air, which is why whales can hear each other across great distances. Bees return to the hive and perform a short dance that tells the others where the flowers can be found. The company moved its offices to the edge of town last year, and many of the staff now drive to work instead of walking. He played the same three songs on the piano every evening, and after a while the neighbours began to hum along through the wall. Before you start the machine, check that the door is closed and that the water tank has been filled to the marked line."
+  ],
+  "passage": "The morning train left the station a few minutes late. Most of the passengers were reading or looking out at the wet fields. A young woman near the door opened her notebook and began to write a long letter to her brother. She told him about the new house, the garden that needed work, and the neighbours who had already invited her to dinner. By the time the train reached the coast, the rain had stopped and the sea was bright under a pale sky. She folded the letter, put it in her coat, and smiled.",
+  "voices": {
+    "sentences": [
+      "af_heart",
+      "am_michael",
+      "af_bella"
+    ],
+    "sentences_first_20": [
+      "bf_emma"
+    ],
+    "paragraphs": [
+      "af_heart"
+    ],
+    "passage": [
+      "af_heart"
+    ]
+  },
+  "speed": 1.0,
+  "model_repo": "onnx-community/Kokoro-82M-v1.0-ONNX",
+  "model_revision": "1939ad2a8e416c0acfeecc08a694d14ef25f2231",
+  "failing_file": {
+    "path": "kokoro-v1.0-onnx/onnx/model_fp16.onnx",
+    "bytes": 163234740,
+    "sha256_prefix": "ba4527a874b42b21"
+  },
+  "sources": {
+    "fp16_nan_probe.py": {
+      "sha256": "9e584ba2419ce350a2c6f25f4eb015f5a0b6ed0e60ce07be2cc1f6836fc08aa9"
+    },
+    "fp16_rate_probe.py": {
+      "sha256": "df1a4eea15adda1baafb84034b904688262a4e33276d7d3a3275cff9d57884dd"
+    },
+    "tts_variant_compare.py": {
+      "sha256": "878004afb8203d84729bdac4dd0ac1dea889cfd298e33f0f1ad90a930960472e"
+    },
+    "fp16-nan-probe.txt": {
+      "sha256": "16691cef9a0b340565c4a771e34f228ca68ee8f949bfe2b791d6b66ed05050b0"
+    },
+    "fp16-rate-probe.txt": {
+      "sha256": "3b6c09bdc449befc55e25e792bb6e9809946548657cd047e473843fad57755a8"
+    },
+    "phonemes.json": {
+      "sha256": "91d91708b9f5d8f65393371470d7182f689f58f30bf82f7a2bfc69fa74a42f40"
+    }
+  }
+}

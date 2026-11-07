@@ -1,0 +1,16 @@
+?? .agent/context/handoffs/2026-11-06-tts-load-fp16-plan-critical-review.md
+?? docs/execution/plans/2026-11-06-tts-load-fp16/baseline.ps1
+?? docs/execution/plans/2026-11-06-tts-load-fp16/baseline.sha
+?? docs/execution/plans/2026-11-06-tts-load-fp16/fp16-test-set/fp16-nan-probe.txt
+?? docs/execution/plans/2026-11-06-tts-load-fp16/fp16-test-set/fp16-rate-probe.txt
+?? docs/execution/plans/2026-11-06-tts-load-fp16/fp16-test-set/fp16_nan_probe.py
+?? docs/execution/plans/2026-11-06-tts-load-fp16/fp16-test-set/fp16_rate_probe.py
+?? docs/execution/plans/2026-11-06-tts-load-fp16/fp16-test-set/phonemes.json
+?? docs/execution/plans/2026-11-06-tts-load-fp16/fp16-test-set/test-set.json
+?? docs/execution/plans/2026-11-06-tts-load-fp16/fp16-test-set/tts_variant_compare.py
+?? docs/execution/plans/2026-11-06-tts-load-fp16/human-gate-decision.md
+?? docs/execution/plans/2026-11-06-tts-load-fp16/identity.py
+?? docs/execution/plans/2026-11-06-tts-load-fp16/implementation-plan.md
+?? docs/execution/plans/2026-11-06-tts-load-fp16/models-snapshot.py
+?? docs/execution/plans/2026-11-06-tts-load-fp16/red-check.py
+?? docs/execution/plans/2026-11-06-tts-load-fp16/task.md

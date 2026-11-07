@@ -918,3 +918,35 @@ test('AC-117.14 an unavailable PyTorch row is a disabled option with its reason,
     await app.close()
   }
 })
+
+// MEU-121 (Session 52, D-239, D-330): PRESELECT_ORDER on the built app.
+test('AC-121.6 a fresh install with nothing downloaded or loaded selects kokoro-onnx-int8', async () => {
+  // MODEL_REASONS[PyTorch] (packages/core/src/avkit_core/domain/tts.py, D-310).
+  const reason = "This build can't run PyTorch models. Choose an ONNX model."
+  const app = await launchApp()
+  try {
+    const page = await app.firstWindow()
+    await installTtsSeam(page)
+    // Setup only: the fresh catalog in list_catalog's id order, nothing downloaded or loaded,
+    // and the PyTorch row served unavailable, so the first runnable row is FP16.
+    await page.evaluate((text) => {
+      const state = window as unknown as { __e2eLoaded: boolean; __e2eCatalog: Array<Record<string, unknown>> }
+      state.__e2eLoaded = false
+      state.__e2eCatalog = [...state.__e2eCatalog]
+        .sort((a, b) => String(a.id).localeCompare(String(b.id)))
+        .map((row) => ({
+          ...row,
+          path: null,
+          is_downloaded: false,
+          available: row.format !== 'pytorch',
+          reason: row.format === 'pytorch' ? text : null,
+        }))
+    }, reason)
+    await openTts(page)
+    const select = page.getByTestId('model-select')
+    await expect(select.locator('option[value="kokoro-onnx-fp16"]')).toBeEnabled()
+    await expect(select).toHaveValue('kokoro-onnx-int8')
+  } finally {
+    await app.close()
+  }
+})

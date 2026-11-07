@@ -1571,6 +1571,14 @@ The following features are explicitly **deferred** to a future phase:
 | Tied | A contract test ties the two defaults together. | Local Canon: triage D-222 |
 | Checklist | The next release's checklist checks the real path ([MEU-125](07-distribution.md#second-release-candidate-residual)). The RC1 checklist belongs to the release session. | Local Canon: known issue `MODELS-DIR-DOCS-AND-PROBE-MISMATCH` |
 
+> **Delivered (Session 52).**
+> - `MODELS_DEFAULT`: `DEFAULT_MODELS_DIRECTORY` is `'~/.avkit/models'`, and `defaultModelsDirectory()` expands it (`ui/src/main/setup-readiness.ts:51-56`). `readTtsModelsDirectory` uses it at both fallbacks (`:65`, `:82`), and a stored value still wins. AC-120.1 reads the backend's `SettingSpec` from `services/settings.py` and holds the two equal.
+> - `DIR_PROBE`: `probeModelsDirWritable` (`:102-124`) creates no folder. An existing folder gets the write-and-delete probe. A missing one gets it in its nearest existing folder (`nearestExistingEntry`, `:86`), and a file on the way, or no existing entry at all, reads `false` (D-327). A fresh install therefore reports the models folder ready when the home folder is writable, and the backend creates `~/.avkit/models` at its first download.
+> - The amended test: "the default models folder is the backend's" (AC-120.2) expects `~/.avkit/models` expanded, no longer `{appData}/models`.
+> - No files move, and a stored `tts.models_directory` is kept as it is. The dev app and the Settings E2E now probe the real `~/.avkit/models`; the models snapshot after the Settings E2E found no change.
+> - Review round 1 F1 (D-340, D-342): a probe whose write or access check fails removes its file before it reads `false` (`:115-122`). The two fault cases in `setup-readiness.test.ts` run under the AC-120.4 and AC-120.6 ids.
+> - AC-120.1 to AC-120.6. Plan `docs/execution/plans/2026-11-06-tts-load-fp16/`.
+
 <a id="download-received-quality-residual"></a>
 
 ### Downloader received quality (residual)

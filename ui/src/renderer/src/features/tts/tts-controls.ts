@@ -102,11 +102,18 @@ export function modelStateSuffix(input: {
 }
 
 /**
+ * The fallback's preference among runnable rows (D-239, D-330): ONNX INT8, then FP32. FP16
+ * is still offered, and is picked only when it is the one downloaded row.
+ */
+export const PRESELECT_ORDER = ['kokoro-onnx-int8', 'kokoro-onnx-fp32'] as const
+
+/**
  * Default picker selection: the user's choice while it is still in the catalog, else the
- * loaded variant, else the first downloaded one, else the first in the catalog. The chosen,
- * first-downloaded and first-row rules skip a row this build can't run (`available: false`),
- * and with no runnable row the result is `null`. The loaded row is kept: a load of an
- * unavailable variant is refused, so a loaded row could run when it loaded.
+ * loaded variant, else the first downloaded one, else the first row. For the last two the
+ * runnable rows are ranked by `PRESELECT_ORDER`, with every other row after them in catalog
+ * order. The chosen, first-downloaded and first-row rules skip a row this build can't run
+ * (`available: false`), and with no runnable row the result is `null`. The loaded row is
+ * kept: a load of an unavailable variant is refused, so a loaded row could run when it loaded.
  */
 export function defaultModelSelection(input: {
   chosen: string | null
@@ -122,5 +129,12 @@ export function defaultModelSelection(input: {
   if (input.loadedVariantId !== null && ids.includes(input.loadedVariantId)) {
     return input.loadedVariantId
   }
-  return runnable.find((row) => row.is_downloaded)?.id ?? runnable[0]?.id ?? null
+  const order: ReadonlyArray<string> = PRESELECT_ORDER
+  const rank = (id: string): number => {
+    const index = order.indexOf(id)
+    return index === -1 ? order.length : index
+  }
+  // The sort is stable, so rows outside PRESELECT_ORDER keep their catalog order.
+  const ranked = [...runnable].sort((a, b) => rank(a.id) - rank(b.id))
+  return ranked.find((row) => row.is_downloaded)?.id ?? ranked[0]?.id ?? null
 }

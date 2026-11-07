@@ -129,10 +129,12 @@ def engines(monkeypatch: pytest.MonkeyPatch) -> Engines:
     return fakes
 
 
-def _adapter(tmp_path: Path, probe: Any) -> Any:
+def _adapter(tmp_path: Path, probe: Any, runtime_probe: Any = None) -> Any:
     from avkit_infra.tts.adapter import KokoroAdapter
 
-    return KokoroAdapter(onnx_vocab_path=tmp_path / "config.json", device_probe=probe)
+    return KokoroAdapter(
+        onnx_vocab_path=tmp_path / "config.json", device_probe=probe, runtime_probe=runtime_probe
+    )
 
 
 def _variant(tmp_path: Path, fmt: ModelFormat) -> ModelVariant:
@@ -640,7 +642,9 @@ def test_ac_75_9_raising_probe_or_vocab_is_model_load_error_neg(
     assert len(_events(logs, "tts.load_failed")) == 1, logs
     assert engines.calls == []
     _assert_no_path(raised.value, onnx)
-    _assert_unloaded(adapter)
+    # `LOAD_KEEPS` (Session 52, D-322): the probe runs before the unload, so A stays loaded.
+    status = adapter.get_model_status()
+    assert (status.is_loaded, status.variant_id, status.device) == (True, onnx.id, "cuda")
 
     failing_vocab = OSError("settings unreadable")
 
@@ -741,7 +745,8 @@ def test_ac_75_9_engine_import_failure_is_model_load_error_neg(
 ) -> None:
     from tests.e2e.api_fakes import AUTH, FakeModels, make_client
 
-    adapter = _adapter(tmp_path, with_cuda)
+    # A' (D-324): the runtime check says yes, so the import fails inside the load (D-325).
+    adapter = _adapter(tmp_path, with_cuda, runtime_probe=lambda _fmt: True)
     _load_cuda_first(adapter, _variant(tmp_path, ModelFormat.ONNX), engines)
     pytorch = _variant(tmp_path, ModelFormat.PyTorch)
     for error in (OSError("engine dependency DLL initialization failed"), RuntimeError("init")):
@@ -856,7 +861,8 @@ def test_ac_98_5_kokoro_import_logs(
     tmp_path: Path, engines: Engines, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     reason = _pytorch_reason()
-    adapter = _adapter(tmp_path, with_cuda)
+    # A' (D-324): the runtime check says yes, so the import fails inside the load (D-325).
+    adapter = _adapter(tmp_path, with_cuda, runtime_probe=lambda _fmt: True)
     pytorch = _variant(tmp_path, ModelFormat.PyTorch)
     missing = ImportError("No module named 'kokoro'")
     monkeypatch.setitem(sys.modules, "kokoro", _kokoro_failing_import(missing))
@@ -1045,3 +1051,208 @@ def test_ac_117_3_runtime_present_probes_once_per_format(
     assert default.runtime_present(ModelFormat.PyTorch) is False
     assert default.runtime_present(ModelFormat.ONNX) is True
     assert seen == [ModelFormat.PyTorch, ModelFormat.ONNX]
+
+
+# --- AC-119.1 to AC-119.8 LOAD_CHECKS, LOAD_KEEPS (Session 52, MEU-119) ---------------------
+
+
+class _UnloadSpy:
+    """Replaces `adapter.unload_model`: counts each call and runs the real one."""
+
+    def __init__(self, adapter: Any) -> None:
+        self.calls = 0
+        self._real = adapter.unload_model
+        adapter.unload_model = self
+
+    def __call__(self) -> None:
+        self.calls += 1
+        self._real()
+
+
+def _int8(tmp_path: Path, *, present: bool) -> ModelVariant:
+    folder = tmp_path / ("private-weights-dir" if present else "gone")
+    path = folder / "model_quantized.onnx"
+    if present:
+        folder.mkdir(exist_ok=True)
+        path.write_bytes(b"weights")
+    return ModelVariant(
+        id="kokoro-onnx-int8",
+        name="ONNX INT8",
+        format=ModelFormat.ONNX,
+        precision=ModelPrecision.INT8,
+        size_bytes=7,
+        path=path,
+        is_downloaded=True,
+    )
+
+
+def _loaded_a(
+    tmp_path: Path, engines: Engines, probe: Any = with_cuda, runtime_probe: Any = None
+) -> tuple[Any, ModelVariant, _UnloadSpy]:
+    """A (ONNX FP32) loaded on `cuda`, then the unload spy, with the call log cleared."""
+    adapter = _adapter(tmp_path, probe, runtime_probe=runtime_probe)
+    a = _variant(tmp_path, ModelFormat.ONNX)
+    _load_cuda_first(adapter, a, engines)
+    return adapter, a, _UnloadSpy(adapter)
+
+
+def _assert_kept(
+    adapter: Any,
+    a: ModelVariant,
+    spy: _UnloadSpy,
+    engines: Engines,
+    logs: list[dict[str, Any]],
+    error: BaseException,
+    b: ModelVariant,
+) -> None:
+    status: ModelStatus = adapter.get_model_status()
+    assert (status.is_loaded, status.variant_id, status.device) == (True, a.id, "cuda")
+    assert spy.calls == 0
+    assert engines.calls == []
+    assert len(_events(logs, "tts.load_failed")) == 1, logs
+    _assert_no_path(error, b)  # type: ignore[arg-type]
+
+
+@pytest.mark.integration
+def test_ac_119_1_missing_weight_keeps_the_loaded_model(tmp_path: Path, engines: Engines) -> None:
+    adapter, a, spy = _loaded_a(tmp_path, engines)
+    b = _int8(tmp_path, present=False)
+    with capture_logs() as logs, pytest.raises(ModelLoadError) as raised:
+        adapter.load_model(b, CUDA)
+    assert str(raised.value) == "model weight file is missing"
+    assert _load_failed(logs) == [(b.id, "cpu", "FileNotFoundError")], logs
+    _assert_kept(adapter, a, spy, engines, logs, raised.value, b)
+
+
+@pytest.mark.integration
+def test_ac_119_2_raising_device_probe_keeps_the_loaded_model(
+    tmp_path: Path, engines: Engines
+) -> None:
+    failing = RuntimeError("probe failed")
+
+    def probe(fmt: ModelFormat) -> tuple[DeviceType, ...]:
+        if probe.fail:  # type: ignore[attr-defined]
+            raise failing
+        return (AUTO, CUDA, CPU)
+
+    probe.fail = False  # type: ignore[attr-defined]
+    adapter, a, spy = _loaded_a(tmp_path, engines, probe)
+    b = _variant(tmp_path, ModelFormat.PyTorch)
+    probe.fail = True  # type: ignore[attr-defined]
+    with capture_logs() as logs, pytest.raises(ModelLoadError) as raised:
+        adapter.load_model(b, CPU)
+    assert str(raised.value) == "TTS device probe failed"
+    assert raised.value.__cause__ is failing
+    assert _load_failed(logs) == [(b.id, "cpu", "RuntimeError")], logs
+    _assert_kept(adapter, a, spy, engines, logs, raised.value, b)
+
+
+@pytest.mark.integration
+def test_ac_119_3_absent_runtime_keeps_the_loaded_model(tmp_path: Path, engines: Engines) -> None:
+    reason = _pytorch_reason()
+    adapter, a, spy = _loaded_a(
+        tmp_path, engines, runtime_probe=lambda fmt: fmt is ModelFormat.ONNX
+    )
+    b = _variant(tmp_path, ModelFormat.PyTorch)
+    with capture_logs() as logs, pytest.raises(ModelLoadError) as raised:
+        adapter.load_model(b, CUDA)
+    assert str(raised.value) == reason
+    assert raised.value.__cause__ is None
+    # Logged on the resolved target, as `_load_pytorch` logs a missing torch (AC-98.5).
+    assert _load_failed(logs) == [(b.id, "cuda", "ModelLoadError")], logs
+    _assert_kept(adapter, a, spy, engines, logs, raised.value, b)
+
+
+@pytest.mark.integration
+def test_ac_119_4_raising_runtime_probe_keeps_the_loaded_model(
+    tmp_path: Path, engines: Engines
+) -> None:
+    failing = RuntimeError("SYNTHETIC_PROBE_MARKER")
+
+    def runtime_probe(fmt: ModelFormat) -> bool:
+        if fmt is ModelFormat.PyTorch:
+            raise failing
+        return True
+
+    adapter, a, spy = _loaded_a(tmp_path, engines, runtime_probe=runtime_probe)
+    b = _variant(tmp_path, ModelFormat.PyTorch)
+    with capture_logs() as logs, pytest.raises(ModelLoadError) as raised:
+        adapter.load_model(b, CUDA)
+    assert str(raised.value) == "TTS runtime probe failed"
+    assert raised.value.__cause__ is failing
+    assert _load_failed(logs) == [(b.id, "cuda", "RuntimeError")], logs
+    assert ["detail" in entry for entry in _events(logs, "tts.load_failed")] == [False], logs
+    assert "SYNTHETIC_PROBE_MARKER" not in repr(logs)
+    _assert_kept(adapter, a, spy, engines, logs, raised.value, b)
+
+
+@pytest.mark.integration
+def test_ac_119_5_unsupported_format_keeps_the_loaded_model(
+    tmp_path: Path, engines: Engines
+) -> None:
+    from avkit_core.domain.errors import ValidationError
+
+    adapter, a, spy = _loaded_a(tmp_path, engines)
+    b = _variant(tmp_path, ModelFormat.PyTorch)
+    # As in AC-98.5: no constructible variant has this format, so it is forced.
+    object.__setattr__(b, "format", "TFLite")
+    with capture_logs() as logs, pytest.raises(ValidationError, match="unsupported") as raised:
+        adapter.load_model(b, CPU)
+    assert _load_failed(logs) == [(b.id, "cpu", "ValidationError")], logs
+    _assert_kept(adapter, a, spy, engines, logs, raised.value, b)
+
+
+@pytest.mark.integration
+def test_ac_119_6_load_probes_the_runtime_once(tmp_path: Path, engines: Engines) -> None:
+    probed: list[ModelFormat] = []
+
+    def runtime_probe(fmt: ModelFormat) -> bool:
+        probed.append(fmt)
+        return True
+
+    adapter = _adapter(tmp_path, with_cuda, runtime_probe=runtime_probe)
+    asked: list[ModelFormat] = []
+    present = adapter.runtime_present
+
+    def runtime_present(fmt: ModelFormat) -> bool:
+        asked.append(fmt)
+        return present(fmt)
+
+    adapter.runtime_present = runtime_present
+    onnx = _variant(tmp_path, ModelFormat.ONNX)
+    adapter.load_model(onnx, CPU)
+    assert (asked, probed) == ([ModelFormat.ONNX], [ModelFormat.ONNX])
+    adapter.load_model(onnx, CPU)
+    assert (asked, probed) == ([ModelFormat.ONNX] * 2, [ModelFormat.ONNX])
+
+
+@pytest.mark.integration
+def test_ac_119_7_kmodel_failure_after_the_checks_unloads(tmp_path: Path, engines: Engines) -> None:
+    adapter, _a, spy = _loaded_a(tmp_path, engines, runtime_probe=lambda _fmt: True)
+    b = _variant(tmp_path, ModelFormat.PyTorch)
+    failing = RuntimeError("init")
+    engines.kmodel_init_error = failing
+    with capture_logs() as logs, pytest.raises(ModelLoadError) as raised:
+        adapter.load_model(b, CPU)
+    assert str(raised.value) == "PyTorch model failed to load"
+    assert raised.value.__cause__ is failing
+    assert _load_failed(logs) == [(b.id, "cpu", "RuntimeError")], logs
+    assert (spy.calls, engines.calls) == (1, [("KModel",)])
+    _assert_unloaded(adapter)
+
+
+@pytest.mark.integration
+def test_ac_119_8_onnx_cpu_session_failure_after_the_checks_unloads(
+    tmp_path: Path, engines: Engines
+) -> None:
+    adapter, _a, spy = _loaded_a(tmp_path, engines)
+    b = _int8(tmp_path, present=True)
+    failing = RuntimeError("session")
+    engines.session_errors[CPU_PROVIDERS] = failing
+    with capture_logs() as logs, pytest.raises(ModelLoadError) as raised:
+        adapter.load_model(b, CPU)
+    assert str(raised.value) == "ONNX session failed"
+    assert raised.value.__cause__ is failing
+    assert _load_failed(logs) == [(b.id, "cpu", "RuntimeError")], logs
+    assert (spy.calls, engines.calls) == (1, [("session", CPU_PROVIDERS)])
+    _assert_unloaded(adapter)

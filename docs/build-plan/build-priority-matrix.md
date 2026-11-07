@@ -44,6 +44,7 @@
 | 3.15 | MEU-119 | `svc-tts-load-keeps-model` | [03 §TTS load keeps the current model (residual)](03-service-layer.md#tts-load-keeps-model-residual) | MEU-62, MEU-75, MEU-98 |
 | 3.16 | MEU-121 | `svc-tts-fp16-nonfinite` | [03 §TTS ONNX FP16 audio (residual)](03-service-layer.md#tts-onnx-fp16-audio-residual) | MEU-62, MEU-72, MEU-117 |
 | 3.17 | MEU-122 | `svc-transcript-metadata` | [03 §Transcript source metadata (residual)](03-service-layer.md#transcript-source-metadata-residual) | MEU-7, MEU-11 |
+| 3.18 | MEU-127 | `svc-tts-fp16-phase-guard` | [03 §TTS FP16 phase guard (residual)](03-service-layer.md#tts-fp16-phase-guard-residual) | MEU-121 |
 | 4.1 | MEU-14 | `api-app-auth` | [04 §App factory](04-rest-api.md#app-factory-and-lifespan) + Auth | MEU-10–13 |
 | 4.2 | MEU-15 | `api-downloads-health-settings` | [04 §Downloads](04-rest-api.md#routes--downloads) + Health + Settings | MEU-14 |
 | 4.3 | MEU-16 | `api-transcripts-tts-models` | [04 §Transcripts](04-rest-api.md#routes--transcripts) + TTS + Models | MEU-14 |

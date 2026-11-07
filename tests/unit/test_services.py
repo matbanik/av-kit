@@ -3286,3 +3286,130 @@ def test_ac_117_7_load_refuses_a_variant_this_build_cannot_run_first(tmp_path: P
     assets.states[TtsAsset.SPACY_MODEL] = AssetState.READY
     models.load("kokoro-pt-fp32", DeviceType.CPU)
     assert [variant.id for variant, _device in tts_port.load_calls] == ["kokoro-pt-fp32"]
+
+
+# --- AC-119.10 HOME_SCRUB (Session 52, MEU-119, D-335) ---------------------------------------
+
+#: A synthetic home folder; no test reads the real one.
+SYNTHETIC_HOME = "C:\\Users\\SYNTHETIC_HOME_USER"
+
+
+def _scrub_ready(monkeypatch: pytest.MonkeyPatch, home: str, *, ignore_case: bool) -> None:
+    """Asserts the scrub's names exist, so a missing one fails by assertion, then patches them."""
+    from avkit_core.services import health as health_module
+
+    assert hasattr(health_module, "home_folder")
+    assert hasattr(health_module, "scrub_home")
+    assert hasattr(health_module, "HOME_IGNORES_CASE")
+    monkeypatch.setattr(health_module, "home_folder", lambda: home)
+    monkeypatch.setattr(health_module, "HOME_IGNORES_CASE", ignore_case)
+
+
+def test_ac_119_10_home_folder_becomes_tilde(monkeypatch: pytest.MonkeyPatch) -> None:
+    from avkit_core.services.health import console_field
+
+    _scrub_ready(monkeypatch, SYNTHETIC_HOME, ignore_case=True)
+    assert [
+        console_field(text)
+        for text in (
+            "at C:\\Users\\SYNTHETIC_HOME_USER\\.avkit\\models\\m.onnx",
+            "at C:/Users/SYNTHETIC_HOME_USER/.avkit/models/m.onnx",
+            "at 'C:\\\\Users\\\\SYNTHETIC_HOME_USER\\\\.avkit\\\\models\\\\m.onnx'",
+            "home is C:\\Users\\SYNTHETIC_HOME_USER",
+            'quoted "C:\\Users\\SYNTHETIC_HOME_USER"',
+        )
+    ] == [
+        "at ~\\.avkit\\models\\m.onnx",
+        "at ~/.avkit/models/m.onnx",
+        "at '~\\\\.avkit\\\\models\\\\m.onnx'",
+        "home is ~",
+        'quoted "~"',
+    ]
+
+
+def test_ac_119_10_case_follows_home_ignores_case(monkeypatch: pytest.MonkeyPatch) -> None:
+    from avkit_core.services.health import console_field
+
+    folded = "at c:\\users\\synthetic_home_user\\f"
+    _scrub_ready(monkeypatch, SYNTHETIC_HOME, ignore_case=True)
+    assert console_field(folded) == "at ~\\f"
+    _scrub_ready(monkeypatch, SYNTHETIC_HOME, ignore_case=False)
+    assert console_field(folded) == folded
+    assert console_field("at C:\\Users\\SYNTHETIC_HOME_USER\\f") == "at ~\\f"
+
+
+def test_ac_119_10_other_paths_stay(monkeypatch: pytest.MonkeyPatch) -> None:
+    from avkit_core.services.health import console_field
+
+    _scrub_ready(monkeypatch, SYNTHETIC_HOME, ignore_case=True)
+    kept = (
+        "at C:\\Users\\SYNTHETIC_HOME_USER2\\x",
+        "at C:\\Users\\Public\\f",
+        "at E:\\mirror\\C:\\Users\\SYNTHETIC_HOME_USER\\f",
+        "at backupC:\\Users\\SYNTHETIC_HOME_USER\\f",
+    )
+    assert [console_field(text) for text in kept] == list(kept)
+
+
+def test_ac_119_10_cut_keeps_no_part_of_the_user_name(monkeypatch: pytest.MonkeyPatch) -> None:
+    from avkit_core.services.health import FIELD_LIMIT, console_field
+
+    _scrub_ready(monkeypatch, SYNTHETIC_HOME, ignore_case=True)
+    prefix = "p" * 289 + " "
+    assert len(prefix) == 290
+    # Cut first, this keeps "C:\Users\S": the scrub runs before the cut.
+    field = console_field(prefix + "C:\\Users\\SYNTHETIC_HOME_USER\\f")
+    assert field == prefix + "~\\f"
+    assert len(field) <= FIELD_LIMIT
+
+
+@pytest.mark.parametrize(
+    "home", ["C:", "C:\\", "\\", "/", ""], ids=["drive", "drive-sep", "bs", "slash", "empty"]
+)
+def test_ac_119_10_bare_drive_or_empty_home_changes_nothing(
+    monkeypatch: pytest.MonkeyPatch, home: str
+) -> None:
+    from avkit_core.services import health as health_module
+
+    _scrub_ready(monkeypatch, home, ignore_case=True)
+    text = "at C:\\Users\\x\\f and /home/x/f"
+    assert (health_module.scrub_home(text), health_module.console_field(text)) == (text, text)
+
+
+def test_ac_119_10_home_folder_reaches_no_console_surface(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import json
+    import re
+
+    import structlog
+
+    _scrub_ready(monkeypatch, SYNTHETIC_HOME, ignore_case=True)
+    health = _health(tmp_path, log_to_file=True)
+    path = SYNTHETIC_HOME + "\\.avkit\\models\\m.onnx"
+    missing = FileNotFoundError(path)
+    unreadable = OSError(2, "No such file or directory", path)
+    structlog.get_logger().error("probe.home", error=str(unreadable), detail=str(missing))
+    assert _messages(health, "probe.home") == [
+        "probe.home error=[Errno 2] No such file or directory: '~\\\\.avkit\\\\models\\\\m.onnx' "
+        "detail=~\\.avkit\\models\\m.onnx"
+    ]
+    ring = " ".join(event.message for event in health.console_snapshot(0))
+    stdout = re.sub(r"\x1b\[[0-9;]*m", "", capsys.readouterr().out)
+    # Stdout carries each Console line as JSON, so its backslashes are doubled there.
+    printed = " ".join(
+        str(json.loads(line).get("message")) for line in stdout.splitlines() if line.startswith("{")
+    )
+    filed = " ".join(str(line.get("message")) for line in _console_lines(tmp_path))
+    raw = {"ring": ring, "stdout": stdout, "file": filed}
+    assert {name: "SYNTHETIC_HOME_USER" in text for name, text in raw.items()} == {
+        "ring": False,
+        "stdout": False,
+        "file": False,
+    }
+    surfaces = {"ring": ring, "stdout": printed, "file": filed}
+    assert {name: "~\\.avkit\\models\\m.onnx" in text for name, text in surfaces.items()} == {
+        "ring": True,
+        "stdout": True,
+        "file": True,
+    }

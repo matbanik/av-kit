@@ -18,6 +18,14 @@ unavailable with its reason (`listed_fields`), that its download answers 409 and
 (`download_refused`), that its load answers 422 (`load_refused`), and that the backend logs both
 refusals (`logged`).
 
+`--phase sentences` is MEU-121's sentence smoke (D-332). It starts the backend copy in
+`--backend-dir` behind the same dead proxies, with `--models-dir` as the models folder. It registers
+`--variant`, loads it on CPU once and runs the `--test-set` jobs one at a time: each sentence with
+each of its voices, then the paragraphs and the passage. Each job sends no cleanup steps, so the
+text reaches the model as written. It passes only when every job ends `Done` with a WAV of more
+than 0 samples in the run folder, and it lists each failure's kind, index, voice and
+`error_message`.
+
 Each phase writes one JSON object to `--out`; `validate-task.ps1 -Check package-smoke` merges them.
 Exit 0 means the phase passed.
 """
@@ -301,24 +309,34 @@ def _offline_env(run_dir: Path) -> tuple[dict[str, str], dict[str, str]]:
     return env, proxy
 
 
-def _register_variant(backend: Backend) -> dict[str, Any]:
+def _register_variant(backend: Backend, *, variant_id: str = VARIANT_ID) -> dict[str, Any]:
     """Record the cached weights in the fresh database through the download fast path.
 
     `/models/downloaded` finds the file on disk, but `/models/load` reads the database row,
     whose path is empty in a new app-data. The download returns at once for a file already at
     `variant_local_path`, with no network, which the dead proxies would otherwise expose.
     """
-    return _download_target(backend, {"variant_id": VARIANT_ID})
+    return _download_target(backend, {"variant_id": variant_id})
 
 
-def _generate(backend: Backend, out_dir: Path) -> dict[str, Any]:
-    backend.ok("POST", "/models/load", {"variant_id": VARIANT_ID, "device": "cpu"})
+def _generate(
+    backend: Backend,
+    out_dir: Path,
+    *,
+    variant_id: str = VARIANT_ID,
+    text: str = SMOKE_TEXT,
+    voice: str = SMOKE_VOICE,
+    load: bool = True,
+) -> dict[str, Any]:
+    """Generate one WAV of `text` in `voice`, loading `variant_id` on CPU first when `load`."""
+    if load:
+        backend.ok("POST", "/models/load", {"variant_id": variant_id, "device": "cpu"})
     job = backend.ok(
         "POST",
         "/tts/generate",
         {
-            "text": SMOKE_TEXT,
-            "voice": SMOKE_VOICE,
+            "text": text,
+            "voice": voice,
             "speed": 1.0,
             "format": "WAV",
             "enabled_steps": [],
@@ -337,7 +355,13 @@ def _generate(backend: Backend, out_dir: Path) -> dict[str, Any]:
     path = Path(job["output_path"]) if job.get("output_path") else None
     if job["status"] == "Done" and path is not None and path.is_file():
         with wave.open(str(path), "rb") as wav:
-            outcome["wav_samples"] = wav.getnframes()
+            # The header's count alone passes a header-only file (review F2, D-343): count the
+            # frames only when the payload holds every one of them.
+            declared = wav.getnframes()
+            payload = len(wav.readframes(declared))
+            complete = payload == declared * wav.getsampwidth() * wav.getnchannels()
+            outcome["wav_declared"] = declared
+            outcome["wav_samples"] = declared if complete else 0
             outcome["sample_rate"] = wav.getframerate()
         outcome["inside_out_dir"] = path.resolve().is_relative_to(out_dir.resolve())
     return outcome
@@ -607,14 +631,123 @@ def phase_capability(backend_dir: Path, models_dir: Path) -> dict[str, Any]:
     return result
 
 
+def _sentence_jobs(test_set: dict[str, Any]) -> list[tuple[str, int, str, str]]:
+    """The test set's jobs as (kind, index, voice, text), in the order they run."""
+    sentences = list(test_set["sentences"])
+    voices = test_set["voices"]
+    groups = (
+        ("sentence", sentences, voices["sentences"]),
+        ("sentence", sentences[:20], voices["sentences_first_20"]),
+        ("paragraph", list(test_set["paragraphs"]), voices["paragraphs"]),
+        ("passage", [test_set["passage"]], voices["passage"]),
+    )
+    return [
+        (kind, index, voice, text)
+        for kind, texts, group_voices in groups
+        for voice in group_voices
+        for index, text in enumerate(texts)
+    ]
+
+
+def phase_sentences(
+    backend_dir: Path, models_dir: Path, test_set: Path, variant_id: str
+) -> dict[str, Any]:
+    """MEU-121's sentence smoke: each test-set job on `variant_id` ends `Done` with audio."""
+    run_dir = backend_dir.parent
+    result: dict[str, Any] = {
+        "phase": "sentences",
+        "passed": False,
+        "started": _now(),
+        "backend_dir": str(backend_dir.resolve()),
+        "models_dir": str(models_dir.resolve()),
+        "test_set": str(test_set.resolve()),
+        "variant_id": variant_id,
+        "jobs": 0,
+        "failures": [],
+        "errors": [],
+    }
+    errors: list[str] = result["errors"]
+    failures: list[dict[str, Any]] = result["failures"]
+    real_models = (Path.home() / ".avkit" / "models").resolve()
+    if backend_dir.resolve().is_relative_to(REPO_ROOT):
+        errors.append(f"backend_dir {backend_dir} is inside the checkout {REPO_ROOT}")
+    for root, label in ((REPO_ROOT, "the checkout"), (real_models, "the real models folder")):
+        if models_dir.resolve().is_relative_to(root):
+            errors.append(f"models_dir {models_dir} is inside {label} {root}")
+    exe = backend_dir / EXE_NAME
+    if not exe.is_file():
+        errors.append(f"missing {exe}")
+    if not errors:
+        result["forbidden_dirs"] = _forbidden_dirs(backend_dir / "_internal")
+        if result["forbidden_dirs"]:
+            errors.append(f"forbidden _internal dirs: {result['forbidden_dirs']}")
+    if errors:
+        result["finished"] = _now()
+        return result
+
+    jobs = _sentence_jobs(json.loads(test_set.read_text(encoding="utf-8")))
+    env, proxy = _offline_env(run_dir)
+    result["proxy"] = proxy
+    app_data = run_dir / "app-data"
+    shutil.rmtree(app_data, ignore_errors=True)
+    out_dir = run_dir / "out"
+    shutil.rmtree(out_dir, ignore_errors=True)
+    out_dir.mkdir(parents=True)
+    # One row per job run: kind, index, voice, status, WAV samples and seconds.
+    rows: list[list[Any]] = []
+    backend = Backend(exe, app_data=app_data, cwd=run_dir, env=env)
+    try:
+        backend.put_tts_settings(models_directory=str(models_dir), output_path=str(out_dir))
+        result["register"] = _register_variant(backend, variant_id=variant_id)
+        if result["register"]["result"] != "downloaded":
+            raise RuntimeError(f"registering {variant_id} failed: {result['register']}")
+        result["asset_states"] = _asset_states(backend)
+        backend.ok("POST", "/models/load", {"variant_id": variant_id, "device": "cpu"})
+        for kind, index, voice, text in jobs:
+            started = time.monotonic()
+            outcome: dict[str, Any]
+            try:
+                outcome = _generate(backend, out_dir, text=text, voice=voice, load=False)
+            except Exception as exc:  # recorded as this job's failure
+                outcome = {"status": "Error", "error": f"{type(exc).__name__}: {exc}"}
+            seconds = round(time.monotonic() - started, 1)
+            samples = int(outcome.get("wav_samples", 0))
+            rows.append([kind, index, voice, outcome["status"], samples, seconds])
+            if outcome["status"] != "Done" or samples <= 0 or not outcome.get("inside_out_dir"):
+                failures.append(
+                    {
+                        "kind": kind,
+                        "index": index,
+                        "voice": voice,
+                        "status": outcome["status"],
+                        "error_message": outcome.get("error"),
+                        "wav_samples": samples,
+                    }
+                )
+    except Exception as exc:  # recorded in the result; the phase fails
+        errors.append(f"{type(exc).__name__}: {exc}")
+    finally:
+        backend.stop()
+        result["jobs"] = len(rows)
+        result["results"] = rows
+        result["backend_tail"] = backend.tail()
+    result["passed"] = not errors and not failures and len(rows) == len(jobs)
+    result["finished"] = _now()
+    return result
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--phase", choices=("online", "offline", "capability"), required=True)
+    parser.add_argument(
+        "--phase", choices=("online", "offline", "capability", "sentences"), required=True
+    )
     parser.add_argument("--models-dir", type=Path, required=True)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument(
-        "--backend-dir", type=Path, help="offline and capability: the copied onedir to run"
+        "--backend-dir", type=Path, help="offline, capability and sentences: the copied onedir"
     )
+    parser.add_argument("--test-set", type=Path, help="sentences: the test-set JSON")
+    parser.add_argument("--variant", help="sentences: the variant id to load")
     args = parser.parse_args(argv)
     if args.phase == "online":
         result = phase_online(args.models_dir)
@@ -623,6 +756,10 @@ def main(argv: list[str] | None = None) -> int:
             parser.error(f"--phase {args.phase} requires --backend-dir")
         if args.phase == "offline":
             result = phase_offline(args.backend_dir, args.models_dir)
+        elif args.phase == "sentences":
+            if args.test_set is None or args.variant is None:
+                parser.error("--phase sentences requires --test-set and --variant")
+            result = phase_sentences(args.backend_dir, args.models_dir, args.test_set, args.variant)
         else:
             result = phase_capability(args.backend_dir, args.models_dir)
     args.out.parent.mkdir(parents=True, exist_ok=True)

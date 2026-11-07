@@ -286,17 +286,19 @@ class KokoroAdapter:
     def load_model(self, variant: ModelVariant, device: DeviceType) -> None:
         """Load `variant`, falling back to CPU (`DEVICE_RESOLVE`, `LOAD_FALLBACK`).
 
-        The model or session is built in locals; the adapter's fields change only once
-        every stage has succeeded, so a failed load leaves nothing loaded on `cpu`. Every
-        failure logs one `tts.load_failed` before it leaves (`LOAD_FAILURE_PATHS`).
+        `LOAD_CHECKS` run before the unload: the weight file, the device probe, the format
+        and the runtime. A load that fails one keeps the loaded model (`LOAD_KEEPS`). After
+        the unload the model or session is built in locals, and the fields change only once
+        every stage has succeeded, so a later failure leaves nothing loaded on `cpu`; building
+        before the unload would hold two models (D-221). Every failure logs one
+        `tts.load_failed` before it leaves (`LOAD_FAILURE_PATHS`).
 
         Raises:
             ModelLoadError: The weight file is missing or unreadable, the runtime is not
-                bundled or failed to initialize, the device probe raised, or the load failed
-                on every device it tried (the cause is the last failure).
+                bundled or failed to initialize, the device or runtime probe raised, or the
+                load failed on every device it tried (the cause is the last failure).
             ValidationError: The variant's format is neither PyTorch nor ONNX.
         """
-        self.unload_model()
         try:
             path = _require_weight_path(variant)
         except ModelLoadError as exc:
@@ -308,16 +310,32 @@ class KokoroAdapter:
             # `runtime_devices` never raises; an injected probe still must not escape bare.
             _log_load_failed(variant, "cpu", exc)
             raise ModelLoadError("TTS device probe failed") from exc
+        if variant.format not in (ModelFormat.PyTorch, ModelFormat.ONNX):
+            unsupported = ValidationError(f"unsupported model format: {variant.format}")
+            _log_load_failed(variant, target, unsupported)
+            raise unsupported
+        try:
+            present = self.runtime_present(variant.format)
+        except Exception as exc:
+            # The probe's text can hold a local path, so only its class is logged (D-323).
+            log.error(
+                "tts.load_failed",
+                variant_id=variant.id,
+                device=target,
+                error=type(exc).__name__,
+            )
+            raise ModelLoadError("TTS runtime probe failed") from exc
+        if not present:
+            absent = ModelLoadError(MODEL_REASONS[variant.format])
+            _log_load_failed(variant, target, absent)
+            raise absent
+        self.unload_model()
         kmodel: Any = None
         session: InferenceSession | None = None
         if variant.format is ModelFormat.PyTorch:
             kmodel, actual = self._load_pytorch(variant, path, target)
-        elif variant.format is ModelFormat.ONNX:
-            session, actual = self._load_onnx(variant, path, target)
         else:
-            unsupported = ValidationError(f"unsupported model format: {variant.format}")
-            _log_load_failed(variant, target, unsupported)
-            raise unsupported
+            session, actual = self._load_onnx(variant, path, target)
         self._kmodel = kmodel
         self._session = session
         self._device_name = actual
