@@ -279,7 +279,8 @@ The columns are: Date, MEU(s), Tool Calls, Time to First Green, Tests Added, Cod
 Present the human with:
 1. Completion summary (MEUs done, tests passing, proposed commit messages)
 2. Link to the reflection file for review
-3. Draft outline for the next session (used by `/create-plan` workflow)
+3. The next session's prompt, written to `C:/Temp/av-kit/session-{N+1}-prompt.md` (task row H2-6) in the shape of the prompt that started this session: the title line, read-first and driver lines, prerequisites with HEAD, scope with file:line citations to re-read, tests, Done means, closeout flags, calibration, the carried design rules (5c) and the constraints. The next session is the grouping's next in order, else the 5d outline's target.
+4. Every decision still open for the human, here and in that prompt, as a Decision Brief per `.agent/docs/human-decision-protocol.md`: recommendation first, the options with a do-nothing option, and what happens without an answer. A question the obviousness test settles is decided and logged, not asked.
 
 > [!NOTE]
 > **Prose is probabilistic; a hook is deterministic.** This gate and the Step 4c anti-stop rule *shift* the model's stop/continue choice but cannot guarantee it — the RLHF deference prior will sometimes win the sampling roll regardless of wording. The durable backstop is a **harness-level Stop hook** that blocks end-of-turn until `task.md` has no `[ ]`/`[/]` rows and the closeout artifacts exist on disk. That hook lives in the harness config (e.g. Antigravity's stop-hook, or Claude Code's `settings.json` hook — see `.agent/docs/harness-profiles.md` for your harness's mechanism), NOT in this workflow file — out of scope here, but the recommended complement. Guard it with a consecutive-block / `stop_hook_active` loop-breaker so a genuinely-blocked turn can still end.
@@ -355,6 +356,7 @@ The compressed variant still requires invoking the timestamp skill and copying i
 - [ ] MEU-status indexes updated for completed MEUs using canonical exact receipts for the target-bound `tools/meu_status.py update MEU-{N} approved` and `tools/meu_status.py render` argv, plus `.agent/context/current-focus.md`
 - [ ] Reflection file created at `docs/execution/reflections/`
 - [ ] Metrics table updated
+- [ ] Next-session prompt written to `C:/Temp/av-kit/session-{N+1}-prompt.md`, with a Decision Brief for every open human decision
 - [ ] Session digest created at `.agent/context/sessions/{conversation-id}/digest.md`
 - [ ] Proposed commit messages presented to human (do NOT auto-commit; no AI attribution trailers)
 

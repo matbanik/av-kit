@@ -4,7 +4,9 @@
 > Open Questions (`create-plan.md` §2B), reviewer human-decision items (§5b), the round-cap
 > TL;DR (§5d), reviewer questions with no local-canon answer (§5e), triage architecture
 > decisions (`issue-triage.md` Step 8), grouping §8 tables (`session-grouping.md`), execution-time
-> forks where an acceptance criterion proves unreachable as written, and closeout.
+> forks where an acceptance criterion proves unreachable as written, closeout, the open
+> decisions a next-session prompt carries (`execution-session.md` §6), and any question asked
+> mid-session. Every decision put to the human runs it; none is asked bare.
 > **It never loosens a hard gate.** Commit/push/merge/deploy, destructive data operations, the
 > plan→execution transition under `plan_to_exec_gate: human`, and review round caps stay human
 > stops regardless of how obvious the answer looks (`AGENTS.md`, `GUARDRAILS.md` SIGN 1–3).

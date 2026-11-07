@@ -180,7 +180,7 @@ Explicit retirements correct host-hierarchy claims, unsupported reviewer chains,
       "before_blocks": 124,
       "after_blocks": 50,
       "preimage_sha256": "2a47ddc0af97695abc368825a5274b1163f0ca10cd78879693e7643edf483bb3",
-      "postimage_sha256": "ac2419494c3c439c06882d49f4289d786f72e94cbd5556d187f6e0715ce523ce"
+      "postimage_sha256": "41b91b52b50f89936b54546aee44c21307ad942af5690b66bca2a598390bd787"
     },
     "GUARDRAILS.md": {
       "before_blocks": 28,

@@ -409,6 +409,7 @@ When the configured reviewer is unavailable, ineligible or rate-limited, preserv
 2. **Create reflection** at `docs/execution/reflections/{date}-{slug}-reflection.md`
 3. **Update metrics** in `docs/execution/metrics.md`
 4. **Create/update handoff** at `.agent/context/handoffs/{date}-{slug}-handoff.md`
+5. **Write the next-session prompt** at `C:/Temp/av-kit/session-{N+1}-prompt.md` ([execution-session.md](https://local/av-kit/blob/main/.agent/workflows/execution-session.md) §6), with a Decision Brief for every open human decision
 6. **Update context files:**
    - `.agent/context/current-focus.md` — what's next
    - `.agent/context/known-issues.md` — resolved issues archived
@@ -431,6 +432,7 @@ Before declaring complete, the agent must verify:
 - Token counts are populated (never zero)
 - Handoff has all required markers (4 sections)
 - Metrics row appended
+- Next-session prompt written; every open human decision carries an HDP recommendation
 - No `REPLACE_ME` placeholders
 
 ### 🔄 Adaptability Notes
