@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import unicodedata
 from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
@@ -245,6 +246,53 @@ class PlaylistInfo:
             isinstance(item, str) and item for item in self.video_ids
         ):
             raise ValidationError("video_ids must be a list of non-empty str")
+
+
+def _require_text_clean(value: object, field: str) -> None:
+    """`TEXT_CLEAN`: None, or non-empty single-spaced text with no controls or lone surrogates.
+
+    The message names the field, never the value (Session 50 RULE-1).
+    """
+    if value is None:
+        return
+    if (
+        not isinstance(value, str)
+        or value == ""
+        or " ".join(value.split()) != value
+        or any(unicodedata.category(char) in ("Cc", "Cs") for char in value)
+    ):
+        raise ValidationError(
+            f"{field} must be None or single-spaced text without controls or lone surrogates"
+        )
+
+
+@dataclass(frozen=True)
+class ListedVideo:
+    """One video from a flat enumeration: its ID and, when given, its title."""
+
+    video_id: str
+    title: str | None
+
+    def __post_init__(self) -> None:
+        require_non_empty_str(self.video_id, "video_id")
+        _require_text_clean(self.title, "title")
+
+
+@dataclass(frozen=True)
+class VideoListing:
+    """A flat enumeration's videos and, when given, the channel that owns them."""
+
+    videos: tuple[ListedVideo, ...]
+    channel_name: str | None
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.videos, tuple) or not all(
+            isinstance(item, ListedVideo) for item in self.videos
+        ):
+            raise ValidationError("videos must be a tuple of ListedVideo")
+        if len({item.video_id for item in self.videos}) != len(self.videos):
+            raise ValidationError("videos must not repeat a video_id")
+        _require_text_clean(self.channel_name, "channel_name")
 
 
 @dataclass(frozen=True)

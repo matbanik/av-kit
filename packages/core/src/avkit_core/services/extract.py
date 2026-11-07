@@ -5,7 +5,7 @@ from __future__ import annotations
 import threading
 import time
 
-from avkit_core.domain.download import PlaylistInfo, VideoInfo
+from avkit_core.domain.download import PlaylistInfo, VideoInfo, VideoListing
 from avkit_core.ports.youtube import YouTubePort
 
 EXTRACT_CACHE_TTL_S = 300.0
@@ -19,7 +19,7 @@ class ExtractCoordinator:
         self._ttl_s = ttl_s
         self._lock = threading.Lock()
         self._info_cache: dict[str, tuple[float, VideoInfo | PlaylistInfo]] = {}
-        self._ids_cache: dict[str, tuple[float, list[str]]] = {}
+        self._ids_cache: dict[str, tuple[float, VideoListing]] = {}
         self.in_flight = 0
         self.max_in_flight = 0
 
@@ -46,17 +46,17 @@ class ExtractCoordinator:
             finally:
                 self._leave()
 
-    def extract_video_ids(self, channel_url: str) -> list[str]:
+    def extract_video_ids(self, channel_url: str) -> VideoListing:
         key = channel_url.strip()
         now = time.monotonic()
         with self._lock:
             cached = self._ids_cache.get(key)
             if cached is not None and now - cached[0] < self._ttl_s:
-                return list(cached[1])
+                return cached[1]
             self._enter()
             try:
                 result = self._youtube.extract_video_ids(key)
-                self._ids_cache[key] = (time.monotonic(), list(result))
-                return list(result)
+                self._ids_cache[key] = (time.monotonic(), result)
+                return result
             finally:
                 self._leave()

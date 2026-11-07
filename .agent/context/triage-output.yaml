@@ -1901,6 +1901,57 @@ archived:
   category: null
   priority: null
   enrichment: null
+- id: TRANSCRIPT-TITLE-IS-VIDEO-ID
+  title: Every transcript's title is its video ID
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-223
+      stage: triage
+      question: Where does the transcript's title come from?
+      resolution: autonomous
+      class: two-way
+      chosen: From the flat enumeration add_channel already runs, stored per item, with no extra request per video. The video ID stays as the fallback only.
+      source_tag: Local Canon
+      precedents:
+      - packages/infrastructure/src/avkit_infra/transcript/adapter.py:42-44 — the fallback that always wins
+      research:
+        engine: none
+        sources: []
+      reasoning: An extra request per video would add load to the endpoint family that is rate limiting. PlaylistInfo carries only video_ids today (domain/download.py, youtube/adapter.py:203-214), so it
+        gains a field. The plan must measure which URL shapes return titles. Two-way.
+    decided_by: agent
+- id: TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME
+  title: A transcript job's channel name is the playlist's title
+  severity: low
+  component: core
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-224
+      stage: triage
+      question: Where does the channel name come from?
+      resolution: autonomous
+      class: two-way
+      chosen: From the same enumeration, falling back to today's title. The existing output folder slug stays unchanged.
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/transcript.py:136-138,151 and :626 — where the name is taken and written
+      research:
+        engine: none
+        sources: []
+      reasoning: A slug change would split a channel's output across two folders. Two-way.
+    decided_by: agent
 - id: TTS-DEVICE-OPTIONS-IN-CPU-BUILD
   title: The shipped build runs text to speech on the CPU only, but its device options don't say so
   severity: low
@@ -2222,6 +2273,22 @@ archived:
       reasoning: The workaround works, so the session buys an end to a failure that otherwise arrives at the end of each of Sessions 50 to 57. Alternatives were reusing D-272 in every session, and fixing
         it inside Session 49, which would change that plan's goal just before review.
       human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
+- id: GUI-MODELS-PROBE-LEFTOVER-FILE
+  title: The models-folder write probe leaves its file behind when the write or the access check fails
+  severity: medium
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: SMOKE-TTS-WAV-HEADER-TRUSTED
+  title: The packaged TTS smoke takes a WAV's frame count from its header, so a header-only file passes
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
 actionable:
 - id: E2E-ELECTRON-LAUNCH-FLAG
   title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
@@ -2362,57 +2429,6 @@ actionable:
   category: TECH-DEBT
   priority: P4
   enrichment: null
-- id: TRANSCRIPT-TITLE-IS-VIDEO-ID
-  title: Every transcript's title is its video ID
-  severity: medium
-  component: infrastructure
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-223
-      stage: triage
-      question: Where does the transcript's title come from?
-      resolution: autonomous
-      class: two-way
-      chosen: From the flat enumeration add_channel already runs, stored per item, with no extra request per video. The video ID stays as the fallback only.
-      source_tag: Local Canon
-      precedents:
-      - packages/infrastructure/src/avkit_infra/transcript/adapter.py:42-44 — the fallback that always wins
-      research:
-        engine: none
-        sources: []
-      reasoning: An extra request per video would add load to the endpoint family that is rate limiting. PlaylistInfo carries only video_ids today (domain/download.py, youtube/adapter.py:203-214), so it
-        gains a field. The plan must measure which URL shapes return titles. Two-way.
-    decided_by: agent
-- id: TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME
-  title: A transcript job's channel name is the playlist's title
-  severity: low
-  component: core
-  status: open
-  category: MEU-NEW
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-224
-      stage: triage
-      question: Where does the channel name come from?
-      resolution: autonomous
-      class: two-way
-      chosen: From the same enumeration, falling back to today's title. The existing output folder slug stays unchanged.
-      source_tag: Local Canon
-      precedents:
-      - packages/core/src/avkit_core/services/transcript.py:136-138,151 and :626 — where the name is taken and written
-      research:
-        engine: none
-        sources: []
-      reasoning: A slug change would split a channel's output across two folders. Two-way.
-    decided_by: agent
 - id: TRANSCRIPT-ADD-CHANNEL-422
   title: Adding a channel returned 422 after about 8 minutes of enumeration
   severity: low
@@ -2667,6 +2683,22 @@ actionable:
       reasoning: A user who keeps the preselected model should not hit a failure on an ordinary sentence. INT8 and FP32 had no failures in the 2026-11-04 probe and generated at the same speed. INT8 is 92
         MB against 326 MB and peaked at 583 MB against 817 MB. Nobody has compared them by ear, so the choice between them stays with Mat's listening check.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+- id: CONSOLE-HOME-SCRUB-SHORT-FORM
+  title: The Console's home-folder scrub misses the 8.3 short form of the home folder
+  severity: low
+  component: core
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: TRACKED-FILES-HOLD-HOME-PATH
+  title: Tracked files name the maintainer's Windows home folder in full, user name included
+  severity: low
+  component: agent
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -2924,26 +2956,24 @@ deferred:
         kokoro pin. This is not legal advice. See the brief.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
 proposed_batches:
-- slug: infrastructure-transcript-title-is-video-id-tts-onnx-fp16-nonfinite-audio
-  issues:
-  - TRANSCRIPT-TITLE-IS-VIDEO-ID
-  - TTS-ONNX-FP16-NONFINITE-AUDIO
-  component: infrastructure
-  priority_band: P2
-  complexity: M
-  has_duplicates: false
-- slug: core-transcript-channel-is-playlist-name-convert-extract-stream-index-mismatch
-  issues:
-  - TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME
-  - CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
-  component: core
-  priority_band: P3
-  complexity: M
-  has_duplicates: false
 - slug: ui-download-row-shows-requested-quality
   issues:
   - DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
   component: ui
   priority_band: P3
+  complexity: S
+  has_duplicates: false
+- slug: core-convert-extract-stream-index-mismatch
+  issues:
+  - CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
+  component: core
+  priority_band: P3
+  complexity: S
+  has_duplicates: false
+- slug: infrastructure-tts-onnx-fp16-nonfinite-audio
+  issues:
+  - TTS-ONNX-FP16-NONFINITE-AUDIO
+  component: infrastructure
+  priority_band: P2
   complexity: S
   has_duplicates: false

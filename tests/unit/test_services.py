@@ -645,6 +645,8 @@ class DownloadYouTube(FakeYouTube):
         self.playlist: PlaylistInfo | None = None
         self.video = VideoInfo(video_id="vid1", title="One", duration=1.0, formats=[])
         self.ids: list[str] = ["c1", "c2"]
+        self.titles: dict[str, str] = {}
+        self.channel: str | None = None
         self.delay = False
         self._release = __import__("threading").Event()
         self._entered = __import__("threading").Event()
@@ -679,14 +681,19 @@ class DownloadYouTube(FakeYouTube):
         finally:
             self.in_flight -= 1
 
-    def extract_video_ids(self, channel_url: str) -> list[str]:
+    def extract_video_ids(self, channel_url: str) -> object:
+        from avkit_core.domain.download import ListedVideo, VideoListing
+
         self.ids_calls += 1
         self.in_flight += 1
         self.max_in_flight = max(self.max_in_flight, self.in_flight)
         try:
             if self.delay:
                 self._release.wait(timeout=2)
-            return list(self.ids)
+            return VideoListing(
+                tuple(ListedVideo(video_id, self.titles.get(video_id)) for video_id in self.ids),
+                self.channel,
+            )
         finally:
             self.in_flight -= 1
 

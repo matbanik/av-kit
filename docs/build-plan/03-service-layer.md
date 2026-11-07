@@ -208,7 +208,7 @@ Session: `QueueRuntime(queue_name="transcripts")`.
 1. Reject duplicate `channel_url` already in queue.
 2. `youtube.extract_info` / `extract_video_ids` with `transcript.playlist_end` (`0` = all).
 3. `ChannelInfo` → `channel_name`.
-4. `output_dir` = `{transcript.output_dir}/{slug(channel_name)}`.
+4. `output_dir` = `{transcript.output_dir}/{slug(extract title)}`: the slug comes from `extract_info`'s title, not the listed channel name (`SLUG_SOURCE`, Session 53 D-349).
 5. `filesystem.ensure_channel_dirs`.
 6. Insert `TranscriptJob` (`Pending`, `video_count=N`, `word_count=0`).
 7. `replace_items` with one `TranscriptItem` per id (`Pending`).
@@ -673,6 +673,15 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Channel name | `channel_name` comes from the same enumeration, falling back to today's title. | Local Canon: triage D-224 |
 | Slug | The existing output folder slug stays unchanged. | Local Canon: triage D-224 |
 | Tests | Unit with fake enumeration output: titles are stored and reach the files and the compiled headings; a missing title falls back to the ID; a missing channel falls back to today's title; the slug is unchanged; the fake counts no extra request. | Local Canon |
+
+> **Delivered (Session 53).**
+> - The registered text above cites the 2026-11-04 tree. At `9093d95`, the title fallback was at `transcript/adapter.py:63-65`, the channel name at `services/transcript.py:158,161`, and the fetched title at `:611`.
+> - `extract_video_ids` returns a `VideoListing` of IDs and titles with the channel name (`ports/youtube.py:25`, `domain/download.py:268`, `:280`), from the same flat enumeration and with no extra request per video (AC-122.1 to AC-122.4, AC-122.12). A bare channel's tabs are flattened (`FLAT_TABS`, AC-122.18).
+> - `add_channel` stores each listed title on its item (`services/transcript.py:153`), and the ID is the fallback only (AC-122.8, AC-122.9). The channel name is the listing's, falling back to the extract title (`:169`, AC-122.10). The folder, the compiled volumes and the raw zip keep the extract title's slug (`:160-163`, `:347`, `:381`, AC-122.11).
+> - A fetch keeps the stored title (`:611`, AC-122.13). The front matter quotes the title and channel, and the Contents label escapes backslashes and square brackets (`:752-770`, AC-122.14).
+> - The "Last:" label comes only from a processed item (`routes/transcripts.py:35`, AC-122.15).
+> - Titles don't reach the Console (AC-122.16), and a SQL error's text holds no bound value (`database/engine.py:82`, AC-122.17).
+> - Shapes measured live once under D-353 (`C:/Temp/av-kit/s53-shapes.txt`). AC-122.1 to AC-122.18. Plan `docs/execution/plans/2026-11-07-transcript-metadata/`.
 
 <a id="tts-fp16-phase-guard-residual"></a>
 

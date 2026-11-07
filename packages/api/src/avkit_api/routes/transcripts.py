@@ -31,7 +31,8 @@ def _aggregates(items: list[Any]) -> tuple[int, str | None, str | None, str | No
         return done, None, None, None
     dated = [item for item in items if item.processed_at is not None]
     chosen = max(dated, key=lambda item: item.processed_at) if dated else items[-1]
-    title = chosen.title
+    # A stored title shows under "Last:" only once that video was processed (D-352).
+    title = chosen.title if dated else None
     message = chosen.error_message if chosen.status in _MESSAGE_STATUSES else None
     return done, title, chosen.status.value, message
 

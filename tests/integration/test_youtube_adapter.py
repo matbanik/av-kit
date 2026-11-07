@@ -127,6 +127,13 @@ def _video_info_payload() -> dict[str, Any]:
     }
 
 
+def _require_listing() -> None:
+    from avkit_core.domain import download as download_domain
+
+    assert hasattr(download_domain, "VideoListing")
+    assert hasattr(download_domain, "ListedVideo")
+
+
 def _options(tmp_path: Path, **overrides: object) -> DownloadOptions:
     cookie_file = overrides.pop("cookie_file", None)
     payload: dict[str, object] = {
@@ -273,12 +280,13 @@ def test_ac_6_4_extract_video_ids_playlistend_ctor(monkeypatch: pytest.MonkeyPat
     with pytest.raises(ValidationError):
         YouTubeAdapter(playlist_end=-1)
 
+    _require_listing()
     captured = _patch_ydl(
         monkeypatch,
         info={"_type": "playlist", "id": "PL", "title": "T", "entries": [{"id": "a"}]},
     )
-    ids = YouTubeAdapter(playlist_end=0).extract_video_ids("https://www.youtube.com/@chan")
-    assert ids == ["a"]
+    listing = YouTubeAdapter(playlist_end=0).extract_video_ids("https://www.youtube.com/@chan")
+    assert [video.video_id for video in listing.videos] == ["a"]
     assert captured[0].get("extract_flat") is True
     assert "playlistend" not in captured[0]
 
@@ -774,3 +782,234 @@ def test_ac_78_5_no_location_leaves_the_key_absent_neg(monkeypatch: pytest.Monke
     YouTubeAdapter().extract_info("https://youtu.be/vid12345678")
     assert len(captured) == 2
     assert all("ffmpeg_location" not in opts for opts in captured)
+
+
+CHANNEL_URL = "https://www.youtube.com/channel/UCchan/videos"
+
+
+@pytest.mark.integration
+def test_ac_122_2_listing_maps_titles_and_channel(monkeypatch: pytest.MonkeyPatch) -> None:
+    _require_listing()
+    from avkit_core.domain.download import ListedVideo, VideoListing
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    tab = {
+        "_type": "playlist",
+        "id": "UCchan",
+        "title": "Chan - Videos",
+        "channel": "Chan",
+        "uploader": "Someone else",
+        "entries": [
+            {"_type": "url", "id": "a", "title": "Alpha"},
+            {"_type": "url", "id": "b", "title": "  Be\x00ta\n\n  two\x07  words\t"},
+            {"_type": "url", "id": "a", "title": "Alpha again"},
+        ],
+    }
+    _patch_ydl(monkeypatch, info=tab)
+    assert YouTubeAdapter().extract_video_ids(CHANNEL_URL) == VideoListing(
+        videos=(
+            ListedVideo(video_id="a", title="Alpha"),
+            ListedVideo(video_id="b", title="Beta two words"),
+        ),
+        channel_name="Chan",
+    )
+
+    playlist = {
+        "_type": "playlist",
+        "id": "PLlist",
+        "title": "My list",
+        "channel": "Owner",
+        "entries": [{"id": "c", "title": "Gamma"}],
+    }
+    _patch_ydl(monkeypatch, info=playlist)
+    assert YouTubeAdapter().extract_video_ids(
+        "https://www.youtube.com/playlist?list=PLlist"
+    ) == VideoListing(videos=(ListedVideo(video_id="c", title="Gamma"),), channel_name="Owner")
+
+
+@pytest.mark.integration
+def test_ac_122_2_lone_surrogate_is_dropped(monkeypatch: pytest.MonkeyPatch) -> None:
+    _require_listing()
+    from avkit_core.domain.download import ListedVideo, VideoListing
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    kept = "Caf\u00e9 \u2014 \u65e5\u672c \U0001f600 zero\u200bwidth"
+    tab = {
+        "_type": "playlist",
+        "id": "UCchan",
+        "title": "Chan - Videos",
+        "channel": "Chan \udfff",
+        "entries": [
+            {"_type": "url", "id": "a", "title": "Talk \ud800 title"},
+            {"_type": "url", "id": "b", "title": "\ud800"},
+            {"_type": "url", "id": "c", "title": kept},
+        ],
+    }
+    _patch_ydl(monkeypatch, info=tab)
+    assert YouTubeAdapter().extract_video_ids(CHANNEL_URL) == VideoListing(
+        videos=(
+            ListedVideo(video_id="a", title="Talk title"),
+            ListedVideo(video_id="b", title=None),
+            ListedVideo(video_id="c", title=kept),
+        ),
+        channel_name="Chan",
+    )
+
+
+@pytest.mark.integration
+def test_ac_122_8_surrogate_title_survives_real_storage(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    _require_listing()
+    from tests.unit.test_services import FakeCaptions
+
+    from avkit_core.domain.enums import TranscriptStatus
+    from avkit_core.services.extract import ExtractCoordinator
+    from avkit_core.services.settings import SettingsService
+    from avkit_core.services.transcript import TranscriptService
+    from avkit_infra.database.engine import (
+        create_session_factory,
+        create_sqlite_engine,
+        init_schema,
+    )
+    from avkit_infra.database.unit_of_work import SqlAlchemyUnitOfWork
+    from avkit_infra.filesystem.writer import FilesystemAdapter
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    tab = {
+        "_type": "playlist",
+        "id": "UCchan",
+        "title": "Chan - Videos",
+        "channel": "Chan \udfff",
+        "entries": [
+            {"_type": "url", "id": "a", "title": "Talk \ud800 title"},
+            {"_type": "url", "id": "b", "title": "\ud800"},
+        ],
+    }
+    _patch_ydl(monkeypatch, info=tab)
+    engine = create_sqlite_engine(tmp_path / "avkit.db")
+    try:
+        init_schema(engine)
+        session_factory = create_session_factory(engine)
+
+        def uow_factory() -> SqlAlchemyUnitOfWork:
+            return SqlAlchemyUnitOfWork(session_factory)
+
+        settings = SettingsService(uow_factory)
+        settings.set("transcript", "output_dir", str(tmp_path / "out"))
+        service = TranscriptService(
+            uow_factory,
+            coordinator=ExtractCoordinator(YouTubeAdapter()),
+            captions=FakeCaptions(),
+            filesystem=FilesystemAdapter(),
+            settings=settings,
+            sleep=lambda _seconds: None,
+        )
+        error = None
+        try:
+            job = service.add_channel(CHANNEL_URL)
+        except Exception as exc:  # the Red records the failure as a value, not a crash
+            error = type(exc).__name__
+        assert error is None
+        assert job.channel_name == "Chan"
+        assert [item.title for item in service.list_items(job.id)] == ["Talk title", None]
+        service.start_processing()
+        if service._thread is not None:
+            service._thread.join(timeout=5)
+        assert service.get_job(job.id).status is TranscriptStatus.Done
+        raw = (job.output_dir / "raw" / "a.md").read_bytes().decode("utf-8")
+        assert '"Talk title"' in raw
+        assert [item.title for item in service.list_items(job.id)] == ["Talk title", "b"]
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.integration
+def test_ac_122_3_missing_fields_fall_back(monkeypatch: pytest.MonkeyPatch) -> None:
+    _require_listing()
+    from avkit_core.domain.download import ListedVideo, VideoListing
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    entries = [{"id": "a"}, {"id": "b", "title": 7}, {"id": "c", "title": " \t "}]
+    _patch_ydl(
+        monkeypatch,
+        info={"_type": "playlist", "id": "PL", "channel": "", "uploader": "Up", "entries": entries},
+    )
+    listing = YouTubeAdapter().extract_video_ids(CHANNEL_URL)
+    assert listing == VideoListing(
+        videos=tuple(ListedVideo(video_id=video_id, title=None) for video_id in ("a", "b", "c")),
+        channel_name="Up",
+    )
+
+    _patch_ydl(
+        monkeypatch,
+        info={"_type": "playlist", "id": "PL", "channel": 5, "entries": [{"id": "a"}]},
+    )
+    assert YouTubeAdapter().extract_video_ids(CHANNEL_URL).channel_name is None
+
+
+@pytest.mark.integration
+def test_ac_122_4_single_video_lists_itself(monkeypatch: pytest.MonkeyPatch) -> None:
+    _require_listing()
+    from avkit_core.domain.download import ListedVideo, VideoListing
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    _patch_ydl(monkeypatch, info={**_video_info_payload(), "channel": "Chan"})
+    assert YouTubeAdapter().extract_video_ids(
+        "https://www.youtube.com/watch?v=vid12345678"
+    ) == VideoListing(
+        videos=(ListedVideo(video_id="vid12345678", title="Example"),), channel_name="Chan"
+    )
+
+
+@pytest.mark.integration
+def test_ac_122_18_flat_tabs_list_each_tab_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    _require_listing()
+    from avkit_core.domain.download import ListedVideo, VideoListing
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    info = {
+        "_type": "playlist",
+        "id": "UCchan",
+        "title": "Chan",
+        "channel": "Chan",
+        "entries": [
+            {
+                "_type": "playlist",
+                "id": "UCchan",
+                "title": "Chan - Videos",
+                "entries": [
+                    {"_type": "url", "id": "v1", "title": "One"},
+                    {"_type": "url", "id": "v2", "title": "Two"},
+                ],
+            },
+            {
+                "_type": "playlist",
+                "id": "UCchan",
+                "title": "Chan - Shorts",
+                "entries": [
+                    {"_type": "url", "id": "s1", "title": "Short"},
+                    {"_type": "url", "id": "v1", "title": "One as a short"},
+                    {
+                        "_type": "playlist",
+                        "id": "PLinner",
+                        "title": "Inner",
+                        "entries": [{"_type": "url", "id": "i1", "title": "Inner video"}],
+                    },
+                ],
+            },
+            {"_type": "playlist", "id": "UCchan", "title": "Chan - Live"},
+        ],
+    }
+    _patch_ydl(monkeypatch, info=info)
+    listing = YouTubeAdapter().extract_video_ids("https://www.youtube.com/channel/UCchan")
+    assert listing == VideoListing(
+        videos=(
+            ListedVideo(video_id="v1", title="One"),
+            ListedVideo(video_id="v2", title="Two"),
+            ListedVideo(video_id="s1", title="Short"),
+        ),
+        channel_name="Chan",
+    )
+    listed = {value for video in listing.videos for value in (video.video_id, video.title)}
+    assert listed.isdisjoint({"UCchan", "PLinner", "Chan - Videos", "Chan - Shorts", "Chan - Live"})

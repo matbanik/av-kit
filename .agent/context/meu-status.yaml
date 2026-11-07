@@ -3184,7 +3184,8 @@ meus:
   closed_reason: null
   note: 'Registered 2026-11-04 from TTS-ONNX-FP16-NONFINITE-AUDIO (D-239, Mat). Plan 2026-11-06-tts-load-fp16 (Session 52). Approved 2026-11-07: Codex execution review round 1 of 6, intent achieved: a fresh
     install preselects ONNX INT8, and the packaged sentences smoke passes 149 of 149 on INT8 after failing 12 on FP16, AC-121.1 to AC-121.9. The spike places FP16''s first non-finite output at /decoder/decoder/generator/Div;
-    the issue stays open, and its guard is MEU-127 (D-336, Mat). One non-blocking Medium, F2 (the smoke takes a WAV frame count from its header), is filed as SMOKE-TTS-WAV-HEADER-TRUSTED and fixed before the commit on Mat''s D-340 ruling (task rows C3 and C4, D-343); the execution review''s round 2 rechecks it.'
+    the issue stays open, and its guard is MEU-127 (D-336, Mat). One non-blocking Medium, F2 (the smoke takes a WAV frame count from its header), is filed as SMOKE-TTS-WAV-HEADER-TRUSTED and fixed before
+    the commit on Mat''s D-340 ruling (task rows C3 and C4, D-343); the execution review''s round 2 rechecks it.'
 - row_key: MEU-122
   id: MEU-122
   slug: svc-transcript-metadata
@@ -3196,20 +3197,20 @@ meus:
     anchor: transcript-source-metadata-residual
     text: Phase 3 §Transcript source metadata (residual)
   description: Transcript titles and the channel name come from the flat enumeration add_channel already runs, with the video ID and today's title as fallbacks.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-7, MEU-11
   dependency_parse_status: parsed
   depends_on:
   - MEU-7
   - MEU-11
-  execution_plan: null
-  updated: '2026-11-04'
+  execution_plan: docs/execution/plans/2026-11-07-transcript-metadata/
+  updated: '2026-11-07'
   closed_reason: null
-  note: Registered 2026-11-04 from TRANSCRIPT-TITLE-IS-VIDEO-ID and TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME (D-223, D-224).
+  note: 'Registered 2026-11-04 from TRANSCRIPT-TITLE-IS-VIDEO-ID and TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME (D-223, D-224). Plan 2026-11-07-transcript-metadata (Session 53): ready for review 2026-11-07.'
 - row_key: MEU-123
   id: MEU-123
   slug: convert-extract-stream-index

@@ -705,15 +705,15 @@ Do not read `isProcessing` before `data` exists (temporal dead zone). Cover acti
 > **Source**: [`_transcript_pseudo_logic.md §4, §8`](../../_inspiration/_transcript_pseudo_logic.md).
 
 ```
-{TranscriptJob.output_dir}/          # already {transcript.output_dir}/{slug(channel_name)}
+{TranscriptJob.output_dir}/          # {transcript.output_dir}/{slug(extract title)} (SLUG_SOURCE, Session 53 D-349)
 ├── raw/
 │   ├── {video_id}.md              # Individual transcript with YAML frontmatter
 │   └── ...
 ├── compiled/
-│   ├── {channel_name}_vol1.md     # Compiled Markdown with TOC
-│   └── {channel_name}_vol2.md     # (if word count > max_words_per_document)
+│   ├── {folder}_vol1.md           # Compiled Markdown with TOC; {folder} is the output_dir name
+│   └── {folder}_vol2.md           # (if word count > max_words_per_document)
 ├── progress.json                  # Optional write-through export — not resume SoT
-└── {channel_name}_raw.zip         # Archive of raw files (auto-created on completion)
+└── {folder}_raw.zip               # Archive of raw files (auto-created on completion)
 ```
 
 **Individual transcript format** (YAML frontmatter):

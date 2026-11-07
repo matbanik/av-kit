@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import time
+import unicodedata
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -18,9 +19,11 @@ from avkit_core.domain.download import (
     DownloadOptions,
     DownloadResult,
     FormatInfo,
+    ListedVideo,
     PlaylistInfo,
     SABRStatus,
     VideoInfo,
+    VideoListing,
 )
 from avkit_core.domain.enums import AudioFormat, QualityPreset, SABRMode, SABRSource
 from avkit_core.domain.errors import (
@@ -132,6 +135,57 @@ def _unique_preserve_ids(entries: object) -> list[str]:
         seen.add(raw)
         ids.append(raw)
     return ids
+
+
+_UNCLEAN_CATEGORIES = frozenset({"Cc", "Cs"})
+
+
+def _clean_text(value: object) -> str | None:
+    """`TEXT_CLEAN`: drop non-whitespace controls and lone surrogates, then collapse whitespace.
+
+    A lone surrogate cannot be stored or written as UTF-8 (D-360), so it is dropped like a control.
+    """
+    if not isinstance(value, str):
+        return None
+    kept = "".join(
+        char
+        for char in value
+        if char.isspace() or unicodedata.category(char) not in _UNCLEAN_CATEGORIES
+    )
+    return " ".join(kept.split()) or None
+
+
+def _listed_videos(entries: object) -> tuple[ListedVideo, ...]:
+    """Each entry's video, the first title winning (`FLAT_TABS`, D-358).
+
+    An entry whose `_type` is `playlist` is a channel tab: it gives its own entries' videos,
+    one level deep, and never its own ID (the channel's) or title (the tab's).
+    """
+    if not isinstance(entries, list):
+        return ()
+    flat: list[object] = []
+    for entry in entries:
+        if not (isinstance(entry, dict) and entry.get("_type") == "playlist"):
+            flat.append(entry)
+            continue
+        inner = entry.get("entries")
+        if isinstance(inner, list):
+            flat.extend(
+                item
+                for item in inner
+                if not (isinstance(item, dict) and item.get("_type") == "playlist")
+            )
+    videos: list[ListedVideo] = []
+    seen: set[str] = set()
+    for entry in flat:
+        if not isinstance(entry, dict):
+            continue
+        raw = entry.get("id")
+        if not isinstance(raw, str) or raw == "" or raw in seen:
+            continue
+        seen.add(raw)
+        videos.append(ListedVideo(raw, _clean_text(entry.get("title"))))
+    return tuple(videos)
 
 
 def _map_format_row(row: object) -> FormatInfo:
@@ -415,17 +469,19 @@ class YouTubeAdapter:
             return _playlist_from_info(info)
         return _video_from_info(info)
 
-    def extract_video_ids(self, channel_url: str) -> list[str]:
+    def extract_video_ids(self, channel_url: str) -> VideoListing:
         logger = _YtDlpLogger(self._yt_dlp_debug)
         opts = self._base_opts(logger)
         opts["extract_flat"] = True
         if self._playlist_end > 0:
             opts["playlistend"] = self._playlist_end
         info, _logger = self._run_extract(channel_url, opts, download=False)
+        channel = _clean_text(info.get("channel")) or _clean_text(info.get("uploader"))
         if _is_playlist(info, True):
-            return _playlist_from_info(info).video_ids
+            return VideoListing(_listed_videos(info.get("entries")), channel)
         video = _video_from_info(info)
-        return [video.video_id]
+        listed = ListedVideo(video.video_id, _clean_text(info.get("title")))
+        return VideoListing((listed,), channel)
 
     def download(self, url: str, options: DownloadOptions) -> DownloadResult:
         self._last_progress = None

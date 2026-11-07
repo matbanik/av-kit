@@ -3002,12 +3002,15 @@ issues:
     title: Every transcript's title is its video ID
     severity: medium
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: packages/infrastructure/src/avkit_infra/transcript/adapter.py:42-44 reads a title attribute from the fetched transcript and falls back to the video ID. The installed youtube_transcript_api FetchedTranscript has only snippets, video_id, language, language_code and is_generated, so the fallback always wins.
     blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Transcript files, compiled volume headings and contents, and the ''Last:'' label all show the ID. Not measured: whether other fields are affected. Compiled files stay usable but are hard to navigate.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-07'
+      method: 'Session 53 task row 1 receipts C:/Temp/av-kit/s53-listing-red.txt and s53-listing-red-check.txt, row 2 receipts s53-listing-green.txt and s53-listing-types.txt, row 3 receipts s53-api-red.txt and s53-api-red-check.txt, row 4 receipts s53-api-green.txt and s53-api-types.txt, and row 0a''s s53-shapes.txt (plan 2026-11-07-transcript-metadata): tests/unit/test_transcript_metadata.py with a fake port that counts its calls, tests/integration/test_youtube_adapter.py with yt-dlp faked, and tests/e2e/test_api_transcripts.py. The URL shapes were measured live once, on Mat''s D-353 yes (2026-11-07): four URLs, field presence only, no retry.'
+      result: 'Row 1: 18 failed by assertion or a declared-new name and 1 passed, red-check 0 problems. Row 2: 243 passed, pyright 0 errors. Row 3: 1 failed by assertion. Row 4: 15 passed, pyright 0 errors. Each item stores the title its flat entry lists (AC-122.8), and a missing title falls back to the video ID (AC-122.9). The title reaches the raw file''s quoted front matter, the compiled heading and the Contents label (AC-122.14), a fetch keeps it (AC-122.13), and the Last label shows it only from a processed item (AC-122.15). One listing call per add and no extra request per video, at 2 and 50 videos (AC-122.12). Live: a channel Videos tab''s flat entries hold an id and a title for 3 of 3.'
+    resolution_path: 'Fixed in Session 53 on 2026-11-07 (plan 2026-11-07-transcript-metadata, MEU-122, D-346 to D-351): extract_video_ids returns a VideoListing of each flat entry''s ID and cleaned title, add_channel stores the title on its item with the ID as the fallback only, and a fetch keeps the stored title. A bare channel URL''s tabs are flattened (FLAT_TABS, D-354 and D-358).'
     category: MEU-NEW
     priority: P3
     meu_links:
@@ -3038,12 +3041,15 @@ issues:
     title: A transcript job's channel name is the playlist's title
     severity: low
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: TranscriptService.add_channel uses info.title as channel_name for a PlaylistInfo (packages/core/src/avkit_core/services/transcript.py:136-138,151). For a channel's videos tab that is the tab's playlist title rather than the channel's name.
     blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Per-video transcript files from a playlist run read ''channel: Blender Fundamentals 2.8'', the playlist''s title. It also feeds the output slug (:312). Not measured: other URL shapes, including a channel''s videos tab.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-07'
+      method: 'Session 53 task row 1 receipts C:/Temp/av-kit/s53-listing-red.txt and s53-listing-red-check.txt, row 2 receipts s53-listing-green.txt and s53-listing-types.txt, row 4 receipts s53-api-green.txt and s53-api-types.txt, and row 0a''s s53-shapes.txt (plan 2026-11-07-transcript-metadata): tests/unit/test_transcript_metadata.py and tests/integration/test_youtube_adapter.py with yt-dlp faked. The URL shapes were measured live once, on Mat''s D-353 yes (2026-11-07): four URLs, field presence only, no retry.'
+      result: 'Row 1: 18 failed by assertion or a declared-new name and 1 passed, red-check 0 problems. Row 2: 243 passed, pyright 0 errors. Row 4: 15 passed, pyright 0 errors. The channel name is the listing''s top-level channel, falling back to the uploader (AC-122.2 to AC-122.4), and to the extract title when the listing has none (AC-122.10). The output folder, the compiled volume names and the raw zip keep the extract title''s slug (AC-122.11). Live: the channel Videos tab, the bare channel and the playlist each carry a top-level channel.'
+    resolution_path: 'Fixed in Session 53 on 2026-11-07 (plan 2026-11-07-transcript-metadata, MEU-122, D-347 to D-349): the channel name comes from the same flat enumeration''s top-level channel, then the uploader, then the extract title. The folder, volume and zip names keep the extract title''s slug (SLUG_SOURCE).'
     category: MEU-NEW
     priority: P4
     meu_links:

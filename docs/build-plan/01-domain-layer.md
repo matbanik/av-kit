@@ -206,6 +206,8 @@ Pending ──→ Downloading ──→ Done
 |------|--------|-------|
 | `VideoInfo` | `video_id`, `title`, `duration`, `formats: list[FormatInfo]` | `YouTubePort.extract_info` |
 | `PlaylistInfo` | `playlist_id`, `title`, `video_ids` | Flat extract; service inserts N jobs |
+| `ListedVideo` | `video_id`, `title` (single-spaced text without controls or lone surrogates, or `None`) | One entry of the flat enumeration (Session 53 MEU-122, `TEXT_CLEAN`) |
+| `VideoListing` | `videos: tuple[ListedVideo, ...]`, `channel_name` (as `title`, or `None`) | `YouTubePort.extract_video_ids`; no `video_id` repeats (`LISTING`) |
 | `FormatInfo` | `format_id`, `ext`, `height`, `abr`, `vcodec`, `acodec` | |
 | `DownloadOptions` | `quality`, `audio_only`, `audio_format`, `output_dir`, cookie fields as **paths/mode only** | Never embed cookie bytes |
 | `DownloadResult` | `file_path`, `file_size`, `video_id`, `title` | |
@@ -267,7 +269,7 @@ Skip catalog. Not job history. Matches yt-dlp `--download-archive` (extractor + 
 
 | Command | Effect |
 |---------|--------|
-| Resolve | `YouTubePort.extract_video_ids` → insert `TranscriptItem` rows → set `video_count` |
+| Resolve | `YouTubePort.extract_video_ids` → `VideoListing` → insert `TranscriptItem` rows, each with its listed title → set `video_count` |
 | Compile | `POST /transcripts/{id}/compile` — write `compiled/*.md`; not a new job row |
 | Zip | Automatic on channel `Done` — set `zip_path` |
 | Pause / Resume / Stop | Session `QueueRuntime` + this job’s `status` (`Processing` ↔ `Paused`) |
@@ -430,7 +432,7 @@ Ports stay IO-shaped. They return DTOs, not persisted graphs. **This section is 
 ```python
 class YouTubePort(Protocol):
     def extract_info(self, url: str, flat: bool = False) -> VideoInfo | PlaylistInfo: ...
-    def extract_video_ids(self, channel_url: str) -> list[str]: ...
+    def extract_video_ids(self, channel_url: str) -> VideoListing: ...
     def download(self, url: str, options: DownloadOptions) -> DownloadResult: ...
     def get_formats(self, video_id: str) -> list[FormatInfo]: ...
     def check_sabr_status(self) -> SABRStatus: ...

@@ -240,7 +240,7 @@ Each plan follows `.agent/docs/cloud-local-collaboration.md`: gate location and 
 | 50 | `transcript-failure-reason` | MEU-115, MEU-116 | P2 | executed | `docs/execution/plans/2026-11-05-transcript-failure-reason/` |
 | 51 | `tts-build-capability` | MEU-117, MEU-118 | P2 | executed | `docs/execution/plans/2026-11-06-tts-build-capability/` |
 | 52 | `tts-load-fp16` | MEU-119, MEU-120, MEU-121 | P2 | executed | `docs/execution/plans/2026-11-06-tts-load-fp16/` |
-| 53 | `transcript-metadata` | MEU-122 | P2 | pending | — |
+| 53 | `transcript-metadata` | MEU-122 | P2 | executed | `docs/execution/plans/2026-11-07-transcript-metadata/` |
 | 54 | `convert-extract-index` | MEU-123 | P2 | pending | — |
 | 55 | `download-received-quality` | MEU-124 | P2 | pending | — |
 | 56 | `light-accent-contrast` | MEU-126 | P2 | pending | — |

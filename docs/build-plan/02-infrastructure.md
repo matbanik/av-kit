@@ -344,6 +344,8 @@ Implements `YouTubePort`. Library: `yt_dlp` (import the library; do not shell ou
 
 `flat_playlist=True`, honor `playlist_end` from options/settings (`0` = no limit). Used by transcript resolve.
 
+Returns a `VideoListing` (Session 53 MEU-122, `youtube/adapter.py:462-474`): each flat entry's ID and title, and the top-level `channel`, falling back to `uploader`. `_clean_text` (`:140`) drops control characters and collapses whitespace, and an empty result is `None`. `_listed_videos` (`:148`) keeps the first title of a repeated ID. A bare channel URL returns one nested playlist per tab; `FLAT_TABS` flattens their entries one level deep and drops anything nested further (D-358). A single video lists itself with its own title.
+
 ### `download(url, options)`
 
 Build yt-dlp opts from `DownloadOptions`:

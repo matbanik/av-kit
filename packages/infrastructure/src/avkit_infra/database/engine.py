@@ -78,6 +78,8 @@ def create_sqlite_engine(db_path: Path) -> Engine:
     engine = create_engine(
         sqlite_url(db_path),
         connect_args=SQLITE_CONNECT_ARGS,
+        # A SQL error's text then holds no bound value, such as a title (D-357).
+        hide_parameters=True,
     )
     _register_sqlite_pragmas(engine)
     log.info("engine.created", path=str(db_path))

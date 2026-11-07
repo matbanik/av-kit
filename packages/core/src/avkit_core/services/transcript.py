@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import threading
 import time
@@ -15,7 +16,7 @@ from uuid import uuid4
 
 import structlog
 
-from avkit_core.domain.download import PlaylistInfo, VideoInfo
+from avkit_core.domain.download import ListedVideo, PlaylistInfo, VideoInfo
 from avkit_core.domain.enums import QueueProcessorState, TranscriptItemStatus, TranscriptStatus
 from avkit_core.domain.errors import (
     ConflictError,
@@ -148,23 +149,26 @@ class TranscriptService:
                 if job.channel_url == url:
                     raise ConflictError("channel_url is already in the queue")
         info = self._coordinator.extract_info(url)
-        ids = self._coordinator.extract_video_ids(url)
+        listing = self._coordinator.extract_video_ids(url)
+        videos = listing.videos
         playlist_end = _as_int(self._settings.get("transcript", "playlist_end"))
         if playlist_end > 0:
-            ids = ids[:playlist_end]
-        if not ids and isinstance(info, VideoInfo):
-            ids = [info.video_id]
+            videos = videos[:playlist_end]
+        if not videos and isinstance(info, VideoInfo):
+            videos = (ListedVideo(info.video_id, None),)
         if isinstance(info, PlaylistInfo):
-            name = info.title
+            folder = info.title
             channel_id = info.playlist_id
         elif isinstance(info, VideoInfo):
-            name = info.title
+            folder = info.title
             channel_id = info.video_id
         else:
             raise ValidationError("extract_info returned an unknown type")
         _ = channel_id
+        # The folder keeps the extract title's slug (SLUG_SOURCE); the name is the channel's.
+        name = listing.channel_name or info.title
         root = Path(str(self._settings.get("transcript", "output_dir"))).expanduser()
-        output_dir = root / slugify(name)
+        output_dir = root / slugify(folder)
         self._filesystem.ensure_channel_dirs(output_dir)
         created = TranscriptJob(
             id=str(uuid4()),
@@ -172,7 +176,7 @@ class TranscriptService:
             channel_name=name,
             status=TranscriptStatus.Pending,
             output_dir=output_dir,
-            video_count=len(ids),
+            video_count=len(videos),
             word_count=0,
             zip_path=None,
             queue_position=0,
@@ -184,8 +188,8 @@ class TranscriptService:
             TranscriptItem(
                 id=str(uuid4()),
                 job_id=created.id,
-                video_id=video_id,
-                title=None,
+                video_id=video.video_id,
+                title=video.title,
                 language=None,
                 word_count=0,
                 path=None,
@@ -194,7 +198,7 @@ class TranscriptService:
                 retry_count=0,
                 processed_at=None,
             )
-            for video_id in ids
+            for video in videos
         ]
         with self._uow_factory() as uow:
             created = replace(
@@ -340,7 +344,7 @@ class TranscriptService:
 
     def _write_volumes(self, job: TranscriptJob, items: list[TranscriptItem]) -> list[Path]:
         max_words = _as_int(self._settings.get("transcript", "max_words_per_document"))
-        slug = slugify(job.channel_name)
+        slug = job.output_dir.name
         compiled_dir = job.output_dir / "compiled"
         volumes: list[list[TranscriptItem]] = [[]]
         running = 0
@@ -362,7 +366,7 @@ class TranscriptService:
         lines = [f"# {job.channel_name}", "", "## Contents"]
         for item in items:
             title = item.title or item.video_id
-            lines.append(f"- [{title}](#{slugify(title)})")
+            lines.append(f"- [{_contents_label(title)}](#{slugify(title)})")
         lines.append("")
         for item in items:
             title = item.title or item.video_id
@@ -374,7 +378,7 @@ class TranscriptService:
         return "\n".join(lines).rstrip() + "\n"
 
     def _zip_raw(self, job: TranscriptJob, items: list[TranscriptItem]) -> Path:
-        slug = slugify(job.channel_name)
+        slug = job.output_dir.name
         zip_path = job.output_dir / f"{slug}_raw.zip"
         with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             for item in items:
@@ -603,12 +607,14 @@ class TranscriptService:
         if job is None:
             return False
         path = job.output_dir / "raw" / f"{result.video_id}.md"
-        self._filesystem.write_text_atomic(path, _raw_markdown(job, result))
+        # The listed title wins; the result's title, the ID, is the fallback (TITLE_KEPT).
+        title = current.title or result.title
+        self._filesystem.write_text_atomic(path, _raw_markdown(job, result, title))
         if self._stop or self._pause:
             return False
         done = replace(
             replace(current, path=path).transition(TranscriptItemStatus.Done),
-            title=result.title,
+            title=title,
             language=result.language,
             word_count=len(result.text.split()),
             error_message=None,
@@ -743,20 +749,25 @@ def _job_message(
     return template.format(n=len(matching), total=len(items), message=last.error_message)
 
 
-def _raw_markdown(job: TranscriptJob, result: TranscriptResult) -> str:
+def _raw_markdown(job: TranscriptJob, result: TranscriptResult, title: str) -> str:
     video_id = result.video_id
-    title = result.title
     text = result.text
     url = f"https://www.youtube.com/watch?v={video_id}"
+    # Quoted, so a title holding ":" or a quote can't break the front matter (D-351).
     front = (
         "---\n"
         f"video_id: {video_id}\n"
-        f"title: {title}\n"
-        f"channel: {job.channel_name}\n"
+        f"title: {json.dumps(title, ensure_ascii=False)}\n"
+        f"channel: {json.dumps(job.channel_name, ensure_ascii=False)}\n"
         f"url: {url}\n"
         "---\n\n"
     )
     return front + text + "\n"
+
+
+def _contents_label(title: str) -> str:
+    """Link text with backslashes and square brackets escaped (D-351); the anchor isn't."""
+    return title.replace("\\", "\\\\").replace("[", "\\[").replace("]", "\\]")
 
 
 def _markdown_body(text: str) -> str:

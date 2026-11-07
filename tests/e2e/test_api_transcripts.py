@@ -140,3 +140,20 @@ def test_ac_115_8_job_out_carries_the_latest_item_message() -> None:
     assert seen == [
         (status.value, expected, expected, job_text) for status, _path, _message, expected in cases
     ]
+
+
+def test_ac_122_15_last_title_comes_only_from_a_processed_item() -> None:
+    from dataclasses import replace
+
+    client, fake, _tts, _models = make_client()
+    first, latest = fake.items[JOB_A]
+    assert (first.title, latest.title) == ("First", "Latest")
+    fake.items[JOB_A] = [replace(first, processed_at=None), replace(latest, processed_at=None)]
+    unprocessed = client.get(f"/api/v1/transcripts/{JOB_A}", headers=AUTH).json()
+    listed = client.get("/api/v1/transcripts", headers=AUTH).json()["items"][0]
+    assert (unprocessed["last_title"], listed["last_title"]) == (None, None)
+    assert unprocessed["last_item_status"] == "Pending"
+
+    fake.items[JOB_A] = [first, replace(latest, processed_at=None)]
+    processed = client.get(f"/api/v1/transcripts/{JOB_A}", headers=AUTH).json()
+    assert processed["last_title"] == "First"

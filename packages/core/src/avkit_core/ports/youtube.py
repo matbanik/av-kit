@@ -13,6 +13,7 @@ from avkit_core.domain.download import (
     PlaylistInfo,
     SABRStatus,
     VideoInfo,
+    VideoListing,
 )
 
 
@@ -21,7 +22,7 @@ class YouTubePort(Protocol):
 
     def extract_info(self, url: str, flat: bool = False) -> VideoInfo | PlaylistInfo: ...
 
-    def extract_video_ids(self, channel_url: str) -> list[str]: ...
+    def extract_video_ids(self, channel_url: str) -> VideoListing: ...
 
     def download(self, url: str, options: DownloadOptions) -> DownloadResult: ...
 
