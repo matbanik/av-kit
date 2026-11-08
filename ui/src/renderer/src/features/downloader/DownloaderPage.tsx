@@ -499,6 +499,7 @@ export function DownloaderPage() {
       speed: row.speed,
       eta: row.eta,
       status: row.status,
+      received_height: row.received_height,
     })
   }
 

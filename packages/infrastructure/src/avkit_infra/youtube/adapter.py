@@ -155,14 +155,10 @@ def _clean_text(value: object) -> str | None:
     return " ".join(kept.split()) or None
 
 
-def _listed_videos(entries: object) -> tuple[ListedVideo, ...]:
-    """Each entry's video, the first title winning (`FLAT_TABS`, D-358).
-
-    An entry whose `_type` is `playlist` is a channel tab: it gives its own entries' videos,
-    one level deep, and never its own ID (the channel's) or title (the tab's).
-    """
+def _flat_entries(entries: object) -> list[object]:
+    """`FLAT_TABS` (D-358): each channel tab's entries in place of the tab, one level deep."""
     if not isinstance(entries, list):
-        return ()
+        return []
     flat: list[object] = []
     for entry in entries:
         if not (isinstance(entry, dict) and entry.get("_type") == "playlist"):
@@ -175,9 +171,20 @@ def _listed_videos(entries: object) -> tuple[ListedVideo, ...]:
                 for item in inner
                 if not (isinstance(item, dict) and item.get("_type") == "playlist")
             )
+    return flat
+
+
+def _listed_videos(entries: object) -> tuple[ListedVideo, ...]:
+    """Each entry's video, the first title winning (`FLAT_TABS`, D-358).
+
+    An entry whose `_type` is `playlist` is a channel tab: it gives its own entries' videos,
+    one level deep, and never its own ID (the channel's) or title (the tab's).
+    """
+    if not isinstance(entries, list):
+        return ()
     videos: list[ListedVideo] = []
     seen: set[str] = set()
-    for entry in flat:
+    for entry in _flat_entries(entries):
         if not isinstance(entry, dict):
             continue
         raw = entry.get("id")
@@ -264,7 +271,7 @@ def _playlist_from_info(info: dict[str, object]) -> PlaylistInfo:
     return PlaylistInfo(
         playlist_id=playlist_id,
         title=title,
-        video_ids=_unique_preserve_ids(info.get("entries")),
+        video_ids=_unique_preserve_ids(_flat_entries(info.get("entries"))),
     )
 
 
@@ -522,12 +529,19 @@ class YouTubeAdapter:
             raise ValidationError("downloaded video id is required")
         if not isinstance(title, str) or title == "":
             title = video_id
+        raw_height = info.get("height")
+        height = (
+            raw_height
+            if isinstance(raw_height, int) and not isinstance(raw_height, bool) and raw_height > 0
+            else None
+        )
         result = DownloadResult(
             file_path=path,
             file_size=path.stat().st_size,
             video_id=video_id,
             title=title,
             sabr_detected=logger.sabr_detected,
+            height=height,
         )
         log.info("youtube.download", video_id=video_id, sabr_detected=result.sabr_detected)
         return result

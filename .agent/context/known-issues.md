@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 121** — Active: 40 | Mitigated: 1 | Resolved: 78
+**Total: 122** — Active: 37 | Mitigated: 1 | Resolved: 82
 
 ## Active Issues
 
@@ -13,10 +13,8 @@
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | ⬜ open | 2026-09-30 |
 | 🟡 | `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` | Non-English voices via the real espeak-ng CLI were never run end to end… | infrastructure | ⬜ open | 2026-10-15 |
 | 🟡 | `YOUTUBE-CAPTIONS-IP-BLOCK` | YouTube is blocking caption requests from the maintainer's IP | infrastructure | ⬜ open | 2026-11-03 |
-| 🟡 | `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY` | A download row shows the quality you asked for, not the quality you got | ui | ⬜ open | 2026-11-03 |
 | 🟡 | `FFMPEG-LIBDVDCSS-BUNDLED` | The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟡 | `TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS` | verify --deep and discover report noise, and verify stamps last_checked… | infrastructure | ⬜ open | 2026-11-04 |
-| 🟡 | `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` | A bare channel URL in the download queue queues the channel's tabs, not… | infrastructure | ⬜ open | 2026-11-07 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
 | 🟢 | `E2E-ELECTRON-LAUNCH-FLAG` | ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch -… | ui | ⬜ open | 2026-09-02 |
 | 🟢 | `TOOLING-ADOPTION-FIXTURE-LIVE-GOVERNANCE` | Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the… | infrastructure | ⬜ open | 2026-09-30 |
@@ -48,7 +46,6 @@
 | 🟢 | `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` | The transcript queue E2E's seam reload failed once with ERR_ABORTED und… | ui | ⬜ open | 2026-11-07 |
 | 🟢 | `TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS` | Two older title paths into transcript storage skip the lone-surrogate c… | core | ⬜ open | 2026-11-07 |
 | 🟢 | `CONVERT-CUT-ENCODER-LABEL` | A cut is labelled with an encoder it does not use | core | ⬜ open | 2026-11-07 |
-| 🟢 | `CONSOLE-STARTUP-DB-PATH` | The backend's first log line shows the database path, user name include… | infrastructure | ⬜ open | 2026-11-07 |
 
 ## Mitigated / Workaround
 
@@ -56,9 +53,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (78)
+## Resolved (82)
 
-78 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+82 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

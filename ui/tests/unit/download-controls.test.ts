@@ -76,6 +76,7 @@ type DownloadRow = {
   speed: string | null
   eta: string | null
   status: string
+  received_height: number | null
 }
 
 function row(overrides: Partial<DownloadRow> = {}): DownloadRow {
@@ -84,6 +85,7 @@ function row(overrides: Partial<DownloadRow> = {}): DownloadRow {
     speed: null,
     eta: null,
     status: 'Pending',
+    received_height: null,
     ...overrides,
   }
 }
@@ -169,5 +171,35 @@ describe('MEU-46 download-controls', () => {
 
     // An empty quality string is dropped rather than rendered as a blank chip.
     expect(downloadMetaSegments(row({ quality: '', speed: '2.0MiB/s' }))).toEqual(['2.0MiB/s'])
+  })
+})
+
+describe('MEU-124 download-controls', () => {
+  it('AC-124.14 downloadMetaSegments shows the received quality next to the request when they differ', async () => {
+    const { downloadMetaSegments } = await loadControls()
+    const done = { status: 'Done', speed: '4.2MiB/s', eta: '00:00' }
+
+    // SHOWN_WHEN_DIFFERENT: a received height that matches the request shows once.
+    expect(downloadMetaSegments(row({ ...done, quality: '1080p', received_height: 1080 }))).toEqual([
+      '1080p',
+      '4.2MiB/s',
+      '00:00',
+    ])
+    expect(downloadMetaSegments(row({ ...done, quality: '1080p', received_height: 360 }))).toEqual([
+      '360p (asked 1080p)',
+      '4.2MiB/s',
+      '00:00',
+    ])
+    // A row without a received height shows its request, as before MEU-124.
+    expect(downloadMetaSegments(row({ ...done, quality: '1080p', received_height: null }))).toEqual([
+      '1080p',
+      '4.2MiB/s',
+      '00:00',
+    ])
+    expect(downloadMetaSegments(row({ ...done, quality: 'best', received_height: 1080 }))).toEqual([
+      '1080p (asked best)',
+      '4.2MiB/s',
+      '00:00',
+    ])
   })
 })

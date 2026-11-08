@@ -134,6 +134,7 @@ class DownloadJob:
     queue_position: int
     created_at: datetime
     updated_at: datetime
+    received_height: int | None = None
 
     def __post_init__(self) -> None:
         require_uuid_str(self.id, "id")
@@ -153,6 +154,7 @@ class DownloadJob:
         require_non_negative_int(self.queue_position, "queue_position")
         require_datetime(self.created_at, "created_at")
         require_datetime(self.updated_at, "updated_at")
+        require_optional_non_negative_int(self.received_height, "received_height")
 
     def transition(self, new_status: DownloadStatus) -> DownloadJob:
         """Return a copy with `new_status` when the edge is in DOWNLOAD_TRANSITIONS."""
@@ -328,6 +330,7 @@ class DownloadResult:
     video_id: str
     title: str
     sabr_detected: bool
+    height: int | None = None
 
     def __post_init__(self) -> None:
         require_path(self.file_path, "file_path")
@@ -335,6 +338,7 @@ class DownloadResult:
         require_non_empty_str(self.video_id, "video_id")
         require_non_empty_str(self.title, "title")
         require_bool(self.sabr_detected, "sabr_detected")
+        require_optional_non_negative_int(self.height, "height")
 
 
 @dataclass(frozen=True)

@@ -148,6 +148,7 @@ export type DownloadMetaRow = {
   speed: string | null
   eta: string | null
   status: string
+  received_height: number | null
 }
 
 /**
@@ -156,16 +157,26 @@ export type DownloadMetaRow = {
  * Carries the Quality / Speed / ETA columns of the deleted react-table queue
  * onto the card. Speed and ETA are emitted whenever the field is non-null
  * *regardless of status* — the backend never clears them
- * (`services/download.py:559-568`), so a finished row keeps the speed and ETA it
+ * (`services/download.py:561-571`), so a finished row keeps the speed and ETA it
  * completed at. A null or empty field yields no segment at all rather than a
  * stray em dash, because the card joins the segments with META_SEPARATOR and an
  * empty segment would render as a floating separator.
  *
- * @param row - One download list row; only the four fields above are read.
+ * SHOWN_WHEN_DIFFERENT (D-385): when the row's received height differs from its
+ * requested quality, the Quality segment reads `360p (asked 1080p)`; a matching
+ * or missing height leaves the request alone, as before MEU-124.
+ *
+ * @param row - One download list row; only the fields above are read.
  * @returns The segments in Quality, Speed, ETA order, with blanks dropped.
  */
 export function downloadMetaSegments(row: DownloadMetaRow): string[] {
-  const segments: (string | null)[] = [row.quality, row.speed, row.eta]
+  const height = row.received_height
+  const received = typeof height === 'number' && height > 0 ? `${height}p` : null
+  const quality =
+    received === null || received === row.quality
+      ? row.quality
+      : `${received} (asked ${row.quality})`
+  const segments: (string | null)[] = [quality, row.speed, row.eta]
   return segments.filter(
     (segment): segment is string => segment !== null && segment.length > 0,
   )

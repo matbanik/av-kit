@@ -33,6 +33,7 @@ const existing: DownloadListItem = {
   file_size: 156_000_000,
   file_path: null,
   queue_position: 1,
+  received_height: null,
 }
 
 const created: DownloadListItem = {
@@ -47,6 +48,7 @@ const created: DownloadListItem = {
   file_size: 245_000_000,
   file_path: null,
   queue_position: 2,
+  received_height: null,
 }
 
 function mockApi(): void {
@@ -430,6 +432,7 @@ describe('MEU-46 DownloaderPage queue surface', () => {
       file_size: null,
       file_path: null,
       queue_position: 1,
+      received_height: null,
       ...overrides,
     }
   }
@@ -1188,6 +1191,30 @@ describe('MEU-46 DownloaderPage queue surface', () => {
     expect(within(region).getByTestId('queue-list').parentElement?.className).toContain('overflow-auto')
     expect(within(root).getByTestId('url-input').closest('form')).toBeTruthy()
   })
+
+  it('AC-124.15 a card shows the received quality next to the request when they differ', async () => {
+    rows = [
+      queueItem({
+        id: 'dl-1',
+        title: 'First',
+        status: 'Done',
+        quality: '1080p',
+        received_height: 360,
+        progress: 100,
+        queue_position: 1,
+      }),
+      queueItem({ id: 'dl-2', title: 'Second', quality: '720p', queue_position: 2 }),
+    ]
+    await renderQueue()
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    const meta = (id: string): string => inside(card(id), 'queue-card-meta')?.textContent ?? ''
+    expect(meta('dl-1')).toContain('360p (asked 1080p)')
+    expect(meta('dl-2')).toContain('720p')
+    expect(meta('dl-2')).not.toContain('asked')
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -1225,6 +1252,7 @@ describe('MEU-47 DownloaderPage bulk selection', () => {
       file_size: null,
       file_path: null,
       queue_position: 1,
+      received_height: null,
       ...overrides,
     }
   }
@@ -1661,6 +1689,7 @@ describe('MEU-49 DownloaderPage drag reorder', () => {
       file_size: null,
       file_path: null,
       queue_position: 1,
+      received_height: null,
       ...overrides,
     }
   }

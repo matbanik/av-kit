@@ -1013,3 +1013,126 @@ def test_ac_122_18_flat_tabs_list_each_tab_once(monkeypatch: pytest.MonkeyPatch)
     )
     listed = {value for video in listing.videos for value in (video.video_id, video.title)}
     assert listed.isdisjoint({"UCchan", "PLinner", "Chan - Videos", "Chan - Shorts", "Chan - Live"})
+
+
+def _downloaded_info(tmp_path: Path, **extra: object) -> dict[str, Any]:
+    outfile = tmp_path / "clip.mp4"
+    outfile.write_bytes(b"x")
+    return {
+        **_video_info_payload(),
+        "requested_downloads": [{"filepath": str(outfile)}],
+        **extra,
+    }
+
+
+@pytest.mark.integration
+def test_ac_124_5_download_reads_the_received_height(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    _patch_ydl(monkeypatch, info=_downloaded_info(tmp_path, height=720))
+    result = YouTubeAdapter(should_stop=lambda: False).download(
+        "https://youtu.be/vid12345678", _options(tmp_path)
+    )
+    assert result.height == 720
+
+
+_NO_HEIGHT = object()
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "raw",
+    [True, 1.5, 0, -1, "720", _NO_HEIGHT],
+    ids=["bool", "float", "zero", "negative", "string", "missing"],
+)
+def test_ac_124_6_unusable_height_is_none(
+    raw: object, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    info = _downloaded_info(tmp_path)
+    if raw is not _NO_HEIGHT:
+        info["height"] = raw
+    _patch_ydl(monkeypatch, info=info)
+    result = YouTubeAdapter(should_stop=lambda: False).download(
+        "https://youtu.be/vid12345678", _options(tmp_path)
+    )
+    assert result.height is None
+
+
+@pytest.mark.integration
+def test_ac_124_10_bare_channel_adds_each_tab_video(monkeypatch: pytest.MonkeyPatch) -> None:
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    info = {
+        "_type": "playlist",
+        "id": "UCchan",
+        "title": "Chan",
+        "channel": "Chan",
+        "entries": [
+            {
+                "_type": "playlist",
+                "id": "UCchan",
+                "title": "Chan - Videos",
+                "entries": [
+                    {"_type": "url", "id": "v1", "title": "One"},
+                    {"_type": "url", "id": "v2", "title": "Two"},
+                    {"_type": "url", "id": "v3", "title": "Three"},
+                ],
+            },
+            {
+                "_type": "playlist",
+                "id": "UCchan",
+                "title": "Chan - Shorts",
+                "entries": [
+                    {"_type": "url", "id": "s1", "title": "Short one"},
+                    {"_type": "url", "id": "s2", "title": "Short two"},
+                    {"_type": "url", "id": "v1", "title": "One as a short"},
+                    {
+                        "_type": "playlist",
+                        "id": "PLinner",
+                        "title": "Inner",
+                        "entries": [{"_type": "url", "id": "i1", "title": "Inner video"}],
+                    },
+                ],
+            },
+            {
+                "_type": "playlist",
+                "id": "UCchan",
+                "title": "Chan - Live",
+                "entries": [
+                    {"_type": "url", "id": "l1", "title": "Live one"},
+                    {"_type": "url", "id": "l2", "title": "Live two"},
+                    {"_type": "url", "id": "l3", "title": "Live three"},
+                ],
+            },
+        ],
+    }
+    _patch_ydl(monkeypatch, info=info)
+    extracted = YouTubeAdapter().extract_info("https://www.youtube.com/@chan")
+    assert isinstance(extracted, PlaylistInfo)
+    assert extracted.video_ids == ["v1", "v2", "v3", "s1", "s2", "l1", "l2", "l3"]
+    assert {"UCchan", "PLinner", "i1"}.isdisjoint(extracted.video_ids)
+
+
+@pytest.mark.integration
+def test_ac_124_11_tab_url_lists_its_videos_unchanged(monkeypatch: pytest.MonkeyPatch) -> None:
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    info = {
+        "_type": "playlist",
+        "id": "UCchan",
+        "title": "Chan - Videos",
+        "entries": [
+            {"_type": "url", "id": "v1", "title": "One"},
+            {"_type": "url", "id": "v2", "title": "Two"},
+            {"_type": "url", "id": "v3", "title": "Three"},
+        ],
+    }
+    _patch_ydl(monkeypatch, info=info)
+    extracted = YouTubeAdapter().extract_info("https://www.youtube.com/@chan/videos")
+    assert extracted == PlaylistInfo(
+        playlist_id="UCchan", title="Chan - Videos", video_ids=["v1", "v2", "v3"]
+    )

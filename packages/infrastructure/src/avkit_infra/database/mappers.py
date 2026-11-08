@@ -116,6 +116,7 @@ def download_job_from_row(row: DownloadJobRow) -> DownloadJob:
         queue_position=row.queue_position,
         created_at=row.created_at,
         updated_at=row.updated_at,
+        received_height=row.received_height,
     )
 
 
@@ -139,6 +140,7 @@ def download_job_to_row(job: DownloadJob) -> DownloadJobRow:
         queue_position=job.queue_position,
         created_at=job.created_at,
         updated_at=job.updated_at,
+        received_height=job.received_height,
     )
 
 
@@ -160,6 +162,7 @@ def apply_download_job(row: DownloadJobRow, job: DownloadJob) -> None:
     row.queue_position = job.queue_position
     row.created_at = job.created_at
     row.updated_at = job.updated_at
+    row.received_height = job.received_height
 
 
 def archive_entry_from_row(row: DownloadArchiveRow) -> DownloadArchiveEntry:

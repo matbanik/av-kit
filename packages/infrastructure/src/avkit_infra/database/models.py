@@ -49,6 +49,8 @@ class DownloadJobRow(Base):
     queue_position: Mapped[int] = mapped_column(Integer, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # Last, so a fresh database and one upgraded by COLUMN_MIGRATIONS have the same order.
+    received_height: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
 class DownloadArchiveRow(Base):

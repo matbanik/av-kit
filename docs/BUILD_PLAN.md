@@ -64,8 +64,8 @@ Status of **code**: YouTube toolkit + Convert + Capture implemented through GUI;
 |----------|-----------|:-----:|:---------:|
 | P0 | MEU-1–4 (Phase 1 domain) | 4 | 4 |
 | P1 | MEU-5–13 (Phases 2–3) | 9 | 9 |
-| P2 | MEU-14–127 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17 triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127) | 114 | 104 |
-| **Total** | | **127** | **116 + 1🚫** |
+| P2 | MEU-14–127 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17 triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127) | 114 | 105 |
+| **Total** | | **127** | **117 + 1🚫** |
 
 <!-- END AUTOGEN:meu-status:summary -->
 

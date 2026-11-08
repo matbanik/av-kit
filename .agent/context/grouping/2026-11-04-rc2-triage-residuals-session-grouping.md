@@ -24,7 +24,7 @@
 | MEU-121 | `svc-tts-fp16-nonfinite` | `TTS-ONNX-FP16-NONFINITE-AUDIO` (D-239) | GUI, adapter investigation | MEU-62, MEU-72, MEU-117 |
 | MEU-122 | `svc-transcript-metadata` | `TRANSCRIPT-TITLE-IS-VIDEO-ID` (D-223), `TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME` (D-224) | Service, port, adapter | MEU-7, MEU-11 |
 | MEU-123 | `convert-extract-stream-index` | `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH` (D-227); rider `CONVERT-EXTRACT-ENCODER-LABEL` | Service, media adapter | MEU-29, MEU-30 |
-| MEU-124 | `download-received-quality` | `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY` (D-225); riders `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` (Mat's D-361) and `CONSOLE-STARTUP-DB-PATH` (D-379) | Domain, service, database, API, GUI | MEU-10, MEU-20 |
+| MEU-124 | `download-received-quality` | `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY` (D-225); riders `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` (Mat's D-361), `CONSOLE-STARTUP-DB-PATH` (D-379) and `DOWNLOAD-PLAYLIST-ITEM-DOWNLOADS-PLAYLIST` (Mat's D-392) | Domain, service, database, API, GUI | MEU-10, MEU-20 |
 | MEU-125 | `dist-release-candidate-2` | The accepted batching: the new build, gate, notes and checklist | Release | MEU-110, MEU-113, MEU-114, MEU-115, MEU-116, MEU-117, MEU-118, MEU-119, MEU-120, MEU-121 |
 | MEU-126 | `gui-light-accent-contrast` | `LIGHT-ACCENT-BELOW-AA-CONTRAST` (D-235) | GUI | MEU-26 |
 
@@ -49,6 +49,7 @@
 | `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY` | MEU-NEW | MEU-124 |
 | `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` | TECH-DEBT | MEU-124 (rider, Mat's D-361) |
 | `CONSOLE-STARTUP-DB-PATH` | TECH-DEBT | MEU-124 (rider, D-379) |
+| `DOWNLOAD-PLAYLIST-ITEM-DOWNLOADS-PLAYLIST` | TECH-DEBT | MEU-124 (rider, Mat's D-392) |
 | `LIGHT-ACCENT-BELOW-AA-CONTRAST` | TECH-DEBT | MEU-126 |
 | `BACKEND-READY-BEFORE-LISTEN` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
 | `CAPTURE-E2E-LAUNCH-TEARDOWN-HANG` | MONITORING | Not an MEU: monitoring, acts on recurrence |
@@ -139,6 +140,7 @@ The triage proposed five batches: A (FFmpeg, uninstall), B (Transcript failures)
 - Session 49b, a tooling session with no MEU, fixes the closeout check before Session 50 (Mat's D-274, D-280).
 - Session 53's closeout filed three issues, and Mat placed them on 2026-11-07 (D-361 to D-363, recorded in that session's reflection and each issue's `decision_log`, not in §8). A rider joins Session 55 and a watch item joins Session 57; the third goes to the debt queue, since no remaining session works in its files (D-242).
 - Session 54's plan filed two issues, and Mat asked on 2026-11-07 that they be placed here (D-379, D-380, recorded in Session 54's plan and each issue's `decision_log`, not in §8). `CONSOLE-STARTUP-DB-PATH` is a rider in Session 55, the last session in the database package; `CONVERT-CUT-ENCODER-LABEL` goes to the debt queue, since no remaining session works in its files (D-242).
+- Session 55's plan review filed one issue, and Mat placed it in Session 55 on 2026-11-08 (D-392, recorded in Session 55's plan and the issue's `decision_log`, not in §8). `DOWNLOAD-PLAYLIST-ITEM-DOWNLOADS-PLAYLIST` is a rider there, in the add path the bare-channel rider already changes.
 
 ### Session 49 — `rc2-fetch-uninstall` (MEU-113, MEU-114) · P2
 
@@ -198,6 +200,7 @@ The triage proposed five batches: A (FFmpeg, uninstall), B (Transcript failures)
 - Batch E's quality fix: domain, service, database, API and GUI. It shares no file with Session 54, so it has its own plan (D-250). Calibrate against the MEU-112 part of Session 44 `release-rc1`, which added a job column the same way.
 - Rider `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` (P3, Mat's D-361): a bare channel URL in the download queue queues its tabs, not its videos. The fix applies D-354's rule to the add path in `services/download.py:177-186`, the file this session already works in, flattening the tabs one level as `FLAT_TABS` does for transcripts, with a Red against the measured shape.
 - Rider `CONSOLE-STARTUP-DB-PATH` (P3, D-379): the backend's first log line, `engine.created`, prints the database path with the user name in it (`database/engine.py:85`). `build_services` creates the engine (`wiring.py:135`) before HealthService installs the Console scrub (`:205`), and the desktop app shows the line in the Console; RC1 shipped it. This session's column work runs through `create_sqlite_engine` in the same package. The fix drops the raw path from the line or logs it with the home folder as `~`, with a Red that `build_services` into a folder with a marker name prints no stdout line holding it (D-377's widen option).
+- Rider `DOWNLOAD-PLAYLIST-ITEM-DOWNLOADS-PLAYLIST` (P2, Mat's D-392): every item of a playlist, tab or channel add stores the URL typed (`services/download.py:186-187`), so each row's download asks yt-dlp for the whole list (`:534`). Found by this session's plan review (F1). The fix stores the watch URL of each item's own id at add; a single-video add keeps the URL typed, with a Red through dispatch.
 
 ### Session 56 — `light-accent-contrast` (MEU-126) · P2 band, issue P4
 
@@ -252,7 +255,7 @@ Each plan follows `.agent/docs/cloud-local-collaboration.md`: gate location and 
 | 52 | `tts-load-fp16` | MEU-119, MEU-120, MEU-121 | P2 | executed | `docs/execution/plans/2026-11-06-tts-load-fp16/` |
 | 53 | `transcript-metadata` | MEU-122 | P2 | executed | `docs/execution/plans/2026-11-07-transcript-metadata/` |
 | 54 | `convert-extract-index` | MEU-123 | P2 | executed | `docs/execution/plans/2026-11-07-convert-extract-index/` |
-| 55 | `download-received-quality` | MEU-124 | P2 | pending | — |
+| 55 | `download-received-quality` | MEU-124 | P2 | executed | `docs/execution/plans/2026-11-08-download-received-quality/` |
 | 56 | `light-accent-contrast` | MEU-126 | P2 | pending | — |
 | 57 | `release-rc2` | MEU-125 | P2 | pending | — |
 

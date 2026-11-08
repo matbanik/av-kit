@@ -3247,18 +3247,18 @@ meus:
     anchor: download-received-quality-residual
     text: Phase 6 §Downloader received quality (residual)
   description: The file's real quality is stored in a new nullable field, and the row shows requested and received together only when they differ.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-10, MEU-20
   dependency_parse_status: parsed
   depends_on:
   - MEU-10
   - MEU-20
-  execution_plan: null
-  updated: '2026-11-07'
+  execution_plan: docs/execution/plans/2026-11-08-download-received-quality/
+  updated: '2026-11-08'
   closed_reason: null
   note: Registered 2026-11-04 from DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY (D-225), with riders DOWNLOAD-BARE-CHANNEL-LISTS-TABS (D-361, Mat 2026-11-07) and CONSOLE-STARTUP-DB-PATH (D-379, 2026-11-07).
 - row_key: MEU-125

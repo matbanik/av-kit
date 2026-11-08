@@ -3096,12 +3096,15 @@ issues:
     title: A download row shows the quality you asked for, not the quality you got
     severity: medium
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: The row's meta line prints row.quality (ui/src/renderer/src/features/downloader/DownloaderPage.tsx:497-498), which is the preset stored when the item was added (packages/core/src/avkit_core/services/download.py:213,235). No field carries the downloaded file's real quality.
     blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. With YouTube limiting quality under SABR, a row still showed the requested preset. A user can believe they have a higher quality than the file holds. Not measured: how often the two differ outside SABR.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-08'
+      method: 'Session 55 task row 2 receipts C:/Temp/av-kit/s55-py-red.txt and s55-py-red-check.txt, row 3 receipts s55-ui-red.txt and s55-ui-red-check.txt, row 4 receipts s55-py-green.txt, s55-py-openapi.txt, s55-py-types.txt and s55-py-lint.txt, and row 5 receipts s55-ui-green.txt, s55-ui-types.txt and s55-ui-lint.txt (plan 2026-11-08-download-received-quality): tests/unit/test_domain.py, tests/unit/test_services.py, tests/integration/test_youtube_adapter.py, tests/e2e/test_api_downloads.py, the new tests/integration/test_download_received_quality.py on real SQLite, ui/tests/unit/download-controls.test.ts and ui/tests/unit/downloader-page.behavior.test.ts'
+      result: 'Row 2: 10 failed by assertion and 9 passed; red-check 10 required, 0 problems. Row 3: 2 failed by assertion (the card read 1080p); red-check 2 required, 0 problems. Row 4: 323 passed, the OpenAPI check clean, pyright 0 errors, ruff clean. Row 5: 52 passed, typecheck and lint clean. A Done row stores the file''s height (360 for a 1080p request), an unknown height and an audio-only row store null, an existing download_jobs table gains received_height last with every old row kept and null, the list API carries it, and the card reads 360p (asked 1080p) while a matching or null height shows the request alone (AC-124.1 to AC-124.9, AC-124.14, AC-124.15).'
+    resolution_path: 'Fixed in Session 55 on 2026-11-08 under triage D-225 (plan 2026-11-08-download-received-quality, MEU-124): the adapter reads yt-dlp''s height into DownloadResult.height, the Done row stores it in the new nullable download_jobs.received_height (null for audio only), COLUMN_MIGRATIONS adds the column to an existing database, DownloadJobOut carries it, and downloadMetaSegments shows HEIGHTp (asked REQUEST) only when the two differ (D-385).'
     category: MEU-NEW
     priority: P3
     meu_links:
@@ -4189,13 +4192,15 @@ issues:
     title: A bare channel URL in the download queue queues the channel's tabs, not its videos
     severity: medium
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-07'
     root_cause: The download add path queues one item per id in PlaylistInfo.video_ids (packages/core/src/avkit_core/services/download.py:177-186). _playlist_from_info takes those ids from the top-level entries (packages/infrastructure/src/avkit_infra/youtube/adapter.py:257-268, called at :469), and a bare channel URL's top-level entries are its tabs (Videos, Shorts, Live), not videos. Session 53 flattened the tabs one level for transcripts only (FLAT_TABS, D-354, D-358).
     blast_radius: 'Measured: Session 53''s row 0a (D-353) read a bare channel URL''s shape live: entries 3, _type playlist 3, each tab holding the videos (C:/Temp/av-kit/s53-shapes.txt:24-28). Read from the code, not run: a bare channel URL in the download queue gets three tab ids as its items. No download was run. A URL that names a tab (/videos) is not affected.'
-    resolution_path: 'Rider in MEU-124 (Session 55 download-received-quality), which already works in services/download.py: apply D-354''s rule to the download add path, flattening a bare channel''s tabs one level as FLAT_TABS does for transcripts, with a Red against the measured shape.'
+    resolution_path: 'Fixed in Session 55 on 2026-11-08 on Mat''s D-361 ruling (plan 2026-11-08-download-received-quality, MEU-124): _flat_entries, split out of _listed_videos, gives each channel tab''s entries in place of the tab one level deep (FLAT_TABS, D-358), and _playlist_from_info uses it, so the download add queues a bare channel''s videos (BARE_CHANNEL_FLAT).'
     verification:
-      last_checked: '2026-11-07'
+      last_checked: '2026-11-08'
+      method: 'Session 55 task row 2 receipts C:/Temp/av-kit/s55-py-red.txt and s55-py-red-check.txt and row 4 receipts s55-py-green.txt, s55-py-types.txt and s55-py-lint.txt (plan 2026-11-08-download-received-quality): tests/integration/test_youtube_adapter.py with the recorded bare-channel shape through a fake YoutubeDL, and the new tests/integration/test_download_received_quality.py through the real add and dispatch on SQLite; no live YouTube request'
+      result: 'Row 2: AC-124.10 and AC-124.12 failed by assertion (the add listed only UCchan, the id the tabs share). Row 4: 323 passed. A bare channel URL lists v1, v2, v3, s1, s2, l1, l2, l3: each tab''s videos one level deep, a repeated video once, and never the channel id or a playlist nested in a tab. A tab URL lists its videos unchanged (AC-124.11), and the queue downloads each video''s own watch URL (AC-124.12).'
     category: TECH-DEBT
     priority: P3
     related:
@@ -4217,7 +4222,7 @@ issues:
           chosen: File it, P3, as a rider in MEU-124 (Session 55); the fix applies D-354's flatten rule to the download add path
           source_tag: Human-approved
           precedents:
-            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, riders go by shared file
+            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, riders go by shared file
             - packages/core/src/avkit_core/services/download.py:177-186 — the add path that queues video_ids
             - docs/build-plan/06-gui.md:1582-1594 — MEU-124 already names services/download.py:213,235
           research:
@@ -4258,7 +4263,7 @@ issues:
           chosen: File it as MONITORING, P4, and attach it to Session 57's gate as a watch item, with no code change now
           source_tag: Human-approved
           precedents:
-            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:66 — E2E-CLIPBOARD-PRIMER-EMPTY, MONITORING before Session 57
+            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:67 — E2E-CLIPBOARD-PRIMER-EMPTY, MONITORING before Session 57
             - C:/Temp/av-kit/s53-gate-r2a/ — the failed attempt's receipts
           research:
             engine: web_search
@@ -4297,8 +4302,8 @@ issues:
           chosen: File it, P3, in current-focus's debt queue, not as a rider
           source_tag: Human-approved
           precedents:
-            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, a rider needs a session already in the file
-            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:66,68 — debt-queue rows that land before Session 57 if wanted
+            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, a rider needs a session already in the file
+            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:67,69 — debt-queue rows that land before Session 57 if wanted
           research:
             engine: web_search
             sources:
@@ -4355,8 +4360,8 @@ issues:
           chosen: P4, last in current-focus's debt queue, not a rider; it needs a build, so it lands before Session 57 if wanted
           source_tag: Local Canon
           precedents:
-            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, a rider needs a session already in the file
-            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:81 — D-363, a fix whose files no remaining session works in goes to the debt queue
+            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, a rider needs a session already in the file
+            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:82 — D-363, a fix whose files no remaining session works in goes to the debt queue
             - CONVERT-EXTRACT-ENCODER-LABEL — the Extract half of the same label defect, filed P4
           research:
             engine: none
@@ -4367,13 +4372,15 @@ issues:
     title: The backend's first log line shows the database path, user name included, in the Console
     severity: low
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-07'
     root_cause: create_sqlite_engine logs engine.created with path=str(db_path) (packages/infrastructure/src/avkit_infra/database/engine.py:85). build_services creates the engine (packages/api/src/avkit_api/wiring.py:135) before it builds HealthService (:205), whose constructor installs the processor that drops every field outside CONSOLE_FIELDS and scrubs the home folder (packages/core/src/avkit_core/services/health.py:163-183). Until then structlog's default ConsoleRenderer prints every field to stdout. The database is %LOCALAPPDATA%\av-kit\avkit.db (engine.py:36-46, :49-51), inside the user's profile folder.
     blast_radius: 'Measured at plan time: build_services into a folder with a marker name printed one stdout line holding it, this one (C:/Temp/av-kit/s54-plan-startup-stdout-probe.txt). The desktop host forwards each line the backend prints to the Console without a scrub (ui/src/main/index.ts:267-274, ui/src/main/python-manager.ts:133-145, ui/src/renderer/src/hooks/useBackendLogs.ts:69-80). console.log is not affected, since only HealthService writes it. So every start puts the Windows user name in the Console, and a copied Console or a screenshot of it carries it. The line has been in the tree since the root commit, so RC1 shipped it. Found while answering Session 54''s plan review F1 (D-377).'
-    resolution_path: 'Rider in MEU-124 (Session 55 download-received-quality), the last code session before rc.2 and the only one left in packages/infrastructure/src/avkit_infra/database/: engine.created logs no raw path, either dropping the field or logging it with the home folder as ~, with a Red that build_services into a folder with a marker name prints no stdout line holding it (D-377''s widen option).'
+    resolution_path: 'Fixed in Session 55 on 2026-11-08 under D-379 (plan 2026-11-08-download-received-quality, MEU-124): engine.created logs no path field (STARTUP_NO_PATH), so the raw database path no longer reaches stdout or the Console.'
     verification:
-      last_checked: '2026-11-07'
+      last_checked: '2026-11-08'
+      method: 'Session 55 task row 2 receipts C:/Temp/av-kit/s55-py-red.txt and s55-py-red-check.txt and row 4 receipts s55-py-green.txt and s55-py-lint.txt (plan 2026-11-08-download-received-quality): the new tests/integration/test_download_received_quality.py runs the real build_services into a folder whose name holds a random marker, and reads stdout, stderr, the Console ring and console.log'
+      result: 'Row 2: AC-124.13 failed by assertion (the engine.created line held the marker). Row 4: passed. No stdout or stderr line, Console ring message or console.log line holds the marker, and the engine.created line is still written (the positive control).'
     category: TECH-DEBT
     priority: P3
     related:
@@ -4415,8 +4422,8 @@ issues:
           chosen: 'P3, a rider in MEU-124 (Session 55 download-received-quality): engine.created logs no raw path, with a Red that build_services into a folder with a marker name prints no stdout line holding it'
           source_tag: Local Canon
           precedents:
-            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, a rider needs a session already in the file
-            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:199 — D-361, Session 55's first rider
+            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, a rider needs a session already in the file
+            - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:201 — D-361, Session 55's first rider
             - docs/build-plan/06-gui.md:1592 — MEU-124 adds its column through COLUMN_MIGRATIONS, in the package that holds engine.py
             - tests/integration/test_sqlite_uow.py:165-172 — the real-SQLite tests build through create_sqlite_engine and init_schema
           research:
@@ -4424,3 +4431,45 @@ issues:
             sources: []
           reasoning: Session 55 is the last code session before rc.2 and the only one left in avkit_infra/database/, and its column tests run create_sqlite_engine, the function that logs the line. That stretches D-242 from the file to its package, which is why it is stated here. The debt queue would ship the user name in rc.2's Console at every start. Two-way.
           human_message_reference: USER_EXPLICIT 2026-11-07 'All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'
+  - id: DOWNLOAD-PLAYLIST-ITEM-DOWNLOADS-PLAYLIST
+    title: Each video of a playlist download asks yt-dlp for the whole playlist
+    severity: high
+    component: core
+    status: resolved
+    discovered: '2026-11-08'
+    root_cause: add_to_queue gives every item of a PlaylistInfo the URL the user typed (packages/core/src/avkit_core/services/download.py:186-187 at 2963efe), and _run_one passes job.url to YouTubePort.download (:534). For a playlist, a channel tab or a channel URL, each row therefore hands yt-dlp the list's URL with download=True (packages/infrastructure/src/avkit_infra/youtube/adapter.py:497-498), not its own video's.
+    blast_radius: 'Read from the code, not run live. Every row of a playlist, tab or channel add asks yt-dlp to process the whole list with download=True, so the row''s result is the list''s info, not its video''s, and the files on disk are the list''s. Session 55''s plan review F1 reproduced the dispatch offline with a fake download port on real SQLite: three queued ids, three calls with the channel URL, none with a video URL (.agent/context/handoffs/2026-11-08-download-received-quality-plan-critical-review.md). A single-video add is not affected. The kebab''s copy action copies the list URL for a row with no output (ui/src/renderer/src/components/queue/QueueCardMenu.tsx:141).'
+    resolution_path: 'Fixed in Session 55 on 2026-11-08 on Mat''s D-392 ruling (plan 2026-11-08-download-received-quality, MEU-124): add_to_queue stores WATCH_URL_PREFIX plus the video id for each PlaylistInfo item (VIDEO_TARGET), so each job downloads its own video. Rows queued before this change keep the list URL.'
+    verification:
+      last_checked: '2026-11-08'
+      method: 'Session 55 task row 2 receipts C:/Temp/av-kit/s55-py-red.txt and s55-py-red-check.txt and row 4 receipts s55-py-green.txt, s55-py-types.txt and s55-py-lint.txt (plan 2026-11-08-download-received-quality): AC-124.16 in tests/unit/test_services.py with a recording fake download port, and AC-124.12 in the new tests/integration/test_download_received_quality.py through the real add and dispatch on SQLite; no live YouTube request'
+      result: 'Row 2: AC-124.16 failed by assertion (the list item''s job held the list URL https://youtube.com/pl), and AC-124.12 failed at its bare-channel step before reaching the URLs. Row 4: 323 passed. A list item''s job stores https://www.youtube.com/watch?v= plus its own video id, the download port is asked for exactly those URLs in queue order and never the list or channel URL, every item ends Done, and a single video keeps the URL typed.'
+    category: TECH-DEBT
+    priority: P2
+    related:
+      - DOWNLOAD-BARE-CHANNEL-LISTS-TABS
+    meu_links:
+      - MEU-124
+    notes: Session 55 plan review round 1, finding F1 (Codex). Filed and placed in MEU-124 by Mat's D-392 (2026-11-08), which also chose the fix.
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: human
+      decision_log:
+        - id: D-392
+          stage: planning
+          question: Session 55's plan review found that each playlist item's row downloads the list's URL, so the bare-channel rider would queue rows that fail. How should the plan fix it?
+          resolution: human
+          class: product-preference
+          chosen: 'Per-video URL at add: add_to_queue stores the watch URL of each playlist item''s id, a single-video add keeps the URL typed, AC-124.12 is extended through dispatch with a fake that records each download URL, and this issue is opened and closed in MEU-124'
+          source_tag: Human-approved
+          precedents:
+            - .agent/context/handoffs/2026-11-08-download-received-quality-plan-critical-review.md — F1
+            - packages/core/src/avkit_core/services/download.py:186-187,534 — the stored URL and the download call
+            - packages/core/src/avkit_core/services/transcript.py:755 — transcripts already build the watch URL from the id
+            - docs/execution/plans/2026-11-08-download-received-quality/implementation-plan.md — the brief and the options
+          research:
+            engine: none
+            sources: []
+          reasoning: The add path already holds each item's id, and transcripts build the watch URL the same way. Fixing at add leaves a single-video add's URL and the dispatch code unchanged; fixing at dispatch would also mend rows already queued but would ignore every URL typed. Doing nothing would ship a rider whose rows fail. Two-way.
+          human_message_reference: USER_EXPLICIT 2026-11-08 'Per-video URL at add (Recommended)' (answer to the F1 brief; options in implementation-plan.md §User Review Required)

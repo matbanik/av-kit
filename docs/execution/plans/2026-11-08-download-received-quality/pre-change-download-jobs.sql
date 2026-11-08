@@ -1,0 +1,20 @@
+CREATE TABLE download_jobs (
+	id VARCHAR(36) NOT NULL, 
+	url TEXT NOT NULL, 
+	video_id TEXT NOT NULL, 
+	title TEXT NOT NULL, 
+	quality TEXT NOT NULL, 
+	audio_only BOOLEAN NOT NULL, 
+	audio_format TEXT NOT NULL, 
+	status TEXT NOT NULL, 
+	progress FLOAT NOT NULL, 
+	speed_bps FLOAT, 
+	eta_seconds INTEGER, 
+	file_size INTEGER, 
+	file_path TEXT, 
+	error_message TEXT, 
+	queue_position INTEGER NOT NULL, 
+	created_at DATETIME NOT NULL, 
+	updated_at DATETIME NOT NULL, 
+	PRIMARY KEY (id)
+)

@@ -666,6 +666,7 @@ class DownloadYouTube(FakeYouTube):
         self.download_release = __import__("threading").Event()
         self.download_error: Exception | None = None
         self.last_options: object | None = None
+        self.download_urls: list[str] = []
 
     def extract_info(self, url: str, flat: bool = False) -> VideoInfo | PlaylistInfo:
         self.extract_calls += 1
@@ -698,6 +699,7 @@ class DownloadYouTube(FakeYouTube):
             self.in_flight -= 1
 
     def download(self, url: str, options: object) -> DownloadResult:
+        self.download_urls.append(url)
         self.last_options = options
         self.download_entered.set()
         if self.block_download:
@@ -3420,3 +3422,58 @@ def test_ac_119_10_home_folder_reaches_no_console_surface(
         "stdout": True,
         "file": True,
     }
+
+
+def _run_download_queue(service: DownloadService) -> None:
+    service.start_processing()
+    thread = service._thread
+    assert thread is not None
+    thread.join(timeout=2)
+    assert not thread.is_alive()
+
+
+def test_ac_124_2_done_stores_the_received_height() -> None:
+    service, _settings, youtube, uow = _download_stack()
+    youtube.download_result = replace(youtube.download_result, height=360)
+    service.add_to_queue("https://youtu.be/vid1", QualityPreset.P1080, False, AudioFormat.Default)
+    _run_download_queue(service)
+    done = uow.downloads.list_ordered()[0]
+    assert done.status is DownloadStatus.Done
+    assert done.received_height == 360
+
+
+def test_ac_124_3_unknown_height_stays_none() -> None:
+    service, _settings, youtube, uow = _download_stack()
+    youtube.download_result = replace(youtube.download_result, height=None)
+    service.add_to_queue("https://youtu.be/vid1", QualityPreset.P1080, False, AudioFormat.Default)
+    _run_download_queue(service)
+    done = uow.downloads.list_ordered()[0]
+    assert done.status is DownloadStatus.Done
+    assert done.received_height is None
+
+
+def test_ac_124_4_audio_only_stores_no_height() -> None:
+    service, _settings, youtube, uow = _download_stack()
+    youtube.download_result = replace(youtube.download_result, height=480)
+    service.add_to_queue("https://youtu.be/vid1", QualityPreset.P1080, True, AudioFormat.Default)
+    _run_download_queue(service)
+    done = uow.downloads.list_ordered()[0]
+    assert done.audio_only is True
+    assert done.status is DownloadStatus.Done
+    assert done.received_height is None
+
+
+def test_ac_124_16_list_items_download_their_own_video() -> None:
+    service, _settings, youtube, uow = _download_stack()
+    service.add_to_queue("https://youtu.be/vid1", QualityPreset.P1080, False, AudioFormat.Default)
+    youtube.playlist = PlaylistInfo(playlist_id="pl", title="P", video_ids=["a", "b"])
+    service.add_to_queue("https://youtube.com/pl", QualityPreset.P1080, False, AudioFormat.Default)
+    assert [job.url for job in uow.downloads.list_ordered()] == [
+        "https://youtu.be/vid1",
+        "https://www.youtube.com/watch?v=a",
+        "https://www.youtube.com/watch?v=b",
+    ]
+    _run_download_queue(service)
+    jobs = uow.downloads.list_ordered()
+    assert youtube.download_urls == [job.url for job in jobs]
+    assert [job.status for job in jobs] == [DownloadStatus.Done] * 3

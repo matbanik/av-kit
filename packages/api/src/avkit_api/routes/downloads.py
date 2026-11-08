@@ -56,6 +56,7 @@ def _job_out(job: Any) -> DownloadJobOut:
         error_message=job.error_message,
         queue_position=job.queue_position,
         created_at=format_iso(job.created_at),
+        received_height=job.received_height,
     )
 
 

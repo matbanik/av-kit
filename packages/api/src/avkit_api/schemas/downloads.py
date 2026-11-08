@@ -61,6 +61,7 @@ class DownloadJobOut(ApiModel):
     error_message: str | None
     queue_position: int
     created_at: str
+    received_height: int | None
 
 
 class DownloadListOut(ApiModel):

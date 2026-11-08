@@ -1952,6 +1952,32 @@ archived:
         sources: []
       reasoning: A slug change would split a channel's output across two folders. Two-way.
     decided_by: agent
+- id: DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
+  title: A download row shows the quality you asked for, not the quality you got
+  severity: medium
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-225
+      stage: triage
+      question: How does a row show the quality actually received?
+      resolution: autonomous
+      class: two-way
+      chosen: Store the file's real quality in a new nullable field. Show requested and received together only when they differ.
+      source_tag: Local Canon
+      precedents:
+      - packages/core/src/avkit_core/services/download.py:213,235 — only the requested preset is stored
+      - packages/infrastructure/src/avkit_infra/database/migrations.py — the migration path
+      research:
+        engine: none
+        sources: []
+      reasoning: Older rows have no measurement, so nullable keeps them truthful. Two-way.
+    decided_by: agent
 - id: TTS-DEVICE-OPTIONS-IN-CPU-BUILD
   title: The shipped build runs text to speech on the CPU only, but its device options don't say so
   severity: low
@@ -2324,6 +2350,119 @@ archived:
   category: TECH-DEBT
   priority: P3
   enrichment: null
+- id: DOWNLOAD-BARE-CHANNEL-LISTS-TABS
+  title: A bare channel URL in the download queue queues the channel's tabs, not its videos
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-361
+      stage: execution
+      question: Where does the download-side bare channel tab listing go?
+      resolution: human
+      class: product-preference
+      chosen: File it, P3, as a rider in MEU-124 (Session 55); the fix applies D-354's flatten rule to the download add path
+      source_tag: Human-approved
+      precedents:
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, riders go by shared file
+      - packages/core/src/avkit_core/services/download.py:177-186 — the add path that queues video_ids
+      - docs/build-plan/06-gui.md:1582-1594 — MEU-124 already names services/download.py:213,235
+      research:
+        engine: web_search
+        sources:
+        - https://github.com/yt-dlp/yt-dlp/issues/11976 — a bare channel with --flat-playlist yields every tab's ids
+        - https://ytdlp.online/youtube-channel-downloader — each upload lives in exactly one tab
+      reasoning: Session 55 already works in the file that queues the videos, so the rider meets D-242. Downloads and transcripts then read a bare channel the same way in rc.2. Two-way.
+      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
+- id: CONSOLE-STARTUP-DB-PATH
+  title: The backend's first log line shows the database path, user name included, in the Console
+  severity: low
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-377
+      stage: planning
+      question: The backend's startup engine.created line prints the database path, user name included, before HealthService is built, and the host shows it in the Console. File it, fix it in MEU-123, or
+        leave it?
+      resolution: human
+      class: product-preference
+      chosen: File it, with no change in MEU-123
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md — the D-377 brief and Mat's ruling
+      - packages/infrastructure/src/avkit_infra/database/engine.py:85 — the line
+      - packages/api/src/avkit_api/wiring.py:135,205 — the engine is created before HealthService
+      - C:/Temp/av-kit/s54-plan-startup-stdout-probe.txt — one stdout line holds the folder
+      - docs/execution/reflections/2026-11-06-tts-load-fp16-reflection.md:128 — D-337 filed CONSOLE-HOME-SCRUB-SHORT-FORM
+      research:
+        engine: tavily
+        sources:
+        - https://www.structlog.org/en/stable/console-output.html — the default configuration renders every field with ConsoleRenderer
+        - https://www.structlog.org/en/stable/api.html — PrintLoggerFactory writes to sys.stdout, the pipe the host reads
+      reasoning: Filing keeps MEU-123 to its two issues, and raising it meets Session 50 RULE-1. The widen option changes database code neither issue names and would have sent the plan to a recheck. Two-way.
+      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'' (briefs: docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md)'
+    - id: D-379
+      stage: planning
+      question: Where does CONSOLE-STARTUP-DB-PATH go in the session grouping?
+      resolution: autonomous
+      class: two-way
+      chosen: 'P3, a rider in MEU-124 (Session 55 download-received-quality): engine.created logs no raw path, with a Red that build_services into a folder with a marker name prints no stdout line holding
+        it'
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, a rider needs a session already in the file
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:201 — D-361, Session 55's first rider
+      - docs/build-plan/06-gui.md:1592 — MEU-124 adds its column through COLUMN_MIGRATIONS, in the package that holds engine.py
+      - tests/integration/test_sqlite_uow.py:165-172 — the real-SQLite tests build through create_sqlite_engine and init_schema
+      research:
+        engine: none
+        sources: []
+      reasoning: Session 55 is the last code session before rc.2 and the only one left in avkit_infra/database/, and its column tests run create_sqlite_engine, the function that logs the line. That stretches
+        D-242 from the file to its package, which is why it is stated here. The debt queue would ship the user name in rc.2's Console at every start. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-07 'All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'
+- id: DOWNLOAD-PLAYLIST-ITEM-DOWNLOADS-PLAYLIST
+  title: Each video of a playlist download asks yt-dlp for the whole playlist
+  severity: high
+  component: core
+  status: resolved
+  category: TECH-DEBT
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-392
+      stage: planning
+      question: Session 55's plan review found that each playlist item's row downloads the list's URL, so the bare-channel rider would queue rows that fail. How should the plan fix it?
+      resolution: human
+      class: product-preference
+      chosen: 'Per-video URL at add: add_to_queue stores the watch URL of each playlist item''s id, a single-video add keeps the URL typed, AC-124.12 is extended through dispatch with a fake that records
+        each download URL, and this issue is opened and closed in MEU-124'
+      source_tag: Human-approved
+      precedents:
+      - .agent/context/handoffs/2026-11-08-download-received-quality-plan-critical-review.md — F1
+      - packages/core/src/avkit_core/services/download.py:186-187,534 — the stored URL and the download call
+      - packages/core/src/avkit_core/services/transcript.py:755 — transcripts already build the watch URL from the id
+      - docs/execution/plans/2026-11-08-download-received-quality/implementation-plan.md — the brief and the options
+      research:
+        engine: none
+        sources: []
+      reasoning: The add path already holds each item's id, and transcripts build the watch URL the same way. Fixing at add leaves a single-video add's URL and the dispatch code unchanged; fixing at dispatch
+        would also mend rows already queued but would ignore every URL typed. Doing nothing would ship a rider whose rows fail. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-08 'Per-video URL at add (Recommended)' (answer to the F1 brief; options in implementation-plan.md §User Review Required)
 actionable:
 - id: E2E-ELECTRON-LAUNCH-FLAG
   title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
@@ -2472,32 +2611,6 @@ actionable:
   category: MONITORING
   priority: P4
   enrichment: null
-- id: DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
-  title: A download row shows the quality you asked for, not the quality you got
-  severity: medium
-  component: ui
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-225
-      stage: triage
-      question: How does a row show the quality actually received?
-      resolution: autonomous
-      class: two-way
-      chosen: Store the file's real quality in a new nullable field. Show requested and received together only when they differ.
-      source_tag: Local Canon
-      precedents:
-      - packages/core/src/avkit_core/services/download.py:213,235 — only the requested preset is stored
-      - packages/infrastructure/src/avkit_infra/database/migrations.py — the migration path
-      research:
-        engine: none
-        sources: []
-      reasoning: Older rows have no measurement, so nullable keeps them truthful. Two-way.
-    decided_by: agent
 - id: TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE
   title: The TTS progress label reads 'Segments 0/1000' whatever the text's length
   severity: low
@@ -2699,36 +2812,6 @@ actionable:
   category: TECH-DEBT
   priority: P4
   enrichment: null
-- id: DOWNLOAD-BARE-CHANNEL-LISTS-TABS
-  title: A bare channel URL in the download queue queues the channel's tabs, not its videos
-  severity: medium
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-361
-      stage: execution
-      question: Where does the download-side bare channel tab listing go?
-      resolution: human
-      class: product-preference
-      chosen: File it, P3, as a rider in MEU-124 (Session 55); the fix applies D-354's flatten rule to the download add path
-      source_tag: Human-approved
-      precedents:
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, riders go by shared file
-      - packages/core/src/avkit_core/services/download.py:177-186 — the add path that queues video_ids
-      - docs/build-plan/06-gui.md:1582-1594 — MEU-124 already names services/download.py:213,235
-      research:
-        engine: web_search
-        sources:
-        - https://github.com/yt-dlp/yt-dlp/issues/11976 — a bare channel with --flat-playlist yields every tab's ids
-        - https://ytdlp.online/youtube-channel-downloader — each upload lives in exactly one tab
-      reasoning: Session 55 already works in the file that queues the videos, so the rider meets D-242. Downloads and transcripts then read a bare channel the same way in rc.2. Two-way.
-      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
 - id: E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE
   title: The transcript queue E2E's seam reload failed once with ERR_ABORTED under load
   severity: low
@@ -2749,7 +2832,7 @@ actionable:
       chosen: File it as MONITORING, P4, and attach it to Session 57's gate as a watch item, with no code change now
       source_tag: Human-approved
       precedents:
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:66 — E2E-CLIPBOARD-PRIMER-EMPTY, MONITORING before Session 57
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:67 — E2E-CLIPBOARD-PRIMER-EMPTY, MONITORING before Session 57
       - C:/Temp/av-kit/s53-gate-r2a/ — the failed attempt's receipts
       research:
         engine: web_search
@@ -2778,8 +2861,8 @@ actionable:
       chosen: File it, P3, in current-focus's debt queue, not as a rider
       source_tag: Human-approved
       precedents:
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, a rider needs a session already in the file
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:66,68 — debt-queue rows that land before Session 57 if wanted
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, a rider needs a session already in the file
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:67,69 — debt-queue rows that land before Session 57 if wanted
       research:
         engine: web_search
         sources:
@@ -2825,66 +2908,14 @@ actionable:
       chosen: P4, last in current-focus's debt queue, not a rider; it needs a build, so it lands before Session 57 if wanted
       source_tag: Local Canon
       precedents:
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, a rider needs a session already in the file
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:81 — D-363, a fix whose files no remaining session works in goes to the debt queue
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, a rider needs a session already in the file
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:82 — D-363, a fix whose files no remaining session works in goes to the debt queue
       - CONVERT-EXTRACT-ENCODER-LABEL — the Extract half of the same label defect, filed P4
       research:
         engine: none
         sources: []
       reasoning: Sessions 55 to 57 work in downloads, the light theme and the release; none edits services/conversion.py or the media adapter, so a rider would chain unrelated work into a session (D-250's
         test). The debt queue keeps it visible for a build before rc.2. It is P4, as the Extract half was. Two-way.
-      human_message_reference: USER_EXPLICIT 2026-11-07 'All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'
-- id: CONSOLE-STARTUP-DB-PATH
-  title: The backend's first log line shows the database path, user name included, in the Console
-  severity: low
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-377
-      stage: planning
-      question: The backend's startup engine.created line prints the database path, user name included, before HealthService is built, and the host shows it in the Console. File it, fix it in MEU-123, or
-        leave it?
-      resolution: human
-      class: product-preference
-      chosen: File it, with no change in MEU-123
-      source_tag: Human-approved
-      precedents:
-      - docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md — the D-377 brief and Mat's ruling
-      - packages/infrastructure/src/avkit_infra/database/engine.py:85 — the line
-      - packages/api/src/avkit_api/wiring.py:135,205 — the engine is created before HealthService
-      - C:/Temp/av-kit/s54-plan-startup-stdout-probe.txt — one stdout line holds the folder
-      - docs/execution/reflections/2026-11-06-tts-load-fp16-reflection.md:128 — D-337 filed CONSOLE-HOME-SCRUB-SHORT-FORM
-      research:
-        engine: tavily
-        sources:
-        - https://www.structlog.org/en/stable/console-output.html — the default configuration renders every field with ConsoleRenderer
-        - https://www.structlog.org/en/stable/api.html — PrintLoggerFactory writes to sys.stdout, the pipe the host reads
-      reasoning: Filing keeps MEU-123 to its two issues, and raising it meets Session 50 RULE-1. The widen option changes database code neither issue names and would have sent the plan to a recheck. Two-way.
-      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'' (briefs: docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md)'
-    - id: D-379
-      stage: planning
-      question: Where does CONSOLE-STARTUP-DB-PATH go in the session grouping?
-      resolution: autonomous
-      class: two-way
-      chosen: 'P3, a rider in MEU-124 (Session 55 download-received-quality): engine.created logs no raw path, with a Red that build_services into a folder with a marker name prints no stdout line holding
-        it'
-      source_tag: Local Canon
-      precedents:
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, a rider needs a session already in the file
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:199 — D-361, Session 55's first rider
-      - docs/build-plan/06-gui.md:1592 — MEU-124 adds its column through COLUMN_MIGRATIONS, in the package that holds engine.py
-      - tests/integration/test_sqlite_uow.py:165-172 — the real-SQLite tests build through create_sqlite_engine and init_schema
-      research:
-        engine: none
-        sources: []
-      reasoning: Session 55 is the last code session before rc.2 and the only one left in avkit_infra/database/, and its column tests run create_sqlite_engine, the function that logs the line. That stretches
-        D-242 from the file to its package, which is why it is stated here. The debt queue would ship the user name in rc.2's Console at every start. Two-way.
       human_message_reference: USER_EXPLICIT 2026-11-07 'All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
@@ -3143,13 +3174,6 @@ deferred:
         kokoro pin. This is not legal advice. See the brief.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
 proposed_batches:
-- slug: ui-download-row-shows-requested-quality
-  issues:
-  - DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
-  component: ui
-  priority_band: P3
-  complexity: S
-  has_duplicates: false
 - slug: infrastructure-tts-onnx-fp16-nonfinite-audio
   issues:
   - TTS-ONNX-FP16-NONFINITE-AUDIO

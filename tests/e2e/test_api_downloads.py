@@ -790,3 +790,19 @@ def test_r1f1_upgrade_backfills_noncanonical_legacy_blocked_rows(tmp_path: Path)
             upgraded.listed_download(keep, AUTH)["error_message"]
             == STALE_QUALITY_BLOCKED_REASON
         )
+
+
+def test_ac_124_9_list_items_carry_received_height() -> None:
+    from dataclasses import replace
+
+    client, fake = _app()
+    for url in ("https://youtu.be/aaaaaaaaaaa", "https://youtu.be/bbbbbbbbbbb"):
+        client.post("/api/v1/downloads", headers=AUTH, json={"url": url, "quality": "1080p"})
+    fake.jobs[0] = replace(fake.jobs[0], received_height=360)
+    listed = client.get("/api/v1/downloads", headers=AUTH)
+    assert listed.status_code == 200
+    by_id = {item["id"]: item for item in listed.json()["items"]}
+    assert by_id[fake.jobs[0].id].get("received_height") == 360
+    other = by_id[fake.jobs[1].id]
+    assert "received_height" in other
+    assert other["received_height"] is None

@@ -1594,6 +1594,17 @@ The following features are explicitly **deferred** to a future phase:
 | Bare channel (rider) | A bare channel URL queues the channel's videos: its tabs are flattened one level, as `FLAT_TABS` does for transcripts (D-354, D-358). A URL that names a tab is unchanged. A Red covers the measured shape (`C:/Temp/av-kit/s53-shapes.txt:24-28`). | Human-approved: D-361, known issue `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` |
 | Startup line (rider) | `engine.created` (`database/engine.py:85`) logs no raw database path: it drops the field or shows the home folder as `~`. A Red runs `build_services` into a folder with a marker name and finds no stdout line holding it. | Local Canon: D-379, known issue `CONSOLE-STARTUP-DB-PATH` (filed under Mat's D-377) |
 
+> **Delivered (Session 55).**
+> - `RECEIVED_HEIGHT`: `download` keeps yt-dlp's `height` only as a positive `int` that isn't a `bool`, and anything else is `None` (`youtube/adapter.py:532-537`). `DownloadResult.height` (`domain/download.py:331`, checked at `:339`) and `DownloadJob.received_height` (`:137`, checked at `:157`) are `None` or a non-negative `int`.
+> - `STORED_ON_DONE`: the Done row stores the height, and an audio-only row stores `None` (`services/download.py:568`).
+> - `COLUMN_UPGRADE`: `received_height` is the last column of `download_jobs` (`database/models.py:52-53`), and `COLUMN_MIGRATIONS` adds it to an existing database (`database/migrations.py:105`). An old row keeps every value and reads `None`, so it shows its request as before. The column loop skips a table that does not exist yet (`:136-137`), so a migrations-only run on an empty database stays a no-op; the plan had listed no change there, and AC-112.5 found it.
+> - `WIRE_FIELD`: `DownloadJobOut.received_height` (`schemas/downloads.py:64`), filled at `routes/downloads.py:59`. The MCP list passes it through unchanged.
+> - `SHOWN_WHEN_DIFFERENT`: `downloadMetaSegments` (`download-controls.ts:172-183`) shows `360p (asked 1080p)` when the received height differs from the request, and the request alone when they match or the height is null. `best` and `lowest` count as different (D-385).
+> - `BARE_CHANNEL_FLAT`: `_playlist_from_info` flattens channel tabs through `_flat_entries` (`youtube/adapter.py:158`, `:274`), the helper `FLAT_TABS` now shares, so a bare channel URL queues the channel's videos and a tab URL lists as before (D-361).
+> - `VIDEO_TARGET`: each list item's job stores its own watch URL (`services/download.py:55`, `:187-189`) and downloads that video, not the list (D-392). Rows queued before this change keep the list URL.
+> - `STARTUP_NO_PATH`: `engine.created` logs no database path (`database/engine.py:85`).
+> - AC-124.1 to AC-124.16. Plan `docs/execution/plans/2026-11-08-download-received-quality/`.
+
 <a id="light-accent-contrast-residual"></a>
 
 ### Light accent contrast (residual)

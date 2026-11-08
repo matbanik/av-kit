@@ -51,6 +51,8 @@ ARCHIVE_EXTRACTOR = "youtube"
 SABR_COMPAT_QUALITY = frozenset({QualityPreset.P360, QualityPreset.Lowest})
 SABR_COMPAT_AUDIO = SABR_RESTRICTED_AUDIO
 PROGRESS_COMMIT_INTERVAL_S = 1.0
+# `VIDEO_TARGET` (D-392): a list item's job stores its own video's URL, not the list's.
+WATCH_URL_PREFIX = "https://www.youtube.com/watch?v="
 
 UoWFactory = Callable[[], UnitOfWork]
 log = structlog.get_logger(module="download")
@@ -184,7 +186,7 @@ class DownloadService:
             items.append((url.strip(), info.video_id, info.title or info.video_id))
         elif isinstance(info, PlaylistInfo):
             for video_id in info.video_ids:
-                items.append((url.strip(), video_id, video_id))
+                items.append((f"{WATCH_URL_PREFIX}{video_id}", video_id, video_id))
         else:
             raise ValidationError("extract_info returned an unknown type")
         created: list[DownloadJob] = []
@@ -563,6 +565,7 @@ class DownloadService:
                     "file_size": result.file_size,
                     "progress": 1.0,
                     "updated_at": _now(),
+                    "received_height": None if latest.audio_only else result.height,
                 }
             )
             uow.downloads.save(done)

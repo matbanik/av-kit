@@ -98,9 +98,11 @@ DATA_MIGRATIONS: list[str] = [
 
 # Columns added after a table first shipped. create_all and CREATE TABLE IF NOT EXISTS
 # both leave an existing table alone, and ADD COLUMN has no IF NOT EXISTS, so each entry
-# runs only when PRAGMA table_info says the column is missing.
+# runs only when PRAGMA table_info says the column is missing. A table that does not exist
+# yet is skipped: create_all builds it with every column.
 COLUMN_MIGRATIONS: list[tuple[str, str, str]] = [
     ("conversion_jobs", "gpu_preference", "TEXT"),
+    ("download_jobs", "received_height", "INTEGER"),
 ]
 
 
@@ -132,6 +134,8 @@ def apply_migrations(engine: Any) -> None:
             applied_data += 1
         added_columns = 0
         for table, column, sql_type in COLUMN_MIGRATIONS:
+            if table not in tables:
+                continue
             existing = connection.exec_driver_sql(f"PRAGMA table_info({table})")
             if column in {str(row[1]) for row in existing}:
                 continue

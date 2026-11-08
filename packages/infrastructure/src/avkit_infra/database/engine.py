@@ -82,7 +82,7 @@ def create_sqlite_engine(db_path: Path) -> Engine:
         hide_parameters=True,
     )
     _register_sqlite_pragmas(engine)
-    log.info("engine.created", path=str(db_path))
+    log.info("engine.created")
     return engine
 
 

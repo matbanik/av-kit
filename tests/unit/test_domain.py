@@ -639,6 +639,7 @@ SPEC_DOWNLOAD_JOB_FIELDS = (
     "queue_position",
     "created_at",
     "updated_at",
+    "received_height",
 )
 SPEC_ARCHIVE_FIELDS = ("extractor", "video_id", "title", "recorded_at")
 SPEC_TRANSCRIPT_JOB_FIELDS = (
@@ -1666,3 +1667,30 @@ def test_ac_117_1_model_availability_and_reasons() -> None:
     for available, reason in ((True, "x"), (False, None), (False, "")):
         with pytest.raises(ValidationError):
             availability(available, reason)
+
+
+@pytest.mark.unit
+def test_ac_124_1_received_height_defaults_to_none_and_is_checked() -> None:
+    from avkit_core.domain.download import DownloadResult
+    from avkit_core.domain.errors import ValidationError
+
+    def _result(**overrides: object) -> object:
+        payload: dict[str, object] = {
+            "file_path": Path("video.mp4"),
+            "file_size": 10,
+            "video_id": "abc123",
+            "title": "Example",
+            "sabr_detected": False,
+            **overrides,
+        }
+        return DownloadResult(**payload)  # type: ignore[arg-type]
+
+    assert _download_job().received_height is None
+    assert _download_job(received_height=360).received_height == 360
+    assert _result().height is None
+    assert _result(height=360).height == 360
+    for bad in (-1, True):
+        with pytest.raises(ValidationError):
+            _download_job(received_height=bad)
+        with pytest.raises(ValidationError):
+            _result(height=bad)
