@@ -106,6 +106,9 @@ template_version: "2.0"
 | D-358 | planning | Mat ruled to flatten a bare channel's nested tabs now. What exactly does the adapter list? | autonomous | FLAT_TABS: each top-level playlist entry is a tab whose own entries are listed, one level deep, in yt-dlp's order; the tab's ID and title are never listed; duplicates keep their first title; downloads are unchanged | Human-approved | yt-dlp nests tabs exactly one level. Keeping its order needs no tab names, which may be translated. _playlist_from_info is left alone because the ruling named _listed_videos (`implementation-plan.md:529`). | USER_EXPLICIT 2026-11-07 'proceed, D-353 yes, D-354 Flatten the tabs now' |
 | D-359 | execution | AC-122.16 says `_YtDlpLogger(True).debug(marker)` adds nothing to the Console, but the ring records every structlog event's name. What does the test assert? | autonomous | The events added are exactly `["yt-dlp"]`, with no field holding the marker | Local Canon | The event name is a constant and carries no value, so no title reaches the Console. Dropping debug events from the ring would change the Console for every yt-dlp call, downloads included. Asserting the exact list still fails if any text reaches a Console field (handoff Decision Log). Two-way. | — |
 | D-360 | execution | Review round 1 F1: a lone surrogate in a listed title or channel passes TEXT_CLEAN, then fails the SQLite insert and the UTF-8 write, so add_channel raises. What does TEXT_CLEAN do with one? | autonomous | `_clean_text` drops category Cs as it drops Cc, and `_require_text_clean` refuses both; a title left empty becomes None and takes the ID fallback | Local Canon | A lone surrogate can't be encoded as UTF-8, so no reader could show it. Dropping it matches how control characters are treated and keeps the rest of the title. U+FFFD would store a character the user never saw; leaving it keeps the failure. Round 2 approved it, checked against every code point (handoff Decision Log). Two-way. | — |
+| D-361 | execution | A bare channel URL in the download queue queues the channel's tabs, not its videos. Where does it go? | human | File `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` (P3) as a rider in MEU-124, Session 55 | Human-approved | Session 55 already works in `services/download.py`, which queues the videos (D-242), and the fix applies D-354's rule. The first brief recommended filing only; Mat asked for HDP again with a lean toward riders in this grouping, and accepted the second run's recommendation (`closeout-decisions.md`). | USER_EXPLICIT 2026-11-07 'all recommendations are accepted' |
+| D-362 | execution | The transcript queue E2E's seam reload failed once under load. What happens with it? | human | File `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` (MONITORING, P4) as a watch item in Session 57's gate, with no code change now | Human-approved | One failure can't show that a fix works, and no remaining session edits the test file. Session 57's gate runs it anyway (`closeout-decisions.md`). | USER_EXPLICIT 2026-11-07 'all recommendations are accepted' |
+| D-363 | execution | The `info.title` channel fallback and `TranscriptResult.title` skip D-360's cleaning. Where does it go? | human | File `TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS` (P3) in current-focus's debt queue, not as a rider | Human-approved | No remaining session works in `services/transcript.py` or the caption adapter, so a rider would break D-242. The recommendation departed from Mat's lean and said so; Mat accepted it (`closeout-decisions.md`). | USER_EXPLICIT 2026-11-07 'all recommendations are accepted' |
 
 ---
 
@@ -161,7 +164,7 @@ EXAMPLE: "rerun the gate" → "copy the receipts to s53-gate-r2a/, rerun unchang
 
 ## Next Day Outline
 
-1. **Target:** done, awaiting Mat's words to commit. Session 53's work is one commit on `main`; its draft is `C:/Temp/av-kit/commit-draft.txt`.
+1. **Target:** done. Session 53's work is commit `39ac742` on `main`, pushed on Mat's "commit and push". Mat's rulings on D-361 to D-363 came after it and wait for his words to commit.
 2. **Next session:** Session 54 `convert-extract-index` (MEU-123), per the grouping. Its prompt is `C:/Temp/av-kit/session-54-prompt.md`.
 3. **Scaffold changes needed:** none.
 4. **Patterns to bake in from today:** RULE-1 to RULE-4 here, plus Session 52's, Session 51's and Session 50's rules, all of which carry.
@@ -180,7 +183,7 @@ EXAMPLE: "rerun the gate" → "copy the receipts to s53-gate-r2a/, rerun unchang
 | Codex findings | Plan review: R1 approved, two wording clarifications, 5,222,959 tokens; R2 approved after Mat's rulings, 3,587,547. Execution review: R1 changes_required, F1 High (lone surrogates), 10,294,200 tokens; R2 approved, F1 `fixed`, no new finding, 2,598,073 (12,892,273 of 21,000,000) |
 | Handoff Score (X/7) | 6/7. Every AC has evidence, and the gate passed on run 1 and on run 2 after the fix. Run 2's first attempt failed one Electron test under load and was rerun unchanged, disclosed in the handoff |
 | Rule Adherence (%) | 90 (9 of 10 triggered rules followed in full, 1 in part; 1 more was not triggered) |
-| Prompt→commit time | Planned and executed on 2026-11-07; not committed. The commit waits for Mat's explicit words |
+| Prompt→commit time | Planned, executed and committed on 2026-11-07 (`39ac742`, on Mat's "commit and push") |
 
 ### Rules Sampled for Adherence Check
 
@@ -194,7 +197,7 @@ EXAMPLE: "rerun the gate" → "copy the receipts to s53-gate-r2a/, rerun unchang
 | The recheck prompt gives the literal closure table (Session 52 RULE-1) | Session 52 reflection | Yes. The round 2 prompt gave '| 1 | open | fixed |', with round 1's id as the validator reads it (RULE-3) |
 | A plan's cached artifacts are probed offline (Session 52 RULE-2) | Session 52 reflection | Yes. `uv sync --frozen --offline --dry-run` exits 0 with no changes (`s53-uv-offline-dry-run.txt`) |
 | A loop's budget is compared with the last comparable round (Session 52 RULE-3) | Session 52 reflection | Yes. Session 52's execution round 1 cost 14,996,767 for three MEUs, a smoke and a spike; one MEU was expected to fit the default 21M |
-| No branches or worktrees; never commit or push without the human | AGENTS.md §Commits | Yes. Nothing was committed or pushed, and the work is on `main` |
+| No branches or worktrees; never commit or push without the human | AGENTS.md §Commits | Yes. The work is on `main`, and `39ac742` was committed and pushed only after Mat said "commit and push" |
 | Preserve line endings | memory; the AC-51.6 byte hash | Yes. CRLF files stay CRLF and LF files stay LF, measured in bytes |
 | Decision briefs keep a do-nothing option | the brief; HDP | Yes. D-353 and D-354 each list one |
 

@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 116** — Active: 37 | Mitigated: 1 | Resolved: 76
+**Total: 121** — Active: 40 | Mitigated: 1 | Resolved: 78
 
 ## Active Issues
 
@@ -15,8 +15,8 @@
 | 🟡 | `YOUTUBE-CAPTIONS-IP-BLOCK` | YouTube is blocking caption requests from the maintainer's IP | infrastructure | ⬜ open | 2026-11-03 |
 | 🟡 | `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY` | A download row shows the quality you asked for, not the quality you got | ui | ⬜ open | 2026-11-03 |
 | 🟡 | `FFMPEG-LIBDVDCSS-BUNDLED` | The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses… | infrastructure | ⬜ open | 2026-11-04 |
-| 🟡 | `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH` | Audio extract reads its stream index two ways: AAC from a normal video… | core | ⬜ open | 2026-11-04 |
 | 🟡 | `TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS` | verify --deep and discover report noise, and verify stamps last_checked… | infrastructure | ⬜ open | 2026-11-04 |
+| 🟡 | `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` | A bare channel URL in the download queue queues the channel's tabs, not… | infrastructure | ⬜ open | 2026-11-07 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
 | 🟢 | `E2E-ELECTRON-LAUNCH-FLAG` | ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch -… | ui | ⬜ open | 2026-09-02 |
 | 🟢 | `TOOLING-ADOPTION-FIXTURE-LIVE-GOVERNANCE` | Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the… | infrastructure | ⬜ open | 2026-09-30 |
@@ -34,7 +34,6 @@
 | 🟢 | `TTS-AUDIO-RANDOM-FILE-NAMES` | Generated audio files have random ID names | core | ⬜ open | 2026-11-03 |
 | 🟢 | `CONVERT-POSITIONS-NOT-RENUMBERED` | Convert's queue numbers aren't renumbered | core | ⬜ open | 2026-11-03 |
 | 🟢 | `CONVERT-CUT-TIME-RAW-MS` | A cut job's row shows its times in raw milliseconds | ui | ⬜ open | 2026-11-03 |
-| 🟢 | `CONVERT-EXTRACT-ENCODER-LABEL` | An audio extract is labelled with a video encoder | core | ⬜ open | 2026-11-03 |
 | 🟢 | `DOWNLOADER-ADVANCED-PANEL-GAP` | An empty gap sits under Advanced on the Downloader page | ui | ⬜ open | 2026-11-03 |
 | 🟢 | `CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR` | validate_closeout_artifacts --selftest fails when a .agent folder sits… | agent | ⬜ open | 2026-11-04 |
 | 🟢 | `E2E-MAIN-PROCESS-ERRORS-UNWATCHED` | The E2E suite does not notice an uncaught exception in the main process | ui | ⬜ open | 2026-11-04 |
@@ -46,6 +45,10 @@
 | 🟢 | `INSTALL-FOLDER-NAME-MISMATCH` | The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build pla… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `CONSOLE-HOME-SCRUB-SHORT-FORM` | The Console's home-folder scrub misses the 8.3 short form of the home f… | core | ⬜ open | 2026-11-07 |
 | 🟢 | `TRACKED-FILES-HOLD-HOME-PATH` | Tracked files name the maintainer's Windows home folder in full, user n… | agent | ⬜ open | 2026-11-07 |
+| 🟢 | `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` | The transcript queue E2E's seam reload failed once with ERR_ABORTED und… | ui | ⬜ open | 2026-11-07 |
+| 🟢 | `TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS` | Two older title paths into transcript storage skip the lone-surrogate c… | core | ⬜ open | 2026-11-07 |
+| 🟢 | `CONVERT-CUT-ENCODER-LABEL` | A cut is labelled with an encoder it does not use | core | ⬜ open | 2026-11-07 |
+| 🟢 | `CONSOLE-STARTUP-DB-PATH` | The backend's first log line shows the database path, user name include… | infrastructure | ⬜ open | 2026-11-07 |
 
 ## Mitigated / Workaround
 
@@ -53,9 +56,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (76)
+## Resolved (78)
 
-76 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+78 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

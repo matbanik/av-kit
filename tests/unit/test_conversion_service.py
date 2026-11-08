@@ -927,3 +927,259 @@ def test_ac_112_4_only_compress_stores_the_choice(
     )
     job = uow.conversion_jobs.list_ordered()[0]
     assert job.gpu_preference is None
+
+
+def _picture_first(*audio_codecs: str) -> MediaInfo:
+    """A probe that lists the picture at stream 0 and one audio stream per codec after it."""
+    from avkit_core.domain.conversion import StreamInfo
+
+    streams: list[object] = [StreamInfo(0, "video", "h264", None, None, None)]
+    streams += [
+        StreamInfo(number + 1, "audio", codec, None, 2, 48000)
+        for number, codec in enumerate(audio_codecs)
+    ]
+    return MediaInfo(
+        duration=1.0,
+        container="mov,mp4,m4a,3gp,3g2,mj2",
+        video_codec="h264",
+        audio_codec=audio_codecs[0] if audio_codecs else None,
+        sample_rate=48000 if audio_codecs else None,
+        channels=2 if audio_codecs else None,
+        width=1280,
+        height=720,
+        fps=24.0,
+        bit_depth=8,
+        field_order=None,
+        streams=streams,
+    )
+
+
+def _process(service: object) -> None:
+    service.start_processing()  # type: ignore[attr-defined]
+    thread = service._thread  # type: ignore[attr-defined]
+    if thread is not None:
+        thread.join(timeout=2)
+        assert not thread.is_alive()
+
+
+class GpuCountingMedia(RecordingMedia):
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(**kwargs)  # type: ignore[arg-type]
+        self.detect_gpu_calls = 0
+
+    def detect_gpu(self):  # type: ignore[no-untyped-def]
+        self.detect_gpu_calls += 1
+        return super().detect_gpu()
+
+
+@pytest.mark.parametrize("ac_id", ["AC-123.1"], ids=["AC-123.1"])
+@pytest.mark.unit
+def test_ac_123_1_first_mode_takes_audio_position_0(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-123.1"
+    from avkit_core.domain.conversion import ExtractOptions
+    from avkit_core.domain.enums import ConversionKind
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    media = RecordingMedia(probe=_picture_first("aac"))
+    service, _uow, _media, _settings = _stack(tmp_path, media)
+    jobs = service.add_to_queue(
+        [_write_clip(tmp_path)], ConversionAddSpec(kind=ConversionKind.Extract)
+    )
+    assert [(job.stream_index, job.output_path.name) for job in jobs] == [(0, "clip_a.m4a")]
+    _process(service)
+    assert media.encode_options == [ExtractOptions(stream_index=0, output_container="m4a")]
+
+
+@pytest.mark.parametrize("ac_id", ["AC-123.2"], ids=["AC-123.2"])
+@pytest.mark.unit
+def test_ac_123_2_all_mode_plans_audio_positions(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-123.2"
+    from avkit_core.domain.enums import ConversionKind
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    media = RecordingMedia(probe=_picture_first("aac", "ac3"))
+    service, _uow, _media, _settings = _stack(tmp_path, media)
+    jobs = service.add_to_queue(
+        [_write_clip(tmp_path)],
+        ConversionAddSpec(kind=ConversionKind.Extract, stream_mode="all"),
+    )
+    assert [(job.stream_index, job.output_path.name) for job in jobs] == [
+        (0, "clip_a0.m4a"),
+        (1, "clip_a1.ac3"),
+    ]
+    _process(service)
+    assert [getattr(options, "stream_index") for options in media.encode_options] == [0, 1]
+
+
+@pytest.mark.parametrize("ac_id", ["AC-123.3"], ids=["AC-123.3"])
+@pytest.mark.unit
+def test_ac_123_3_all_mode_single_track_is_unnumbered(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-123.3"
+    from avkit_core.domain.enums import ConversionKind
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    service, _uow, _media, _settings = _stack(
+        tmp_path, RecordingMedia(probe=_picture_first("aac"))
+    )
+    jobs = service.add_to_queue(
+        [_write_clip(tmp_path)],
+        ConversionAddSpec(kind=ConversionKind.Extract, stream_mode="all"),
+    )
+    assert [(job.stream_index, job.output_path.name) for job in jobs] == [(0, "clip_a.m4a")]
+
+
+@pytest.mark.parametrize(
+    ("ac_id", "audio", "mode", "index", "message"),
+    [
+        ("AC-123.4", (), "first", None, "the file has no audio track"),
+        ("AC-123.4", (), "all", None, "the file has no audio track"),
+        ("AC-123.4", ("aac",), "first", 2, "no audio track a:2; the file has 1 audio track(s)"),
+    ],
+    ids=["AC-123.4-first-no-audio", "AC-123.4-all-no-audio", "AC-123.4-index-past-end"],
+)
+@pytest.mark.unit
+def test_ac_123_4_missing_track_fails_at_add(
+    ac_id: str,
+    audio: tuple[str, ...],
+    mode: str,
+    index: int | None,
+    message: str,
+    tmp_path: Path,
+) -> None:
+    assert ac_id == "AC-123.4"
+    from avkit_core.domain.enums import ConversionKind, ConversionStatus
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    media = RecordingMedia(probe=_picture_first(*audio))
+    service, uow, _media, _settings = _stack(tmp_path, media)
+    jobs = service.add_to_queue(
+        [_write_clip(tmp_path)],
+        ConversionAddSpec(kind=ConversionKind.Extract, stream_mode=mode, stream_index=index),
+    )
+    assert [(job.status, job.error_message) for job in jobs] == [
+        (ConversionStatus.Failed, message)
+    ]
+    _process(service)
+    assert [job.status for job in uow.conversion_jobs.list_ordered()] == [
+        ConversionStatus.Failed
+    ]
+    assert media.encode_calls == 0
+
+
+@pytest.mark.parametrize("ac_id", ["AC-123.5"], ids=["AC-123.5"])
+@pytest.mark.unit
+def test_ac_123_5_unknown_positions_fall_back_at_0_only(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-123.5"
+    from avkit_core.domain.enums import ConversionKind, ConversionStatus
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    media = RecordingMedia()
+    assert media.probe(tmp_path / "any.mp4").streams is None
+    service, _uow, _media, _settings = _stack(tmp_path, media)
+    clip = _write_clip(tmp_path)
+    found = [
+        service.add_to_queue(
+            [clip], ConversionAddSpec(kind=ConversionKind.Extract, stream_index=position)
+        )
+        for position in (0, 1)
+    ]
+    assert [[(job.output_path.suffix, job.status) for job in jobs] for jobs in found] == [
+        [(".m4a", ConversionStatus.Pending)],
+        [(".mka", ConversionStatus.Pending)],
+    ]
+
+
+@pytest.mark.parametrize("ac_id", ["AC-123.6"], ids=["AC-123.6-nvidia"])
+@pytest.mark.unit
+def test_ac_123_6_extract_saves_no_encoder(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-123.6"
+    from avkit_core.domain.enums import ConversionKind, ConversionStatus
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    media = GpuCountingMedia(gpu=_nvidia_caps())
+    service, uow, _media, _settings = _stack(tmp_path, media)
+    service.add_to_queue([_write_clip(tmp_path)], ConversionAddSpec(kind=ConversionKind.Extract))
+    _process(service)
+    job = uow.conversion_jobs.list_ordered()[0]
+    assert (job.status, job.gpu_encoder, media.detect_gpu_calls) == (
+        ConversionStatus.Done,
+        None,
+        0,
+    )
+
+
+@pytest.mark.parametrize("ac_id", ["AC-123.6"], ids=["AC-123.6-software"])
+@pytest.mark.unit
+def test_ac_123_6_extract_needs_no_software_encoder(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-123.6"
+    from avkit_core.domain.conversion import GPUCapabilities
+    from avkit_core.domain.enums import ConversionKind, ConversionStatus
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    caps = GPUCapabilities(
+        nvidia_nvenc=False,
+        amd_amf=False,
+        intel_qsv=False,
+        vulkan=False,
+        software_h265=False,
+        software_h264=False,
+        recommended_encoder="libx264",
+        checked_at=None,
+    )
+    service, uow, _media, settings = _stack(tmp_path, RecordingMedia(gpu=caps))
+    settings.set("converter", "gpu_preference", "software")
+    service.add_to_queue([_write_clip(tmp_path)], ConversionAddSpec(kind=ConversionKind.Extract))
+    _process(service)
+    job = uow.conversion_jobs.list_ordered()[0]
+    assert (job.status, job.error_message, job.gpu_encoder) == (ConversionStatus.Done, None, None)
+
+
+@pytest.mark.parametrize("ac_id", ["AC-123.7"], ids=["AC-123.7"])
+@pytest.mark.unit
+def test_ac_123_7_legacy_extract_row_runs_unchanged(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-123.7"
+    from avkit_core.domain.conversion import ExtractOptions
+    from avkit_core.domain.enums import ConversionKind, ConversionStatus
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    media = RecordingMedia(gpu=_nvidia_caps())
+    service, uow, _media, _settings = _stack(tmp_path, media)
+    service.add_to_queue([_write_clip(tmp_path)], ConversionAddSpec(kind=ConversionKind.Extract))
+    job = uow.conversion_jobs.list_ordered()[0]
+    uow.conversion_jobs.save(
+        replace(
+            job,
+            status=ConversionStatus.Failed,
+            error_message="boom",
+            stream_index=1,
+            gpu_encoder="hevc_nvenc",
+        )
+    )
+    uow.commit()
+    service.reset_failed(job.id)
+    _process(service)
+    done = uow.conversion_jobs.list_ordered()[0]
+    assert media.encode_options == [ExtractOptions(stream_index=1, output_container="m4a")]
+    assert (done.status, done.gpu_encoder) == (ConversionStatus.Done, None)
+
+
+@pytest.mark.parametrize(
+    ("ac_id", "nvidia", "encoder"),
+    [("AC-123.8", False, "libx265"), ("AC-123.8", True, "hevc_nvenc")],
+    ids=["AC-123.8-default", "AC-123.8-nvidia-auto"],
+)
+@pytest.mark.unit
+def test_ac_123_8_compress_still_saves_encoder(
+    ac_id: str, nvidia: bool, encoder: str, tmp_path: Path
+) -> None:
+    assert ac_id == "AC-123.8"
+    from avkit_core.domain.enums import ConversionKind, ConversionStatus
+    from avkit_core.services.conversion import ConversionAddSpec
+
+    media = RecordingMedia(gpu=_nvidia_caps() if nvidia else None)
+    service, uow, _media, _settings = _stack(tmp_path, media)
+    service.add_to_queue([_write_clip(tmp_path)], ConversionAddSpec(kind=ConversionKind.Compress))
+    _process(service)
+    job = uow.conversion_jobs.list_ordered()[0]
+    assert (job.status, job.gpu_encoder) == (ConversionStatus.Done, encoder)
+    assert getattr(media.encode_options[0], "codec") == encoder

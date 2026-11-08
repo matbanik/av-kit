@@ -1978,6 +1978,14 @@ archived:
         sources: []
       reasoning: Two lists of what a build can do would drift, as the models folder did. Whatever D-217 rules, this stands. Two-way.
     decided_by: agent
+- id: CONVERT-EXTRACT-ENCODER-LABEL
+  title: An audio extract is labelled with a video encoder
+  severity: low
+  component: core
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
 - id: MAIN-LOG-AFTER-WINDOW-DESTROYED
   title: Backend output after the window is destroyed stops the main process behind a JavaScript error dialog
   severity: medium
@@ -2195,6 +2203,33 @@ archived:
   category: TECH-DEBT
   priority: P4
   enrichment: null
+- id: CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
+  title: 'Audio extract reads its stream index two ways: AAC from a normal video comes out as .mka, and All audio streams targets the wrong tracks'
+  severity: medium
+  component: core
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-227
+      stage: triage
+      question: What does stream_index mean?
+      resolution: autonomous
+      class: two-way
+      chosen: Audio-relative everywhere. _output_ext looks the codec up by audio position and the All audio streams plan sends audio positions. Both modes are tested against a real .mp4.
+      source_tag: Local Canon
+      precedents:
+      - docs/build-plan/08-video-conversion.md:176,178 — map a:0 with the container from the codec table
+      - 'packages/infrastructure/src/avkit_infra/media/adapter.py:634-635 — the stream specifier a: followed by the stream index'
+      - packages/core/src/avkit_core/services/conversion.py:328,386 — the conflicting use
+      research:
+        engine: none
+        sources: []
+      reasoning: The adapter and the spec already mean this (-map a:N), so only the service moves. The filer measured -map a:1 failing on a one-track file. Two-way.
+    decided_by: agent
 - id: UNINSTALL-LEAVES-INSTALLER-COPY
   title: Uninstalling leaves a 340 MB copy of the installer in %LOCALAPPDATA%\av-kit-ui-updater
   severity: low
@@ -2495,14 +2530,6 @@ actionable:
   category: TECH-DEBT
   priority: P4
   enrichment: null
-- id: CONVERT-EXTRACT-ENCODER-LABEL
-  title: An audio extract is labelled with a video encoder
-  severity: low
-  component: core
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment: null
 - id: DOWNLOADER-ADVANCED-PANEL-GAP
   title: An empty gap sits under Advanced on the Downloader page
   severity: low
@@ -2579,33 +2606,6 @@ actionable:
   category: TECH-DEBT
   priority: P4
   enrichment: null
-- id: CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
-  title: 'Audio extract reads its stream index two ways: AAC from a normal video comes out as .mka, and All audio streams targets the wrong tracks'
-  severity: medium
-  component: core
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-227
-      stage: triage
-      question: What does stream_index mean?
-      resolution: autonomous
-      class: two-way
-      chosen: Audio-relative everywhere. _output_ext looks the codec up by audio position and the All audio streams plan sends audio positions. Both modes are tested against a real .mp4.
-      source_tag: Local Canon
-      precedents:
-      - docs/build-plan/08-video-conversion.md:176,178 — map a:0 with the container from the codec table
-      - 'packages/infrastructure/src/avkit_infra/media/adapter.py:634-635 — the stream specifier a: followed by the stream index'
-      - packages/core/src/avkit_core/services/conversion.py:328,386 — the conflicting use
-      research:
-        engine: none
-        sources: []
-      reasoning: The adapter and the spec already mean this (-map a:N), so only the service moves. The filer measured -map a:1 failing on a one-track file. Two-way.
-    decided_by: agent
 - id: TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS
   title: verify --deep and discover report noise, and verify stamps last_checked without checking
   severity: medium
@@ -2699,6 +2699,193 @@ actionable:
   category: TECH-DEBT
   priority: P4
   enrichment: null
+- id: DOWNLOAD-BARE-CHANNEL-LISTS-TABS
+  title: A bare channel URL in the download queue queues the channel's tabs, not its videos
+  severity: medium
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-361
+      stage: execution
+      question: Where does the download-side bare channel tab listing go?
+      resolution: human
+      class: product-preference
+      chosen: File it, P3, as a rider in MEU-124 (Session 55); the fix applies D-354's flatten rule to the download add path
+      source_tag: Human-approved
+      precedents:
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, riders go by shared file
+      - packages/core/src/avkit_core/services/download.py:177-186 — the add path that queues video_ids
+      - docs/build-plan/06-gui.md:1582-1594 — MEU-124 already names services/download.py:213,235
+      research:
+        engine: web_search
+        sources:
+        - https://github.com/yt-dlp/yt-dlp/issues/11976 — a bare channel with --flat-playlist yields every tab's ids
+        - https://ytdlp.online/youtube-channel-downloader — each upload lives in exactly one tab
+      reasoning: Session 55 already works in the file that queues the videos, so the rider meets D-242. Downloads and transcripts then read a bare channel the same way in rc.2. Two-way.
+      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
+- id: E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE
+  title: The transcript queue E2E's seam reload failed once with ERR_ABORTED under load
+  severity: low
+  component: ui
+  status: open
+  category: MONITORING
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-362
+      stage: execution
+      question: What happens with the one-off E2E seam reload failure?
+      resolution: human
+      class: governance-value
+      chosen: File it as MONITORING, P4, and attach it to Session 57's gate as a watch item, with no code change now
+      source_tag: Human-approved
+      precedents:
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:66 — E2E-CLIPBOARD-PRIMER-EMPTY, MONITORING before Session 57
+      - C:/Temp/av-kit/s53-gate-r2a/ — the failed attempt's receipts
+      research:
+        engine: web_search
+        sources:
+        - https://github.com/microsoft/playwright/issues/5111 — reload racing an in-flight navigation gives ERR_ABORTED
+        - https://endform.dev/blog/quarantine-flaky-playwright-tests — a pass on retry is not a fix; track it with an owner
+      reasoning: One failure can't show that a fix works, and no remaining session edits the test file. Session 57's gate runs it anyway, so a named watch item there costs one plan line. Two-way.
+      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
+- id: TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS
+  title: Two older title paths into transcript storage skip the lone-surrogate cleaning
+  severity: low
+  component: core
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-363
+      stage: execution
+      question: Where do the two uncleaned transcript title paths go?
+      resolution: human
+      class: governance-value
+      chosen: File it, P3, in current-focus's debt queue, not as a rider
+      source_tag: Human-approved
+      precedents:
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, a rider needs a session already in the file
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:66,68 — debt-queue rows that land before Session 57 if wanted
+      research:
+        engine: web_search
+        sources:
+        - https://bugs.python.org/issue18814 — a lone surrogate fails encode('utf-8'); fix it at the source
+        - https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html — validate after parsing, before storage
+      reasoning: No remaining session is in those files, so a rider would add a second service to Session 55. The debt queue keeps it inside this grouping. Two-way.
+      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
+- id: CONVERT-CUT-ENCODER-LABEL
+  title: A cut is labelled with an encoder it does not use
+  severity: low
+  component: core
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-373
+      stage: planning
+      question: A Cut job also saves an encoder it never uses. Register it, fix it in MEU-123, or leave it?
+      resolution: human
+      class: product-preference
+      chosen: File it, with no Cut change in MEU-123
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md — the D-373 brief and Mat's ruling
+      - packages/infrastructure/src/avkit_infra/media/adapter.py:590-604 — Cut uses -c copy or libx265
+      - docs/execution/reflections/2026-11-06-tts-load-fp16-reflection.md:128,135 — D-337 and D-344 filed neighbours for a later plan
+      research:
+        engine: tavily
+        sources:
+        - https://www.ffmpeg.org/doxygen/2.4/ffmpeg_8h_source.html — an output stream has separate stream_copy and encoding_needed flags, so a copied stream runs no encoder
+        - https://ossrs.io/lts/en-us/docs/v7/doc/ffmpeg — copy passes the stream through without encoding it
+      reasoning: Filing keeps MEU-123 to the two issues it closes. The widen option changes a stored value neither issue names and would have sent the plan to a recheck. Two-way.
+      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'' (briefs: docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md)'
+    - id: D-380
+      stage: planning
+      question: Where does CONVERT-CUT-ENCODER-LABEL go in the session grouping?
+      resolution: autonomous
+      class: two-way
+      chosen: P4, last in current-focus's debt queue, not a rider; it needs a build, so it lands before Session 57 if wanted
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, a rider needs a session already in the file
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:81 — D-363, a fix whose files no remaining session works in goes to the debt queue
+      - CONVERT-EXTRACT-ENCODER-LABEL — the Extract half of the same label defect, filed P4
+      research:
+        engine: none
+        sources: []
+      reasoning: Sessions 55 to 57 work in downloads, the light theme and the release; none edits services/conversion.py or the media adapter, so a rider would chain unrelated work into a session (D-250's
+        test). The debt queue keeps it visible for a build before rc.2. It is P4, as the Extract half was. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-07 'All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'
+- id: CONSOLE-STARTUP-DB-PATH
+  title: The backend's first log line shows the database path, user name included, in the Console
+  severity: low
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-377
+      stage: planning
+      question: The backend's startup engine.created line prints the database path, user name included, before HealthService is built, and the host shows it in the Console. File it, fix it in MEU-123, or
+        leave it?
+      resolution: human
+      class: product-preference
+      chosen: File it, with no change in MEU-123
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md — the D-377 brief and Mat's ruling
+      - packages/infrastructure/src/avkit_infra/database/engine.py:85 — the line
+      - packages/api/src/avkit_api/wiring.py:135,205 — the engine is created before HealthService
+      - C:/Temp/av-kit/s54-plan-startup-stdout-probe.txt — one stdout line holds the folder
+      - docs/execution/reflections/2026-11-06-tts-load-fp16-reflection.md:128 — D-337 filed CONSOLE-HOME-SCRUB-SHORT-FORM
+      research:
+        engine: tavily
+        sources:
+        - https://www.structlog.org/en/stable/console-output.html — the default configuration renders every field with ConsoleRenderer
+        - https://www.structlog.org/en/stable/api.html — PrintLoggerFactory writes to sys.stdout, the pipe the host reads
+      reasoning: Filing keeps MEU-123 to its two issues, and raising it meets Session 50 RULE-1. The widen option changes database code neither issue names and would have sent the plan to a recheck. Two-way.
+      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'' (briefs: docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md)'
+    - id: D-379
+      stage: planning
+      question: Where does CONSOLE-STARTUP-DB-PATH go in the session grouping?
+      resolution: autonomous
+      class: two-way
+      chosen: 'P3, a rider in MEU-124 (Session 55 download-received-quality): engine.created logs no raw path, with a Red that build_services into a folder with a marker name prints no stdout line holding
+        it'
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:278 — D-242, a rider needs a session already in the file
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:199 — D-361, Session 55's first rider
+      - docs/build-plan/06-gui.md:1592 — MEU-124 adds its column through COLUMN_MIGRATIONS, in the package that holds engine.py
+      - tests/integration/test_sqlite_uow.py:165-172 — the real-SQLite tests build through create_sqlite_engine and init_schema
+      research:
+        engine: none
+        sources: []
+      reasoning: Session 55 is the last code session before rc.2 and the only one left in avkit_infra/database/, and its column tests run create_sqlite_engine, the function that logs the line. That stretches
+        D-242 from the file to its package, which is why it is stated here. The debt queue would ship the user name in rc.2's Console at every start. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-07 'All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -2960,13 +3147,6 @@ proposed_batches:
   issues:
   - DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
   component: ui
-  priority_band: P3
-  complexity: S
-  has_duplicates: false
-- slug: core-convert-extract-stream-index-mismatch
-  issues:
-  - CONVERT-EXTRACT-STREAM-INDEX-MISMATCH
-  component: core
   priority_band: P3
   complexity: S
   has_duplicates: false

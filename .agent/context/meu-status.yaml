@@ -3222,18 +3222,18 @@ meus:
     anchor: extract-stream-index-residual
     text: Phase 8 §Extract stream index (residual)
   description: stream_index is audio-relative everywhere, so extract picks the right extension and tracks; an Extract job saves no encoder.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-29, MEU-30
   dependency_parse_status: parsed
   depends_on:
   - MEU-29
   - MEU-30
-  execution_plan: null
-  updated: '2026-11-04'
+  execution_plan: docs/execution/plans/2026-11-07-convert-extract-index/
+  updated: '2026-11-08'
   closed_reason: null
   note: Registered 2026-11-04 from CONVERT-EXTRACT-STREAM-INDEX-MISMATCH (D-227), with rider CONVERT-EXTRACT-ENCODER-LABEL.
 - row_key: MEU-124
@@ -3258,9 +3258,9 @@ meus:
   - MEU-10
   - MEU-20
   execution_plan: null
-  updated: '2026-11-04'
+  updated: '2026-11-07'
   closed_reason: null
-  note: Registered 2026-11-04 from DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY (D-225).
+  note: Registered 2026-11-04 from DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY (D-225), with riders DOWNLOAD-BARE-CHANNEL-LISTS-TABS (D-361, Mat 2026-11-07) and CONSOLE-STARTUP-DB-PATH (D-379, 2026-11-07).
 - row_key: MEU-125
   id: MEU-125
   slug: dist-release-candidate-2

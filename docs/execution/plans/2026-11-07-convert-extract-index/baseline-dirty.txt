@@ -1,0 +1,18 @@
+ M .agent/context/current-focus.md	aab4b079c42ad318559a244bf5ce8489de2d5b6ae6e7e540dea5c3d5b72ad426
+ M .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md	b55158ac7308d961f3f329370a737d5a666614c341e150af637f12608e5e0433
+ M .agent/context/known-issues.md	db22fe7ddba33c0e1fc1278707f4a3d72a768e899af6364a8a0fa8842b55509d
+ M .agent/context/known-issues.yaml	9c181ea36fe83bc67f5e8cafdf9407cc58d423262566918b24a97727e6b1f0b2
+ M .agent/context/meu-status.yaml	39c22c8cc8574ac4f3c6c0607c304c51b0cf94a22fff3438d9ce4d8898d81a3d
+ M docs/build-plan/06-gui.md	5203572cde12718c0abdb0d2cd7bce5d23be92f41d55f01cfae0ddabc1addb5f
+ M docs/execution/metrics.md	1c804f7452b6df96bc43f173d5b908b1714c4689b33e7a7bde319ecb454d0e11
+ M docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md	26914364749c1eb461c53b902f8046bb43117cc5bac8a8275f22763114d0a8ca
+ M docs/execution/reflections/2026-11-07-transcript-metadata-reflection.md	3d3dea996cbfbffdb2ecc7bbff552ed07519c10d862e576e2d84ffd24b5d5d03
+?? .agent/context/handoffs/2026-11-07-convert-extract-index-plan-critical-review.md	97afcba1d03477e3fcfc35e4a16e737e5f0ee801534e12bc8355a5ba3673a53c
+?? docs/execution/plans/2026-11-07-convert-extract-index/baseline-dirty.txt	e89123b70a0b0b00c1161c3f1047f9dea9d43e1a732eb2a9ad4ab80ccadc995e
+?? docs/execution/plans/2026-11-07-convert-extract-index/baseline.ps1	c722223a74b6c04647961ba66bdfd466154cde7b80c608bc4cb1bc20549f3bea
+?? docs/execution/plans/2026-11-07-convert-extract-index/baseline.sha	3ec3d422efa8749e336890f58dae7e111d826361774222d90f76d85ad5b9fb7e
+?? docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md	81daa542169cb6f1104e7b7d088d5bff53172fb441be8107f1cbe4eff16e5d7a
+?? docs/execution/plans/2026-11-07-convert-extract-index/identity.py	cc11fb2776674a94e487da1ca30eb4c6950f2bf6213304df013e60acfb1c1ac5
+?? docs/execution/plans/2026-11-07-convert-extract-index/implementation-plan.md	e375e5a2a89c0411b1451c96f3d3e99025080fe21bc4808318a7f80ea6c93092
+?? docs/execution/plans/2026-11-07-convert-extract-index/red-check.py	60273cd4de30e3fb328166b5eae640d3aa1c8ab52d8c42f8b2adcb5e4ff6f54b
+?? docs/execution/plans/2026-11-07-convert-extract-index/task.md	120ee710690d836088ad0c38fd97a1bf7f07ab102cf170d5e362f8e0b0c72ab4

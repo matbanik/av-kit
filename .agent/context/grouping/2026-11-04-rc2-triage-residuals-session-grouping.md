@@ -24,7 +24,7 @@
 | MEU-121 | `svc-tts-fp16-nonfinite` | `TTS-ONNX-FP16-NONFINITE-AUDIO` (D-239) | GUI, adapter investigation | MEU-62, MEU-72, MEU-117 |
 | MEU-122 | `svc-transcript-metadata` | `TRANSCRIPT-TITLE-IS-VIDEO-ID` (D-223), `TRANSCRIPT-CHANNEL-IS-PLAYLIST-NAME` (D-224) | Service, port, adapter | MEU-7, MEU-11 |
 | MEU-123 | `convert-extract-stream-index` | `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH` (D-227); rider `CONVERT-EXTRACT-ENCODER-LABEL` | Service, media adapter | MEU-29, MEU-30 |
-| MEU-124 | `download-received-quality` | `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY` (D-225) | Domain, service, database, API, GUI | MEU-10, MEU-20 |
+| MEU-124 | `download-received-quality` | `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY` (D-225); riders `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` (Mat's D-361) and `CONSOLE-STARTUP-DB-PATH` (D-379) | Domain, service, database, API, GUI | MEU-10, MEU-20 |
 | MEU-125 | `dist-release-candidate-2` | The accepted batching: the new build, gate, notes and checklist | Release | MEU-110, MEU-113, MEU-114, MEU-115, MEU-116, MEU-117, MEU-118, MEU-119, MEU-120, MEU-121 |
 | MEU-126 | `gui-light-accent-contrast` | `LIGHT-ACCENT-BELOW-AA-CONTRAST` (D-235) | GUI | MEU-26 |
 
@@ -47,6 +47,8 @@
 | `CONVERT-EXTRACT-ENCODER-LABEL` | TECH-DEBT | MEU-123 (rider) |
 | `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH` | MEU-NEW | MEU-123 |
 | `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY` | MEU-NEW | MEU-124 |
+| `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` | TECH-DEBT | MEU-124 (rider, Mat's D-361) |
+| `CONSOLE-STARTUP-DB-PATH` | TECH-DEBT | MEU-124 (rider, D-379) |
 | `LIGHT-ACCENT-BELOW-AA-CONTRAST` | TECH-DEBT | MEU-126 |
 | `BACKEND-READY-BEFORE-LISTEN` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
 | `CAPTURE-E2E-LAUNCH-TEARDOWN-HANG` | MONITORING | Not an MEU: monitoring, acts on recurrence |
@@ -56,6 +58,7 @@
 | `CLOSEOUT-CHECK-REFUSES-REGISTER` | TECH-DEBT | Not an MEU: Session 49b, a tooling session tracked by the issue (D-274, D-280) |
 | `CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
 | `CONVERT-ADVANCED-EDIT-REPLACED` | TECH-DEBT | Not an MEU: first in current-focus's debt queue. Needs a build, so it would land before Session 57 if wanted |
+| `CONVERT-CUT-ENCODER-LABEL` | TECH-DEBT | Not an MEU: last in current-focus's debt queue (D-380). Needs a build, so it would land before Session 57 if wanted |
 | `CONVERT-CUT-TIME-RAW-MS` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
 | `CONVERT-POSITIONS-NOT-RENUMBERED` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
 | `DOWNLOAD-QUEUE-DRAG-OVER-MISS` | MONITORING | Not an MEU: monitoring, acts on recurrence |
@@ -63,6 +66,7 @@
 | `E2E-CLIPBOARD-PRIMER-EMPTY` | MONITORING | Not an MEU: first in current-focus's debt queue. Needs a build, so it would land before Session 57 if wanted |
 | `E2E-ELECTRON-LAUNCH-FLAG` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
 | `E2E-MAIN-PROCESS-ERRORS-UNWATCHED` | TECH-DEBT | Not an MEU: first in current-focus's debt queue. Needs a build, so it would land before Session 57 if wanted |
+| `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` | MONITORING | Not an MEU: a watch item in Session 57's gate that acts on recurrence (Mat's D-362) |
 | `FFMPEG-LIBDVDCSS-BUNDLED` | CLOSE | Not an MEU: accepted risk, Mat's D-266 |
 | `GUI-READY-CHUNK-BOUNDARY` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
 | `INSTALL-FOLDER-NAME-MISMATCH` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
@@ -74,6 +78,7 @@
 | `TOOLING-TRIAGE-CLI-CP1252` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
 | `TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
 | `TRANSCRIPT-ADD-CHANNEL-422` | MONITORING | Not an MEU: monitoring, acts on recurrence |
+| `TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS` | TECH-DEBT | Not an MEU: in current-focus's debt queue (Mat's D-363). Needs a build, so it would land before Session 57 if wanted |
 | `TTS-AUDIO-RANDOM-FILE-NAMES` | TECH-DEBT | Not an MEU: standing debt queue, outside the accepted batches |
 | `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` | BLOCKED | Not an MEU: blocked until Mat installs eSpeak NG 1.52 and runs AC-74.11 |
 | `TTS-JA-ZH-G2P-EXTRAS` | DEFER | Not an MEU: deferred (D-229) |
@@ -132,6 +137,8 @@ The triage proposed five batches: A (FFmpeg, uninstall), B (Transcript failures)
 - TTS runs as two sessions, not one (D-245).
 - Batch A lost the FFmpeg build: Mat kept FFmpeg as it is, including libdvdcss (D-266). Its exit-code rider now stands as MEU-113, and the two fixes stay in one session (D-267).
 - Session 49b, a tooling session with no MEU, fixes the closeout check before Session 50 (Mat's D-274, D-280).
+- Session 53's closeout filed three issues, and Mat placed them on 2026-11-07 (D-361 to D-363, recorded in that session's reflection and each issue's `decision_log`, not in §8). A rider joins Session 55 and a watch item joins Session 57; the third goes to the debt queue, since no remaining session works in its files (D-242).
+- Session 54's plan filed two issues, and Mat asked on 2026-11-07 that they be placed here (D-379, D-380, recorded in Session 54's plan and each issue's `decision_log`, not in §8). `CONSOLE-STARTUP-DB-PATH` is a rider in Session 55, the last session in the database package; `CONVERT-CUT-ENCODER-LABEL` goes to the debt queue, since no remaining session works in its files (D-242).
 
 ### Session 49 — `rc2-fetch-uninstall` (MEU-113, MEU-114) · P2
 
@@ -189,6 +196,8 @@ The triage proposed five batches: A (FFmpeg, uninstall), B (Transcript failures)
 ### Session 55 — `download-received-quality` (MEU-124) · P2
 
 - Batch E's quality fix: domain, service, database, API and GUI. It shares no file with Session 54, so it has its own plan (D-250). Calibrate against the MEU-112 part of Session 44 `release-rc1`, which added a job column the same way.
+- Rider `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` (P3, Mat's D-361): a bare channel URL in the download queue queues its tabs, not its videos. The fix applies D-354's rule to the add path in `services/download.py:177-186`, the file this session already works in, flattening the tabs one level as `FLAT_TABS` does for transcripts, with a Red against the measured shape.
+- Rider `CONSOLE-STARTUP-DB-PATH` (P3, D-379): the backend's first log line, `engine.created`, prints the database path with the user name in it (`database/engine.py:85`). `build_services` creates the engine (`wiring.py:135`) before HealthService installs the Console scrub (`:205`), and the desktop app shows the line in the Console; RC1 shipped it. This session's column work runs through `create_sqlite_engine` in the same package. The fix drops the raw path from the line or logs it with the home folder as `~`, with a Red that `build_services` into a folder with a marker name prints no stdout line holding it (D-377's widen option).
 
 ### Session 56 — `light-accent-contrast` (MEU-126) · P2 band, issue P4
 
@@ -197,6 +206,7 @@ The triage proposed five batches: A (FFmpeg, uninstall), B (Transcript failures)
 ### Session 57 — `release-rc2` (MEU-125) · P2
 
 - Version, clean build, gate, notes and checklist. Calibrate against Session 44 `release-rc1`, whose review rounds cost 4.5M to 10M tokens each. Publishing stays with Mat.
+- Watch item `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` (MONITORING, P4, Mat's D-362): the plan names it, and if W2-4's seam reload fails again in this gate or an earlier one, the fix lands before the release. The likely fix is to wait for the first load to settle before `page.reload()`. Session 53 RULE-4 governs a single failure: rerun once unchanged and disclose both attempts.
 
 ---
 
@@ -241,7 +251,7 @@ Each plan follows `.agent/docs/cloud-local-collaboration.md`: gate location and 
 | 51 | `tts-build-capability` | MEU-117, MEU-118 | P2 | executed | `docs/execution/plans/2026-11-06-tts-build-capability/` |
 | 52 | `tts-load-fp16` | MEU-119, MEU-120, MEU-121 | P2 | executed | `docs/execution/plans/2026-11-06-tts-load-fp16/` |
 | 53 | `transcript-metadata` | MEU-122 | P2 | executed | `docs/execution/plans/2026-11-07-transcript-metadata/` |
-| 54 | `convert-extract-index` | MEU-123 | P2 | pending | — |
+| 54 | `convert-extract-index` | MEU-123 | P2 | executed | `docs/execution/plans/2026-11-07-convert-extract-index/` |
 | 55 | `download-received-quality` | MEU-124 | P2 | pending | — |
 | 56 | `light-accent-contrast` | MEU-126 | P2 | pending | — |
 | 57 | `release-rc2` | MEU-125 | P2 | pending | — |

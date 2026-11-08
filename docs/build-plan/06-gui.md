@@ -1583,7 +1583,7 @@ The following features are explicitly **deferred** to a future phase:
 
 ### Downloader received quality (residual)
 
-> **MEU-124.** Registered 2026-11-04 from `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY`. The row's meta line prints `row.quality` (`DownloaderPage.tsx:497-498`), the preset stored when the item was added (`services/download.py:213,235`). No field carries the file's real quality.
+> **MEU-124.** Registered 2026-11-04 from `DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY`, with riders `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` (Mat's D-361, 2026-11-07) and `CONSOLE-STARTUP-DB-PATH` (D-379, 2026-11-07). The row's meta line prints `row.quality` (`DownloaderPage.tsx:497-498`), the preset stored when the item was added (`services/download.py:213,235`). No field carries the file's real quality.
 
 | Rule | Contract | Source |
 |------|----------|--------|
@@ -1591,6 +1591,8 @@ The following features are explicitly **deferred** to a future phase:
 | Shown | The row shows requested and received together only when they differ. | Local Canon: triage D-225 |
 | Upgrade | `COLUMN_MIGRATIONS` adds the column to an existing database, as [MEU-112](08-video-conversion.md#job-encoder-choice-residual) did. Existing rows stay null and show the request as today. | Local Canon: 08 §Encoder choice per job, Upgrade rule |
 | Tests | A unit test for the stored value and for null; a migration test on an existing database; a renderer test for same, different and null. | Local Canon |
+| Bare channel (rider) | A bare channel URL queues the channel's videos: its tabs are flattened one level, as `FLAT_TABS` does for transcripts (D-354, D-358). A URL that names a tab is unchanged. A Red covers the measured shape (`C:/Temp/av-kit/s53-shapes.txt:24-28`). | Human-approved: D-361, known issue `DOWNLOAD-BARE-CHANNEL-LISTS-TABS` |
+| Startup line (rider) | `engine.created` (`database/engine.py:85`) logs no raw database path: it drops the field or shows the home folder as `~`. A Red runs `build_services` into a folder with a marker name and finds no stdout line holding it. | Local Canon: D-379, known issue `CONSOLE-STARTUP-DB-PATH` (filed under Mat's D-377) |
 
 <a id="light-accent-contrast-residual"></a>
 

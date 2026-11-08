@@ -138,7 +138,7 @@
 | MEU-33 | `gui-convert` | 8.6 | [Phase 8 §Convert page](../../docs/build-plan/08-video-conversion.md#convert-page-convert) | Convert rail below TTS, Downloader-shaped queue, presets, HelpCard, Wave 8 E2E, action-index audit | ✅ approved |
 | MEU-109 | `convert-output-folder` | 8.7 | [Phase 8 §Output folder (residual)](../../docs/build-plan/08-video-conversion.md#output-folder-residual) | Encode, cut and extract create the output folder before FFmpeg starts, so a first Convert job into the default folder succeeds and a folder that cannot be created names the path. | ✅ approved |
 | MEU-112 | `convert-job-gpu-preference` | 8.8 | [Phase 8 §Encoder choice per job (residual)](../../docs/build-plan/08-video-conversion.md#job-encoder-choice-residual) | The encoder chosen for one Compress job reaches FFmpeg, survives a re-queue or a restart, and an existing database upgrades in place. The setting still applies when a job sends nothing. | ✅ approved |
-| MEU-123 | `convert-extract-stream-index` | 8.9 | [Phase 8 §Extract stream index (residual)](../../docs/build-plan/08-video-conversion.md#extract-stream-index-residual) | stream_index is audio-relative everywhere, so extract picks the right extension and tracks; an Extract job saves no encoder. | ⬜ pending |
+| MEU-123 | `convert-extract-stream-index` | 8.9 | [Phase 8 §Extract stream index (residual)](../../docs/build-plan/08-video-conversion.md#extract-stream-index-residual) | stream_index is audio-relative everywhere, so extract picks the right extension and tracks; an Extract job saves no encoder. | ✅ approved |
 
 
 ## Screenshot capture (P2)

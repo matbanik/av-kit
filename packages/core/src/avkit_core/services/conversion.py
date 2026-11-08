@@ -90,6 +90,28 @@ def _preset_by_id(preset_id: ConversionPresetId):
     raise ValidationError("unknown conversion preset")
 
 
+def _audio_streams(info: MediaInfo | None) -> list[StreamInfo] | None:
+    """AUDIO_POSITION: the audio streams in ffprobe order, so list position N is FFmpeg's a:N.
+
+    None means the positions are unknown: there was no probe, or it gave no stream list.
+    An empty list means the file has no audio.
+    """
+    if info is None or info.streams is None:
+        return None
+    audio = [s for s in info.streams if isinstance(s, StreamInfo) and s.codec_type == "audio"]
+    return sorted(audio, key=lambda stream: stream.index)
+
+
+def _missing_track(plan: dict[str, int | None], audio: list[StreamInfo] | None) -> str | None:
+    """MISSING_TRACK: why an Extract plan names no audio track the file has, else None."""
+    position = plan.get("stream_index") or 0
+    if audio is None or position < len(audio):
+        return None
+    if not audio:
+        return "the file has no audio track"
+    return f"no audio track a:{position}; the file has {len(audio)} audio track(s)"
+
+
 @dataclass(frozen=True)
 class ConversionAddSpec:
     """Add-to-queue request. Unexpected fields are rejected by the dataclass."""
@@ -254,8 +276,10 @@ class ConversionService:
         except (MediaProbeError, FilesystemError, OSError, ValidationError) as exc:
             probe_error = str(exc) or "probe failed"
         plans = self._expand_plans(spec, info)
+        audio = _audio_streams(info) if spec.kind is ConversionKind.Extract else None
         jobs = []
         for offset, plan in enumerate(plans):
+            error = probe_error or _missing_track(plan, audio)
             output, skipped = self._resolve_output(
                 path,
                 spec.kind,
@@ -269,7 +293,7 @@ class ConversionService:
                 ),
             )
             status = ConversionStatus.Skipped if skipped else ConversionStatus.Pending
-            if probe_error is not None:
+            if error is not None:
                 status = ConversionStatus.Failed
             preset_id, cq, scale_height, audio_mode = self._compress_fields(spec)
             job = ConversionJob(
@@ -299,7 +323,7 @@ class ConversionService:
                 duration_seconds=None if info is None else info.duration,
                 width=None if info is None else info.width,
                 height=None if info is None else info.height,
-                error_message=probe_error,
+                error_message=error,
                 queue_position=position + offset,
                 created_at=_now(),
                 updated_at=_now(),
@@ -318,14 +342,9 @@ class ConversionService:
     ) -> list[dict[str, int | None]]:
         if spec.kind is not ConversionKind.Extract:
             return [{"stream_index": spec.stream_index}]
-        if spec.stream_mode == "all" and info is not None and info.streams:
-            audio = [
-                stream
-                for stream in info.streams
-                if isinstance(stream, StreamInfo) and stream.codec_type == "audio"
-            ]
-            if audio:
-                return [{"stream_index": stream.index} for stream in audio]
+        audio = _audio_streams(info)
+        if spec.stream_mode == "all" and audio:
+            return [{"stream_index": position} for position in range(len(audio))]
         index = spec.stream_index if spec.stream_index is not None else 0
         return [{"stream_index": index}]
 
@@ -380,13 +399,12 @@ class ConversionService:
         if kind is ConversionKind.Cut:
             return path.suffix or COMPRESS_EXT
         codec = "unknown"
-        if info is not None and info.streams:
-            index = plan.get("stream_index")
-            for stream in info.streams:
-                if isinstance(stream, StreamInfo) and stream.index == index:
-                    codec = stream.codec_name
-                    break
-        elif info is not None and info.audio_codec:
+        audio = _audio_streams(info)
+        position = plan.get("stream_index") or 0
+        if audio is not None:
+            if position < len(audio):
+                codec = audio[position].codec_name
+        elif position == 0 and info is not None and info.audio_codec:
             codec = info.audio_codec
         return EXTRACT_CONTAINER_MAP.get(codec, EXTRACT_UNKNOWN_EXT)
 
@@ -484,8 +502,11 @@ class ConversionService:
         self._finish(job.id, ConversionStatus.Done, progress=1.0)
 
     def _dispatch(self, job) -> None:
-        caps = self._gpu or self.detect_gpu()
-        encoder = self._resolve_encoder(caps, job.gpu_preference)
+        # EXTRACT_NO_ENCODER: an Extract copies its audio stream, so it needs no GPU check,
+        # and saving None clears the label an older build stored on the row.
+        encoder: str | None = None
+        if job.kind is not ConversionKind.Extract:
+            encoder = self._resolve_encoder(self._gpu or self.detect_gpu(), job.gpu_preference)
         with self._uow_factory() as uow:
             latest = uow.conversion_jobs.get(job.id)
             if latest is None:
@@ -511,6 +532,8 @@ class ConversionService:
                 uow.commit()
 
         if job.kind is ConversionKind.Compress:
+            if encoder is None:  # resolved above for every kind but Extract
+                raise ValidationError("Compress jobs require an encoder")
             preset = _preset_by_id(job.preset_id or ConversionPresetId.Balanced)
             probed = self._media.probe(job.input_path)
             options = VideoEncodeOptions(

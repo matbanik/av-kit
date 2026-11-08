@@ -173,8 +173,8 @@ No timeline player in MVP (named deferral). Numeric fields are enough for the st
 
 | Control | Rule | Source |
 |---------|------|--------|
-| First audio stream | `map a:0`, container from codec table | Spec |
-| All audio streams | One `ConversionJob` **per stream** (N rows) | Local Canon playlist → N `DownloadJob` |
+| First audio stream | `map a:0`: audio position 0, the first audio stream whatever stream comes before it; container from codec table | Spec; MEU-123 |
+| All audio streams | One `ConversionJob` **per audio stream**, at audio positions 0 to k-1 for k tracks, named `_a0`, `_a1`… (one track stays `_a`). A file with no audio track gives one Failed row, in either mode | Local Canon playlist → N `DownloadJob`; MEU-123 |
 | Container map | PCM→`.wav`, AAC→`.m4a`, AC3→`.ac3`, EAC3→`.eac3`, Opus→`.opus`, Vorbis→`.oga`, MP3→`.mp3`, MP2→`.mp2`, WMA→`.wma`; unknown → `.mka` | Spec (inspiration) |
 | Video-only / subtitles | **Deferred** | — |
 
@@ -465,7 +465,7 @@ Python `assert` is not validation.
 
 - compress: `preset` (wire `balanced` default), optional `cq`, `scale_height`, `audio_mode`, `gpu_preference`
 - cut: `in_ms`, `out_ms` (ints ≥ 0, `out_ms > in_ms`), `copy_mode` (`fast_copy` default)
-- extract: `stream_mode` (`first` \| `all`), optional `stream_index` (required if not `all`/`first`)
+- extract: `stream_mode` (`first` \| `all`), optional `stream_index` (required if not `all`/`first`). `stream_index` is the Nth audio stream (0-based), the N in `-map a:N`, with that one meaning in the API, MCP, GUI, service and adapter
 
 Extra forbid. Unknown preset → 422.
 
@@ -473,7 +473,7 @@ Wire mapping follows Phase 4 quality/audio: GUI strings ≠ domain `.name` where
 
 ### `ConversionJobOut`
 
-All persistable fields needed by the table: `id`, `kind`, `input_path`, `output_path`, `display_name`, `preset_id`, `cq`, `scale_height`, `audio_mode`, `gpu_encoder`, `in_ms`, `out_ms`, `copy_mode`, `stream_index`, `status`, `progress`, `speed`, `eta`, `file_size`, `duration_seconds`, `width`, `height`, `error_message`, `queue_position`, `created_at`. Format speed/eta as GUI strings at the schema layer (Local Canon DownloadJobOut).
+All persistable fields needed by the table: `id`, `kind`, `input_path`, `output_path`, `display_name`, `preset_id`, `cq`, `scale_height`, `audio_mode`, `gpu_encoder`, `in_ms`, `out_ms`, `copy_mode`, `stream_index`, `status`, `progress`, `speed`, `eta`, `file_size`, `duration_seconds`, `width`, `height`, `error_message`, `queue_position`, `created_at`. Format speed/eta as GUI strings at the schema layer (Local Canon DownloadJobOut). `gpu_encoder` is `null` for an Extract, which copies its audio stream.
 
 No media bytes.
 
@@ -603,6 +603,13 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 | All audio streams | The plan sends audio positions. | Local Canon: triage D-227 |
 | Encoder label (rider) | An Extract job saves no `gpu_encoder`, because it's a stream copy that uses no encoder. | Local Canon: known issue `CONVERT-EXTRACT-ENCODER-LABEL` |
 | Tests | Both modes against a real `.mp4`, with one audio track and with two. | Local Canon: triage D-227 |
+
+> **Delivered (Session 54).**
+> - `_audio_streams` in `services/conversion.py:93` lists the probe's audio streams in ffprobe order, so list position N is the N in the adapter's `-map a:N` (`media/adapter.py:635`) (`AUDIO_POSITION`, D-364). All audio streams plans positions 0 to k-1 in `_expand_plans` at `:338` (`AUDIO_PLAN`, D-365). `_output_ext` at `:390` takes the codec at the position, so AAC comes out as `.m4a`; with no stream list, the probe's first audio codec applies at position 0 only (`EXTRACT_EXT`, D-366).
+> - `_missing_track` at `:105` fails a job at add when its position names no audio track the file has, and FFmpeg never runs for it (`MISSING_TRACK`, D-367).
+> - `_dispatch` at `:504` neither checks the GPU nor resolves an encoder for an Extract, and saves `gpu_encoder` as `null`, which also clears a label an older build stored. Compress and Cut are unchanged (`EXTRACT_NO_ENCODER`, D-368, D-373). A stored row runs with its `stream_index` as before (`LEGACY_JOBS`, D-369), and the API, MCP and GUI pass `stream_index` through unchanged (`PASS_THROUGH`, D-370).
+> - `tests/integration/test_extract_real_ffmpeg.py` runs both modes through the real `FFmpegAdapter` and the pinned `packaging/ffmpeg-win64/` binaries, on `.mp4` files with one, two and no audio tracks that it generates in a temp folder (`REAL_FFMPEG`, D-371). No clip path reaches stdout, stderr, the Console ring or `console.log` (`NO_RAW_CONSOLE`, D-372). CI's Tests step deselects the module, because the runner has no fetched binaries (`CI_DESELECT`, `.github/workflows/ci.yml:65`).
+> - AC-123.1 to AC-123.13. Closes `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH` and its rider `CONVERT-EXTRACT-ENCODER-LABEL`. Plan `docs/execution/plans/2026-11-07-convert-extract-index/`.
 
 ---
 
