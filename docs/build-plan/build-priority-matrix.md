@@ -2,7 +2,7 @@
 
 > **Spec source:** `docs/BUILD_PLAN.md` and `docs/build-plan/00-overview.md`–`11-page-layout.md`.
 > MEU IDs registered 2026-08-18 via `/session-grouping`. Phase 8 MEU-28–33: 2026-08-24. Phase 9 MEU-34–39: 2026-08-26.
-> Phase 10 MEU-41–49: 2026-08-28. Phase 11 MEU-50–58: 2026-09-03. Phase 6 residual MEU-61: 2026-09-20. 2026-09-30 GUI-walkthrough residuals MEU-62–70 (Phases 3/5/6/9/11). 2026-10-09 triage residuals MEU-71–91 (Phases 3/4/7/9/11). 2026-10-17 triage residuals MEU-93–98 (Phases 3/6). 2026-11-03 release candidate residuals MEU-108–112 (Phases 6/7/8/9). 2026-11-04 rc.2 triage residuals MEU-113–126 (Phases 3/6/7/8).
+> Phase 10 MEU-41–49: 2026-08-28. Phase 11 MEU-50–58: 2026-09-03. Phase 6 residual MEU-61: 2026-09-20. 2026-09-30 GUI-walkthrough residuals MEU-62–70 (Phases 3/5/6/9/11). 2026-10-09 triage residuals MEU-71–91 (Phases 3/4/7/9/11). 2026-10-17 triage residuals MEU-93–98 (Phases 3/6). 2026-11-03 release candidate residuals MEU-108–112 (Phases 6/7/8/9). 2026-11-04 rc.2 triage residuals MEU-113–126 (Phases 3/6/7/8). 2026-11-08 capture crop residuals MEU-128–132 (Phase 9).
 > YAML SSOT: `.agent/context/meu-status.yaml`.
 > Each MEU maps to exactly one row below.
 
@@ -12,7 +12,7 @@
 |------|------|------|
 | P0 | MEU-1–4 | Domain first. No infrastructure until ports exist. |
 | P1 | MEU-5–13 | Adapters then services. Never import infra from domain. |
-| P2 | MEU-14–125 | API before MCP/GUI. Distribution after GUI shell. Conversion (MEU-28–33) after the YouTube toolkit exists. Capture (MEU-34–40) after Convert. Capture annotation geometry (MEU-59) after the Capture page and native picker. Capture edit-until-Save (MEU-60) after MEU-59. Queue cards (MEU-41–49) after every page exists. Page layout (MEU-50–58) after the queue cards it composes around. Login item (MEU-61) after Settings (MEU-23) and the NSIS installer (MEU-25). 2026-09-30 residuals: TTS runtime assets (MEU-62) before the TTS page residuals (MEU-63/64) and the MCP live audit (MEU-68); Capture toolbar (MEU-65) before zoom (MEU-66); flatten-with-backup (MEU-67) after MEU-60; header toggles (MEU-69) and Settings emphasis (MEU-70) last. 2026-10-17 residuals: shortcut binding (MEU-95) before palette curation (MEU-96) before common shortcuts (MEU-97); path fields (MEU-93) and theme-reactive selects (MEU-94) stand alone; TTS sideload load (MEU-98) after the device fallback (MEU-75). |
+| P2 | MEU-14–132 | API before MCP/GUI. Distribution after GUI shell. Conversion (MEU-28–33) after the YouTube toolkit exists. Capture (MEU-34–40) after Convert. Capture annotation geometry (MEU-59) after the Capture page and native picker. Capture edit-until-Save (MEU-60) after MEU-59. Queue cards (MEU-41–49) after every page exists. Page layout (MEU-50–58) after the queue cards it composes around. Login item (MEU-61) after Settings (MEU-23) and the NSIS installer (MEU-25). 2026-09-30 residuals: TTS runtime assets (MEU-62) before the TTS page residuals (MEU-63/64) and the MCP live audit (MEU-68); Capture toolbar (MEU-65) before zoom (MEU-66); flatten-with-backup (MEU-67) after MEU-60; header toggles (MEU-69) and Settings emphasis (MEU-70) last. 2026-10-17 residuals: shortcut binding (MEU-95) before palette curation (MEU-96) before common shortcuts (MEU-97); path fields (MEU-93) and theme-reactive selects (MEU-94) stand alone; TTS sideload load (MEU-98) after the device fallback (MEU-75). 2026-11-08 crop residuals: region view (MEU-128) before crop (MEU-130) before the crop tool (MEU-131); image import (MEU-129) before GUI import (MEU-132). |
 
 ## MEU order
 
@@ -123,6 +123,11 @@
 | 9.32 | MEU-106 | `capture-line-ellipse-shapes` | [09 §Line and ellipse](09-screenshot-capture.md#line-and-ellipse) | MEU-100, MEU-105 |
 | 9.33 | MEU-107 | `capture-step-mark` | [09 §Step mark](09-screenshot-capture.md#step-mark) | MEU-105 |
 | 9.34 | MEU-111 | `mcp-image-fits-stdio` | [05 §Image size limit (residual)](05-mcp-server.md#image-size-limit-residual) | MEU-38 |
+| 9.35 | MEU-128 | `capture-region-view` | [09 §Region view](09-screenshot-capture.md#region-view) | MEU-37, MEU-38, MEU-111 |
+| 9.36 | MEU-129 | `capture-image-import` | [09 §Image import](09-screenshot-capture.md#image-import) | MEU-36, MEU-37, MEU-38 |
+| 9.37 | MEU-130 | `capture-crop-copy` | [09 §Crop to a new shot](09-screenshot-capture.md#crop-to-new-shot) | MEU-128, MEU-67 |
+| 9.38 | MEU-131 | `gui-capture-crop-tool` | [09 §Crop tool](09-screenshot-capture.md#crop-tool) | MEU-130, MEU-100 |
+| 9.39 | MEU-132 | `gui-capture-image-import` | [09 §GUI image import](09-screenshot-capture.md#gui-image-import) | MEU-129, MEU-39 |
 | 10.1 | MEU-41 | `canon-queue-cards` | [10 §Scope and non-goals](10-queue-card-ui.md#scope-and-non-goals) | MEU-39 |
 | 10.2 | MEU-42 | `svc-requeue-widening` | [10 §Re-queue contract](10-queue-card-ui.md#re-queue-contract) | MEU-41 |
 | 10.3 | MEU-43 | `gui-queue-primitives` | [10 §Status token table](10-queue-card-ui.md#status-token-table) | MEU-41 |

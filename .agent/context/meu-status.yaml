@@ -110,12 +110,13 @@ phases:
   - docs/execution/plans/2026-08-27-p9-capture-native-picker/
   - docs/execution/plans/2026-09-19-p9-capture-annotate-arrow-text/
   - docs/execution/plans/2026-09-20-p9-capture-annotate-edit/
-  last_updated: '2026-11-03'
+  last_updated: '2026-11-08'
   note: MEU-34–36 bound to p9-capture-engine. MEU-37–38 bound to p9-capture-api-mcp. MEU-39 bound to p9-capture-gui. MEU-40 bound to p9-capture-native-picker. MEU-59 bound to p9-capture-annotate-arrow-text
     (arrow+text geometry residual). MEU-60 bound to p9-capture-annotate-edit (edit-until-Save residual). Session 8c / MEU-27 approved. MEU-65–67 residuals (toolbar icons, zoom, flatten-with-backup) registered
     2026-09-30. MEU-80–91 residuals (icon hints, action row, text baseline, arrow geometry, file sync, size scrub, swatches, tool lock, filmstrip menu/multi-select, pixelate, eraser) registered 2026-10-09.
     MEU-82–84 bound to capture-render-fidelity. MEU-85–87 bound to capture-editor-options. MEU-90–91 bound to capture-new-marks. MEU-99–107 residuals (canvas history chords, resize handles, text re-edit,
-    multi-line text, redact, copy image, style and tool flow, line and ellipse, step mark) registered 2026-10-29. MEU-111 residual (image size limit over MCP) registered 2026-11-03.
+    multi-line text, redact, copy image, style and tool flow, line and ellipse, step mark) registered 2026-10-29. MEU-111 residual (image size limit over MCP) registered 2026-11-03. MEU-128–132 residuals
+    (region view, image import, crop to a new shot, crop tool, GUI image import) registered 2026-11-08.
 - id: '10'
   name: Queue card UI
   band: P2
@@ -3342,6 +3343,139 @@ meus:
   updated: '2026-11-07'
   closed_reason: null
   note: Registered 2026-11-07 from TTS-ONNX-FP16-NONFINITE-AUDIO (D-336, Mat), the follow-up to Session 52's spike. Spike first.
+- row_key: MEU-128
+  id: MEU-128
+  slug: capture-region-view
+  phase: '9'
+  band: P2
+  matrix_item: '9.35'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: region-view
+    text: Phase 9 §Region view
+  description: GET image and MCP image take an optional region in original px or fractions, clamp it, fit it inside max_edge (default 1568, upscale capped at 4x) and report the frame; no file is written.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-37, MEU-38, MEU-111
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-37
+  - MEU-38
+  - MEU-111
+  execution_plan: null
+  updated: '2026-11-08'
+  closed_reason: null
+  note: Registered 2026-11-08 from the capture crop design (_inspiration/capture-crop/design.md). Mat asked for crop in the GUI, MCP and API, agent first (design D-2), and ruled D-1 (a crop writes a new
+    shot) on 2026-11-08.
+- row_key: MEU-129
+  id: MEU-129
+  slug: capture-image-import
+  phase: '9'
+  band: P2
+  matrix_item: '9.36'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: image-import
+    text: Phase 9 §Image import
+  description: POST /captures mode import and MCP import copy a local png, jpg, jpeg or webp into the inbox as a new shot (source Import), writing an upright PNG when EXIF rotates it; inbox paths register
+    in place.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-36, MEU-37, MEU-38
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-36
+  - MEU-37
+  - MEU-38
+  execution_plan: null
+  updated: '2026-11-08'
+  closed_reason: null
+  note: Registered 2026-11-08 from the capture crop design (_inspiration/capture-crop/design.md). Mat asked for crop in the GUI, MCP and API, agent first (design D-2), and ruled D-1 (a crop writes a new
+    shot) on 2026-11-08.
+- row_key: MEU-130
+  id: MEU-130
+  slug: capture-crop-copy
+  phase: '9'
+  band: P2
+  matrix_item: '9.37'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: crop-to-new-shot
+    text: Phase 9 §Crop to a new shot
+  description: POST /captures/{id}/crop and MCP crop write the region as a new PNG shot (source Crop) with exact pixels, leave the source untouched, and carry the saved marks translated and clipped.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-128, MEU-67
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-128
+  - MEU-67
+  execution_plan: null
+  updated: '2026-11-08'
+  closed_reason: null
+  note: Registered 2026-11-08 from the capture crop design (_inspiration/capture-crop/design.md). Mat asked for crop in the GUI, MCP and API, agent first (design D-2), and ruled D-1 (a crop writes a new
+    shot) on 2026-11-08.
+- row_key: MEU-131
+  id: MEU-131
+  slug: gui-capture-crop-tool
+  phase: '9'
+  band: P2
+  matrix_item: '9.38'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: crop-tool
+    text: Phase 9 §Crop tool
+  description: A Crop tool on the Capture page with a full-image box with 8 handles, dimmed outside, aspect presets, X/Y/W/H fields, and Enter or Save as copy writes a new shot through the crop endpoint.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-130, MEU-100
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-130
+  - MEU-100
+  execution_plan: null
+  updated: '2026-11-08'
+  closed_reason: null
+  note: Registered 2026-11-08 from the capture crop design (_inspiration/capture-crop/design.md). Mat asked for crop in the GUI, MCP and API, agent first (design D-2), and ruled D-1 (a crop writes a new
+    shot) on 2026-11-08.
+- row_key: MEU-132
+  id: MEU-132
+  slug: gui-capture-image-import
+  phase: '9'
+  band: P2
+  matrix_item: '9.39'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: gui-image-import
+    text: Phase 9 §GUI image import
+  description: Drag and drop, an Import image button and Ctrl+V paste bring images into the Capture inbox through the import endpoint or the hotkey publication path.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-129, MEU-39
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-129
+  - MEU-39
+  execution_plan: null
+  updated: '2026-11-08'
+  closed_reason: null
+  note: Registered 2026-11-08 from the capture crop design (_inspiration/capture-crop/design.md). Mat asked for crop in the GUI, MCP and API, agent first (design D-2), and ruled D-1 (a crop writes a new
+    shot) on 2026-11-08.
 summary_bands:
 - key: P0
   label: P0
@@ -3351,6 +3485,7 @@ summary_bands:
   range: MEU-5–13 (Phases 2–3)
 - key: P2
   label: P2
-  range: MEU-14–127 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
-    triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127)
+  range: MEU-14–132 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+    triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127;
+    2026-11-08 capture crop residuals MEU-128–132)
 narrative_sections: []

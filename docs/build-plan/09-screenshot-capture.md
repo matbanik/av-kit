@@ -975,6 +975,94 @@ Nine residual MEUs from the Human-approved capture annotation synthesis (`_inspi
 |------|----------|--------|
 | Mark | A new `step {x, y, number, color, size}` type through every layer, so an agent reads the number directly; the badge text is centred in the preview and the bake alike | Human-approved 2026-10-29 synthesis C-8 |
 
+## Residuals registered 2026-11-08
+
+Five residual MEUs from the capture crop design (`_inspiration/capture-crop/design.md`, 2026-11-08). Mat asked for crop in the GUI, MCP and API, working on screenshots and any other image, agent first (design D-2), and ruled that a crop writes a new shot and leaves the source untouched (D-1). The design's other decisions, D-3 to D-13, are agent decisions backed by research or local canon; a plan may revise one with evidence and says so. Grouping: `.agent/context/grouping/2026-11-08-capture-crop-session-grouping.md`.
+
+<a id="region-view"></a>
+
+### Region view
+
+> **MEU-128.** Design slice S1 (§6.1, §6.2). Agents here crop mostly to look closer and throw the file away (design §4); this serves that without writing a file.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Fields | `GET /captures/{id}/image` accepts optional `x`, `y`, `width`, `height` (all four or none), `unit` (`px` by default, or `fraction`) and `max_edge` (64 to 2576). MCP `image` gains the same optional fields and passes them as query keys (`GET_QUERY_KEYS`). Other keys stay rejected | Human-approved 2026-11-08 design D-2; Research-backed design D-5 (one action, not a new `zoom`) |
+| Frame | Every coordinate is in the shot's original px, the frame `get` reports. A returned view is never a frame. `unit: "fraction"` takes 0 to 1 of the original's width and height and rounds outward (`left = floor(x·W)`, `top = floor(y·H)`, `right = ceil((x+width)·W)`, `bottom = ceil((y+height)·H)`) before clamping. With `unit: "px"`, a non-integer value is rejected with a message that names `unit: "fraction"` | Research-backed design D-3, D-4 (R-1 to R-4, R-7) |
+| Bounds | A region past the right or bottom edge is clamped, and the response says so. A region whose clamped result is empty or has an edge under `CAPTURE_MIN_EDGE_PX` (8) is rejected with 422. A negative `x` or `y` fails validation | Research-backed design D-6 (R-6, R-7); Local Canon design L-11, L-17 (Pillow pads past the edge with black) |
+| Scale | With a region, the region is cut from the full-resolution `variant` and fitted inside `max_edge` (default 1568), upscaled at most 4×, with Lanczos resampling. With `max_edge` and no region, the whole image is downscaled to fit and never upscaled. With neither, the bytes and media type are today's. Nothing is written to disk | Research-backed design D-5 (R-1, R-4, R-5) |
+| Frame report | The API response carries the frame in headers: the source size, the applied region, the returned size, the scale and whether the region was clamped. MCP returns two content items, a short text item with that frame and the mapping `source_x = region.x + x / scale` first, then the image | Research-backed design D-3, D-5 (R-4) |
+| MCP limit | The 7,800,000 B cap stays; its error names `max_edge` as the way to fit a large shot | Local Canon MEU-111 |
+| Descriptions | The `image` description follows design §6.7, including `max_edge: 2576` for high-resolution vision, and the tool documentation carries the ImageMagick mapping (design §6.6) | Research-backed design §6.6, §6.7 (R-8) |
+| Tests | Contract tests for every field, frame, bounds and scale rule, outward rounding on odd sizes, the 4× cap and unchanged bytes without a region; MCP tests for the two-item shape, with existing tests that read `content[0]` updated; OpenAPI regenerated | Local Canon |
+
+<a id="image-import"></a>
+
+### Image import
+
+> **MEU-129.** Design slice S3 (§6.4). Lets an agent bring in any local image so region view, crop and annotate work on it.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Request | `POST /captures` `{"mode": "import", "path": …}` (`CaptureImportIn`, `extra="forbid"`) and MCP `import {path}` (`.strict()`) | Human-approved 2026-11-08 design D-2 ("any other images provided"); Local Canon design D-9 (L-2, L-10) |
+| Copy | The file is copied into the inbox root. The source file is never moved, changed or watched. A path already in the inbox registers in place and returns its row, so the call is idempotent | Local Canon design D-9 (L-3, L-4) |
+| Accepted | An absolute path that resolves to a regular file, with a suffix in `SCAN_EXTENSIONS`, that Pillow's `verify()` accepts, within the import size cap (a tunable the plan fixes, starting from 50 MB), with Pillow's decompression-bomb guard left on | Local Canon design D-9 (L-3) |
+| Orientation | EXIF orientation 1, or no tag: a byte copy in the same format. Any other orientation: an upright PNG, so Pillow's pixel frame matches what Chromium shows | Research-backed design D-9 (R-7) |
+| Name | The source stem, sanitized, with the unique suffix checked against files and catalog rows under `CAPTURE_FILE_LOCK` | Local Canon design L-9 |
+| Source | New `CaptureSource.Import`, wire `import`. A scan that sees the file first does not replace it | Local Canon design L-4, L-12 |
+| Errors | Each 4xx names the fix, for example "path must be absolute", "not an image av-kit can open (png, jpg, jpeg, webp)", "file is 212 MB; the import limit is 50 MB" | Research-backed design §6.4 (R-8) |
+| Planning check | The plan probes whether a JPEG already in the inbox with EXIF orientation other than 1 shows its marks in the wrong place, and files an issue if it does | Local Canon design §11 |
+| Tests | Each rule; fixtures for all 8 orientations; idempotent re-import; the outside file's bytes and timestamp unchanged; OpenAPI regenerated | Local Canon |
+
+<a id="crop-to-new-shot"></a>
+
+### Crop to a new shot
+
+> **MEU-130.** Design slice S2 (§6.3, §6.5). Reuses MEU-128's coordinate, rounding and bounds rules, so a crop and a region view of the same box cut the same pixels.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Request | `POST /captures/{id}/crop` `{x, y, width, height, unit?, name?}` (`CaptureCropIn`, `extra="forbid"`) and MCP `crop` (`.strict()`). Coordinates, rounding and bounds follow [Region view](#region-view) | Human-approved 2026-11-08 design D-2; Research-backed design D-3, D-4, D-6 |
+| Writes | A new shot. The source file, sidecar and bake are not changed. No `confirm`, because nothing is overwritten | Human-approved 2026-11-08 design D-1 |
+| Pixels | The original's pixels exactly, with no resampling, saved as PNG with metadata stripped, in the inbox root | Local Canon design D-8; AC-40.26 (the exact-crop bar) |
+| Name | `{stem}-crop.png`, then `_2` and on. An optional `name` is sanitized to `[A-Za-z0-9 ._-]`, 1 to 80 characters, and becomes `{name}.png` with the same suffix rule. Names are checked against files and catalog rows under `CAPTURE_FILE_LOCK` | Local Canon design D-8 (L-9) |
+| Source | New `CaptureSource.Crop`, wire `crop` | Local Canon design L-12 |
+| Marks | The source's saved marks are carried over, moved by `(-applied.x, -applied.y)`. Box, highlight, pixelate and eraser marks are intersected with the crop and dropped when empty. An arrow is kept when both ends are inside, clipped with Liang–Barsky otherwise, and dropped when no part is inside. A text mark is kept when its anchor is inside. The crop gets its own sidecar and bake | Local Canon design D-7 |
+| Response | 201 `{item, source_id, requested, applied, clamped, marks: {kept, clipped, dropped}}`, with paths and no image bytes | Research-backed design §6.3 (R-6, R-8) |
+| Tests | Pixel-exact corners and centre on a pattern; no black pixel when a box runs past each edge of an all-white image; two crops give `-crop` and `-crop_2`; a scan that registers the file first keeps `Crop`; source bytes unchanged; each known bake difference in design §6.5 asserted; no source pixel left unchanged inside a clipped pixelate; the Pillow and SVG parity suites on clipped marks | Local Canon design §11 |
+
+<a id="crop-tool"></a>
+
+### Crop tool
+
+> **MEU-131.** Design slice S4 (§7.1). The Windows Photos and Photoshop crop pattern on the Capture page.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Entry | A toolbar button with the lucide `Crop` icon and the tooltip "Crop (C)". `CaptureTool` gains `'crop'`. C is a page-scoped shortcut registry entry; if the registry has no page-scoped letter entries yet, C arrives with MEU-105 and the button ships alone | Research-backed design D-11 (R-11); Local Canon design L-14 |
+| Box | The box starts as the whole image with 8 handles from `capture-transform.ts`. Dragging a handle resizes, dragging inside moves, dragging outside draws a new box, and Shift keeps the aspect ratio | Research-backed design D-11 (R-10, R-11); Local Canon design L-13 |
+| Look | The area outside the box is dimmed, a rule-of-thirds grid shows only while dragging, and the size reads out in original px | Research-backed design D-11 (R-11) |
+| Aspect | Free, Original, Square, 16:9, 4:3 and 3:2. The swap button or X swaps portrait and landscape | Research-backed design D-11 (R-10, R-11) |
+| Numbers | X, Y, W and H fields in original px. Arrow keys nudge 1 px and Shift+arrow 10 px | Research-backed design D-3 |
+| Commit | Enter, a double-click inside the box, or **Save as copy** calls the [crop endpoint](#crop-to-new-shot). A toast names the new shot, which becomes selected; the source stays in the filmstrip | Human-approved 2026-11-08 design D-1; Research-backed design D-11 (R-10) |
+| Cancel | Esc or Cancel leaves without a crop; Reset returns the box to the whole image | Research-backed design D-11 |
+| Modal | While the crop is open, other tool letters are ignored until Enter or Esc | Research-backed design D-11 (R-11) |
+| Unsaved marks | Crop is disabled while marks are unsaved, with the tooltip "Save or discard your marks first" | Local Canon design §7.1 (one code path for the GUI and agents) |
+| Tests | Behaviour tests for each rule; Electron proof of a real handle drag, Save as copy and the new shot selected | Local Canon |
+
+<a id="gui-image-import"></a>
+
+### GUI image import
+
+> **MEU-132.** Design slice S5 (§7.2).
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Drop | Image files dropped on the Capture page are imported one by one through [Image import](#image-import); a file that isn't an image shows an error toast | Local Canon design D-12 |
+| Button | **Import image…** with the lucide `ImagePlus` icon opens a file dialog filtered to png, jpg, jpeg and webp, with multi-select | Local Canon design D-12 |
+| Paste | Ctrl+V with an image on the clipboard: the main process writes it to the inbox as `{yyyy-MM-dd_HH-mm-ss}.png` and registers it as `gui`, the hotkey's publication path. Text fields keep their native paste | Local Canon design D-12 ([§Result publication](#result-publication)) |
+| Tests | Behaviour tests for each entry point; Electron proof of a drop and a paste | Local Canon |
+
 ## Named deferrals (not this phase)
 
 | Feature | Why |
@@ -990,6 +1078,7 @@ Nine residual MEUs from the Human-approved capture annotation synthesis (`_inspi
 | SSE | Poll + `fs.watch` IPC |
 | MCP Guard | Still deferred (06) |
 | Session 8c / MEU-27 | Human-gated; do not pack into Phase 9 |
+| Crop trim, resize and cover-crop, rotate and flip, a crop format option, persisted crop provenance, `unit: "fraction"` on annotate | Deferred by the 2026-11-08 crop design (§9, D-13); ImageMagick-style geometry strings and an ImageMagick dependency are rejected there |
 
 ---
 
@@ -1030,6 +1119,11 @@ Nine residual MEUs from the Human-approved capture annotation synthesis (`_inspi
 | MEU-105 | `gui-capture-style-tool-flow` | [Style and tool flow](#style-and-tool-flow) | MEU-87, MEU-99, MEU-100 |
 | MEU-106 | `capture-line-ellipse-shapes` | [Line and ellipse](#line-and-ellipse) | MEU-100, MEU-105 |
 | MEU-107 | `capture-step-mark` | [Step mark](#step-mark) | MEU-105 |
+| MEU-128 | `capture-region-view` | [Region view](#region-view) | MEU-37, MEU-38, MEU-111 |
+| MEU-129 | `capture-image-import` | [Image import](#image-import) | MEU-36, MEU-37, MEU-38 |
+| MEU-130 | `capture-crop-copy` | [Crop to a new shot](#crop-to-new-shot) | MEU-128, MEU-67 |
+| MEU-131 | `gui-capture-crop-tool` | [Crop tool](#crop-tool) | MEU-130, MEU-100 |
+| MEU-132 | `gui-capture-image-import` | [GUI image import](#gui-image-import) | MEU-129, MEU-39 |
 
 ---
 
