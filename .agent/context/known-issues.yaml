@@ -3892,11 +3892,11 @@ issues:
     title: The light theme's accent colour puts button labels below 4.5:1 contrast
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: 'Worked out from the token values during the 2026-11-04 triage, not measured in the running app. ui/src/renderer/src/styles.css:97 sets light --color-accent to #0891b2 and :98 sets --color-accent-fg to #ffffff. ui/src/renderer/src/components/ui/Button.tsx:15 puts white text on that colour, 3.68:1. Button.tsx:16, the default variant, puts accent text on a 12% tint of it, 3.20:1 over #ffffff and 2.98:1 over the page''s #f5f6fa. Labels are text-sm, so the 4.5:1 floor for normal text applies. Mat''s 2026-10-26 ruling darkened the eight light pill tokens and did not touch this one (_inspiration/zorivest/PROVENANCE.md:25).'
     blast_radius: Light theme only; dark is the default (packages/core/src/avkit_core/services/settings.py:80). Affects 12 explicit primary buttons and every default secondary button there; SegmentedControl.tsx:44 uses the same pair at 15%. Nothing breaks and nobody has reported it. Queue pill labels have their own floor (docs/build-plan/10-queue-card-ui.md:122). The accent tests found pin the dark value (ui/tests/unit/chrome-zorivest.test.ts:21) or the var() reference (queue-primitives.test.ts:583), not this light contrast.
-    resolution_path: 'Ruled by Mat on 2026-11-04 (D-235): --color-accent #155e75 and --color-accent-hover #164e63, as in _inspiration/zorivest/globals.css:144,146, with a look at the light theme before it ships. ui/tests/unit/fixtures/queue-slot-baseline.json mentions these tokens and may need a re-baseline. Needs a new build.'
+    resolution_path: 'Ruled by Mat on 2026-11-04 (D-235): --color-accent #155e75 and --color-accent-hover #164e63, as in _inspiration/zorivest/globals.css:144,146, with a look at the light theme before it ships. Fixed in Session 56 on 2026-11-08 (plan 2026-11-08-light-accent-contrast, MEU-126): styles.css:97 and :99 hold the ruled values (LIGHT_ACCENT_TOKENS) and the dark block is unchanged. queue-slot-baseline.json needed no re-baseline; AC-43.3''s contrast matrix moved 40 light values under Mat''s D-456 authorization (MATRIX_REBASELINE). Mat looked at the Downloader, Convert and Settings pages in the light theme and answered ''yes, approved  - everything looks good'' (D-458).'
     category: TECH-DEBT
     priority: P4
     meu_links:
@@ -3904,7 +3904,9 @@ issues:
     related:
       - QUEUE-PILL-TOKEN-DRIFT
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-08'
+      method: 'Session 56 task row 1 receipts C:/Temp/av-kit/s56-unit-red.txt and s56-unit-red-check.txt, row 2 receipts s56-e2e-red.txt and s56-e2e-red-check.txt, and row 3 receipts s56-matrix-rebaseline.txt, s56-green-tokens.txt, s56-green-unit.txt, s56-green-types.txt, s56-green-lint.txt, s56-green-build.txt and s56-green-e2e.txt (plan 2026-11-08-light-accent-contrast): the new ui/tests/unit/light-accent-contrast.test.ts, which reads the tokens from styles.css at test time, AC-126.8 in ui/tests/e2e/settings.test.ts on the built app, and the eleven caller unit files'
+      result: 'Row 1: AC-126.1 and AC-126.3 to AC-126.6 failed by assertion (white on the accent 3.68:1, the 12% tint 2.82 to 3.20:1, the 20% tint 2.59 to 2.90:1, the 15% segmented tint 2.87 and 3.09:1, accent text 3.41 and 3.68:1) and AC-126.2 and AC-126.7 passed; red-check 5 required, 0 problems. Row 2: AC-126.8 failed by assertion on the shipped rgb(8, 145, 178) after its dark steps passed; red-check 1 required, 0 problems. Row 3: the contrast matrix re-baseline wrote 40 values with 0 problems; 12 files and 182 tests passed, typecheck, lint and build were clean, and the settings E2E passed 24 of 24. White labels read 7.27:1 on the accent and 9.11:1 on its hover, the worst tint pair is the 20% hover on a selected queue card at 4.62:1, and the dark tokens are unchanged (AC-126.1 to AC-126.8).'
     enrichment:
       questions_asked:
         - 'D-235: Does the light theme''s --color-accent (#0891b2) change?'
@@ -4473,3 +4475,45 @@ issues:
             sources: []
           reasoning: The add path already holds each item's id, and transcripts build the watch URL the same way. Fixing at add leaves a single-video add's URL and the dispatch code unchanged; fixing at dispatch would also mend rows already queued but would ignore every URL typed. Doing nothing would ship a rider whose rows fail. Two-way.
           human_message_reference: USER_EXPLICIT 2026-11-08 'Per-video URL at add (Recommended)' (answer to the F1 brief; options in implementation-plan.md §User Review Required)
+  - id: TTS-STATUS-PILL-BELOW-AA-CONTRAST
+    title: The TTS job status pill puts its label below 4.5:1 contrast in both themes
+    severity: low
+    component: ui
+    status: open
+    discovered: '2026-11-08'
+    root_cause: 'Worked out from the token values while planning Session 56, not measured in the running app. ui/src/renderer/src/features/tts/TTSPage.tsx:721 draws the job status as text-xs text-fg on a solid fill from STATUS_COLORS (ui/src/renderer/src/features/tts/tts-controls.ts:14-21). Dark, the default theme, puts #f8f8f2 on Idle and Cancelled at 4.41:1, Failed 2.95, Pending 1.60, Generating 1.30 and Done 1.29. Light puts #1e293b on Idle and Cancelled at 5.71, Done 4.44, Generating 3.97, Failed 3.03 and Pending 2.00. Session 56 (MEU-126) darkens the light accent to #155e75, which moves light Generating from 3.97 to 2.01; white on #155e75 would be 7.27. Labels are text-xs, so the 4.5:1 floor applies (C:/Temp/av-kit/s56-plan-tts-pill-dark.txt).'
+    blast_radius: The TTS page's status pill only, in both themes; every status but light Idle and Cancelled is below 4.5:1. Nothing breaks and nobody has reported it. The transcript feature's STATUS_COLORS (ui/src/renderer/src/features/transcript/transcript-controls.ts:41) is exported but not rendered. Queue pills have their own tokens and floor (docs/build-plan/10-queue-card-ui.md:122).
+    verification:
+      last_checked: '2026-11-08'
+      method: WCAG 2.2 ratio of text-fg over each STATUS_COLORS fill, from the tokens in styles.css
+      result: 10 of 12 theme and status pairs below 4.5:1
+    category: TECH-DEBT
+    priority: P3
+    related:
+      - LIGHT-ACCENT-BELOW-AA-CONTRAST
+      - QUEUE-PILL-TOKEN-DRIFT
+    meu_links: []
+    notes: 'Found while planning Session 56 light-accent-contrast (MEU-126). Filed, not fixed: the fix (a per-status label colour, or the queue pill''s tint and floor) changes the TTS page in both themes, which D-235 did not rule on.'
+    enrichment:
+      questions_asked:
+        - 'D-455: Session 56 makes light Generating''s TTS pill 2.01:1. Widen the session to fix it, or keep the ruled scope and file the pill?'
+      answers:
+        - 'D-455: B, keep the scope and file the whole pill as its own issue'
+      decided_by: human
+      decision_log:
+        - id: D-455
+          stage: planning
+          question: Session 56's ruled light accent moves the TTS Generating pill's label from 3.97:1 to 2.01:1, and the pill already fails 4.5:1 for most statuses in both themes. Widen the session or keep its scope?
+          resolution: human
+          class: product-preference
+          chosen: 'B: keep MEU-126 to the two ruled light tokens and file the whole TTS status pill as an open TECH-DEBT issue'
+          source_tag: Human-approved
+          precedents:
+            - ui/src/renderer/src/features/tts/TTSPage.tsx:721 — text-xs text-fg on the STATUS_COLORS fill
+            - C:/Temp/av-kit/s56-plan-tts-pill-dark.txt — both themes' ratios
+            - docs/execution/plans/2026-11-08-light-accent-contrast/implementation-plan.md — the D-455 brief and its options
+          research:
+            engine: none
+            sources: []
+          reasoning: The pill fails in the default dark theme for five of six statuses before this session, so fixing Generating alone leaves the pill failing, and fixing it whole changes the TTS page in both themes, outside D-235's two tokens. Filing keeps the ruled scope and records the probe. Two-way.
+          human_message_reference: USER_EXPLICIT 2026-11-08 'all recommendations accpeted, proceed'

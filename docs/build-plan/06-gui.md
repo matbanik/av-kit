@@ -1618,6 +1618,15 @@ The following features are explicitly **deferred** to a future phase:
 | Baseline | `ui/tests/unit/fixtures/queue-slot-baseline.json` may need a re-baseline. | Local Canon: known issue `LIGHT-ACCENT-BELOW-AA-CONTRAST` |
 | Tests | A contrast test of the two light token values: white on the accent, and the accent on its tint over the page background, each at 4.5:1 or more. | Local Canon |
 
+> **Delivered (Session 56).**
+> - `LIGHT_ACCENT_TOKENS`: in the light block, `--color-accent` is `#155e75` (`styles.css:97`) and `--color-accent-hover` is `#164e63` (`:99`); `--color-accent-fg` stays `#ffffff` (`:98`). White labels read 7.27:1 on the accent and 9.11:1 on its hover.
+> - `DARK_UNCHANGED`: the dark accent tokens are unchanged (`styles.css:44-46`), and AC-126.7 pins them.
+> - `CONTRAST_FLOOR` and `TINT_MODEL`: `ui/tests/unit/light-accent-contrast.test.ts` reads the tokens from `styles.css` at test time and checks each pair at 4.5:1, unrounded: white on the accent and its hover, accent labels on the 12% and 20% tints over the page, a card and a selected queue card (its 5% wash read from `CARD_STATE_CLASSES`), a selected segmented option's 15% tint over its group and the page, and accent text on the page and a card. The worst pair is the secondary hover on a selected queue card, 4.62:1.
+> - `RUNTIME_COLOURS`: AC-126.8 (`ui/tests/e2e/settings.test.ts:705-735`) checks the painted colours of the theme buttons and the selected cookie-mode option in both themes, and the primary button's hover in light.
+> - Baseline: `queue-slot-baseline.json` needed no change. AC-43.3's matrix (`docs/execution/plans/2026-08-28-p10-queue-card-foundations/contrast-matrix.json`) moved 40 light values, the label and icon ratios on the two accent-washed backdrops, under Mat's authorization at the plan gate (`MATRIX_REBASELINE`, D-456). Its `_meta` is unchanged.
+> - Human check: Mat looked at the Downloader, Convert and Settings pages in the light theme and answered "yes, approved  - everything looks good" (D-458).
+> - AC-126.1 to AC-126.8. Plan `docs/execution/plans/2026-11-08-light-accent-contrast/`.
+
 ## Validation Commands
 
 ```bash

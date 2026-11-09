@@ -104,7 +104,7 @@
 | MEU-118 | `gui-tts-device-options` | 6.14 | [Phase 6 §TTS device options (residual)](../../docs/build-plan/06-gui.md#tts-device-options-residual) | The Settings device select offers only what the backend reports for this build. | ✅ approved |
 | MEU-120 | `gui-models-dir-probe` | 6.15 | [Phase 6 §Models folder probe (residual)](../../docs/build-plan/06-gui.md#models-folder-probe-residual) | The first-run probe tests the backend's real models folder and stops creating an empty one; a contract test ties the two defaults together. | ✅ approved |
 | MEU-124 | `download-received-quality` | 6.16 | [Phase 6 §Downloader received quality (residual)](../../docs/build-plan/06-gui.md#download-received-quality-residual) | The file's real quality is stored in a new nullable field, and the row shows requested and received together only when they differ. | ✅ approved |
-| MEU-126 | `gui-light-accent-contrast` | 6.17 | [Phase 6 §Light accent contrast (residual)](../../docs/build-plan/06-gui.md#light-accent-contrast-residual) | The light theme's accent tokens move to the colours Mat ruled, so button labels reach AA contrast. | ⬜ pending |
+| MEU-126 | `gui-light-accent-contrast` | 6.17 | [Phase 6 §Light accent contrast (residual)](../../docs/build-plan/06-gui.md#light-accent-contrast-residual) | The light theme's accent tokens move to the colours Mat ruled, so button labels reach AA contrast. | ✅ approved |
 
 
 ## Distribution (P2)

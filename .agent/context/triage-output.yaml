@@ -2283,6 +2283,37 @@ archived:
         sources: []
       reasoning: No user data is involved and av-kit has no updater that reads the copy (no electron-updater in ui/package.json). Two-way.
     decided_by: agent
+- id: LIGHT-ACCENT-BELOW-AA-CONTRAST
+  title: The light theme's accent colour puts button labels below 4.5:1 contrast
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked:
+    - 'D-235: Does the light theme''s --color-accent (#0891b2) change?'
+    answers:
+    - 'D-235: the recommendation, #155e75 and #164e63'
+    decided_by: human
+    decision_log:
+    - id: D-235
+      stage: triage
+      question: Does the light theme's --color-accent (#0891b2) change? This is the current-focus candidate 'follow Zorivest as --color-accent-cyan did'.
+      resolution: human
+      class: product-preference
+      chosen: '--color-accent #155e75 and --color-accent-hover #164e63, with a look at the light theme before it ships'
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-10-10-gui-polish-residuals/human-gate-decision.md:89 — A-5 left --color-accent as it was and logged this follow-up
+      - 'docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/walkthrough.md:106 — D-91 A: Zorivest is provenance only, so following it is no reason by itself'
+      - _inspiration/zorivest/PROVENANCE.md:25 — Mat's ruling of 2026-10-26 took the darker light hexes for the eight pill tokens
+      research:
+        engine: none
+        sources: []
+      reasoning: White labels go from 3.68:1 to 7.27:1 and secondary labels from 2.98:1 to 5.63:1 on the page background, and pills and buttons share one cyan. It changes how the whole light theme looks,
+        so it is Mat's to rule. Two-way. See the Step 8 brief.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
 - id: CLOSEOUT-CHECK-REFUSES-REGISTER
   title: The closeout check refuses known-issues.yaml as the triage tool writes it, and --decision-issue keeps only the last value
   severity: medium
@@ -2727,37 +2758,6 @@ actionable:
   category: TECH-DEBT
   priority: P3
   enrichment: null
-- id: LIGHT-ACCENT-BELOW-AA-CONTRAST
-  title: The light theme's accent colour puts button labels below 4.5:1 contrast
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked:
-    - 'D-235: Does the light theme''s --color-accent (#0891b2) change?'
-    answers:
-    - 'D-235: the recommendation, #155e75 and #164e63'
-    decided_by: human
-    decision_log:
-    - id: D-235
-      stage: triage
-      question: Does the light theme's --color-accent (#0891b2) change? This is the current-focus candidate 'follow Zorivest as --color-accent-cyan did'.
-      resolution: human
-      class: product-preference
-      chosen: '--color-accent #155e75 and --color-accent-hover #164e63, with a look at the light theme before it ships'
-      source_tag: Human-approved
-      precedents:
-      - docs/execution/plans/2026-10-10-gui-polish-residuals/human-gate-decision.md:89 — A-5 left --color-accent as it was and logged this follow-up
-      - 'docs/execution/plans/2026-10-16-gui-mcp-setup-prompt/walkthrough.md:106 — D-91 A: Zorivest is provenance only, so following it is no reason by itself'
-      - _inspiration/zorivest/PROVENANCE.md:25 — Mat's ruling of 2026-10-26 took the darker light hexes for the eight pill tokens
-      research:
-        engine: none
-        sources: []
-      reasoning: White labels go from 3.68:1 to 7.27:1 and secondary labels from 2.98:1 to 5.63:1 on the page background, and pills and buttons share one cyan. It changes how the whole light theme looks,
-        so it is Mat's to rule. Two-way. See the Step 8 brief.
-      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
 - id: INSTALL-FOLDER-NAME-MISMATCH
   title: The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build plan and the round-trip script say Programs\av-kit
   severity: low
@@ -2917,6 +2917,38 @@ actionable:
       reasoning: Sessions 55 to 57 work in downloads, the light theme and the release; none edits services/conversion.py or the media adapter, so a rider would chain unrelated work into a session (D-250's
         test). The debt queue keeps it visible for a build before rc.2. It is P4, as the Extract half was. Two-way.
       human_message_reference: USER_EXPLICIT 2026-11-07 'All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'
+- id: TTS-STATUS-PILL-BELOW-AA-CONTRAST
+  title: The TTS job status pill puts its label below 4.5:1 contrast in both themes
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked:
+    - 'D-455: Session 56 makes light Generating''s TTS pill 2.01:1. Widen the session to fix it, or keep the ruled scope and file the pill?'
+    answers:
+    - 'D-455: B, keep the scope and file the whole pill as its own issue'
+    decided_by: human
+    decision_log:
+    - id: D-455
+      stage: planning
+      question: Session 56's ruled light accent moves the TTS Generating pill's label from 3.97:1 to 2.01:1, and the pill already fails 4.5:1 for most statuses in both themes. Widen the session or keep
+        its scope?
+      resolution: human
+      class: product-preference
+      chosen: 'B: keep MEU-126 to the two ruled light tokens and file the whole TTS status pill as an open TECH-DEBT issue'
+      source_tag: Human-approved
+      precedents:
+      - ui/src/renderer/src/features/tts/TTSPage.tsx:721 — text-xs text-fg on the STATUS_COLORS fill
+      - C:/Temp/av-kit/s56-plan-tts-pill-dark.txt — both themes' ratios
+      - docs/execution/plans/2026-11-08-light-accent-contrast/implementation-plan.md — the D-455 brief and its options
+      research:
+        engine: none
+        sources: []
+      reasoning: The pill fails in the default dark theme for five of six statuses before this session, so fixing Generating alone leaves the pill failing, and fixing it whole changes the TTS page in both
+        themes, outside D-235's two tokens. Filing keeps the ruled scope and records the probe. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-08 'all recommendations accpeted, proceed'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only

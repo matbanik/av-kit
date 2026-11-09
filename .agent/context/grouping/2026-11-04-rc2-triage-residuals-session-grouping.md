@@ -256,7 +256,7 @@ Each plan follows `.agent/docs/cloud-local-collaboration.md`: gate location and 
 | 53 | `transcript-metadata` | MEU-122 | P2 | executed | `docs/execution/plans/2026-11-07-transcript-metadata/` |
 | 54 | `convert-extract-index` | MEU-123 | P2 | executed | `docs/execution/plans/2026-11-07-convert-extract-index/` |
 | 55 | `download-received-quality` | MEU-124 | P2 | executed | `docs/execution/plans/2026-11-08-download-received-quality/` |
-| 56 | `light-accent-contrast` | MEU-126 | P2 | pending | — |
+| 56 | `light-accent-contrast` | MEU-126 | P2 | executed | `docs/execution/plans/2026-11-08-light-accent-contrast/` |
 | 57 | `release-rc2` | MEU-125 | P2 | pending | — |
 
 ---

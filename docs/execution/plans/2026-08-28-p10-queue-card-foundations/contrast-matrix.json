@@ -311,14 +311,14 @@
       "status": "Pending",
       "backdrop": "checkbox-selected",
       "token": "--color-status-pending",
-      "ratio": 10.95
+      "ratio": 10.74
     },
     {
       "theme": "light",
       "status": "Pending",
       "backdrop": "detail-open",
       "token": "--color-status-pending",
-      "ratio": 10.4
+      "ratio": 10.04
     },
     {
       "theme": "light",
@@ -339,14 +339,14 @@
       "status": "Processing",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-cyan",
-      "ratio": 11.04
+      "ratio": 10.89
     },
     {
       "theme": "light",
       "status": "Processing",
       "backdrop": "detail-open",
       "token": "--color-accent-cyan",
-      "ratio": 10.5
+      "ratio": 10.14
     },
     {
       "theme": "light",
@@ -367,14 +367,14 @@
       "status": "Downloading",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-cyan",
-      "ratio": 11.04
+      "ratio": 10.89
     },
     {
       "theme": "light",
       "status": "Downloading",
       "backdrop": "detail-open",
       "token": "--color-accent-cyan",
-      "ratio": 10.5
+      "ratio": 10.14
     },
     {
       "theme": "light",
@@ -395,14 +395,14 @@
       "status": "Paused",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-yellow",
-      "ratio": 11.13
+      "ratio": 10.9
     },
     {
       "theme": "light",
       "status": "Paused",
       "backdrop": "detail-open",
       "token": "--color-accent-yellow",
-      "ratio": 10.5
+      "ratio": 10.21
     },
     {
       "theme": "light",
@@ -423,14 +423,14 @@
       "status": "Done",
       "backdrop": "checkbox-selected",
       "token": "--color-status-filled",
-      "ratio": 11.07
+      "ratio": 10.84
     },
     {
       "theme": "light",
       "status": "Done",
       "backdrop": "detail-open",
       "token": "--color-status-filled",
-      "ratio": 10.53
+      "ratio": 10.16
     },
     {
       "theme": "light",
@@ -451,14 +451,14 @@
       "status": "Failed",
       "backdrop": "checkbox-selected",
       "token": "--color-status-rejected",
-      "ratio": 10.81
+      "ratio": 10.59
     },
     {
       "theme": "light",
       "status": "Failed",
       "backdrop": "detail-open",
       "token": "--color-status-rejected",
-      "ratio": 10.19
+      "ratio": 9.91
     },
     {
       "theme": "light",
@@ -479,14 +479,14 @@
       "status": "Skipped",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-purple",
-      "ratio": 10.94
+      "ratio": 10.72
     },
     {
       "theme": "light",
       "status": "Skipped",
       "backdrop": "detail-open",
       "token": "--color-accent-purple",
-      "ratio": 10.32
+      "ratio": 10.04
     },
     {
       "theme": "light",
@@ -507,14 +507,14 @@
       "status": "Cancelled",
       "backdrop": "checkbox-selected",
       "token": "--color-status-canceled",
-      "ratio": 11.46
+      "ratio": 11.24
     },
     {
       "theme": "light",
       "status": "Cancelled",
       "backdrop": "detail-open",
       "token": "--color-status-canceled",
-      "ratio": 10.83
+      "ratio": 10.53
     },
     {
       "theme": "light",
@@ -535,14 +535,14 @@
       "status": "QualityBlocked",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-orange",
-      "ratio": 10.95
+      "ratio": 10.74
     },
     {
       "theme": "light",
       "status": "QualityBlocked",
       "backdrop": "detail-open",
       "token": "--color-accent-orange",
-      "ratio": 10.4
+      "ratio": 10.04
     },
     {
       "theme": "light",
@@ -563,14 +563,14 @@
       "status": "AgeRestricted",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-red",
-      "ratio": 10.81
+      "ratio": 10.59
     },
     {
       "theme": "light",
       "status": "AgeRestricted",
       "backdrop": "detail-open",
       "token": "--color-accent-red",
-      "ratio": 10.19
+      "ratio": 9.91
     }
   ],
   "icon": [
@@ -873,14 +873,14 @@
       "status": "Pending",
       "backdrop": "checkbox-selected",
       "token": "--color-status-pending",
-      "ratio": 6.39
+      "ratio": 6.27
     },
     {
       "theme": "light",
       "status": "Pending",
       "backdrop": "detail-open",
       "token": "--color-status-pending",
-      "ratio": 6.04
+      "ratio": 5.84
     },
     {
       "theme": "light",
@@ -901,14 +901,14 @@
       "status": "Processing",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-cyan",
-      "ratio": 6.36
+      "ratio": 6.24
     },
     {
       "theme": "light",
       "status": "Processing",
       "backdrop": "detail-open",
       "token": "--color-accent-cyan",
-      "ratio": 6.01
+      "ratio": 5.81
     },
     {
       "theme": "light",
@@ -929,14 +929,14 @@
       "status": "Downloading",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-cyan",
-      "ratio": 6.36
+      "ratio": 6.24
     },
     {
       "theme": "light",
       "status": "Downloading",
       "backdrop": "detail-open",
       "token": "--color-accent-cyan",
-      "ratio": 6.01
+      "ratio": 5.81
     },
     {
       "theme": "light",
@@ -957,14 +957,14 @@
       "status": "Paused",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-yellow",
-      "ratio": 6.0
+      "ratio": 5.88
     },
     {
       "theme": "light",
       "status": "Paused",
       "backdrop": "detail-open",
       "token": "--color-accent-yellow",
-      "ratio": 5.67
+      "ratio": 5.48
     },
     {
       "theme": "light",
@@ -985,14 +985,14 @@
       "status": "Done",
       "backdrop": "checkbox-selected",
       "token": "--color-status-filled",
-      "ratio": 6.24
+      "ratio": 6.12
     },
     {
       "theme": "light",
       "status": "Done",
       "backdrop": "detail-open",
       "token": "--color-status-filled",
-      "ratio": 5.9
+      "ratio": 5.7
     },
     {
       "theme": "light",
@@ -1013,14 +1013,14 @@
       "status": "Failed",
       "backdrop": "checkbox-selected",
       "token": "--color-status-rejected",
-      "ratio": 7.27
+      "ratio": 7.13
     },
     {
       "theme": "light",
       "status": "Failed",
       "backdrop": "detail-open",
       "token": "--color-status-rejected",
-      "ratio": 6.87
+      "ratio": 6.64
     },
     {
       "theme": "light",
@@ -1041,14 +1041,14 @@
       "status": "Skipped",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-purple",
-      "ratio": 6.22
+      "ratio": 6.1
     },
     {
       "theme": "light",
       "status": "Skipped",
       "backdrop": "detail-open",
       "token": "--color-accent-purple",
-      "ratio": 5.88
+      "ratio": 5.68
     },
     {
       "theme": "light",
@@ -1069,14 +1069,14 @@
       "status": "Cancelled",
       "backdrop": "checkbox-selected",
       "token": "--color-status-canceled",
-      "ratio": 4.16
+      "ratio": 4.08
     },
     {
       "theme": "light",
       "status": "Cancelled",
       "backdrop": "detail-open",
       "token": "--color-status-canceled",
-      "ratio": 3.94
+      "ratio": 3.8
     },
     {
       "theme": "light",
@@ -1097,14 +1097,14 @@
       "status": "QualityBlocked",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-orange",
-      "ratio": 6.39
+      "ratio": 6.27
     },
     {
       "theme": "light",
       "status": "QualityBlocked",
       "backdrop": "detail-open",
       "token": "--color-accent-orange",
-      "ratio": 6.04
+      "ratio": 5.84
     },
     {
       "theme": "light",
@@ -1125,14 +1125,14 @@
       "status": "AgeRestricted",
       "backdrop": "checkbox-selected",
       "token": "--color-accent-red",
-      "ratio": 7.27
+      "ratio": 7.13
     },
     {
       "theme": "light",
       "status": "AgeRestricted",
       "backdrop": "detail-open",
       "token": "--color-accent-red",
-      "ratio": 6.87
+      "ratio": 6.64
     }
   ]
 }

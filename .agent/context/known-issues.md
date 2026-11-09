@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 122** — Active: 37 | Mitigated: 1 | Resolved: 82
+**Total: 123** — Active: 37 | Mitigated: 1 | Resolved: 83
 
 ## Active Issues
 
@@ -39,13 +39,13 @@
 | 🟢 | `SETTINGS-DRAFT-STALE-BASELINE` | An unsaved capture settings edit freezes the other capture settings at… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `CONVERT-ADVANCED-EDIT-REPLACED` | An Advanced edit on Convert snaps back when settings load late or the d… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `GUI-READY-CHUNK-BOUNDARY` | A READY line split across output chunks can be missed, and two READY ch… | ui | ⬜ open | 2026-11-04 |
-| 🟢 | `LIGHT-ACCENT-BELOW-AA-CONTRAST` | The light theme's accent colour puts button labels below 4.5:1 contrast | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `INSTALL-FOLDER-NAME-MISMATCH` | The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build pla… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `CONSOLE-HOME-SCRUB-SHORT-FORM` | The Console's home-folder scrub misses the 8.3 short form of the home f… | core | ⬜ open | 2026-11-07 |
 | 🟢 | `TRACKED-FILES-HOLD-HOME-PATH` | Tracked files name the maintainer's Windows home folder in full, user n… | agent | ⬜ open | 2026-11-07 |
 | 🟢 | `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` | The transcript queue E2E's seam reload failed once with ERR_ABORTED und… | ui | ⬜ open | 2026-11-07 |
 | 🟢 | `TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS` | Two older title paths into transcript storage skip the lone-surrogate c… | core | ⬜ open | 2026-11-07 |
 | 🟢 | `CONVERT-CUT-ENCODER-LABEL` | A cut is labelled with an encoder it does not use | core | ⬜ open | 2026-11-07 |
+| 🟢 | `TTS-STATUS-PILL-BELOW-AA-CONTRAST` | The TTS job status pill puts its label below 4.5:1 contrast in both the… | ui | ⬜ open | 2026-11-08 |
 
 ## Mitigated / Workaround
 
@@ -53,9 +53,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (82)
+## Resolved (83)
 
-82 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+83 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

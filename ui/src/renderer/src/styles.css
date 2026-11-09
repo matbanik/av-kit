@@ -94,9 +94,9 @@
   --color-accent-blue: #2563eb;
   --color-accent-red: #991b1b;
   --color-accent-yellow: #854d0e;
-  --color-accent: #0891b2;
+  --color-accent: #155e75;
   --color-accent-fg: #ffffff;
-  --color-accent-hover: #0e7490;
+  --color-accent-hover: #164e63;
   --color-accent-ring: color-mix(in oklab, var(--color-accent) 35%, transparent);
   --color-neutral: #94a3b8;
   --color-border: #d1d5db;

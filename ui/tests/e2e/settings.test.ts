@@ -698,6 +698,42 @@ test('AC-94.7 Settings selects follow a live theme toggle', async () => {
   await app.close()
 })
 
+// MEU-126 (Session 56): RUNTIME_COLOURS, defined once in
+// docs/execution/plans/2026-11-08-light-accent-contrast/implementation-plan.md.
+// Each toHaveCSS polls past the 120 ms colour transition (--duration-fast).
+
+test('AC-126.8 light accent paints the ruled colours', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await installSettingsSeam(page, {}, { themeProbe: { theme: { answer: 'dark' } } })
+  await openSettings(page)
+  const darkBtn = page.getByTestId('theme-dark-btn')
+  const lightBtn = page.getByTestId('theme-light-btn')
+  // The test id is on the radio; the seam's cookie mode is `file`, so its label is the selected option.
+  const fileOption = page.getByTestId('settings-leaf-cookie_mode-file').locator('xpath=..')
+  const expectDarkAccent = async (): Promise<void> => {
+    await expect(darkBtn).toHaveCSS('background-color', 'rgb(139, 233, 253)')
+    await expect(darkBtn).toHaveCSS('color', 'rgb(40, 42, 54)')
+    await expect(lightBtn).toHaveCSS('color', 'rgb(139, 233, 253)')
+    await expect(fileOption).toHaveCSS('color', 'rgb(139, 233, 253)')
+  }
+
+  await expectDarkAccent()
+  await lightBtn.click()
+  await expectThemeColours(page, 'light', THEME_FLOORS.settings)
+  await page.mouse.move(0, 0)
+  await expect(lightBtn).toHaveCSS('background-color', 'rgb(21, 94, 117)')
+  await expect(lightBtn).toHaveCSS('color', 'rgb(255, 255, 255)')
+  await expect(darkBtn).toHaveCSS('color', 'rgb(21, 94, 117)')
+  await expect(fileOption).toHaveCSS('color', 'rgb(21, 94, 117)')
+  await lightBtn.hover()
+  await expect(lightBtn).toHaveCSS('background-color', 'rgb(22, 78, 99)')
+  await darkBtn.click()
+  await page.mouse.move(0, 0)
+  await expectDarkAccent()
+  await app.close()
+})
+
 test('AC-94.8 (a) cold boot with stored Light and no mirror holds the route until the theme', async () => {
   const app = await launchApp()
   const page = await app.firstWindow()
