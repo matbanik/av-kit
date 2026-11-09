@@ -64,8 +64,10 @@ through onnxruntime.
   Windows build `n8.1.3-27-g8dca1586f4` (win64, gpl, release `autobuild-2026-10-31-12-59`) that
   `tools/fetch_ffmpeg_windows.ps1` pins by SHA256. They are a separate program: av-kit runs them
   as subprocesses and never links them.
+- **DVD libraries:** this build also links libdvdread and libdvdnav, and through them libdvdcss,
+  into `ffmpeg.exe`. av-kit never uses DVD input.
 - **Source:** the complete corresponding source is `av-kit-0.1.0-rc.1-ffmpeg-source.tar.xz`,
-  attached to the release at https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.1. It holds
+  attached to the release at https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.2. It holds
   FFmpeg at commit `8dca1586f468bfcbb78ae3ed618af1361d9f140a`, every dependency this build enables
   at its pinned commit, the scripts that produced the build
   (https://github.com/BtbN/FFmpeg-Builds) with their patches, and the toolchain sources. Its

@@ -1,6 +1,6 @@
 [project]
 name = "avkit-api"
-version = "0.1.0rc1"
+version = "0.1.0rc2"
 description = "av-kit FastAPI REST surface"
 license = "MIT"
 requires-python = ">=3.11"

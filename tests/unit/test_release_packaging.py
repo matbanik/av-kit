@@ -24,8 +24,8 @@ PY_MANIFESTS = (
     "packages/infrastructure/pyproject.toml",
 )
 INSTALLER_NAME = "${productName}-Setup-${version}.${ext}"
-RC_NPM = "0.1.0-rc.1"
-RC_PY = "0.1.0rc1"
+RC_NPM = "0.1.0-rc.2"
+RC_PY = "0.1.0rc2"
 NPM_LOCKS = ("ui/package-lock.json", "mcp-server/package-lock.json")
 UV_MEMBERS = ("av-kit", "avkit-api", "avkit-core", "avkit-infra")
 

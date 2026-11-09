@@ -226,10 +226,12 @@ def test_ac_72_7_third_party_notices() -> None:
         "autobuild-2026-10-31-12-59",
         "https://github.com/BtbN/FFmpeg-Builds",
         "av-kit-0.1.0-rc.1-ffmpeg-source.tar.xz",
-        "https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.1",
+        "https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.2",
         "resources/ffmpeg/LICENSE.txt",
         "ffmpeg.exe",
         "ffprobe.exe",
+        "libdvdcss",
+        "av-kit never uses DVD input",
     ):
         assert needle in ffmpeg, needle
     assert any(

@@ -121,7 +121,7 @@
 | MEU-110 | `dist-release-candidate` | 7.6 | [Phase 7 §Release candidate packaging (residual)](../../docs/build-plan/07-distribution.md#release-candidate-packaging-residual) | Release candidate 1 packaging with a generated licence list, one version on every surface, a real NSIS installer with packaged checks, release notes and a publish checklist. | ✅ approved |
 | MEU-113 | `dist-fetch-exit-codes` | 7.7 | [Phase 7 §Fetch script exit codes (residual)](../../docs/build-plan/07-distribution.md#fetch-exit-codes-residual) | The fetch script returns its documented exit codes 2 to 5, and the tests assert them. | ✅ approved |
 | MEU-114 | `dist-uninstall-installer-copy` | 7.8 | [Phase 7 §Uninstall removes the installer copy (residual)](../../docs/build-plan/07-distribution.md#uninstall-installer-copy-residual) | customUnInstall deletes the installer copy electron-builder leaves in av-kit-ui-updater, skipping an in-place update. | ✅ approved |
-| MEU-125 | `dist-release-candidate-2` | 7.9 | [Phase 7 §Second release candidate (residual)](../../docs/build-plan/07-distribution.md#second-release-candidate-residual) | The 0.1.0-rc.2 version, clean build, packaged checks, gate, notes and publish checklist; nothing publishes. | ⬜ pending |
+| MEU-125 | `dist-release-candidate-2` | 7.9 | [Phase 7 §Second release candidate (residual)](../../docs/build-plan/07-distribution.md#second-release-candidate-residual) | The 0.1.0-rc.2 version, clean build, packaged checks, gate, notes and publish checklist; nothing publishes. | ✅ approved |
 
 
 ## Video conversion (P2)

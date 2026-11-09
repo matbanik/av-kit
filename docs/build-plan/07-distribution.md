@@ -385,6 +385,16 @@ MCP Guard / lock stays **deferred** ([06-gui.md](06-gui.md)).
 | Checklist | A new publish checklist gives the outward steps in order with exact commands, attaches the FFmpeg source archive for the unchanged pin, checks `~/.avkit/models` for voice models and includes what happens to RC1 once this candidate replaces it. | Human-approved: triage D-266, D-101; RC1 plan D-238; known issue `MODELS-DIR-DOCS-AND-PROBE-MISMATCH` |
 | Publishing | Nothing here tags, uploads or changes a release. | Local Canon: PROFILE E5 |
 
+> **Delivered (Session 57).**
+> - `VERSION_ONE`: `version-bump.py` moved 13 surfaces to `0.1.0-rc.2` and `0.1.0rc2`; the FFmpeg source archive keeps its name `av-kit-0.1.0-rc.1-ffmpeg-source.tar.xz`. `NOTICE_LINE`: the notices name libdvdread, libdvdnav and libdvdcss and say av-kit never uses DVD input, and their source link moves to the rc.2 tag (D-465 A).
+> - `CLEAN_TREE`, `FRESH_BUILD` and `BUILD_RECORD`: `build-rc.ps1` built `ui/dist/av-kit-Setup-0.1.0-rc.2.exe` offline, 340,362,828 B, SHA-256 `547b1f5019e79f2b2a44fbc79aedc16c45bf26c753c1ada9845dcdd8037f74c8`, recorded in `docs/releases/v0.1.0-rc.2-build-record.json`. Mat ruled that the build leave out another session's 9 untracked paths, and that the Electron 42.11.18 checksum file be seeded from the local `checksums.json`.
+> - `PACKAGED_CHECKS`: the packaged smoke and its negative control, the MCP entry reporting `0.1.0-rc.2`, and offline TTS from a copy, all passed on `win-unpacked`. `ROUNDTRIP`: MEU-114's phases A to D passed with RC1 as the old installer, and no uninstall left anything behind or changed the app data.
+> - `CAPABILITY_SMOKE` passed on the installed backend's copy: PyTorch FP32 unavailable, its download and load refused, and the models folder unchanged. `SENTENCE_SMOKE`: ONNX INT8 generated all 149 jobs.
+> - `docs/releases/v0.1.0-rc.2.md` and `publish-checklist-v0.1.0-rc.2.md`. The notes use D-466's alternative, because the other-network Transcript check hadn't run. The checklist keeps RC1 and marks it replaced (D-467 A). Nothing was tagged or uploaded.
+> - AC-125.1 to AC-125.24.
+> - Gate: the `session-gate.ps1` record in the MEU-125 handoff. Under D-464 A, a run whose only finding is YouTube's caption block ends `INCOMPLETE VERIFICATION`, never a pass.
+> - Plan `docs/execution/plans/2026-11-08-release-rc2/`.
+
 ---
 
 ## Platforms
