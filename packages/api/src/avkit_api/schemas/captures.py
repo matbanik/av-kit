@@ -47,8 +47,15 @@ class CaptureRegionIn(ApiModel):
     height: int = Field(ge=CAPTURE_MIN_EDGE_PX)
 
 
+class CaptureImportIn(ApiModel):
+    """POST /captures body for mode=import."""
+
+    mode: Literal["import"]
+    path: str
+
+
 CaptureCreateIn = Annotated[
-    CaptureRegisterIn | CaptureFullscreenIn | CaptureRegionIn,
+    CaptureRegisterIn | CaptureFullscreenIn | CaptureRegionIn | CaptureImportIn,
     Field(discriminator="mode"),
 ]
 

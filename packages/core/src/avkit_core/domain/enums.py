@@ -215,6 +215,8 @@ class CaptureSource(StrEnum):
     McpRegion = "McpRegion"
     McpInteractive = "McpInteractive"
     Scan = "Scan"
+    # IMPORT_SOURCE (MEU-129, D-414): a file brought in with POST /captures mode=import.
+    Import = "Import"
 
 
 class CaptureRequestStatus(StrEnum):

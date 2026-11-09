@@ -153,6 +153,27 @@
         "title": "CaptureFullscreenIn",
         "type": "object"
       },
+      "CaptureImportIn": {
+        "additionalProperties": false,
+        "description": "POST /captures body for mode=import.",
+        "properties": {
+          "mode": {
+            "const": "import",
+            "title": "Mode",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "path"
+        ],
+        "title": "CaptureImportIn",
+        "type": "object"
+      },
       "CaptureItemOut": {
         "additionalProperties": false,
         "description": "POST /captures 201 envelope.",
@@ -3345,6 +3366,7 @@
                 "discriminator": {
                   "mapping": {
                     "fullscreen": "#/components/schemas/CaptureFullscreenIn",
+                    "import": "#/components/schemas/CaptureImportIn",
                     "region": "#/components/schemas/CaptureRegionIn",
                     "register": "#/components/schemas/CaptureRegisterIn"
                   },
@@ -3359,6 +3381,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/CaptureRegionIn"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CaptureImportIn"
                   }
                 ],
                 "title": "Body"
@@ -3846,6 +3871,106 @@
               "title": "Variant",
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "x",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X"
+            }
+          },
+          {
+            "in": "query",
+            "name": "y",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Y"
+            }
+          },
+          {
+            "in": "query",
+            "name": "width",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Width"
+            }
+          },
+          {
+            "in": "query",
+            "name": "height",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Height"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "px",
+                    "fraction"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Unit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_edge",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Edge"
+            }
           }
         ],
         "responses": {
@@ -3855,7 +3980,39 @@
                 "schema": {}
               }
             },
-            "description": "Successful Response"
+            "description": "Successful Response",
+            "headers": {
+              "X-Capture-Clamped": {
+                "description": "`true` when the region was cut to fit the image, else `false`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Capture-Region": {
+                "description": "The applied region in source px, after clamping: `x,y,width,height`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Capture-Returned": {
+                "description": "The returned image size in px: `width,height`.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Capture-Scale": {
+                "description": "Returned px per source px, to 6 places. Source px = region.x + x / scale.",
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "X-Capture-Source": {
+                "description": "The source image size in px: `W,H`.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
           },
           "422": {
             "content": {

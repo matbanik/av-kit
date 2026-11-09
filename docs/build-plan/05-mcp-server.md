@@ -225,8 +225,13 @@ Canonical action table: [08-video-conversion.md](08-video-conversion.md) §MCP. 
 
 Canonical action table: [09-screenshot-capture.md](09-screenshot-capture.md) §MCP. Implement under MEU-38, not MEU-18.
 
-**Workflow:** `capture` or `capture_interactive` → `image` → `annotate`.  
-**Exception:** `image` returns PNG bytes (vision), up to the cap in [§Image size limit (residual)](#image-size-limit-residual). List/get stay path-only.
+**Workflow:** `capture` or `capture_interactive` → `image` → `annotate`. To look closer: `get` → `image` with `x`, `y`, `width` and `height`.  
+**Exception:** `image` returns a text item with the frame (source size, region, returned size, scale, clamped) and then the image bytes (vision), up to the cap in [§Image size limit (residual)](#image-size-limit-residual). A region and `max_edge` (64 to 2576) return a smaller image ([09 §Region view](09-screenshot-capture.md#region-view)). List/get stay path-only.
+
+| ImageMagick | av-kit |
+|---|---|
+| `magick identify -format "%wx%h" in.png` | `get` → `width`, `height` |
+| `-crop 600x200+550+560 +repage -resize 200%` (to look) | `image {x:550, y:560, width:600, height:200}` (no file; 2× fits inside 1568) |
 
 ---
 
@@ -315,7 +320,7 @@ Publish on the MCP server so agents see it without this file. Minimum:
 | Rule | Contract | Source |
 |------|----------|--------|
 | Cap | `IMAGE_FITS_STDIO`: `avkit_capture image` never sends an image the SDK's stdio reader can't take. The MCP cap is 7,800,000 B: 10,400,000 B of base64, leaving 85,760 B of the buffer for the envelope. | Known issue; measured limit above |
-| Above the cap | A `payload_too_large` tool error that tells the agent to read `original_path` or `annotated_path` from `avkit_capture get`. The connection still answers later calls. An oversize shot can't be seen through MCP as an image; a downscaled preview can come later. | Known issue |
+| Above the cap | A `payload_too_large` tool error that tells the agent to read `original_path` or `annotated_path` from `avkit_capture get`. The connection still answers later calls. An oversize shot can still be seen through MCP: `max_edge` (64 to 2576) or a region gives a smaller image, and the error says so (Session 58). | Known issue |
 | SDK guard | A test imports `STDIO_DEFAULT_MAX_BUFFER_SIZE` from `@modelcontextprotocol/sdk/shared/stdio.js` and checks the cap's base64 length plus the envelope reserve against it, so an SDK release that lowers the buffer fails that test. | This section |
 | REST | Stays at 15 MiB ([09 §REST API](09-screenshot-capture.md#rest-api)). OpenAPI and `tools/list` don't change: no description names the cap. | Phase 9 |
 | Live audit | `capture.image` and `capture.image.annotated` pass on that refusal only when the REST image is larger than the cap. A refused smaller image, or a lost connection, fails the step. | §MCP live audit (residual) |
@@ -328,6 +333,13 @@ Publish on the MCP server so agents see it without this file. Minimum:
 > - AC-111.1 to AC-111.4.
 > - Gate: the shared `session-gate.ps1` record in the MEU-111 handoff.
 > - Plan `docs/execution/plans/2026-11-03-release-rc1/`.
+
+> **Delivered (Session 58).**
+> - `OVERSIZE_HINT`: the `payload_too_large` error also names `max_edge (64 to 2576)` and a region as the way to a smaller image. The 7,800,000 B cap is unchanged.
+> - `FRAME_ITEM`: `image` returns the frame text item before the image when the API sent all five `X-Capture-*` headers.
+> - `QUERY_GET_ONLY`: the region fields and `max_edge` go into the query string of the GET `image` call only; a POST `capture` region keeps them in its body.
+> - AC-128.18 to AC-128.24.
+> - Plan `docs/execution/plans/2026-11-08-capture-region-import/`.
 
 ## What this layer must not do
 

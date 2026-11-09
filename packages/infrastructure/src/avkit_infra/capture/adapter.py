@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
+import io
 import math
 import os
 import sys
+import warnings
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import structlog
-from PIL import Image, ImageDraw, ImageFont, ImageStat, UnidentifiedImageError
+from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageStat, UnidentifiedImageError
 
 from avkit_core.domain.capture import (
     ANNOTATED_FORMATS,
@@ -24,10 +26,12 @@ from avkit_core.domain.capture import (
     PixelateAnnotation,
     RectAnnotation,
     TextAnnotation,
+    ViewFrame,
 )
 from avkit_core.domain.errors import (
     CaptureFailedError,
     CaptureNotSupportedError,
+    ConflictError,
     InboxPathError,
     ValidationError,
 )
@@ -50,6 +54,11 @@ ARROW_TILE_PAD_PX = 4
 FONT_CANDIDATES = ("segoeui.ttf", "arial.ttf")
 # LOSSY_QUALITY (MEU-67, Human-approved): Pillow quality for JPEG and lossy WebP bake output.
 LOSSY_QUALITY = 90
+# IMPORT_ACCEPT (MEU-129, D-416, D-417): the fixed, path-free refusals of inspect_import.
+IMPORT_OPEN_MESSAGE = "not an image av-kit can open (png, jpg, jpeg, webp)"
+IMPORT_PIXEL_MESSAGE = "image is larger than the 89478485-pixel limit"
+EXIF_ORIENTATION_TAG = 0x0112
+_UPRIGHT_MODES = frozenset({"RGB", "RGBA", "L", "LA"})
 _PIL_FORMAT: dict[str, str] = {"png": "PNG", "jpeg": "JPEG", "webp": "WEBP"}
 NAMED_RGB: dict[str, tuple[int, int, int]] = {
     "red": (255, 0, 0),
@@ -214,6 +223,23 @@ def apply_region_pass(canvas: Image.Image, annotations: Sequence[Annotation]) ->
     return canvas
 
 
+def _encode_view(image: Image.Image, suffix: str) -> bytes:
+    """VIEW_FORMAT: encode a view as the source file's format (PNG keeps the mode)."""
+    buffer = io.BytesIO()
+    if suffix in (".jpg", ".jpeg"):
+        image.convert("RGB").save(buffer, format="JPEG", quality=LOSSY_QUALITY)
+    elif suffix == ".webp":
+        has_alpha = image.mode in ("RGBA", "LA")
+        image.convert("RGBA" if has_alpha else "RGB").save(
+            buffer, format="WEBP", quality=LOSSY_QUALITY
+        )
+    else:
+        if image.mode not in ("RGBA", "RGB", "L", "LA"):
+            image = image.convert("RGBA" if "A" in image.getbands() else "RGB")
+        image.save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
 class CaptureAdapter:
     """Windows mss grabber and Pillow annotator."""
 
@@ -261,6 +287,82 @@ class CaptureAdapter:
         except (UnidentifiedImageError, OSError) as exc:
             raise InboxPathError(f"{path} is not an image") from exc
         return ImageProbe(width=width, height=height, file_size=path.stat().st_size)
+
+    def view(self, path: Path, frame: ViewFrame) -> bytes:
+        """Return `frame` of the image in the file's own format, in memory (MEU-128, D-410).
+
+        Writes no file. Errors name no path: the open failure and the size check are
+        Console-visible API messages.
+        """
+        try:
+            with Image.open(path) as opened:
+                opened.load()
+                image = opened.copy()
+        except Exception as exc:
+            # Pillow raises SyntaxError, ValueError and others for a damaged file, and an
+            # OSError's text holds the path; each becomes the one fixed refusal (D-421).
+            raise InboxPathError("the image could not be opened") from exc
+        if image.size != (frame.source_width, frame.source_height):
+            raise ConflictError(
+                "the image file changed since the captures were listed; list them again and retry"
+            )
+        whole = (frame.x, frame.y, frame.width, frame.height) == (0, 0, *image.size)
+        returned = (frame.returned_width, frame.returned_height)
+        # RETURN_UNCHANGED: the whole image at scale 1 is the file itself.
+        if whole and returned == image.size:
+            try:
+                return path.read_bytes()
+            except OSError as exc:
+                raise InboxPathError("the image could not be opened") from exc
+        if image.mode in ("P", "PA"):
+            # A palette image resizes with NEAREST whatever filter is given; convert it first.
+            has_alpha = image.mode == "PA" or "transparency" in image.info
+            image = image.convert("RGBA" if has_alpha else "RGB")
+        box = (frame.x, frame.y, frame.x + frame.width, frame.y + frame.height)
+        if not whole:
+            image = image.crop(box)
+        if image.size != returned:
+            image = image.resize(returned, Image.Resampling.LANCZOS)
+        return _encode_view(image, path.suffix.lower())
+
+    def inspect_import(self, data: bytes) -> int:
+        """IMPORT_ACCEPT: decode `data` in full and return its EXIF orientation (1 with no tag).
+
+        Pillow only warns between 1x and 2x MAX_IMAGE_PIXELS, so the warning is an error here
+        and the pixel count is checked as well. `verify()` passes a truncated JPEG, so the
+        bytes are reopened and every pixel is loaded.
+        """
+        limit = Image.MAX_IMAGE_PIXELS
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            try:
+                with Image.open(io.BytesIO(data)) as probe:
+                    width, height = probe.size
+                    if limit is not None and width * height > limit:
+                        raise ValidationError(IMPORT_PIXEL_MESSAGE)
+                    probe.verify()
+                with Image.open(io.BytesIO(data)) as image:
+                    image.load()
+                    orientation = image.getexif().get(EXIF_ORIENTATION_TAG, 1)
+            except ValidationError:
+                raise
+            except (Image.DecompressionBombWarning, Image.DecompressionBombError) as exc:
+                raise ValidationError(IMPORT_PIXEL_MESSAGE) from exc
+            except Exception as exc:
+                raise ValidationError(IMPORT_OPEN_MESSAGE) from exc
+        if isinstance(orientation, int) and 2 <= orientation <= 8:
+            return orientation
+        return 1
+
+    def write_upright_png(self, data: bytes, path: Path) -> ImageProbe:
+        """IMPORT_UPRIGHT: apply the EXIF orientation and write the result as a PNG at `path`."""
+        with Image.open(io.BytesIO(data)) as opened:
+            upright = ImageOps.exif_transpose(opened)
+        if upright.mode not in _UPRIGHT_MODES:
+            alpha = upright.mode in ("P", "PA") and "transparency" in upright.info
+            alpha = alpha or upright.mode.endswith("A")
+            upright = upright.convert("RGBA" if alpha else "RGB")
+        return self._write_png(upright, path)
 
     def bake(
         self,

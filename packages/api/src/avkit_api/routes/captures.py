@@ -17,6 +17,7 @@ from avkit_api.schemas.captures import (
     CaptureCompleteIn,
     CaptureCreateIn,
     CaptureFullscreenIn,
+    CaptureImportIn,
     CaptureItemOut,
     CaptureListOut,
     CaptureRegionIn,
@@ -41,6 +42,7 @@ from avkit_core.domain.capture import (
     PixelateAnnotation,
     RectAnnotation,
     TextAnnotation,
+    ViewFrame,
 )
 from avkit_core.domain.wire import REGISTER_SOURCE_WIRE_MAP, REQUEST_STATUS_QUERY_MAP
 from avkit_core.services.capture import annotations_to_wire
@@ -53,6 +55,33 @@ IMAGE_MIME_MAP = {
     ".webp": "image/webp",
 }
 _REQUESTS_PATH = "/requests"
+# OVERSIZE_HINT (MEU-128, D-411): the 413 names the two ways to a smaller image.
+IMAGE_OVERSIZE_DETAIL = (
+    "image exceeds IMAGE_MAX_BYTES; pass max_edge (64 to 2576) or a region for a smaller image"
+)
+# FRAME_HEADERS (MEU-128, D-411): every 200 from GET /captures/{id}/image carries the frame.
+_FRAME_HEADER_DOCS: dict[str, Any] = {
+    "X-Capture-Source": {
+        "description": "The source image size in px: `W,H`.",
+        "schema": {"type": "string"},
+    },
+    "X-Capture-Region": {
+        "description": "The applied region in source px, after clamping: `x,y,width,height`.",
+        "schema": {"type": "string"},
+    },
+    "X-Capture-Returned": {
+        "description": "The returned image size in px: `width,height`.",
+        "schema": {"type": "string"},
+    },
+    "X-Capture-Scale": {
+        "description": "Returned px per source px, to 6 places. Source px = region.x + x / scale.",
+        "schema": {"type": "string"},
+    },
+    "X-Capture-Clamped": {
+        "description": "`true` when the region was cut to fit the image, else `false`.",
+        "schema": {"type": "string"},
+    },
+}
 
 router = APIRouter(prefix="/captures", dependencies=[Depends(require_bearer)])
 
@@ -180,6 +209,31 @@ def _image_media_type(path: Path) -> str:
     return IMAGE_MIME_MAP.get(path.suffix.lower(), "application/octet-stream")
 
 
+def _frame_headers(frame: ViewFrame) -> dict[str, str]:
+    return {
+        "X-Capture-Source": f"{frame.source_width},{frame.source_height}",
+        "X-Capture-Region": f"{frame.x},{frame.y},{frame.width},{frame.height}",
+        "X-Capture-Returned": f"{frame.returned_width},{frame.returned_height}",
+        "X-Capture-Scale": f"{frame.scale:.6f}",
+        "X-Capture-Clamped": "true" if frame.clamped else "false",
+    }
+
+
+def _whole_frame(width: int, height: int) -> ViewFrame:
+    return ViewFrame(
+        source_width=width,
+        source_height=height,
+        x=0,
+        y=0,
+        width=width,
+        height=height,
+        returned_width=width,
+        returned_height=height,
+        scale=1.0,
+        clamped=False,
+    )
+
+
 @router.get("", response_model=CaptureListOut)
 def list_captures(capture: Any = Depends(get_capture_service)) -> CaptureListOut:
     """Return the inbox catalog. Not a queue."""
@@ -201,6 +255,9 @@ def create_capture(
         shot = capture.capture_region(
             BBox(x=body.x, y=body.y, width=body.width, height=body.height)
         )
+    elif isinstance(body, CaptureImportIn):
+        # IMPORT_MODE (MEU-129, D-415): copy or register a local image; the source is only read.
+        shot = capture.import_image(Path(body.path))
     else:
         raise HTTPException(status_code=422, detail="unknown capture mode")
     return CaptureItemOut(item=_shot_out(shot))
@@ -254,24 +311,50 @@ def get_capture(id: str, capture: Any = Depends(get_capture_service)) -> Capture
     return _detail_for(capture, capture.get_shot(id))
 
 
-@router.get("/{id}/image")
+@router.get("/{id}/image", responses={200: {"headers": _FRAME_HEADER_DOCS}})
 def get_capture_image(
     id: str,
     variant: Literal["original", "annotated"] = Query(default="original"),
+    x: float | None = Query(default=None),
+    y: float | None = Query(default=None),
+    width: float | None = Query(default=None),
+    height: float | None = Query(default=None),
+    unit: Literal["px", "fraction"] | None = Query(default=None),
+    max_edge: int | None = Query(default=None),
     capture: Any = Depends(get_capture_service),
 ) -> Response:
     """Return original or annotated image bytes."""
+    # MEU-128 (D-411): with none of x, y, width, height, unit and max_edge, the file's bytes
+    # are returned unchanged; the five X-Capture-* headers give the frame either way. The
+    # region fields have no ge or le: the domain's messages are the contract.
     shot = capture.get_shot(id)
-    payload = capture.read_image(id, variant)
+    if all(value is None for value in (x, y, width, height, unit, max_edge)):
+        payload = capture.read_image(id, variant)
+        frame = _whole_frame(shot.width, shot.height)
+    else:
+        payload, frame = capture.read_image_view(
+            id,
+            variant,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            unit=unit,
+            max_edge=max_edge,
+        )
     if len(payload) > IMAGE_MAX_BYTES:
-        raise HTTPException(status_code=413, detail="image exceeds IMAGE_MAX_BYTES")
+        raise HTTPException(status_code=413, detail=IMAGE_OVERSIZE_DETAIL)
     media_path = shot.original_path
     if variant == "annotated":
         annotated = shot.annotated_path
         if annotated is None:
             raise HTTPException(status_code=404, detail="annotated image is missing")
         media_path = annotated
-    return Response(content=payload, media_type=_image_media_type(media_path))
+    return Response(
+        content=payload,
+        media_type=_image_media_type(media_path),
+        headers=_frame_headers(frame),
+    )
 
 
 @router.post("/{id}/annotate", response_model=CaptureShotOut)

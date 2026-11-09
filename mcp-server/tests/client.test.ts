@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { api, toToolError } from "../src/client.js";
+import { api, apiBinary, toToolError } from "../src/client.js";
 import { handleTool } from "../src/toolsets/registry.js";
 
 const temps: string[] = [];
@@ -193,5 +193,42 @@ describe("token gate", () => {
     expect(result.isError).toBe(true);
     expect(result.content[0].text).not.toContain(token);
     expect(result.content[0].text).toContain("[redacted]");
+  });
+});
+
+// MEU-128 capture-region-view (Session 58): apiBinary hands the frame headers to the image branch.
+describe("MEU-128 apiBinary capture headers", () => {
+  it("AC-128.21 apiBinary returns the x-capture headers", async () => {
+    const appData = tempAppData();
+    writeFileSync(path.join(appData, "mcp-token.txt"), "tok");
+    const fetchImpl = vi.fn(async () => new Response(Uint8Array.from([0x89, 0x50, 0x4e, 0x47]), {
+      status: 200,
+      headers: {
+        "Content-Type": "image/png",
+        "X-Capture-Source": "40,30",
+        "X-Capture-Region": "0,0,40,30",
+        "X-Capture-Returned": "40,30",
+        "X-Capture-Scale": "1.000000",
+        "X-Capture-Clamped": "false",
+        "X-Request-ID": "req-1",
+        "X-Other": "kept out",
+      },
+    }));
+    const result = await apiBinary("GET", "/captures/s1/image", {
+      env: {
+        AVKIT_APP_DATA: appData,
+        AVKIT_API_BASE: "http://127.0.0.1:8000/api/v1",
+      },
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    expect(result.ok).toBe(true);
+    const headers = result.ok ? (result as { captureHeaders?: unknown }).captureHeaders : undefined;
+    expect(headers).toEqual({
+      "x-capture-source": "40,30",
+      "x-capture-region": "0,0,40,30",
+      "x-capture-returned": "40,30",
+      "x-capture-scale": "1.000000",
+      "x-capture-clamped": "false",
+    });
   });
 });

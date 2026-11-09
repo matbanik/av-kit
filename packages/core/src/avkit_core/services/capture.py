@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import shutil
@@ -31,11 +32,15 @@ from avkit_core.domain.capture import (
     ImageProbe,
     PixelateAnnotation,
     RectAnnotation,
+    RegionUnit,
     TextAnnotation,
+    ViewFrame,
+    view_frame,
 )
 from avkit_core.domain.enums import AnnotationType, CaptureRequestStatus, CaptureSource
 from avkit_core.domain.errors import (
     AnnotationValidationError,
+    CaptureFailedError,
     CaptureFlattenConflictError,
     CaptureRequestConflictError,
     ConflictError,
@@ -52,6 +57,17 @@ Clock = Callable[[], datetime]
 log = structlog.get_logger(module="capture")
 
 SCAN_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp")
+# IMPORT_ACCEPT (MEU-129, D-425, Human-approved): the largest file mode=import reads.
+IMPORT_MAX_BYTES = 50_000_000
+# IMPORT_NAME (MEU-129, D-420): the copy's stem.
+IMPORT_STEM_MAX = 100
+IMPORT_STEM_FALLBACK = "import"
+_IMPORT_STEM_DROP = re.compile(r"[^\w\- ]+")
+WINDOWS_RESERVED_STEMS = frozenset(
+    {"CON", "PRN", "AUX", "NUL"}
+    | {f"COM{n}" for n in range(1, 10)}
+    | {f"LPT{n}" for n in range(1, 10)}
+)
 TIMESTAMP_FORMAT = "%Y-%m-%d_%H-%M-%S"
 REQUEST_TTL_S = 120
 SIDECAR_SUFFIX = ".ann.json"
@@ -60,6 +76,14 @@ ANNOTATION_CLAMP_MIN = 0
 # MEU-67 flatten with backup (plan 2026-10-02-capture-flatten-backup §Single-statement contracts).
 BACKUP_DIR_DEFAULT_NAME = ".avkit-backup"
 TMP_SUFFIX = ".avkit-tmp"
+
+
+def _is_file(path: Path) -> bool:
+    """`Path.is_file`, with a denied lookup read as missing, so its path-bearing text stays out."""
+    try:
+        return path.is_file()
+    except OSError:
+        return False
 BACKUP_TIMESTAMP_FORMAT = "%Y%m%d-%H%M%S"
 FLATTEN_PNG_SUFFIX = ".png"
 CONVERTIBLE_SUFFIXES = frozenset({".jpg", ".jpeg", ".webp"})
@@ -82,6 +106,16 @@ def resolve_backup_dir(raw: str, inbox: Path) -> Path:
     if resolved == inbox.resolve():
         raise CaptureFlattenConflictError("capture.backup_dir must not be the inbox folder itself")
     return resolved
+
+
+def import_stem(stem: str) -> str:
+    """IMPORT_NAME: the source stem made safe for a file name in the inbox."""
+    text = _IMPORT_STEM_DROP.sub("_", stem).strip(" _-")[:IMPORT_STEM_MAX]
+    if text == "":
+        return IMPORT_STEM_FALLBACK
+    if text.upper() in WINDOWS_RESERVED_STEMS:
+        return f"{IMPORT_STEM_FALLBACK}_{text}"
+    return text
 
 
 def _backup_pattern(stem: str) -> re.Pattern[str]:
@@ -412,6 +446,130 @@ class CaptureService:
         with self._uow_factory() as uow:
             return self._upsert_shot(uow, resolved, probe, now, source)
 
+    def import_image(self, path: Path) -> CaptureShot:
+        """IMPORT_MODE: copy a local image into the inbox root, or register one already there.
+
+        Every refusal is a fixed message that names no path (D-416), and nothing is written
+        until every check has passed. The source file is only read.
+        """
+        if not path.is_absolute():
+            raise InboxPathError("path must be absolute")
+        inbox = self._inbox()
+        try:
+            resolved, data = self._read_import(path, inbox)
+        except OSError as exc:
+            # A denied folder or a failed lookup carries the path in its text (D-421).
+            raise InboxPathError("the file could not be read") from exc
+        in_root = resolved.parent == inbox
+        orientation = self._annotate.inspect_import(data)
+        if in_root:
+            return self._import_in_place(resolved)
+        return self._import_copy(resolved, inbox, data, orientation)
+
+    @staticmethod
+    def _read_import(path: Path, inbox: Path) -> tuple[Path, bytes]:
+        """IMPORT_ACCEPT's file checks, in order. An `OSError` from any of them propagates."""
+        if not path.exists():
+            raise InboxPathError("no file at that path")
+        if not path.is_file():
+            raise InboxPathError("path is not a regular file")
+        if path.suffix.lower() not in SCAN_EXTENSIONS:
+            raise InboxPathError("not an image av-kit can open (png, jpg, jpeg, webp)")
+        size = path.stat().st_size
+        if size > IMPORT_MAX_BYTES:
+            raise InboxPathError(
+                f"file is {math.ceil(size / 1_000_000)} MB; "
+                f"the import limit is {IMPORT_MAX_BYTES // 1_000_000} MB"
+            )
+        resolved = path.resolve()
+        if resolved.parent == inbox and resolved.name.lower().endswith(ANNOTATED_SUFFIXES):
+            raise InboxPathError("this file is an annotated copy; import its original instead")
+        return resolved, path.read_bytes()
+
+    def _import_in_place(self, resolved: Path) -> CaptureShot:
+        """IMPORT_IN_PLACE: an existing row keeps its source; a new row is `Import`."""
+        with CAPTURE_FILE_LOCK, self._uow_factory() as uow:
+            try:
+                probe = self._annotate.probe(resolved)
+            except (InboxPathError, OSError) as exc:
+                raise InboxPathError("the image could not be opened") from exc
+            now = self._now()
+            existing = uow.capture_shots.get_by_path(resolved)
+            if existing is None:
+                return self._upsert_shot(uow, resolved, probe, now, CaptureSource.Import)
+            if existing.file_size == probe.file_size:
+                return existing
+            updated = replace(
+                existing,
+                width=probe.width,
+                height=probe.height,
+                file_size=probe.file_size,
+                updated_at=now,
+            )
+            uow.capture_shots.save(updated)
+            return updated
+
+    def _import_copy(
+        self, source: Path, inbox: Path, data: bytes, orientation: int
+    ) -> CaptureShot:
+        """IMPORT_COPY: write a temporary file, move it into place, probe and register it.
+
+        Any failure from the first write through the commit removes what this call wrote and
+        raises the fixed 503, so no message that names a path reaches the response. The
+        temporary file is created exclusively, so a file another writer left under that name is
+        never written over or removed.
+        """
+        suffix = source.suffix.lower() if orientation == 1 else ".png"
+        tmp: Path | None = None
+        dest: Path | None = None
+        moved = False
+        with CAPTURE_FILE_LOCK:
+            try:
+                with self._uow_factory() as uow:
+                    self._annotate.ensure_dir(inbox)
+                    dest = self._import_dest(uow, inbox, import_stem(source.stem), suffix)
+                    with dest.with_name(dest.name + TMP_SUFFIX).open("xb") as handle:
+                        tmp = Path(handle.name)
+                        if orientation == 1:
+                            handle.write(data)
+                    if orientation != 1:
+                        self._annotate.write_upright_png(data, tmp)
+                    os.replace(tmp, dest)
+                    moved = True
+                    probe = self._annotate.probe(dest)
+                    shot = self._upsert_shot(uow, dest, probe, self._now(), CaptureSource.Import)
+            except Exception as exc:
+                self._unlink_if_file(tmp)
+                if moved:
+                    self._unlink_if_file(dest)
+                raise CaptureFailedError("the import could not be written") from exc
+        return shot
+
+    @staticmethod
+    def _import_dest(uow: UnitOfWork, inbox: Path, stem: str, suffix: str) -> Path:
+        """IMPORT_NAME: `stem`, then `_2`, `_3` … until no inbox-root file or row holds it.
+
+        A name whose temporary file is in the inbox root is taken too, so the copy never writes
+        over another writer's `NAME.avkit-tmp`.
+        """
+        taken: set[str] = set()
+        for child in inbox.iterdir():
+            name = child.name.casefold()
+            taken.add(name)
+            if name.endswith(TMP_SUFFIX):
+                taken.add(name.removesuffix(TMP_SUFFIX))
+        taken |= {
+            shot.original_path.name.casefold()
+            for shot in uow.capture_shots.list()
+            if shot.original_path.parent == inbox
+        }
+        name = f"{stem}{suffix}"
+        index = 2
+        while name.casefold() in taken:
+            name = f"{stem}_{index}{suffix}"
+            index += 1
+        return inbox / name
+
     def capture_fullscreen(self) -> CaptureShot:
         """Grab the virtual desktop into the inbox and register it."""
         dest = self._unique_png(self._inbox())
@@ -555,15 +713,48 @@ class CaptureService:
 
     def read_image(self, shot_id: str, variant: str) -> bytes:
         """Return original or annotated file bytes."""
+        return self._variant_path(self.get_shot(shot_id), variant).read_bytes()
+
+    def read_image_view(
+        self,
+        shot_id: str,
+        variant: str,
+        *,
+        x: float | None = None,
+        y: float | None = None,
+        width: float | None = None,
+        height: float | None = None,
+        unit: RegionUnit | None = None,
+        max_edge: int | None = None,
+    ) -> tuple[bytes, ViewFrame]:
+        """Return a region view of the variant and its frame (MEU-128, D-411). Writes no file.
+
+        The annotated copy is baked at the original's size, so one frame serves both variants.
+        """
         shot = self.get_shot(shot_id)
+        path = self._variant_path(shot, variant)
+        frame = view_frame(
+            shot.width,
+            shot.height,
+            x=x,
+            y=y,
+            width=width,
+            height=height,
+            unit=unit,
+            max_edge=max_edge,
+        )
+        return self._annotate.view(path, frame), frame
+
+    @staticmethod
+    def _variant_path(shot: CaptureShot, variant: str) -> Path:
         if variant == "original":
-            if not shot.original_path.is_file():
+            if not _is_file(shot.original_path):
                 raise NotFoundError("original image is missing")
-            return shot.original_path.read_bytes()
+            return shot.original_path
         if variant == "annotated":
-            if shot.annotated_path is None or not shot.annotated_path.is_file():
+            if shot.annotated_path is None or not _is_file(shot.annotated_path):
                 raise NotFoundError("annotated image is missing")
-            return shot.annotated_path.read_bytes()
+            return shot.annotated_path
         raise ValidationError("variant must be original or annotated")
 
     def remove(self, shot_id: str) -> None:

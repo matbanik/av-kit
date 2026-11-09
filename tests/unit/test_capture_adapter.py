@@ -6,6 +6,7 @@ import ast
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 from uuid import uuid4
 
 import pytest
@@ -1212,3 +1213,235 @@ def test_ac_91_6_eraser_samples_the_pixelated_ring_and_text_stays_crisp(
         if max(after[(y * 60 + x) * 3 : (y * 60 + x) * 3 + 3]) <= 60
     ]
     assert dark
+
+
+# MEU-128 capture-region-view (Session 58): the adapter's view. The tests build ViewFrame
+# directly and their images with Pillow under tmp_path.
+VIEW_SIZE = (64, 48)
+
+
+def _distinct_rgb(size: tuple[int, int] = VIEW_SIZE) -> Any:
+    from PIL import Image
+
+    width, height = size
+    image = Image.new("RGB", size)
+    image.putdata(
+        [
+            ((x * 4) % 256, (y * 5) % 256, (x * 3 + y * 7) % 256)
+            for y in range(height)
+            for x in range(width)
+        ]
+    )
+    return image
+
+
+def _view_frame(
+    region: tuple[int, int, int, int],
+    returned: tuple[int, int],
+    *,
+    source: tuple[int, int] = VIEW_SIZE,
+) -> Any:
+    from avkit_core.domain.capture import ViewFrame
+
+    x, y, width, height = region
+    return ViewFrame(
+        source_width=source[0],
+        source_height=source[1],
+        x=x,
+        y=y,
+        width=width,
+        height=height,
+        returned_width=returned[0],
+        returned_height=returned[1],
+        scale=returned[0] / width,
+        clamped=False,
+    )
+
+
+def _decode(data: bytes) -> Any:
+    import io
+
+    from PIL import Image
+
+    image = Image.open(io.BytesIO(data))
+    image.load()
+    return image
+
+
+def _folder_state(folder: Path) -> list[tuple[str, int, int]]:
+    return sorted((p.name, p.stat().st_size, p.stat().st_mtime_ns) for p in folder.iterdir())
+
+
+@pytest.mark.parametrize("ac_id", ["AC-128.6"], ids=["AC-128.6"])
+@pytest.mark.unit
+def test_ac_128_6_view_crops_exact_pixels(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-128.6"
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    path = tmp_path / "shot.png"
+    source = _distinct_rgb()
+    source.save(path)
+    got = _decode(CaptureAdapter().view(path, _view_frame((10, 8, 20, 16), (20, 16))))
+    assert got.size == (20, 16)
+    want = source.crop((10, 8, 30, 24))
+    assert got.convert("RGB").tobytes() == want.tobytes()
+
+
+@pytest.mark.parametrize("ac_id", ["AC-128.7"], ids=["AC-128.7"])
+@pytest.mark.unit
+def test_ac_128_7_view_resizes_with_lanczos(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-128.7"
+    from PIL import Image
+
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    adapter = CaptureAdapter()
+    frame = _view_frame((10, 8, 20, 16), (80, 64))
+    box = (10, 8, 30, 24)
+
+    rgb_path = tmp_path / "rgb.png"
+    rgb = _distinct_rgb()
+    rgb.save(rgb_path)
+    got = _decode(adapter.view(rgb_path, frame))
+    want = rgb.crop(box).resize((80, 64), Image.LANCZOS)
+    assert got.size == (80, 64)
+    assert got.tobytes() == want.tobytes()
+
+    palette_path = tmp_path / "palette.png"
+    palette = rgb.quantize(colors=64)
+    palette.info["transparency"] = 0
+    palette.save(palette_path, transparency=0)
+    with Image.open(palette_path) as opened:
+        assert opened.mode == "P"
+        expected = opened.convert("RGBA").crop(box).resize((80, 64), Image.LANCZOS)
+    got_palette = _decode(adapter.view(palette_path, frame))
+    assert got_palette.mode == "RGBA"
+    assert got_palette.tobytes() == expected.tobytes()
+
+    rgba_path = tmp_path / "rgba.png"
+    rgba = rgb.convert("RGBA")
+    rgba.putalpha(200)
+    rgba.save(rgba_path)
+    got_rgba = _decode(adapter.view(rgba_path, frame))
+    assert got_rgba.mode == "RGBA"
+    assert got_rgba.size == (80, 64)
+
+
+@pytest.mark.parametrize("ac_id", ["AC-128.8"], ids=["AC-128.8"])
+@pytest.mark.unit
+def test_ac_128_8_view_keeps_the_format(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-128.8"
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    adapter = CaptureAdapter()
+    frame = _view_frame((10, 8, 20, 16), (40, 32))
+    jpeg_path = tmp_path / "photo.jpg"
+    _distinct_rgb().save(jpeg_path, format="JPEG", quality=90)
+    jpeg = _decode(adapter.view(jpeg_path, frame))
+    assert (jpeg.format, jpeg.mode, jpeg.size) == ("JPEG", "RGB", (40, 32))
+    webp_path = tmp_path / "page.webp"
+    _distinct_rgb().save(webp_path, format="WEBP", quality=90)
+    webp = _decode(adapter.view(webp_path, frame))
+    assert (webp.format, webp.size) == ("WEBP", (40, 32))
+
+
+@pytest.mark.parametrize("ac_id", ["AC-128.9"], ids=["AC-128.9"])
+@pytest.mark.unit
+def test_ac_128_9_view_writes_no_file(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-128.9"
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    adapter = CaptureAdapter()
+    rgb = _distinct_rgb()
+    rgb.save(tmp_path / "shot.png")
+    rgb.quantize(colors=64).save(tmp_path / "palette.png", transparency=0)
+    rgb.convert("RGBA").save(tmp_path / "rgba.png")
+    rgb.save(tmp_path / "photo.jpg", format="JPEG", quality=90)
+    rgb.save(tmp_path / "page.webp", format="WEBP", quality=90)
+    before = _folder_state(tmp_path)
+    frames = (
+        _view_frame((0, 0, 64, 48), (64, 48)),
+        _view_frame((10, 8, 20, 16), (20, 16)),
+        _view_frame((10, 8, 20, 16), (80, 64)),
+        _view_frame((0, 0, 64, 48), (32, 24)),
+    )
+    for name in ("shot.png", "palette.png", "rgba.png", "photo.jpg", "page.webp"):
+        for frame in frames:
+            assert adapter.view(tmp_path / name, frame)
+    assert _folder_state(tmp_path) == before
+
+
+@pytest.mark.parametrize("ac_id", ["AC-128.10"], ids=["AC-128.10"])
+@pytest.mark.unit
+def test_ac_128_10_view_refuses_a_changed_or_bad_file(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-128.10"
+    from avkit_core.domain.errors import ConflictError, InboxPathError
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    adapter = CaptureAdapter()
+    folder = tmp_path / "private-folder"
+    folder.mkdir()
+    path = folder / "secret-shot.png"
+    _distinct_rgb().save(path)
+    stale = _view_frame((10, 8, 20, 16), (20, 16), source=(100, 80))
+    with pytest.raises(ConflictError) as changed:
+        adapter.view(path, stale)
+    text = str(changed.value)
+    for part in (str(path), str(folder), "private-folder", "secret-shot", tmp_path.name):
+        assert part not in text
+    fake = folder / "notes.png"
+    fake.write_text("not an image", encoding="utf-8")
+    with pytest.raises(InboxPathError) as unopened:
+        adapter.view(fake, _view_frame((0, 0, 64, 48), (64, 48)))
+    assert str(unopened.value) == "the image could not be opened"
+
+
+def _broken_chunk_png() -> bytes:
+    """A PNG whose IDAT is cut and followed by an invalid chunk: Pillow raises SyntaxError."""
+    import io
+    import struct
+    import zlib
+
+    buffer = io.BytesIO()
+    _distinct_rgb().save(buffer, format="PNG")
+    data = buffer.getvalue()
+    at = data.index(b"IDAT") - 4
+    (length,) = struct.unpack(">I", data[at : at + 4])
+    body = data[at + 8 : at + 8 + length][:4]
+    crc = struct.pack(">I", zlib.crc32(b"IDAT" + body))
+    idat = struct.pack(">I", len(body)) + b"IDAT" + body + crc
+    bad = struct.pack(">I", 0) + b"BAD!" + struct.pack(">I", zlib.crc32(b"BAD!"))
+    return data[:at] + idat + bad
+
+
+@pytest.mark.parametrize("fault", ["broken-chunk", "second-read"])
+@pytest.mark.parametrize("ac_id", ["AC-128.10"], ids=["AC-128.10"])
+@pytest.mark.unit
+def test_ac_128_10_view_maps_decode_and_read_faults(
+    ac_id: str, fault: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert ac_id == "AC-128.10"
+    from avkit_core.domain.errors import InboxPathError
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    adapter = CaptureAdapter()
+    folder = tmp_path / "private-folder"
+    folder.mkdir()
+    path = folder / "secret-shot.png"
+    if fault == "broken-chunk":
+        path.write_bytes(_broken_chunk_png())
+        frame = _view_frame((10, 8, 20, 16), (20, 16))
+    else:
+        _distinct_rgb().save(path)
+        frame = _view_frame((0, 0, *VIEW_SIZE), VIEW_SIZE)
+        real_read = Path.read_bytes
+
+        def broken_read(self: Path) -> bytes:
+            if self == path:
+                raise PermissionError(13, "Permission denied", str(self))
+            return real_read(self)
+
+        monkeypatch.setattr(Path, "read_bytes", broken_read)
+    with pytest.raises(InboxPathError) as refused:
+        adapter.view(path, frame)
+    assert str(refused.value) == "the image could not be opened"

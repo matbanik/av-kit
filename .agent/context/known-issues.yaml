@@ -4517,3 +4517,41 @@ issues:
             sources: []
           reasoning: The pill fails in the default dark theme for five of six statuses before this session, so fixing Generating alone leaves the pill failing, and fixing it whole changes the TTS page in both themes, outside D-235's two tokens. Filing keeps the ruled scope and records the probe. Two-way.
           human_message_reference: USER_EXPLICIT 2026-11-08 'all recommendations accpeted, proceed'
+  - id: CAPTURE-EXIF-SCANNED-ORIENTATION
+    title: A scanned JPEG or WebP with EXIF orientation 5 to 8 is sized and marked sideways
+    severity: medium
+    component: infrastructure
+    status: open
+    discovered: '2026-11-08'
+    root_cause: 'The capture adapter''s probe reads image.size after Image.open without applying the EXIF orientation (packages/infrastructure/src/avkit_infra/capture/adapter.py:253-263 at 2963efe), and bake and the region view open the stored pixels the same way. A JPEG or WebP that the inbox scan registers with orientation 5, 6, 7 or 8 is therefore recorded at its stored width and height, while Chromium, which honours the tag, shows the turned frame. Plan-time probe on Pillow 13.0.0: a 400x300 file tagged 5 to 8 probes 400x300, and ImageOps.exif_transpose gives 300x400 (C:/Temp/av-kit/s58-plan-exif-probe.txt).'
+    blast_radius: Read from the probe; the GUI was not run. Only files that reach the inbox by the scan or by register mode with a turning tag (phone and camera photos, mostly). For those, the row's width and height are swapped against what the GUI shows, marks drawn in the GUI land in the stored frame, and a region asked in the shown frame is clamped or refused. Screenshots carry no tag. MEU-129's import mode avoids it by writing an upright PNG (D-417), so this issue covers the scan and register paths only.
+    verification:
+      last_checked: '2026-11-08'
+      method: Pillow probe of orientations 1 to 8 against the adapter's probe
+      result: 'orientations 5 to 8 differ: probe 400x300, exif_transpose 300x400'
+    category: TECH-DEBT
+    priority: P3
+    related: []
+    meu_links:
+      - MEU-129
+    notes: 'Found while planning Session 58 capture-region-import (MEU-129 import). Filed, not fixed: the fix (transpose at scan and register, or record the shown frame) changes rows already stored and wants its own plan.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: agent
+      decision_log:
+        - id: D-424
+          stage: planning
+          question: The import design turns EXIF-oriented images upright, but scanned and registered files keep their stored frame. Fix the scan path in Session 58, file it, or leave it?
+          resolution: autonomous
+          class: two-way
+          chosen: File it as an open TECH-DEBT issue linked to MEU-129 and fix only the import path in Session 58
+          source_tag: Local Canon
+          precedents:
+            - packages/infrastructure/src/avkit_infra/capture/adapter.py:253-263 — probe reads the stored size
+            - docs/execution/plans/2026-11-08-capture-region-import/implementation-plan.md — D-417 upright PNG
+            - AGENTS.md — out-of-scope findings go to the known-issues register
+          research:
+            engine: none
+            sources: []
+          reasoning: Changing the scan path rewrites the frame of rows already stored, which the MEU-128 and MEU-129 ACs do not cover. Leaving it unrecorded hides a defect the plan found. Filing keeps the session's scope and records the probe. Two-way.

@@ -302,6 +302,7 @@ ENUM_MEMBERS: dict[str, tuple[str, ...]] = {
         "McpRegion",
         "McpInteractive",
         "Scan",
+        "Import",
     ),
     "CaptureRequestStatus": ("Pending", "Completed", "Cancelled", "Expired"),
     # TA-6 (Session 39, D-24): + Pixelate, Eraser.

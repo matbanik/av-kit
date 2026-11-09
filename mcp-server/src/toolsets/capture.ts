@@ -16,7 +16,19 @@ export const IMAGE_MAX_BYTES = 7_800_000;
  */
 export const CAPTURE_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 const captureId = z.string().regex(CAPTURE_ID_PATTERN, "id must be an opaque capture id");
-export const GET_QUERY_KEYS = ["variant", "status"] as const;
+export const GET_QUERY_KEYS = [
+  "variant",
+  "status",
+  "x",
+  "y",
+  "width",
+  "height",
+  "unit",
+  "max_edge",
+] as const;
+// REGION_VIEW (MEU-128, D-409): the bounds of max_edge, as the API checks them.
+export const REGION_MAX_EDGE_MIN = 64;
+export const REGION_MAX_EDGE_MAX = 2576;
 
 function desc(action: string, method: string, path: string): string {
   return [
@@ -27,14 +39,22 @@ function desc(action: string, method: string, path: string): string {
   ].join(" ");
 }
 
+// Design 6.7 (D-415): the capture action's import mode.
+const IMPORT_TEXT =
+  "mode=import copies a local image (png, jpg, jpeg, webp; absolute path) into the capture inbox as a new shot so image, crop and annotate work on it. The source file is never changed.";
+
+// Design 6.7 (D-412): the image action's region view and its frame item.
+const REGION_VIEW_TEXT =
+  'Optional x/y/width/height returns just that region from the full-resolution image, scaled to fit max_edge (default 1568; pass 2576 for high-resolution vision). Writes no file. Coordinates are original pixels, or unit: "fraction" (0–1) when you read them off a scaled view. The first content item gives the frame: source px = region.x + x / scale.';
+
 const ANNOTATE_EXAMPLE =
   'Example annotations: [{"type": "arrow", "from": [10, 10], "to": [80, 40], "color": "red", "stroke_width": 3}, {"type": "text", "x": 12, "y": 48, "text": "Note", "color": "white", "font_size": 16}].';
 
 export const captureDescriptions: Record<string, string> = {
   "avkit_capture.list": desc("list", "GET", "/captures"),
   "avkit_capture.get": desc("get", "GET", "/captures/{id}"),
-  "avkit_capture.image": `${desc("image", "GET", "/captures/{id}/image")} variant=original|annotated. ${ANNOTATE_EXAMPLE}`,
-  "avkit_capture.capture": desc("capture", "POST", "/captures"),
+  "avkit_capture.image": `${desc("image", "GET", "/captures/{id}/image")} variant=original|annotated. ${REGION_VIEW_TEXT} ${ANNOTATE_EXAMPLE}`,
+  "avkit_capture.capture": `${desc("capture", "POST", "/captures")} ${IMPORT_TEXT}`,
   "avkit_capture.capture_interactive": desc("capture_interactive", "POST", "/captures/requests"),
   "avkit_capture.list_requests": desc("list_requests", "GET", "/captures/requests"),
   "avkit_capture.annotate": `${desc("annotate", "POST", "/captures/{id}/annotate")} ${ANNOTATE_EXAMPLE}`,
@@ -147,6 +167,18 @@ const captureRegion = withDesc(
     .strict(),
 );
 
+// IMPORT_MODE (MEU-129, D-415): copy a local image into the inbox; the source is only read.
+const captureImport = withDesc(
+  "capture",
+  z
+    .object({
+      action: z.literal("capture"),
+      mode: z.literal("import"),
+      path: z.string().min(1),
+    })
+    .strict(),
+);
+
 export const captureSchema = z.union([
   withDesc("list", z.object({ action: z.literal("list") }).strict()),
   withDesc("get", z.object({ action: z.literal("get"), id: captureId }).strict()),
@@ -157,11 +189,19 @@ export const captureSchema = z.union([
         action: z.literal("image"),
         id: captureId,
         variant: z.enum(VARIANT_WIRES).optional(),
+        // A first filter only; the API's messages stay the contract (D-412).
+        x: z.number().nonnegative().optional(),
+        y: z.number().nonnegative().optional(),
+        width: z.number().positive().optional(),
+        height: z.number().positive().optional(),
+        unit: z.enum(["px", "fraction"]).optional(),
+        max_edge: z.number().int().min(REGION_MAX_EDGE_MIN).max(REGION_MAX_EDGE_MAX).optional(),
       })
       .strict(),
   ),
   captureFullscreen,
   captureRegion,
+  captureImport,
   withDesc("capture_interactive", z.object({ action: z.literal("capture_interactive") }).strict()),
   withDesc(
     "list_requests",

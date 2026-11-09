@@ -556,3 +556,223 @@ describe("MEU-91 avkit_capture eraser", () => {
     expect(calls[0]?.body).toEqual({ annotations: [eraser] });
   });
 });
+
+// MEU-128 capture-region-view (Session 58): QUERY_GET_ONLY, FRAME_ITEM and OVERSIZE_HINT.
+const FRAME_HEADER_VALUES = {
+  "X-Capture-Source": "2000,1500",
+  "X-Capture-Region": "100,200,800,600",
+  "X-Capture-Returned": "1568,1176",
+  "X-Capture-Scale": "1.960000",
+  "X-Capture-Clamped": "false",
+} as const;
+const OVERSIZE_TODAY =
+  `image exceeds the ${IMAGE_MAX_BYTES} B MCP limit; read original_path or annotated_path from avkit_capture get and open that file`;
+
+function framedResponse(headers: Record<string, string>): Response {
+  return new Response(PNG_BYTES, {
+    status: 200,
+    headers: { "Content-Type": "image/png", ...headers },
+  });
+}
+
+describe("MEU-128 image region", () => {
+  it("AC-128.18 image sends the region fields as query keys", async () => {
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string }[] = [];
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push({ url: String(url), method: init?.method });
+      return imageResponse(PNG_BYTES);
+    });
+    const result = await handleTool("avkit_capture", {
+      action: "image",
+      id: "s1",
+      x: 0.25,
+      y: 0.5,
+      width: 0.25,
+      height: 0.125,
+      unit: "fraction",
+      max_edge: 2576,
+    }, {
+      env: toolEnv(appData),
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    expect(result.isError).not.toBe(true);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.method).toBe("GET");
+    const url = new URL(calls[0]?.url ?? "");
+    expect(url.pathname.endsWith("/captures/s1/image")).toBe(true);
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      x: "0.25",
+      y: "0.5",
+      width: "0.25",
+      height: "0.125",
+      unit: "fraction",
+      max_edge: "2576",
+    });
+  });
+
+  it("AC-128.19 capture region sends no query string", async () => {
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push({
+        url: String(url),
+        method: init?.method,
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+      });
+      return okJson({ item: SHOT_ITEM }, 201);
+    });
+    const result = await handleTool(
+      "avkit_capture",
+      { action: "capture", mode: "region", x: 10, y: 20, width: 32, height: 40 },
+      { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+    );
+    expect(result.isError).not.toBe(true);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.method).toBe("POST");
+    expect(calls[0]?.url).not.toContain("?");
+    expect(calls[0]?.url.endsWith("/captures")).toBe(true);
+    expect(calls[0]?.body).toEqual({ mode: "region", x: 10, y: 20, width: 32, height: 40 });
+  });
+
+  it("AC-128.20 image returns the frame item before the image", async () => {
+    const appData = tempAppData();
+    temps.push(appData);
+    const framed = vi.fn(async () => framedResponse({ ...FRAME_HEADER_VALUES }));
+    const result = await handleTool("avkit_capture", { action: "image", id: "s1" }, {
+      env: toolEnv(appData),
+      fetchImpl: framed as unknown as typeof fetch,
+    });
+    expect(result.isError).not.toBe(true);
+    expect(result.content.map((item) => item.type)).toEqual(["text", "image"]);
+    const text = (result.content[0] as { text: string }).text;
+    const parsed = JSON.parse(text) as { frame: unknown; map: string };
+    expect(parsed.frame).toEqual({
+      source: { width: 2000, height: 1500 },
+      region: { x: 100, y: 200, width: 800, height: 600 },
+      returned: { width: 1568, height: 1176 },
+      scale: 1.96,
+      clamped: false,
+    });
+    expect(parsed.map).toContain("source_x = region.x + x / scale");
+    expect(parsed.map).toContain("source_y = region.y + y / scale");
+    const image = result.content[1] as { type: string; data?: string; mimeType?: string };
+    expect(image.data).toBe(Buffer.from(PNG_BYTES).toString("base64"));
+    expect(image.mimeType).toBe("image/png");
+
+    const { "X-Capture-Scale": _scale, ...partial } = FRAME_HEADER_VALUES;
+    const unframed = vi.fn(async () => framedResponse(partial));
+    const alone = await handleTool("avkit_capture", { action: "image", id: "s1" }, {
+      env: toolEnv(appData),
+      fetchImpl: unframed as unknown as typeof fetch,
+    });
+    expect(alone.isError).not.toBe(true);
+    expect(alone.content.map((item) => item.type)).toEqual(["image"]);
+  });
+
+  it("AC-128.22 an oversize image names max_edge", async () => {
+    const appData = tempAppData();
+    temps.push(appData);
+    const oversize = vi.fn(async () => imageResponse(new Uint8Array(IMAGE_MAX_BYTES + 1)));
+    const result = await handleTool("avkit_capture", { action: "image", id: "s1" }, {
+      env: toolEnv(appData),
+      fetchImpl: oversize as unknown as typeof fetch,
+    });
+    expect(result.isError).toBe(true);
+    const text = result.content[0].text;
+    expect(text).toContain("payload_too_large");
+    expect(text).toContain(OVERSIZE_TODAY);
+    expect(text).toContain("max_edge (64 to 2576)");
+  });
+
+  it("AC-128.23 image region fields are bounded", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const base = { action: "image", id: "s1" } as const;
+    const region = { x: 0.25, y: 0, width: 0.5, height: 0.5 };
+    expect(captureSchema.safeParse({ ...base, ...region, unit: "fraction" }).success).toBe(true);
+    expect(captureSchema.safeParse({ ...base, ...region, max_edge: 64 }).success).toBe(true);
+    for (const bad of [
+      { ...region, x: -1 },
+      { ...region, width: 0 },
+      { ...region, unit: "inch" },
+      { max_edge: 63 },
+      { max_edge: 2577 },
+      { max_edge: 100.5 },
+    ]) {
+      expect(captureSchema.safeParse({ ...base, ...bad }).success, JSON.stringify(bad)).toBe(false);
+    }
+  });
+
+  it("AC-128.24 image describes the region and the frame", async () => {
+    const { captureDescriptions } = await import("../src/toolsets/capture.js");
+    const { advertisedSchema } = await import("../src/toolsets/registry.js");
+    const text = captureDescriptions["avkit_capture.image"] ?? "";
+    for (const needle of ["max_edge", "2576", "fraction", "region.x + x / scale"]) {
+      expect(text, needle).toContain(needle);
+    }
+    expect(M7.filter((marker) => text.includes(marker)).length).toBeGreaterThanOrEqual(3);
+    const keys = Object.keys(advertisedSchema("avkit_capture").shape);
+    expect(keys).toEqual(expect.arrayContaining(["x", "y", "width", "height", "unit", "max_edge"]));
+  });
+});
+
+// MEU-129 capture-image-import (Session 58): IMPORT_MODE over MCP (D-415, design §6.7).
+describe("MEU-129 capture import", () => {
+  it("AC-129.12 capture import sends mode and path", async () => {
+    const { ADD_TIMEOUT_MS } = await import("../src/client.js");
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const source = "C:/elsewhere/shot.png";
+    expect(
+      captureSchema.safeParse({ action: "capture", mode: "import", path: source }).success,
+    ).toBe(true);
+    expect(
+      captureSchema.safeParse({ action: "capture", mode: "import", path: source, nope: 1 }).success,
+    ).toBe(false);
+    expect(captureSchema.safeParse({ action: "capture", mode: "import" }).success).toBe(false);
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push({
+        url: String(url),
+        method: init?.method,
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+      });
+      return okJson({ item: { ...SHOT_ITEM, source: "Import" } }, 201);
+    });
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    try {
+      const result = await handleTool(
+        "avkit_capture",
+        { action: "capture", mode: "import", path: source },
+        { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+      );
+      expect(result.isError).not.toBe(true);
+      expect(calls).toHaveLength(1);
+      expect(calls[0]?.method).toBe("POST");
+      expect(calls[0]?.url).not.toContain("?");
+      expect(calls[0]?.url.endsWith("/captures")).toBe(true);
+      expect(calls[0]?.body).toEqual({ mode: "import", path: source });
+      expect(timeout).toHaveBeenCalledWith(ADD_TIMEOUT_MS);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
+  it("AC-129.13 capture describes import", async () => {
+    const { captureDescriptions } = await import("../src/toolsets/capture.js");
+    const { advertisedSchema } = await import("../src/toolsets/registry.js");
+    const text = captureDescriptions["avkit_capture.capture"] ?? "";
+    expect(text).toContain("mode=import");
+    expect(text).toContain("never changed");
+    const shape = advertisedSchema("avkit_capture").shape as Record<
+      string,
+      { safeParse(value: unknown): { success: boolean } }
+    >;
+    expect(Object.keys(shape)).toEqual(expect.arrayContaining(["mode", "path"]));
+    expect(shape.mode?.safeParse("import").success).toBe(true);
+    expect(shape.mode?.safeParse("fullscreen").success).toBe(true);
+  });
+});

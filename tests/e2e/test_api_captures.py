@@ -97,6 +97,7 @@ SOURCE_OUT = (
     "McpRegion",
     "McpInteractive",
     "Scan",
+    "Import",
 )
 STATUS_OUT = ("Pending", "Completed", "Cancelled", "Expired")
 APPSERVICES_SITES = (

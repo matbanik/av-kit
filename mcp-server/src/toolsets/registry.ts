@@ -200,6 +200,53 @@ function interpolatePath(template: string, args: Record<string, unknown>): strin
   return template.replace(/\{([a-z_]+)\}/g, (_m, name: string) => encodeURIComponent(String(args[name] ?? "")));
 }
 
+const FRAME_MAP = "source_x = region.x + x / scale; source_y = region.y + y / scale";
+
+type CaptureFrame = {
+  source: { width: number; height: number };
+  region: { x: number; y: number; width: number; height: number };
+  returned: { width: number; height: number };
+  scale: number;
+  clamped: boolean;
+};
+
+function parseInts(value: string | undefined, count: number): number[] | null {
+  if (value === undefined) {
+    return null;
+  }
+  const parts = value.split(",");
+  if (parts.length !== count || !parts.every((part) => /^\d+$/.test(part))) {
+    return null;
+  }
+  return parts.map((part) => Number(part));
+}
+
+/** FRAME_ITEM: the five X-Capture-* headers as one frame, or null when any is missing or bad. */
+function parseCaptureFrame(headers: Record<string, string>): CaptureFrame | null {
+  const source = parseInts(headers["x-capture-source"], 2);
+  const region = parseInts(headers["x-capture-region"], 4);
+  const returned = parseInts(headers["x-capture-returned"], 2);
+  const scaleText = headers["x-capture-scale"];
+  const clampedText = headers["x-capture-clamped"];
+  if (source === null || region === null || returned === null || scaleText === undefined) {
+    return null;
+  }
+  const scale = Number(scaleText);
+  if (!/^\d+(\.\d+)?$/.test(scaleText) || !Number.isFinite(scale) || scale <= 0) {
+    return null;
+  }
+  if (clampedText !== "true" && clampedText !== "false") {
+    return null;
+  }
+  return {
+    source: { width: source[0], height: source[1] },
+    region: { x: region[0], y: region[1], width: region[2], height: region[3] },
+    returned: { width: returned[0], height: returned[1] },
+    scale,
+    clamped: clampedText === "true",
+  };
+}
+
 function withQuery(path: string, record: Record<string, unknown>): string {
   const params = new URLSearchParams();
   for (const key of GET_QUERY_KEYS) {
@@ -332,7 +379,11 @@ export async function handleTool(tool: string, args: unknown, runtime?: ToolRunt
   if (!row) {
     return toToolError({ code: "unknown_action", message: `${tool}.${action}` }, env);
   }
-  const path = withQuery(interpolatePath(row.path, record), record);
+  // QUERY_GET_ONLY (MEU-128, D-413): a POST capture region keeps x, y, width and height in
+  // its body and sends no query string.
+  const path = row.method === "GET"
+    ? withQuery(interpolatePath(row.path, record), record)
+    : interpolatePath(row.path, record);
   const timeoutMs = (
     ((tool === "avkit_download" || tool === "avkit_transcript" || tool === "avkit_convert") && action === "add")
     || (tool === "avkit_capture" && action === "capture")
@@ -351,15 +402,24 @@ export async function handleTool(tool: string, args: unknown, runtime?: ToolRunt
     if (binary.bytes.byteLength > IMAGE_MAX_BYTES) {
       return toToolError({
         code: "payload_too_large",
-        message: `image exceeds the ${IMAGE_MAX_BYTES} B MCP limit; read original_path or annotated_path from avkit_capture get and open that file`,
+        message: `image exceeds the ${IMAGE_MAX_BYTES} B MCP limit; read original_path or annotated_path from avkit_capture get and open that file, or pass max_edge (64 to 2576) or x, y, width and height for a smaller image`,
       }, env);
     }
+    const image = {
+      type: "image" as const,
+      data: Buffer.from(binary.bytes).toString("base64"),
+      mimeType: binary.mimeType,
+    };
+    // FRAME_ITEM (MEU-128, D-412): the frame text first when all five headers parse.
+    const frame = parseCaptureFrame(binary.captureHeaders);
+    if (frame === null) {
+      return { content: [image] };
+    }
     return {
-      content: [{
-        type: "image",
-        data: Buffer.from(binary.bytes).toString("base64"),
-        mimeType: binary.mimeType,
-      }],
+      content: [
+        { type: "text", text: JSON.stringify({ frame, map: FRAME_MAP }) },
+        image,
+      ],
     };
   }
   const result = await api(row.method, path, httpBody(row.method, record, row.path), {

@@ -154,7 +154,13 @@ export async function api<T>(
   }
 }
 
-export type ApiBinaryOk = { ok: true; bytes: Uint8Array; mimeType: string };
+export type ApiBinaryOk = {
+  ok: true;
+  bytes: Uint8Array;
+  mimeType: string;
+  /** Every `x-capture-*` response header, lowercased (MEU-128 FRAME_ITEM). */
+  captureHeaders: Record<string, string>;
+};
 export type ApiBinaryResult = ApiBinaryOk | ApiErr;
 
 function sniffImageMime(bytes: Uint8Array, declared: string): string {
@@ -246,7 +252,14 @@ export async function apiBinary(
         status: res.status,
       };
     }
-    return { ok: true, bytes: buffer, mimeType };
+    const captureHeaders: Record<string, string> = {};
+    res.headers.forEach((value, name) => {
+      const lower = name.toLowerCase();
+      if (lower.startsWith("x-capture-")) {
+        captureHeaders[lower] = value;
+      }
+    });
+    return { ok: true, bytes: buffer, mimeType, captureHeaders };
   } catch {
     return {
       ok: false,

@@ -3354,10 +3354,10 @@ meus:
     anchor: region-view
     text: Phase 9 §Region view
   description: GET image and MCP image take an optional region in original px or fractions, clamp it, fit it inside max_edge (default 1568, upscale capped at 4x) and report the frame; no file is written.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-37, MEU-38, MEU-111
   dependency_parse_status: parsed
@@ -3365,8 +3365,8 @@ meus:
   - MEU-37
   - MEU-38
   - MEU-111
-  execution_plan: null
-  updated: '2026-11-08'
+  execution_plan: docs/execution/plans/2026-11-08-capture-region-import/
+  updated: '2026-11-09'
   closed_reason: null
   note: Registered 2026-11-08 from the capture crop design (_inspiration/capture-crop/design.md). Mat asked for crop in the GUI, MCP and API, agent first (design D-2), and ruled D-1 (a crop writes a new
     shot) on 2026-11-08.
@@ -3382,10 +3382,10 @@ meus:
     text: Phase 9 §Image import
   description: POST /captures mode import and MCP import copy a local png, jpg, jpeg or webp into the inbox as a new shot (source Import), writing an upright PNG when EXIF rotates it; inbox paths register
     in place.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-36, MEU-37, MEU-38
   dependency_parse_status: parsed
@@ -3393,8 +3393,8 @@ meus:
   - MEU-36
   - MEU-37
   - MEU-38
-  execution_plan: null
-  updated: '2026-11-08'
+  execution_plan: docs/execution/plans/2026-11-08-capture-region-import/
+  updated: '2026-11-09'
   closed_reason: null
   note: Registered 2026-11-08 from the capture crop design (_inspiration/capture-crop/design.md). Mat asked for crop in the GUI, MCP and API, agent first (design D-2), and ruled D-1 (a crop writes a new
     shot) on 2026-11-08.

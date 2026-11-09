@@ -279,7 +279,7 @@ Enums live in `domain/enums.py` (MEU-34 extends MEU-2). Do **not** add `"capture
 
 | Enum | Values | Persist |
 |------|--------|---------|
-| `CaptureSource` | `Hotkey`, `Gui`, `McpFullscreen`, `McpRegion`, `McpInteractive`, `Scan` | yes (`.name`) |
+| `CaptureSource` | `Hotkey`, `Gui`, `McpFullscreen`, `McpRegion`, `McpInteractive`, `Scan`, `Import` | yes (`.name`) |
 | `CaptureRequestStatus` | `Pending`, `Completed`, `Cancelled`, `Expired` | yes |
 | `AnnotationType` | `Arrow`, `Rect`, `Highlight`, `Text`, `Pixelate`, `Eraser` | sidecar JSON + API (wire lowercase) |
 
@@ -536,6 +536,7 @@ Discriminated by `mode` (wire lowercase):
 | `register` | `path` (absolute), `source` (`hotkey` \| `gui` \| `scan`) | Electron after write |
 | `fullscreen` | (none) | MCP / API grab |
 | `region` | `x`, `y`, `width`, `height` (ints ≥ 0, width/height ≥ 8) | MCP bbox |
+| `import` | `path` (absolute) | API and MCP `capture` ([§Image import](#image-import)) |
 
 Extra forbid. `register` is what the region-picker path uses — the API does not grab in that mode.
 
@@ -574,8 +575,8 @@ New compound tool `avkit_capture` (M2 parity with REST). No second URL space. Zo
 |--------|------|
 | `list` | `GET /captures` |
 | `get` | `GET /captures/{id}` |
-| `image` | `GET /captures/{id}/image` |
-| `capture` | `POST /captures` mode `fullscreen` \| `region` |
+| `image` | `GET /captures/{id}/image`; optional `x`, `y`, `width`, `height`, `unit` and `max_edge` as query keys, and a frame text item before the image ([§Region view](#region-view)) |
+| `capture` | `POST /captures` mode `fullscreen` \| `region` \| `import` |
 | `capture_interactive` | `POST /captures/requests` then poll |
 | `list_requests` | `GET /captures/requests` |
 | `annotate` | `POST /captures/{id}/annotate` |
@@ -988,13 +989,21 @@ Five residual MEUs from the capture crop design (`_inspiration/capture-crop/desi
 | Rule | Contract | Source |
 |------|----------|--------|
 | Fields | `GET /captures/{id}/image` accepts optional `x`, `y`, `width`, `height` (all four or none), `unit` (`px` by default, or `fraction`) and `max_edge` (64 to 2576). MCP `image` gains the same optional fields and passes them as query keys (`GET_QUERY_KEYS`). Other keys stay rejected | Human-approved 2026-11-08 design D-2; Research-backed design D-5 (one action, not a new `zoom`) |
-| Frame | Every coordinate is in the shot's original px, the frame `get` reports. A returned view is never a frame. `unit: "fraction"` takes 0 to 1 of the original's width and height and rounds outward (`left = floor(x·W)`, `top = floor(y·H)`, `right = ceil((x+width)·W)`, `bottom = ceil((y+height)·H)`) before clamping. With `unit: "px"`, a non-integer value is rejected with a message that names `unit: "fraction"` | Research-backed design D-3, D-4 (R-1 to R-4, R-7) |
+| Frame | Every coordinate is in the shot's original px, the frame `get` reports. A returned view is never a frame. `unit: "fraction"` takes 0 to 1 of the original's width and height and rounds outward (`left = floor(x·W)`, `top = floor(y·H)`, `right = ceil((x+width)·W)`, `bottom = ceil((y+height)·H)`) before clamping. Each product is first rounded to 9 decimal places, so float error (`0.07·100` is `7.000000000000001`) doesn't widen the region by a pixel (D-408). With `unit: "px"`, a non-integer value is rejected with a message that names `unit: "fraction"` | Research-backed design D-3, D-4 (R-1 to R-4, R-7) |
 | Bounds | A region past the right or bottom edge is clamped, and the response says so. A region whose clamped result is empty or has an edge under `CAPTURE_MIN_EDGE_PX` (8) is rejected with 422. A negative `x` or `y` fails validation | Research-backed design D-6 (R-6, R-7); Local Canon design L-11, L-17 (Pillow pads past the edge with black) |
 | Scale | With a region, the region is cut from the full-resolution `variant` and fitted inside `max_edge` (default 1568), upscaled at most 4×, with Lanczos resampling. With `max_edge` and no region, the whole image is downscaled to fit and never upscaled. With neither, the bytes and media type are today's. Nothing is written to disk | Research-backed design D-5 (R-1, R-4, R-5) |
-| Frame report | The API response carries the frame in headers: the source size, the applied region, the returned size, the scale and whether the region was clamped. MCP returns two content items, a short text item with that frame and the mapping `source_x = region.x + x / scale` first, then the image | Research-backed design D-3, D-5 (R-4) |
+| Frame report | The API response carries the frame in headers: the source size, the applied region, the returned size, the scale and whether the region was clamped. MCP returns two content items, a short text item with that frame and the mapping `source_x = region.x + x / scale` first, then the image. MCP sends the text item only when the API sent all five `X-Capture-*` headers; otherwise it returns the image alone (D-412) | Research-backed design D-3, D-5 (R-4) |
 | MCP limit | The 7,800,000 B cap stays; its error names `max_edge` as the way to fit a large shot | Local Canon MEU-111 |
 | Descriptions | The `image` description follows design §6.7, including `max_edge: 2576` for high-resolution vision, and the tool documentation carries the ImageMagick mapping (design §6.6) | Research-backed design §6.6, §6.7 (R-8) |
-| Tests | Contract tests for every field, frame, bounds and scale rule, outward rounding on odd sizes, the 4× cap and unchanged bytes without a region; MCP tests for the two-item shape, with existing tests that read `content[0]` updated; OpenAPI regenerated | Local Canon |
+| Tests | Contract tests for every field, frame, bounds and scale rule, outward rounding on odd sizes, the 4× cap and unchanged bytes without a region; MCP tests for the two-item shape; existing tests that read `content[0]` from a fake without the headers stay unchanged, because the image then comes alone (D-412); OpenAPI regenerated | Local Canon |
+
+> **Delivered (Session 58).**
+> - `resolve_region`, `view_scale` and `view_frame` in `domain/capture.py` give `REGION_RESOLVE`, `REGION_ERRORS` and `VIEW_SCALE`. `CaptureAdapter.view` crops, resizes with Lanczos and encodes in memory in the file's format (`VIEW_FORMAT`), and a whole frame at scale 1 returns the file's bytes (`RETURN_UNCHANGED`).
+> - `GET /captures/{id}/image` takes the six query fields, names `max_edge` in its 413 (`OVERSIZE_HINT`) and sends the five `X-Capture-*` headers on every 200 (`FRAME_HEADERS`).
+> - MCP `image` sends the fields as query keys on a GET only (`QUERY_GET_ONLY`), returns the frame text item before the image (`FRAME_ITEM`), and its oversize error names `max_edge`.
+> - AC-128.1 to AC-128.24.
+> - Gate: the H1-2 `session-gate.ps1` record in the Session 58 handoff.
+> - Plan `docs/execution/plans/2026-11-08-capture-region-import/`.
 
 <a id="image-import"></a>
 
@@ -1004,15 +1013,22 @@ Five residual MEUs from the capture crop design (`_inspiration/capture-crop/desi
 
 | Rule | Contract | Source |
 |------|----------|--------|
-| Request | `POST /captures` `{"mode": "import", "path": …}` (`CaptureImportIn`, `extra="forbid"`) and MCP `import {path}` (`.strict()`) | Human-approved 2026-11-08 design D-2 ("any other images provided"); Local Canon design D-9 (L-2, L-10) |
+| Request | `POST /captures` `{"mode": "import", "path": …}` (`CaptureImportIn`, `extra="forbid"`) and MCP `capture` with `mode: "import"` and `path` (`.strict()`), not a new `import` action (D-415) | Human-approved 2026-11-08 design D-2 ("any other images provided"); Local Canon design D-9 (L-2, L-10) |
 | Copy | The file is copied into the inbox root. The source file is never moved, changed or watched. A path already in the inbox registers in place and returns its row, so the call is idempotent | Local Canon design D-9 (L-3, L-4) |
 | Accepted | An absolute path that resolves to a regular file, with a suffix in `SCAN_EXTENSIONS`, that Pillow's `verify()` accepts, within the import size cap (a tunable the plan fixes, starting from 50 MB), with Pillow's decompression-bomb guard left on | Local Canon design D-9 (L-3) |
 | Orientation | EXIF orientation 1, or no tag: a byte copy in the same format. Any other orientation: an upright PNG, so Pillow's pixel frame matches what Chromium shows | Research-backed design D-9 (R-7) |
 | Name | The source stem, sanitized, with the unique suffix checked against files and catalog rows under `CAPTURE_FILE_LOCK` | Local Canon design L-9 |
-| Source | New `CaptureSource.Import`, wire `import`. A scan that sees the file first does not replace it | Local Canon design L-4, L-12 |
+| Source | New `CaptureSource.Import`, reported as `Import`, with no register wire value (D-414). A scan that sees the file first does not replace it: the scan and the import both take `CAPTURE_FILE_LOCK`, and an in-place import keeps the row's source (D-419) | Local Canon design L-4, L-12 |
 | Errors | Each 4xx names the fix, for example "path must be absolute", "not an image av-kit can open (png, jpg, jpeg, webp)", "file is 212 MB; the import limit is 50 MB" | Research-backed design §6.4 (R-8) |
-| Planning check | The plan probes whether a JPEG already in the inbox with EXIF orientation other than 1 shows its marks in the wrong place, and files an issue if it does | Local Canon design §11 |
+| Planning check | The plan probes whether a JPEG already in the inbox with EXIF orientation other than 1 shows its marks in the wrong place, and files an issue if it does. Done as a probe in the Session 58 plan; it does, so `CAPTURE-EXIF-SCANNED-ORIENTATION` is filed (D-424) | Local Canon design §11 |
 | Tests | Each rule; fixtures for all 8 orientations; idempotent re-import; the outside file's bytes and timestamp unchanged; OpenAPI regenerated | Local Canon |
+
+> **Delivered (Session 58).**
+> - `CaptureSource.Import` (`IMPORT_SOURCE`) and `POST /captures` `mode: import` with `CaptureImportIn`; MCP `capture` takes `mode: "import"` with `path` (`IMPORT_MODE`).
+> - `CaptureService.import_image` checks each rule in order with a fixed message that names no path, and `inspect_import` decodes every pixel first (`IMPORT_ACCEPT`). An outside file is copied into the inbox root through a temporary file under `CAPTURE_FILE_LOCK`, and a failure removes what the call wrote and answers 503 (`IMPORT_COPY`). EXIF orientations 2 to 8 are written upright as PNG (`IMPORT_UPRIGHT`). A file already in the inbox root registers in place (`IMPORT_IN_PLACE`), and the copy's name is sanitized and made unique (`IMPORT_NAME`). No new log line reaches the Console (`NO_RAW_CONSOLE`).
+> - AC-129.1 to AC-129.13.
+> - Gate: the H1-2 `session-gate.ps1` record in the Session 58 handoff.
+> - Plan `docs/execution/plans/2026-11-08-capture-region-import/`.
 
 <a id="crop-to-new-shot"></a>
 

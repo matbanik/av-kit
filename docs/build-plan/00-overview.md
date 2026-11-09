@@ -65,7 +65,7 @@ SQLite stores **job records and file pointers**, not transcript bodies or media 
 | `TTSStatus` | Pending, Generating, Done, Failed, Cancelled |
 | `ConversionKind` | Compress, Cut, Extract (Phase 8) |
 | `ConversionStatus` | Pending, Processing, Done, Failed, Cancelled, Skipped (Phase 8) |
-| `CaptureSource` | Hotkey, Gui, McpFullscreen, McpRegion, McpInteractive, Scan (Phase 9) |
+| `CaptureSource` | Hotkey, Gui, McpFullscreen, McpRegion, McpInteractive, Scan, Import (Phase 9) |
 | `CaptureRequestStatus` | Pending, Completed, Cancelled, Expired (Phase 9) |
 | `MediaFormat` | MP4, WEBM, MP3, M4A, WAV, OPUS |
 | `QualityPreset` | Best, P2160, P1440, P1080, P720, P480, P360, P240, P144, Lowest |
