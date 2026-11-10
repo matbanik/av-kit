@@ -103,3 +103,16 @@ status: "in_progress"
 | 36 | Codex round 1 (read-only, high) | `C:/Temp/av-kit/dispatch/rc3-exec-r1-run.txt`: ledger recorded round 1 `approved`, 0 blocking, usage 5,976,320; report saved to `.agent/context/handoffs/2026-11-09-rc3-fixes-implementation-critical-review.md` | `[x]` |
 | 37 | R1-F1 (Medium, non-blocking): `test_tts_fetch_tls.py` spies on `ssl.create_default_context` and asserts `cafile == certifi.where()` and that its context reaches `urlopen` (main and clone; test only, no rebuild) | `r1f1-mutant.txt`: real fetch passes, a no-`cafile` mutant fails by assertion at :70; `r1f1-green.txt` 29 passed; `r1f1-static.txt` ruff, format, pyright clean | `[x]` |
 | 38 | Commit and push the fixes on `main` at the rc.2 version (Mat: "commit fixes first and push them, not sure if we can rebuild since github actions are out of minutes"). The rc.3 version bump, a rebuild from `main`, the tag and the release wait for Mat; the VM-tested installer (`682d4d01…`) came from `e0c1d0b` plus these fixes and matches no `main` commit | `git log -1`; `git status -sb` shows `main` even with `origin/main` | `[x]` |
+
+## Release — 0.1.0-rc.3 (2026-11-09)
+
+> Mat: "go-ahead and do the 4 steps now" (bump on `main`, rebuild offline from it, check on the VM,
+> tag and publish). Receipts in `C:/Temp/av-kit/s58rc3/` unless named.
+
+| # | Task | Validation | Status |
+|---|---|---|---|
+| 39 | Bump every version surface to 0.1.0-rc.3 on `main`; commit `2331cf0` and push | `main-bump.txt`; `main-bump-check.txt`: `uv lock --check` ok, 40 passed, OpenAPI `--check` exit 0 | `[x]` |
+| 40 | Clone detached at `2331cf0`; offline build with `build-rc3.ps1`; smoke, pyz, asar, version info; build identity against `2331cf0` (round 5 receipts kept as `r5-*`) | `build.txt` exit 0; `build-record.json`: 340,379,394 B, SHA-256 `bb6b64932749c8ad86bc9adf9575d810fab1d700b067c4e2fff785dd3d496f8a`, build_inputs `28d1641e…`; `smoke-unpacked.txt` PASS at `0.1.0rc3`; `pyz-check.txt` 13 True, 0 False; `asar-check.txt` 4 True; `versioninfo5.txt` focalia.ai; `identity-2331cf0.txt` matches | `[x]` |
+| 41 | VM revert to `clean-zorivest`, deploy, guest hash; silent install, Apps entry, silent uninstall (no UAC: per-user) | `C:/Temp/zorivest/avkit-rc3-revert.txt`, `avkit-rc3-deploy.txt`, `avkit-rc3-guesthash.txt` (`bb6b6493…`), `avkit-rc3-installcheck.txt`: Apps entry `av-kit 0.1.0-rc.3` publisher focalia.ai, uninstall leaves no app, entry or updater copy | `[x]` |
+| 42 | Suites on `2331cf0` | `rel-py.txt` 1,447 passed, 1 failed (`test_evidence_contract_real_cli_selftests[validate_closeout_artifacts.py]`, a temp-path message the same as `full4-py.txt` and `tooling-selftest-main.txt`); `rel-ui.txt` 1,192 passed; `rel-mcp.txt` 479 passed | `[x]` |
+| 43 | Release notes `docs/releases/v0.1.0-rc.3.md` and build record `v0.1.0-rc.3-build-record.json`; docs commit; build identity on the docs commit; signed tag `v0.1.0-rc.3`; `gh release create` prerelease with the installer, `THIRD_PARTY_LICENSES.txt` and the rc.1 FFmpeg source archive | `identity-head.txt`; `gh release view v0.1.0-rc.3` | `[ ]` |
