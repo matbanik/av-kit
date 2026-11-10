@@ -18,7 +18,7 @@
         ],
         "effort_default": "medium",
         "forbid": [
-          "claude-fable-5-1"
+          "claude-fable-5-2"
         ],
         "inherit_allowed": false,
         "not_a_reviewer": true,
@@ -44,7 +44,7 @@
         ],
         "effort_default": "high",
         "forbid": [
-          "claude-fable-5-1"
+          "claude-fable-5-2"
         ]
       }
     },
@@ -105,7 +105,7 @@
         ],
         "effort_default": "medium",
         "forbid": [
-          "claude-fable-5-1"
+          "claude-fable-5-2"
         ],
         "inherit_allowed": false,
         "not_a_reviewer": true,
@@ -114,5 +114,5 @@
     }
   },
   "extends": "global",
-  "validated_against": "7097dc5bb0f07978436ece4ba6c4b1f8d2a10affcdfbc16bbfa968f826bf0437"
+  "validated_against": "d9f65813eaec94486a50460fc4fceee45515f77937de3a0efa15ba25cf5b8ca4"
 }

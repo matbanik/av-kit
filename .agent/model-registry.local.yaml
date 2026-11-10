@@ -4,7 +4,7 @@ classes:
     contract:
       capabilities: [orchestration, deep_reasoning, agentic_exec]
       effort_default: high
-      forbid: [claude-fable-5-1]
+      forbid: [claude-fable-5-2]
     bindings:
       cursor-task: {slug: cursor-grok-4.6, effort: xhigh}
       claude-p: {slug: claude-opus-5, effort: high}
@@ -15,7 +15,7 @@ classes:
       price_ceiling_band: high
       inherit_allowed: false
       not_a_reviewer: true
-      forbid: [claude-fable-5-1]
+      forbid: [claude-fable-5-2]
     bindings:
       cursor-task: {slug: cursor-grok-4.6, effort: xhigh}
       claude-code-agents: {slug: claude-sonnet-5-5, effort: medium}
@@ -26,7 +26,7 @@ classes:
       price_ceiling_band: high
       inherit_allowed: false
       not_a_reviewer: true
-      forbid: [claude-fable-5-1]
+      forbid: [claude-fable-5-2]
     bindings:
       cursor-task: {slug: composer-2.5-fast, effort: medium}
       claude-code-agents: {slug: claude-sonnet-5-5, effort: medium}
