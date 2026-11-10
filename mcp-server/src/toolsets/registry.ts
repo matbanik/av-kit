@@ -130,6 +130,7 @@ export const ACTION_INDEX: ActionRow[] = [
   // MEU-67: before download_asset, which stays the last row.
   { tool: "avkit_capture", action: "flatten", method: "POST", path: "/captures/{id}/flatten" },
   { tool: "avkit_capture", action: "revert", method: "POST", path: "/captures/{id}/revert" },
+  { tool: "avkit_capture", action: "crop", method: "POST", path: "/captures/{id}/crop" },
   // MEU-62: appended so the KEEP / Convert / Capture positions stay fixed.
   { tool: "avkit_models", action: "download_asset", method: "POST", path: "/models/download" },
 ];
@@ -386,7 +387,7 @@ export async function handleTool(tool: string, args: unknown, runtime?: ToolRunt
     : interpolatePath(row.path, record);
   const timeoutMs = (
     ((tool === "avkit_download" || tool === "avkit_transcript" || tool === "avkit_convert") && action === "add")
-    || (tool === "avkit_capture" && action === "capture")
+    || (tool === "avkit_capture" && (action === "capture" || action === "crop"))
   )
     ? ADD_TIMEOUT_MS
     : undefined;

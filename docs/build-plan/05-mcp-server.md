@@ -225,13 +225,17 @@ Canonical action table: [08-video-conversion.md](08-video-conversion.md) §MCP. 
 
 Canonical action table: [09-screenshot-capture.md](09-screenshot-capture.md) §MCP. Implement under MEU-38, not MEU-18.
 
-**Workflow:** `capture` or `capture_interactive` → `image` → `annotate`. To look closer: `get` → `image` with `x`, `y`, `width` and `height`.  
+**Workflow:** `capture` or `capture_interactive` → `image` → `annotate`. To look closer: `get` → `image` with `x`, `y`, `width` and `height`. To keep a region: `crop` with the same box writes it as a new shot; the source is never changed ([09 §Crop to a new shot](09-screenshot-capture.md#crop-to-new-shot)).  
 **Exception:** `image` returns a text item with the frame (source size, region, returned size, scale, clamped) and then the image bytes (vision), up to the cap in [§Image size limit (residual)](#image-size-limit-residual). A region and `max_edge` (64 to 2576) return a smaller image ([09 §Region view](09-screenshot-capture.md#region-view)). List/get stay path-only.
 
 | ImageMagick | av-kit |
 |---|---|
 | `magick identify -format "%wx%h" in.png` | `get` → `width`, `height` |
+| `magick in.png -crop 640x360+100+50 +repage out.png` | `crop {x:100, y:50, width:640, height:360}` (a new shot) |
 | `-crop 600x200+550+560 +repage -resize 200%` (to look) | `image {x:550, y:560, width:600, height:200}` (no file; 2× fits inside 1568) |
+| `-gravity South -crop 100%x35%+0+0 +repage` | `crop {unit:"fraction", x:0, y:0.65, width:1, height:0.35}` |
+| `-gravity center -crop 50%x50%+0+0 +repage` | `crop {unit:"fraction", x:0.25, y:0.25, width:0.5, height:0.5}` |
+| `-crop 640x360` (no offset: tiles) | Not expressible: `x` and `y` are required |
 
 ---
 
@@ -303,7 +307,7 @@ Publish on the MCP server so agents see it without this file. Minimum:
 | Client | The runner connects to the **built** server (`dist/index.js`) over stdio with the env `copyMcpConfig` writes (`AVKIT_API_TOKEN`, `AVKIT_APP_DATA`, with discovery through `backend.json`), using the SDK `Client`. It never imports toolset modules | Research-backed (SDK client; Inspector CLI was the alternative) |
 | Backend | An **isolated** backend: the runner spawns `python -m avkit_api` with a throwaway app-data folder, and every output-path setting is moved under it and re-read before any lifecycle call (ISOLATION_GUARD). It never attaches to the user's running app | Human-approved 2026-10-01 (H-2) |
 | Phase 1 Discovery | `tools/list` must serve the 8 `COMPOUND_TOOLS`; the action set is `_meta.action_descriptions`, compared with `ACTION_INDEX` in `registry.ts` and with the baseline. New, removed, ghost and unexpected entries are findings, and removed counts as a REGRESSION. A tool whose advertised `inputSchema` does not expose its actions is a finding | Zorivest §Phase 1; Local Canon `registry.ts` |
-| Phase 2 Lifecycles | download `add→apply_defaults→reorder→list/get→start→cancel→reset→start→pause→resume→stop→remove→clear`; transcript `add→list/get→reorder→start→pause→resume→stop→requeue→retry→compile→remove`; tts `voices→prepare→generate→get→cancel`; convert `add→list/get→start→cancel→reset→reorder→start→pause→resume→cancel→remove→clear`; capture `capture→list→get→image→annotate→flatten→revert→capture_interactive→list_requests→remove` (MEU-67: `annotate→flatten→revert`); models `available→download→downloaded→load→status→unload`; settings `get→set→set (restore)`. Each step asserts **observable state** through the REST API or the filesystem (job row, output file, sidecar), not the envelope | Zorivest §Phase 2; Local Canon G25 ([emerging-standards](../../.agent/docs/emerging-standards.md)) |
+| Phase 2 Lifecycles | download `add→apply_defaults→reorder→list/get→start→cancel→reset→start→pause→resume→stop→remove→clear`; transcript `add→list/get→reorder→start→pause→resume→stop→requeue→retry→compile→remove`; tts `voices→prepare→generate→get→cancel`; convert `add→list/get→start→cancel→reset→reorder→start→pause→resume→cancel→remove→clear`; capture `capture→list→get→image→annotate→flatten→revert→crop→capture_interactive→list_requests→remove` (MEU-67: `annotate→flatten→revert`; MEU-130: `crop`, a new shot whose source's bytes are checked unchanged); models `available→download→downloaded→load→status→unload`; settings `get→set→set (restore)`. Each step asserts **observable state** through the REST API or the filesystem (job row, output file, sidecar), not the envelope | Zorivest §Phase 2; Local Canon G25 ([emerging-standards](../../.agent/docs/emerging-standards.md)) |
 | Destructive | Every destructive action runs with `confirm: true` on disposable fixtures, **and** the audit proves the same call without `confirm`, and with `confirm: false`, is refused with the state unchanged (`destructive.ts`) | Spec §Destructive actions |
 | Phase 3 Functional | `avkit_health.liveness/dependencies`, `avkit_download.cookies_test/sabr_get/sabr_check/sabr_force/sabr_clear`, `avkit_convert.gpu/gpu_refresh`, `avkit_models.download_runtime`, with minimal valid params; record status / error / notes | Zorivest §Phase 3 |
 | Phase 4 Regression | PASS→FAIL = REGRESSION, FAIL→FAIL = known issue (id), FAIL→PASS = FIXED (baseline updated), new = added. Only an authoritative Windows run with clean cleanup and no regression may write the baseline | Zorivest §Phase 4 |
@@ -340,6 +344,12 @@ Publish on the MCP server so agents see it without this file. Minimum:
 > - `QUERY_GET_ONLY`: the region fields and `max_edge` go into the query string of the GET `image` call only; a POST `capture` region keeps them in its body.
 > - AC-128.18 to AC-128.24.
 > - Plan `docs/execution/plans/2026-11-08-capture-region-import/`.
+
+> **Delivered (Session 59).**
+> - `CROP_MCP`: `avkit_capture` gains `crop`, a `.strict()` member sent as `POST /captures/{id}/crop` with the box in the body and `ADD_TIMEOUT_MS`. It is not destructive and asks no confirmation. `ACTION_INDEX` has 71 rows, and `avkit_capture` 11 actions.
+> - `BASELINE_PENDING`: the committed live-audit baseline doesn't hold `avkit_capture.crop` until the next authoritative audit run, so AC-68.5 accepts exactly that missing key (known issue `MCP-AUDIT-BASELINE-PENDING-CROP`). The audit plan's `capture.crop` step runs after `capture.revert`.
+> - AC-130.23 to AC-130.28.
+> - Plan `docs/execution/plans/2026-11-08-capture-crop-copy/`.
 
 ## What this layer must not do
 

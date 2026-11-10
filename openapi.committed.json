@@ -137,6 +137,192 @@
         "title": "CaptureCompleteIn",
         "type": "object"
       },
+      "CaptureCropAppliedOut": {
+        "additionalProperties": false,
+        "description": "The box that was cut, in source px after clamping.",
+        "properties": {
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "title": "CaptureCropAppliedOut",
+        "type": "object"
+      },
+      "CaptureCropIn": {
+        "additionalProperties": false,
+        "description": "POST /captures/{id}/crop body (MEU-130, CROP_REQUEST).\n\nThe box has no bounds here: the service resolves it with REGION_RESOLVE, whose messages\nare the contract. `name` is checked by CROP_NAME.",
+        "properties": {
+          "height": {
+            "title": "Height",
+            "type": "number"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "px",
+                  "fraction"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "width": {
+            "title": "Width",
+            "type": "number"
+          },
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "title": "CaptureCropIn",
+        "type": "object"
+      },
+      "CaptureCropMarksOut": {
+        "additionalProperties": false,
+        "description": "How the source's saved marks travelled: kept, clipped or dropped (MARK_CARRY).",
+        "properties": {
+          "clipped": {
+            "title": "Clipped",
+            "type": "integer"
+          },
+          "dropped": {
+            "title": "Dropped",
+            "type": "integer"
+          },
+          "kept": {
+            "title": "Kept",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kept",
+          "clipped",
+          "dropped"
+        ],
+        "title": "CaptureCropMarksOut",
+        "type": "object"
+      },
+      "CaptureCropOut": {
+        "additionalProperties": false,
+        "description": "POST /captures/{id}/crop 201 (CROP_RESPONSE). No image bytes.",
+        "properties": {
+          "applied": {
+            "$ref": "#/components/schemas/CaptureCropAppliedOut"
+          },
+          "clamped": {
+            "title": "Clamped",
+            "type": "boolean"
+          },
+          "item": {
+            "$ref": "#/components/schemas/CaptureShotOut"
+          },
+          "marks": {
+            "$ref": "#/components/schemas/CaptureCropMarksOut"
+          },
+          "requested": {
+            "$ref": "#/components/schemas/CaptureCropRequestedOut"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "source_id",
+          "requested",
+          "applied",
+          "clamped",
+          "marks"
+        ],
+        "title": "CaptureCropOut",
+        "type": "object"
+      },
+      "CaptureCropRequestedOut": {
+        "additionalProperties": false,
+        "description": "The box as sent, with `unit` defaulting to px.",
+        "properties": {
+          "height": {
+            "title": "Height",
+            "type": "number"
+          },
+          "unit": {
+            "enum": [
+              "px",
+              "fraction"
+            ],
+            "title": "Unit",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "number"
+          },
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height",
+          "unit"
+        ],
+        "title": "CaptureCropRequestedOut",
+        "type": "object"
+      },
       "CaptureFullscreenIn": {
         "additionalProperties": false,
         "description": "POST /captures body for mode=fullscreen.",
@@ -3780,6 +3966,61 @@
           }
         ],
         "summary": "Annotate Capture"
+      }
+    },
+    "/api/v1/captures/{id}/crop": {
+      "post": {
+        "description": "Cut a region into a new PNG shot (source `Crop`); the source is never changed.",
+        "operationId": "crop_capture_api_v1_captures__id__crop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureCropIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureCropOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Crop Capture"
       }
     },
     "/api/v1/captures/{id}/flatten": {

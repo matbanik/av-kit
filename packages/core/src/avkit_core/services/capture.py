@@ -27,6 +27,7 @@ from avkit_core.domain.capture import (
     BBox,
     CaptureRequest,
     CaptureShot,
+    CropResult,
     EraserAnnotation,
     HighlightAnnotation,
     ImageProbe,
@@ -35,6 +36,8 @@ from avkit_core.domain.capture import (
     RegionUnit,
     TextAnnotation,
     ViewFrame,
+    clip_mark,
+    resolve_region,
     view_frame,
 )
 from avkit_core.domain.enums import AnnotationType, CaptureRequestStatus, CaptureSource
@@ -92,6 +95,58 @@ CONVERT_STEM_TAG = "-converted"
 # The API is a single uvicorn process; this lock is not reentrant, so a held section never calls
 # another locked public method.
 CAPTURE_FILE_LOCK = threading.Lock()
+
+# CROP_NAME (MEU-130, D-483): a crop's file name. A given `name` keeps these characters only.
+CROP_NAME_MAX = 80
+CROP_STEM_TAG = "-crop"
+CROP_RESERVED_PREFIX = "crop_"
+_CROP_NAME_DROP = re.compile(r"[^A-Za-z0-9 ._-]")
+_CROP_NAME_STRIP = " ._-"
+CROP_NAME_LENGTH = f"name must be 1 to {CROP_NAME_MAX} characters"
+CROP_NAME_UNUSABLE = (
+    "name has no usable characters; use letters, digits, space, dot, underscore or hyphen"
+)
+CROP_NAME_ANNOTATED = "name may not end in .annotated"
+# A crop stem is taken when an inbox-root entry is the stem plus one of these, case-folded.
+CROP_TAKEN_SUFFIXES: tuple[str, ...] = (
+    *SCAN_EXTENSIONS,
+    SIDECAR_SUFFIX,
+    *ANNOTATED_SUFFIXES,
+    f".png{TMP_SUFFIX}",
+)
+# CROP_CLEANUP (D-476): raised before the crop is cut, these are refusals and pass unchanged.
+CROP_REFUSALS: tuple[type[Exception], ...] = (
+    ValidationError,
+    NotFoundError,
+    ConflictError,
+    AnnotationValidationError,
+    InboxPathError,
+)
+
+
+def crop_name_stem(name: str) -> str:
+    """CROP_NAME: a caller's `name` made into a crop stem, or a fixed 422 that never repeats it."""
+    if not 1 <= len(name) <= CROP_NAME_MAX:
+        raise ValidationError(CROP_NAME_LENGTH)
+    text = _CROP_NAME_DROP.sub("", name).strip(_CROP_NAME_STRIP)
+    if text.lower().endswith(FLATTEN_PNG_SUFFIX):
+        text = text[: -len(FLATTEN_PNG_SUFFIX)].strip(_CROP_NAME_STRIP)
+    if text == "":
+        raise ValidationError(CROP_NAME_UNUSABLE)
+    if len(text) > CROP_NAME_MAX:
+        raise ValidationError(CROP_NAME_LENGTH)
+    if text.lower().endswith(".annotated"):
+        raise ValidationError(CROP_NAME_ANNOTATED)
+    # Windows reserves CON, NUL and the rest with any extension, so the part before a dot counts.
+    if text.split(".", 1)[0].rstrip(" ").upper() in WINDOWS_RESERVED_STEMS:
+        return f"{CROP_RESERVED_PREFIX}{text}"
+    return text
+
+
+def crop_default_stem(source_stem: str) -> str:
+    """CROP_NAME: `{stem}-crop` from the source's stem, cut to IMPORT_STEM_MAX characters."""
+    stem = source_stem[:IMPORT_STEM_MAX].strip(_CROP_NAME_STRIP)
+    return f"{stem}{CROP_STEM_TAG}" if stem else CROP_STEM_TAG.lstrip("-")
 
 
 def resolve_backup_dir(raw: str, inbox: Path) -> Path:
@@ -828,6 +883,154 @@ class CaptureService:
                 uow.capture_shots.save(updated)
             log.info("capture.reverted", shot_id=shot.id, backup=str(source))
             return updated
+
+    def crop_shot(
+        self,
+        shot_id: str,
+        *,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        unit: RegionUnit | None = None,
+        name: str | None = None,
+    ) -> CropResult:
+        """CROP_READ to CROP_CLEANUP: cut a region of a shot into a new PNG shot (MEU-130).
+
+        The source's file, sidecar and row are only read. Saved marks travel through
+        `clip_mark` (MARK_CARRY) and are baked onto the crop (CROP_BAKE). A refusal names no
+        path; any other failure removes only what this call wrote and raises the fixed 503
+        (D-476, D-490).
+        """
+        chosen = None if name is None else crop_name_stem(name)
+        output_format = self._annotated_format()
+        inbox = self._inbox()
+        tmp: Path | None = None
+        crop: Path | None = None
+        cut = False
+        moved = False
+        with CAPTURE_FILE_LOCK:
+            try:
+                with self._uow_factory() as uow:
+                    shot = uow.capture_shots.get(shot_id)
+                    if shot is None:
+                        raise NotFoundError(f"capture shot {shot_id} not found")
+                    marks = self._saved_marks(shot.original_path)
+                    if not all(math.isfinite(value) for value in (x, y, width, height)):
+                        raise ValidationError("x, y, width and height must be finite numbers")
+                    left, top, crop_width, crop_height, clamped = resolve_region(
+                        shot.width, shot.height, x, y, width, height, unit or "px"
+                    )
+                    carried: list[Annotation] = []
+                    counts = {"kept": 0, "clipped": 0, "dropped": 0}
+                    for mark in marks:
+                        clipped_mark, carry = clip_mark(mark, left, top, crop_width, crop_height)
+                        counts[carry] += 1
+                        if clipped_mark is not None:
+                            carried.append(clipped_mark)
+                    self._annotate.ensure_dir(inbox)
+                    stem = chosen if chosen is not None else crop_default_stem(
+                        shot.original_path.stem
+                    )
+                    crop = self._crop_dest(uow, inbox, stem)
+                    with crop.with_name(crop.name + TMP_SUFFIX).open("xb") as handle:
+                        tmp = Path(handle.name)
+                    self._annotate.crop(
+                        shot.original_path,
+                        (left, top, crop_width, crop_height),
+                        (shot.width, shot.height),
+                        tmp,
+                    )
+                    cut = True
+                    os.replace(tmp, crop)
+                    moved = True
+                    # The name is no longer this call's once it is moved; never remove it later.
+                    tmp = None
+                    probe = self._annotate.probe(crop)
+                    now = self._now()
+                    new = self._upsert_shot(uow, crop, probe, now, CaptureSource.Crop)
+                    if carried:
+                        sidecar = _sidecar_for(crop)
+                        sidecar.write_text(
+                            json.dumps(
+                                {
+                                    "version": SIDECAR_VERSION,
+                                    "annotations": annotations_to_wire(carried),
+                                }
+                            ),
+                            encoding="utf-8",
+                        )
+                        annotated = annotated_path_for(crop, output_format)
+                        self._annotate.bake(crop, carried, annotated, output_format)
+                        new = replace(
+                            new, annotated_path=annotated, sidecar_path=sidecar, updated_at=now
+                        )
+                        uow.capture_shots.save(new)
+            except Exception as exc:
+                self._discard(tmp)
+                if moved and crop is not None:
+                    # CROP_NAME found each of these free under this hold, so each is the crop's.
+                    for path in (crop, _sidecar_for(crop), *_annotated_siblings(crop)):
+                        self._discard(path)
+                if not cut and isinstance(exc, CROP_REFUSALS):
+                    raise
+                raise CaptureFailedError("the crop could not be written") from exc
+        return CropResult(
+            shot=new,
+            source_id=shot.id,
+            requested=(x, y, width, height, unit or "px"),
+            applied=(left, top, crop_width, crop_height),
+            clamped=clamped,
+            kept=counts["kept"],
+            clipped=counts["clipped"],
+            dropped=counts["dropped"],
+        )
+
+    @staticmethod
+    def _saved_marks(original: Path) -> list[Annotation]:
+        """CROP_READ: the source's saved marks. A missing sidecar is []; a malformed one is 422."""
+        sidecar = _sidecar_for(original)
+        if not _is_file(sidecar):
+            return []
+        try:
+            payload = json.loads(sidecar.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise AnnotationValidationError("sidecar is malformed") from exc
+        return annotations_from_sidecar(payload)
+
+    @staticmethod
+    def _crop_dest(uow: UnitOfWork, inbox: Path, stem: str) -> Path:
+        """CROP_NAME: `{stem}.png`, then `{stem}_2.png` … until the stem is free.
+
+        A stem is taken when an inbox-root entry case-folds to it plus any suffix in
+        CROP_TAKEN_SUFFIXES, or a row in the inbox root holds its PNG name. A name whose
+        temporary file is in the inbox root is taken too, so the crop never writes over
+        another writer's `NAME.avkit-tmp`.
+        """
+        taken: set[str] = set()
+        for child in inbox.iterdir():
+            entry = child.name.casefold()
+            taken.add(entry)
+            if entry.endswith(TMP_SUFFIX):
+                taken.add(entry.removesuffix(TMP_SUFFIX))
+        taken |= {
+            shot.original_path.name.casefold()
+            for shot in uow.capture_shots.list()
+            if shot.original_path.parent == inbox
+        }
+        candidate = stem
+        index = 2
+        while any(f"{candidate}{suffix}".casefold() in taken for suffix in CROP_TAKEN_SUFFIXES):
+            candidate = f"{stem}_{index}"
+            index += 1
+        return inbox / f"{candidate}{FLATTEN_PNG_SUFFIX}"
+
+    def _discard(self, path: Path | None) -> None:
+        """Remove a file this call wrote; a failed removal can't replace the fixed 503."""
+        try:
+            self._unlink_if_file(path)
+        except OSError:
+            pass
 
     def _flatten_png_locked(
         self,

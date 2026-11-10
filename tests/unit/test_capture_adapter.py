@@ -1445,3 +1445,294 @@ def test_ac_128_10_view_maps_decode_and_read_faults(
     with pytest.raises(InboxPathError) as refused:
         adapter.view(path, frame)
     assert str(refused.value) == "the image could not be opened"
+
+# MEU-130 capture-crop-copy (Session 59): the adapter's crop. Every image is built with Pillow
+# under tmp_path, and the box is always (10, 8, 20, 16) on a 64x48 source.
+CROP_BOX = (10, 8, 20, 16)
+CROP_PIL_BOX = (10, 8, 30, 24)
+CROP_CHANGED = "the image file changed since the captures were listed; list them again and retry"
+CROP_MODE_CASES = ("1", "L", "LA", "P", "RGB", "RGBA", "I;16", "jpg", "webp")
+
+
+def _crop_source(case: str, folder: Path) -> Path:
+    """A 64x48 source for AC-130.9 in the mode or format `case` names."""
+    from PIL import Image
+
+    base = _distinct_rgb()
+    alpha = Image.new("L", VIEW_SIZE)
+    width, height = VIEW_SIZE
+    alpha.putdata([(x * 3 + y * 2) % 256 for y in range(height) for x in range(width)])
+    if case == "jpg":
+        path = folder / "source.jpg"
+        base.save(path, format="JPEG", quality=90)
+        return path
+    if case == "webp":
+        path = folder / "source.webp"
+        rgba = base.convert("RGBA")
+        rgba.putalpha(alpha)
+        rgba.save(path, format="WEBP", quality=90)
+        return path
+    path = folder / "source.png"
+    if case == "P":
+        base.quantize(16).save(path, format="PNG", transparency=3)
+    elif case == "I;16":
+        deep = Image.new("I;16", VIEW_SIZE)
+        deep.putdata([x * 1000 + y for y in range(height) for x in range(width)])
+        deep.save(path, format="PNG")
+    elif case in ("LA", "RGBA"):
+        image = base.convert(case)
+        image.putalpha(alpha)
+        image.save(path, format="PNG")
+    else:
+        base.convert(case).save(path, format="PNG")
+    return path
+
+
+@pytest.mark.parametrize("ac_id", ["AC-130.8"], ids=["AC-130.8"])
+@pytest.mark.unit
+def test_ac_130_8_crop_writes_the_box_exactly(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-130.8"
+    from PIL import Image
+
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    source = tmp_path / "source.png"
+    image = _distinct_rgb()
+    image.save(source)
+    out = tmp_path / "crop.png"
+    probe = CaptureAdapter().crop(source, CROP_BOX, VIEW_SIZE, out)
+    assert (probe.width, probe.height) == (20, 16)
+    assert out.is_file()
+    assert probe.file_size == out.stat().st_size
+    with Image.open(out) as cropped:
+        assert cropped.format == "PNG"
+        cropped.load()
+        assert (cropped.mode, cropped.size) == ("RGB", (20, 16))
+        assert cropped.tobytes() == image.crop(CROP_PIL_BOX).tobytes()
+        for x, y in ((0, 0), (19, 0), (0, 15), (19, 15), (10, 8)):
+            assert cropped.getpixel((x, y)) == image.getpixel((10 + x, 8 + y)), (x, y)
+
+
+@pytest.mark.parametrize(
+    "case", CROP_MODE_CASES, ids=[case.replace(";", "") for case in CROP_MODE_CASES]
+)
+@pytest.mark.parametrize("ac_id", ["AC-130.9"], ids=["AC-130.9"])
+@pytest.mark.unit
+def test_ac_130_9_crop_keeps_the_mode(ac_id: str, case: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-130.9"
+    from PIL import Image
+
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    source = _crop_source(case, tmp_path)
+    with Image.open(source) as opened:
+        opened.load()
+        decoded = opened.copy()
+    want_mode = {"jpg": "RGB", "webp": "RGBA"}.get(case, case)
+    assert decoded.mode == want_mode, (case, decoded.mode)
+    out = tmp_path / "crop.png"
+    CaptureAdapter().crop(source, CROP_BOX, VIEW_SIZE, out)
+    assert out.is_file()
+    with Image.open(out) as cropped:
+        assert cropped.format == "PNG"
+        cropped.load()
+        assert (cropped.mode, cropped.size) == (want_mode, (20, 16))
+        want = decoded.crop(CROP_PIL_BOX)
+        assert cropped.tobytes() == want.tobytes()
+        if case == "P":
+            assert cropped.getpalette() == decoded.getpalette()
+            assert cropped.info.get("transparency") == 3
+
+
+@pytest.mark.parametrize("ac_id", ["AC-130.10"], ids=["AC-130.10"])
+@pytest.mark.unit
+def test_ac_130_10_crop_keeps_icc_and_drops_the_rest(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-130.10"
+    from PIL import Image, ImageCms, PngImagePlugin
+
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    icc = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes()
+    exif = Image.Exif()
+    exif[0x010F] = "private maker"
+    text = PngImagePlugin.PngInfo()
+    text.add_text("Comment", "private comment")
+    source = tmp_path / "source.png"
+    _distinct_rgb().save(source, format="PNG", icc_profile=icc, exif=exif, pnginfo=text)
+    with Image.open(source) as opened:
+        assert opened.info.get("icc_profile") == icc
+        assert "exif" in opened.info
+        assert opened.text == {"Comment": "private comment"}  # type: ignore[attr-defined]
+    out = tmp_path / "crop.png"
+    CaptureAdapter().crop(source, CROP_BOX, VIEW_SIZE, out)
+    assert out.is_file()
+    with Image.open(out) as cropped:
+        cropped.load()
+        assert cropped.info.get("icc_profile") == icc
+        assert "exif" not in cropped.info
+        assert dict(cropped.getexif()) == {}
+        assert cropped.text == {}  # type: ignore[attr-defined]
+        assert "Comment" not in cropped.info
+
+
+def _s15(value: float) -> bytes:
+    import struct
+
+    return struct.pack(">i", round(value * 65536))
+
+
+def _cmyk_icc() -> bytes:
+    """A minimal ICC v2 CMYK profile built from bytes: Lab PCS and a 2-point lut16 A2B0.
+
+    Each CLUT corner is the plain RGB of that ink mix, so it differs from Pillow's plain
+    CMYK conversion in the mid-tones. The test reads no system profile.
+    """
+    import struct
+
+    from PIL import Image, ImageCms
+
+    to_lab = ImageCms.buildTransform(
+        ImageCms.createProfile("sRGB"), ImageCms.createProfile("LAB"), "RGB", "LAB"
+    )
+    corners = [
+        tuple(round(255 * (1 - ink) * (1 - k)) for ink in (c, m, y))
+        for c in (0, 1)
+        for m in (0, 1)
+        for y in (0, 1)
+        for k in (0, 1)
+    ]
+    strip = Image.new("RGB", (len(corners), 1))
+    strip.putdata(corners)
+    raw = ImageCms.applyTransform(strip, to_lab)
+    assert raw is not None
+    clut = bytes(
+        byte for value in raw.tobytes() for byte in struct.pack(">H", value * 256)
+    )
+    ramp = struct.pack(">2H", 0, 0xFFFF)
+    lut = (
+        b"mft2"
+        + bytes(4)
+        + bytes([4, 3, 2, 0])
+        + b"".join(_s15(v) for v in (1, 0, 0, 0, 1, 0, 0, 0, 1))
+        + struct.pack(">2H", 2, 2)
+        + ramp * 4
+        + clut
+        + ramp * 3
+    )
+    size = 128 + 4 + 12 + len(lut)
+    header = (
+        struct.pack(">I", size)
+        + bytes(4)
+        + struct.pack(">I", 0x02100000)
+        + b"prtrCMYKLab "
+        + bytes(12)
+        + b"acsp"
+        + bytes(28)
+        + _s15(0.9642)
+        + _s15(1.0)
+        + _s15(0.8249)
+        + bytes(48)
+    )
+    assert len(header) == 128
+    return header + struct.pack(">I", 1) + b"A2B0" + struct.pack(">2I", 144, len(lut)) + lut
+
+
+def _cmyk_jpeg(path: Path, icc: bytes | None) -> None:
+    from PIL import Image
+
+    image = Image.new("CMYK", (64, 48))
+    image.putdata(
+        [
+            ((x * 4) % 256, (y * 5) % 256, ((x + y) * 3) % 256, 40)
+            for y in range(48)
+            for x in range(64)
+        ]
+    )
+    extra = {} if icc is None else {"icc_profile": icc}
+    image.save(path, format="JPEG", quality=95, **extra)
+
+
+@pytest.mark.parametrize("ac_id", ["AC-130.10"], ids=["AC-130.10"])
+@pytest.mark.unit
+def test_ac_130_10_cmyk_icc_to_srgb(ac_id: str, tmp_path: Path) -> None:
+    """Round 1 F1, D-506 A: a CMYK source converts through its profile; the crop is sRGB."""
+    assert ac_id == "AC-130.10"
+    import io
+
+    from PIL import Image, ImageCms
+
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    icc = _cmyk_icc()
+    srgb = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB"))
+    source = tmp_path / "source.jpg"
+    _cmyk_jpeg(source, icc)
+    with Image.open(source) as opened:
+        opened.load()
+        assert (opened.mode, opened.info.get("icc_profile")) == ("CMYK", icc)
+        part = opened.crop(CROP_PIL_BOX)
+    managed = ImageCms.profileToProfile(
+        part, ImageCms.ImageCmsProfile(io.BytesIO(icc)), srgb, outputMode="RGB"
+    )
+    assert managed is not None
+    assert managed.tobytes() != part.convert("RGB").tobytes()
+    out = tmp_path / "crop.png"
+    CaptureAdapter().crop(source, CROP_BOX, VIEW_SIZE, out)
+    with Image.open(out) as cropped:
+        cropped.load()
+        assert (cropped.mode, cropped.size) == ("RGB", (20, 16))
+        assert cropped.info.get("icc_profile") == srgb.tobytes()
+        assert cropped.tobytes() == managed.tobytes()
+
+
+@pytest.mark.parametrize("icc", [None, b"not a profile"], ids=["none", "junk"])
+@pytest.mark.parametrize("ac_id", ["AC-130.10"], ids=["AC-130.10"])
+@pytest.mark.unit
+def test_ac_130_10_cmyk_plain_fallback(ac_id: str, icc: bytes | None, tmp_path: Path) -> None:
+    """D-506 A: with no profile, or one that builds no transform, plain RGB and no profile."""
+    assert ac_id == "AC-130.10"
+    from PIL import Image
+
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    source = tmp_path / "source.jpg"
+    _cmyk_jpeg(source, icc)
+    with Image.open(source) as opened:
+        opened.load()
+        assert opened.mode == "CMYK"
+        assert opened.info.get("icc_profile") == icc
+        want = opened.crop(CROP_PIL_BOX).convert("RGB")
+    out = tmp_path / "crop.png"
+    CaptureAdapter().crop(source, CROP_BOX, VIEW_SIZE, out)
+    with Image.open(out) as cropped:
+        cropped.load()
+        assert cropped.mode == "RGB"
+        assert "icc_profile" not in cropped.info
+        assert cropped.tobytes() == want.tobytes()
+
+
+@pytest.mark.parametrize("ac_id", ["AC-130.11"], ids=["AC-130.11"])
+@pytest.mark.unit
+def test_ac_130_11_crop_refusals_name_no_path(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-130.11"
+    from avkit_core.domain.errors import ConflictError, InboxPathError
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    adapter = CaptureAdapter()
+    folder = tmp_path / "private-folder"
+    folder.mkdir()
+    source = folder / "secret-shot.png"
+    _distinct_rgb().save(source)
+    out = folder / "secret-crop.png"
+    with pytest.raises(ConflictError) as changed:
+        adapter.crop(source, CROP_BOX, (100, 80), out)
+    assert str(changed.value) == CROP_CHANGED
+    for part in (str(tmp_path), folder.name, source.name, out.name):
+        assert part not in str(changed.value), part
+    assert not out.exists()
+    text = folder / "secret-text.png"
+    text.write_text("not an image at all", encoding="utf-8")
+    with pytest.raises(InboxPathError) as unopened:
+        adapter.crop(text, CROP_BOX, VIEW_SIZE, out)
+    assert str(unopened.value) == "the image could not be opened"
+    assert not out.exists()

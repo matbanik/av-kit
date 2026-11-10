@@ -279,7 +279,7 @@ Enums live in `domain/enums.py` (MEU-34 extends MEU-2). Do **not** add `"capture
 
 | Enum | Values | Persist |
 |------|--------|---------|
-| `CaptureSource` | `Hotkey`, `Gui`, `McpFullscreen`, `McpRegion`, `McpInteractive`, `Scan`, `Import` | yes (`.name`) |
+| `CaptureSource` | `Hotkey`, `Gui`, `McpFullscreen`, `McpRegion`, `McpInteractive`, `Scan`, `Import`, `Crop` (MEU-130) | yes (`.name`) |
 | `CaptureRequestStatus` | `Pending`, `Completed`, `Cancelled`, `Expired` | yes |
 | `AnnotationType` | `Arrow`, `Rect`, `Highlight`, `Text`, `Pixelate`, `Eraser` | sidecar JSON + API (wire lowercase) |
 
@@ -583,6 +583,7 @@ New compound tool `avkit_capture` (M2 parity with REST). No second URL space. Zo
 | `remove` | `DELETE /captures/{id}` |
 | `flatten` | `POST /captures/{id}/flatten` |
 | `revert` | `POST /captures/{id}/revert` |
+| `crop` | `POST /captures/{id}/crop` with `x`, `y`, `width`, `height` and optional `unit` and `name` in the body; writes a new shot and is not destructive ([§Crop to a new shot](#crop-to-new-shot)) |
 
 Do not add a second MCP server inside Electron. Do not call `mss` from `mcp-server/`.
 
@@ -1042,10 +1043,19 @@ Five residual MEUs from the capture crop design (`_inspiration/capture-crop/desi
 | Writes | A new shot. The source file, sidecar and bake are not changed. No `confirm`, because nothing is overwritten | Human-approved 2026-11-08 design D-1 |
 | Pixels | The original's pixels exactly, with no resampling, saved as PNG with metadata stripped, in the inbox root | Local Canon design D-8; AC-40.26 (the exact-crop bar) |
 | Name | `{stem}-crop.png`, then `_2` and on. An optional `name` is sanitized to `[A-Za-z0-9 ._-]`, 1 to 80 characters, and becomes `{name}.png` with the same suffix rule. Names are checked against files and catalog rows under `CAPTURE_FILE_LOCK` | Local Canon design D-8 (L-9) |
-| Source | New `CaptureSource.Crop`, wire `crop` | Local Canon design L-12 |
-| Marks | The source's saved marks are carried over, moved by `(-applied.x, -applied.y)`. Box, highlight, pixelate and eraser marks are intersected with the crop and dropped when empty. An arrow is kept when both ends are inside, clipped with Liang–Barsky otherwise, and dropped when no part is inside. A text mark is kept when its anchor is inside. The crop gets its own sidecar and bake | Local Canon design D-7 |
+| Source | New `CaptureSource.Crop`, reported as `Crop`, with no register wire value: a crop never arrives through register, so a wire value would be unused (D-484 corrects the design's `wire crop`) | Local Canon design L-12; D-484 |
+| Marks | The source's saved marks are carried over, moved by `(-applied.x, -applied.y)`. Highlight, pixelate and eraser marks are intersected with the crop and dropped when empty. A rect is clipped on its inclusive outline, because the bake draws its right and bottom stroke on `x + width` and `y + height` (D-486). An arrow is kept when both ends are inside, clipped with Liang–Barsky otherwise, with its new ends rounded half up and clamped, and dropped when no part is inside or it rounds to zero length; a clipped arrow never reverses (D-487). A text mark is kept when its anchor is inside. The crop gets its own sidecar and bake | Local Canon design D-7; D-486, D-487 |
 | Response | 201 `{item, source_id, requested, applied, clamped, marks: {kept, clipped, dropped}}`, with paths and no image bytes | Research-backed design §6.3 (R-6, R-8) |
-| Tests | Pixel-exact corners and centre on a pattern; no black pixel when a box runs past each edge of an all-white image; two crops give `-crop` and `-crop_2`; a scan that registers the file first keeps `Crop`; source bytes unchanged; each known bake difference in design §6.5 asserted; no source pixel left unchanged inside a clipped pixelate; the Pillow and SVG parity suites on clipped marks | Local Canon design §11 |
+| Tests | Pixel-exact corners and centre on a pattern; no black pixel when a box runs past each edge of an all-white image; two crops give `-crop` and `-crop_2`; a scan that registers the file first keeps `Crop`; source bytes unchanged; the known bake differences, as D-486 corrects design §6.5: a rect cut on any side gets a stroke along the crop edge, a pixelate cut on its left or top re-aligns its block grid and one cut on its right or bottom averages its partial blocks over the pixels inside, an eraser cut by the crop samples its fill from the ring inside the crop, a clipped arrow draws its head at the crop edge, and a text mark whose anchor is outside is dropped even when its glyphs reach inside; no source pixel left unchanged inside a clipped pixelate; the Pillow and SVG parity suites on clipped marks, through four crop cases in the region fixture (D-493) | Local Canon design §11; D-486, D-493 |
+
+> **Delivered (Session 59).**
+> - `CaptureSource.Crop` (`CROP_SOURCE`) and `POST /captures/{id}/crop` with `CaptureCropIn`, whose box goes through Region view's `resolve_region` (`CROP_REQUEST`); MCP `avkit_capture` `crop` (`CROP_MCP`).
+> - `CaptureService.crop_shot` reads the row and the source's sidecar without changing either (`CROP_READ`). The adapter's `crop` cuts the original's pixels with no resampling into a PNG with no metadata but its ICC profile (`CROP_PIXELS`); a CMYK, YCbCr or LAB source converts through its profile to sRGB and carries the sRGB profile, or plainly with none when it has no usable profile (D-506). The name is `{stem}-crop.png` or a sanitized `name`, made unique against inbox files, temporary files and rows (`CROP_NAME`).
+> - `clip_mark` moves and clips each saved mark (`MARK_CARRY`, `MARK_CLIP_BOX`, `MARK_CLIP_ARROW`, `MARK_CLIP_TEXT`), and the carried marks are baked onto the crop with its own sidecar (`CROP_BAKE`). The crop runs under one `CAPTURE_FILE_LOCK` hold, and a failure removes only what the call wrote and answers 503 (`CROP_CLEANUP`). The 201 reports `requested`, `applied`, `clamped` and the mark counts (`CROP_RESPONSE`). No new log line reaches the Console (`NO_RAW_CONSOLE`).
+> - The live audit plan has a `capture.crop` step. The committed audit baseline doesn't hold `avkit_capture.crop` yet (`BASELINE_PENDING`, known issue `MCP-AUDIT-BASELINE-PENDING-CROP`).
+> - AC-130.1 to AC-130.29.
+> - Gate: the H1-2 `session-gate.ps1` record in the Session 59 handoff.
+> - Plan `docs/execution/plans/2026-11-08-capture-crop-copy/`.
 
 <a id="crop-tool"></a>
 

@@ -53,7 +53,8 @@ describe("MEU-32 avkit_convert", () => {
   it("AC-32.1 ACTION_INDEX_AFTER keeps first ACTION_INDEX_KEEP rows", () => {
     // TA-9 (Session 27, MEU-62): +1 avkit_models.download_asset, appended.
     // TA-1 (Session 30, MEU-67): +avkit_capture.flatten, +avkit_capture.revert.
-    expect(ACTION_INDEX).toHaveLength(70);
+    // MEU-130 (Session 59): +avkit_capture.crop after revert.
+    expect(ACTION_INDEX).toHaveLength(71);
     expect([...COMPOUND_TOOLS]).toEqual([
       "avkit_download",
       "avkit_transcript",

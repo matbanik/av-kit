@@ -201,3 +201,56 @@ class CaptureRequestListOut(ApiModel):
     """Interactive request catalog."""
 
     items: list[CaptureRequestOut]
+
+
+class CaptureCropIn(ApiModel):
+    """POST /captures/{id}/crop body (MEU-130, CROP_REQUEST).
+
+    The box has no bounds here: the service resolves it with REGION_RESOLVE, whose messages
+    are the contract. `name` is checked by CROP_NAME.
+    """
+
+    x: float
+    y: float
+    width: float
+    height: float
+    unit: Literal["px", "fraction"] | None = None
+    name: str | None = None
+
+
+class CaptureCropRequestedOut(ApiModel):
+    """The box as sent, with `unit` defaulting to px."""
+
+    x: float
+    y: float
+    width: float
+    height: float
+    unit: Literal["px", "fraction"]
+
+
+class CaptureCropAppliedOut(ApiModel):
+    """The box that was cut, in source px after clamping."""
+
+    x: int
+    y: int
+    width: int
+    height: int
+
+
+class CaptureCropMarksOut(ApiModel):
+    """How the source's saved marks travelled: kept, clipped or dropped (MARK_CARRY)."""
+
+    kept: int
+    clipped: int
+    dropped: int
+
+
+class CaptureCropOut(ApiModel):
+    """POST /captures/{id}/crop 201 (CROP_RESPONSE). No image bytes."""
+
+    item: CaptureShotOut
+    source_id: str
+    requested: CaptureCropRequestedOut
+    applied: CaptureCropAppliedOut
+    clamped: bool
+    marks: CaptureCropMarksOut

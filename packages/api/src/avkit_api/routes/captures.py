@@ -16,6 +16,11 @@ from avkit_api.schemas.captures import (
     ArrowAnnotationIn,
     CaptureCompleteIn,
     CaptureCreateIn,
+    CaptureCropAppliedOut,
+    CaptureCropIn,
+    CaptureCropMarksOut,
+    CaptureCropOut,
+    CaptureCropRequestedOut,
     CaptureFullscreenIn,
     CaptureImportIn,
     CaptureItemOut,
@@ -387,6 +392,38 @@ def revert_capture(
     """Restore the newest backup over the original; the backup file is kept."""
     del body
     return _detail_for(capture, capture.revert(id))
+
+
+@router.post("/{id}/crop", status_code=201, response_model=CaptureCropOut)
+def crop_capture(
+    id: str,
+    body: CaptureCropIn,
+    capture: Any = Depends(get_capture_service),
+) -> CaptureCropOut:
+    """Cut a region into a new PNG shot (source `Crop`); the source is never changed."""
+    result = capture.crop_shot(
+        id,
+        x=body.x,
+        y=body.y,
+        width=body.width,
+        height=body.height,
+        unit=body.unit,
+        name=body.name,
+    )
+    req_x, req_y, req_width, req_height, req_unit = result.requested
+    left, top, width, height = result.applied
+    return CaptureCropOut(
+        item=_shot_out(result.shot),
+        source_id=result.source_id,
+        requested=CaptureCropRequestedOut(
+            x=req_x, y=req_y, width=req_width, height=req_height, unit=req_unit
+        ),
+        applied=CaptureCropAppliedOut(x=left, y=top, width=width, height=height),
+        clamped=result.clamped,
+        marks=CaptureCropMarksOut(
+            kept=result.kept, clipped=result.clipped, dropped=result.dropped
+        ),
+    )
 
 
 @router.delete("/{id}", status_code=204)

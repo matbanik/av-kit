@@ -8,7 +8,7 @@ template_version: "2.2"
 requested_verbosity: "standard"
 agent: "codex-independent-reviewer"
 loop_id: "s59-plan-canonical-2026-11-08-capture-crop-copy"
-round: 2
+round: 3
 ---
 
 # Critical Review: 2026-11-08-capture-crop-copy
@@ -301,3 +301,96 @@ None.
 ### Verdict
 
 `approved` — F1–F6 are fixed, including the sole High blocker. Executing the corrected plan after its dependency and human execution gates would deliver the registered crop-copy intent. No new High/Critical or other delivery finding remains. S12's presence-only parser is explicitly distinguished from issue filing's A-only parser above. This is plan approval, not execution authorization or implemented-behavior certification. Report written only to `C:/Temp/av-kit/s59-plan-review-round-2.md`; the coordinator owns canonical adoption.
+
+## Corrections Applied (2026-11-09) -- Round 2 plan amendment, D-476
+
+Written by the plan's author acting as the corrections agent (`claude-opus-claude-code-coordinator`), not by a reviewer, after round 2's approval. The frontmatter verdict is now `corrections_applied`. Only round 3's independent recheck can approve.
+
+### Why the approved plan changed
+
+- Row 0's S11 check found that a Session 58 shape this plan relies on, the `.avkit-tmp` pattern, differs from Session 58's plan. Session 58's execution review changed it: execution F1 (a failed import deleted another writer's `NAME.avkit-tmp`) and F2 (filesystem calls outside the mapped `try`, and Pillow's `SyntaxError` uncaught), recorded as its RULE-1 and RULE-2 (`docs/execution/reflections/2026-11-08-capture-region-import-reflection.md:41-43`).
+- S11's response is "Stop; amend this plan through the plan review before row 1" (`implementation-plan.md:459`). Mat chose option A at the row-0 gate, in Mat's words: "A: plan round 3 (Recommended)". It is recorded as D-476 (`implementation-plan.md:749`).
+- Session 58 has since landed in `8e79282`, so its code is now real: `_import_copy` (`packages/core/src/avkit_core/services/capture.py:512-546`), `_import_dest` (`:549-570`), `view`'s `except Exception` (`packages/infrastructure/src/avkit_infra/capture/adapter.py:297-304`) and AC-129.9 (`tests/e2e/test_api_capture_region_import.py:627`).
+
+### Changes made
+
+- **`CROP_NAME`** (`implementation-plan.md:119`): every inbox-root entry ending in `.avkit-tmp` also takes its name without that suffix, as `_import_dest` does. The helper is `CaptureService._crop_dest(uow, inbox, stem)`, and its `iterdir` runs inside `CROP_CLEANUP`'s `try`.
+- **`CROP_CLEANUP`** (`:126`): every filesystem call on the crop's paths runs inside one `try`. The temporary file is created with `open("xb")`, and `tmp` is set only after the create succeeds. `cut` is set when the adapter's `crop` returns, and `moved` is set by `os.replace`. The `except` removes `tmp` when set, and the crop, its sidecar and its bakes only when `moved` is true. A refusal raised while `cut` is false passes through unchanged after that cleanup; anything else is the 503. This replaces "re-raised before the first write", which no longer separates the cases once the temporary file exists before the adapter decodes the source.
+- **Adapter `crop`** (`:174`, `:176`, `:179`): step 1 catches `Exception` on open and load, as `view` does. Step 3 no longer calls `load()` a second time outside that `try`. A failure of the save or of `probe(out)` is raised as `OSError("the crop could not be saved")`, so the only refusals `crop` raises are the two fixed, pathless ones.
+- **Service step 3** (`:183`): it follows `_import_copy`, with the `tmp`, `cut` and `moved` flags, and cites `_unlink_if_file` at its current line, `:1145`.
+- **AC-130.21** (`:298`): two tests are added. The first, "keeps a temporary file it did not write", runs `none`, `race` (`_crop_dest` patched), `replace` and `commit` against another writer's `shot-crop.png.avkit-tmp`, whose bytes must survive every case. The second registers a PNG, then damages its IDAT chunk in place, and expects a 422 `the image could not be opened` with no path.
+- **D-476** is added to the decision log (`:749`), and the banner (`:465`) and the provenance row (`:323`) name it.
+- **Budget** (`:108`): Mat set the execution loop at 60M tokens ("60M"), with the cap of 6 rounds.
+- **`task.md`**: rows 4a (`:84`) and 5 (`:86`) carry the same notes. No validation command changed.
+
+### What did not change
+
+- `CROP_REQUEST`, `CROP_READ`, `CROP_PIXELS` apart from the adapter's error mapping, `CROP_SOURCE`, the mark mechanisms, `CROP_BAKE`, `CROP_RESPONSE`, `CROP_MCP`, `BASELINE_PENDING`, `NO_RAW_CONSOLE`, D-481 to D-499, and every other AC.
+- No Session 58 shape other than the `.avkit-tmp` pattern differed. Row 0's baseline (`C:/Temp/av-kit/s59-baseline.txt`) ends `baseline: all steps exit 0`, at `HEAD` `f15626c`.
+
+### Verification
+
+- The decision log parses as YAML: 20 entries, unique ids, and D-476 and D-499 `human`.
+- `lint_task_contract.py` on `task.md`: `OK: 25 row(s)` (`C:/Temp/av-kit/s59-amend-task-lint.txt`).
+- Both plan files keep their LF endings. The whole edit, old and new text, is `C:/Temp/av-kit/s59-amend-diff.txt`.
+
+## Recheck (2026-11-09) -- Round 3
+
+**Workflow**: `/planning-corrections` recheck
+**Agent**: codex-independent-reviewer
+
+### Prior Pass Summary
+
+| Finding | Prior Status | Recheck Result |
+|---------|-------------|----------------|
+| F1 | fixed | fixed |
+| F2 | fixed | fixed |
+| F3 | fixed | fixed |
+| F4 | fixed | fixed |
+| F5 | fixed | fixed |
+| F6 | fixed | fixed |
+
+### Confirmed Fixes
+
+References abbreviated to `implementation-plan.md` and `task.md` resolve under `docs/execution/plans/2026-11-08-capture-crop-copy/`. This is the independent Codex recheck of Claude Code/Anthropic's D-476 amendment. The registered intent remains the complete Intent Anchor above. Mat's D-476 A ruling, D-499 A, the grouping, Session 58's settled decisions and round 2's acceptances were preserved. HEAD is `f15626c25af428e33c0274cb280eef6579455320`, branch `main`. The amendment changes only the two plan files; all five plan-local scripts match HEAD. All 25 task rows remain unchecked and the crop service/helper/e2e module are absent. Row 0's supplied receipt says `baseline step session58-shapes exit=0` and ends `baseline: all steps exit 0`; that receipt was read, not rerun.
+
+- **A1 — accepted: ownership (`CROP_NAME`, `CROP_CLEANUP`).** `implementation-plan.md:119`, `:126`, `:183` and `:754` implement Session 58 RULE-1. With another writer's `shot-crop.png.avkit-tmp` present, the name is occupied and normal allocation chooses `shot-crop_2.png`. If the helper instead returns the occupied name, exclusive `open("xb")` fails before `tmp` is assigned; cleanup has no acquired temporary path and `moved` is false. The foreign bytes survive and the result is the fixed 503. After successful exclusive acquisition, a save failure removes only the acquired temporary file. A replace failure does the same with `cut` true and `moved` false. After successful replace, a probe, sidecar-write, bake-write or commit failure removes the published crop and its derived paths. A partial sidecar or bake is included. The temporary name is then absent, so its cleanup is harmless. Derived cleanup guarded by `moved` is sound: those writes occur only after replace, and `CROP_NAME` checked every image/sidecar/bake destination free while the same lock remains held through cleanup. This is the existing single-process `CAPTURE_FILE_LOCK` contract (`packages/core/src/avkit_core/services/capture.py:91`, `:346`), not a new cross-process filesystem guarantee. The real predecessor creates exclusively and assigns ownership afterward at `:531-532`; its occupied-name handling is at `:555-570`. No source file or source-derived path enters the crop's cleanup set. **Not accepted: none.**
+
+- **A2 — accepted: mapping and decode coverage (`CROP_CLEANUP`, `CROP_PIXELS`).** The whole-UoW boundary at `implementation-plan.md:126` and `:183` explicitly includes `_crop_dest`'s `iterdir`, `ensure_dir`, the source-sidecar read, exclusive create, adapter crop, replace, both probes, row upsert, sidecar/bake writes and UoW exit/commit. Step 2's semicolon-separated order at `:182` describes work inside that boundary, not calls to perform before it. Inbox path resolution also belongs inside this boundary under the stated every-filesystem-call rule: `_inbox` calls `expanduser().resolve()` (`packages/core/src/avkit_core/services/capture.py:1011-1016`). No listed forward call remains prescribed outside it. Adapter open and load share `except Exception` (`implementation-plan.md:174`), matching actual `view` (`packages/infrastructure/src/avkit_infra/capture/adapter.py:297-304`), so both `SyntaxError` and `ValueError` are covered. Step 3 no longer repeats `load()` outside that handler (`implementation-plan.md:176`). Save and `probe(out)` failures become the pathless `OSError` at `:179`; other unexpected crop/conversion failures reach the service's broad 503 mapping. The real UoW commits in `__exit__` and always closes its session (`packages/infrastructure/src/avkit_infra/database/unit_of_work.py:54-65`), so placing that exit inside the try matters. **Not accepted: none.**
+
+- **A3 — accepted: refusal versus 503 (`CROP_READ`, `CROP_CLEANUP`, `NO_RAW_CONSOLE`).** `cut` stays false until the adapter returns (`implementation-plan.md:126`). The pre-cut refusals are the fixed name checks (`:181`), missing-row/malformed-sidecar rules (`:117`), shared resolver messages (`:116`), and the adapter's fixed decode/changed-size refusals (`:174-175`). CROP_READ still requires malformed sidecars to become `AnnotationValidationError("sidecar is malformed")`; it does not authorize forwarding a raw parser diagnostic containing sidecar content. Before the adapter returns, its save or `probe(out)` can already have written bytes, but their exceptions are converted to `OSError`, which is outside the refusal set and becomes 503 even while `cut` is false (`:179`). The later service `probe(crop)` occurs after `cut` is true, so AC-130.21's injected path-bearing `InboxPathError` also becomes 503, never a path-bearing 422 (`:298`). The adapter's direct AC-130.11 still writes no output before rejecting invalid input; at service level the already-created owned temporary file is removed before the same 422/409 refusal is returned. AC-130.16's 404/422/409 cases remain consistent (`:288`, `:293`). The path-bearing real `probe` messages at `packages/infrastructure/src/avkit_infra/capture/adapter.py:281-289` are therefore contained at both crop call sites. **Not accepted: no refusal-path leak demonstrated under these contracts.**
+
+- **A4 — accepted: constructible, discriminating tests (AC-130.21).** `implementation-plan.md:298` and `task.md:84` require the foreign-temporary cases `none`, `race`, `replace` and `commit`, including exact success name, failure status, unchanged inbox names/no new row on failure, and preserved foreign bytes in every case. With `shot.png` already registered, patch replace/probe/commit against the expected crop destination (`shot-crop_2.png` in ordinary allocation), as row 4a specifies. In particular, copying Session 58's broad `any .png exists` commit trigger literally would trip on the existing source; the crop-specific trigger reaches the intended commit. The race helper does not exist at row 4a: install that test patch with `raising=False` (the scratch witness used `patch.object(..., create=True)`) so the HTTP status assertion remains the Red failure. A direct default-raising patch copied verbatim from Session 58 would instead fail in setup and is not an acceptable realization of the plan's assertion-first rule (`task.md:34-36`, `:80`; `implementation-plan.md:414-419`). This is a constructible fixture choice, not missing product behavior or an impossible Red contract.
+
+  The damaged-IDAT witness is also constructible. The probe first decoded a valid 64x48 PNG, then retained its IHDR, dimensions and total byte length while shortening IDAT and inserting an invalid chunk. `Image.open` still reported 64x48; `load()` raised `SyntaxError` under Pillow 13.0.0. Registering the valid source before this mutation avoids setup's decoder. To inspect no-new-row afterward, read the UoW directly or restore the exact original bytes before a scanning `GET /captures`; scanning the still-damaged source is outside this crop-refusal oracle (`packages/core/src/avkit_core/services/capture.py:343-356`). Against the missing crop route all five new cases reach an assertion: 404 differs from the respective expected 201, 503 or 422. They do not invoke row 1's adapter stub through an absent route. The existing direct adapter Reds still assert output existence or expected exceptions before reading missing output (`task.md:36`; `implementation-plan.md:288`, `:414-416`). The fixed ownership model distinguished the four expected outcomes and additional save/probe/sidecar/bake failures. **Not accepted: no impossible expectation or assertion-free required failure found; these are feasibility probes, not execution of the future tests.**
+
+- **A5 — accepted: blast radius, with one clerical note.** Contracts at `implementation-plan.md:119`, `:126`, `:174-179`, `:183`, AC-130.21 at `:298`, provenance at `:323`, D-476 at `:749-765`, and row 4a/5 at `task.md:84`, `:86` agree. The scanner still uses the same lock and ignores `.avkit-tmp` by extension, preserving AC-130.20 (`implementation-plan.md:297`; `packages/core/src/avkit_core/services/capture.py:346-353`). CROP_READ's pathless 422/409 rule and step 2's order remain valid with the exclusive temporary file preceding decode. `_unlink_if_file` really is at `packages/core/src/avkit_core/services/capture.py:1145`; the new predecessor/view/test anchors also resolve to the cited behavior. Older moved anchors do not change the named operations, and `task.md:32` requires current-anchor reads and handoff corrections. The 60M execution budget is Mat's record at `implementation-plan.md:108`, not a finding.
+
+  **Clerical note:** D-490's `chosen` text at `implementation-plan.md:608` still says any exception "after the first write" becomes 503. Read it through the explicit "D-476, refining D-490" at `:126` and D-476's later human-approved text at `:754`: the named contract's `cut` rule governs. Synchronizing that historical summary would remove the stale phrase, but there is no unresolved behavioral choice and no delivery blocker. No F7 is opened for it. F1-F6 remain fixed: the amendment does not change their corrected geometry, naming bound, pixel oracle, eraser oracle or Console controls (`implementation-plan.md:119`, `:122-123`, `:279-280`, `:290`, `:296`, `:299`). **Not accepted: no new material contradiction.**
+
+PR-1 through PR-9 pass within this amendment's scope: the two plan files align; implementation remains unstarted; row contracts and validation commands are retained; the new negative cases are feasible; D-476 supplies the human/source basis; the amendment can be corrected and handed off; no scope item was cut; ownership and exception paths have observable negative oracles; and the governing named rule is unambiguous. Paperwork review and runtime implementation certification are n/a under the requested scope.
+
+The following evidence is plan-local review evidence. It does not certify a production implementation or fresh product-suite run. Python used `PYTHONDONTWRITEBYTECODE=1` and `-B`. No pytest, Vitest, Playwright, baseline, issue-file, session gate, dev app, network request or repository write was run. Only scratch files under `C:/Temp/av-kit` were written.
+
+```json
+{"schema_version":"evidence.v1","check_id":"s59-round3-bounded-probes","command":"rtk proxy .venv/Scripts/python.exe -B C:/Temp/av-kit/s59_r3_probe.py","cwd":"P:/av-kit","scope":"Pillow damaged-IDAT and Windows exclusive-create witnesses; finite-state model of amended ownership/refusal flags; missing-helper patch feasibility and missing-route assertion oracles","phase":"targeted","exit_code":0,"result":"pass","tested_state":"plan-review-f15626c-plan-8eb90f1f69e8be3c0d47215e356225c2747c9423898e1c3dc42fbe558a988f6c-task-b5d12a059ff8c2ab985f1d489099b9cbf46d3e7db1ffdf2040dfbe78d8373643","fresh":true,"output":"Pillow 13.0.0, bytecode disabled. Damaged IDAT: dimensions 64x48 and total byte length preserved, load raises SyntaxError. Flag model: none 201; race/save/replace/probe/sidecar/bake/commit 503; decode 422; size 409. Every modeled failure restores original names and preserves foreign bytes. Real open('xb') raises FileExistsError without ownership or byte changes. Missing helper can be patched with create=True; missing-route 404 differs by AssertionError from 201/503/422. No future crop service or HTTP stack was executed."}
+```
+
+```json
+{"schema_version":"evidence.v1","check_id":"s59-round3-amendment-state","command":"rtk proxy .venv/Scripts/python.exe -B C:/Temp/av-kit/s59_r3_static.py","cwd":"P:/av-kit","scope":"Exact two-file amendment, focused boundary census, unchanged scripts, unstarted state and supplied baseline receipt","phase":"static","exit_code":0,"result":"pass","tested_state":"plan-review-f15626c-plan-8eb90f1f69e8be3c0d47215e356225c2747c9423898e1c3dc42fbe558a988f6c-task-b5d12a059ff8c2ab985f1d489099b9cbf46d3e7db1ffdf2040dfbe78d8373643","fresh":true,"output":"HEAD f15626c25af428e33c0274cb280eef6579455320, main. Changed paths only implementation-plan.md and task.md. All five plan-local scripts equal HEAD. 25 unchecked rows; crop_shot, _crop_dest and crop e2e module absent. Focused census identifies D-490:608 as the stale summary; the named CROP_CLEANUP:126 and human D-476:754 resolve it. Supplied baseline reports session58-shapes exit=0 and baseline: all steps exit 0; it was not executed by this reviewer."}
+```
+
+### New Findings
+
+| # | Severity | Blocking | Kind | Finding | File:Line | Recommendation | Status |
+|---|---|---|---|---|---|---|---|
+
+None.
+
+### Remaining Findings
+
+None.
+
+### Verdict
+
+`approved` — F1-F6 remain fixed. The D-476 amendment correctly carries Session 58's ownership and file-error corrections into the crop plan, and its new negative cases are constructible and able to fail. Executing this amended plan would deliver the registered crop-copy intent. No evidence-backed High/Critical or other delivery finding remains. D-490's stale summary is a non-blocking clerical note, resolved in favor of the explicitly refined named contract. This approves the plan only; implementation and its runtime checks remain the coordinator's subsequent work. The complete rolling report is `C:/Temp/av-kit/s59-plan-review-round-3.md`; canonical adoption belongs to the coordinator.

@@ -32,6 +32,8 @@ const CAPTURE_ACTIONS = [
   // TA-2 (Session 30, MEU-67): +flatten, +revert after remove.
   { action: "flatten", method: "POST", path: "/captures/{id}/flatten" },
   { action: "revert", method: "POST", path: "/captures/{id}/revert" },
+  // MEU-130 (Session 59): +crop after revert.
+  { action: "crop", method: "POST", path: "/captures/{id}/crop" },
 ] as const;
 const REST_ONLY = ["complete", "cancel", "register"] as const;
 // TA-4 (Session 30, MEU-67): + flatten_backup, backup_dir, annotated_format.
@@ -103,7 +105,8 @@ describe("MEU-38 avkit_capture", () => {
   it("AC-38.1 ACTION_INDEX_AFTER keeps first ACTION_INDEX_KEEP rows", () => {
     // TA-9 (Session 27, MEU-62): +1 avkit_models.download_asset, appended.
     // TA-1 (Session 30, MEU-67): +avkit_capture.flatten, +avkit_capture.revert.
-    expect(ACTION_INDEX).toHaveLength(70);
+    // MEU-130 (Session 59): +avkit_capture.crop after revert.
+    expect(ACTION_INDEX).toHaveLength(71);
     expect([...COMPOUND_TOOLS]).toEqual([
       "avkit_download",
       "avkit_transcript",
@@ -120,8 +123,8 @@ describe("MEU-38 avkit_capture", () => {
 
   it("AC-38.2 CAPTURE_ACTIONS match REST 1:1; REST_ONLY absent", () => {
     const rows = ACTION_INDEX.filter((row) => row.tool === "avkit_capture");
-    // TA-2 (Session 30, MEU-67).
-    expect(rows).toHaveLength(10);
+    // TA-2 (Session 30, MEU-67); MEU-130 (Session 59): +crop.
+    expect(rows).toHaveLength(11);
     expect(rows.map((row) => ({ action: row.action, method: row.method, path: row.path }))).toEqual(
       CAPTURE_ACTIONS.map((row) => ({ action: row.action, method: row.method, path: row.path })),
     );
@@ -774,5 +777,123 @@ describe("MEU-129 capture import", () => {
     expect(Object.keys(shape)).toEqual(expect.arrayContaining(["mode", "path"]));
     expect(shape.mode?.safeParse("import").success).toBe(true);
     expect(shape.mode?.safeParse("fullscreen").success).toBe(true);
+  });
+});
+
+// MEU-130 capture-crop-copy (Session 59): CROP_MCP (D-492, D-494).
+describe("MEU-130 capture crop", () => {
+  it("AC-130.23 crop sends the box as the POST body", async () => {
+    const { ADD_TIMEOUT_MS } = await import("../src/client.js");
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push({
+        url: String(url),
+        method: init?.method,
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+      });
+      return okJson({ item: { ...SHOT_ITEM, id: "c1", source: "Crop" }, source_id: "s1" }, 201);
+    });
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    try {
+      const result = await handleTool(
+        "avkit_capture",
+        {
+          action: "crop",
+          id: "s1",
+          x: 0.25,
+          y: 0.5,
+          width: 0.5,
+          height: 0.25,
+          unit: "fraction",
+          name: "detail",
+        },
+        { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+      );
+      expect(calls).toHaveLength(1);
+      expect(result.isError).not.toBe(true);
+      expect(calls[0]?.method).toBe("POST");
+      expect(calls[0]?.url).not.toContain("?");
+      expect(calls[0]?.url.endsWith("/captures/s1/crop")).toBe(true);
+      expect(calls[0]?.body).toEqual({
+        x: 0.25,
+        y: 0.5,
+        width: 0.5,
+        height: 0.25,
+        unit: "fraction",
+        name: "detail",
+      });
+      expect(timeout).toHaveBeenCalledWith(ADD_TIMEOUT_MS);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
+  it("AC-130.24 crop fields are bounded", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const base: Record<string, unknown> = {
+      action: "crop",
+      id: "s1",
+      x: 0.25,
+      y: 0,
+      width: 0.5,
+      height: 1,
+      unit: "fraction",
+      name: "detail",
+    };
+    expect(captureSchema.safeParse(base).success).toBe(true);
+    expect(
+      captureSchema.safeParse({ action: "crop", id: "s1", x: 0, y: 0, width: 8, height: 8 }).success,
+    ).toBe(true);
+    expect(captureSchema.safeParse({ ...base, name: "a".repeat(80) }).success).toBe(true);
+    for (const bad of [
+      { x: -1 },
+      { width: 0 },
+      { unit: "inch" },
+      { name: "" },
+      { name: "a".repeat(81) },
+      { nope: 1 },
+    ]) {
+      expect(captureSchema.safeParse({ ...base, ...bad }).success, JSON.stringify(bad)).toBe(false);
+    }
+    for (const key of ["id", "x", "y", "width", "height"]) {
+      const partial = { ...base };
+      delete partial[key];
+      expect(captureSchema.safeParse(partial).success, `without ${key}`).toBe(false);
+    }
+  });
+
+  it("AC-130.25 crop describes a new shot", async () => {
+    const { captureDescriptions } = await import("../src/toolsets/capture.js");
+    const { advertisedSchema } = await import("../src/toolsets/registry.js");
+    const { USER_CONFIRM_ACTIONS } = await import("../src/destructive.js");
+    const raw: unknown = captureDescriptions["avkit_capture.crop"];
+    expect(typeof raw).toBe("string");
+    const text = String(raw);
+    for (const needle of ["NEW shot", "never changed", "applied", "clipped", "-crop WxH+X+Y +repage"]) {
+      expect(text, needle).toContain(needle);
+    }
+    expect(M7.filter((marker) => text.includes(marker)).length).toBeGreaterThanOrEqual(3);
+    const keys = Object.keys(advertisedSchema("avkit_capture").shape);
+    expect(keys).toEqual(expect.arrayContaining(["x", "y", "width", "height", "unit", "name"]));
+    expect(DESTRUCTIVE_ACTIONS.has("avkit_capture.crop")).toBe(false);
+    expect(USER_CONFIRM_ACTIONS.has("avkit_capture.crop")).toBe(false);
+  });
+
+  it("AC-130.26 ACTION_INDEX has the crop row after revert", () => {
+    expect(ACTION_INDEX).toHaveLength(71);
+    const keys = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`);
+    const revert = keys.indexOf("avkit_capture.revert");
+    expect(revert).toBeGreaterThan(-1);
+    expect(keys[revert + 1]).toBe("avkit_capture.crop");
+    expect(ACTION_INDEX[revert + 1]).toEqual({
+      tool: "avkit_capture",
+      action: "crop",
+      method: "POST",
+      path: "/captures/{id}/crop",
+    });
+    expect(keys[keys.length - 1]).toBe("avkit_models.download_asset");
+    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(11);
   });
 });

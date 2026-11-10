@@ -11,7 +11,15 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import structlog
-from PIL import Image, ImageDraw, ImageFont, ImageOps, ImageStat, UnidentifiedImageError
+from PIL import (
+    Image,
+    ImageCms,
+    ImageDraw,
+    ImageFont,
+    ImageOps,
+    ImageStat,
+    UnidentifiedImageError,
+)
 
 from avkit_core.domain.capture import (
     ANNOTATED_FORMATS,
@@ -59,6 +67,11 @@ IMPORT_OPEN_MESSAGE = "not an image av-kit can open (png, jpg, jpeg, webp)"
 IMPORT_PIXEL_MESSAGE = "image is larger than the 89478485-pixel limit"
 EXIF_ORIENTATION_TAG = 0x0112
 _UPRIGHT_MODES = frozenset({"RGB", "RGBA", "L", "LA"})
+# CROP_PIXELS (MEU-130, D-482): the modes a PNG stores, which a crop keeps; any other mode
+# becomes RGBA or RGB. A CMYK, YCbCr or LAB source converts through its profile to sRGB
+# (D-506 A), because PNG can't hold those colour spaces or their profiles.
+_CROP_KEPT_MODES = frozenset({"1", "L", "LA", "P", "RGB", "RGBA", "I;16"})
+_CROP_ICC_CONVERT_MODES = frozenset({"CMYK", "YCbCr", "LAB"})
 _PIL_FORMAT: dict[str, str] = {"png": "PNG", "jpeg": "JPEG", "webp": "WEBP"}
 NAMED_RGB: dict[str, tuple[int, int, int]] = {
     "red": (255, 0, 0),
@@ -240,6 +253,21 @@ def _encode_view(image: Image.Image, suffix: str) -> bytes:
     return buffer.getvalue()
 
 
+def _to_srgb(image: Image.Image, icc: bytes | None) -> tuple[Image.Image, bytes | None]:
+    """D-506 A: CMYK, YCbCr or LAB pixels to RGB, through `icc` to sRGB when it builds."""
+    if icc:
+        srgb = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB"))
+        try:
+            managed = ImageCms.profileToProfile(
+                image, ImageCms.ImageCmsProfile(io.BytesIO(icc)), srgb, outputMode="RGB"
+            )
+        except (OSError, ValueError, ImageCms.PyCMSError):
+            managed = None
+        if managed is not None:
+            return managed, srgb.tobytes()
+    return image.convert("RGB"), None
+
+
 class CaptureAdapter:
     """Windows mss grabber and Pillow annotator."""
 
@@ -363,6 +391,60 @@ class CaptureAdapter:
             alpha = alpha or upright.mode.endswith("A")
             upright = upright.convert("RGBA" if alpha else "RGB")
         return self._write_png(upright, path)
+
+    def crop(
+        self,
+        source: Path,
+        box: tuple[int, int, int, int],
+        source_size: tuple[int, int],
+        out: Path,
+    ) -> ImageProbe:
+        """CROP_PIXELS: cut `box` from the original's pixels into a PNG at `out` (MEU-130).
+
+        `box` is `(left, top, width, height)` inside the image, as `resolve_region` returns it.
+        No resampling and no `exif_transpose`: the crop is the stored frame's pixels. The mode
+        is kept when PNG stores it; the ICC profile is kept; EXIF, XMP and text are dropped.
+        A CMYK, YCbCr or LAB source converts through its profile to sRGB and carries the
+        sRGB profile; with no profile, or one that builds no transform, it converts plainly
+        and carries none (D-506 A).
+        The only refusals are the two fixed, path-free ones (D-481, D-482, D-476).
+        """
+        try:
+            with Image.open(source) as opened:
+                opened.load()
+                image = opened.copy()
+        except Exception as exc:
+            # Pillow raises SyntaxError, ValueError and others for a damaged file, and an
+            # OSError's text holds the path; each becomes the one fixed refusal (D-421).
+            raise InboxPathError("the image could not be opened") from exc
+        if image.size != source_size:
+            raise ConflictError(
+                "the image file changed since the captures were listed; list them again and retry"
+            )
+        left, top, width, height = box
+        icc = image.info.get("icc_profile")
+        transparency = image.info.get("transparency")
+        cropped = image.crop((left, top, left + width, top + height))
+        if image.mode in _CROP_KEPT_MODES:
+            info: dict[str | tuple[int, int], object] = {}
+            if transparency is not None:
+                info["transparency"] = transparency
+        else:
+            info = {}
+            if image.mode in _CROP_ICC_CONVERT_MODES:
+                cropped, icc = _to_srgb(cropped, icc)
+            else:
+                has_alpha = "A" in image.mode or "a" in image.mode or transparency is not None
+                cropped = cropped.convert("RGBA" if has_alpha else "RGB")
+        if icc:
+            info["icc_profile"] = icc
+        # Only the ICC profile and the kept mode's transparency survive: no EXIF, XMP or text.
+        cropped.info = info
+        try:
+            cropped.save(out, format="PNG")
+            return self.probe(out)
+        except Exception as exc:
+            raise OSError("the crop could not be saved") from exc
 
     def bake(
         self,

@@ -54,6 +54,7 @@ ROUTE_INDEX: tuple[tuple[str, str], ...] = (
     ("POST", "/api/v1/captures/{id}/annotate"),
     ("POST", "/api/v1/captures/{id}/flatten"),  # TA-8 (Session 30, MEU-67)
     ("POST", "/api/v1/captures/{id}/revert"),  # TA-8 (Session 30, MEU-67)
+    ("POST", "/api/v1/captures/{id}/crop"),  # CROP_REQUEST (Session 59, MEU-130)
     ("DELETE", "/api/v1/captures/{id}"),
     ("POST", "/api/v1/transcripts"),
     ("GET", "/api/v1/transcripts"),
@@ -110,7 +111,7 @@ def test_ac_16_6_openapi_path_census() -> None:
     assert schema["info"]["version"] == __version__
     paths = set(schema["paths"])
     assert paths == ROUTE_PATHS
-    assert len(ROUTE_INDEX) == 73  # TA-8 (Session 30, MEU-67)
+    assert len(ROUTE_INDEX) == 74  # TA-8 (Session 30, MEU-67); MEU-130 + crop
 
 
 @pytest.mark.parametrize("method,path", ROUTE_INDEX)

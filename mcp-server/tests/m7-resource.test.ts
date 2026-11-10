@@ -44,13 +44,14 @@ function registeredResourceUris(server: ReturnType<typeof createServer>): string
 }
 
 describe("M7_PER_ACTION", () => {
-  it("ACTION_DESCRIPTIONS has exactly 70 keys each with ≥3 distinct M7 markers", () => {
+  it("ACTION_DESCRIPTIONS has exactly 71 keys each with ≥3 distinct M7 markers", () => {
     const keys = Object.keys(ACTION_DESCRIPTIONS).sort();
     const expected = ACTION_INDEX.map((r) => `${r.tool}.${r.action}`).sort();
     expect(keys).toEqual(expected);
     // TA-9 (Session 27, MEU-62): +1 avkit_models.download_asset.
     // TA-1 (Session 30, MEU-67): +avkit_capture.flatten, +avkit_capture.revert.
-    expect(keys).toHaveLength(70);
+    // MEU-130 (Session 59): +avkit_capture.crop after revert.
+    expect(keys).toHaveLength(71);
     for (const key of keys) {
       const text = ACTION_DESCRIPTIONS[key];
       expect(typeof text).toBe("string");
@@ -62,13 +63,13 @@ describe("M7_PER_ACTION", () => {
     expect(ACTION_DESCRIPTIONS["avkit_settings.set"]).toContain(SETTINGS_SCHEMA_URI);
   });
 
-  it("registers the 70 ACTION_DESCRIPTIONS on Zod action options and listTools _meta", () => {
+  it("registers the 71 ACTION_DESCRIPTIONS on Zod action options and listTools _meta", () => {
     const server = createServer();
     const fromSchema = registeredActionDescriptions(server);
     const expected = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`).sort();
     expect(Object.keys(fromSchema).sort()).toEqual(expected);
-    // TA-1 (Session 30, MEU-67).
-    expect(Object.keys(fromSchema)).toHaveLength(70);
+    // TA-1 (Session 30, MEU-67); MEU-130 (Session 59): +avkit_capture.crop.
+    expect(Object.keys(fromSchema)).toHaveLength(71);
     const tools = registeredTools(server);
     for (const row of ACTION_INDEX) {
       const key = `${row.tool}.${row.action}`;

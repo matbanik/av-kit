@@ -43,3 +43,16 @@ class ImageAnnotatePort(Protocol):
     def write_upright_png(self, data: bytes, path: Path) -> ImageProbe:
         """Write `data` turned upright by its EXIF orientation as a PNG at `path` (MEU-129)."""
         ...
+
+    def crop(
+        self,
+        source: Path,
+        box: tuple[int, int, int, int],
+        source_size: tuple[int, int],
+        out: Path,
+    ) -> ImageProbe:
+        """CROP_PIXELS: write `box` (left, top, width, height) of `source` as a PNG at `out`.
+
+        No resampling; the ICC profile is kept and no other metadata is written (MEU-130).
+        """
+        ...

@@ -23,6 +23,7 @@ CAPTURE_SOURCE_MEMBERS = (
     "McpInteractive",
     "Scan",
     "Import",
+    "Crop",
 )
 CAPTURE_REQUEST_STATUS_MEMBERS = ("Pending", "Completed", "Cancelled", "Expired")
 # TA-1 (Session 39, MEU-90, MEU-91): + Pixelate, Eraser.
@@ -605,6 +606,287 @@ def test_ac_129_1_capture_source_import(ac_id: str) -> None:
     assert ac_id == "AC-129.1"
     from avkit_core.domain.enums import CaptureSource
 
-    assert "Import" in CaptureSource.__members__
-    assert list(CaptureSource.__members__)[-1] == "Import"
+    # MEU-130 (D-484): Crop now follows Import, so Import is pinned after Scan.
+    members = list(CaptureSource.__members__)
+    assert "Import" in members
+    assert members[members.index("Scan") + 1] == "Import"
     assert CaptureSource.Import.value == "Import"
+
+
+# MEU-130 capture-crop-copy (Session 59): MARK_CARRY, MARK_CLIP_BOX, MARK_CLIP_ARROW,
+# MARK_CLIP_TEXT and CROP_SOURCE (D-484 to D-488).
+CROP_BOX_KINDS = ("rect", "highlight", "pixelate", "eraser")
+CROP_CLIP_AT = (100, 50, 200, 100)
+CROP_LINE_AT = (10, 10, 30, 30)
+# id, box in the crop's frame, the half-open result, the rect's inclusive result (None: dropped)
+CROP_CLIP_SIDES = (
+    ("left", (-20, 10, 50, 30), (0, 10, 30, 30), (0, 10, 30, 30)),
+    ("top", (10, -20, 30, 50), (10, 0, 30, 30), (10, 0, 30, 30)),
+    ("right", (180, 10, 40, 30), (180, 10, 20, 30), (180, 10, 19, 30)),
+    ("bottom", (10, 80, 30, 40), (10, 80, 30, 20), (10, 80, 30, 19)),
+    ("corner", (-10, -10, 230, 130), (0, 0, 200, 100), (0, 0, 199, 99)),
+    ("whole-crop", (0, 0, 200, 100), (0, 0, 200, 100), (0, 0, 199, 99)),
+    ("outside", (250, 10, 20, 20), None, None),
+    ("touch-right", (200, 10, 20, 20), None, None),
+    ("touch-left", (-20, 10, 20, 20), None, (0, 10, 0, 20)),
+)
+CROP_ZERO_SIZE = (
+    ("w0-in", (50, 20, 0, 30), (50, 20, 0, 30)),
+    ("w0-out", (-5, 20, 0, 30), None),
+    ("h0-in", (50, 20, 30, 0), (50, 20, 30, 0)),
+    ("h0-out", (50, 100, 30, 0), None),
+)
+# id, rect in source pixels under CROP_LINE_AT, the result in the crop's frame
+CROP_RECT_LINES = (
+    ("rect-w0-across", (20, 0, 0, 40), (10, 0, 0, 29)),
+    ("rect-h0-across", (0, 20, 40, 0), (0, 10, 29, 0)),
+    ("rect-w0-outside", (50, 0, 0, 40), None),
+    ("rect-h0-outside", (0, 50, 40, 0), None),
+)
+
+
+def _carry_of(frame: tuple[int, int, int, int], expected: object) -> str:
+    if expected is None:
+        return "dropped"
+    return "kept" if expected == frame else "clipped"
+
+
+def _crop_clip_cases() -> list[object]:
+    left, top = CROP_CLIP_AT[0], CROP_CLIP_AT[1]
+    cases: list[object] = []
+    for side, frame, half_open, inclusive in CROP_CLIP_SIDES:
+        for kind in CROP_BOX_KINDS:
+            expected = inclusive if kind == "rect" else half_open
+            source = (frame[0] + left, frame[1] + top, frame[2], frame[3])
+            carry = _carry_of(frame, expected)
+            cases.append(
+                pytest.param(kind, CROP_CLIP_AT, source, expected, carry, id=f"{kind}-{side}")
+            )
+    for case_id, frame, expected in CROP_ZERO_SIZE:
+        for kind in CROP_BOX_KINDS[1:]:
+            source = (frame[0] + left, frame[1] + top, frame[2], frame[3])
+            carry = _carry_of(frame, expected)
+            cases.append(
+                pytest.param(kind, CROP_CLIP_AT, source, expected, carry, id=f"{kind}-{case_id}")
+            )
+    for case_id, source, expected in CROP_RECT_LINES:
+        carry = "dropped" if expected is None else "clipped"
+        cases.append(pytest.param("rect", CROP_LINE_AT, source, expected, carry, id=case_id))
+    return cases
+
+
+# id, from, to, the exact Liang-Barsky ends (s59-plan-probes), the rounded ends, the carry
+CROP_ARROW_CASES = (
+    ("both-inside", (10, 10), (90, 40), (10.0, 10.0, 90.0, 40.0), (10, 10, 90, 40), "kept"),
+    ("tail-left", (-20, 25), (50, 25), (0.0, 25.0, 50.0, 25.0), (0, 25, 50, 25), "clipped"),
+    ("head-right", (50, 25), (150, 25), (50.0, 25.0, 100.0, 25.0), (50, 25, 100, 25), "clipped"),
+    (
+        "diagonal-through",
+        (-10, -10),
+        (110, 60),
+        (7.142857142857142, 0.0, 92.85714285714285, 50.0),
+        (7, 0, 93, 50),
+        "clipped",
+    ),
+    ("outside", (-10, 60), (-5, 70), None, None, "dropped"),
+    ("left-edge", (0, 0), (0, 50), (0.0, 0.0, 0.0, 50.0), (0, 0, 0, 50), "kept"),
+    ("top-edge", (-10, 0), (110, 0), (0.0, 0.0, 100.0, 0.0), (0, 0, 100, 0), "clipped"),
+    ("corner-graze", (-5, 55), (5, 45), (0.0, 50.0, 5.0, 45.0), (0, 50, 5, 45), "clipped"),
+    ("enters-at-corner", (-10, 60), (10, 40), (0.0, 50.0, 10.0, 40.0), (0, 50, 10, 40), "clipped"),
+    ("touches-corner-only", (-10, 10), (10, -10), (0.0, 0.0, 0.0, 0.0), None, "dropped"),
+    (
+        "bottom-sliver",
+        (-10, 49),
+        (120, 60),
+        (0.0, 49.84615384615385, 1.8181818181818183, 50.0),
+        (0, 50, 2, 50),
+        "clipped",
+    ),
+)
+
+
+def _box_mark(kind: str, x: int, y: int, width: int, height: int):
+    from avkit_core.domain import capture
+
+    if kind == "rect":
+        return capture.RectAnnotation(
+            x=x, y=y, width=width, height=height, color="red", stroke_width=4
+        )
+    if kind == "highlight":
+        return capture.HighlightAnnotation(
+            x=x, y=y, width=width, height=height, color="#FFEE00", opacity=0.4
+        )
+    if kind == "pixelate":
+        return capture.PixelateAnnotation(x=x, y=y, width=width, height=height, block_size=12)
+    assert kind == "eraser"
+    return capture.EraserAnnotation(x=x, y=y, width=width, height=height)
+
+
+@pytest.mark.parametrize("kind", CROP_BOX_KINDS, ids=CROP_BOX_KINDS)
+@pytest.mark.unit
+def test_ac_130_1_box_mark_inside_is_kept(kind: str) -> None:
+    from dataclasses import replace
+
+    from avkit_core.domain.capture import clip_mark
+
+    mark = _box_mark(kind, 130, 80, 50, 30)
+    out, carry = clip_mark(mark, *CROP_CLIP_AT)
+    assert carry == "kept"
+    assert out == replace(mark, x=30, y=30)
+    assert mark == _box_mark(kind, 130, 80, 50, 30)
+
+
+@pytest.mark.parametrize(("kind", "crop", "box", "expected", "carry"), _crop_clip_cases())
+@pytest.mark.unit
+def test_ac_130_2_box_mark_is_clipped_to_the_crop(
+    kind: str,
+    crop: tuple[int, int, int, int],
+    box: tuple[int, int, int, int],
+    expected: tuple[int, int, int, int] | None,
+    carry: str,
+) -> None:
+    from dataclasses import replace
+
+    from avkit_core.domain.capture import clip_mark
+
+    mark = _box_mark(kind, *box)
+    out, got = clip_mark(mark, *crop)
+    assert got == carry
+    if expected is None:
+        assert out is None
+        return
+    x, y, width, height = expected
+    assert out == replace(mark, x=x, y=y, width=width, height=height)
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "exact", "rounded", "carry"),
+    [pytest.param(*case[1:], id=case[0]) for case in CROP_ARROW_CASES],
+)
+@pytest.mark.unit
+def test_ac_130_3_arrow_clips_with_liang_barsky(
+    start: tuple[int, int],
+    end: tuple[int, int],
+    exact: tuple[float, float, float, float] | None,
+    rounded: tuple[int, int, int, int] | None,
+    carry: str,
+) -> None:
+    from dataclasses import replace
+
+    from avkit_core.domain.capture import ArrowAnnotation, clip_mark
+
+    mark = ArrowAnnotation(from_xy=start, to_xy=end, color="red", stroke_width=3)
+    out, got = clip_mark(mark, 0, 0, 100, 50)
+    assert got == carry
+    if rounded is None:
+        assert out is None
+        return
+    assert exact is not None
+    assert out == replace(mark, from_xy=rounded[:2], to_xy=rounded[2:])
+    assert isinstance(out, ArrowAnnotation)
+    for axis in (0, 1):
+        before = end[axis] - start[axis]
+        after = out.to_xy[axis] - out.from_xy[axis]
+        assert before * after >= 0, f"axis {axis} reversed"
+        assert abs(out.from_xy[axis] - exact[axis]) <= 0.5
+        assert abs(out.to_xy[axis] - exact[2 + axis]) <= 0.5
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "rounded"),
+    [
+        pytest.param((119, 223), (79, 53), ((8, 5), (7, 0)), id="fwd"),
+        pytest.param((79, 53), (119, 223), ((7, 0), (8, 5)), id="rev"),
+    ],
+)
+@pytest.mark.unit
+def test_ac_130_3_arrow_half_tie_rounds_up(
+    start: tuple[int, int],
+    end: tuple[int, int],
+    rounded: tuple[tuple[int, int], tuple[int, int]],
+) -> None:
+    """Round 1 F2: the entry at x=8 is exactly y=9/2, so half-up gives 5 in either direction."""
+    from dataclasses import replace
+
+    from avkit_core.domain.capture import ArrowAnnotation, clip_mark
+
+    mark = ArrowAnnotation(from_xy=start, to_xy=end, color="red", stroke_width=3)
+    out, got = clip_mark(mark, 89, 125, 8, 44)
+    assert got == "clipped"
+    assert out == replace(mark, from_xy=rounded[0], to_xy=rounded[1])
+
+
+@pytest.mark.parametrize(
+    ("anchor", "expected"),
+    [
+        pytest.param((100, 50), (0, 0), id="origin"),
+        pytest.param((299, 149), (199, 99), id="far-corner"),
+        pytest.param((300, 60), None, id="x-equals-width"),
+        pytest.param((150, 49), None, id="y-minus-one"),
+    ],
+)
+@pytest.mark.unit
+def test_ac_130_4_text_keeps_or_drops_by_anchor(
+    anchor: tuple[int, int], expected: tuple[int, int] | None
+) -> None:
+    from dataclasses import replace
+
+    from avkit_core.domain.capture import TEXT_MAX_CHARS, TextAnnotation, clip_mark
+
+    mark = TextAnnotation(
+        x=anchor[0],
+        y=anchor[1],
+        text="W" * TEXT_MAX_CHARS,
+        color="white",
+        font_size=24,
+        bg_color="#000000",
+    )
+    out, carry = clip_mark(mark, *CROP_CLIP_AT)
+    if expected is None:
+        assert (out, carry) == (None, "dropped")
+        return
+    assert carry == "kept"
+    assert out == replace(mark, x=expected[0], y=expected[1])
+
+
+@pytest.mark.parametrize("ac_id", ["AC-130.6"], ids=["AC-130.6"])
+@pytest.mark.unit
+def test_ac_130_6_every_mark_kind_has_a_rule(ac_id: str) -> None:
+    assert ac_id == "AC-130.6"
+    from dataclasses import replace
+    from typing import get_args
+
+    from avkit_core.domain import capture
+
+    samples = {
+        capture.ArrowAnnotation: capture.ArrowAnnotation(
+            from_xy=(15, 25), to_xy=(60, 70), color="red", stroke_width=3
+        ),
+        capture.RectAnnotation: _box_mark("rect", 15, 25, 40, 30),
+        capture.HighlightAnnotation: _box_mark("highlight", 15, 25, 40, 30),
+        capture.TextAnnotation: capture.TextAnnotation(
+            x=15, y=25, text="note", color="white", font_size=20, bg_color=None
+        ),
+        capture.PixelateAnnotation: _box_mark("pixelate", 15, 25, 40, 30),
+        capture.EraserAnnotation: _box_mark("eraser", 15, 25, 40, 30),
+    }
+    assert set(samples) == set(get_args(capture.Annotation))
+    for kind, mark in samples.items():
+        out, carry = capture.clip_mark(mark, 5, 5, 100, 100)
+        assert carry == "kept", kind.__name__
+        if isinstance(mark, capture.ArrowAnnotation):
+            expected = replace(mark, from_xy=(10, 20), to_xy=(55, 65))
+        else:
+            expected = replace(mark, x=10, y=20)
+        assert out == expected, kind.__name__
+
+
+@pytest.mark.parametrize("ac_id", ["AC-130.7"], ids=["AC-130.7"])
+@pytest.mark.unit
+def test_ac_130_7_capture_source_crop(ac_id: str) -> None:
+    assert ac_id == "AC-130.7"
+    from avkit_core.domain.enums import CaptureSource
+
+    assert "Crop" in CaptureSource.__members__
+    assert list(CaptureSource.__members__)[-1] == "Crop"
+    assert CaptureSource.Crop.value == "Crop"

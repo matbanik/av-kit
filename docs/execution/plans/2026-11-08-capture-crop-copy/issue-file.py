@@ -133,7 +133,7 @@ model.add_issue(
         "has to accept it."
     ),
     verification={
-        "last_checked": "2026-11-08",
+        "last_checked": "2026-11-09",
         "method": "coverage.test.ts AC-68.5 and AC-130.28 at the Session 59 gate",
         "result": "the baseline misses only avkit_capture.crop and has no extra key",
     },

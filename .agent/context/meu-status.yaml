@@ -116,8 +116,7 @@ phases:
     2026-09-30. MEU-80–91 residuals (icon hints, action row, text baseline, arrow geometry, file sync, size scrub, swatches, tool lock, filmstrip menu/multi-select, pixelate, eraser) registered 2026-10-09.
     MEU-82–84 bound to capture-render-fidelity. MEU-85–87 bound to capture-editor-options. MEU-90–91 bound to capture-new-marks. MEU-99–107 residuals (canvas history chords, resize handles, text re-edit,
     multi-line text, redact, copy image, style and tool flow, line and ellipse, step mark) registered 2026-10-29. MEU-111 residual (image size limit over MCP) registered 2026-11-03. MEU-128–132 residuals
-    (region view, image import, crop to a new shot, crop tool, GUI image import) registered 2026-11-08. MEU-134–136 residuals (video frames, video sheet, export copy)
-    registered 2026-11-09.
+    (region view, image import, crop to a new shot, crop tool, GUI image import) registered 2026-11-08. MEU-134–136 residuals (video frames, video sheet, export copy) registered 2026-11-09.
 - id: '10'
   name: Queue card UI
   band: P2
@@ -3410,18 +3409,18 @@ meus:
     anchor: crop-to-new-shot
     text: Phase 9 §Crop to a new shot
   description: POST /captures/{id}/crop and MCP crop write the region as a new PNG shot (source Crop) with exact pixels, leave the source untouched, and carry the saved marks translated and clipped.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-128, MEU-67
   dependency_parse_status: parsed
   depends_on:
   - MEU-128
   - MEU-67
-  execution_plan: null
-  updated: '2026-11-08'
+  execution_plan: docs/execution/plans/2026-11-08-capture-crop-copy/
+  updated: '2026-11-09'
   closed_reason: null
   note: Registered 2026-11-08 from the capture crop design (_inspiration/capture-crop/design.md). Mat asked for crop in the GUI, MCP and API, agent first (design D-2), and ruled D-1 (a crop writes a new
     shot) on 2026-11-08.
@@ -3501,7 +3500,8 @@ meus:
   execution_plan: null
   updated: '2026-11-09'
   closed_reason: null
-  note: Registered 2026-11-09 from the video stills design (_inspiration/video-stills/design.md). Mat asked whether agents can take stills from video through av-kit and accepted every recommendation (D-1 to D-5) on 2026-11-09.
+  note: Registered 2026-11-09 from the video stills design (_inspiration/video-stills/design.md). Mat asked whether agents can take stills from video through av-kit and accepted every recommendation (D-1
+    to D-5) on 2026-11-09.
 - row_key: MEU-134
   id: MEU-134
   slug: capture-video-frames
@@ -3527,7 +3527,8 @@ meus:
   execution_plan: null
   updated: '2026-11-09'
   closed_reason: null
-  note: Registered 2026-11-09 from the video stills design (_inspiration/video-stills/design.md). Mat asked whether agents can take stills from video through av-kit and accepted every recommendation (D-1 to D-5) on 2026-11-09.
+  note: Registered 2026-11-09 from the video stills design (_inspiration/video-stills/design.md). Mat asked whether agents can take stills from video through av-kit and accepted every recommendation (D-1
+    to D-5) on 2026-11-09.
 - row_key: MEU-135
   id: MEU-135
   slug: capture-video-sheet
@@ -3551,7 +3552,8 @@ meus:
   execution_plan: null
   updated: '2026-11-09'
   closed_reason: null
-  note: Registered 2026-11-09 from the video stills design (_inspiration/video-stills/design.md). Mat asked whether agents can take stills from video through av-kit and accepted every recommendation (D-1 to D-5) on 2026-11-09.
+  note: Registered 2026-11-09 from the video stills design (_inspiration/video-stills/design.md). Mat asked whether agents can take stills from video through av-kit and accepted every recommendation (D-1
+    to D-5) on 2026-11-09.
 - row_key: MEU-136
   id: MEU-136
   slug: capture-export-copy
@@ -3575,7 +3577,8 @@ meus:
   execution_plan: null
   updated: '2026-11-09'
   closed_reason: null
-  note: Registered 2026-11-09 from the video stills design (_inspiration/video-stills/design.md). Mat asked whether agents can take stills from video through av-kit and accepted every recommendation (D-1 to D-5) on 2026-11-09.
+  note: Registered 2026-11-09 from the video stills design (_inspiration/video-stills/design.md). Mat asked whether agents can take stills from video through av-kit and accepted every recommendation (D-1
+    to D-5) on 2026-11-09.
 summary_bands:
 - key: P0
   label: P0

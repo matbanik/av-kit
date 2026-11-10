@@ -25,8 +25,12 @@ from pathlib import Path
 
 from PIL import Image
 
-from avkit_core.domain.capture import Annotation, TextAnnotation
-from avkit_core.services.capture import SIDECAR_VERSION, annotations_from_sidecar
+from avkit_core.domain.capture import Annotation, TextAnnotation, clip_mark
+from avkit_core.services.capture import (
+    SIDECAR_VERSION,
+    annotations_from_sidecar,
+    annotations_to_wire,
+)
 from avkit_infra.capture.adapter import CaptureAdapter
 
 ORIGINAL_NAME = "capture-fidelity-original.png"
@@ -123,6 +127,61 @@ def _checker(width: int, height: int, even: _Rgb, odd: _Rgb) -> list[int]:
     return pixels
 
 
+def _crop_case(
+    name: str,
+    size: tuple[int, int],
+    pixels: Sequence[int],
+    mark: dict[str, object],
+    box: tuple[int, int, int, int],
+) -> RegionCase:
+    """A crop case (MEU-130, D-493): the crop's own pixels and the mark `clip_mark` returns."""
+    width = size[0]
+    left, top, crop_width, crop_height = box
+    cut: list[int] = []
+    for y in range(top, top + crop_height):
+        start = (y * width + left) * 3
+        cut.extend(pixels[start : start + crop_width * 3])
+    clipped, _ = clip_mark(region_annotations([mark])[0], left, top, crop_width, crop_height)
+    if clipped is None:
+        raise ValueError(f"{name}: the mark misses the crop")
+    return (name, crop_width, crop_height, cut, annotations_to_wire([clipped]))
+
+
+def crop_cases() -> list[RegionCase]:
+    """The crop cases, appended to ``REGION_CASES``; their own seed keeps the others' bytes."""
+    rng = random.Random(REGION_SEED + 1)
+    return [
+        # The crop keeps a 3 px sliver of a block-4 pixelate mark at its left edge.
+        _crop_case(
+            "crop-pixelate-sliver",
+            (24, 16),
+            _noise(rng, 24, 16),
+            _pixelate(2, 2, 18, 10, 4),
+            (17, 3, 6, 8),
+        ),
+        # The mark covers the crop's top-left corner from outside it.
+        _crop_case(
+            "crop-pixelate-corner",
+            (16, 12),
+            _noise(rng, 16, 12),
+            _pixelate(0, 0, 10, 8, 3),
+            (6, 4, 10, 8),
+        ),
+        # The eraser is cut at the crop's right edge, so its ring has no right side.
+        _crop_case(
+            "crop-eraser-edge", (16, 12), _noise(rng, 16, 12), _eraser(8, 3, 8, 6), (0, 0, 12, 12)
+        ),
+        # The eraser sits inside the crop with its whole ring, which the stems cross.
+        _crop_case(
+            "crop-eraser-ring",
+            (20, 14),
+            _stems_pattern(20, 14),
+            _eraser(6, 4, 5, 5),
+            (3, 1, 12, 12),
+        ),
+    ]
+
+
 def region_cases() -> list[RegionCase]:
     """``REGION_CASES`` inputs ``(name, width, height, pixels, marks)``; marks in wire form."""
     rng = random.Random(REGION_SEED)
@@ -159,6 +218,7 @@ def region_cases() -> list[RegionCase]:
             _boundary_pattern(32, 24),
             [_pixelate(0, 0, 32, 24, 3), _eraser(10, 7, 6, 5)],
         ),
+        *crop_cases(),
     ]
 
 

@@ -47,6 +47,10 @@ const IMPORT_TEXT =
 const REGION_VIEW_TEXT =
   'Optional x/y/width/height returns just that region from the full-resolution image, scaled to fit max_edge (default 1568; pass 2576 for high-resolution vision). Writes no file. Coordinates are original pixels, or unit: "fraction" (0–1) when you read them off a scaled view. The first content item gives the frame: source px = region.x + x / scale.';
 
+// CROP_MCP (MEU-130, D-492, D-494): the crop action writes a new shot.
+const CROP_TEXT =
+  "Writes the region as a NEW shot (PNG) and returns its id and paths; the source is never changed. Same coordinates as image: original pixels, or unit: \"fraction\" (0–1). A box past the edge is clamped and `applied` reports what was cut. Saved marks are carried over and clipped to the region; `marks` counts kept, clipped and dropped. Optional name sets the file name (letters, digits, space, dot, underscore, hyphen). Like ImageMagick `-crop WxH+X+Y +repage`, without the virtual canvas.";
+
 const ANNOTATE_EXAMPLE =
   'Example annotations: [{"type": "arrow", "from": [10, 10], "to": [80, 40], "color": "red", "stroke_width": 3}, {"type": "text", "x": 12, "y": 48, "text": "Note", "color": "white", "font_size": 16}].';
 
@@ -61,6 +65,7 @@ export const captureDescriptions: Record<string, string> = {
   "avkit_capture.remove": desc("remove", "DELETE", "/captures/{id}"),
   "avkit_capture.flatten": `${desc("flatten", "POST", "/captures/{id}/flatten")} Bakes the saved marks into the image file (backup first when capture.flatten_backup is on; a JPEG/WebP shot gets a new PNG copy instead); the user must also accept in the IDE.`,
   "avkit_capture.revert": `${desc("revert", "POST", "/captures/{id}/revert")} Overwrites the image file from its newest backup; the user must also accept in the IDE.`,
+  "avkit_capture.crop": `${desc("crop", "POST", "/captures/{id}/crop")} ${CROP_TEXT}`,
 };
 
 function withDesc<T extends z.ZodTypeAny>(action: string, schema: T): T {
@@ -233,5 +238,21 @@ export const captureSchema = z.union([
   withDesc(
     "revert",
     z.object({ action: z.literal("revert"), id: captureId, confirm: z.literal(true) }).strict(),
+  ),
+  withDesc(
+    "crop",
+    z
+      .object({
+        action: z.literal("crop"),
+        id: captureId,
+        // A first filter only; the API's REGION_RESOLVE and CROP_NAME messages stay the contract.
+        x: z.number().nonnegative(),
+        y: z.number().nonnegative(),
+        width: z.number().positive(),
+        height: z.number().positive(),
+        unit: z.enum(["px", "fraction"]).optional(),
+        name: z.string().min(1).max(80).optional(),
+      })
+      .strict(),
   ),
 ]);

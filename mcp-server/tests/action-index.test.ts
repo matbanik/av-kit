@@ -38,7 +38,8 @@ describe("ACTION_INDEX census", () => {
   it("exports ACTION_INDEX_AFTER rows; KEEP rows unchanged; registers COMPOUND_TOOLS", () => {
     // TA-9 (Session 27, MEU-62): +1 avkit_models.download_asset, appended.
     // TA-1 (Session 30, MEU-67): +avkit_capture.flatten, +avkit_capture.revert.
-    expect(ACTION_INDEX).toHaveLength(70);
+    // MEU-130 (Session 59): +avkit_capture.crop after revert.
+    expect(ACTION_INDEX).toHaveLength(71);
     expect(EXPECTED_ACTION_INDEX).toHaveLength(46);
     expect(ACTION_INDEX.slice(0, 46)).toEqual(EXPECTED_ACTION_INDEX);
     expect([...COMPOUND_TOOLS]).toEqual([...EXPECTED_COMPOUND_TOOLS]);

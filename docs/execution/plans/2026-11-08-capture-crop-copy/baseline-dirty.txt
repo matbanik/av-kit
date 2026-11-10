@@ -1,0 +1,1 @@
+?? docs/execution/plans/2026-11-08-capture-crop-copy/baseline.sha	6c572e132f90257b45519453245ea58d7e7c6033ae9d918b6d4657802762d5de

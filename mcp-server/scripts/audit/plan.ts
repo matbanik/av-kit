@@ -1572,6 +1572,46 @@ const CAPTURE_STEPS: StepSpec[] = [
     confirmedEffect: (ctx, _before, after) =>
       (after as { original_sha256: string | null }).original_sha256 === str(ctx.state.get("pre_flatten_sha")),
   }),
+  // CROP_MCP (MEU-130, D-492): an 8x8 crop of the shot is a new Crop shot, and the source's
+  // bytes are the same before and after. Its own execute reads the source's SHA-256 first.
+  {
+    id: "capture.crop",
+    tool: "avkit_capture",
+    action: "crop",
+    phase: "lifecycle",
+    depends_on: ["capture.flatten"],
+    execute: async (ctx) => {
+      if (!ctx.state.has("shot_id")) return { kind: "blocked", by: "state:shot_id", detail: "shot_id was never established" };
+      const before = await captureDetail(ctx);
+      const sourceSha = sha256Of(str(before.row.original_path));
+      const result = await ctx.call("avkit_capture", {
+        action: "crop",
+        id: ctx.state.get("shot_id"),
+        x: 0,
+        y: 0,
+        width: 8,
+        height: 8,
+      });
+      const id = result.isError ? null : ctx.firstId(result);
+      let observable: ObservableResult;
+      if (id) {
+        ctx.ledger.register("capture", id);
+        const crop = await ctx.rest.get(`/captures/${id}`);
+        const row = asRec(crop.json);
+        const f = fileReport(str(row.original_path), ctx.root);
+        const after = await captureDetail(ctx);
+        const unchanged = sourceSha !== null && sha256Of(str(after.row.original_path)) === sourceSha;
+        const isCrop = crop.status === 200 && row.source === "Crop";
+        observable = obs(
+          isCrop && f.ok && unchanged,
+          `REST crop ${crop.status} source ${str(row.source)}; ${f.detail}; source bytes unchanged ${String(unchanged)}`,
+        );
+      } else {
+        observable = obs(false, `MCP error or no id: ${result.text.slice(0, 200)}`);
+      }
+      return { kind: "simple", isError: result.isError, expectError: false, observable, text: result.text };
+    },
+  },
   simpleStep({
     id: "capture.capture_interactive",
     tool: "avkit_capture",

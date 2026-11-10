@@ -43,6 +43,8 @@ def _valid_body(path: str) -> dict[str, object]:
         return {"theme": "dark"}
     if path == "/api/v1/health/startup-metrics":
         return {"key": "boot", "value_ms": 12}
+    if path == "/api/v1/captures/{id}/crop":
+        return {"x": 0, "y": 0, "width": 8, "height": 8}
     return {}
 
 

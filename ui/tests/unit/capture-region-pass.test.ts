@@ -38,6 +38,9 @@ const PIXELATE_CASES = [
   'pixelate-big-block',
   'pixelate-empty',
   'pixelate-repeat-overlap',
+  // MEU-130 (Session 59, D-493): crops of a pixelate mark, clipped by CROP_PIXELS.
+  'crop-pixelate-sliver',
+  'crop-pixelate-corner',
 ]
 
 const DRAWN: Annotation[] = [
@@ -142,10 +145,36 @@ describe('MEU-90 renderer region pass', () => {
     applyRegionPass(untouched, interior.width, interior.height, DRAWN)
     expect(firstDiff(interior.name, interior.width, untouched, interior.pixels)).toBeNull()
   })
+
+  // MEU-130 (Session 59, D-493): the crop cases are the crop's own pixels and the marks clip_mark returns.
+  it('AC-130.29 the region fixture holds the four crop cases', () => {
+    const crop = ['crop-pixelate-sliver', 'crop-pixelate-corner', 'crop-eraser-edge', 'crop-eraser-ring']
+    expect(crop.filter((name) => PIXELATE_CASES.includes(name) || ERASER_CASES.includes(name))).toEqual(crop)
+    const cases = loadCases().filter((c) => c.name.startsWith('crop-'))
+    expect(cases.map((c) => c.name)).toEqual(crop)
+    for (const c of cases) {
+      expect(c.marks.length, c.name).toBeGreaterThan(0)
+      expect(c.marks.map((mark) => isRegionMark(mark)), c.name).toEqual(c.marks.map(() => true))
+      expect(c.expected, `${c.name} changes pixels`).not.toEqual(c.pixels)
+      const canvas = rgba(c.pixels)
+      applyRegionPass(canvas, c.width, c.height, c.marks)
+      expect(firstDiff(c.name, c.width, canvas, c.expected)).toBeNull()
+      expect(opaque(canvas), `${c.name} alpha`).toBe(true)
+    }
+  })
 })
 
 /** The eraser rows of REGION_CASES in fixture order; `pixelate-then-eraser` is a composed pass (R-1 `composed`). */
-const ERASER_CASES = ['eraser-stems', 'eraser-tie', 'eraser-clipped', 'eraser-cover', 'pixelate-then-eraser']
+// MEU-130 (Session 59, D-493): + the crop eraser cases, after the composed pass.
+const ERASER_CASES = [
+  'eraser-stems',
+  'eraser-tie',
+  'eraser-clipped',
+  'eraser-cover',
+  'pixelate-then-eraser',
+  'crop-eraser-edge',
+  'crop-eraser-ring',
+]
 
 describe('MEU-91 renderer eraser', () => {
   it('AC-91.7 applyRegionPass equals the bake on every channel for every eraser REGION_CASE', () => {

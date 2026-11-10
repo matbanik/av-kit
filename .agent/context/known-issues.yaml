@@ -4555,3 +4555,88 @@ issues:
             engine: none
             sources: []
           reasoning: Changing the scan path rewrites the frame of rows already stored, which the MEU-128 and MEU-129 ACs do not cover. Leaving it unrecorded hides a defect the plan found. Filing keeps the session's scope and records the probe. Two-way.
+  - id: MCP-AUDIT-BASELINE-PENDING-CROP
+    title: The committed MCP audit baseline has no avkit_capture.crop entry
+    severity: low
+    component: mcp-server
+    status: open
+    discovered: '2026-11-08'
+    root_cause: MEU-130 adds avkit_capture.crop to ACTION_INDEX. The committed baseline (.agent/skills/mcp-tool-audit/resources/baseline-snapshot.json, authoritative, recorded at ddd1117 on 2026-10-16) can only gain an entry from an authoritative --update-baseline run, and BASELINE_UPDATE_RULE refuses that run while YOUTUBE-CAPTIONS-IP-BLOCK makes the transcript actions REGRESSION. Hand-adding the entry is forbidden by BASELINE_ANNOTATION_RULE.
+    blast_radius: The audit coverage test (mcp-server/tests/audit/coverage.test.ts, AC-68.5) accepts the baseline missing exactly the keys in BASELINE_PENDING, which holds only avkit_capture.crop. Every other key still has to match, so a second missing action still fails. The next release audit reports avkit_capture.crop as NEW, and that audit's rule has to accept it.
+    verification:
+      last_checked: '2026-11-09'
+      method: coverage.test.ts AC-68.5 and AC-130.28 at the Session 59 gate
+      result: the baseline misses only avkit_capture.crop and has no extra key
+    category: TECH-DEBT
+    priority: P3
+    related:
+      - YOUTUBE-CAPTIONS-IP-BLOCK
+    meu_links:
+      - MEU-130
+    notes: Filed by Session 59 capture-crop-copy under D-499 A. Closed by the next authoritative baseline update, which records avkit_capture.crop and empties BASELINE_PENDING in the same change; AC-130.28 fails once the baseline holds a pending key, so the list can't outlive its reason. The next release audit is where avkit_capture.crop is accepted as NEW.
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: human
+      decision_log:
+        - id: D-499
+          stage: planning
+          question: How does the MCP audit baseline meet the new crop action?
+          resolution: human
+          class: governance-value
+          chosen: 'A: BASELINE_PENDING = [''avkit_capture.crop''] in mcp-server/tests/audit/coverage.test.ts, AC-68.5''s committed-baseline clause amended, and this issue filed'
+          source_tag: Human
+          precedents:
+            - mcp-server/tests/audit/coverage.test.ts:78-85 — AC-68.5 at 8bcb4a6
+            - .agent/skills/mcp-tool-audit/SKILL.md:45-51 — BASELINE_UPDATE_RULE and BASELINE_ANNOTATION_RULE
+            - .agent/context/known-issues.yaml — YOUTUBE-CAPTIONS-IP-BLOCK, open; do not refresh the audit baseline to hide it
+            - docs/execution/plans/2026-10-02-capture-flatten-backup/implementation-plan.md:200 — D-20, a gate-only tolerance
+          research:
+            engine: exa
+            sources:
+              - https://contribute.qt-project.org/quips/24/
+              - https://handbook.gitlab.com/handbook/engineering/testing/quarantine-process/
+              - https://www.rad-ui.com/docs/contributing/flaky-test-quarantine
+              - https://sysroot.io/blog/flaky-tests-quarantine-strategy-ci-cd-reliability
+          reasoning: The baseline is a governed snapshot that only an authoritative run updates, and that run is blocked while the caption block holds. Naming the one gap in the test and here keeps main green and tells the next release audit what to accept. Two-way.
+          human_message_reference: '**Mat''s ruling (2026-11-09):** option A, as recommended: `BASELINE_PENDING` in the test, plus a filed issue. Mat''s words: "D-499 A".'
+  - id: CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST
+    title: One inbox-root file the scan can't open breaks the capture list
+    severity: medium
+    component: infrastructure
+    status: open
+    discovered: '2026-11-09'
+    root_cause: GET /captures and MCP capture list run CaptureService.scan_inbox (packages/core/src/avkit_core/services/capture.py:466), which calls the adapter's probe on every inbox-root file with a scan extension (:411) and catches nothing. probe (packages/infrastructure/src/avkit_infra/capture/adapter.py:316 at f15626c) turns UnidentifiedImageError and OSError into InboxPathError(f"{path} is not an image"), so a non-image named .png fails the whole list with a 422 whose message holds the file's path. Pillow raises SyntaxError for some damaged PNG chunks, which probe doesn't catch, so that file fails the list with a 500.
+    blast_radius: 'Found in Session 59''s row 5: AC-130.21''s test damages a PNG''s IDAT and must put the source''s bytes back before its follow-up list, because the scan''s probe can''t read it; the GUI was not run. Any one such file in the inbox root (a half-written or damaged screenshot, a renamed non-image) hides every shot from the Capture page and the MCP list until it is removed, and the 422 puts a path in an API message the Console can show. Import, crop and the region view refuse such a file with fixed, path-free messages already.'
+    verification:
+      last_checked: '2026-11-09'
+      method: A read of scan_inbox and the adapter's probe at f15626c, and AC-130.21's restore step in tests/e2e/test_api_capture_crop.py
+      result: probe catches only UnidentifiedImageError and OSError and raises InboxPathError with the path in its text; scan_inbox catches nothing, so one such file fails the list
+    category: MEU-NEW
+    priority: P2
+    related:
+      - CAPTURE-EXIF-SCANNED-ORIENTATION
+    meu_links:
+      - MEU-130
+    notes: 'Found by Session 59 capture-crop-copy (MEU-130) in row 5 and filed at its closeout under Mat''s D-507. Not fixed there: it predates the crop and changes the scan path, which needs its own plan (skip or mark the file and keep listing the rest, with a fixed path-free message and SyntaxError caught where probe opens the file).'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: human
+      decision_log:
+        - id: D-507
+          stage: closeout
+          question: 'Session 59 found a pre-existing scan defect outside the crop: one inbox-root file the scan can''t open breaks GET /captures, with a 422 naming its path or a 500. File it, or leave it as the handoff''s observation?'
+          resolution: human
+          class: two-way
+          chosen: 'File it, as recommended: CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST, P2, open, linked to MEU-130, in Session 59''s commit. Mat''s words (2026-11-10): ''File it (Recommended)'''
+          source_tag: Human-approved
+          precedents:
+            - packages/core/src/avkit_core/services/capture.py:411 — scan_inbox calls probe on each scan-extension file with no catch
+            - packages/infrastructure/src/avkit_infra/capture/adapter.py:316 — probe raises InboxPathError naming the path, mapped to 422
+            - .agent/context/handoffs/2026-11-08-capture-crop-copy-MEU-130-handoff.md — row 5's observation, not fixed
+          research:
+            engine: none
+            sources: []
+          reasoning: Session 50's rule says a raw value that reaches an API message is fixed or raised, never left as a residual, and the defect predates this session and lies outside MEU-130's scope. Filing records the probe and its two failure shapes for a plan of its own. Leaving it as a handoff observation hides it from the register. Two-way.
+          human_message_reference: File it (Recommended)

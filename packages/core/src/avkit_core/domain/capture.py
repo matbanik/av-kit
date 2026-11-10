@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import math
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
+from fractions import Fraction
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypeVar, assert_never
 
 from avkit_core.domain.enums import CaptureRequestStatus, CaptureSource
 from avkit_core.domain.errors import (
@@ -417,6 +418,122 @@ Annotation = (
     | EraserAnnotation
 )
 
+MarkCarry = Literal["kept", "clipped", "dropped"]
+
+
+def clip_mark(
+    mark: Annotation, left: int, top: int, width: int, height: int
+) -> tuple[Annotation | None, MarkCarry]:
+    """MARK_CARRY: move a saved mark into a crop's frame and clip it to the crop (MEU-130).
+
+    The crop is `(left, top, width, height)` in the source's original pixels. The result is
+    a new mark (the input is never changed) and how it was carried; a dropped mark is `None`.
+    Every returned mark is a fixed point of the service's `_clamp_annotation` (D-485).
+    """
+    match mark:
+        case ArrowAnnotation():
+            return _clip_arrow(mark, left, top, width, height)
+        case RectAnnotation():
+            return _clip_rect(mark, left, top, width, height)
+        case HighlightAnnotation():
+            return _clip_half_open(mark, left, top, width, height)
+        case PixelateAnnotation():
+            return _clip_half_open(mark, left, top, width, height)
+        case EraserAnnotation():
+            return _clip_half_open(mark, left, top, width, height)
+        case TextAnnotation():
+            return _clip_text(mark, left, top, width, height)
+        case _:
+            assert_never(mark)
+
+
+_HalfOpenMark = TypeVar(
+    "_HalfOpenMark", HighlightAnnotation, PixelateAnnotation, EraserAnnotation
+)
+
+
+def _clip_half_open(
+    mark: _HalfOpenMark, left: int, top: int, width: int, height: int
+) -> tuple[_HalfOpenMark | None, MarkCarry]:
+    """MARK_CLIP_BOX: highlight, pixelate and eraser cover `[x, x+w) x [y, y+h)` (D-486)."""
+    x0, y0 = mark.x - left, mark.y - top
+    x1, y1 = x0 + mark.width, y0 + mark.height
+    if mark.width == 0 or mark.height == 0:
+        # Draws nothing: kept while its origin is inside, as the clamp would leave it.
+        if 0 <= x0 < width and 0 <= y0 < height:
+            return replace(mark, x=x0, y=y0), "kept"
+        return None, "dropped"
+    if x0 >= 0 and y0 >= 0 and x1 <= width and y1 <= height:
+        return replace(mark, x=x0, y=y0), "kept"
+    cx0, cy0, cx1, cy1 = max(x0, 0), max(y0, 0), min(x1, width), min(y1, height)
+    if cx0 >= cx1 or cy0 >= cy1:
+        return None, "dropped"
+    return replace(mark, x=cx0, y=cy0, width=cx1 - cx0, height=cy1 - cy0), "clipped"
+
+
+def _clip_rect(
+    mark: RectAnnotation, left: int, top: int, width: int, height: int
+) -> tuple[RectAnnotation | None, MarkCarry]:
+    """MARK_CLIP_BOX: a rect's outline covers `[x, x+w] x [y, y+h]`, a line when w or h is 0."""
+    x0, y0 = mark.x - left, mark.y - top
+    x1, y1 = x0 + mark.width, y0 + mark.height
+    right, bottom = width - 1, height - 1
+    if x0 >= 0 and y0 >= 0 and x1 <= right and y1 <= bottom:
+        return replace(mark, x=x0, y=y0), "kept"
+    cx0, cy0, cx1, cy1 = max(x0, 0), max(y0, 0), min(x1, right), min(y1, bottom)
+    if cx0 > cx1 or cy0 > cy1:
+        return None, "dropped"
+    return replace(mark, x=cx0, y=cy0, width=cx1 - cx0, height=cy1 - cy0), "clipped"
+
+
+def _clip_text(
+    mark: TextAnnotation, left: int, top: int, width: int, height: int
+) -> tuple[TextAnnotation | None, MarkCarry]:
+    """MARK_CLIP_TEXT: kept when its anchor is in `[0, width) x [0, height)`; never clipped."""
+    x0, y0 = mark.x - left, mark.y - top
+    if 0 <= x0 < width and 0 <= y0 < height:
+        return replace(mark, x=x0, y=y0), "kept"
+    return None, "dropped"
+
+
+def _round_half_up(value: Fraction, hi: int) -> int:
+    return min(max(math.floor(value + 0.5), 0), hi)
+
+
+def _clip_arrow(
+    mark: ArrowAnnotation, left: int, top: int, width: int, height: int
+) -> tuple[ArrowAnnotation | None, MarkCarry]:
+    """MARK_CLIP_ARROW: Liang-Barsky against the closed `[0, width] x [0, height]` (D-487).
+
+    The parameters are exact fractions, so an end that lands on a half pixel rounds up in
+    either direction (round 1 F2): a float could fall just below the tie.
+    """
+    x0, y0 = mark.from_xy[0] - left, mark.from_xy[1] - top
+    x1, y1 = mark.to_xy[0] - left, mark.to_xy[1] - top
+    if 0 <= x0 <= width and 0 <= y0 <= height and 0 <= x1 <= width and 0 <= y1 <= height:
+        return replace(mark, from_xy=(x0, y0), to_xy=(x1, y1)), "kept"
+    dx, dy = x1 - x0, y1 - y0
+    t0, t1 = Fraction(0), Fraction(1)
+    for p, q in ((-dx, x0), (dx, width - x0), (-dy, y0), (dy, height - y0)):
+        if p == 0:
+            if q < 0:
+                return None, "dropped"
+            continue
+        r = Fraction(q) / p
+        if p < 0:
+            if r > t1:
+                return None, "dropped"
+            t0 = max(t0, r)
+        else:
+            if r < t0:
+                return None, "dropped"
+            t1 = min(t1, r)
+    start = (_round_half_up(x0 + t0 * dx, width), _round_half_up(y0 + t0 * dy, height))
+    end = (_round_half_up(x0 + t1 * dx, width), _round_half_up(y0 + t1 * dy, height))
+    if start == end:
+        return None, "dropped"
+    return replace(mark, from_xy=start, to_xy=end), "clipped"
+
 
 @dataclass(frozen=True)
 class CaptureShot:
@@ -486,6 +603,24 @@ class CaptureRequest:
         require_datetime(self.expires_at, "expires_at")
 
 
+@dataclass(frozen=True)
+class CropResult:
+    """A crop's new shot, its boxes and its mark counts (MEU-130, CROP_RESPONSE).
+
+    `requested` is the box as sent with its unit; `applied` is `(left, top, width, height)`
+    in original pixels after `resolve_region`.
+    """
+
+    shot: CaptureShot
+    source_id: str
+    requested: tuple[float, float, float, float, RegionUnit]
+    applied: tuple[int, int, int, int]
+    clamped: bool
+    kept: int
+    clipped: int
+    dropped: int
+
+
 __all__ = (
     "ANNOTATED_EXT",
     "ANNOTATED_FORMATS",
@@ -498,9 +633,11 @@ __all__ = (
     "CAPTURE_REQUEST_TRANSITIONS",
     "CaptureRequest",
     "CaptureShot",
+    "CropResult",
     "EraserAnnotation",
     "HighlightAnnotation",
     "ImageProbe",
+    "MarkCarry",
     "PIXELATE_BLOCK_DEFAULT",
     "PIXELATE_BLOCK_MAX",
     "PIXELATE_BLOCK_MIN",
@@ -513,6 +650,7 @@ __all__ = (
     "RegionUnit",
     "TextAnnotation",
     "ViewFrame",
+    "clip_mark",
     "resolve_region",
     "view_frame",
     "view_scale",

@@ -1182,3 +1182,66 @@ def test_ac_91_2_eraser_sidecar_round_trip_and_clamp(ac_id: str, tmp_path: Path)
     assert sidecar["version"] == SIDECAR_VERSION
     assert sidecar["annotations"][0] == {"type": "eraser", "x": 32, "y": 0, "width": 9, "height": 5}
     assert service.load_shot_annotations(saved.id)[0] == clamped
+
+
+# MEU-130 capture-crop-copy (Session 59): MARK_CARRY's clamp invariant (D-485).
+@pytest.mark.parametrize("ac_id", ["AC-130.5"], ids=["AC-130.5"])
+@pytest.mark.unit
+def test_ac_130_5_carry_is_a_fixed_point_of_the_clamp(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-130.5"
+    import copy
+    import random
+    from collections import Counter
+
+    from avkit_core.domain.capture import (
+        ArrowAnnotation,
+        EraserAnnotation,
+        HighlightAnnotation,
+        PixelateAnnotation,
+        RectAnnotation,
+        TextAnnotation,
+        clip_mark,
+    )
+
+    service, _uow, _port, _inbox = _stack(tmp_path)
+    rng = random.Random(130)
+    kinds = ("arrow", "rect", "highlight", "text", "pixelate", "eraser")
+    counts: Counter[str] = Counter()
+    by_kind: Counter[tuple[str, str]] = Counter()
+    moved_by_clamp: list[tuple[int, str]] = []
+    for index in range(500):
+        kind = kinds[index % len(kinds)]
+        left, top = rng.randint(0, 400), rng.randint(0, 400)
+        width, height = rng.randint(8, 300), rng.randint(8, 300)
+        x = rng.randint(left - 200, left + width + 200)
+        y = rng.randint(top - 200, top + height + 200)
+        w = 0 if rng.random() < 0.1 else rng.randint(1, 250)
+        h = 0 if rng.random() < 0.1 else rng.randint(1, 250)
+        if kind == "arrow":
+            end = (
+                rng.randint(left - 200, left + width + 200),
+                rng.randint(top - 200, top + height + 200),
+            )
+            mark = ArrowAnnotation(from_xy=(x, y), to_xy=end, color="red", stroke_width=3)
+        elif kind == "rect":
+            mark = RectAnnotation(x=x, y=y, width=w, height=h, color="blue", stroke_width=2)
+        elif kind == "highlight":
+            mark = HighlightAnnotation(x=x, y=y, width=w, height=h, color="yellow", opacity=0.5)
+        elif kind == "text":
+            mark = TextAnnotation(x=x, y=y, text="note", color="white", font_size=18, bg_color=None)
+        elif kind == "pixelate":
+            mark = PixelateAnnotation(x=x, y=y, width=w, height=h, block_size=rng.randint(2, 100))
+        else:
+            mark = EraserAnnotation(x=x, y=y, width=w, height=h)
+        before = copy.deepcopy(mark)
+        out, carry = clip_mark(mark, left, top, width, height)
+        assert mark == before
+        counts[carry] += 1
+        by_kind[(kind, carry)] += 1
+        assert (out is None) == (carry == "dropped")
+        if out is not None and service._clamp_annotation(out, width, height) != out:
+            moved_by_clamp.append((index, kind))
+    assert moved_by_clamp == []
+    assert sum(counts.values()) == 500
+    assert set(counts) == {"kept", "clipped", "dropped"}
+    assert {kind for kind, _carry in by_kind} == set(kinds)

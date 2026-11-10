@@ -217,6 +217,8 @@ class CaptureSource(StrEnum):
     Scan = "Scan"
     # IMPORT_SOURCE (MEU-129, D-414): a file brought in with POST /captures mode=import.
     Import = "Import"
+    # CROP_SOURCE (MEU-130, D-484): a region cut from another shot by POST /captures/{id}/crop.
+    Crop = "Crop"
 
 
 class CaptureRequestStatus(StrEnum):

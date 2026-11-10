@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 124** — Active: 38 | Mitigated: 1 | Resolved: 83
+**Total: 126** — Active: 40 | Mitigated: 1 | Resolved: 83
 
 ## Active Issues
 
@@ -16,6 +16,7 @@
 | 🟡 | `FFMPEG-LIBDVDCSS-BUNDLED` | The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟡 | `TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS` | verify --deep and discover report noise, and verify stamps last_checked… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟡 | `CAPTURE-EXIF-SCANNED-ORIENTATION` | A scanned JPEG or WebP with EXIF orientation 5 to 8 is sized and marked… | infrastructure | ⬜ open | 2026-11-08 |
+| 🟡 | `CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST` | One inbox-root file the scan can't open breaks the capture list | infrastructure | ⬜ open | 2026-11-09 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
 | 🟢 | `E2E-ELECTRON-LAUNCH-FLAG` | ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch -… | ui | ⬜ open | 2026-09-02 |
 | 🟢 | `TOOLING-ADOPTION-FIXTURE-LIVE-GOVERNANCE` | Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the… | infrastructure | ⬜ open | 2026-09-30 |
@@ -47,6 +48,7 @@
 | 🟢 | `TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS` | Two older title paths into transcript storage skip the lone-surrogate c… | core | ⬜ open | 2026-11-07 |
 | 🟢 | `CONVERT-CUT-ENCODER-LABEL` | A cut is labelled with an encoder it does not use | core | ⬜ open | 2026-11-07 |
 | 🟢 | `TTS-STATUS-PILL-BELOW-AA-CONTRAST` | The TTS job status pill puts its label below 4.5:1 contrast in both the… | ui | ⬜ open | 2026-11-08 |
+| 🟢 | `MCP-AUDIT-BASELINE-PENDING-CROP` | The committed MCP audit baseline has no avkit_capture.crop entry | mcp-server | ⬜ open | 2026-11-08 |
 
 ## Mitigated / Workaround
 
