@@ -67,7 +67,7 @@ through onnxruntime.
 - **DVD libraries:** this build also links libdvdread and libdvdnav, and through them libdvdcss,
   into `ffmpeg.exe`. av-kit never uses DVD input.
 - **Source:** the complete corresponding source is `av-kit-0.1.0-rc.1-ffmpeg-source.tar.xz`,
-  attached to the release at https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.2. It holds
+  attached to the release at https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.3. It holds
   FFmpeg at commit `8dca1586f468bfcbb78ae3ed618af1361d9f140a`, every dependency this build enables
   at its pinned commit, the scripts that produced the build
   (https://github.com/BtbN/FFmpeg-Builds) with their patches, and the toolchain sources. Its

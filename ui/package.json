@@ -1,6 +1,6 @@
 {
   "name": "av-kit-ui",
-  "version": "0.1.0-rc.2",
+  "version": "0.1.0-rc.3",
   "private": true,
   "type": "module",
   "description": "Save YouTube videos and captions, read text aloud, shrink videos and mark up screenshots, all on your own PC.",

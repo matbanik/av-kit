@@ -226,7 +226,7 @@ def test_ac_72_7_third_party_notices() -> None:
         "autobuild-2026-10-31-12-59",
         "https://github.com/BtbN/FFmpeg-Builds",
         "av-kit-0.1.0-rc.1-ffmpeg-source.tar.xz",
-        "https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.2",
+        "https://github.com/matbanik/av-kit/releases/tag/v0.1.0-rc.3",
         "resources/ffmpeg/LICENSE.txt",
         "ffmpeg.exe",
         "ffprobe.exe",

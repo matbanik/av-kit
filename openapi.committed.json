@@ -3329,7 +3329,7 @@
   },
   "info": {
     "title": "av-kit",
-    "version": "0.1.0rc2"
+    "version": "0.1.0rc3"
   },
   "openapi": "3.1.0",
   "paths": {

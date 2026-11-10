@@ -78,7 +78,7 @@ wheels = [
 
 [[package]]
 name = "av-kit"
-version = "0.1.0rc2"
+version = "0.1.0rc3"
 source = { virtual = "." }
 
 [package.dev-dependencies]
@@ -105,7 +105,7 @@ dev = [
 
 [[package]]
 name = "avkit-api"
-version = "0.1.0rc2"
+version = "0.1.0rc3"
 source = { editable = "packages/api" }
 dependencies = [
     { name = "avkit-core" },
@@ -128,7 +128,7 @@ requires-dist = [
 
 [[package]]
 name = "avkit-core"
-version = "0.1.0rc2"
+version = "0.1.0rc3"
 source = { editable = "packages/core" }
 dependencies = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
@@ -146,7 +146,7 @@ requires-dist = [
 
 [[package]]
 name = "avkit-infra"
-version = "0.1.0rc2"
+version = "0.1.0rc3"
 source = { editable = "packages/infrastructure" }
 dependencies = [
     { name = "avkit-core" },
