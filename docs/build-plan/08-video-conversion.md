@@ -611,6 +611,21 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 > - `tests/integration/test_extract_real_ffmpeg.py` runs both modes through the real `FFmpegAdapter` and the pinned `packaging/ffmpeg-win64/` binaries, on `.mp4` files with one, two and no audio tracks that it generates in a temp folder (`REAL_FFMPEG`, D-371). No clip path reaches stdout, stderr, the Console ring or `console.log` (`NO_RAW_CONSOLE`, D-372). CI's Tests step deselects the module, because the runner has no fetched binaries (`CI_DESELECT`, `.github/workflows/ci.yml:65`).
 > - AC-123.1 to AC-123.13. Closes `CONVERT-EXTRACT-STREAM-INDEX-MISMATCH` and its rider `CONVERT-EXTRACT-ENCODER-LABEL`. Plan `docs/execution/plans/2026-11-07-convert-extract-index/`.
 
+<a id="media-probe-residual"></a>
+
+## Media probe (residual)
+
+> **MEU-133.** Registered 2026-11-09 from the video stills design (`_inspiration/video-stills/design.md`, slice S1, §6.2). Before an agent picks times for frames or a sheet ([09 §Residuals registered 2026-11-09](09-screenshot-capture.md#residuals-registered-2026-11-09)), it needs the video's duration, size and streams. `MediaPort.probe` already reads them for jobs, but nothing exposes them.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Request | `POST /conversions/probe` `{path}` (`extra="forbid"`) and MCP `avkit_convert` `probe` with `path` (`.strict()`). Synchronous and read-only; no job row is written | Research-backed design D-6 |
+| Response | 200 `{path, duration_ms, timecode, container, video_codec, audio_codec, width, height, fps, has_video, has_audio}`. `duration_ms` and `timecode` are null when the container gives no duration (raw camera streams such as `.h264` or `.dav`) | Research-backed design D-6, §11 |
+| Reuse | Calls the existing `MediaPort.probe` as it is; no new ffprobe code | Local Canon design L-2 |
+| Input | A local absolute path to a regular file, read in place and never changed. URLs are rejected | Local Canon design D-16 |
+| Errors | Fixed messages that name no path: `video file not found`, the existing ffmpeg-not-found error, and a fixed probe failure. Extra keys fail the strict schema | Research-backed design §8 |
+| Tests | Route and MCP field parity; a real-ffmpeg probe of generated clips with and without audio, and of one with no duration; OpenAPI regenerated | Local Canon |
+
 ---
 
 ## MEUs
@@ -626,6 +641,7 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 | MEU-109 | `convert-output-folder` | [§Output folder (residual)](#output-folder-residual) | MEU-29 |
 | MEU-112 | `convert-job-gpu-preference` | [§Encoder choice per job (residual)](#job-encoder-choice-residual) | MEU-30, MEU-33 |
 | MEU-123 | `convert-extract-stream-index` | [§Extract stream index (residual)](#extract-stream-index-residual) | MEU-29, MEU-30 |
+| MEU-133 | `convert-media-probe` | [§Media probe (residual)](#media-probe-residual) | MEU-31, MEU-32 |
 
 ---
 

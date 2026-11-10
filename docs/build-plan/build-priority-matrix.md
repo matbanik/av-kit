@@ -12,7 +12,7 @@
 |------|------|------|
 | P0 | MEU-1–4 | Domain first. No infrastructure until ports exist. |
 | P1 | MEU-5–13 | Adapters then services. Never import infra from domain. |
-| P2 | MEU-14–132 | API before MCP/GUI. Distribution after GUI shell. Conversion (MEU-28–33) after the YouTube toolkit exists. Capture (MEU-34–40) after Convert. Capture annotation geometry (MEU-59) after the Capture page and native picker. Capture edit-until-Save (MEU-60) after MEU-59. Queue cards (MEU-41–49) after every page exists. Page layout (MEU-50–58) after the queue cards it composes around. Login item (MEU-61) after Settings (MEU-23) and the NSIS installer (MEU-25). 2026-09-30 residuals: TTS runtime assets (MEU-62) before the TTS page residuals (MEU-63/64) and the MCP live audit (MEU-68); Capture toolbar (MEU-65) before zoom (MEU-66); flatten-with-backup (MEU-67) after MEU-60; header toggles (MEU-69) and Settings emphasis (MEU-70) last. 2026-10-17 residuals: shortcut binding (MEU-95) before palette curation (MEU-96) before common shortcuts (MEU-97); path fields (MEU-93) and theme-reactive selects (MEU-94) stand alone; TTS sideload load (MEU-98) after the device fallback (MEU-75). 2026-11-08 crop residuals: region view (MEU-128) before crop (MEU-130) before the crop tool (MEU-131); image import (MEU-129) before GUI import (MEU-132). |
+| P2 | MEU-14–136 | API before MCP/GUI. Distribution after GUI shell. Conversion (MEU-28–33) after the YouTube toolkit exists. Capture (MEU-34–40) after Convert. Capture annotation geometry (MEU-59) after the Capture page and native picker. Capture edit-until-Save (MEU-60) after MEU-59. Queue cards (MEU-41–49) after every page exists. Page layout (MEU-50–58) after the queue cards it composes around. Login item (MEU-61) after Settings (MEU-23) and the NSIS installer (MEU-25). 2026-09-30 residuals: TTS runtime assets (MEU-62) before the TTS page residuals (MEU-63/64) and the MCP live audit (MEU-68); Capture toolbar (MEU-65) before zoom (MEU-66); flatten-with-backup (MEU-67) after MEU-60; header toggles (MEU-69) and Settings emphasis (MEU-70) last. 2026-10-17 residuals: shortcut binding (MEU-95) before palette curation (MEU-96) before common shortcuts (MEU-97); path fields (MEU-93) and theme-reactive selects (MEU-94) stand alone; TTS sideload load (MEU-98) after the device fallback (MEU-75). 2026-11-08 crop residuals: region view (MEU-128) before crop (MEU-130) before the crop tool (MEU-131); image import (MEU-129) before GUI import (MEU-132). 2026-11-09 video stills residuals: probe (MEU-133) before frames (MEU-134) before the sheet (MEU-135); frames and the export copy (MEU-136) after crop (MEU-130). |
 
 ## MEU order
 
@@ -89,6 +89,7 @@
 | 8.7 | MEU-109 | `convert-output-folder` | [08 §Output folder (residual)](08-video-conversion.md#output-folder-residual) | MEU-29 |
 | 8.8 | MEU-112 | `convert-job-gpu-preference` | [08 §Encoder choice per job (residual)](08-video-conversion.md#job-encoder-choice-residual) | MEU-30, MEU-33 |
 | 8.9 | MEU-123 | `convert-extract-stream-index` | [08 §Extract stream index (residual)](08-video-conversion.md#extract-stream-index-residual) | MEU-29, MEU-30 |
+| 8.10 | MEU-133 | `convert-media-probe` | [08 §Media probe (residual)](08-video-conversion.md#media-probe-residual) | MEU-31, MEU-32 |
 | 9.1 | MEU-34 | `domain-capture` | [09 §Domain](09-screenshot-capture.md#domain) | MEU-4 |
 | 9.2 | MEU-35 | `infra-capture` | [09 §Infrastructure](09-screenshot-capture.md#infrastructure) | MEU-34, MEU-5 |
 | 9.3 | MEU-36 | `svc-capture` | [09 §Service layer](09-screenshot-capture.md#service-layer) | MEU-35 |
@@ -128,6 +129,9 @@
 | 9.37 | MEU-130 | `capture-crop-copy` | [09 §Crop to a new shot](09-screenshot-capture.md#crop-to-new-shot) | MEU-128, MEU-67 |
 | 9.38 | MEU-131 | `gui-capture-crop-tool` | [09 §Crop tool](09-screenshot-capture.md#crop-tool) | MEU-130, MEU-100 |
 | 9.39 | MEU-132 | `gui-capture-image-import` | [09 §GUI image import](09-screenshot-capture.md#gui-image-import) | MEU-129, MEU-39 |
+| 9.40 | MEU-134 | `capture-video-frames` | [09 §Video frames](09-screenshot-capture.md#video-frames) | MEU-133, MEU-129, MEU-130 |
+| 9.41 | MEU-135 | `capture-video-sheet` | [09 §Video sheet](09-screenshot-capture.md#video-sheet) | MEU-134 |
+| 9.42 | MEU-136 | `capture-export-copy` | [09 §Export copy](09-screenshot-capture.md#export-copy) | MEU-130 |
 | 10.1 | MEU-41 | `canon-queue-cards` | [10 §Scope and non-goals](10-queue-card-ui.md#scope-and-non-goals) | MEU-39 |
 | 10.2 | MEU-42 | `svc-requeue-widening` | [10 §Re-queue contract](10-queue-card-ui.md#re-queue-contract) | MEU-41 |
 | 10.3 | MEU-43 | `gui-queue-primitives` | [10 §Status token table](10-queue-card-ui.md#status-token-table) | MEU-41 |

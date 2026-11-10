@@ -1079,6 +1079,66 @@ Five residual MEUs from the capture crop design (`_inspiration/capture-crop/desi
 | Paste | Ctrl+V with an image on the clipboard: the main process writes it to the inbox as `{yyyy-MM-dd_HH-mm-ss}.png` and registers it as `gui`, the hotkey's publication path. Text fields keep their native paste | Local Canon design D-12 ([§Result publication](#result-publication)) |
 | Tests | Behaviour tests for each entry point; Electron proof of a drop and a paste | Local Canon |
 
+## Residuals registered 2026-11-09
+
+Three residual MEUs from the video stills design (`_inspiration/video-stills/design.md`, 2026-11-09). Mat asked whether an agent can take stills from a video through av-kit, to review meeting recordings and security camera footage. On 2026-11-09 Mat accepted every recommendation: frames and sheets are `avkit_capture` actions that write inbox shots (D-1); v1 is probe, frames and sheet, with change detection deferred (D-2); an export copy is in v1 (D-3); the caps in D-4; and no new GUI, because the outputs are ordinary shots on the Capture page (D-5). D-6 to D-20 are agent decisions backed by research or local canon; a plan may revise one with evidence and says so. The probe slice lives in 08 ([§Media probe (residual)](08-video-conversion.md#media-probe-residual), MEU-133). Grouping: `.agent/context/grouping/2026-11-09-video-stills-session-grouping.md`.
+
+<a id="video-frames"></a>
+
+### Video frames
+
+> **MEU-134.** Design slice S2 (§6.1, §6.3). Frames at known times, for example times taken from a transcript, or evenly spaced across a span.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Request | `POST /captures/frames` and MCP `avkit_capture` `frames` (`.strict()`) in two shapes: `{path, at: [time, …]}` with 1 to `FRAMES_MAX` times, or `{path, count, start?, end?}` with `count` 1 to `FRAMES_MAX`. `FRAMES_MAX` is 20 | Human-approved 2026-11-09 design D-1, D-4 |
+| Times | In: seconds as a number, or a string `SS`, `MM:SS` or `HH:MM:SS`, each with an optional `.mmm`. Out: every time as `time_ms` and `timecode` (`HH:MM:SS.mmm`), relative to the file start. A time at or past the end is rejected before any grab with a fixed message that gives the duration; `start` must be before `end` | Local Canon design D-8; Research-backed design D-15 |
+| Spacing | `count` frames sit at the midpoints of `count` equal parts of `[start, end)`, which default to the whole file. Duplicate times collapse, and the response is in time order | Research-backed design D-9 (R-3) |
+| Grab | Input seek `-ss T -i V -frames:v 1`, decoded and never `-c copy`, written as PNG at source resolution. `CaptureService` reaches ffmpeg through a narrow `FramePort` (`probe`, `grab_frame`) that the existing `FFmpegAdapter` instance implements | Research-backed design D-7; Local Canon design D-19 |
+| Video input | A local absolute path, read in place, never copied into the inbox or changed, with no size limit. URLs are rejected | Local Canon design D-16 |
+| Writes | Each frame is a new inbox shot: a `.avkit-tmp` file, then `os.replace` under `CAPTURE_FILE_LOCK`, then register. A failed grab leaves no partial shot | Local Canon design §8 (L-5, the [Image import](#image-import) pattern) |
+| Name | `{video_stem}-t{HH}h{MM}m{SS}.{mmm}s.png`, for example `standup-t00h12m05.500s.png`, then `_2` and on, checked against files and rows | Local Canon design D-11 |
+| Source | New `CaptureSource.Video` with no register wire value, added after `Crop`, so AC-130.7's last-member assertion moves with it | Local Canon design D-12 |
+| Response | 201 `{video: {path, duration_ms, width, height, fps}, frames: [{id, path, time_ms, timecode, width, height}]}`, with no image bytes. The agent views a frame with `image` and its `max_edge` or region fields ([Region view](#region-view)) | Research-backed design D-10 (R-10) |
+| Errors | Fixed messages that name no path: `video file not found`; `not a video: no video stream`; `time {t} is past the end ({duration})`; `start must be before end`; the existing ffmpeg-not-found error; `frame grab failed at {t}`. A file with no duration fails `count` with a fixed message, and `at` still works | Research-backed design §8, §11 |
+| Description | Its own markers, because capture's shared Prerequisite does not fit a video path: workflow probe → sheet → frames → image; prerequisite a local absolute video path and ffmpeg, nothing uploaded; returns ids, paths and times. It says whether a grab returns the frame at or after T or the nearest one | Local Canon design §6.6 (L-9) |
+| Planning probes | (1) Seek accuracy on a `testsrc2` counter clip. (2) The time for 20 frames of a 2 h 4K HEVC file against the MCP request timeout; if it is close, the plan lowers `FRAMES_MAX` rather than adding a queue | Design §11; Human-approved D-4 |
+| Tests | Counter-clip grabs at 0, 1.0 and 1.02 s and the last frame; a VFR fixture within one frame interval; past-the-end rejected before any grab; two calls at once give `_2` names, never an overwrite; API and MCP field parity; OpenAPI regenerated | Local Canon design §11 |
+
+<a id="video-sheet"></a>
+
+### Video sheet
+
+> **MEU-135.** Design slice S3 (§6.4). One labelled grid image that covers a span, so an agent can see an hour in one view and zoom by calling again with a narrower span.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Request | `POST /captures/sheet` and MCP `avkit_capture` `sheet` (`.strict()`) `{path, start?, end?, grid?, max_edge?}`. `grid` is 2 to 5, default 3 (grid × grid cells). `max_edge` is 64 to 2576 (`REGION_MAX_EDGE_MIN/MAX`), default 1568. Times, errors and video input follow [Video frames](#video-frames) | Human-approved 2026-11-09 design D-1, D-4 |
+| Cells | Cell times sit at the midpoints, as in `count` frames. ffmpeg grabs each cell already scaled to the cell size, and Pillow pastes the cells left to right, top to bottom | Local Canon design D-13; Research-backed design D-9 |
+| Labels | Each cell carries its number and `HH:MM:SS`, with `.mmm` when the spacing is under 10 s, as outlined text in the font annotate already resolves (`_load_font`). Label height scales with the cell. Neither ffmpeg `drawtext`, `tile` nor `xstack` is used | Research-backed design D-14; Local Canon design D-13 (L-8) |
+| Size | The long edge is at most `max_edge`, and the area holds w×h/750 ≤ 1568 tokens, or ≤ 4784 when `max_edge` > 1568, so the vision API never downscales the sheet | Human-approved 2026-11-09 design D-4 (R-9) |
+| Writes | One new shot, `{video_stem}-sheet-{start}-{end}.png` with `HHhMMmSSs` times, then `_2`, as `CaptureSource.Video`, through the [Video frames](#video-frames) write pattern | Local Canon design D-11, D-12 |
+| Response | 201 `{video, shot: {id, path, width, height}, spacing_ms, cells: [{cell, time_ms, timecode}]}`, with no image bytes | Research-backed design D-10, D-14 |
+| Description | Cite times from `cells`, never times read off the image. Zoom is the same call with a narrower `start` and `end`; no session state is kept. Events between samples can be missed | Research-backed design §6.4, §6.6 (R-6) |
+| Planning probe | A 5×5 sheet of a 2 h 4K HEVC file against the MCP request timeout | Design §11 |
+| Tests | The size budget for every grid at 16:9, 4:3 and 9:16; labels legible on a mostly white and a mostly black frame; each label matches its `cells` entry; a file with no duration fails with the fixed message; API and MCP field parity; OpenAPI regenerated | Local Canon design §11 |
+
+<a id="export-copy"></a>
+
+### Export copy
+
+> **MEU-136.** Design slice S4 (§6.5). The most common image edit agents run here after crop is a resize with a re-encode (design §4); this makes a small deliverable without ImageMagick.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Request | `POST /captures/{id}/export` `{format, max_edge?, quality?}` (`extra="forbid"`) and MCP `avkit_capture` `export` (`.strict()`). `format` is `png`, `jpeg` or `webp`. `max_edge` is at least 64 and only shrinks. `quality` is 1 to 100 for `jpeg` and `webp`, default `LOSSY_QUALITY` | Human-approved 2026-11-09 design D-3; Local Canon design D-20 |
+| Source | The shot as it is shown: the annotated bake when marks exist, otherwise the original. The export has no marks or sidecar of its own | Local Canon design D-20 |
+| Writes | A new shot. The source file, sidecar and bake are not changed, and there is no `confirm`, because nothing is overwritten. It uses the [Crop to a new shot](#crop-to-new-shot) copy pipeline (temporary file, lock, unique name, register) and saves no metadata | Human-approved 2026-11-09 design D-3; Local Canon design D-20 |
+| Name | `{stem}-export.{png,jpg,webp}`, then `_2` and on | Local Canon design D-11 |
+| Source member | New `CaptureSource.Export` with no register wire value | Local Canon design D-12 |
+| Response | 201 `{shot: {id, path, width, height, bytes}, source_id}`, with no image bytes; `bytes` lets the agent see when an export came out larger than its source | Research-backed design §6.5, §11 |
+| Tests | Each format; `max_edge` shrinks and never grows; quality changes the size of `jpeg` and `webp`; no EXIF in the output; a marked source exports its bake; source bytes unchanged; two exports give `-export` and `-export_2`; API and MCP field parity; OpenAPI regenerated | Local Canon |
+
 ## Named deferrals (not this phase)
 
 | Feature | Why |
@@ -1088,13 +1148,14 @@ Five residual MEUs from the capture crop design (`_inspiration/capture-crop/desi
 | In-overlay arrows (ShareX ShapeManager) | Annotation is the Capture page / MCP |
 | Freehand, blur, curved arrows, spotlight, frames, callouts | Four tools only; Pixelate and Eraser are added by MEU-90/91 (Mat's 2026-10-03 request, 2026-10-09 triage). Ellipse and Line (MEU-106), numbered steps (MEU-107) and solid Redact (MEU-103) are registered by the 2026-10-29 capture editor residuals |
 | Timer / window-focus / clipboard-watch auto-capture | Not the F2 loop |
-| ShareX uploaders, after-upload, OCR, GIF, video, scrolling capture | Out of product |
-| Downloader / Convert → Capture handoff | Would reopen those pages |
+| ShareX uploaders, after-upload, OCR, GIF, video, scrolling capture | Out of product. "Video" here is screen recording; stills taken from a video file arrive with MEU-134 and MEU-135 (2026-11-09 video stills design D-1) |
+| Downloader / Convert → Capture handoff | Would reopen those pages. A video path in and capture shots out (`frames`, `sheet`) is reopened by the 2026-11-09 video stills design D-1 (MEU-134, MEU-135); a page-to-page handoff stays deferred |
 | Recursive inbox scan / subfolders | Flat inbox |
 | SSE | Poll + `fs.watch` IPC |
 | MCP Guard | Still deferred (06) |
 | Session 8c / MEU-27 | Human-gated; do not pack into Phase 9 |
-| Crop trim, resize and cover-crop, rotate and flip, a crop format option, persisted crop provenance, `unit: "fraction"` on annotate | Deferred by the 2026-11-08 crop design (§9, D-13); ImageMagick-style geometry strings and an ImageMagick dependency are rejected there |
+| Crop trim, resize and cover-crop, rotate and flip, a crop format option, persisted crop provenance, `unit: "fraction"` on annotate | Deferred by the 2026-11-08 crop design (§9, D-13); ImageMagick-style geometry strings and an ImageMagick dependency are rejected there. Resize and a format option are reopened as an export copy by the 2026-11-09 video stills design D-3 ([Export copy](#export-copy), MEU-136); the rest stays deferred |
+| Scene, slide or motion detection, dedupe, subtitle extract, wall-clock labels for camera files, pad, extent and cover-crop, compare, trim, compose, a Grab frame dialog, a video timeline, persisted video provenance | Deferred by the 2026-11-09 video stills design (§9, D-2, D-5, D-18). OCR and PDF rasterise are out of scope; inline image bytes from `frames` or `sheet`, ffmpeg `drawtext` or `tile` sheets, a separate `avkit_video` tool and URL sources are rejected there |
 
 ---
 
@@ -1140,6 +1201,9 @@ Five residual MEUs from the capture crop design (`_inspiration/capture-crop/desi
 | MEU-130 | `capture-crop-copy` | [Crop to a new shot](#crop-to-new-shot) | MEU-128, MEU-67 |
 | MEU-131 | `gui-capture-crop-tool` | [Crop tool](#crop-tool) | MEU-130, MEU-100 |
 | MEU-132 | `gui-capture-image-import` | [GUI image import](#gui-image-import) | MEU-129, MEU-39 |
+| MEU-134 | `capture-video-frames` | [Video frames](#video-frames) | MEU-133, MEU-129, MEU-130 |
+| MEU-135 | `capture-video-sheet` | [Video sheet](#video-sheet) | MEU-134 |
+| MEU-136 | `capture-export-copy` | [Export copy](#export-copy) | MEU-130 |
 
 ---
 
