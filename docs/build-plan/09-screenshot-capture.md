@@ -1076,6 +1076,18 @@ Five residual MEUs from the capture crop design (`_inspiration/capture-crop/desi
 | Unsaved marks | Crop is disabled while marks are unsaved, with the tooltip "Save or discard your marks first" | Local Canon design §7.1 (one code path for the GUI and agents) |
 | Tests | Behaviour tests for each rule; Electron proof of a real handle drag, Save as copy and the new shot selected | Local Canon |
 
+> **Entry (D-508).** The shortcut registry has no page-scoped letter entries yet, so under the Entry rule's own clause the Crop button ships alone, with the tooltip "Crop" and no `aria-keyshortcuts`. C arrives with MEU-105.
+
+> **Delivered (Session 60).**
+> - `CaptureTool` gains `'crop'`, and a Crop button sits after the lock, outside the Annotation tool group (`CROP_ENTRY`). Crop is disabled with no shot, on a shot under 8 px a side, and while marks are unsaved, checked in that order (`CROP_UNSAVED_GATE`).
+> - `capture-crop.ts` holds the geometry in whole original px: rounding half up (`CROP_ROUND`); 8 px minimum a side, the endpoint's `CAPTURE_MIN_EDGE_PX`, so a box is never clamped (`CROP_MIN`, D-511); the handles, a move and a new box drawn outside (`CROP_HANDLES`, `CROP_MOVE`, `CROP_DRAW`); a preset always keeps its ratio, and under Free, Shift keeps the start box's ratio for that drag (`CROP_RATIO`, D-512); the presets and the swap, which disable an infeasible ratio (`CROP_PRESETS`, `CROP_SWAP`); the fields and the nudges (`CROP_FIELDS`, `CROP_NUDGE`).
+> - While the crop is open the page sends the surface's pointer and its keys to the crop and disables the other tools, Undo, Redo, the lock and the Annotated view (`CROP_POINTER`, `CROP_MODAL`). `CaptureCropOverlay` draws the dim, the outline, the thirds while dragging and the 8 handles (`CROP_LOOK`), and `CaptureCropBar` replaces the option groups (`CROP_BAR`).
+> - Enter, a double-click inside the box or **Save as copy** calls the [crop endpoint](#crop-to-new-shot). The new shot is selected, and the Capture status line reads `Saved crop as {display_name}.` in place of a toast (`CROP_COMMIT`, D-516). While the request runs the button is busy and the line reads `Cropping…`; an error keeps the crop open (`CROP_ERRORS`). Esc, Cancel, Reset and a change of shot or view (`CROP_CANCEL`). No new log line (`NO_RAW_CONSOLE`).
+> - Electron proof of a real SE handle drag with Save as copy, and of the bar (`CROP_ELECTRON`). A Haiku 5.5 agent cropped a panel through MCP `crop` from the advertised description alone (`D494_RUN`, D-521).
+> - AC-131.1 to AC-131.24.
+> - Gate: the H1-2 `session-gate.ps1` record in the Session 60 handoff.
+> - Plan `docs/execution/plans/2026-11-10-gui-capture-crop-tool/`.
+
 <a id="gui-image-import"></a>
 
 ### GUI image import

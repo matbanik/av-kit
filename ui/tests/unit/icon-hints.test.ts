@@ -53,6 +53,7 @@ const NO_SHOT_IDS = new Set([
   'capture-tool-text',
   'capture-tool-pixelate',
   'capture-tool-eraser',
+  'capture-tool-crop',
   'capture-zoom-out',
   'capture-zoom-in',
   'capture-zoom-fit',
@@ -311,7 +312,7 @@ describe('MEU-80 icon-only inventory hints', () => {
     expect(screen.getByTestId('capture-tool-arrow')).toBeTruthy()
   })
 
-  it('AC-80.8: the 13 Capture toolbar buttons are wrapped, untitled and hinted, with and without a shot', async () => {
+  it('AC-80.8: the 14 Capture toolbar buttons are wrapped, untitled and hinted, with and without a shot', async () => {
     await renderCapture(true)
     const page = screen.getByTestId('capture-page')
     for (const [id, spec] of Object.entries(TOOLBAR_BUTTONS)) {

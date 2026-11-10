@@ -1,5 +1,7 @@
 import {
   ArchiveRestore,
+  ArrowLeftRight,
+  Crop,
   Delete,
   Eraser,
   ExternalLink,
@@ -47,6 +49,8 @@ export const TOOLBAR_BUTTONS = {
   'capture-tool-eraser': { icon: Eraser, name: 'Eraser' },
   // TOOL_LOCK (MEU-87): a toggle, not a tool, so it is not in TOOL_BUTTON_IDS.
   'capture-tool-lock': { icon: Lock, name: 'Keep tool after drawing' },
+  // CROP_ENTRY (MEU-131): a tool, after the lock in the row.
+  'capture-tool-crop': { icon: Crop, name: 'Crop' },
   'capture-undo': { icon: Undo2, name: 'Undo' },
   'capture-redo': { icon: Redo2, name: 'Redo' },
   'capture-view-original': { icon: ImageIcon, name: 'Original' },
@@ -74,6 +78,14 @@ export const ACTION_BUTTONS = {
 
 export type ActionButtonId = keyof typeof ACTION_BUTTONS
 
+/**
+ * CROP_BUTTONS (MEU-131 CROP_BAR): the crop bar's icon buttons, keyed by test id. A record apart from
+ * TOOLBAR_BUTTONS, which AC-80.8 expects on the page, and from ACTION_BUTTONS.
+ */
+export const CROP_BUTTONS: Record<string, ToolbarButtonSpec> = {
+  'capture-crop-swap': { icon: ArrowLeftRight, name: 'Swap portrait and landscape' },
+}
+
 /** Every `CaptureTool` maps to exactly one toolbar button; a new tool fails the type check here. */
 export const TOOL_BUTTON_IDS: Readonly<Record<CaptureTool, ToolbarButtonId>> = {
   select: 'capture-tool-select',
@@ -83,6 +95,7 @@ export const TOOL_BUTTON_IDS: Readonly<Record<CaptureTool, ToolbarButtonId>> = {
   text: 'capture-tool-text',
   pixelate: 'capture-tool-pixelate',
   eraser: 'capture-tool-eraser',
+  crop: 'capture-tool-crop',
 }
 
 /** The option groups the contextual options row can show (OPTIONS_BY_TOOL, OPTIONS_BY_TOOL_V2). */
@@ -104,6 +117,7 @@ function strokeApplies(tool: CaptureTool, selected: Annotation | null): boolean 
     case 'text':
     case 'pixelate':
     case 'eraser':
+    case 'crop':
       return false
     default:
       return assertNever(tool)
@@ -112,10 +126,14 @@ function strokeApplies(tool: CaptureTool, selected: Annotation | null): boolean 
 
 /**
  * OPTIONS_BY_TOOL_V2: the option groups for the active tool and the selected mark, first rule that
- * matches. A pixelate (tool or selected mark) has only its block size; an eraser has no option at all;
+ * matches. The crop has no option group (MEU-131 CROP_ENTRY); a pixelate (tool or selected mark) has
+ * only its block size; an eraser has no option at all;
  * otherwise color is present and text options win over stroke, so the two are never shown together.
  */
 export function optionGroups(tool: CaptureTool, selected: Annotation | null): readonly OptionGroup[] {
+  if (tool === 'crop') {
+    return []
+  }
   if (tool === 'pixelate' || selected?.type === 'pixelate') {
     return ['block']
   }

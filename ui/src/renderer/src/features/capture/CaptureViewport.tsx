@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 
 import { Button } from '../../components/ui/Button'
 import type { Annotation } from './capture-annotate'
+import type { CropBox } from './capture-crop'
 import { arrowHeadPoints, arrowShaftEnd } from './capture-arrow-head'
 import { contrastText, hexForNamedColor, NAMED_COLOR_HEX, normalizeHex } from './capture-color'
 import {
@@ -50,6 +51,7 @@ import {
   textBackgroundBox,
 } from './capture-text-metrics'
 import { ToolbarIconButton } from './ToolbarIconButton'
+import { CaptureCropOverlay } from './CaptureCropOverlay'
 import { CaptureScrubField } from './CaptureScrubField'
 import { FONT_SCRUB_MAX, STROKE_SCRUB_MAX } from './capture-scrub'
 import { isRegistryChord } from '../../registry/commandRegistry'
@@ -62,7 +64,21 @@ const RESIZE_CURSOR_CLASS: Record<ReturnType<typeof cursorForHandle>, string> = 
   'ew-resize': ' cursor-ew-resize',
 }
 
-export type CaptureTool = 'select' | 'arrow' | 'box' | 'highlight' | 'text' | 'pixelate' | 'eraser'
+/** CROP_POINTER (MEU-131): what a press under the pointer would do while the crop is open. */
+export type CropCursor = HandleId | 'move' | 'draw'
+
+/** CROP_LOOK: the surface cursor for the crop's hover; a handle shows its resize cursor. */
+function cropCursorClass(cursor: CropCursor | null): string {
+  if (cursor === 'move') {
+    return ' cursor-move'
+  }
+  if (cursor === null || cursor === 'draw') {
+    return ' cursor-crosshair'
+  }
+  return RESIZE_CURSOR_CLASS[cursorForHandle(cursor)]
+}
+
+export type CaptureTool = 'select' | 'arrow' | 'box' | 'highlight' | 'text' | 'pixelate' | 'eraser' | 'crop'
 export type CaptureViewVariant = 'original' | 'annotated'
 
 export type TextDraft = {
@@ -83,6 +99,8 @@ export type SurfacePointer = {
   oy: number
   image: ImagePoint | null
   imageClamped: ImagePoint | null
+  /** CROP_POINTER (MEU-131): Shift keeps the box's ratio under Free. */
+  shiftKey: boolean
 }
 
 type CaptureViewportProps = {
@@ -160,6 +178,15 @@ type CaptureViewportProps = {
   onTextDraftChange: (value: string) => void
   onTextCommit: () => void
   onTextCancel: () => void
+  /** CROP_LOOK (MEU-131): the open crop's box, whether a drag is live and the hover cursor; null when closed. */
+  crop?: { box: CropBox; dragging: boolean; cursor: CropCursor | null } | null
+  /** CROP_BAR: replaces the option groups while the crop is open. */
+  cropBar?: ReactNode
+  /** CROP_MODAL (D-518): set while the crop is open; every other tool, history, the lock and Annotated wait. */
+  cropReason?: string
+  /** CROP_UNSAVED_GATE (D-509): why Crop can't open now, or undefined. */
+  cropDisabledReason?: string
+  onToggleCrop?: () => void
 }
 
 function toolVariant(active: boolean): 'primary' | 'outline' {
@@ -372,7 +399,7 @@ function mapEventClamped(
 
 /** SURFACE_POINTER: every surface event carries the VIEW_TRANSFORM it was mapped with. */
 function surfaceFromDom(
-  event: { currentTarget: EventTarget | null; clientX: number; clientY: number },
+  event: { currentTarget: EventTarget | null; clientX: number; clientY: number; shiftKey?: boolean },
   phase: SurfacePointer['phase'],
   pointerId: number,
   imageWidth: number,
@@ -395,6 +422,7 @@ function surfaceFromDom(
     oy: view?.oy ?? 0,
     image: view === null ? null : mapPointerWithView(event.clientX, event.clientY, box.left, box.top, view, imageWidth, imageHeight),
     imageClamped: loose === null ? null : clampImagePoint(loose, imageWidth, imageHeight),
+    shiftKey: event.shiftKey === true,
   }
 }
 
@@ -490,6 +518,11 @@ export function CaptureViewport({
   onTextDraftChange,
   onTextCommit,
   onTextCancel,
+  crop = null,
+  cropBar,
+  cropReason,
+  cropDisabledReason,
+  onToggleCrop = () => undefined,
 }: CaptureViewportProps) {
   const pointerSession = useRef(false)
   const surfaceRef = useRef<HTMLDivElement>(null)
@@ -517,6 +550,8 @@ export function CaptureViewport({
   const showBodyHandle =
     showVectors && selected !== null && selected.type !== 'arrow' && textDraft?.editIndex !== selectedIndex
   const options = optionGroups(tool, selected)
+  // CROP_ENTRY: why the Crop button is disabled, if it is.
+  const cropOff = hasSelection ? cropDisabledReason : NO_SHOT_HINT
   // SCRUB_BASE: an invalid field scrubs from the applicable selected mark, else the default.
   const strokeBase = selected !== null && (selected.type === 'arrow' || selected.type === 'rect') ? selected.stroke_width : 3
   const fontSizeBase = selected?.type === 'text' ? selected.font_size : 16
@@ -794,9 +829,11 @@ export function CaptureViewport({
     ? ' cursor-grabbing'
     : spaceHeld
       ? ' cursor-grab'
-      : showVectors && resizeCursor !== null && resizePoints.length > 0
-        ? RESIZE_CURSOR_CLASS[cursorForHandle(resizeCursor)]
-        : ''
+      : crop !== null
+        ? cropCursorClass(crop.cursor)
+        : showVectors && resizeCursor !== null && resizePoints.length > 0
+          ? RESIZE_CURSOR_CLASS[cursorForHandle(resizeCursor)]
+          : ''
   const painted = (() => {
     const rows = annotations
       .map((ann, index) => ({ ann, index }))
@@ -812,7 +849,7 @@ export function CaptureViewport({
   const visibleMarks = preview !== null ? [...painted, { ann: preview, index: -1 }] : painted
 
   function emitSurface(
-    event: { currentTarget: EventTarget | null; clientX: number; clientY: number },
+    event: { currentTarget: EventTarget | null; clientX: number; clientY: number; shiftKey?: boolean },
     phase: SurfacePointer['phase'],
     pointerId: number,
   ): void {
@@ -842,8 +879,8 @@ export function CaptureViewport({
               id="capture-tool-select"
               variant={toolVariant(tool === 'select')}
               pressed={tool === 'select'}
-              disabled={!hasSelection}
-              reason={hasSelection ? undefined : NO_SHOT_HINT}
+              disabled={!hasSelection || cropReason !== undefined}
+              reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
               onClick={() => onTool('select')}
             />
             <ToolbarIconButton
@@ -851,8 +888,8 @@ export function CaptureViewport({
               id="capture-tool-arrow"
               variant={toolVariant(tool === 'arrow')}
               pressed={tool === 'arrow'}
-              disabled={!hasSelection}
-              reason={hasSelection ? undefined : NO_SHOT_HINT}
+              disabled={!hasSelection || cropReason !== undefined}
+              reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
               onClick={() => onTool('arrow')}
             />
             <ToolbarIconButton
@@ -860,8 +897,8 @@ export function CaptureViewport({
               id="capture-tool-box"
               variant={toolVariant(tool === 'box')}
               pressed={tool === 'box'}
-              disabled={!hasSelection}
-              reason={hasSelection ? undefined : NO_SHOT_HINT}
+              disabled={!hasSelection || cropReason !== undefined}
+              reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
               onClick={() => onTool('box')}
             />
             <ToolbarIconButton
@@ -869,8 +906,8 @@ export function CaptureViewport({
               id="capture-tool-highlight"
               variant={toolVariant(tool === 'highlight')}
               pressed={tool === 'highlight'}
-              disabled={!hasSelection}
-              reason={hasSelection ? undefined : NO_SHOT_HINT}
+              disabled={!hasSelection || cropReason !== undefined}
+              reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
               onClick={() => onTool('highlight')}
             />
             <ToolbarIconButton
@@ -878,8 +915,8 @@ export function CaptureViewport({
               id="capture-tool-text"
               variant={toolVariant(tool === 'text')}
               pressed={tool === 'text'}
-              disabled={!hasSelection}
-              reason={hasSelection ? undefined : NO_SHOT_HINT}
+              disabled={!hasSelection || cropReason !== undefined}
+              reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
               onClick={() => onTool('text')}
             />
             <ToolbarIconButton
@@ -887,8 +924,8 @@ export function CaptureViewport({
               id="capture-tool-pixelate"
               variant={toolVariant(tool === 'pixelate')}
               pressed={tool === 'pixelate'}
-              disabled={!hasSelection}
-              reason={hasSelection ? undefined : NO_SHOT_HINT}
+              disabled={!hasSelection || cropReason !== undefined}
+              reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
               onClick={() => onTool('pixelate')}
             />
             <ToolbarIconButton
@@ -896,8 +933,8 @@ export function CaptureViewport({
               id="capture-tool-eraser"
               variant={toolVariant(tool === 'eraser')}
               pressed={tool === 'eraser'}
-              disabled={!hasSelection}
-              reason={hasSelection ? undefined : NO_SHOT_HINT}
+              disabled={!hasSelection || cropReason !== undefined}
+              reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
               onClick={() => onTool('eraser')}
             />
           </div>
@@ -907,14 +944,27 @@ export function CaptureViewport({
             id="capture-tool-lock"
             variant={toolVariant(toolLocked)}
             pressed={toolLocked}
+            disabled={cropReason !== undefined}
+            reason={cropReason}
             onClick={onToggleToolLock}
+          />
+          {/* CROP_ENTRY (MEU-131, D-508): after the lock, outside the tool group; the page opens and closes it. */}
+          <ToolbarIconButton
+            spec={TOOLBAR_BUTTONS['capture-tool-crop']}
+            id="capture-tool-crop"
+            variant={toolVariant(tool === 'crop')}
+            pressed={tool === 'crop'}
+            disabled={cropOff !== undefined}
+            reason={cropOff}
+            onClick={onToggleCrop}
           />
           <div role="group" aria-label="History" className="flex shrink-0 items-center gap-0.5">
             <ToolbarIconButton
               spec={TOOLBAR_BUTTONS['capture-undo']}
               id="capture-undo"
               variant="ghost"
-              disabled={!canUndo}
+              disabled={!canUndo || cropReason !== undefined}
+              reason={cropReason}
               shortcut="Ctrl+Z"
               onClick={onUndo}
             />
@@ -922,7 +972,8 @@ export function CaptureViewport({
               spec={TOOLBAR_BUTTONS['capture-redo']}
               id="capture-redo"
               variant="ghost"
-              disabled={!canRedo}
+              disabled={!canRedo || cropReason !== undefined}
+              reason={cropReason}
               shortcut="Ctrl+Y"
               onClick={onRedo}
             />
@@ -940,7 +991,8 @@ export function CaptureViewport({
               id="capture-view-annotated"
               variant={toolVariant(viewVariant === 'annotated')}
               pressed={viewVariant === 'annotated'}
-              disabled={!hasAnnotated}
+              disabled={!hasAnnotated || cropReason !== undefined}
+              reason={cropReason}
               onClick={() => onViewVariant('annotated')}
             />
           </div>
@@ -981,6 +1033,7 @@ export function CaptureViewport({
         </div>
         {/* OPTIONS_ROW: only the controls the active tool or selected mark consumes (OPTIONS_BY_TOOL). */}
         <div className="flex flex-nowrap items-center gap-1 overflow-x-auto min-h-9" data-testid="capture-chrome-options">
+          {cropBar}
           {options.includes('color') ? (
             <span role="group" aria-label="Color" className="flex shrink-0 items-center gap-1">
               <span className="text-xs text-fg-muted">Color</span>
@@ -1406,6 +1459,15 @@ export function CaptureViewport({
                 />
               ))}
             </svg>
+          ) : null}
+          {crop !== null && showVectors ? (
+            <CaptureCropOverlay
+              box={crop.box}
+              dragging={crop.dragging}
+              imageWidth={imageWidth}
+              imageHeight={imageHeight}
+              scale={view?.s ?? 1}
+            />
           ) : null}
           </div>
           {textDraft !== null && showVectors ? (

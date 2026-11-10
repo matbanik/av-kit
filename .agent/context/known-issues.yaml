@@ -4640,3 +4640,43 @@ issues:
             sources: []
           reasoning: Session 50's rule says a raw value that reaches an API message is fixed or raised, never left as a residual, and the defect predates this session and lies outside MEU-130's scope. Filing records the probe and its two failure shapes for a plan of its own. Leaving it as a handoff observation hides it from the register. Two-way.
           human_message_reference: File it (Recommended)
+  - id: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL
+    title: Claude Code doesn't show a model the per-action text in _meta.action_descriptions
+    severity: low
+    component: mcp-server
+    status: open
+    discovered: '2026-11-10'
+    root_cause: Each compound MCP tool registers its per-action text only under _meta.action_descriptions (mcp-server/src/toolsets/registry.ts:599-610 at 237732d); description holds TOOL_TOP_LEVEL and inputSchema the flattened schema. Claude Code passes a model the server instructions, the top-level description and the input schema, not _meta. So the crop paragraph (CROP_TEXT, mcp-server/src/toolsets/capture.ts:51) and every other action's text never reach a Claude Code agent.
+    blast_radius: 'A Claude Code agent learns an action''s inputs, units and limits only from the flattened schema, which has no per-action text. Session 60''s D-521 run (Haiku 5.5, given only that surface) still cropped a named region in one list and one crop call, and reported that neither the description nor the server instructions mention crop, that crop''s inputs appear only in the schema, and that the unit enum doesn''t say which value is the default. Clients that do read _meta are unaffected.'
+    verification:
+      last_checked: '2026-11-10'
+      method: d494-harness.ts describe against this tree's mcp-server/dist/index.js (C:/Temp/av-kit/s60-plan-d494-describe.txt), compared with avkit_capture's tool schema as Claude Code loaded it in Session 60, without calling the server
+      result: the crop text is only under _meta.action_descriptions.crop; the description and schema a Claude Code model receives don't carry it
+    category: UPSTREAM
+    priority: P3
+    related:
+      - MCP-AUDIT-BASELINE-PENDING-CROP
+    meu_links:
+      - MEU-131
+    notes: Found by Session 60 gui-capture-crop-tool (MEU-131) while planning D-494's live agent run (D-521) and filed at its closeout under D-528, on Mat's plan-gate ruling. No fix is planned. A fix would move action text into what a client shows (the top-level description or the server instructions), which changes the MCP surface and its audit baseline and needs its own plan.
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: human
+      decision_log:
+        - id: D-528
+          stage: closeout
+          question: 'Claude Code doesn''t show a model _meta.action_descriptions, where each MCP action''s text lives. Register it as a known issue, or leave it as the plan''s observation?'
+          resolution: human
+          class: two-way
+          chosen: 'A: register it, as recommended: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL, P3, open, linked to MEU-131, no fix planned, filed at closeout in Session 60''s commit'
+          source_tag: Human-approved
+          precedents:
+            - mcp-server/src/toolsets/registry.ts:599-610 — action text is registered only under _meta.action_descriptions
+            - C:/Temp/av-kit/s60-plan-d494-describe.txt — the crop text sits under the heading not shown to the agent
+            - docs/execution/plans/2026-11-10-gui-capture-crop-tool/implementation-plan.md — User Review Required, The gate, 2026-11-10
+          research:
+            engine: none
+            sources: []
+          reasoning: The gap was found on this session's own tool schema and changes what an agent can learn about every action, but the session's scope is renderer-only and changes no MCP text. Registering records the probe and the D-521 run's feedback for a plan of its own. Doing nothing leaves it in a plan note the register doesn't show. Two-way.
+          human_message_reference: 'A: Register it (Recommended)'

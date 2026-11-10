@@ -478,3 +478,22 @@ export const CAPTURE_HANDLE_RESIZE_W = 'capture-handle-resize-w'
 
 // MEU-115 Transcript failure reason (additive IDs).
 export const JOB_MESSAGE = 'job-message'
+
+// MEU-131 Capture crop tool (additive IDs).
+export const CAPTURE_TOOL_CROP = 'capture-tool-crop'
+export const CAPTURE_CROP_BAR = 'capture-crop-bar'
+export const CAPTURE_CROP_ASPECT = 'capture-crop-aspect'
+export const CAPTURE_CROP_SWAP = 'capture-crop-swap'
+export const CAPTURE_CROP_X = 'capture-crop-x'
+export const CAPTURE_CROP_Y = 'capture-crop-y'
+export const CAPTURE_CROP_W = 'capture-crop-w'
+export const CAPTURE_CROP_H = 'capture-crop-h'
+export const CAPTURE_CROP_SIZE = 'capture-crop-size'
+export const CAPTURE_CROP_RESET = 'capture-crop-reset'
+export const CAPTURE_CROP_CANCEL = 'capture-crop-cancel'
+export const CAPTURE_CROP_SAVE = 'capture-crop-save'
+export const CAPTURE_CROP_OVERLAY = 'capture-crop-overlay'
+export const CAPTURE_CROP_DIM = 'capture-crop-dim'
+export const CAPTURE_CROP_OUTLINE = 'capture-crop-outline'
+export const CAPTURE_CROP_THIRDS = 'capture-crop-thirds'
+export const CAPTURE_CROP_HANDLE = 'capture-crop-handle'

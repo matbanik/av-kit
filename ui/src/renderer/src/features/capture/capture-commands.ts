@@ -2,6 +2,7 @@ import { ApiError, apiFetch } from '../../lib/api'
 import { queryClient } from '../../lib/query-client'
 import { navigateShell } from '../../lib/shell-nav'
 import { ANNOTATE_PATH, parseAnnotateBody, type Annotation } from './capture-annotate'
+import type { CropBox } from './capture-crop'
 import { QUERY_KEY, type CaptureListItem } from './useCaptureCatalog'
 
 export const IPC_CAPTURE_REGION = 'capture-region'
@@ -145,6 +146,22 @@ export async function revertCapture(id: string): Promise<CaptureShotDetail> {
   const detail = await apiFetch<CaptureShotDetail>(`/captures/${id}/revert`, { method: 'POST', body: '{}' })
   await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
   return detail
+}
+
+/** MEU-131 CROP_COMMIT: Session 59's `CaptureCropOut`; the renderer reads `item` only. */
+export type CaptureCropResult = { item: CaptureListItem; source_id: string; clamped: boolean }
+
+/**
+ * MEU-131 CROP_COMMIT (D-516): POST the integer box to the source's crop route and refresh the catalog, so
+ * the new shot is listed before the page selects it. The source is untouched.
+ */
+export async function cropCapture(id: string, box: CropBox): Promise<CaptureCropResult> {
+  const result = await apiFetch<CaptureCropResult>(`/captures/${encodeURIComponent(id)}/crop`, {
+    method: 'POST',
+    body: JSON.stringify({ x: box.x, y: box.y, width: box.width, height: box.height }),
+  })
+  await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+  return result
 }
 
 export async function openCaptureFile(): Promise<void> {

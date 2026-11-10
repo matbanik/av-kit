@@ -3011,3 +3011,162 @@ test('AC-101.6 a double-click reopens a committed text mark; Save posts the new 
   expect((scaled[0] as { font_size?: number }).font_size).toBeGreaterThan(2)
   await app.close()
 })
+
+// ── MEU-131 Capture crop tool (Session 60 plan AC-131.23, AC-131.24; CROP_ELECTRON) ─────────
+// The crop seam answers POST …/crop with 201 and the new item, adds it to the list it serves and
+// records each body in window.__s60.crops. Images are the seam's 1×1 PNG; nothing reads the network.
+
+const S60_SOURCE = sampleShot('e2e-s60-1', 'a.png', '2026-11-10T12:00:00Z', { width: 400, height: 200 })
+
+async function installCropSeam(page: Page, shots: CaptureItem[]): Promise<void> {
+  await page.addInitScript((seed: CaptureItem[]) => {
+    type Item = (typeof seed)[number]
+    const state = window as unknown as {
+      __e2eSeamInstalled?: boolean
+      __s60?: { items: Item[]; crops: unknown[] }
+    }
+    state.__e2eSeamInstalled = true
+    const s = { items: [...seed], crops: [] as unknown[] }
+    state.__s60 = s
+    const settings = { inbox_dir: 'C:/e2e', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true }
+    const original = window.fetch.bind(window)
+    const png = Uint8Array.from([
+      137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31,
+      21, 196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 156, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 45, 180, 0, 0, 0, 0,
+      73, 69, 78, 68, 174, 66, 96, 130,
+    ])
+    const json = (body: unknown, status = 200) =>
+      new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      const method = (init?.method ?? 'GET').toUpperCase()
+      const path = new URL(url).pathname
+      if (path.includes('/health/dependencies')) {
+        return json({ ffmpeg: { available: true, version: '7.1.2' }, yt_dlp: { available: true } })
+      }
+      if (path.endsWith('/settings/capture')) {
+        return json(settings)
+      }
+      if (path.includes('/captures/requests')) {
+        return json({ items: [] })
+      }
+      if (path.endsWith('/image')) {
+        return new Response(png, { status: 200, headers: { 'Content-Type': 'image/png' } })
+      }
+      const crop = path.match(/\/captures\/([^/]+)\/crop$/)
+      if (crop && method === 'POST') {
+        const id = decodeURIComponent(crop[1] as string)
+        const body = JSON.parse(String(init?.body ?? '{}')) as { width: number; height: number }
+        s.crops.push(body)
+        const source = s.items.find((row) => row.id === id) as Item
+        const stem = source.display_name.replace(/\.[^.]+$/, '')
+        const stamp = new Date().toISOString()
+        const made = {
+          ...source,
+          id: `${id}-crop`,
+          original_path: `C:/e2e/${stem}-crop.png`,
+          annotated_path: null,
+          display_name: `${stem}-crop.png`,
+          width: body.width,
+          height: body.height,
+          created_at: stamp,
+          updated_at: stamp,
+        }
+        s.items = [made, ...s.items]
+        return json({ item: made, source_id: id, clamped: false }, 201)
+      }
+      const detail = path.match(/\/captures\/([^/]+)$/)
+      if (detail && method === 'GET') {
+        const id = decodeURIComponent(detail[1] as string)
+        return json({ ...s.items.find((row) => row.id === id), annotations: [], backup_path: null })
+      }
+      if (/\/captures\/?$/.test(path) && method === 'GET') {
+        return json({ items: s.items })
+      }
+      return original(input, init)
+    }
+  }, shots)
+  await page.reload()
+  await page.getByTestId('downloader-page').waitFor()
+}
+
+async function cropBodies(page: Page): Promise<Array<Record<string, number>>> {
+  return page.evaluate(
+    () => ((window as unknown as { __s60?: { crops: Array<Record<string, number>> } }).__s60?.crops ?? []),
+  )
+}
+
+async function openCropShot(page: Page): Promise<void> {
+  await page.getByTestId('nav-capture').click()
+  await page.getByTestId('capture-filmstrip-item').first().click()
+  await expect(page.getByTestId('capture-draw-surface')).toHaveAttribute('data-overlay-ready', 'true')
+  await page.getByTestId('capture-tool-crop').click()
+  await expect(page.getByTestId('capture-crop-bar')).toBeVisible()
+}
+
+async function cropFieldValues(page: Page): Promise<string[]> {
+  return Promise.all(['x', 'y', 'w', 'h'].map((key) => page.getByTestId(`capture-crop-${key}`).inputValue()))
+}
+
+test('AC-131.23 CROP_ELECTRON: a real se handle drag and Save as copy send the dragged box; the copy is selected and named', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await installCropSeam(page, [S60_SOURCE])
+  await installFetchLedger(page)
+  await openCropShot(page)
+  await expect.poll(() => cropFieldValues(page)).toEqual(['0', '0', '400', '200'])
+  const zoom = await readZoom(page)
+  const toClient = (x: number, y: number) => ({ x: zoom.left + zoom.ox + x * zoom.s, y: zoom.top + zoom.oy + y * zoom.s })
+  // One css px inside the se corner, so the press lands on the handle inside the surface.
+  const from = toClient(400, 200)
+  const to = toClient(300, 150)
+  await page.mouse.move(from.x - 1, from.y - 1)
+  await page.mouse.down()
+  await page.mouse.move((from.x + to.x) / 2 - 1, (from.y + to.y) / 2 - 1, { steps: 4 })
+  await page.mouse.move(to.x - 1, to.y - 1, { steps: 4 })
+  await page.mouse.up()
+  await page.getByTestId('capture-crop-save').click()
+  await expect.poll(async () => (await cropBodies(page)).length).toBe(1)
+  const body = (await cropBodies(page))[0] as Record<string, number>
+  expect(Object.keys(body).sort()).toEqual(['height', 'width', 'x', 'y'])
+  const want: Record<string, number> = { x: 0, y: 0, width: 300, height: 150 }
+  for (const key of Object.keys(want)) {
+    expect(Math.abs((body[key] as number) - (want[key] as number)), `${key} ${body[key]}`).toBeLessThanOrEqual(1)
+  }
+  expect(await ledger(page, 'POST', '/captures/e2e-s60-1/crop')).toBe(1)
+  await expect(page.locator('[data-testid="capture-filmstrip-item"][aria-current="true"]')).toContainText('a-crop.png')
+  await expect(page.getByTestId('capture-status')).toHaveText('Saved crop as a-crop.png.')
+  await expect(page.getByTestId('capture-filmstrip-name').filter({ hasText: /^a\.png$/ })).toHaveCount(1)
+  await expect(page.getByTestId('capture-crop-bar')).toHaveCount(0)
+  await app.close()
+})
+
+test('AC-131.24 CROP_ELECTRON: Square, swap, a W entry, Reset, Cancel and Esc drive the bar; no POST is sent', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await installCropSeam(page, [S60_SOURCE])
+  await installFetchLedger(page)
+  await openCropShot(page)
+  await page.getByTestId('capture-crop-aspect').selectOption('square')
+  await expect.poll(() => cropFieldValues(page)).toEqual(['100', '0', '200', '200'])
+  await page.getByTestId('capture-crop-swap').click()
+  await expect.poll(() => cropFieldValues(page), 'Square is unchanged by the swap').toEqual(['100', '0', '200', '200'])
+  await page.getByTestId('capture-crop-w').fill('100')
+  await page.getByTestId('capture-crop-w').press('Enter')
+  await expect.poll(() => cropFieldValues(page)).toEqual(['100', '0', '100', '100'])
+  await expect(page.getByTestId('capture-crop-size')).toHaveText('100 × 100 px')
+  await page.getByTestId('capture-crop-reset').click()
+  await expect.poll(() => cropFieldValues(page)).toEqual(['0', '0', '400', '200'])
+  await expect(page.getByTestId('capture-crop-aspect')).toHaveValue('free')
+  await page.getByTestId('capture-crop-cancel').click()
+  await expect(page.getByTestId('capture-crop-bar')).toHaveCount(0)
+  await expect(page.getByTestId('capture-tool-arrow')).toHaveAttribute('aria-pressed', 'true')
+  await page.getByTestId('capture-tool-crop').click()
+  await expect(page.getByTestId('capture-crop-bar')).toBeVisible()
+  await page.getByTestId('capture-draw-surface').focus()
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('capture-crop-bar')).toHaveCount(0)
+  expect(await ledger(page, 'POST', '/crop')).toBe(0)
+  expect(await cropBodies(page)).toEqual([])
+  await app.close()
+})

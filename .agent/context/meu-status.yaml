@@ -3435,18 +3435,18 @@ meus:
     anchor: crop-tool
     text: Phase 9 §Crop tool
   description: A Crop tool on the Capture page with a full-image box with 8 handles, dimmed outside, aspect presets, X/Y/W/H fields, and Enter or Save as copy writes a new shot through the crop endpoint.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-130, MEU-100
   dependency_parse_status: parsed
   depends_on:
   - MEU-130
   - MEU-100
-  execution_plan: null
-  updated: '2026-11-08'
+  execution_plan: docs/execution/plans/2026-11-10-gui-capture-crop-tool/
+  updated: '2026-11-10'
   closed_reason: null
   note: Registered 2026-11-08 from the capture crop design (_inspiration/capture-crop/design.md). Mat asked for crop in the GUI, MCP and API, agent first (design D-2), and ruled D-1 (a crop writes a new
     shot) on 2026-11-08.

@@ -20,8 +20,8 @@ import type { CaptureTool } from '../../src/renderer/src/features/capture/Captur
 const ui = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const captureDir = resolve(ui, 'src/renderer/src/features/capture')
 
-// TA-2 (Session 39): + pixelate, eraser.
-const TOOLS: CaptureTool[] = ['select', 'arrow', 'box', 'highlight', 'text', 'pixelate', 'eraser']
+// TA-2 (Session 39): + pixelate, eraser. MEU-131: + crop.
+const TOOLS: CaptureTool[] = ['select', 'arrow', 'box', 'highlight', 'text', 'pixelate', 'eraser', 'crop']
 
 const MARKS: Record<'none' | 'arrow' | 'rect' | 'highlight' | 'text' | 'pixelate' | 'eraser', Annotation | null> = {
   none: null,
@@ -35,6 +35,10 @@ const MARKS: Record<'none' | 'arrow' | 'rect' | 'highlight' | 'text' | 'pixelate
 
 /** OPTIONS_BY_TOOL, restated independently of the implementation (plan §Single-statement contracts). */
 function expectedGroups(tool: CaptureTool, selected: Annotation | null): OptionGroup[] {
+  // CROP_ENTRY (MEU-131): the crop has no option group, whatever mark is selected.
+  if (tool === 'crop') {
+    return []
+  }
   // OPTIONS_BY_TOOL_V2 (Session 39): the leading region rule.
   if (tool === 'pixelate' || selected?.type === 'pixelate') {
     return ['block']
@@ -96,7 +100,11 @@ describe('MEU-65 capture toolbar table and options rule', () => {
         const got = [...optionGroups(tool, mark)].sort()
         expect(got, `${tool} × ${kind}`).toEqual(expectedGroups(tool, mark).sort())
         const regionCase =
-          tool === 'pixelate' || mark?.type === 'pixelate' || tool === 'eraser' || mark?.type === 'eraser'
+          tool === 'pixelate' ||
+          mark?.type === 'pixelate' ||
+          tool === 'eraser' ||
+          mark?.type === 'eraser' ||
+          tool === 'crop'
         expect(got.includes('color'), `${tool} × ${kind} color`).toBe(!regionCase)
         expect(got.includes('text') && got.includes('stroke'), `${tool} × ${kind} text+stroke`).toBe(false)
       }
@@ -143,8 +151,17 @@ describe('MEU-87 tool lock entry (TOOL_LOCK)', () => {
     expect(Object.values(TOOL_BUTTON_IDS)).not.toContain('capture-tool-lock')
   })
 
-  it('AC-87.1 negative: TOOL_BUTTON_IDS still lists exactly the seven tools (AC-65.1 holds)', () => {
-    expect(Object.keys(TOOL_BUTTON_IDS).sort()).toEqual(['arrow', 'box', 'eraser', 'highlight', 'pixelate', 'select', 'text'])
+  it('AC-87.1 negative: TOOL_BUTTON_IDS still lists exactly the eight tools (AC-65.1 holds)', () => {
+    expect(Object.keys(TOOL_BUTTON_IDS).sort()).toEqual([
+      'arrow',
+      'box',
+      'crop',
+      'eraser',
+      'highlight',
+      'pixelate',
+      'select',
+      'text',
+    ])
   })
 })
 
@@ -157,9 +174,11 @@ describe('MEU-90 pixelate tool', () => {
     expect(optionGroups('pixelate', null)).toEqual(['block'])
     // Negative: not the Session 34 fallthrough for an unknown tool.
     expect(optionGroups('pixelate', null)).not.toEqual(['color', 'stroke'])
-    for (const tool of TOOLS) {
+    // CROP_ENTRY (MEU-131): the crop's leading rule wins over a selected pixelate.
+    for (const tool of TOOLS.filter((t) => t !== 'crop')) {
       expect(optionGroups(tool, MARKS.pixelate), `${tool} × selected pixelate`).toEqual(['block'])
     }
+    expect(optionGroups('crop', MARKS.pixelate)).toEqual([])
     for (const kind of ['arrow', 'rect', 'highlight', 'text'] as const) {
       expect(optionGroups('pixelate', MARKS[kind]), `pixelate × ${kind}`).toEqual(['block'])
     }

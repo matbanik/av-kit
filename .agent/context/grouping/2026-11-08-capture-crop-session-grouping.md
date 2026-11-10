@@ -107,7 +107,7 @@ Run `/create-plan` once per session, in order. Session 58 is planned now (Mat's 
 |---------|------|------|------|--------|-------------|
 | 58 | `capture-region-import` | MEU-128, MEU-129 | P2 | executed | `docs/execution/plans/2026-11-08-capture-region-import/` |
 | 59 | `capture-crop-copy` | MEU-130 | P2 | executed | `docs/execution/plans/2026-11-08-capture-crop-copy/` |
-| 60 | `gui-capture-crop-tool` | MEU-131 | P2 | pending | — |
+| 60 | `gui-capture-crop-tool` | MEU-131 | P2 | executed | `docs/execution/plans/2026-11-10-gui-capture-crop-tool/` |
 | 61 | `gui-capture-image-import` | MEU-132 | P2 | pending | — |
 
 ---

@@ -11,6 +11,7 @@ import { logRenderer } from '../../lib/renderer-log'
 import { usePublishCommandState } from '../../registry/command-state'
 import { ariaKeyshortcuts } from '../../registry/shortcuts'
 import {
+  cropCapture,
   deleteCapture,
   deleteCaptures,
   flattenCapture,
@@ -41,16 +42,41 @@ import { parseAnnotateBody } from './capture-annotate'
 import { CaptureFilmstrip, type FilmstripShotActions } from './CaptureFilmstrip'
 import { rangeBetween, toggleSelection } from './capture-filmstrip-select'
 import { COPY_IMAGE_UNAVAILABLE, copyErrorMessage, loadClipboardPng } from './capture-clipboard'
+import { CaptureCropBar } from './CaptureCropBar'
+import {
+  applyPreset,
+  CROP_MIN_PX,
+  cropEligible,
+  drawCrop,
+  moveCrop,
+  nudgeCrop,
+  presetFeasible,
+  presetRatio,
+  resizeCrop,
+  swapCrop,
+  wholeImage,
+  type AspectPresetId,
+  type CropBox,
+} from './capture-crop'
 import {
   CaptureViewport,
   type CaptureTool,
   type CaptureViewVariant,
+  type CropCursor,
   type SurfacePointer,
   type TextDraft,
 } from './CaptureViewport'
 import { fetchCaptureImageObjectUrl } from './capture-image'
 import { hitTestMarks, moveEndpoint, translateBody } from './capture-hit-test'
-import { isBoxMark, resizeBox, scaleTextMark, type HandleId, type TextCorner } from './capture-transform'
+import {
+  boxHandlePoints,
+  hitResizeHandle,
+  isBoxMark,
+  resizeBox,
+  scaleTextMark,
+  type HandleId,
+  type TextCorner,
+} from './capture-transform'
 import { PIXELATE_BLOCK_DEFAULT, PIXELATE_BLOCK_MAX, PIXELATE_BLOCK_MIN } from './capture-region-pass'
 import { ACTION_BUTTONS } from './capture-toolbar'
 import { ToolbarIconButton } from './ToolbarIconButton'
@@ -63,9 +89,39 @@ const DRAG_THRESHOLD_CSS = 3
 const KEYBOARD_NUDGE_PX = 1
 const COLOR_GATE_MESSAGE = 'Apply or Cancel color'
 const TEXT_GATE_MESSAGE = 'Finish or cancel the text label'
+// CROP_MODAL, CROP_UNSAVED_GATE, CROP_ERRORS (MEU-131): the crop's reasons and its pending status.
+const CROP_REASON = 'Finish or cancel the crop first'
+const CROP_NO_SHOT = 'Select a shot first'
+const CROP_DIRTY_REASON = 'Save or discard your marks first'
+const CROP_SMALL_REASON = `Too small to crop: each side needs ${CROP_MIN_PX} px`
+const CROP_SWAP_REASON = 'Too small to swap this ratio'
+const CROP_BUSY_MESSAGE = 'Cropping…'
+const CROP_NUDGE_SHIFT_PX = 10
 
 /** NUDGE_TARGET: what the arrow keys move, the whole selected mark or one end of a selected arrow. */
 type NudgeTarget = 'body' | 'from' | 'to'
+
+/** CROP_POINTER (D-515): a live crop drag, from the box it started on. */
+type CropDrag =
+  | { kind: 'resize'; handle: HandleId; startCssX: number; startCssY: number; start: CropBox }
+  | { kind: 'move'; startCssX: number; startCssY: number; start: CropBox }
+  | { kind: 'draw'; anchor: { x: number; y: number }; start: CropBox }
+
+/** CROP_STATE (D-510): the open crop on one shot; `prior` is the tool it returns to when it closes. */
+type CropState = {
+  shotId: string
+  box: CropBox
+  aspect: AspectPresetId
+  swapped: boolean
+  prior: CaptureTool
+  drag: CropDrag | null
+  hover: CropCursor | null
+  busy: boolean
+}
+
+function insideBox(box: CropBox, point: { x: number; y: number }): boolean {
+  return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height
+}
 
 /** SIZE_BURST (MEU-85): the field text and marks before one Stroke or Size scrub; `index` is the live mark, if any. */
 type SizeBurst = {
@@ -202,7 +258,7 @@ function createDrawnMark(
   stroke: string,
   blockSize: string,
 ): Annotation | null {
-  if (tool === 'select' || tool === 'text') {
+  if (tool === 'select' || tool === 'text' || tool === 'crop') {
     return null
   }
   const strokeWidth = Number.parseInt(stroke, 10) || 3
@@ -336,6 +392,12 @@ export function CapturePage() {
   const sizeBurstRef = useRef<SizeBurst | null>(null)
   // SCRUB_BASE: tells the Stroke or Size field that the page closed its burst.
   const [sizeEpoch, setSizeEpoch] = useState({ stroke: 0, font: 0 })
+  // CROP_STATE (D-510): pointer and key events read the ref in the same task; updateCrop sets both.
+  const [crop, setCrop] = useState<CropState | null>(null)
+  const cropRef = useRef<CropState | null>(null)
+  const cropBusyRef = useRef(false)
+  /** CROP_COMMIT (D-515): the copy a crop just selected; its detail load keeps the tool the crop restored. */
+  const cropCopyRef = useRef<string | null>(null)
 
   const selected = useMemo(
     () => items.find((item) => item.id === selectedId) ?? null,
@@ -362,6 +424,32 @@ export function CapturePage() {
   canSaveRef.current = canSave
   // PAGE_STATE: capture-save is mounted while dirty and enabled while canSave.
   usePublishCommandState('/capture', { 'capture:save': dirty && canSave })
+  const cropImage = { width: selected?.width ?? 0, height: selected?.height ?? 0 }
+  const cropLive = crop !== null && crop.shotId === selectedId ? crop : null
+  const cropReason = cropLive !== null ? CROP_REASON : undefined
+  // CROP_UNSAVED_GATE (D-509): no crop over unsaved marks or on a shot too small to cut.
+  const cropDisabledReason =
+    cropLive !== null
+      ? undefined
+      : selected === null
+        ? CROP_NO_SHOT
+        : !cropEligible(cropImage.width, cropImage.height)
+          ? CROP_SMALL_REASON
+          : dirty
+            ? CROP_DIRTY_REASON
+            : undefined
+
+  // CROP_CANCEL (D-509): another shot, a shot that left the catalog or a view other than Original closes it.
+  useEffect(() => {
+    if (crop === null) {
+      return
+    }
+    if (crop.shotId !== selectedId || viewVariant !== 'original' || !items.some((item) => item.id === crop.shotId)) {
+      cropRef.current = null
+      setCrop(null)
+      setTool(crop.prior)
+    }
+  }, [crop, items, selectedId, viewVariant])
 
   useEffect(() => {
     setCaptureSaveAllowed(() => canSaveRef.current)
@@ -472,10 +560,17 @@ export function CapturePage() {
     overlayEditGen.current = 0
     const loadGen = overlayEditGen.current
     const loadId = selectedId
+    const keepTool = cropCopyRef.current === loadId
+    if (!keepTool) {
+      cropCopyRef.current = null
+    }
     void apiFetch<{ annotations?: unknown; backup_path?: string | null }>(`/captures/${loadId}`)
       .then((detail) => {
         if (cancelled || overlayEditGen.current !== loadGen) {
           return
+        }
+        if (keepTool) {
+          cropCopyRef.current = null
         }
         setBackupPath(typeof detail.backup_path === 'string' ? detail.backup_path : null)
         const parsed = parseAnnotateBody({ annotations: detail.annotations ?? [] })
@@ -488,7 +583,8 @@ export function CapturePage() {
         setAnnotations(parsed.annotations)
         setSaved(parsed.annotations)
         setOverlayReady(true)
-        if (parsed.annotations.length > 0) {
+        // A crop's copy keeps the tool the crop opened from, even when it carries marks.
+        if (parsed.annotations.length > 0 && !keepTool) {
           setTool('select')
         }
       })
@@ -542,8 +638,259 @@ export function CapturePage() {
     annotationsRef.current = next
   }
 
+  function updateCrop(next: CropState | null): void {
+    cropRef.current = next
+    setCrop(next)
+  }
+
+  /** CROP_CANCEL: close the crop and return to the tool it opened from. */
+  function closeCrop(): void {
+    const open = cropRef.current
+    if (open === null) {
+      return
+    }
+    updateCrop(null)
+    setTool(open.prior)
+  }
+
+  /** CROP_ENTRY (D-508): opens on the whole image, Free, in Original; a second click closes it. */
+  function toggleCrop(): void {
+    const open = cropRef.current
+    if (open !== null) {
+      if (!open.busy) {
+        closeCrop()
+      }
+      return
+    }
+    if (
+      selectedId === null ||
+      cropDisabledReason !== undefined ||
+      textDraft !== null ||
+      colorDirty ||
+      txOpen ||
+      gestureRef.current !== null
+    ) {
+      return
+    }
+    finishSize()
+    setPreview(null)
+    setSelectedIndex(null)
+    nudgeTargetRef.current = 'body'
+    setViewVariant('original')
+    updateCrop({
+      shotId: selectedId,
+      box: wholeImage(cropImage),
+      aspect: 'free',
+      swapped: false,
+      prior: tool,
+      drag: null,
+      hover: null,
+      busy: false,
+    })
+    setTool('crop')
+  }
+
+  /** CROP_BAR aspect: a preset that can't fit is ignored. */
+  function chooseCropAspect(aspect: AspectPresetId): void {
+    const open = cropRef.current
+    if (open === null || open.drag !== null || open.busy) {
+      return
+    }
+    const box = applyPreset(open.box, aspect, cropImage, open.swapped)
+    if (box !== null) {
+      updateCrop({ ...open, box, aspect })
+    }
+  }
+
+  /** CROP_BAR swap (button or X): exchange the orientation when the swapped ratio fits. */
+  function swapCropBox(): void {
+    const open = cropRef.current
+    if (open === null || open.drag !== null || open.busy) {
+      return
+    }
+    const box = swapCrop(open.box, open.aspect, cropImage, open.swapped)
+    if (box !== null) {
+      updateCrop({ ...open, box, swapped: !open.swapped })
+    }
+  }
+
+  function setCropBox(box: CropBox): void {
+    const open = cropRef.current
+    if (open === null || open.drag !== null || open.busy) {
+      return
+    }
+    updateCrop({ ...open, box })
+  }
+
+  function resetCrop(): void {
+    const open = cropRef.current
+    if (open === null || open.busy) {
+      return
+    }
+    updateCrop({ ...open, box: wholeImage(cropImage), aspect: 'free', swapped: false, drag: null })
+  }
+
+  /** CROP_COMMIT, CROP_ERRORS (D-516, D-517): one POST; the copy is selected and named, the source stays. */
+  function commitCrop(): void {
+    const open = cropRef.current
+    if (open === null || open.drag !== null || cropBusyRef.current) {
+      return
+    }
+    cropBusyRef.current = true
+    const { shotId, box, prior } = open
+    updateCrop({ ...open, busy: true })
+    setError(null)
+    void run(async () => {
+      try {
+        const result = await cropCapture(shotId, box)
+        if (cropRef.current?.shotId === shotId) {
+          updateCrop(null)
+          setTool(prior)
+        }
+        applyRange({ anchorId: result.item.id, rangeIds: [] })
+        cropCopyRef.current = result.item.id
+        setSelectedId(result.item.id)
+        setNotice({ shotId: result.item.id, text: `Saved crop as ${result.item.display_name}.` })
+        setViewVariant('original')
+        setTextDraft(null)
+        setPast([])
+        setFuture([])
+      } finally {
+        cropBusyRef.current = false
+        const live = cropRef.current
+        if (live?.busy === true) {
+          updateCrop({ ...live, busy: false })
+        }
+      }
+    })
+  }
+
+  /** CROP_POINTER (D-515): a handle resizes, inside moves, outside draws; Shift keeps the ratio under Free. */
+  function handleCropPointer(event: SurfacePointer): void {
+    const open = cropRef.current
+    if (open === null || open.busy) {
+      return
+    }
+    const loose = event.scale > 0 ? { x: (event.cssX - event.ox) / event.scale, y: (event.cssY - event.oy) / event.scale } : null
+    const view = { cssX: event.cssX, cssY: event.cssY, scale: event.scale, ox: event.ox, oy: event.oy }
+    if (event.phase === 'dblclick') {
+      if (open.drag === null && loose !== null && insideBox(open.box, loose)) {
+        commitCrop()
+      }
+      return
+    }
+    if (event.phase === 'cancel') {
+      if (open.drag !== null) {
+        updateCrop({ ...open, box: open.drag.start, drag: null })
+      }
+      return
+    }
+    if (event.phase === 'down') {
+      if (loose === null || event.imageClamped === null) {
+        return
+      }
+      const handle = hitResizeHandle(boxHandlePoints(open.box), view)
+      const drag: CropDrag =
+        handle !== null
+          ? { kind: 'resize', handle, startCssX: event.cssX, startCssY: event.cssY, start: open.box }
+          : insideBox(open.box, loose)
+            ? { kind: 'move', startCssX: event.cssX, startCssY: event.cssY, start: open.box }
+            : { kind: 'draw', anchor: event.imageClamped, start: open.box }
+      updateCrop({ ...open, drag, hover: handle ?? (drag.kind === 'move' ? 'move' : 'draw') })
+      return
+    }
+    const drag = open.drag
+    if (drag === null) {
+      if (event.phase === 'move' && loose !== null) {
+        const hover = hitResizeHandle(boxHandlePoints(open.box), view) ?? (insideBox(open.box, loose) ? 'move' : 'draw')
+        if (hover !== open.hover) {
+          updateCrop({ ...open, hover })
+        }
+      }
+      return
+    }
+    const ratio =
+      presetRatio(open.aspect, cropImage, open.swapped) ??
+      (event.shiftKey ? drag.start.width / drag.start.height : null)
+    let box = open.box
+    if (drag.kind === 'draw') {
+      if (event.imageClamped !== null) {
+        box = drawCrop(drag.anchor, event.imageClamped, cropImage, ratio) ?? drag.start
+      }
+    } else if (event.scale > 0) {
+      const dx = (event.cssX - drag.startCssX) / event.scale
+      const dy = (event.cssY - drag.startCssY) / event.scale
+      box =
+        drag.kind === 'resize'
+          ? resizeCrop(drag.start, drag.handle, dx, dy, cropImage, ratio)
+          : moveCrop(drag.start, dx, dy, cropImage)
+    }
+    updateCrop({ ...open, box, drag: event.phase === 'up' ? null : drag })
+  }
+
+  /** CROP_MODAL (D-518): while the crop is open only its keys act; the marks, history and tools wait. */
+  function handleCropKey(event: KeyboardEvent): void {
+    const open = cropRef.current
+    if (open === null || event.type !== 'keydown') {
+      return
+    }
+    const target = event.target
+    if (
+      target instanceof HTMLInputElement ||
+      target instanceof HTMLSelectElement ||
+      target instanceof HTMLTextAreaElement
+    ) {
+      return
+    }
+    if (historyChord(event) !== null) {
+      event.preventDefault()
+      return
+    }
+    const plain = !event.ctrlKey && !event.metaKey && !event.altKey
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      if (!open.busy) {
+        closeCrop()
+      }
+      return
+    }
+    if (event.key === 'Enter') {
+      // Enter on another button stays that button's. On the Crop toggle it commits: keyboard entry
+      // keeps focus there (A-4), so its own activation would otherwise close the crop.
+      const toggle = target instanceof HTMLElement && target.dataset.testid === 'capture-tool-crop'
+      if (!plain || (target instanceof HTMLButtonElement && !toggle)) {
+        return
+      }
+      event.preventDefault()
+      commitCrop()
+      return
+    }
+    const step = event.shiftKey ? CROP_NUDGE_SHIFT_PX : KEYBOARD_NUDGE_PX
+    const delta =
+      event.key === 'ArrowRight'
+        ? [step, 0]
+        : event.key === 'ArrowLeft'
+          ? [-step, 0]
+          : event.key === 'ArrowDown'
+            ? [0, step]
+            : event.key === 'ArrowUp'
+              ? [0, -step]
+              : null
+    if (delta !== null) {
+      event.preventDefault()
+      if (plain && open.drag === null && !open.busy) {
+        updateCrop({ ...open, box: nudgeCrop(open.box, delta[0] ?? 0, delta[1] ?? 0, cropImage) })
+      }
+      return
+    }
+    if ((event.key === 'x' || event.key === 'X') && plain) {
+      event.preventDefault()
+      swapCropBox()
+    }
+  }
+
   function chooseTool(next: CaptureTool): void {
-    if (textDraft !== null || colorDirty || txOpen || gestureRef.current !== null) {
+    if (cropRef.current !== null || textDraft !== null || colorDirty || txOpen || gestureRef.current !== null) {
       return
     }
     finishSize()
@@ -652,6 +999,10 @@ export function CapturePage() {
 
   function handleSurfacePointer(event: SurfacePointer): void {
     if (viewVariant !== 'original' || !overlayReady || imageEpoch < 1) {
+      return
+    }
+    if (cropRef.current !== null) {
+      handleCropPointer(event)
       return
     }
     if (event.phase === 'down') {
@@ -1168,6 +1519,10 @@ export function CapturePage() {
     if (event.isComposing) {
       return
     }
+    if (cropRef.current !== null) {
+      handleCropKey(event)
+      return
+    }
     const history = historyChord(event)
     if (history !== null) {
       // Outside HISTORY_FOCUS the key stays the field's or the menu's: no preventDefault.
@@ -1512,8 +1867,10 @@ export function CapturePage() {
     return replaceAt(annotations, gestureRef.current.index, preview)
   })()
   const drawingPreview = preview !== null && gestureRef.current?.kind === 'drawing' ? preview : null
+  const cropStatus = cropLive?.busy === true ? CROP_BUSY_MESSAGE : null
   const editorStatus =
     error ??
+    cropStatus ??
     (textDraft !== null
       ? TEXT_GATE_MESSAGE
       : applyEnabled || colorDirty
@@ -1894,6 +2251,9 @@ export function CapturePage() {
           onPointer={() => undefined}
           onSurfacePointer={handleSurfacePointer}
           onSelectIndex={(index) => {
+            if (cropRef.current !== null) {
+              return
+            }
             finishSize()
             setSelectedIndex(index)
             setTool('select')
@@ -1911,6 +2271,33 @@ export function CapturePage() {
             }
           }}
           onEditorKey={handleEditorKey}
+          crop={cropLive === null ? null : { box: cropLive.box, dragging: cropLive.drag !== null, cursor: cropLive.hover }}
+          cropBar={
+            cropLive === null ? undefined : (
+              <CaptureCropBar
+                box={cropLive.box}
+                image={cropImage}
+                aspect={cropLive.aspect}
+                swapped={cropLive.swapped}
+                busy={cropLive.busy}
+                ratio={presetRatio(cropLive.aspect, cropImage, cropLive.swapped)}
+                swapReason={
+                  cropLive.aspect !== 'free' && !presetFeasible(cropLive.aspect, cropImage, !cropLive.swapped)
+                    ? CROP_SWAP_REASON
+                    : undefined
+                }
+                onAspect={chooseCropAspect}
+                onSwap={swapCropBox}
+                onBox={setCropBox}
+                onReset={resetCrop}
+                onCancel={closeCrop}
+                onSave={commitCrop}
+              />
+            )
+          }
+          cropReason={cropReason}
+          cropDisabledReason={cropDisabledReason}
+          onToggleCrop={toggleCrop}
         />
       </div>
     </section>
