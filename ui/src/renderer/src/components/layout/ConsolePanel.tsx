@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
 
@@ -10,12 +10,24 @@ import { Tooltip } from '../ui/Tooltip'
 export const CONSOLE_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] as const
 export type ConsoleLevel = (typeof CONSOLE_LEVELS)[number]
 
-export function lineMatchesExactLevel(line: string, level: ConsoleLevel): boolean {
+function isConsoleLevel(value: unknown): value is ConsoleLevel {
+  return typeof value === 'string' && (CONSOLE_LEVELS as readonly string[]).includes(value)
+}
+
+/**
+ * A line passes when its level is the selected level or more severe (D-1, 2026-11-09):
+ * DEBUG shows every levelled line. A line without a level token never passes.
+ */
+export function lineMeetsLevel(line: string, level: ConsoleLevel): boolean {
   const match = line.match(/\[(DEBUG|INFO|WARNING|ERROR|CRITICAL)\s*\]/i)
   if (match === null) {
     return false
   }
-  return match[1].toUpperCase() === level
+  const lineLevel = match[1].toUpperCase()
+  if (!isConsoleLevel(lineLevel)) {
+    return false
+  }
+  return CONSOLE_LEVELS.indexOf(lineLevel) >= CONSOLE_LEVELS.indexOf(level)
 }
 
 export async function copyVisibleLogs(
@@ -48,6 +60,8 @@ type ConsolePanelProps = {
   onExpand?: () => void
   onClose?: () => void
   onCollapse?: () => void
+  /** Reads Settings → Log level, the level the Console opens at (D-2, 2026-11-09). */
+  loadStartLevel?: () => Promise<unknown>
 }
 
 export function ConsolePanel({
@@ -59,15 +73,43 @@ export function ConsolePanel({
   onExpand,
   onClose,
   onCollapse,
+  loadStartLevel,
 }: ConsolePanelProps) {
   const [filter, setFilter] = useState<ConsoleLevel>('DEBUG')
+  const userChoseLevel = useRef(false)
+  // Read once when the Console opens; the shell re-renders on every log line.
+  const startLevelLoader = useRef(loadStartLevel)
   const [search, setSearch] = useState('')
   const [showYtdlp, setShowYtdlp] = useState(true)
   const g30 = useG30Styles()
 
+  useEffect(() => {
+    const load = startLevelLoader.current
+    if (load === undefined) {
+      return undefined
+    }
+    let live = true
+    load()
+      .then((settings) => {
+        const saved =
+          typeof settings === 'object' && settings !== null
+            ? (settings as { log_level?: unknown }).log_level
+            : undefined
+        if (live && !userChoseLevel.current && isConsoleLevel(saved)) {
+          setFilter(saved)
+        }
+      })
+      .catch(() => {
+        // Settings unreadable: the Console stays at DEBUG.
+      })
+    return () => {
+      live = false
+    }
+  }, [])
+
   const visible = useMemo(() => {
     return lines.filter((line) => {
-      if (!lineMatchesExactLevel(line, filter)) {
+      if (!lineMeetsLevel(line, filter)) {
         return false
       }
       if (!showYtdlp && /yt-?dlp/i.test(line)) {
@@ -155,6 +197,7 @@ export function ConsolePanel({
                 size="sm"
                 data-testid={`console-level-${level}`}
                 onClick={() => {
+                  userChoseLevel.current = true
                   setFilter(level)
                 }}
               >

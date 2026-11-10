@@ -339,7 +339,7 @@ A shared log viewer as a right side sheet. Closed by default (unmounted). Header
 
 | Feature | Description | Source |
 |---|---|---|
-| Log level filtering | Exclusive level buttons: DEBUG, INFO, WARNING, ERROR, CRITICAL (exact token match; default DEBUG) | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md); MEU-27 |
+| Log level filtering | Exclusive level buttons: DEBUG, INFO, WARNING, ERROR, CRITICAL. A button shows its level and every more severe level; a line without a level token is hidden. The Console opens at Settings → Log level (`app.log_level`) and falls back to DEBUG. | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md); MEU-27; rc.3 D-1 and D-2 (2026-11-09) |
 | Console output theme | `console-output` uses `--color-console-bg` / `--color-console-fg` (black / console green) | MEU-27 live preview |
 | Module prefix tags | `[Downloader]`, `[Transcript]`, `[TTS]`, `[Convert]`, `[Capture]`, `[yt-dlp]` | All source apps + Phase 8/9 |
 | yt-dlp debug toggle | Separate checkbox: "Show yt-dlp debug output" | [_downloader_pseudo_logic.md §9](../../_inspiration/_downloader_pseudo_logic.md) |

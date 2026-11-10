@@ -150,6 +150,7 @@ version = "0.1.0rc2"
 source = { editable = "packages/infrastructure" }
 dependencies = [
     { name = "avkit-core" },
+    { name = "certifi" },
     { name = "huggingface-hub" },
     { name = "kokoro" },
     { name = "misaki", extra = ["en"] },
@@ -159,6 +160,7 @@ dependencies = [
     { name = "pillow" },
     { name = "sqlalchemy" },
     { name = "structlog" },
+    { name = "tqdm" },
     { name = "youtube-transcript-api" },
     { name = "yt-dlp" },
 ]
@@ -166,6 +168,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "avkit-core", editable = "packages/core" },
+    { name = "certifi" },
     { name = "huggingface-hub" },
     { name = "kokoro" },
     { name = "misaki", extras = ["en"], specifier = "==0.9.4" },
@@ -175,6 +178,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=10.0" },
     { name = "sqlalchemy", specifier = ">=2.0" },
     { name = "structlog" },
+    { name = "tqdm" },
     { name = "youtube-transcript-api", specifier = ">=1.0" },
     { name = "yt-dlp" },
 ]

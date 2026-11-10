@@ -299,8 +299,18 @@ class _Stack:
     ) -> TTSJob:
         return self.service.generate(text, VOICE, speed, fmt, [], TTSSourceKind.Inline, None)
 
+    def generating_id(self) -> str:
+        """The running job's id; a file's name no longer carries it (rc.3 F5)."""
+        (running,) = self.repo.list_by_status(TTSStatus.Generating)
+        return running.id
+
     def files(self, job_id: str) -> list[str]:
-        return sorted(path.name for path in self.root.glob(f"{job_id}.*"))
+        # Every file in the output folder: the name comes from the text (rc.3 F5), and a
+        # cleanup check must see any file left behind, whatever its name.
+        del job_id
+        if not self.root.is_dir():
+            return []
+        return sorted(path.name for path in self.root.iterdir() if path.is_file())
 
     def status(self, job_id: str) -> TTSStatus:
         return self.service.get_status(job_id).status
@@ -323,7 +333,7 @@ def test_ac_77_1_generate_returns_generating_then_done(tmp_path: Path) -> None:
     assert stack.service.wait_idle(WAIT) is True
     done = stack.service.get_status(job.id)
     assert done.status is TTSStatus.Done
-    assert done.output_path == stack.root / f"{job.id}.mp3"
+    assert done.output_path == stack.root / "hello-there-am_eric.mp3"
     assert done.output_path.is_file()
 
 
@@ -443,7 +453,8 @@ def test_ac_77_5_cancel_from_write_hooks_leaves_no_files(tmp_path: Path, hook: s
     stack = _Stack(tmp_path, spawn=_sync)
 
     def cancel_from(path: Path) -> None:
-        stack.service.cancel(path.stem)
+        del path
+        stack.service.cancel(stack.generating_id())
 
     if hook == "wav":
         stack.filesystem.after_wav = cancel_from
@@ -465,8 +476,9 @@ def test_ac_77_5_cleanup_uses_job_paths_after_output_path_changed(
 
     def change_then_end(path: Path) -> None:
         stack.settings.values[("tts", "output_path")] = str(moved)
+        del path
         if outcome is TTSStatus.Cancelled:
-            stack.service.cancel(path.stem)
+            stack.service.cancel(stack.generating_id())
         else:
             raise RuntimeError("encoder died")
 
@@ -497,7 +509,7 @@ def test_ac_77_5_cancel_waits_for_terminal_write_barrier(tmp_path: Path) -> None
     assert stack.repo.done_released == [True]
     done = stack.service.get_status(job.id)
     assert done.status is TTSStatus.Done
-    assert f"{job.id}.mp3" in stack.files(job.id)
+    assert "hello-there-am_eric.mp3" in stack.files(job.id)
     stack.repo.hold_done = False
     following = stack.generate()
     assert stack.service.wait_idle(WAIT) is True
@@ -509,7 +521,8 @@ def test_ac_77_5_uncancelled_job_keeps_mp3_neg(tmp_path: Path) -> None:
     stack = _Stack(tmp_path, spawn=_sync)
     job = stack.generate()
     assert stack.status(job.id) is TTSStatus.Done
-    assert stack.files(job.id) == [f"{job.id}.mp3", f"{job.id}.wav"]
+    # rc.3 F7: the WAV an MP3 is encoded from is removed once the MP3 is written.
+    assert stack.files(job.id) == ["hello-there-am_eric.mp3"]
 
 
 # --- AC-77.6 WORKER_RULE ----------------------------------------------------------------

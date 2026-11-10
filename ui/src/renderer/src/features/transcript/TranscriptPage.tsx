@@ -50,6 +50,7 @@ import {
   retryTranscript,
   startTranscripts,
   stopTranscripts,
+  type TranscriptJobOut,
 } from './transcript-commands'
 import { TRANSCRIPT_HELP_SECTIONS } from './transcript-help-content'
 import { TranscriptToolbar } from './TranscriptToolbar'
@@ -81,6 +82,7 @@ export const TRANSCRIPT_TEST_IDS = [
   'last-title',
   'job-message',
   'channel-url-hint',
+  'add-status',
   'remove-confirm-btn',
   'remove-confirm-cancel',
   'error-banner',
@@ -112,12 +114,16 @@ function errorMessage(caught: unknown): string {
   return caught instanceof ApiError || caught instanceof Error ? caught.message : String(caught)
 }
 
-/** The job statuses whose `error_message` replaces the output tree on line 3 (D-294). */
-const JOB_MESSAGE_STATUSES: ReadonlySet<string> = new Set(['Failed', 'Paused', 'Done'])
+/**
+ * The job statuses whose `error_message` replaces the output tree on line 3 (D-294).
+ * A Processing job holds one only while YouTube refuses a request (rc.3 F6).
+ */
+const JOB_MESSAGE_STATUSES: ReadonlySet<string> = new Set(['Failed', 'Paused', 'Done', 'Processing'])
 
 /**
- * Line 3 of a card (TR5): the job's message on a Failed, Paused or Done card that
- * has one; the last title, status and item message on the Processing card;
+ * Line 3 of a card (TR5): the job's message on a card that has one (a Processing
+ * card has one while it waits out a retry); otherwise the last title, status and
+ * item message on the Processing card;
  * otherwise the output root with both full raw/compiled paths kept in accessible text.
  */
 function CardDetail({ item }: { item: TranscriptListItem }): ReactElement {
@@ -143,6 +149,16 @@ function CardDetail({ item }: { item: TranscriptListItem }): ReactElement {
   )
 }
 
+function queuedMessage(job: TranscriptJobOut | null): string | null {
+  if (job === null) {
+    return null
+  }
+  const from = job.channel_name ? ` from ${job.channel_name}` : ''
+  const count = job.video_count
+  const what = count === undefined ? 'the channel' : `${count} video${count === 1 ? '' : 's'}`
+  return `Queued ${what}${from}. Click Start to fetch transcripts.`
+}
+
 export function TranscriptPage() {
   const queue = useTranscriptQueue()
   const settingsQuery = useQuery({
@@ -153,6 +169,7 @@ export function TranscriptPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
+  const [addStatus, setAddStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [compiledById, setCompiledById] = useState<Record<string, string>>({})
@@ -271,11 +288,15 @@ export function TranscriptPage() {
     }
     setAdding(true)
     setError(null)
+    // The backend lists the channel's videos before it answers; say so, as the Downloader does.
+    setAddStatus("Adding — reading the channel's video list…")
     void postTranscriptCreate(submitted)
-      .then(() => {
+      .then((job) => {
         setChannelUrl('')
+        setAddStatus(queuedMessage(job))
       })
       .catch((caught: unknown) => {
+        setAddStatus(null)
         setError(errorMessage(caught))
       })
       .finally(() => {
@@ -495,8 +516,15 @@ export function TranscriptPage() {
             </Button>
           </div>
           <div className="min-h-6 text-sm">
-            <p data-testid="channel-url-hint" className="text-fg-muted" hidden={error !== null}>
+            <p
+              data-testid="channel-url-hint"
+              className="text-fg-muted"
+              hidden={error !== null || addStatus !== null}
+            >
               Accepts: /@handle, /c/name, /channel/UCxxx, /user/name
+            </p>
+            <p data-testid="add-status" className="text-fg-muted" role="status" hidden={addStatus === null || error !== null}>
+              {addStatus}
             </p>
             {error ? (
               <p data-testid="error-banner" className="text-error" role="alert">

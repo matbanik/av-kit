@@ -33,6 +33,7 @@ from avkit_core.domain.transcript import (
     TranscriptResult,
     TranscriptSkip,
     failure_message,
+    retry_message,
     safe_reason,
 )
 from avkit_core.ports.filesystem import FilesystemPort
@@ -114,6 +115,8 @@ class TranscriptService:
         self._pause = False
         self._stop = False
         self._pick_processing = False
+        # The retry message this worker last wrote on the job it runs (rc.3 F6).
+        self._retry_message: str | None = None
         self._thread: threading.Thread | None = None
         # True from a worker's start until it decides, under `_lock`, to exit (D-306).
         self._worker_active = False
@@ -148,7 +151,8 @@ class TranscriptService:
             for job in uow.transcripts.list_jobs_ordered():
                 if job.channel_url == url:
                     raise ConflictError("channel_url is already in the queue")
-        info = self._coordinator.extract_info(url)
+        # Flat: the folder title and IDs read the same, without opening every video first.
+        info = self._coordinator.extract_info(url, flat=True)
         listing = self._coordinator.extract_video_ids(url)
         videos = listing.videos
         playlist_end = _as_int(self._settings.get("transcript", "playlist_end"))
@@ -459,7 +463,13 @@ class TranscriptService:
             if latest is None:
                 return
             if latest.status is TranscriptStatus.Pending:
-                latest = replace(latest.transition(TranscriptStatus.Processing), updated_at=_now())
+                # A message from an earlier run (a requeued Done or Failed job) would read as
+                # this run's on the Processing card.
+                latest = replace(
+                    latest.transition(TranscriptStatus.Processing),
+                    error_message=None,
+                    updated_at=_now(),
+                )
                 uow.transcripts.save_job(latest)
                 uow.commit()
             elif latest.status is not TranscriptStatus.Processing:
@@ -537,7 +547,19 @@ class TranscriptService:
             uow.commit()
 
     def _fetch_item(self, job_id: str, item: TranscriptItem) -> bool:
-        """Fetch one video. True when a block outlasted `max_retries` (the item stays Pending)."""
+        """Fetch one video. True when a block outlasted `max_retries` (the item stays Pending).
+
+        A retry message shown on the job while it waited is cleared however the fetch ends; a
+        block that pauses the job then writes its own message.
+        """
+        try:
+            return self._fetch_item_attempts(job_id, item)
+        finally:
+            if self._retry_message is not None:
+                self._set_job_message(job_id, None, only_if=self._retry_message)
+                self._retry_message = None
+
+    def _fetch_item_attempts(self, job_id: str, item: TranscriptItem) -> bool:
         max_retries = _as_int(self._settings.get("transcript", "max_retries"))
         retry_delay = _as_float(self._settings.get("transcript", "retry_delay"))
         languages = list(TRANSCRIPT_LANGUAGES_DEFAULT)
@@ -550,9 +572,14 @@ class TranscriptService:
             try:
                 result = self._captions.get_transcript(current.video_id, languages)
             except TranscriptRetryableError:
+                retry_count = current.retry_count + 1
+                attempts = max(max_retries, 1)
+                waiting = retry_message(retry_count, attempts, retry_delay)
+                self._set_job_message(job_id, waiting, only_if=self._retry_message)
+                self._retry_message = waiting
+                # No log line per retry: a blocked video logs once, `transcript.blocked` (AC-115.7).
                 self._sleep(retry_delay)
                 blocked = failure_message(TranscriptFailureCause.blocked)
-                retry_count = current.retry_count + 1
                 if max_retries <= 0 or retry_count >= max_retries:
                     self._save_item(replace(current, retry_count=0, error_message=blocked))
                     log.error(
@@ -642,6 +669,19 @@ class TranscriptService:
             self._sleep(min(1.0, self._request_starts[0] + RATE_WINDOW - now))
             if self._stop or self._pause:
                 return False
+
+    def _set_job_message(self, job_id: str, message: str | None, *, only_if: str | None) -> None:
+        """Write a Processing job's `error_message` while it still holds `only_if`."""
+        with self._uow_factory() as uow:
+            job = uow.transcripts.get_job(job_id)
+            if (
+                job is None
+                or job.status is not TranscriptStatus.Processing
+                or job.error_message != only_if
+            ):
+                return
+            uow.transcripts.save_job(replace(job, error_message=message, updated_at=_now()))
+            uow.commit()
 
     def _save_item(self, item: TranscriptItem) -> None:
         with self._uow_factory() as uow:

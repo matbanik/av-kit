@@ -40,6 +40,7 @@ export type TranscriptJobOut = {
   id: string
   channel_url: string
   channel_name?: string
+  video_count?: number
 }
 
 export function createTranscriptBody(channelUrl: string): CreateTranscriptInput | null {

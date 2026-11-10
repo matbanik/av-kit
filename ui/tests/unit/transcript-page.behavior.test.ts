@@ -98,6 +98,7 @@ describe('MEU-55 transcript page composition', () => {
   let holdReorder: Promise<void> | null
   let reorderStatus: number
   let holdStart: Promise<void> | null
+  let holdPost: Promise<void> | null
 
   const path = (url: string): string => new URL(url).pathname.replace('/api/v1', '')
   const requests = (method: string, pattern: RegExp): Ledger =>
@@ -113,6 +114,7 @@ describe('MEU-55 transcript page composition', () => {
     holdReorder = null
     reorderStatus = 200
     holdStart = null
+    holdPost = null
     queryClient.clear()
     mockApi(async (target) => {
       opened.push(target)
@@ -134,12 +136,18 @@ describe('MEU-55 transcript page composition', () => {
           return envelope()
         }
         if (p === '/transcripts' && method === 'POST') {
+          if (holdPost !== null) {
+            await holdPost
+          }
           if (postStatus >= 400) {
             return new Response(JSON.stringify({ error: { code: 'VALIDATION', message: 'bad channel' } }), {
               status: postStatus,
             })
           }
-          return new Response(JSON.stringify({ id: 'new', channel_url: String(body?.channel_url) }), { status: 201 })
+          return new Response(
+            JSON.stringify({ id: 'new', channel_url: String(body?.channel_url), channel_name: 'Foxtrot', video_count: 3 }),
+            { status: 201 },
+          )
         }
         if (p === '/transcripts/reorder' && method === 'PUT') {
           if (holdReorder !== null) {
@@ -524,6 +532,40 @@ describe('MEU-55 transcript page composition', () => {
     expect(requests('POST', /^\/transcripts$/)[0].body).toEqual({ channel_url: 'https://www.youtube.com/@bad' })
   })
 
+  it('rc.3 F3 Add shows its progress, then how many videos it queued', async () => {
+    let release = (): void => undefined
+    holdPost = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    await renderPage()
+    expect(within(host).getByTestId('add-status').hidden).toBe(true)
+    await user.type(within(host).getByTestId('channel-input'), 'https://www.youtube.com/@foxtrot')
+    await user.click(within(host).getByTestId('add-btn'))
+    const status = (): HTMLElement => within(host).getByTestId('add-status')
+    expect(status().hidden).toBe(false)
+    expect(status().textContent).toMatch(/^Adding — reading the channel's video list/)
+    expect(status().getAttribute('role')).toBe('status')
+    expect(within(host).getByTestId('channel-url-hint').hidden).toBe(true)
+    await act(async () => {
+      release()
+    })
+    await vi.waitFor(() => {
+      expect(status().textContent).toBe('Queued 3 videos from Foxtrot. Click Start to fetch transcripts.')
+    })
+    expect(within(host).getByTestId('error-banner').hidden).toBe(true)
+  })
+
+  it('rc.3 F3 a failed Add clears the progress line and shows the error', async () => {
+    postStatus = 422
+    await renderPage()
+    await user.type(within(host).getByTestId('channel-input'), 'https://www.youtube.com/@bad')
+    await user.click(within(host).getByTestId('add-btn'))
+    await vi.waitFor(() => {
+      expect(within(host).getByTestId('error-banner').textContent).toMatch(/bad channel/)
+    })
+    expect(within(host).getByTestId('add-status').hidden).toBe(true)
+  })
+
   it('AC-55.6 empty queue invites a link and the action only focuses the field', async () => {
     items = []
     processorState = 'Idle'
@@ -596,5 +638,27 @@ describe('MEU-55 transcript page composition', () => {
     const victor = card('Victor')
     expect(within(victor).queryByTestId('output-tree')?.textContent).toContain('C:/t/Victor · raw · compiled')
     expect(within(victor).queryByTestId('last-title')).toBeNull()
+  })
+
+  it('rc.3 F6 a Processing card shows its retry message on line three until the job clears it', async () => {
+    const waiting =
+      'YouTube is blocking caption requests from this network. Attempt 1 of 3 was refused; trying again in 30 s.'
+    items = [
+      item({
+        id: 'r', channel_name: 'Romeo', status: 'Processing', error_message: waiting, last_title: 'Episode 1',
+        last_item_status: 'Done', queue_position: 1,
+      }),
+      item({
+        id: 'q', channel_name: 'Quebec', status: 'Processing', last_title: 'Episode 2', last_item_status: 'Done',
+        queue_position: 2,
+      }),
+    ]
+    await renderPage()
+    const romeo = card('Romeo')
+    expect(within(romeo).queryByTestId('job-message')?.textContent).toBe(waiting)
+    expect(within(romeo).queryByTestId('last-title')).toBeNull()
+    const quebec = card('Quebec')
+    expect(within(quebec).queryByTestId('job-message')).toBeNull()
+    expect(within(quebec).queryByTestId('last-title')?.textContent).toBe('Last: Episode 2 Done')
   })
 })

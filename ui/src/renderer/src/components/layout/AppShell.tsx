@@ -326,6 +326,7 @@ export function AppShell({ children }: AppShellProps) {
             onCollapse={() => {
               setConsoleExpanded(false)
             }}
+            loadStartLevel={() => apiFetch('/settings/app')}
           />
         ) : null}
       </div>

@@ -19,6 +19,7 @@ import importlib.util
 import json
 import os
 import shutil
+import ssl
 import sys
 import threading
 import urllib.request
@@ -29,6 +30,7 @@ from pathlib import Path, PurePosixPath
 from typing import assert_never
 from uuid import uuid4
 
+import certifi
 import structlog
 
 from avkit_core.domain.errors import ModelDownloadError
@@ -168,8 +170,15 @@ def spacy_ready(models_dir: Path) -> bool:
 
 
 def _default_fetch(url: str, dest: Path, on_progress: ProgressFn) -> None:
-    """Stream `url` to `dest` with the process proxy environment (urllib honours it)."""
-    with urllib.request.urlopen(url, timeout=60) as response:  # noqa: S310 — pinned https URL
+    """Stream `url` to `dest` with the process proxy environment (urllib honours it).
+
+    Verifies against certifi's roots, like the other downloads: a fresh Windows install
+    holds few roots in its store and Python never triggers the lazy fetch of the rest.
+    """
+    context = ssl.create_default_context(cafile=certifi.where())
+    with urllib.request.urlopen(  # noqa: S310 — pinned https URL
+        url, timeout=60, context=context
+    ) as response:
         total = int(response.headers.get("Content-Length") or 0)
         done = 0
         with dest.open("wb") as handle:

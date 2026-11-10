@@ -215,6 +215,7 @@ function GridSelect({
   options,
   onChange,
   disabled,
+  hint,
 }: {
   id: string
   label: string
@@ -223,10 +224,11 @@ function GridSelect({
   options: ReadonlyArray<{ value: string; label: string }>
   onChange: (value: string) => void
   disabled?: boolean
+  hint?: string
 }): React.JSX.Element {
   const g30 = useG30Styles()
   return (
-    <FormRow id={id} label={label}>
+    <FormRow id={id} label={label} hint={hint}>
       <select
         data-testid={testId}
         className={SELECT_CLASS}
@@ -1039,6 +1041,7 @@ export function SettingsPage() {
           <GridSelect
             id="settings-log-level"
             label="Log level"
+            hint="The level the Console opens at. A level shows its own lines and every more severe one."
             testId="settings-leaf-log_level"
             options={LOG_LEVELS.map((level) => ({ value: level, label: level }))}
             value={appSettings?.log_level ?? 'INFO'}

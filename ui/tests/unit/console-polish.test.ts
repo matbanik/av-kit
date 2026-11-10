@@ -193,28 +193,31 @@ describe('MEU-27 console polish', () => {
     )
   })
 
-  it('AC-27.8 lineMatchesExactLevel implements LEVEL_EXACT fail-closed matching', async () => {
-    const { lineMatchesExactLevel } = await import(
+  // AC-27.8 and AC-27.9 follow Mat's 2026-11-09 ruling D-1 (the level and above), which
+  // replaces MEU-27's exact match; console-level-threshold.test.ts holds the full matrix.
+  it('AC-27.8 lineMeetsLevel keeps the level and above and fails closed on tokenless lines', async () => {
+    const { lineMeetsLevel } = await import(
       '../../src/renderer/src/components/layout/ConsolePanel'
     )
-    expect(lineMatchesExactLevel('2026-08-20 15:31:51 [debug ] uow.commit', 'DEBUG')).toBe(true)
-    expect(lineMatchesExactLevel('2026-08-20 [info] started', 'DEBUG')).toBe(false)
-    expect(lineMatchesExactLevel('no level token here', 'DEBUG')).toBe(false)
-    expect(lineMatchesExactLevel('[INFO] ok', 'INFO')).toBe(true)
+    expect(lineMeetsLevel('2026-08-20 15:31:51 [debug ] uow.commit', 'DEBUG')).toBe(true)
+    expect(lineMeetsLevel('2026-08-20 [info] started', 'DEBUG')).toBe(true)
+    expect(lineMeetsLevel('2026-08-20 [debug ] uow.commit', 'INFO')).toBe(false)
+    expect(lineMeetsLevel('no level token here', 'DEBUG')).toBe(false)
+    expect(lineMeetsLevel('[INFO] ok', 'INFO')).toBe(true)
   })
 
-  it('AC-27.9 open console-output applies exact DEBUG filter to rendered text', async () => {
+  it('AC-27.9 open console-output applies the DEBUG threshold to rendered text', async () => {
     const { ConsolePanel } = await import('../../src/renderer/src/components/layout/ConsolePanel')
     await act(async () => {
       render(
         createElement(ConsolePanel, {
-          lines: ['[debug ] keep-me', '[info] hide-me', 'tokenless hide'],
+          lines: ['[debug ] keep-me', '[info] keep-too', 'tokenless hide'],
         }),
       )
     })
     const output = screen.queryByTestId('console-output')?.textContent ?? ''
     expect(output).toContain('keep-me')
-    expect(output).not.toContain('hide-me')
+    expect(output).toContain('keep-too')
     expect(output).not.toContain('tokenless hide')
   })
 

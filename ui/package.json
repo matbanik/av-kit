@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Save YouTube videos and captions, read text aloud, shrink videos and mark up screenshots, all on your own PC.",
   "license": "MIT",
-  "author": "Mat Banik",
+  "author": "focalia.ai",
   "homepage": "https://github.com/matbanik/av-kit",
   "repository": {
     "type": "git",

@@ -216,6 +216,18 @@ def failure_message(cause: TranscriptFailureCause, reason: str | None = None) ->
     return f"Couldn't get captions: {reason}." if reason else "Couldn't get captions."
 
 
+def retry_message(attempt: int, attempts: int, delay: float) -> str:
+    """The job's message while a blocked video waits: which attempt was refused, what comes next.
+
+    The last attempt's wait ends in a pause (MEU-116), so it says so instead of a retry.
+    """
+    then = "pausing" if attempt >= attempts else "trying again"
+    return (
+        "YouTube is blocking caption requests from this network. "
+        f"Attempt {attempt} of {attempts} was refused; {then} in {delay:g} s."
+    )
+
+
 def replace_links(text: str) -> str:
     """`text` with each URL as "[link]". `safe_reason` and the Console fields share this rule."""
     return _URL.sub("[link]", text)

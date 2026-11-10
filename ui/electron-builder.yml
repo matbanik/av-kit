@@ -1,5 +1,7 @@
 appId: com.avkit.app
 productName: av-kit
+# The author (focalia.ai) is the Publisher; the licence holder keeps the copyright.
+copyright: Copyright © 2026 Mat Banik
 directories:
   buildResources: build
   output: dist

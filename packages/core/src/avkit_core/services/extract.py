@@ -18,7 +18,7 @@ class ExtractCoordinator:
         self._youtube = youtube
         self._ttl_s = ttl_s
         self._lock = threading.Lock()
-        self._info_cache: dict[str, tuple[float, VideoInfo | PlaylistInfo]] = {}
+        self._info_cache: dict[tuple[str, bool], tuple[float, VideoInfo | PlaylistInfo]] = {}
         self._ids_cache: dict[str, tuple[float, VideoListing]] = {}
         self.in_flight = 0
         self.max_in_flight = 0
@@ -32,7 +32,9 @@ class ExtractCoordinator:
         self.in_flight -= 1
 
     def extract_info(self, url: str, flat: bool = False) -> VideoInfo | PlaylistInfo:
-        key = url.strip()
+        url = url.strip()
+        # A flat result lacks formats, so it never answers a full request (or the reverse).
+        key = (url, flat)
         now = time.monotonic()
         with self._lock:
             cached = self._info_cache.get(key)
@@ -40,7 +42,7 @@ class ExtractCoordinator:
                 return cached[1]
             self._enter()
             try:
-                result = self._youtube.extract_info(key, flat=flat)
+                result = self._youtube.extract_info(url, flat=flat)
                 self._info_cache[key] = (time.monotonic(), result)
                 return result
             finally:

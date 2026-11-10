@@ -30,6 +30,7 @@ from avkit_core.domain.tts import (
     TTSJob,
     VoiceAvailability,
     VoiceConfig,
+    output_stem,
     required_tts_assets,
     voice_availability,
 )
@@ -78,6 +79,20 @@ def _is_finite_number(value: object) -> bool:
         and not isinstance(value, bool)
         and math.isfinite(float(value))
     )
+
+
+def _free_paths(root: Path, stem: str) -> tuple[Path, Path]:
+    """The WAV and MP3 paths for `stem`, numbered `-2`, `-3`... past a name already taken.
+
+    One generation runs at a time (`_current_id`), so no job takes the name between this
+    check and the write.
+    """
+    name = stem
+    number = 1
+    while (root / f"{name}.wav").exists() or (root / f"{name}.mp3").exists():
+        number += 1
+        name = f"{stem}-{number}"
+    return root / f"{name}.wav", root / f"{name}.mp3"
 
 
 class TTSService:
@@ -324,8 +339,7 @@ class TTSService:
             cleaned = self._prepare.prepare(text, enabled_steps)
             samples = self._tts.generate(cleaned, config, speed, on_progress)
             root = self._output_root()
-            wav_path = root / f"{job_id}.wav"
-            mp3_path = root / f"{job_id}.mp3"
+            wav_path, mp3_path = _free_paths(root, output_stem(text, config.voice_id))
             partials = (wav_path, mp3_path)
             self._filesystem.write_audio_wav(wav_path, samples, TTS_WAV_SAMPLE_RATE)
             if self._cancel_flag:
@@ -338,6 +352,8 @@ class TTSService:
                 if self._cancel_flag:
                     outcome = TTSStatus.Cancelled
                     return
+                # The WAV was only the encoder's input (rc.3 F7); a failed unlink is logged.
+                self._remove_partial(job_id, (wav_path,))
             outcome = TTSStatus.Done
         except _Cancelled:
             outcome = TTSStatus.Cancelled

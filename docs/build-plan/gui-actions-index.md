@@ -111,7 +111,7 @@
 | `settings:start_minimized` | Start minimized (login item) | no | IPC `login-item-set` | specified | 06 / 07 |
 | `settings:copy_espeak_link` | Copy link | no | IPC `writeClipboardText` | specified | 06 |
 | `settings:copy_log_path` | Copy path | no | IPC `writeClipboardText` | specified | 06 |
-| `console:filter` | Exclusive exact-level buttons | no | local | specified | 06 |
+| `console:filter` | Exclusive level buttons: the level and above | no | local | specified | 06 |
 | `console:search` | Search | no | local | specified | 06 |
 | `console:clear` | Clear view | no | local | specified | 06 |
 | `console:copy` | Copy lines | no | IPC `writeClipboardText` | specified | 06 |

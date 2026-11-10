@@ -90,9 +90,21 @@ def test_ui_manifest_identifies_project(ac_id: str) -> None:
     assert ac_id == "AC-110.1"
     manifest = _npm("ui/package.json")
     assert "MEU" not in str(manifest.get("description"))
-    assert manifest.get("author") == "Mat Banik"
+    # Mat, 2026-11-09: "can we change the publisher in the installer to focalia.ai?" The author
+    # is the installer's Publisher and the exe's CompanyName.
+    assert manifest.get("author") == "focalia.ai"
     assert manifest.get("homepage") == REPO_URL
     assert REPO_URL in str(manifest.get("repository"))
+
+
+@pytest.mark.parametrize("ac_id", ["AC-110.1"], ids=["AC-110.1"])
+def test_exe_copyright_names_the_licence_holder(ac_id: str) -> None:
+    """electron-builder's default copyright names the author; the licence holder stays Mat Banik."""
+    assert ac_id == "AC-110.1"
+    config = (REPO_ROOT / "ui/electron-builder.yml").read_text(encoding="utf-8")
+    lines = config.splitlines()
+    assert "copyright: Copyright © 2026 Mat Banik" in lines
+    assert "Copyright (c) 2026 Mat Banik" in LICENSE_FILE.read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize("ac_id", ["AC-110.2"], ids=["AC-110.2"])

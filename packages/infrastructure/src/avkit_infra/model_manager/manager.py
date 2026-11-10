@@ -12,6 +12,7 @@ from avkit_core.domain.enums import ModelFormat, ModelPrecision
 from avkit_core.domain.errors import ModelDownloadError, ValidationError
 from avkit_core.domain.tts import ModelVariant, is_legacy_onnx_path
 from avkit_infra.model_manager.catalog import CATALOG_METADATA, HF_FILE_MAP, sideload_variant_id
+from avkit_infra.model_manager.progress import progress_bar_class
 from avkit_infra.tts.voices import (
     ONNX_LOCAL_DIR,
     ONNX_REVISION,
@@ -72,18 +73,22 @@ class ModelCatalogAdapter:
             return dest_path
         try:
             on_progress(0.0)
+            # The bytes as they arrive, not 0 until the whole file is on disk.
+            bar = progress_bar_class(on_progress)
             if is_onnx_variant(variant.id):
                 downloaded = hf_hub_download(
                     repo_id=repo_id,
                     filename=filename,
                     revision=ONNX_REVISION,
                     local_dir=str(dest_dir / ONNX_LOCAL_DIR),
+                    tqdm_class=bar,
                 )
             else:
                 downloaded = hf_hub_download(
                     repo_id=repo_id,
                     filename=filename,
                     local_dir=str(dest_dir),
+                    tqdm_class=bar,
                 )
             on_progress(1.0)
         except (OSError, FileNotFoundError) as exc:

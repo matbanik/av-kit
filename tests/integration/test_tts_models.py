@@ -823,6 +823,8 @@ def test_ac_73_8_onnx_download_pins_revision_and_local_dir(
     calls: list[dict[str, object]] = []
 
     def fake_download(**kwargs: Any) -> str:
+        # The byte-progress bar (rc.3 F4) is checked on its own; the pins are the rest.
+        assert isinstance(kwargs.pop("tqdm_class"), type)
         calls.append(kwargs)
         dest = Path(kwargs["local_dir"]) / kwargs["filename"]
         dest.parent.mkdir(parents=True, exist_ok=True)

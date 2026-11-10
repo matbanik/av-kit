@@ -359,3 +359,27 @@ def model_availability(fmt: ModelFormat, runtime_present: bool) -> ModelAvailabi
     if runtime_present:
         return ModelAvailability(True, None)
     return ModelAvailability(False, MODEL_REASONS[fmt])
+
+
+#: How many words of the text name an output file, and the most characters they keep.
+OUTPUT_STEM_WORDS = 3
+OUTPUT_STEM_WORDS_MAX = 60
+
+
+def output_stem(text: str, voice: str) -> str:
+    """An output file's stem: the text's first three words, lowercase, a dash, then the voice.
+
+    Each word keeps only its letters and digits, and a word left empty is skipped; with no word
+    left the stem starts `speech`. Mat, 2026-11-09: "first 3 words from the Text with dash
+    followed by voice".
+    """
+    words: list[str] = []
+    for raw in text.split():
+        word = "".join(char for char in raw.casefold() if char.isalnum())
+        if word:
+            words.append(word)
+            if len(words) == OUTPUT_STEM_WORDS:
+                break
+    head = "-".join(words)[:OUTPUT_STEM_WORDS_MAX].strip("-") or "speech"
+    tail = "".join(char for char in voice if char.isalnum() or char == "_") or "voice"
+    return f"{head}-{tail}"
