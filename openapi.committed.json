@@ -738,6 +738,157 @@
         "title": "CaptureRequestOut",
         "type": "object"
       },
+      "CaptureSheetCellOut": {
+        "additionalProperties": false,
+        "description": "One cell of the sheet: its number in time order, its time and its timecode.",
+        "properties": {
+          "cell": {
+            "title": "Cell",
+            "type": "integer"
+          },
+          "time_ms": {
+            "title": "Time Ms",
+            "type": "integer"
+          },
+          "timecode": {
+            "title": "Timecode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cell",
+          "time_ms",
+          "timecode"
+        ],
+        "title": "CaptureSheetCellOut",
+        "type": "object"
+      },
+      "CaptureSheetIn": {
+        "additionalProperties": false,
+        "description": "POST /captures/sheet body (MEU-135, SHEET_ROUTE): a span of a local video and its grid.\n\n`start` and `end` are read by TIME_PARSE in the service; with neither, the span is the\nwhole video.",
+        "properties": {
+          "end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "grid": {
+            "default": 3,
+            "maximum": 5.0,
+            "minimum": 2.0,
+            "title": "Grid",
+            "type": "integer"
+          },
+          "max_edge": {
+            "default": 1568,
+            "maximum": 2576.0,
+            "minimum": 64.0,
+            "title": "Max Edge",
+            "type": "integer"
+          },
+          "path": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "CaptureSheetIn",
+        "type": "object"
+      },
+      "CaptureSheetOut": {
+        "additionalProperties": false,
+        "description": "POST /captures/sheet 201 (SHEET_ROUTE). No image bytes.",
+        "properties": {
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/CaptureSheetCellOut"
+            },
+            "title": "Cells",
+            "type": "array"
+          },
+          "shot": {
+            "$ref": "#/components/schemas/CaptureSheetShotOut"
+          },
+          "spacing_ms": {
+            "title": "Spacing Ms",
+            "type": "integer"
+          },
+          "video": {
+            "$ref": "#/components/schemas/CaptureFramesVideoOut"
+          }
+        },
+        "required": [
+          "video",
+          "shot",
+          "spacing_ms",
+          "cells"
+        ],
+        "title": "CaptureSheetOut",
+        "type": "object"
+      },
+      "CaptureSheetShotOut": {
+        "additionalProperties": false,
+        "description": "The new shot that holds the sheet.",
+        "properties": {
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "path",
+          "width",
+          "height"
+        ],
+        "title": "CaptureSheetShotOut",
+        "type": "object"
+      },
       "CaptureShotDetailOut": {
         "additionalProperties": false,
         "description": "GET /captures/{id} includes validated sidecar annotations and the newest backup path.",
@@ -4226,6 +4377,50 @@
           }
         ],
         "summary": "Complete Capture Request"
+      }
+    },
+    "/api/v1/captures/sheet": {
+      "post": {
+        "description": "SHEET_ROUTE (MEU-135): one labelled grid of a span of a local video, as a new shot.",
+        "operationId": "capture_sheet_api_v1_captures_sheet_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureSheetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureSheetOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Capture Sheet"
       }
     },
     "/api/v1/captures/{id}": {

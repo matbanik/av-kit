@@ -1,8 +1,9 @@
-"""Local video input, times and frame names for the probe and frames steps (MEU-133, MEU-134).
+"""Local video input, times and names for the probe, frames and sheet steps (MEU-133 to 135).
 
 VIDEO_INPUT, TIMECODE and VideoProbe serve `POST /conversions/probe` (MEU-133); TIME_PARSE,
-FRAME_TIMES and FRAME_NAME serve `POST /captures/frames` (MEU-134). Every function here is pure
-apart from VIDEO_INPUT's read-only path checks.
+FRAME_TIMES and FRAME_NAME serve `POST /captures/frames` (MEU-134); SHEET_SIZE, SHEET_TIMES,
+SHEET_LABEL's sizes and SHEET_NAME serve `POST /captures/sheet` (MEU-135). Every function here is
+pure apart from VIDEO_INPUT's read-only path checks.
 """
 
 from __future__ import annotations
@@ -40,6 +41,20 @@ _TIME_PATTERNS = (
     re.compile(r"(\d+):([0-5]\d):([0-5]\d)(?:\.(\d{1,3}))?", re.ASCII),
 )
 
+# SHEET_CHECKS (MEU-135, D-601 A): a sheet is `grid` by `grid` cells.
+SHEET_GRID_MIN = 2
+SHEET_GRID_MAX = 5
+SHEET_GRID_DEFAULT = 3
+# SHEET_SIZE: the image token budgets (standard up to a 1568 px edge, high above it), the
+# pixels one token covers, and the source size used when the probe gives none.
+SHEET_TOKENS_STANDARD = 1568
+SHEET_TOKENS_HIGH = 4784
+PIXELS_PER_TOKEN = 750
+SHEET_FALLBACK_SIZE = (1920, 1080)
+# SHEET_LABEL: the label's starting size as a percent of the cell height, and its floor.
+SHEET_LABEL_PERCENT = 14
+SHEET_LABEL_MIN_PX = 8
+
 
 @dataclass(frozen=True)
 class VideoProbe:
@@ -76,6 +91,35 @@ class VideoFrames:
 
     video: VideoProbe | None
     frames: tuple[VideoFrame, ...]
+
+
+@dataclass(frozen=True)
+class SheetCell:
+    """One cell of a sheet: its number (1 to k, in time order), time and timecode."""
+
+    cell: int
+    time_ms: int
+    timecode: str
+
+
+@dataclass(frozen=True)
+class SheetShot:
+    """The shot `sheet_from_video` wrote: its id, path and pixel size."""
+
+    id: str
+    path: str
+    width: int
+    height: int
+
+
+@dataclass(frozen=True)
+class VideoSheet:
+    """The result of `sheet_from_video`: the video's probe, the shot, the spacing and the cells."""
+
+    video: VideoProbe | None
+    shot: SheetShot | None
+    spacing_ms: int
+    cells: tuple[SheetCell, ...]
 
 
 def _non_local(text: object) -> bool:
@@ -223,3 +267,65 @@ def frame_name(stem: str, ms: int) -> str:
     minutes, rest = divmod(rest, 60_000)
     seconds, millis = divmod(rest, 1000)
     return f"{import_stem(stem)}-t{hours:02d}h{minutes:02d}m{seconds:02d}.{millis:03d}s"
+
+
+def _half_up(num: int, den: int) -> int:
+    """The one integer rounding SHEET_SIZE, SHEET_TIMES and SHEET_LABEL use: half up."""
+    return (2 * num + den) // (2 * den)
+
+
+def sheet_cell_size(
+    width: int | None, height: int | None, grid: int, max_edge: int
+) -> tuple[int, int]:
+    """SHEET_SIZE (MEU-135): one cell's `(width, height)`, integers only.
+
+    The sheet is `grid` cells on each axis, so its long edge is at most `max_edge` and its
+    area at most the token budget. A source with no usable size counts as 1920x1080.
+    """
+    if width is None or height is None or width < 1 or height < 1:
+        width, height = SHEET_FALLBACK_SIZE
+    tokens = SHEET_TOKENS_STANDARD if max_edge <= SHEET_TOKENS_STANDARD else SHEET_TOKENS_HIGH
+    budget = tokens * PIXELS_PER_TOKEN
+    long_src, short_src = max(width, height), min(width, height)
+    long = max(1, max_edge // grid)
+    short = max(1, _half_up(long * short_src, long_src))
+    while grid * grid * long * short > budget and long > 1:
+        long -= 1
+        short = max(1, _half_up(long * short_src, long_src))
+    return (long, short) if width >= height else (short, long)
+
+
+def sheet_spacing_ms(start_ms: int, end_ms: int, grid: int) -> int:
+    """SHEET_TIMES (MEU-135): the span over `grid` squared, rounded half up."""
+    return _half_up(end_ms - start_ms, grid * grid)
+
+
+def sheet_label(cell: int, timecode: str, spacing_ms: int) -> str:
+    """SHEET_LABEL (MEU-135): the cell number and its timecode, to the second when the
+    cells are 10 s or more apart, else to the millisecond."""
+    return f"{cell} {timecode if spacing_ms < 10_000 else timecode[:8]}"
+
+
+def sheet_label_px(cell_h: int) -> int:
+    """SHEET_LABEL (MEU-135): the label's starting size for a cell `cell_h` high."""
+    return max(SHEET_LABEL_MIN_PX, _half_up(cell_h * SHEET_LABEL_PERCENT, 100))
+
+
+def sheet_label_stroke(px: int) -> int:
+    """SHEET_LABEL (MEU-135): the label's stroke width for a size of `px`."""
+    return max(1, _half_up(px, 10))
+
+
+def _whole_seconds(ms: int) -> str:
+    hours, rest = divmod(ms // 1000, 3600)
+    minutes, seconds = divmod(rest, 60)
+    return f"{hours:02d}h{minutes:02d}m{seconds:02d}s"
+
+
+def sheet_name(stem: str, start_ms: int, end_ms: int) -> str:
+    """SHEET_NAME (MEU-135): `stem-sheet-HHhMMmSSs-HHhMMmSSs`, whole seconds floored, with the
+    stem made safe as IMPORT_NAME makes it."""
+    # Imported here: services.capture imports this module for VideoSheet.
+    from avkit_core.services.capture import import_stem
+
+    return f"{import_stem(stem)}-sheet-{_whole_seconds(start_ms)}-{_whole_seconds(end_ms)}"

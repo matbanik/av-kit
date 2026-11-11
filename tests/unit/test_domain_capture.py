@@ -918,7 +918,8 @@ def test_ac_134_1_video_source_and_frame_port(ac_id: str) -> None:
         assert callable(getattr(ports.FramePort, name, None)), name
         assert callable(getattr(FFmpegAdapter, name, None)), name
     grab = inspect.signature(ports.FramePort.grab_frame).parameters
-    assert list(grab) == ["self", "path", "time_ms", "seek", "timeout_s"]
+    # Session 63 row 1 (MEU-135 CELL_GRAB): grab_frame gains the keyword-only `box`, last.
+    assert list(grab) == ["self", "path", "time_ms", "seek", "timeout_s", "box"]
     assert grab["seek"].kind is inspect.Parameter.KEYWORD_ONLY
     assert grab["timeout_s"].kind is inspect.Parameter.KEYWORD_ONLY
     probe = inspect.signature(ports.FramePort.probe).parameters
@@ -931,3 +932,45 @@ def test_ac_134_1_video_source_and_frame_port(ac_id: str) -> None:
         assert [(key, value.kind, value.default) for key, value in port.items()] == [
             (key, value.kind, value.default) for key, value in adapter.items()
         ], name
+
+
+@pytest.mark.parametrize("ac_id", ["AC-135.1"], ids=["AC-135.1"])
+@pytest.mark.unit
+def test_ac_135_1_sheet_port_and_cell_box(ac_id: str) -> None:
+    """A characterisation of Session 63 row 1's names (SHEET_TILE, CELL_GRAB)."""
+    assert ac_id == "AC-135.1"
+    from avkit_core.ports import capture as ports
+    from avkit_infra.capture.adapter import CaptureAdapter
+    from avkit_infra.media.adapter import FFmpegAdapter
+
+    keyword = inspect.Parameter.KEYWORD_ONLY
+    sheet = inspect.signature(ports.ImageAnnotatePort.sheet).parameters
+    assert list(sheet) == ["self", "cells", "grid", "cell_size", "labels"]
+    assert sheet["cells"].kind is inspect.Parameter.POSITIONAL_OR_KEYWORD
+    for name in ("grid", "cell_size", "labels"):
+        assert sheet[name].kind is keyword, name
+        assert sheet[name].default is inspect.Parameter.empty, name
+    grab = inspect.signature(ports.FramePort.grab_frame).parameters
+    assert list(grab)[-1] == "box"
+    assert grab["box"].kind is keyword
+    assert grab["box"].default is None
+    hints = get_type_hints(ports.FramePort.grab_frame)
+    assert hints["box"] == tuple[int, int] | None
+    assert get_type_hints(ports.ImageAnnotatePort.sheet)["return"] is bytes
+    pairs = (
+        (ports.FramePort.grab_frame, FFmpegAdapter.grab_frame),
+        (ports.ImageAnnotatePort.sheet, CaptureAdapter.sheet),
+    )
+    for port, adapter in pairs:
+        # The adapters' modules defer annotations and the port module doesn't, so the
+        # annotations are compared resolved, through get_type_hints, return included.
+        expected = [
+            (key, value.kind, value.default)
+            for key, value in inspect.signature(port).parameters.items()
+        ]
+        actual = [
+            (key, value.kind, value.default)
+            for key, value in inspect.signature(adapter).parameters.items()
+        ]
+        assert actual == expected, port.__qualname__
+        assert get_type_hints(adapter) == get_type_hints(port), port.__qualname__

@@ -57,7 +57,8 @@ describe("MEU-32 avkit_convert", () => {
     // MEU-130 (Session 59): +avkit_capture.crop after revert.
     // MEU-133 (Session 62): +avkit_convert.probe after gpu_refresh.
     // MEU-134 (Session 62): +avkit_capture.frames after crop.
-    expect(ACTION_INDEX).toHaveLength(73);
+    // MEU-135 (Session 63): +avkit_capture.sheet after frames.
+    expect(ACTION_INDEX).toHaveLength(74);
     expect([...COMPOUND_TOOLS]).toEqual([
       "avkit_download",
       "avkit_transcript",

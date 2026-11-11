@@ -58,6 +58,21 @@ class ImageAnnotatePort(Protocol):
         """
         ...
 
+    def sheet(
+        self,
+        cells: Sequence[bytes],
+        *,
+        grid: int,
+        cell_size: tuple[int, int],
+        labels: Sequence[str],
+    ) -> bytes:
+        """SHEET_TILE (MEU-135): `cells` tiled `grid` by `grid`, each labelled, as PNG bytes.
+
+        Each cell is shrunk to fit `cell_size` (never enlarged) and centred on black; cells
+        past `len(cells)` stay black. No file is written.
+        """
+        ...
+
 
 # FRAME_PORT (MEU-134): how `grab_frame` seeks. "output" decodes from the start, for a raw
 # stream with no duration (NO_DURATION).
@@ -69,6 +84,17 @@ class FramePort(Protocol):
 
     def probe(self, file_path: Path, *, timeout_s: float | None = None) -> MediaInfo: ...
 
-    def grab_frame(self, path: Path, time_ms: int, *, seek: FrameSeek, timeout_s: float) -> bytes:
-        """FRAME_GRAB: the frame at `time_ms` as PNG bytes, or b"" when FFmpeg gives none."""
+    def grab_frame(
+        self,
+        path: Path,
+        time_ms: int,
+        *,
+        seek: FrameSeek,
+        timeout_s: float,
+        box: tuple[int, int] | None = None,
+    ) -> bytes:
+        """FRAME_GRAB: the frame at `time_ms` as PNG bytes, or b"" when FFmpeg gives none.
+
+        CELL_GRAB (MEU-135): with `box`, the frame is scaled down to fit inside it.
+        """
         ...

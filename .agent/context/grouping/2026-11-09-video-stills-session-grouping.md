@@ -100,7 +100,7 @@ Run `/create-plan` once per session, in order, on Mat's word. Nothing is planned
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
 | 62 | `video-probe-frames` | MEU-133, MEU-134 | P2 | executed | `docs/execution/plans/2026-11-10-video-probe-frames/` |
-| 63 | `capture-video-sheet` | MEU-135 | P2 | pending | — |
+| 63 | `capture-video-sheet` | MEU-135 | P2 | executed | `docs/execution/plans/2026-11-11-capture-video-sheet/` |
 | 64 | `capture-export-copy` | MEU-136 | P2 | pending | — |
 
 ---

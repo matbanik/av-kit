@@ -36,6 +36,8 @@ const CAPTURE_ACTIONS = [
   { action: "crop", method: "POST", path: "/captures/{id}/crop" },
   // MEU-134 (Session 62): +frames after crop.
   { action: "frames", method: "POST", path: "/captures/frames" },
+  // MEU-135 (Session 63): +sheet after frames.
+  { action: "sheet", method: "POST", path: "/captures/sheet" },
 ] as const;
 const REST_ONLY = ["complete", "cancel", "register"] as const;
 // TA-4 (Session 30, MEU-67): + flatten_backup, backup_dir, annotated_format.
@@ -110,7 +112,8 @@ describe("MEU-38 avkit_capture", () => {
     // MEU-130 (Session 59): +avkit_capture.crop after revert.
     // MEU-133 (Session 62): +avkit_convert.probe after gpu_refresh.
     // MEU-134 (Session 62): +avkit_capture.frames after crop.
-    expect(ACTION_INDEX).toHaveLength(73);
+    // MEU-135 (Session 63): +avkit_capture.sheet after frames.
+    expect(ACTION_INDEX).toHaveLength(74);
     expect([...COMPOUND_TOOLS]).toEqual([
       "avkit_download",
       "avkit_transcript",
@@ -128,7 +131,8 @@ describe("MEU-38 avkit_capture", () => {
   it("AC-38.2 CAPTURE_ACTIONS match REST 1:1; REST_ONLY absent", () => {
     const rows = ACTION_INDEX.filter((row) => row.tool === "avkit_capture");
     // TA-2 (Session 30, MEU-67); MEU-130 (Session 59): +crop; MEU-134 (Session 62): +frames.
-    expect(rows).toHaveLength(12);
+    // MEU-135 (Session 63): +sheet.
+    expect(rows).toHaveLength(13);
     expect(rows.map((row) => ({ action: row.action, method: row.method, path: row.path }))).toEqual(
       CAPTURE_ACTIONS.map((row) => ({ action: row.action, method: row.method, path: row.path })),
     );
@@ -887,7 +891,8 @@ describe("MEU-130 capture crop", () => {
 
   it("AC-130.26 ACTION_INDEX has the crop row after revert", () => {
     // MEU-134 (Session 62): +avkit_capture.frames after crop.
-    expect(ACTION_INDEX).toHaveLength(73);
+    // MEU-135 (Session 63): +avkit_capture.sheet after frames.
+    expect(ACTION_INDEX).toHaveLength(74);
     const keys = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`);
     const revert = keys.indexOf("avkit_capture.revert");
     expect(revert).toBeGreaterThan(-1);
@@ -899,7 +904,7 @@ describe("MEU-130 capture crop", () => {
       path: "/captures/{id}/crop",
     });
     expect(keys[keys.length - 1]).toBe("avkit_models.download_asset");
-    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(12);
+    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(13);
   });
 });
 
@@ -927,7 +932,8 @@ const FRAMES_BODY = {
   ],
 };
 const FRAMES_TEXT_MARKERS = [
-  "Workflow: call avkit_convert probe for the duration, then avkit_capture frames to POST /captures/frames, then image to view a frame.",
+  // D-605 (Session 63, MEU-135): the workflow line names sheet between probe and frames.
+  "Workflow: call avkit_convert probe for the duration, then avkit_capture sheet to find the moment, then frames to POST /captures/frames for exact stills, then image to view a frame.",
   "Prerequisite: a local absolute video path and FFmpeg; the video is read in place, never changed or uploaded.",
   "Returns: JSON with the video's duration and size and each new shot's id, path, time_ms and timecode; no image bytes.",
   "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
@@ -1050,7 +1056,8 @@ describe("MEU-134 capture frames", () => {
       method: "POST",
       path: "/captures/frames",
     });
-    expect(ACTION_INDEX).toHaveLength(73);
+    // MEU-135 (Session 63): +avkit_capture.sheet after frames.
+    expect(ACTION_INDEX).toHaveLength(74);
     expect(keys[keys.length - 1]).toBe("avkit_models.download_asset");
   });
 
@@ -1073,5 +1080,212 @@ describe("MEU-134 capture frames", () => {
       FRAMES_BODY.frames.map((f) => Object.keys(f).sort()),
     );
     expect(parsed).toEqual(FRAMES_BODY);
+  });
+});
+
+// MEU-135 capture-video-sheet (Session 63): SHEET_MCP.
+const SHEET_PATH = "C:\\videos\\clip.mp4";
+const SHEET_BODY = {
+  video: { path: SHEET_PATH, duration_ms: 3000, width: 320, height: 240, fps: 25 },
+  shot: {
+    id: "sh1",
+    path: "C:/tmp/inbox/clip-sheet-00h00m00s-00h00m03s.png",
+    width: 1250,
+    height: 938,
+  },
+  spacing_ms: 750,
+  cells: [
+    { cell: 1, time_ms: 375, timecode: "00:00:00.375" },
+    { cell: 2, time_ms: 1125, timecode: "00:00:01.125" },
+    { cell: 3, time_ms: 1875, timecode: "00:00:01.875" },
+    { cell: 4, time_ms: 2625, timecode: "00:00:02.625" },
+  ],
+};
+const SHEET_TEXT_MARKERS = [
+  "Workflow: call avkit_convert probe for the duration, then avkit_capture sheet to POST /captures/sheet for a grid over a span, then frames for exact stills, then image to view the sheet.",
+  "Prerequisite: a local absolute video path and FFmpeg; the video is read in place, never changed or uploaded.",
+  "Returns: JSON with the video's duration and size, the new shot's id, path and size, spacing_ms and each cell's number, time_ms and timecode; no image bytes.",
+  "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
+] as const;
+// D-605: FRAMES_TEXT's workflow line names sheet between probe and frames.
+const FRAMES_WORKFLOW_WITH_SHEET =
+  "Workflow: call avkit_convert probe for the duration, then avkit_capture sheet to find the moment, then frames to POST /captures/frames for exact stills, then image to view a frame.";
+
+function sheetFetch(calls: { url: string; method?: string; body: unknown }[]) {
+  return vi.fn(async (url: string, init?: RequestInit) => {
+    calls.push({
+      url: String(url),
+      method: init?.method,
+      body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+    });
+    return okJson(SHEET_BODY, 201);
+  });
+}
+
+describe("MEU-135 capture sheet", () => {
+  it("AC-135.18 capture sheet schema, call and description: the schema takes path and every optional key", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const good: Record<string, unknown>[] = [
+      { action: "sheet", path: SHEET_PATH },
+      { action: "sheet", path: SHEET_PATH, start: 1, end: "2.5", grid: 2, max_edge: 64 },
+      { action: "sheet", path: SHEET_PATH, grid: 5, max_edge: 2576 },
+      { action: "sheet", path: SHEET_PATH, start: "00:00:01.000", end: "1".repeat(32) },
+      { action: "sheet", path: SHEET_PATH, start: 0 },
+      { action: "sheet", path: "a".repeat(4096) },
+    ];
+    for (const args of good) {
+      expect(captureSchema.safeParse(args).success, JSON.stringify(args).slice(0, 120)).toBe(true);
+    }
+  });
+
+  it("AC-135.18 capture sheet schema, call and description: refusals come before fetch", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const bad: Record<string, unknown>[] = [
+      { action: "sheet", path: SHEET_PATH, nope: 1 },
+      { action: "sheet", path: "" },
+      { action: "sheet", path: "a".repeat(4097) },
+      { action: "sheet" },
+      { action: "sheet", path: SHEET_PATH, grid: 1 },
+      { action: "sheet", path: SHEET_PATH, grid: 6 },
+      { action: "sheet", path: SHEET_PATH, grid: 2.5 },
+      { action: "sheet", path: SHEET_PATH, grid: "3" },
+      { action: "sheet", path: SHEET_PATH, grid: null },
+      { action: "sheet", path: SHEET_PATH, max_edge: 63 },
+      { action: "sheet", path: SHEET_PATH, max_edge: 2577 },
+      { action: "sheet", path: SHEET_PATH, max_edge: 100.5 },
+      { action: "sheet", path: SHEET_PATH, max_edge: null },
+      { action: "sheet", path: SHEET_PATH, start: -1 },
+      { action: "sheet", path: SHEET_PATH, end: -1 },
+      { action: "sheet", path: SHEET_PATH, start: "1".repeat(33) },
+      { action: "sheet", path: SHEET_PATH, end: "" },
+      { action: "sheet", path: SHEET_PATH, start: null },
+      { action: "sheet", path: SHEET_PATH, at: [1] },
+      { action: "sheet", path: SHEET_PATH, count: 4 },
+    ];
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = sheetFetch(calls);
+    for (const args of bad) {
+      expect(captureSchema.safeParse(args).success, JSON.stringify(args).slice(0, 120)).toBe(false);
+      const result = await handleTool("avkit_capture", args, {
+        env: toolEnv(appData),
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      });
+      expect(result.isError, JSON.stringify(args).slice(0, 120)).toBe(true);
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(0);
+    expect(calls).toEqual([]);
+  });
+
+  it("AC-135.18 capture sheet schema, call and description: it posts the body minus action with ADD_TIMEOUT_MS (D-601 A)", async () => {
+    const { ADD_TIMEOUT_MS } = await import("../src/client.js");
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = sheetFetch(calls);
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    try {
+      const result = await handleTool(
+        "avkit_capture",
+        { action: "sheet", path: SHEET_PATH, start: 0, end: "3", grid: 2, max_edge: 1568 },
+        { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+      );
+      expect(calls).toHaveLength(1);
+      expect(result.isError).not.toBe(true);
+      expect(calls[0]?.method).toBe("POST");
+      expect(calls[0]?.url).not.toContain("?");
+      expect(calls[0]?.url.endsWith("/captures/sheet")).toBe(true);
+      expect(calls[0]?.body).toEqual({ path: SHEET_PATH, start: 0, end: "3", grid: 2, max_edge: 1568 });
+      expect(timeout).toHaveBeenCalledWith(ADD_TIMEOUT_MS);
+      calls.length = 0;
+      timeout.mockClear();
+      await handleTool(
+        "avkit_capture",
+        { action: "sheet", path: SHEET_PATH },
+        { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+      );
+      expect(calls).toHaveLength(1);
+      expect(calls[0]?.body).toEqual({ path: SHEET_PATH });
+      expect(timeout).toHaveBeenCalledWith(ADD_TIMEOUT_MS);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
+  it("AC-135.18 capture sheet schema, call and description: its own four markers and the zoom advice", async () => {
+    const { captureDescriptions } = await import("../src/toolsets/capture.js");
+    const { advertisedSchema } = await import("../src/toolsets/registry.js");
+    const { USER_CONFIRM_ACTIONS } = await import("../src/destructive.js");
+    const text = captureDescriptions["avkit_capture.sheet"] ?? "";
+    expect(text.length).toBeGreaterThan(0);
+    for (const line of SHEET_TEXT_MARKERS) {
+      expect(text, line).toContain(line);
+    }
+    expect(M7.filter((marker) => text.includes(marker))).toEqual([...M7]);
+    const lower = text.toLowerCase();
+    for (const needle of ["cite times from cells", "narrower start and end", "no state is kept", "can be missed"]) {
+      expect(lower, needle).toContain(needle);
+    }
+    expect(text).toContain("grid 2-5 (default 3, so 9 cells)");
+    expect(text).toContain("max_edge 64-2576 (default 1568)");
+    expect(text).toContain("Needs a video with a duration.");
+    expect(text).not.toContain("Prerequisite: local screen grab or inbox files");
+    const keys = Object.keys(advertisedSchema("avkit_capture").shape);
+    expect(keys).toEqual(expect.arrayContaining(["path", "start", "end", "grid", "max_edge"]));
+    expect(DESTRUCTIVE_ACTIONS.has("avkit_capture.sheet")).toBe(false);
+    expect(USER_CONFIRM_ACTIONS.has("avkit_capture.sheet")).toBe(false);
+  });
+
+  it("AC-135.18 capture sheet schema, call and description: frames' workflow names sheet between probe and frames (D-605)", async () => {
+    const { captureDescriptions } = await import("../src/toolsets/capture.js");
+    const frames = captureDescriptions["avkit_capture.frames"] ?? "";
+    expect(frames).toContain(FRAMES_WORKFLOW_WITH_SHEET);
+    const workflow = frames.slice(frames.indexOf("Workflow:"));
+    const probe = workflow.indexOf("probe");
+    const sheet = workflow.indexOf("sheet");
+    const then = workflow.indexOf("then frames");
+    expect([probe > -1, sheet > probe, then > sheet]).toEqual([true, true, true]);
+  });
+
+  it("AC-135.19 sheet parity and audit coverage: ACTION_INDEX has the sheet row after frames", () => {
+    expect(ACTION_INDEX).toHaveLength(74);
+    const keys = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`);
+    const crop = keys.indexOf("avkit_capture.crop");
+    const frames = keys.indexOf("avkit_capture.frames");
+    expect(crop).toBeGreaterThan(-1);
+    expect(frames).toBe(crop + 1);
+    expect(keys[frames + 1]).toBe("avkit_capture.sheet");
+    expect(ACTION_INDEX[frames + 1]).toEqual({
+      tool: "avkit_capture",
+      action: "sheet",
+      method: "POST",
+      path: "/captures/sheet",
+    });
+    expect(keys.filter((key) => key === "avkit_capture.sheet")).toHaveLength(1);
+    expect(keys[keys.length - 1]).toBe("avkit_models.download_asset");
+    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(13);
+  });
+
+  it("AC-135.19 sheet parity and audit coverage: the fake backend's 201 body reaches the tool result", async () => {
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = sheetFetch(calls);
+    const result = await handleTool(
+      "avkit_capture",
+      { action: "sheet", path: SHEET_PATH, grid: 2 },
+      { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+    );
+    expect(calls).toHaveLength(1);
+    expect(result.isError).not.toBe(true);
+    const parsed = JSON.parse(result.content[0].text) as typeof SHEET_BODY;
+    expect(Object.keys(parsed).sort()).toEqual(["cells", "shot", "spacing_ms", "video"]);
+    expect(Object.keys(parsed.video).sort()).toEqual(Object.keys(SHEET_BODY.video).sort());
+    expect(Object.keys(parsed.shot).sort()).toEqual(["height", "id", "path", "width"]);
+    expect(parsed.cells.map((c) => Object.keys(c).sort())).toEqual(
+      SHEET_BODY.cells.map(() => ["cell", "time_ms", "timecode"]),
+    );
+    expect(parsed).toEqual(SHEET_BODY);
   });
 });

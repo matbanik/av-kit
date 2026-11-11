@@ -542,16 +542,25 @@ class FFmpegAdapter:
             streams=parsed_streams,
         )
 
-    def grab_frame(self, path: Path, time_ms: int, *, seek: FrameSeek, timeout_s: float) -> bytes:
+    def grab_frame(
+        self,
+        path: Path,
+        time_ms: int,
+        *,
+        seek: FrameSeek,
+        timeout_s: float,
+        box: tuple[int, int] | None = None,
+    ) -> bytes:
         """FRAME_GRAB (MEU-134): the frame at `time_ms` as PNG bytes, or b"".
 
         One deadline is set on entry; every process this starts gets the time left to it, and
         none starts once no time is left. FFmpeg writes to a pipe, never to a file, and its
-        stderr is dropped. Its only raise is `FFmpegNotFoundError`.
+        stderr is dropped. Its only raise is `FFmpegNotFoundError`. CELL_GRAB (MEU-135): with
+        `box`, FFmpeg scales the frame down to fit inside it; the END_GAP retry keeps the box.
         """
         deadline = time.monotonic() + timeout_s
         ffmpeg = self._require_ffmpeg()
-        data = self._grab_once(ffmpeg, path, time_ms, seek, deadline)
+        data = self._grab_once(ffmpeg, path, time_ms, seek, deadline, box)
         if data or seek != "input":
             return data
         # END_GAP (D-575): past the last video frame but before the end, input seek gives no
@@ -559,19 +568,31 @@ class FFmpegAdapter:
         last_ms = self._last_video_ms(ffmpeg, path, time_ms, deadline)
         if last_ms is None or last_ms >= time_ms:
             return b""
-        return self._grab_once(ffmpeg, path, max(0, last_ms - 1), "input", deadline)
+        return self._grab_once(ffmpeg, path, max(0, last_ms - 1), "input", deadline, box)
 
     @staticmethod
     def _grab_once(
-        ffmpeg: Path, path: Path, time_ms: int, seek: FrameSeek, deadline: float
+        ffmpeg: Path,
+        path: Path,
+        time_ms: int,
+        seek: FrameSeek,
+        deadline: float,
+        box: tuple[int, int] | None = None,
     ) -> bytes:
-        """FRAME_GRAB: one bounded `ffmpeg` run, in bytes mode; b"" on a timeout or a failure."""
+        """FRAME_GRAB: one bounded `ffmpeg` run, in bytes mode; b"" on a timeout or a failure.
+
+        CELL_GRAB: a `box` adds one Lanczos scale filter that fits the frame inside it.
+        """
         left = deadline - time.monotonic()
         if left <= 0:
             return b""
         at = ["-ss", _seek_text(time_ms)]
         source = ["-i", str(path)]
         order = [*at, *source] if seek == "input" else [*source, *at]
+        scale: list[str] = []
+        if box is not None:
+            fit = "force_original_aspect_ratio=decrease:flags=lanczos"
+            scale = ["-vf", f"scale={box[0]}:{box[1]}:{fit}"]
         command = [
             str(ffmpeg),
             "-hide_banner",
@@ -581,6 +602,7 @@ class FFmpegAdapter:
             *order,
             "-frames:v",
             "1",
+            *scale,
             "-c:v",
             "png",
             "-f",

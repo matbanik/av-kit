@@ -51,6 +51,7 @@ ROUTE_INDEX: tuple[tuple[str, str], ...] = (
     ("POST", "/api/v1/captures/requests/{id}/complete"),
     ("POST", "/api/v1/captures/requests/{id}/cancel"),
     ("POST", "/api/v1/captures/frames"),  # FRAMES_ROUTE (Session 62, MEU-134)
+    ("POST", "/api/v1/captures/sheet"),  # SHEET_ROUTE (Session 63, MEU-135)
     ("GET", "/api/v1/captures/{id}"),
     ("GET", "/api/v1/captures/{id}/image"),
     ("POST", "/api/v1/captures/{id}/annotate"),
@@ -115,7 +116,8 @@ def test_ac_16_6_openapi_path_census() -> None:
     assert paths == ROUTE_PATHS
     # TA-8 (Session 30, MEU-67); MEU-130 + crop; MEU-133 + probe
     # MEU-134 (Session 62) + POST /captures/frames
-    assert len(ROUTE_INDEX) == 76
+    # MEU-135 (Session 63) + POST /captures/sheet
+    assert len(ROUTE_INDEX) == 77
 
 
 @pytest.mark.parametrize("method,path", ROUTE_INDEX)
@@ -201,7 +203,7 @@ def test_ac_134_17_frames_route_in_committed_openapi_and_before_id() -> None:
         for method in item
         if method in {"get", "post", "put", "delete", "patch"}
     )
-    assert operations == 76
+    assert operations == 77  # MEU-135 (Session 63): + POST /captures/sheet
     schemas = committed.get("components", {}).get("schemas", {})
     assert {"CaptureFramesIn", "CaptureFramesOut"} <= set(schemas)
     request = operation.get("requestBody", {}).get("content", {}).get("application/json", {})
@@ -231,3 +233,60 @@ def test_ac_134_17_frames_route_in_committed_openapi_and_before_id() -> None:
     assert frames_at != -1, "routes/captures.py declares no /frames route"
     assert id_at != -1
     assert frames_at < id_at
+
+
+@pytest.mark.parametrize("ac_id", ["AC-135.20"], ids=["AC-135.20"])
+def test_ac_135_20_openapi_has_sheet(ac_id: str) -> None:
+    import json
+
+    committed = json.loads((REPO_ROOT / "openapi.committed.json").read_text(encoding="utf-8"))
+    operation = committed.get("paths", {}).get("/api/v1/captures/sheet", {}).get("post")
+    assert operation is not None, "POST /api/v1/captures/sheet is not in openapi.committed.json"
+    operations = sum(
+        1
+        for item in committed.get("paths", {}).values()
+        for method in item
+        if method in {"get", "post", "put", "delete", "patch"}
+    )
+    assert operations == 77
+    schemas = committed.get("components", {}).get("schemas", {})
+    assert {"CaptureSheetIn", "CaptureSheetOut"} <= set(schemas)
+    request = operation.get("requestBody", {}).get("content", {}).get("application/json", {})
+    assert request.get("schema") == {"$ref": "#/components/schemas/CaptureSheetIn"}
+    replies = operation.get("responses", {})
+    assert set(replies) >= {"201"}
+    reply = replies.get("201", {}).get("content", {}).get("application/json", {})
+    assert reply.get("schema") == {"$ref": "#/components/schemas/CaptureSheetOut"}
+    sheet_in = schemas["CaptureSheetIn"]
+    properties = sheet_in.get("properties", {})
+    assert set(properties) == {"path", "start", "end", "grid", "max_edge"}
+    assert sheet_in.get("required") == ["path"]
+    assert sheet_in.get("additionalProperties") is False
+    assert properties["path"].get("minLength") == 1
+    assert properties["path"].get("maxLength") == 4096
+    assert (properties["grid"].get("minimum"), properties["grid"].get("maximum")) == (2, 5)
+    assert properties["grid"].get("default") == 3
+    assert (properties["max_edge"].get("minimum"), properties["max_edge"].get("maximum")) == (
+        64,
+        2576,
+    )
+    assert properties["max_edge"].get("default") == 1568
+    sheet_out = schemas["CaptureSheetOut"].get("properties", {})
+    assert set(sheet_out) == {"video", "shot", "spacing_ms", "cells"}
+    export = _load_export()
+    drift: str | None = None
+    try:
+        export.check_openapi(REPO_ROOT / "openapi.committed.json")
+    except SystemExit as exc:
+        drift = str(exc)
+    assert drift is None
+    source = (REPO_ROOT / "packages/api/src/avkit_api/routes/captures.py").read_text(
+        encoding="utf-8"
+    )
+    frames_at = source.find('"/frames"')
+    sheet_at = source.find('"/sheet"')
+    id_at = source.find('"/{id}"')
+    assert sheet_at != -1, "routes/captures.py declares no /sheet route"
+    assert frames_at != -1
+    assert id_at != -1
+    assert frames_at < sheet_at < id_at

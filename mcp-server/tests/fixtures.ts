@@ -223,6 +223,7 @@ export function minimalInput(tool: string, action: string): Record<string, unkno
     "avkit_capture.flatten": { action: "flatten", id: "s1", confirm: true },
     "avkit_capture.revert": { action: "revert", id: "s1", confirm: true },
     "avkit_capture.frames": { action: "frames", path: "C:/tmp/clip.mp4", count: 3 },
+    "avkit_capture.sheet": { action: "sheet", path: "C:/tmp/clip.mp4" },
   };
   const found = table[key];
   if (!found) {
@@ -311,6 +312,7 @@ export function expectedBody(tool: string, action: string): unknown {
     "avkit_capture.flatten": {},
     "avkit_capture.revert": {},
     "avkit_capture.frames": { path: "C:/tmp/clip.mp4", count: 3 },
+    "avkit_capture.sheet": { path: "C:/tmp/clip.mp4" },
   };
   if (!(key in table)) {
     throw new Error(`no expected body for ${key}`);

@@ -1665,6 +1665,36 @@ const CAPTURE_STEPS: StepSpec[] = [
       return { kind: "simple", isError: result.isError, expectError: false, observable, text: result.text };
     },
   },
+  // SHEET_MCP (MEU-135): a grid 2 sheet of the probe clip is one new shot; the clip is only read.
+  {
+    id: "capture.sheet",
+    tool: "avkit_capture",
+    action: "sheet",
+    phase: "functional",
+    // Like capture.frames, it makes its own clip when convert.probe never ran.
+    depends_on: [],
+    execute: async (ctx) => {
+      const clip = probeClip(ctx);
+      const result = await ctx.call("avkit_capture", { action: "sheet", path: clip, grid: 2 });
+      let observable: ObservableResult;
+      if (result.isError) {
+        observable = obs(false, `MCP error: ${result.text.slice(0, 200)}`);
+      } else {
+        const body = asRec(payload(result));
+        const sheet = asRec(body.shot);
+        const cells = Array.isArray(body.cells) ? body.cells : [];
+        const id = typeof sheet.id === "string" && sheet.id ? sheet.id : null;
+        if (id) ctx.ledger.register("capture", id);
+        const shot = id ? await ctx.rest.get(`/captures/${id}`) : null;
+        const ok = cells.length === 4 && shot?.status === 200;
+        observable = obs(
+          ok,
+          `cells=${cells.length} shot ${id ?? "none"} REST shot ${String(shot?.status ?? "none")}`,
+        );
+      }
+      return { kind: "simple", isError: result.isError, expectError: false, observable, text: result.text };
+    },
+  },
   simpleStep({
     id: "capture.capture_interactive",
     tool: "avkit_capture",

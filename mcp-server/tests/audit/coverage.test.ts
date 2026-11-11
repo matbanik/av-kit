@@ -18,7 +18,13 @@ const COMMITTED_BASELINE = path.resolve(
 // MEU-133 (Session 62): + avkit_convert.probe on the same terms. The list is in
 // ACTION_INDEX order, because baselineCoverage reports `missing` in that order.
 // MEU-134 (Session 62): + avkit_capture.frames, after crop.
-const BASELINE_PENDING = ["avkit_convert.probe", "avkit_capture.crop", "avkit_capture.frames"];
+// MEU-135 (Session 63): + avkit_capture.sheet, after frames.
+const BASELINE_PENDING = [
+  "avkit_convert.probe",
+  "avkit_capture.crop",
+  "avkit_capture.frames",
+  "avkit_capture.sheet",
+];
 
 /** The pending keys that aren't served, or that the baseline already holds. */
 function pendingProblems(pending: string[], baselineKeys: string[], served: string[]): string[] {
@@ -34,9 +40,10 @@ describe("AC-68.5 AUDIT_PLAN coverage of AUDIT_ACTION_SET", () => {
   // MEU-130 (Session 59): 71 with avkit_capture.crop.
   // MEU-133 (Session 62): 72 with avkit_convert.probe.
   // MEU-134 (Session 62): 73 with avkit_capture.frames.
-  it("AC-68.5 AUDIT_ACTION_SET is the 73 registry rows", () => {
-    expect(ACTION_SET).toHaveLength(73);
-    expect(new Set(ACTION_SET).size).toBe(73);
+  // MEU-135 (Session 63): 74 with avkit_capture.sheet.
+  it("AC-68.5 AUDIT_ACTION_SET is the 74 registry rows", () => {
+    expect(ACTION_SET).toHaveLength(74);
+    expect(new Set(ACTION_SET).size).toBe(74);
   });
 
   it("AC-68.5 every registry action appears in at least one AUDIT_PLAN step", () => {
@@ -218,5 +225,77 @@ describe("MEU-134 probe and frames audit", () => {
     expect(without.length).toBe(AUDIT_PLAN.length - 1);
     expect(coverage(planKeys(without), ACTION_SET)).toEqual(["avkit_capture.frames"]);
     expect(coverage(planKeys(AUDIT_PLAN), ACTION_SET)).toEqual([]);
+  });
+});
+
+// MEU-135 capture-video-sheet (Session 63): the audit plan's sheet step.
+describe("MEU-135 sheet audit", () => {
+  it("AC-135.19 sheet parity and audit coverage: AUDIT_PLAN makes a sheet after frames on the probe clip", async () => {
+    const ids = AUDIT_PLAN.map((s) => s.id);
+    const sheet = AUDIT_PLAN.find((s) => s.id === "capture.sheet");
+    expect(sheet, "capture.sheet step").toBeDefined();
+    if (!sheet) return;
+    expect(ids.indexOf("capture.frames")).toBeGreaterThan(-1);
+    expect(ids.indexOf("capture.sheet")).toBe(ids.indexOf("capture.frames") + 1);
+    expect([sheet.tool, sheet.action]).toEqual(["avkit_capture", "sheet"]);
+    expect(sheet.destructive ?? false).toBe(false);
+    // The sheet step on a fake context, with the probe step's clip already made.
+    const calls: { tool: string; args: Record<string, unknown> }[] = [];
+    const ledger = new CleanupLedger();
+    const clip = "unused/src/probe.mp4";
+    const ctx: StepContext = {
+      mode: "container",
+      platform: "linux",
+      fixtures: {} as unknown as StepContext["fixtures"],
+      root: "unused",
+      out: (sub) => `unused/${sub}`,
+      call: async (tool, args) => {
+        calls.push({ tool, args });
+        return {
+          isError: false,
+          text: JSON.stringify({
+            video: { path: clip, duration_ms: 2000, width: 320, height: 240, fps: 30 },
+            shot: { id: "sh1", path: "unused/probe-sheet-00h00m00s-00h00m02s.png", width: 1250, height: 938 },
+            spacing_ms: 500,
+            cells: [
+              { cell: 1, time_ms: 250, timecode: "00:00:00.250" },
+              { cell: 2, time_ms: 750, timecode: "00:00:00.750" },
+              { cell: 3, time_ms: 1250, timecode: "00:00:01.250" },
+              { cell: 4, time_ms: 1750, timecode: "00:00:01.750" },
+            ],
+          }),
+        };
+      },
+      rest: {
+        get: async () => ({ status: 200, json: { id: "sh1" }, text: "" }),
+        send: async () => ({ status: 404, json: null, text: "" }),
+        bytes: async () => ({ status: 404, bytes: new Uint8Array() }),
+      },
+      ledger,
+      state: new Map<string, unknown>([["probe:src", clip]]),
+      firstId: () => "sh1",
+      poll: async () => null,
+    };
+    const outcome = await sheet.execute(ctx);
+    expect(calls).toEqual([{ tool: "avkit_capture", args: { action: "sheet", path: clip, grid: 2 } }]);
+    expect(ledger.outstanding()).toEqual([{ kind: "capture", id: "sh1" }]);
+    // NO_RAW_OUTPUT: the step's observation names the cell count and the shot id, never a path.
+    const observed = JSON.stringify((outcome as { observable?: unknown }).observable ?? null);
+    expect(observed).toContain("4");
+    expect(observed).toContain("sh1");
+    expect(observed).not.toContain("unused/");
+  });
+
+  it("AC-135.19 sheet parity and audit coverage: coverage fails when the sheet step is missing", () => {
+    const without = AUDIT_PLAN.filter((s) => s.id !== "capture.sheet");
+    expect(without.length).toBe(AUDIT_PLAN.length - 1);
+    expect(coverage(planKeys(without), ACTION_SET)).toEqual(["avkit_capture.sheet"]);
+    expect(coverage(planKeys(AUDIT_PLAN), ACTION_SET)).toEqual([]);
+  });
+
+  it("AC-135.19 sheet parity and audit coverage: BASELINE_PENDING ends with the served sheet action", () => {
+    expect(BASELINE_PENDING[BASELINE_PENDING.length - 1]).toBe("avkit_capture.sheet");
+    expect(ACTION_SET).toContain("avkit_capture.sheet");
+    expect(ACTION_SET.indexOf("avkit_capture.sheet")).toBe(ACTION_SET.indexOf("avkit_capture.frames") + 1);
   });
 });

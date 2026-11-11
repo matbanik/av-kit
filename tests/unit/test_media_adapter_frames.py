@@ -439,3 +439,104 @@ def test_ac_134_9_no_timeout_keyword_without_one(
     adapter.ffmpeg_version()
     assert len(run.calls) == 2
     assert ["timeout" in kwargs for _, kwargs in run.calls] == [False, False]
+
+
+# AC-135.8 CELL_GRAB (Session 63, MEU-135): the cell box becomes one scale filter.
+
+from typing import Any  # noqa: E402
+
+SCALE_288 = ["-vf", "scale=288:162:force_original_aspect_ratio=decrease:flags=lanczos"]
+GRAB_HEAD = ["-frames:v", "1"]
+GRAB_PNG = ["-c:v", "png", "-f", "image2pipe", "pipe:1"]
+
+
+def test_ac_135_8_input_seek_with_a_box(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    adapter, run, _clock, video = _grab_setup(tmp_path, monkeypatch, [_Bytes(PNG)])
+    data = adapter.grab_frame(video, 725_500, seek="input", timeout_s=5.0, box=(288, 162))
+    assert data == PNG
+    command, kwargs = run.calls[0]
+    assert command == [
+        _ffmpeg(tmp_path),
+        "-hide_banner",
+        "-nostdin",
+        "-v",
+        "error",
+        "-ss",
+        "725.500",
+        "-i",
+        str(video),
+        *GRAB_HEAD,
+        *SCALE_288,
+        *GRAB_PNG,
+    ]
+    assert command.index("-vf") == command.index("-frames:v") + 2
+    assert command.index("-vf") < command.index("-c:v")
+    assert kwargs.get("timeout") == pytest.approx(5.0)
+    assert len(run.calls) == 1
+
+
+def test_ac_135_8_output_seek_with_a_box(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    adapter, run, _clock, video = _grab_setup(tmp_path, monkeypatch, [_Bytes(PNG)])
+    data = adapter.grab_frame(video, 1, seek="output", timeout_s=5.0, box=(288, 162))
+    assert data == PNG
+    command, _kwargs = run.calls[0]
+    assert command == [
+        _ffmpeg(tmp_path),
+        "-hide_banner",
+        "-nostdin",
+        "-v",
+        "error",
+        "-i",
+        str(video),
+        "-ss",
+        "0.001",
+        *GRAB_HEAD,
+        *SCALE_288,
+        *GRAB_PNG,
+    ]
+
+
+def test_ac_135_8_the_end_gap_retry_keeps_the_box(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    adapter, run, _clock, video = _grab_setup(
+        tmp_path, monkeypatch, [_Bytes(b""), _packet("2.960\n"), _Bytes(PNG)]
+    )
+    data = adapter.grab_frame(video, 2999, seek="input", timeout_s=5.0, box=(288, 162))
+    assert data == PNG
+    assert run.programs() == ["ffmpeg", "ffprobe", "ffmpeg"]
+    first, _ = run.calls[0]
+    packet, _ = run.calls[1]
+    retry, _ = run.calls[2]
+    assert first[first.index("-ss") + 1] == "2.999"
+    assert retry[retry.index("-ss") + 1] == "2.959"
+    for command in (first, retry):
+        at = command.index("-frames:v")
+        assert command[at : at + 4] == [*GRAB_HEAD, *SCALE_288]
+        assert command[at + 4 :] == GRAB_PNG
+    assert "-vf" not in packet
+
+
+@pytest.mark.parametrize("box", ["absent", None], ids=["no-box", "box-none"])
+def test_ac_135_8_no_box_leaves_the_argv_unchanged(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, box: object
+) -> None:
+    answers: list[Answer] = [_Bytes(PNG), _Bytes(PNG), _Bytes(b""), _packet("2.960\n"), _Bytes(PNG)]
+    adapter, run, _clock, video = _grab_setup(tmp_path, monkeypatch, answers)
+
+    def grab(ms: int, seek: Any) -> bytes:
+        if box == "absent":
+            return adapter.grab_frame(video, ms, seek=seek, timeout_s=5.0)
+        return adapter.grab_frame(video, ms, seek=seek, timeout_s=5.0, box=None)
+
+    assert grab(725_500, "input") == PNG
+    assert grab(1, "output") == PNG
+    assert grab(2999, "input") == PNG
+    ffmpeg = _ffmpeg(tmp_path)
+    head = [ffmpeg, "-hide_banner", "-nostdin", "-v", "error"]
+    commands = [command for command, _ in run.calls]
+    assert commands[0] == [*head, "-ss", "725.500", "-i", str(video), *GRAB_TAIL]
+    assert commands[1] == [*head, "-i", str(video), "-ss", "0.001", *GRAB_TAIL]
+    assert commands[2] == [*head, "-ss", "2.999", "-i", str(video), *GRAB_TAIL]
+    assert commands[4] == [*head, "-ss", "2.959", "-i", str(video), *GRAB_TAIL]
+    assert [command for command in commands if "-vf" in command] == []

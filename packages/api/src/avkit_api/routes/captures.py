@@ -33,6 +33,10 @@ from avkit_api.schemas.captures import (
     CaptureRegisterIn,
     CaptureRequestListOut,
     CaptureRequestOut,
+    CaptureSheetCellOut,
+    CaptureSheetIn,
+    CaptureSheetOut,
+    CaptureSheetShotOut,
     CaptureShotDetailOut,
     CaptureShotOut,
     EraserAnnotationIn,
@@ -342,6 +346,34 @@ def capture_frames(
                 height=frame.height,
             )
             for frame in result.frames
+        ],
+    )
+
+
+@router.post("/sheet", status_code=201, response_model=CaptureSheetOut)
+def capture_sheet(
+    body: CaptureSheetIn,
+    capture: Any = Depends(get_capture_service),
+) -> CaptureSheetOut:
+    """SHEET_ROUTE (MEU-135): one labelled grid of a span of a local video, as a new shot."""
+    result = capture.sheet_from_video(
+        body.path, start=body.start, end=body.end, grid=body.grid, max_edge=body.max_edge
+    )
+    video = result.video
+    shot = result.shot
+    return CaptureSheetOut(
+        video=CaptureFramesVideoOut(
+            path=video.path,
+            duration_ms=video.duration_ms,
+            width=video.width,
+            height=video.height,
+            fps=video.fps,
+        ),
+        shot=CaptureSheetShotOut(id=shot.id, path=shot.path, width=shot.width, height=shot.height),
+        spacing_ms=result.spacing_ms,
+        cells=[
+            CaptureSheetCellOut(cell=cell.cell, time_ms=cell.time_ms, timecode=cell.timecode)
+            for cell in result.cells
         ],
     )
 

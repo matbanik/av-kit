@@ -13,9 +13,18 @@ from avkit_core.domain.capture import (
     PIXELATE_BLOCK_DEFAULT,
     PIXELATE_BLOCK_MAX,
     PIXELATE_BLOCK_MIN,
+    REGION_MAX_EDGE_DEFAULT,
+    REGION_MAX_EDGE_MAX,
+    REGION_MAX_EDGE_MIN,
     TEXT_MAX_CHARS,
 )
-from avkit_core.services.video_input import FRAMES_MAX, MAX_PATH_CHARS
+from avkit_core.services.video_input import (
+    FRAMES_MAX,
+    MAX_PATH_CHARS,
+    SHEET_GRID_DEFAULT,
+    SHEET_GRID_MAX,
+    SHEET_GRID_MIN,
+)
 
 RegisterSourceWire = Literal["hotkey", "gui", "scan"]
 RequestStatusQueryWire = Literal["pending", "completed", "cancelled", "expired"]
@@ -308,3 +317,45 @@ class CaptureFramesOut(ApiModel):
 
     video: CaptureFramesVideoOut
     frames: list[CaptureFrameOut]
+
+
+class CaptureSheetIn(ApiModel):
+    """POST /captures/sheet body (MEU-135, SHEET_ROUTE): a span of a local video and its grid.
+
+    `start` and `end` are read by TIME_PARSE in the service; with neither, the span is the
+    whole video.
+    """
+
+    path: str = Field(min_length=1, max_length=MAX_PATH_CHARS)
+    start: TimeWire | None = None
+    end: TimeWire | None = None
+    grid: Annotated[StrictInt, Field(ge=SHEET_GRID_MIN, le=SHEET_GRID_MAX)] = SHEET_GRID_DEFAULT
+    max_edge: Annotated[StrictInt, Field(ge=REGION_MAX_EDGE_MIN, le=REGION_MAX_EDGE_MAX)] = (
+        REGION_MAX_EDGE_DEFAULT
+    )
+
+
+class CaptureSheetShotOut(ApiModel):
+    """The new shot that holds the sheet."""
+
+    id: str
+    path: str
+    width: int
+    height: int
+
+
+class CaptureSheetCellOut(ApiModel):
+    """One cell of the sheet: its number in time order, its time and its timecode."""
+
+    cell: int
+    time_ms: int
+    timecode: str
+
+
+class CaptureSheetOut(ApiModel):
+    """POST /captures/sheet 201 (SHEET_ROUTE). No image bytes."""
+
+    video: CaptureFramesVideoOut
+    shot: CaptureSheetShotOut
+    spacing_ms: int
+    cells: list[CaptureSheetCellOut]

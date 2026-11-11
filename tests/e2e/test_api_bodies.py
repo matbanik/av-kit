@@ -47,6 +47,8 @@ def _valid_body(path: str) -> dict[str, object]:
         return {"key": "boot", "value_ms": 12}
     if path == "/api/v1/captures/frames":
         return {"path": "C:/tmp/clip.mp4", "count": 3}
+    if path == "/api/v1/captures/sheet":
+        return {"path": "C:/tmp/clip.mp4"}
     if path == "/api/v1/captures/{id}/crop":
         return {"x": 0, "y": 0, "width": 8, "height": 8}
     return {}

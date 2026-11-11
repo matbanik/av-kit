@@ -43,6 +43,11 @@ from avkit_core.domain.errors import (
     InboxPathError,
     ValidationError,
 )
+from avkit_core.services.video_input import (
+    SHEET_LABEL_MIN_PX,
+    sheet_label_px,
+    sheet_label_stroke,
+)
 
 log = structlog.get_logger(module="capture")
 
@@ -154,6 +159,33 @@ def _load_font(font_size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
         except OSError:
             continue
     return ImageFont.load_default()
+
+
+def _draw_sheet_label(cell: Image.Image, label: str) -> None:
+    """SHEET_LABEL: `label` in white with a black stroke at `(pad, pad)` on the cell's canvas.
+
+    The size starts at `sheet_label_px` and drops while the label is wider than the cell, down
+    to the floor of 8. Drawn on the cell's own canvas, it never reaches a neighbour.
+    """
+    cell_w, cell_h = cell.size
+    size = sheet_label_px(cell_h)
+    font = _load_font(size)
+    draw = ImageDraw.Draw(cell)
+    while (
+        size > SHEET_LABEL_MIN_PX
+        and draw.textlength(label, font=font) + 2 * max(1, size // 4) > cell_w
+    ):
+        size -= 1
+        font = _load_font(size)
+    pad = max(1, size // 4)
+    draw.text(
+        (pad, pad),
+        label,
+        font=font,
+        fill=(255, 255, 255),
+        stroke_width=sheet_label_stroke(size),
+        stroke_fill=(0, 0, 0),
+    )
 
 
 def region_clip(
@@ -468,6 +500,41 @@ class CaptureAdapter:
         if output_format == "png":
             return self._write_png(canvas.convert("RGB"), output_path)
         return self._write_lossy(canvas.convert("RGB"), output_path, output_format)
+
+    def sheet(
+        self,
+        cells: Sequence[bytes],
+        *,
+        grid: int,
+        cell_size: tuple[int, int],
+        labels: Sequence[str],
+    ) -> bytes:
+        """SHEET_TILE (MEU-135): `cells` tiled `grid` by `grid`, each labelled, as PNG bytes.
+
+        The canvas is `grid` cells on each axis, black. Each cell is decoded, shrunk with
+        LANCZOS to fit `cell_size` (never enlarged), centred on its own black cell canvas,
+        labelled in its top band, and pasted in row order; cells past `len(cells)` stay black.
+        The PNG carries no metadata and no file is written. A decode failure raises; its text
+        names no path, because the input is bytes.
+        """
+        if len(labels) != len(cells) or len(cells) > grid * grid:
+            raise ValueError("a sheet needs one label per cell and at most grid squared cells")
+        cell_w, cell_h = cell_size
+        canvas = Image.new("RGB", (grid * cell_w, grid * cell_h), (0, 0, 0))
+        for index, (data, label) in enumerate(zip(cells, labels, strict=True)):
+            with Image.open(io.BytesIO(data)) as opened:
+                opened.load()
+                frame = opened.convert("RGB")
+            if frame.width > cell_w or frame.height > cell_h:
+                frame.thumbnail(cell_size, Image.Resampling.LANCZOS)
+            cell = Image.new("RGB", cell_size, (0, 0, 0))
+            cell.paste(frame, ((cell_w - frame.width) // 2, (cell_h - frame.height) // 2))
+            if label:
+                _draw_sheet_label(cell, label)
+            canvas.paste(cell, ((index % grid) * cell_w, (index // grid) * cell_h))
+        buffer = io.BytesIO()
+        canvas.save(buffer, format="PNG")
+        return buffer.getvalue()
 
     def _require_windows(self) -> None:
         if self._platform != "win32":

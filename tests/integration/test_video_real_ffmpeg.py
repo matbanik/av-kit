@@ -52,6 +52,11 @@ CLIPS: dict[str, list[str]] = {
     ],
     # A raw H.264 stream: no container, so no duration.
     "raw.h264": [*COUNTER, *X264, "-f", "h264"],
+    # MEU-135 (Session 63): flat white and flat black for the label contrast (AC-135.14).
+    "white.mp4": ["-f", "lavfi", "-i", "color=c=white:size=320x240:rate=25:duration=3", *X264],
+    "black.mp4": ["-f", "lavfi", "-i", "color=c=black:size=320x240:rate=25:duration=3", *X264],
+    # A 16:9 counter, 640x360 at 25 fps for 3 s, for a sheet's wide cells.
+    "wide.mp4": ["-f", "lavfi", "-i", "testsrc2=size=640x360:rate=25:duration=3", *X264],
 }
 #: Under D-573 A: a path ffprobe's JSON echoes, and a tag, each outside cp1252.
 L_STROKE_PATH = "Łodz.mp4"
@@ -334,5 +339,204 @@ def test_ac_134_10_every_clip_is_unchanged_after_frames(
     for name in ("counter.mp4", "vfr.mkv", "long_audio.mp4", L_STROKE_PATH):
         result = service.frames_from_video(str(clips[name]), at=[1.0])
         assert len(result.frames) == 1, name
+    assert {name: _sha(path) for name, path in clips.items()} == hashes
+    assert sorted(path.name for path in clips["counter.mp4"].parent.iterdir()) == sorted(clips)
+
+
+# MEU-135 a sheet on the pinned FFmpeg (AC-135.14, Session 63) -----------------------------------
+
+from tests.unit.test_capture_sheet_adapter import label_box, near_shares  # noqa: E402
+
+from avkit_core.services.video_input import sheet_cell_size  # noqa: E402
+
+#: The counter clip's cells at grid 2 (FRAME_TIMES of [0, 3000) in 4 parts) and the frame
+#: each shows: frame ceil(t / 40) at 25 fps, as AC-134.10's input seek picks it.
+SHEET_TIMES = [375, 1125, 1875, 2625]
+SHEET_FRAMES = [10, 29, 47, 66]
+#: 320x240 (4:3) at grid 2 and max_edge 1568, from the planning probe.
+SHEET_CELL = (625, 469)
+#: The 1,568-token budget at 750 pixels a token.
+SHEET_BUDGET = 1568 * 750
+#: The 640x360 (16:9) clip at grid 3: nine cells, each the frame ceil(t / 40).
+WIDE_TIMES = [167, 500, 833, 1167, 1500, 1833, 2167, 2500, 2833]
+WIDE_FRAMES = [5, 13, 21, 30, 38, 46, 55, 63, 71]
+#: 640x360 at grid 3 and max_edge 1568, shrunk to the token budget: 1446x813 is 1,175,598 pixels.
+WIDE_CELL = (482, 271)
+
+
+class RecordingCells:
+    """The real adapter, with each `grab_frame` call and its box counted."""
+
+    def __init__(self, real: FFmpegAdapter) -> None:
+        self._real = real
+        self.grabs: list[int] = []
+        self.boxes: list[tuple[int, int] | None] = []
+
+    def probe(self, file_path: Path, *, timeout_s: float | None = None) -> object:
+        return self._real.probe(file_path, timeout_s=timeout_s)
+
+    def grab_frame(
+        self,
+        path: Path,
+        time_ms: int,
+        *,
+        seek: str,
+        timeout_s: float,
+        box: tuple[int, int] | None = None,
+    ) -> bytes:
+        self.grabs.append(time_ms)
+        self.boxes.append(box)
+        return self._real.grab_frame(
+            path,
+            time_ms,
+            seek=seek,  # type: ignore[arg-type]
+            timeout_s=timeout_s,
+            box=box,
+        )
+
+
+def _sheet_service(inbox: Path) -> tuple[CaptureService, RecordingCells]:
+    factory = SharedFakeFactory(FakeUnitOfWork())
+    settings = SettingsService(factory)
+    settings.set("capture", "inbox_dir", str(inbox))
+    image = CaptureAdapter(mss_factory=lambda: None, platform="linux")
+    cells = RecordingCells(FFmpegAdapter(configured_path=FFMPEG))
+    service = CaptureService(
+        factory,
+        capture=image,
+        annotate=image,
+        settings=settings,
+        frames=cells,  # type: ignore[arg-type]
+    )
+    return service, cells
+
+
+def _scaled_reference(clip: Path, index: int, box: tuple[int, int]) -> Image.Image:
+    """Frame `index` by a full decode, through CELL_GRAB's own scale filter."""
+    scale = f"scale={box[0]}:{box[1]}:force_original_aspect_ratio=decrease:flags=lanczos"
+    command = [str(FFMPEG), "-hide_banner", "-nostdin", "-v", "error", "-i", str(clip)]
+    command += ["-vf", f"select=eq(n\\,{index}),{scale}", "-fps_mode", "passthrough"]
+    command += ["-frames:v", "1", "-c:v", "png", "-f", "image2pipe", "pipe:1"]
+    data = subprocess.run(command, check=True, capture_output=True, timeout=120).stdout
+    assert data[:8] == bytes.fromhex("89504e470d0a1a0a")
+    with Image.open(io.BytesIO(data)) as image:
+        return image.convert("RGB")
+
+
+def _open_sheet(path: str) -> Image.Image:
+    data = Path(path).read_bytes()
+    assert data[:8] == bytes.fromhex("89504e470d0a1a0a")
+    with Image.open(io.BytesIO(data)) as image:
+        return image.convert("RGB")
+
+
+def _lower_half(
+    sheet: Image.Image, reference: Image.Image, index: int, grid: int, cell: tuple[int, int]
+) -> tuple[bytes, bytes]:
+    """A cell's lower half on the sheet and the same rows of its reference, as raw RGB."""
+    ref_w, ref_h = reference.size
+    x0 = (index % grid) * cell[0] + (cell[0] - ref_w) // 2
+    y0 = (index // grid) * cell[1] + (cell[1] - ref_h) // 2
+    half = ref_h // 2
+    on_sheet = sheet.crop((x0, y0 + half, x0 + ref_w, y0 + ref_h)).tobytes()
+    reference_half = reference.crop((0, half, ref_w, ref_h)).tobytes()
+    return on_sheet, reference_half
+
+
+@pytest.mark.integration
+def test_ac_135_14_counter_sheet_cells_match_a_scaled_full_decode(
+    clips: dict[str, Path], hashes: dict[str, str], tmp_path: Path
+) -> None:
+    clip = clips["counter.mp4"]
+    service, cells = _sheet_service(tmp_path / "inbox")
+    result = service.sheet_from_video(str(clip), grid=2, max_edge=1568)
+    assert result.cells != ()
+    assert result.shot is not None
+    assert [cell.time_ms for cell in result.cells] == SHEET_TIMES
+    assert cells.grabs == SHEET_TIMES
+    assert set(cells.boxes) == {SHEET_CELL}
+    assert sheet_cell_size(320, 240, 2, 1568) == SHEET_CELL
+    sheet = _open_sheet(result.shot.path)
+    assert sheet.size == (1250, 938)
+    assert (result.shot.width, result.shot.height) == (1250, 938)
+    assert sheet.size[0] * sheet.size[1] <= SHEET_BUDGET
+    # The positive control: neighbouring frames differ in the compared rows.
+    ten = _scaled_reference(clip, 10, SHEET_CELL)
+    eleven = _scaled_reference(clip, 11, SHEET_CELL)
+    control = [_lower_half(sheet, frame, 0, 2, SHEET_CELL)[1] for frame in (ten, eleven)]
+    assert control[0] != control[1]
+    for index, frame in enumerate(SHEET_FRAMES):
+        reference = _scaled_reference(clip, frame, SHEET_CELL)
+        assert reference.size[0] <= SHEET_CELL[0] and reference.size[1] <= SHEET_CELL[1]
+        on_sheet, expected = _lower_half(sheet, reference, index, 2, SHEET_CELL)
+        assert on_sheet == expected, (index, frame)
+    assert Path(result.shot.path).name == "counter-sheet-00h00m00s-00h00m03s.png"
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("name", ["white.mp4", "black.mp4"], ids=["white", "black"])
+def test_ac_135_14_labels_contrast_on_a_real_sheet(
+    clips: dict[str, Path], hashes: dict[str, str], tmp_path: Path, name: str
+) -> None:
+    service, _ = _sheet_service(tmp_path / "inbox")
+    result = service.sheet_from_video(str(clips[name]), grid=2)
+    assert result.cells != ()
+    assert result.shot is not None
+    sheet = _open_sheet(result.shot.path)
+    assert sheet.size == (1250, 938)
+    for index in range(4):
+        white, black = near_shares(sheet, label_box(index, 2, SHEET_CELL))
+        assert (index, white >= 0.02, black >= 0.02) == (index, True, True)
+        # The control: the cell's lower half is the clip's colour alone.
+        x0, y0 = (index % 2) * SHEET_CELL[0], (index // 2) * SHEET_CELL[1]
+        lower = (x0, y0 + SHEET_CELL[1] // 2, x0 + SHEET_CELL[0], y0 + SHEET_CELL[1])
+        lower_white, lower_black = near_shares(sheet, lower)
+        contrasting = lower_black if name == "white.mp4" else lower_white
+        assert (index, contrasting) == (index, 0.0)
+
+
+@pytest.mark.integration
+def test_ac_135_14_a_16_9_clip_fills_its_cells(
+    clips: dict[str, Path], hashes: dict[str, str], tmp_path: Path
+) -> None:
+    clip = clips["wide.mp4"]
+    service, cells = _sheet_service(tmp_path / "inbox")
+    result = service.sheet_from_video(str(clip), grid=3)
+    assert result.cells != ()
+    assert result.shot is not None
+    assert cells.grabs == WIDE_TIMES
+    assert set(cells.boxes) == {WIDE_CELL}
+    assert sheet_cell_size(640, 360, 3, 1568) == WIDE_CELL
+    sheet = _open_sheet(result.shot.path)
+    assert sheet.size == (1446, 813)
+    for index, frame in enumerate(WIDE_FRAMES):
+        reference = _scaled_reference(clip, frame, WIDE_CELL)
+        # A 16:9 frame fills its 16:9 box: no black bars around it.
+        assert reference.size == WIDE_CELL, (index, reference.size)
+        on_sheet, expected = _lower_half(sheet, reference, index, 3, WIDE_CELL)
+        assert on_sheet == expected, (index, frame)
+
+
+@pytest.mark.integration
+def test_ac_135_14_raw_stream_sheet_is_refused(
+    clips: dict[str, Path], hashes: dict[str, str], tmp_path: Path
+) -> None:
+    inbox = tmp_path / "inbox"
+    service, cells = _sheet_service(inbox)
+    with pytest.raises(ValidationError) as caught:
+        service.sheet_from_video(str(clips["raw.h264"]))
+    assert str(caught.value) == "sheet needs a duration; this video has none"
+    assert cells.grabs == []
+    assert not inbox.exists() or list(inbox.iterdir()) == []
+
+
+@pytest.mark.integration
+def test_ac_135_14_every_clip_is_unchanged_after_sheets(
+    clips: dict[str, Path], hashes: dict[str, str], tmp_path: Path
+) -> None:
+    service, _ = _sheet_service(tmp_path / "inbox")
+    for name in ("counter.mp4", "white.mp4", "black.mp4", "wide.mp4", L_STROKE_PATH):
+        result = service.sheet_from_video(str(clips[name]), grid=2)
+        assert result.shot is not None, name
     assert {name: _sha(path) for name, path in clips.items()} == hashes
     assert sorted(path.name for path in clips["counter.mp4"].parent.iterdir()) == sorted(clips)

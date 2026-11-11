@@ -133,6 +133,7 @@ export const ACTION_INDEX: ActionRow[] = [
   { tool: "avkit_capture", action: "revert", method: "POST", path: "/captures/{id}/revert" },
   { tool: "avkit_capture", action: "crop", method: "POST", path: "/captures/{id}/crop" },
   { tool: "avkit_capture", action: "frames", method: "POST", path: "/captures/frames" },
+  { tool: "avkit_capture", action: "sheet", method: "POST", path: "/captures/sheet" },
   // MEU-62: appended so the KEEP / Convert / Capture positions stay fixed.
   { tool: "avkit_models", action: "download_asset", method: "POST", path: "/models/download" },
 ];
@@ -390,7 +391,11 @@ export async function handleTool(tool: string, args: unknown, runtime?: ToolRunt
   const timeoutMs = (
     ((tool === "avkit_download" || tool === "avkit_transcript" || tool === "avkit_convert") && action === "add")
     // FRAMES_MCP under D-577 A: frames waits up to FRAMES_RETURN_S + COMMIT_WAIT_S (111 s).
-    || (tool === "avkit_capture" && (action === "capture" || action === "crop" || action === "frames"))
+    // SHEET_MCP under D-601 A: sheet waits up to SHEET_RETURN_S + COMMIT_WAIT_S (111 s).
+    || (
+      tool === "avkit_capture"
+      && (action === "capture" || action === "crop" || action === "frames" || action === "sheet")
+    )
   )
     ? ADD_TIMEOUT_MS
     : undefined;

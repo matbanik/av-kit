@@ -62,7 +62,7 @@ const REMOVE: StepSpec = destructiveStep({
 });
 
 describe("AC-68.1 / AC-68.4 launch and discovery against the built server", () => {
-  it("AC-68.1 AC-68.4 launches dist/index.js over stdio, initializes, and discovers 8 tools / 73 actions", async () => {
+  it("AC-68.1 AC-68.4 launches dist/index.js over stdio, initializes, and discovers 8 tools / 74 actions", async () => {
     expect(existsSync(SERVER), "run npm run build first").toBe(true);
     const { launcher } = fakeLauncher();
     const { summary, exitCode } = await runAudit(options({ discoveryOnly: true }), { launcher });
@@ -76,7 +76,8 @@ describe("AC-68.1 / AC-68.4 launch and discovery against the built server", () =
     // MEU-130 (Session 59): + capture crop.
     // MEU-133 (Session 62): + convert probe.
     // MEU-134 (Session 62): + capture frames.
-    expect(summary.discovery.actions).toBe(73);
+    // MEU-135 (Session 63): + capture sheet.
+    expect(summary.discovery.actions).toBe(74);
     expect([0, 1]).toContain(exitCode);
   });
 
@@ -186,8 +187,10 @@ describe("AC-67.19 capture flatten/revert audit steps", () => {
     expect(ids.indexOf("capture.revert")).toBe(ids.indexOf("capture.flatten") + 1);
     // MEU-130 (Session 59, D-492): capture.crop sits between revert and capture_interactive.
     expect(ids.indexOf("capture.crop")).toBe(ids.indexOf("capture.revert") + 1);
-    // MEU-134 (Session 62, D-591): capture.frames sits between crop and capture_interactive.
-    expect(ids.indexOf("capture.capture_interactive")).toBe(ids.indexOf("capture.frames") + 1);
+    // MEU-134 (Session 62, D-591): capture.frames sits right after crop.
+    expect(ids.indexOf("capture.frames")).toBe(ids.indexOf("capture.crop") + 1);
+    // MEU-135 (Session 63): capture.sheet sits between frames and capture_interactive.
+    expect(ids.indexOf("capture.capture_interactive")).toBe(ids.indexOf("capture.sheet") + 1);
   });
 
   it("AC-67.19 a userConfirm step refuses omit, false and a declined prompt; the accepted call flattens once", async () => {

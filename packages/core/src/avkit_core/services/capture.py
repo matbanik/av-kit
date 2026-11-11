@@ -15,6 +15,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from io import BufferedWriter
 from pathlib import Path
+from typing import TypeVar
 from uuid import uuid4
 
 import structlog
@@ -24,6 +25,9 @@ from avkit_core.domain.capture import (
     ANNOTATED_FORMATS,
     ANNOTATED_SUFFIXES,
     CAPTURE_REQUEST_TRANSITIONS,
+    REGION_MAX_EDGE_DEFAULT,
+    REGION_MAX_EDGE_MAX,
+    REGION_MAX_EDGE_MIN,
     AnnotatedFormat,
     Annotation,
     ArrowAnnotation,
@@ -61,18 +65,29 @@ from avkit_core.ports.storage import UnitOfWork
 from avkit_core.services.settings import SettingsService
 from avkit_core.services.video_input import (
     FRAMES_MAX,
+    SHEET_GRID_DEFAULT,
+    SHEET_GRID_MAX,
+    SHEET_GRID_MIN,
+    SheetCell,
+    SheetShot,
     VideoFrame,
     VideoFrames,
+    VideoSheet,
     duration_ms,
     format_timecode,
     frame_name,
     frame_times,
     parse_time,
     require_local_video,
+    sheet_cell_size,
+    sheet_label,
+    sheet_name,
+    sheet_spacing_ms,
     video_probe,
 )
 
 UoWFactory = Callable[[], UnitOfWork]
+_T = TypeVar("_T")
 Clock = Callable[[], datetime]
 log = structlog.get_logger(module="capture")
 
@@ -132,6 +147,17 @@ FRAMES_NOT_PROBED = "the file could not be probed"
 FRAMES_NOT_VIDEO = "not a video: no video stream"
 FRAMES_BEFORE_END = "start must be before end"
 FRAMES_NO_DURATION = "count needs a duration; this video has none, so use at"
+# SHEET_DEADLINE (MEU-135, D-601 A): the sheet call's deadline, its return gate and its worker
+# thread's name. It shares COMMIT_WAIT_S and FRAMES_JOIN_STEP_S with frames.
+SHEET_DEADLINE_S = 100
+SHEET_RETURN_S = 105
+SHEET_WORKER = "avkit-sheet"
+# SHEET_WRITE's masked failure and SHEET_CHECKS' fixed refusals (D-599). None echoes the input.
+SHEET_NOT_WRITTEN = "the sheet could not be written"
+SHEET_NO_DURATION = "sheet needs a duration; this video has none"
+SHEET_GRID_RANGE = f"grid must be {SHEET_GRID_MIN} to {SHEET_GRID_MAX}"
+# The view's own max_edge refusal (domain/capture.py), the same words for a sheet.
+SHEET_EDGE_RANGE = f"max_edge must be between {REGION_MAX_EDGE_MIN} and {REGION_MAX_EDGE_MAX}"
 
 # CROP_NAME (MEU-130, D-483): a crop's file name. A given `name` keeps these characters only.
 CROP_NAME_MAX = 80
@@ -415,7 +441,7 @@ def _annotation_to_wire(annotation: Annotation) -> dict[str, object]:
 
 
 class _FramesGate:
-    """FRAME_DEADLINE (e): what a frames call and its worker share, under `lock`.
+    """FRAME_DEADLINE (e) and SHEET_DEADLINE (e): what a call and its worker share, under `lock`.
 
     `state` is `running`, `committing` or `abandoned`; `last_ms` is the call's last time once
     it is known, the time an abandoned call reports.
@@ -426,7 +452,6 @@ class _FramesGate:
         self.state = "running"
         self.last_ms = 0
         self.done = False
-        self.result: VideoFrames | None = None
         self.error: BaseException | None = None
 
 
@@ -655,23 +680,69 @@ class CaptureService:
         the body is waiting on. The worker's error is raised here as the same object, outside
         any `except` clause, so its `__context__` stays `None`.
         """
+
+        def body(gate: _FramesGate, deadline: float) -> VideoFrames:
+            return self._frames_body(gate, deadline, path, at, count, start, end)
+
+        return self._run_gated(
+            FRAMES_WORKER, FRAMES_DEADLINE_S, FRAMES_RETURN_S, FRAMES_NOT_WRITTEN, body
+        )
+
+    def sheet_from_video(
+        self,
+        path: str,
+        *,
+        start: object | None = None,
+        end: object | None = None,
+        grid: int = SHEET_GRID_DEFAULT,
+        max_edge: int = REGION_MAX_EDGE_DEFAULT,
+    ) -> VideoSheet:
+        """SHEET_CHECKS to SHEET_WRITE (MEU-135): one labelled grid of a span as a new shot.
+
+        The body runs on a daemon worker named `avkit-sheet` under SHEET_DEADLINE, through the
+        same return gate as frames (`_run_gated`).
+        """
+
+        def body(gate: _FramesGate, deadline: float) -> VideoSheet:
+            return self._sheet_body(gate, deadline, path, start, end, grid, max_edge)
+
+        return self._run_gated(
+            SHEET_WORKER, SHEET_DEADLINE_S, SHEET_RETURN_S, SHEET_NOT_WRITTEN, body
+        )
+
+    def _run_gated(
+        self,
+        worker_name: str,
+        deadline_s: float,
+        return_s: float,
+        not_written: str,
+        body: Callable[[_FramesGate, float], _T],
+    ) -> _T:
+        """FRAME_DEADLINE (e) and SHEET_DEADLINE (e): run `body` on a daemon worker.
+
+        The clock starts here. This call waits in `FRAMES_JOIN_STEP_S` steps and answers by
+        `return_s`, or by `return_s + COMMIT_WAIT_S` while the worker is committing, whatever
+        the body is waiting on. An abandoned call reports `frame grab failed at` its last time;
+        a commit that outlasts the wait gives the masked `not_written`. The worker's error is
+        raised here as the same object, outside any `except` clause, so its `__context__`
+        stays `None`.
+        """
         began = self._monotonic()
-        deadline = began + FRAMES_DEADLINE_S
+        deadline = began + deadline_s
         gate = _FramesGate()
+        results: list[_T] = []
 
         def work() -> None:
-            result: VideoFrames | None = None
             error: BaseException | None = None
             try:
-                result = self._frames_body(gate, deadline, path, at, count, start, end)
+                results.append(body(gate, deadline))
             except BaseException as exc:  # handed to the caller, which raises it
                 error = exc
             with gate.lock:
-                gate.result = result
                 gate.error = error
                 gate.done = True
 
-        worker = threading.Thread(target=work, name=FRAMES_WORKER, daemon=True)
+        worker = threading.Thread(target=work, name=worker_name, daemon=True)
         worker.start()
         returned: BaseException | None = None
         while True:
@@ -680,7 +751,7 @@ class CaptureService:
             with gate.lock:
                 if gate.done:
                     break
-                if elapsed < FRAMES_RETURN_S:
+                if elapsed < return_s:
                     continue
                 if gate.state == "running":
                     gate.state = "abandoned"
@@ -689,16 +760,180 @@ class CaptureService:
             if state == "abandoned":
                 returned = ValidationError(_frame_failed_text(last_ms))
                 break
-            if elapsed >= FRAMES_RETURN_S + COMMIT_WAIT_S:
-                returned = CaptureFailedError(FRAMES_NOT_WRITTEN)
+            if elapsed >= return_s + COMMIT_WAIT_S:
+                returned = CaptureFailedError(not_written)
                 break
         if returned is None:
             returned = gate.error
-        if returned is None and gate.result is not None:
-            return gate.result
+        if returned is None and results:
+            return results[0]
         if returned is None:
-            returned = CaptureFailedError(FRAMES_NOT_WRITTEN)
+            returned = CaptureFailedError(not_written)
         raise returned
+
+    def _sheet_body(
+        self,
+        gate: _FramesGate,
+        deadline: float,
+        path: str,
+        start: object | None,
+        end: object | None,
+        grid: object,
+        max_edge: object,
+    ) -> VideoSheet:
+        """SHEET_CHECKS, then SHEET_WRITE's three phases, on the worker thread."""
+        resolved = require_local_video(path)
+        start_ms = None if start is None else parse_time(start)
+        end_ms = None if end is None else parse_time(end)
+        if (
+            isinstance(grid, bool)
+            or not isinstance(grid, int)
+            or not SHEET_GRID_MIN <= grid <= SHEET_GRID_MAX
+        ):
+            raise ValidationError(SHEET_GRID_RANGE)
+        if (
+            isinstance(max_edge, bool)
+            or not isinstance(max_edge, int)
+            or not REGION_MAX_EDGE_MIN <= max_edge <= REGION_MAX_EDGE_MAX
+        ):
+            raise ValidationError(SHEET_EDGE_RANGE)
+        if start_ms is not None:
+            gate.last_ms = start_ms
+        port = self._frames
+        if port is None:
+            raise CaptureFailedError(SHEET_NOT_WRITTEN)
+        info: MediaInfo | None = None
+        try:
+            info = port.probe(resolved, timeout_s=deadline - self._monotonic())
+        except MediaProbeError:
+            info = None
+        if info is None:
+            raise ValidationError(FRAMES_NOT_PROBED)
+        if info.video_codec is None:
+            raise ValidationError(FRAMES_NOT_VIDEO)
+        total = duration_ms(info.duration)
+        if total is None:
+            raise ValidationError(SHEET_NO_DURATION)
+        first, last = self._span_ms(total, start_ms, end_ms)
+        times = frame_times(first, last, grid * grid)
+        gate.last_ms = times[-1]
+        cell_size = sheet_cell_size(info.width, info.height, grid, max_edge)
+        spacing = sheet_spacing_ms(first, last, grid)
+        cells = tuple(
+            SheetCell(cell=number, time_ms=ms, timecode=format_timecode(ms))
+            for number, ms in enumerate(times, 1)
+        )
+        labels = [sheet_label(cell.cell, cell.timecode, spacing) for cell in cells]
+        name = sheet_name(resolved.stem, first, last)
+        inbox = self._inbox()
+        failed_ms: int | None = None
+        masked = False
+        written: tuple[CaptureShot, ImageProbe] | None = None
+        try:
+            written = self._write_sheet(
+                gate, deadline, port, resolved, inbox, name, times, grid, cell_size, labels
+            )
+        except _FrameFailed as exc:
+            failed_ms = exc.ms
+        except Exception:
+            masked = True
+        if failed_ms is not None:
+            raise ValidationError(_frame_failed_text(failed_ms))
+        if masked or written is None:
+            raise CaptureFailedError(SHEET_NOT_WRITTEN)
+        shot, probe = written
+        log.info("capture.sheet", cells=len(cells), shot_id=shot.id)
+        return VideoSheet(
+            video=video_probe(resolved, info),
+            shot=SheetShot(
+                id=shot.id,
+                path=str(shot.original_path),
+                width=probe.width,
+                height=probe.height,
+            ),
+            spacing_ms=spacing,
+            cells=cells,
+        )
+
+    def _write_sheet(
+        self,
+        gate: _FramesGate,
+        deadline: float,
+        port: FramePort,
+        resolved: Path,
+        inbox: Path,
+        name: str,
+        times: list[int],
+        grid: int,
+        cell_size: tuple[int, int],
+        labels: list[str],
+    ) -> tuple[CaptureShot, ImageProbe]:
+        """SHEET_WRITE: reserve, grab and tile, publish. Any failure leaves nothing this call made.
+
+        The handle is closed and the temp this call made, if not moved, is unlinked; a temp
+        another writer made is never touched.
+        """
+        handles: list[BufferedWriter] = []
+        temps: list[Path] = []
+        dests: list[Path] = []
+        owned: list[Path] = []
+        names = [name]
+        try:
+            self._reserve_frames(deadline, inbox, names, times[0], handles, temps, dests, owned)
+            probe = self._grab_sheet(
+                deadline, port, resolved, times, grid, cell_size, labels, handles[0], temps[0]
+            )
+            shots = self._publish_frames(
+                gate,
+                deadline,
+                inbox,
+                names,
+                times[-1],
+                CaptureSource.Video,
+                temps,
+                dests,
+                owned,
+                [probe],
+            )
+        finally:
+            for handle in handles:
+                with contextlib.suppress(OSError):
+                    handle.close()
+            for tmp in owned:
+                with contextlib.suppress(OSError):
+                    tmp.unlink(missing_ok=True)
+        return shots[0], probe
+
+    def _grab_sheet(
+        self,
+        deadline: float,
+        port: FramePort,
+        resolved: Path,
+        times: list[int],
+        grid: int,
+        cell_size: tuple[int, int],
+        labels: list[str],
+        handle: BufferedWriter,
+        tmp: Path,
+    ) -> ImageProbe:
+        """SHEET_WRITE (2), unlocked: grab each cell in time order, tile, write and probe."""
+        cells: list[bytes] = []
+        for ms in times:
+            left = deadline - self._monotonic()
+            if left <= 0:  # SHEET_DEADLINE (a)
+                raise _FrameFailed(ms)
+            data = port.grab_frame(resolved, ms, seek="input", timeout_s=left, box=cell_size)
+            if deadline - self._monotonic() <= 0:  # SHEET_DEADLINE (b)
+                raise _FrameFailed(ms)
+            if not isinstance(data, bytes) or not data.startswith(PNG_SIGNATURE):
+                raise _FrameFailed(ms)
+            cells.append(data)
+        image = self._annotate.sheet(cells, grid=grid, cell_size=cell_size, labels=labels)
+        if deadline - self._monotonic() <= 0:  # SHEET_DEADLINE (b')
+            raise _FrameFailed(times[-1])
+        handle.write(image)
+        handle.close()
+        return self._annotate.probe(tmp)
 
     def _frames_body(
         self,
@@ -793,6 +1028,14 @@ class CaptureService:
                 if ms >= total:
                     raise _past_end(ms, total)
             return at_ms, "input"
+        first, last = CaptureService._span_ms(total, start_ms, end_ms)
+        if count is None:
+            raise ValidationError(FRAMES_EITHER)
+        return frame_times(first, last, count), "input"
+
+    @staticmethod
+    def _span_ms(total: int, start_ms: int | None, end_ms: int | None) -> tuple[int, int]:
+        """FRAME_CHECKS and SHEET_CHECKS: the span, start 0 and end the duration by default."""
         first = 0 if start_ms is None else start_ms
         last = total if end_ms is None else end_ms
         if first >= total:
@@ -801,9 +1044,7 @@ class CaptureService:
             raise _past_end(last, total)
         if first >= last:
             raise ValidationError(FRAMES_BEFORE_END)
-        if count is None:
-            raise ValidationError(FRAMES_EITHER)
-        return frame_times(first, last, count), "input"
+        return first, last
 
     def _file_lock_by(self, deadline: float) -> threading.Lock | None:
         """FRAME_WRITE: `CAPTURE_FILE_LOCK`, waited for no longer than the time left, or None."""
@@ -832,13 +1073,21 @@ class CaptureService:
         temps: list[Path] = []
         dests: list[Path] = []
         owned: list[Path] = []
+        names = [frame_name(resolved.stem, ms) for ms in times]
         try:
-            self._reserve_frames(
-                deadline, inbox, resolved.stem, times, handles, temps, dests, owned
-            )
+            self._reserve_frames(deadline, inbox, names, times[0], handles, temps, dests, owned)
             probes = self._grab_frames(deadline, port, resolved, times, seek, handles, temps)
             shots = self._publish_frames(
-                gate, deadline, inbox, resolved.stem, times, temps, dests, owned, probes
+                gate,
+                deadline,
+                inbox,
+                names,
+                times[-1],
+                CaptureSource.Video,
+                temps,
+                dests,
+                owned,
+                probes,
             )
         finally:
             for handle in handles:
@@ -853,22 +1102,25 @@ class CaptureService:
         self,
         deadline: float,
         inbox: Path,
-        stem: str,
-        times: list[int],
+        names: list[str],
+        failed_ms: int,
         handles: list[BufferedWriter],
         temps: list[Path],
         dests: list[Path],
         owned: list[Path],
     ) -> None:
-        """FRAME_WRITE (1): under the lock, each time's name and its exclusive temp file."""
+        """FRAME_WRITE and SHEET_WRITE (1): under the lock, each name's exclusive temp file.
+
+        A lock not had in time fails at `failed_ms`, the call's first time (D-600).
+        """
         lock = self._file_lock_by(deadline)
         if lock is None:
-            raise _FrameFailed(times[0])
+            raise _FrameFailed(failed_ms)
         try:
             with self._uow_factory() as uow:
                 self._annotate.ensure_dir(inbox)
-                for ms in times:
-                    dest = self._import_dest(uow, inbox, frame_name(stem, ms), ".png")
+                for name in names:
+                    dest = self._import_dest(uow, inbox, name, ".png")
                     tmp = dest.with_name(dest.name + TMP_SUFFIX)
                     handles.append(tmp.open("xb"))
                     owned.append(tmp)
@@ -916,19 +1168,21 @@ class CaptureService:
         gate: _FramesGate,
         deadline: float,
         inbox: Path,
-        stem: str,
-        times: list[int],
+        names: list[str],
+        failed_ms: int,
+        source: CaptureSource,
         temps: list[Path],
         dests: list[Path],
         owned: list[Path],
         probes: list[ImageProbe],
     ) -> list[CaptureShot]:
-        """FRAME_WRITE (3): under the lock and one unit of work, move, register and commit.
+        """FRAME_WRITE and SHEET_WRITE (3): under the lock and one unit of work, move, register
+        and commit. A deadline check that fails reports `failed_ms`, the call's last time (D-600).
 
         A failure unlinks every dest this call moved before the lock is released, and the unit
         of work rolls back.
         """
-        last = times[-1]
+        last = failed_ms
         lock = self._file_lock_by(deadline)
         if lock is None:  # FRAME_DEADLINE (c), the lock not had in time
             raise _FrameFailed(last)
@@ -944,12 +1198,11 @@ class CaptureService:
                     for index, tmp in enumerate(temps):
                         dest = dests[index]
                         if _is_file(dest) or uow.capture_shots.get_by_path(dest) is not None:
-                            name = frame_name(stem, times[index])
-                            dest = self._import_dest(uow, inbox, name, ".png")
+                            dest = self._import_dest(uow, inbox, names[index], ".png")
                         os.replace(tmp, dest)
                         owned.remove(tmp)
                         moved.append(dest)
-                        shot = self._upsert_shot(uow, dest, probes[index], now, CaptureSource.Video)
+                        shot = self._upsert_shot(uow, dest, probes[index], now, source)
                         shots.append(shot)
                     with gate.lock:  # FRAME_DEADLINE (d)
                         expired = gate.state == "abandoned" or deadline - self._monotonic() <= 0

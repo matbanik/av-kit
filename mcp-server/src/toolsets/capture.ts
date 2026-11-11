@@ -56,7 +56,8 @@ const CROP_TEXT =
 const FRAMES_MAX = 20;
 const timeValue = z.union([z.number().nonnegative(), z.string().min(1).max(32)]);
 const FRAMES_TEXT = [
-  "Workflow: call avkit_convert probe for the duration, then avkit_capture frames to POST /captures/frames, then image to view a frame.",
+  // D-605 (MEU-135): sheet finds the moment between probe and frames.
+  "Workflow: call avkit_convert probe for the duration, then avkit_capture sheet to find the moment, then frames to POST /captures/frames for exact stills, then image to view a frame.",
   "Prerequisite: a local absolute video path and FFmpeg; the video is read in place, never changed or uploaded.",
   "Returns: JSON with the video's duration and size and each new shot's id, path, time_ms and timecode; no image bytes.",
   "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
@@ -64,6 +65,20 @@ const FRAMES_TEXT = [
   "Each frame is the first one at or after its time; a time after the last video frame but before the end returns the last frame.",
   "Frames are new shots, so image, crop and annotate work on them.",
   "A raw stream with no duration takes only at, and is slow; remuxing it with avkit_convert add (fast copy) gives it a duration.",
+].join(" ");
+
+// SHEET_MCP (MEU-135): sheet has its own four markers. D-601 A: grid at most 5.
+const SHEET_TEXT = [
+  "Workflow: call avkit_convert probe for the duration, then avkit_capture sheet to POST /captures/sheet for a grid over a span, then frames for exact stills, then image to view the sheet.",
+  "Prerequisite: a local absolute video path and FFmpeg; the video is read in place, never changed or uploaded.",
+  "Returns: JSON with the video's duration and size, the new shot's id, path and size, spacing_ms and each cell's number, time_ms and timecode; no image bytes.",
+  "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
+  "One labelled grid image of a span (default the whole video): grid 2-5 (default 3, so 9 cells), max_edge 64-2576 (default 1568).",
+  "Cells sit at the midpoints of equal parts of the span; each is the first frame at or after its time, and a time after the last video frame but before the end shows the last frame.",
+  "Cite times from cells, never from the image.",
+  "To zoom, call again with a narrower start and end; no state is kept between calls.",
+  "Events between cells can be missed.",
+  "Needs a video with a duration.",
 ].join(" ");
 
 const ANNOTATE_EXAMPLE =
@@ -82,6 +97,7 @@ export const captureDescriptions: Record<string, string> = {
   "avkit_capture.revert": `${desc("revert", "POST", "/captures/{id}/revert")} Overwrites the image file from its newest backup; the user must also accept in the IDE.`,
   "avkit_capture.crop": `${desc("crop", "POST", "/captures/{id}/crop")} ${CROP_TEXT}`,
   "avkit_capture.frames": FRAMES_TEXT,
+  "avkit_capture.sheet": SHEET_TEXT,
 };
 
 function withDesc<T extends z.ZodTypeAny>(action: string, schema: T): T {
@@ -289,5 +305,18 @@ export const captureSchema = z.union([
           && (v.at === undefined || (v.start === undefined && v.end === undefined)),
         { message: "frames takes either at or count; start and end go with count" },
       ),
+  ),
+  withDesc(
+    "sheet",
+    z
+      .object({
+        action: z.literal("sheet"),
+        path: z.string().min(1).max(4096),
+        start: timeValue.optional(),
+        end: timeValue.optional(),
+        grid: z.number().int().min(2).max(5).optional(),
+        max_edge: z.number().int().min(64).max(2576).optional(),
+      })
+      .strict(),
   ),
 ]);
