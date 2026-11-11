@@ -42,6 +42,14 @@ declare global {
       subscribeLogs: (cb: (batch: unknown[]) => void) => () => void
       getLogSnapshot: () => Promise<unknown>
       captureRegion: () => Promise<void>
+      pasteCaptureImage?: () => Promise<
+        | { kind: 'saved'; name: string; registered: boolean }
+        | { kind: 'blocked'; reason: 'black' | 'empty' }
+        | { kind: 'empty' }
+        | { kind: 'busy' }
+        | { kind: 'not-ready' }
+        | { kind: 'failed' }
+      >
       getHotkeyStatus: () => Promise<{ accelerator: string; registered: boolean; inUse: boolean }>
       onInboxChanged: (cb: () => void) => () => void
       loginItemGet?: () => Promise<

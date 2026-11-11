@@ -208,7 +208,15 @@ describe('MEU-39 capture gui', () => {
     const sources = captureSources().join('\n')
     expect(sources).toMatch(/showDirectoryDialog|show-directory-dialog/)
     expect(sources).toMatch(/\/settings\/capture/)
-    expect(sources).not.toMatch(/showFilesDialog/)
+    // Browse picks a folder. MEU-132's Import image… button is the one files dialog (09 §GUI image import).
+    const inboxRow = page.slice(
+      page.indexOf('id="capture-inbox-path-field"'),
+      page.indexOf('browseTestId="capture-inbox-browse"'),
+    )
+    expect(inboxRow).toMatch(/showDirectoryDialog/)
+    expect(inboxRow).not.toMatch(/showFilesDialog/)
+    expect(sources.match(/showFilesDialog/g) ?? []).toHaveLength(1)
+    expect(sources).toMatch(/showFilesDialog\(\[\{ name: 'Images'/)
     expect(readRequired(settingsHookPath)).toMatch(/\.strict\(\)|parseSettingsPut/)
   })
 
@@ -312,7 +320,8 @@ describe('MEU-39 capture gui', () => {
     const page = readRequired(pagePath)
     expect(page).toContain('capture-empty')
     expect(page).toMatch(/Press F2 or Capture region/)
-    expect(page).not.toMatch(/dropzone|onDrop/)
+    // No drop zone as the primary path; MEU-132's page-wide drop handler shows none (09 :115, :1099).
+    expect(page).not.toMatch(/drop-?zone/i)
     expect(page).toMatch(/feature=["']capture["']|feature=\{?'capture'\}?/)
     const help = readRequired(helpPath)
     for (const topic of HELP_TOPICS) {

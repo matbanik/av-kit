@@ -96,6 +96,7 @@ let parserState: { pendingLineBytes: number; discarded: boolean } = {
   discarded: false,
 }
 let inFlight = false
+let pasteInFlight = false
 
 /** Swaps the process factory; `null` restores the real `child_process.spawn`. */
 export function setPickerSpawn(fn: PickerSpawn | null): void {
@@ -138,6 +139,7 @@ export function isPickerInFlight(): boolean {
 
 export function resetPickerState(): void {
   inFlight = false
+  pasteInFlight = false
   lastOutput = { stdout: '', stderr: '' }
   parserState = { pendingLineBytes: 0, discarded: false }
 }
@@ -212,6 +214,12 @@ function withStderrTail(reason: string, stderr: string): string {
 
 function errorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err)
+}
+
+/** The Node error code alone, for lines that must not carry a path (MEU-132 PASTE_LOG). */
+function errorCode(err: unknown): string {
+  const code = (err as NodeJS.ErrnoException | null)?.code
+  return typeof code === 'string' && /^[A-Z0-9_]+$/.test(code) ? code : 'unknown'
 }
 
 /**
@@ -427,9 +435,10 @@ export function runRegionPicker(stagingPath: string): Promise<PickerOutcome> {
  *
  * `link` is used rather than `rename` because it fails loudly with `EEXIST` instead of silently
  * replacing an existing capture, and it never rewrites the helper's bytes. Only `EEXIST` walks to
- * the next suffix; any other error is a real failure and is reported as one.
+ * the next suffix; any other error is a real failure and is reported as one. With `logPaths` false
+ * (a paste, MEU-132 PASTE_LOG) the lines carry the error code only, never the inbox or a name.
  */
-function claimInboxName(inbox: string, stagingPath: string): string | null {
+function claimInboxName(inbox: string, stagingPath: string, logPaths = true): string | null {
   const stem = registerFileName().replace(/\.png$/, '')
   for (let attempt = 1; attempt <= PICKER_COLLISION_LIMIT; attempt += 1) {
     const suffix = attempt < PICKER_COLLISION_SUFFIX_START ? '' : `_${attempt}`
@@ -443,14 +452,41 @@ function claimInboxName(inbox: string, stagingPath: string): string | null {
       if ((err as NodeJS.ErrnoException).code === 'EEXIST') {
         continue
       }
-      log(`${CONSOLE_MODULE_TAG} could not claim ${candidate}: ${errorMessage(err)}`)
+      if (logPaths) {
+        log(`${CONSOLE_MODULE_TAG} could not claim ${candidate}: ${errorMessage(err)}`)
+      } else {
+        log(`${CONSOLE_MODULE_TAG} could not claim a name (${errorCode(err)})`)
+      }
       return null
     }
   }
-  log(
-    `${CONSOLE_MODULE_TAG} could not claim a name in ${inbox} after ${PICKER_COLLISION_LIMIT} tries`,
-  )
+  if (logPaths) {
+    log(
+      `${CONSOLE_MODULE_TAG} could not claim a name in ${inbox} after ${PICKER_COLLISION_LIMIT} tries`,
+    )
+  } else {
+    log(`${CONSOLE_MODULE_TAG} could not claim a name after ${PICKER_COLLISION_LIMIT} tries`)
+  }
   return null
+}
+
+/** What the inner publish did with one staged PNG (MEU-132 PASTE_PUBLISH). */
+type PublishOutcome =
+  | { kind: 'blocked'; reason: 'black' | 'empty' }
+  | { kind: 'unclaimed' }
+  | { kind: 'published'; dest: string; registered: boolean }
+
+type PublishOpts = {
+  /** The hotkey's system notifications and its blocked line; a paste reports through its toast. */
+  notify: boolean
+  /** The hotkey's path-bearing lines; a paste logs codes and the basename only (PASTE_LOG). */
+  logPaths: boolean
+  copyToClipboard: boolean
+  source: RegisterSource
+  window: BrowserWindow | undefined
+  register?: boolean
+  /** Called in place of the hotkey's register-failure line and notification. */
+  onRegisterFailure?: (dest: string) => void
 }
 
 async function publishStagedCapture(
@@ -463,34 +499,51 @@ async function publishStagedCapture(
     register?: boolean
   },
 ): Promise<string | null> {
+  const outcome = await publishStaged(stagingPath, inbox, { ...opts, notify: true, logPaths: true })
+  return outcome.kind === 'published' ? outcome.dest : null
+}
+
+/**
+ * The hotkey's publication steps for one staged PNG: the pixel check, the clipboard copy, the
+ * exclusive claim, the settle and the register. The staging file is removed on every outcome.
+ */
+async function publishStaged(
+  stagingPath: string,
+  inbox: string,
+  opts: PublishOpts,
+): Promise<PublishOutcome> {
   const image = nativeImage.createFromPath(stagingPath)
   const pixels = inspectNativeImagePixels(image)
   if (pixels.blocked) {
     const kind = pixels.width < 1 || pixels.height < 1 ? 'empty' : 'black'
-    log(`${CONSOLE_MODULE_TAG} ${SCREEN_CAPTURE_BLOCKED} ${kind}`)
     removeStaging(stagingPath)
-    notifyUser({
-      title: SCREEN_CAPTURE_BLOCKED,
-      body:
-        kind === 'empty'
-          ? 'The region picker returned an image with no pixels.'
-          : 'The captured region came back entirely black, so nothing was saved.',
-    })
-    return null
+    if (opts.notify) {
+      log(`${CONSOLE_MODULE_TAG} ${SCREEN_CAPTURE_BLOCKED} ${kind}`)
+      notifyUser({
+        title: SCREEN_CAPTURE_BLOCKED,
+        body:
+          kind === 'empty'
+            ? 'The region picker returned an image with no pixels.'
+            : 'The captured region came back entirely black, so nothing was saved.',
+      })
+    }
+    return { kind: 'blocked', reason: kind }
   }
 
   if (opts.copyToClipboard) {
     clipboard.writeImage(image)
   }
 
-  const dest = claimInboxName(inbox, stagingPath)
+  const dest = claimInboxName(inbox, stagingPath, opts.logPaths)
   removeStaging(stagingPath)
   if (dest === null) {
-    notifyUser({
-      title: SCREEN_CAPTURE_BLOCKED,
-      body: `The capture could not be saved into ${inbox}.`,
-    })
-    return null
+    if (opts.notify) {
+      notifyUser({
+        title: SCREEN_CAPTURE_BLOCKED,
+        body: `The capture could not be saved into ${inbox}.`,
+      })
+    }
+    return { kind: 'unclaimed' }
   }
 
   // Publication is committed the moment the link succeeds. Everything below is announcement and
@@ -498,6 +551,7 @@ async function publishStagedCapture(
   // `runInteractiveTick` as a *pre*-publication failure and cancels a request whose PNG is
   // already in the inbox (AC-40.33). A renderer torn down between `isDestroyed()` and `send()`
   // is exactly that case.
+  let registered = opts.register !== false
   try {
     // The reservation is lifted before the announcement so a watcher rescan racing the register
     // call sees an already-announced name rather than a second "new file".
@@ -507,9 +561,16 @@ async function publishStagedCapture(
       opts.source,
       opts.register !== false,
       () => {
-        notifyInboxChanged(opts.window)
+        if (opts.window !== undefined) {
+          notifyInboxChanged(opts.window)
+        }
       },
       (message) => {
+        registered = false
+        if (opts.onRegisterFailure !== undefined) {
+          opts.onRegisterFailure(dest)
+          return
+        }
         // The pixels are already safe on disk; a backend that cannot record them must never
         // cost the user the capture, so the file stays and the user is told where it is.
         log(`${CONSOLE_MODULE_TAG} register failed, kept ${dest}: ${message}`)
@@ -519,13 +580,156 @@ async function publishStagedCapture(
           path: dest,
         })
       },
+      opts.logPaths,
     )
   } catch (err: unknown) {
-    log(
-      `${CONSOLE_MODULE_TAG} published ${dest}; post-publication step failed: ${errorMessage(err)}`,
-    )
+    if (opts.logPaths) {
+      log(
+        `${CONSOLE_MODULE_TAG} published ${dest}; post-publication step failed: ${errorMessage(err)}`,
+      )
+    } else {
+      log(`${CONSOLE_MODULE_TAG} published ${basename(dest)}; post-publication step failed (${errorCode(err)})`)
+    }
   }
-  return dest
+  return { kind: 'published', dest, registered }
+}
+
+/** MEU-132 PASTE_MAIN: what a Ctrl+V on the Capture page answers. */
+export type PasteOutcome =
+  | { kind: 'saved'; name: string; registered: boolean }
+  | { kind: 'blocked'; reason: 'black' | 'empty' }
+  | { kind: 'empty' }
+  | { kind: 'busy' }
+  | { kind: 'not-ready' }
+  | { kind: 'failed' }
+
+/** The settings read a paste takes its inbox from (`fetchCaptureRuntime`). */
+export type PasteSettingsRead = () => Promise<{ inbox_dir: string } | null>
+
+export type PasteDeps = {
+  resolveInboxDir: () => Promise<string | null>
+  window: BrowserWindow | undefined
+  readClipboardPng: () => Buffer | null
+  nextStagingName?: () => string
+}
+
+/**
+ * MEU-132 PASTE_IPC: the inbox the backend reports now, read once per paste. A failed or empty
+ * read answers `null`, so a paste never falls back to a default folder.
+ */
+export async function resolvePasteInbox(readSettings: PasteSettingsRead): Promise<string | null> {
+  try {
+    const settings = await readSettings()
+    const dir = settings?.inbox_dir
+    return typeof dir === 'string' && dir.length > 0 ? dir : null
+  } catch {
+    return null
+  }
+}
+
+function pasteLog(line: string): void {
+  log(`${CONSOLE_MODULE_TAG} paste ${line}`)
+}
+
+/** Opens a fresh staging file with `wx`, drawing a new name while one is taken, and writes `png`. */
+function writeExclusiveStaging(inbox: string, png: Buffer, nextName: () => string): string {
+  for (let attempt = 1; attempt <= PICKER_COLLISION_LIMIT; attempt += 1) {
+    const candidate = join(inbox, `${PICKER_STAGING_PREFIX}${nextName()}.tmp`)
+    let fd: number
+    try {
+      fd = fs.openSync(candidate, 'wx')
+    } catch (err: unknown) {
+      if ((err as NodeJS.ErrnoException).code === 'EEXIST') {
+        continue
+      }
+      throw err
+    }
+    try {
+      let written = 0
+      while (written < png.length) {
+        written += fs.writeSync(fd, png, written, png.length - written)
+      }
+    } catch (err: unknown) {
+      try {
+        fs.closeSync(fd)
+      } catch {
+        // The write already failed; the close is best effort before the removal below.
+      }
+      removeStaging(candidate)
+      throw err
+    }
+    fs.closeSync(fd)
+    return candidate
+  }
+  throw Object.assign(new Error('no free staging name'), { code: 'EEXIST' })
+}
+
+/**
+ * MEU-132 PASTE_MAIN: saves the clipboard image into the configured inbox through the hotkey's
+ * publication steps and registers it as `gui`. It never rejects, raises no system notification
+ * and logs codes and the claimed basename only (PASTE_LOG); the renderer's toast reports it.
+ */
+export async function pasteClipboardImage(deps: PasteDeps): Promise<PasteOutcome> {
+  if (pasteInFlight) {
+    pasteLog('busy')
+    return { kind: 'busy' }
+  }
+  pasteInFlight = true
+  let stagingPath: string | null = null
+  try {
+    let inboxDir: string | null
+    try {
+      inboxDir = await deps.resolveInboxDir()
+    } catch {
+      inboxDir = null
+    }
+    if (inboxDir === null) {
+      pasteLog('not ready')
+      return { kind: 'not-ready' }
+    }
+    const png = deps.readClipboardPng()
+    if (png === null || png.length === 0) {
+      pasteLog('empty')
+      return { kind: 'empty' }
+    }
+    const inbox = expandInboxDir(inboxDir)
+    fs.mkdirSync(inbox, { recursive: true })
+    stagingPath = writeExclusiveStaging(
+      inbox,
+      png,
+      deps.nextStagingName ?? (() => randomBytes(8).toString('hex')),
+    )
+    const outcome = await publishStaged(stagingPath, inbox, {
+      notify: false,
+      logPaths: false,
+      copyToClipboard: false,
+      source: 'gui',
+      window: deps.window,
+      register: true,
+      onRegisterFailure: (dest) => {
+        pasteLog(`register failed, kept ${basename(dest)}`)
+      },
+    })
+    stagingPath = null
+    if (outcome.kind === 'blocked') {
+      pasteLog(`blocked ${outcome.reason}`)
+      return { kind: 'blocked', reason: outcome.reason }
+    }
+    if (outcome.kind === 'unclaimed') {
+      return { kind: 'failed' }
+    }
+    const name = basename(outcome.dest)
+    pasteLog(`saved ${name}`)
+    return { kind: 'saved', name, registered: outcome.registered }
+  } catch (err: unknown) {
+    pasteLog(`failed ${errorCode(err)}`)
+    if (stagingPath !== null) {
+      removeStaging(stagingPath)
+    }
+    return { kind: 'failed' }
+  } finally {
+    pasteInFlight = false
+  }
 }
 
 /**

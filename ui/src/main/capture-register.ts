@@ -177,13 +177,16 @@ export async function finalizeCapturedPng(
   register: boolean,
   notify: () => void,
   onRegisterFailure?: (message: string) => void,
+  logFailure = true,
 ): Promise<void> {
   if (register) {
     try {
       await registerCapturePng(dest, source)
     } catch (err: unknown) {
       const message = errorMessage(err)
-      appendStdoutLog(`[Capture] register failed: ${message}`)
+      if (logFailure) {
+        appendStdoutLog(`[Capture] register failed: ${message}`)
+      }
       onRegisterFailure?.(message)
     }
   }

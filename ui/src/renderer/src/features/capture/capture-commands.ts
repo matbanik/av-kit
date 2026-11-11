@@ -164,6 +164,16 @@ export async function cropCapture(id: string, box: CropBox): Promise<CaptureCrop
   return result
 }
 
+export type CaptureImportResult = { item: CaptureListItem }
+
+/** MEU-132 IMPORT_CALL: one file into the inbox through MEU-129's import route; IMPORT_RUN refetches once. */
+export async function importCapture(path: string): Promise<CaptureImportResult> {
+  return apiFetch<CaptureImportResult>('/captures', {
+    method: 'POST',
+    body: JSON.stringify({ mode: 'import', path }),
+  })
+}
+
 export async function openCaptureFile(): Promise<void> {
   const target = viewedPath
   if (target === null || target.length < 1) {

@@ -491,3 +491,43 @@ describe('MEU-97 gui-actions audit', () => {
     }
   })
 })
+
+const MEU132_ROWS = ['capture:import', 'capture:drop', 'capture:paste'] as const
+
+describe('MEU-132 gui-actions audit', () => {
+  it('AC-132.20 ACTIONS_INDEX the three import rows follow capture:region and resolve to real channels, routes and ids', async () => {
+    const { listRegisteredChannels } = await import('../../src/main/ipc')
+    const registered = listRegisteredChannels()
+    const index = readFileSync(indexPath, 'utf8')
+    const lines = index.split(/\r?\n/)
+    const at = (id: string): number[] =>
+      lines.flatMap((line, i) => (line.startsWith(`| \`${id}\` |`) ? [i] : []))
+    const region = at('capture:region')
+    expect(region, 'capture:region').toHaveLength(1)
+    MEU132_ROWS.forEach((id, offset) => {
+      const rows = at(id)
+      expect(rows, id).toHaveLength(1)
+      expect(rows[0], `${id} position`).toBe((region[0] as number) + 1 + offset)
+      expect(lines[rows[0] as number]?.split('|')[3]?.trim(), `${id} palette`).toBe('no')
+    })
+
+    const preload = readFileSync(resolve(repoRoot, 'ui/src/main/preload.ts'), 'utf8')
+    const pasteCell = actionRestIpcCell(index, 'capture:paste') as string
+    expect(preloadChannelFor(pasteCell, preload)).toBe('capture-paste-image')
+    expect(registered).toContain('capture-paste-image')
+
+    const importCell = actionRestIpcCell(index, 'capture:import') ?? ''
+    expect(importCell).toContain('showFilesDialog')
+    expect(importCell).toContain('POST /captures')
+    expect(RENDERER_TO_MAIN_CHANNELS).toContain('show-files-dialog')
+
+    const dropCell = actionRestIpcCell(index, 'capture:drop') ?? ''
+    expect(dropCell).toContain('getPathForFile')
+    expect(dropCell).toContain('POST /captures')
+    expect(preload).toMatch(/\bgetPathForFile: /)
+
+    expect(readFileSync(openapiPath, 'utf8')).toContain('"/api/v1/captures"')
+    expect(readFileSync(testIdsPath, 'utf8')).toContain("'capture-import'")
+    expect(productionSources()).toMatch(/["']capture-import["']/)
+  })
+})

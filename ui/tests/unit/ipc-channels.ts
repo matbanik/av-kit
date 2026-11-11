@@ -20,6 +20,7 @@ export const RENDERER_TO_MAIN_CHANNELS = [
   'login-item-set',
   'write-clipboard-image',
   'get-mcp-setup-prompt',
+  'capture-paste-image',
 ] as const
 
 export const STARTUP_METRIC_KEYS = [

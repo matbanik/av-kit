@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { SlidersHorizontal } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ImagePlus, SlidersHorizontal } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 
 import { HelpCard } from '../../components/help/HelpCard'
+import { BulkResultToast } from '../../components/queue/BulkResultToast'
 import { Button } from '../../components/ui/Button'
 import { Disclosure } from '../../components/ui/Disclosure'
 import { PathRow } from '../../components/ui/PathRow'
 import { StatusChip } from '../../components/ui/StatusChip'
 import { ApiError, apiFetch } from '../../lib/api'
+import type { BulkResult } from '../../lib/queue/run-bulk'
 import { logRenderer } from '../../lib/renderer-log'
 import { usePublishCommandState } from '../../registry/command-state'
 import { ariaKeyshortcuts } from '../../registry/shortcuts'
@@ -15,6 +18,7 @@ import {
   deleteCapture,
   deleteCaptures,
   flattenCapture,
+  importCapture,
   invokeCaptureRegion,
   openCaptureFile,
   openCaptureFolder,
@@ -67,6 +71,14 @@ import {
   type TextDraft,
 } from './CaptureViewport'
 import { fetchCaptureImageObjectUrl } from './capture-image'
+import {
+  IMPORT_EXTENSIONS,
+  importFiles,
+  isEditableTarget,
+  pasteToastResult,
+  type ImportEntry,
+  type PasteOutcome,
+} from './capture-import'
 import { hitTestMarks, moveEndpoint, translateBody } from './capture-hit-test'
 import {
   boxHandlePoints,
@@ -97,6 +109,13 @@ const CROP_SMALL_REASON = `Too small to crop: each side needs ${CROP_MIN_PX} px`
 const CROP_SWAP_REASON = 'Too small to swap this ratio'
 const CROP_BUSY_MESSAGE = 'Cropping…'
 const CROP_NUDGE_SHIFT_PX = 10
+// IMPORT_BUTTON (MEU-132): the button's title while nothing blocks it.
+const IMPORT_TITLE = 'Import image files. You can also drop them here or paste with Ctrl+V.'
+
+/** IMPORT_DROP (D-551): a drag carries files when its types name `Files`. */
+function dragHasFiles(transfer: DataTransfer | null): boolean {
+  return transfer !== null && Array.from(transfer.types ?? []).includes('Files')
+}
 
 /** NUDGE_TARGET: what the arrow keys move, the whole selected mark or one end of a selected arrow. */
 type NudgeTarget = 'body' | 'from' | 'to'
@@ -398,6 +417,21 @@ export function CapturePage() {
   const cropBusyRef = useRef(false)
   /** CROP_COMMIT (D-515): the copy a crop just selected; its detail load keeps the tool the crop restored. */
   const cropCopyRef = useRef<string | null>(null)
+  // IMPORT_GATE (D-555): the crop, an open confirm or a running import or paste blocks a new one; `dirty`
+  // doesn't. The handlers read refs, so a drop or a paste in the same task as a state change sees it. Only an
+  // import run shows on the button (aria-busy): a paste holds the gate through its ref alone.
+  const [importBusy, setImportBusy] = useState(false)
+  const importBusyRef = useRef(false)
+  const pasteBusyRef = useRef(false)
+  const confirmOpenRef = useRef(false)
+  confirmOpenRef.current = confirm !== null
+  // IMPORT_TOAST (D-554): one note for all three entries; a new run replaces it and only Dismiss clears it.
+  const [importNote, setImportNote] = useState<BulkResult | null>(null)
+  const queryClient = useQueryClient()
+  const importBlocked = useCallback(
+    () => cropRef.current !== null || confirmOpenRef.current || importBusyRef.current || pasteBusyRef.current,
+    [],
+  )
 
   const selected = useMemo(
     () => items.find((item) => item.id === selectedId) ?? null,
@@ -478,6 +512,55 @@ export function CapturePage() {
   useEffect(() => {
     setCaptureInboxDir(settings.form.inbox_dir)
   }, [settings.form.inbox_dir])
+
+  // PASTE_KEY (D-550): Ctrl+V outside a text field saves a clipboard image to the inbox. It adds no
+  // commandRegistry entry; a text field, a textarea or an editable element keeps its native paste.
+  useEffect(() => {
+    const onPaste = (event: ClipboardEvent): void => {
+      if (isEditableTarget(event.target) || importBlocked()) {
+        return
+      }
+      event.preventDefault()
+      pasteBusyRef.current = true
+      void (async () => {
+        let outcome: PasteOutcome
+        try {
+          outcome = (await window.api.pasteCaptureImage?.()) ?? { kind: 'failed' }
+        } catch {
+          outcome = { kind: 'failed' }
+        }
+        // PASTE_MESSAGES: `busy` shows nothing; only a saved image changes the list.
+        const note = pasteToastResult(outcome)
+        if (note !== null) {
+          setImportNote(note)
+        }
+        if (outcome.kind === 'saved') {
+          void queryClient.invalidateQueries({ queryKey: ['captures'] })
+        }
+      })().finally(() => {
+        pasteBusyRef.current = false
+      })
+    }
+    window.addEventListener('paste', onPaste)
+    return () => {
+      window.removeEventListener('paste', onPaste)
+    }
+  }, [importBlocked, queryClient])
+
+  /** IMPORT_RUN for the button and a drop: one run at a time, then its note. An empty pick shows nothing. */
+  async function runImport(collect: () => Promise<ImportEntry[]>): Promise<void> {
+    importBusyRef.current = true
+    setImportBusy(true)
+    try {
+      const entries = await collect()
+      if (entries.length > 0) {
+        setImportNote(await importFiles(entries, { importOne: importCapture, refetch: () => catalog.refetch() }))
+      }
+    } finally {
+      importBusyRef.current = false
+      setImportBusy(false)
+    }
+  }
 
   useEffect(() => {
     setCaptureSelection({
@@ -1996,6 +2079,29 @@ export function CapturePage() {
     <section
       data-testid="capture-page"
       className="flex min-h-full w-full max-w-[var(--layout-page-max-width)] flex-col gap-4 p-4"
+      onDragOver={(event) => {
+        // IMPORT_DROP: a file drag is always taken, so a dropped file never navigates the window.
+        if (!dragHasFiles(event.dataTransfer)) {
+          return
+        }
+        event.preventDefault()
+        event.dataTransfer.dropEffect = importBlocked() ? 'none' : 'copy'
+      }}
+      onDrop={(event) => {
+        if (!dragHasFiles(event.dataTransfer)) {
+          return
+        }
+        event.preventDefault()
+        if (importBlocked()) {
+          return
+        }
+        const entries = Array.from(event.dataTransfer.files).map((file) => ({
+          path: window.api.getPathForFile(file),
+          name: file.name,
+        }))
+        // A failed run leaves its note unset; importFiles itself never rejects.
+        void runImport(async () => entries).catch(() => undefined)
+      }}
     >
       <HelpCard feature="capture" tabKey="main" sections={CAPTURE_HELP_SECTIONS} />
       <div data-testid="capture-header" className="flex flex-nowrap items-center gap-3">
@@ -2020,6 +2126,27 @@ export function CapturePage() {
               {hotkeyCap}
             </kbd>
           ) : null}
+        </Button>
+        <Button
+          data-testid="capture-import"
+          variant="secondary"
+          size="md"
+          title={crop !== null ? CROP_REASON : IMPORT_TITLE}
+          disabled={crop !== null || confirm !== null}
+          loading={importBusy}
+          onClick={() => {
+            if (importBlocked()) {
+              return
+            }
+            // IMPORT_BUTTON (D-552): the existing multi-select dialog, filtered to IMPORT_TYPES.
+            void runImport(async () => {
+              const paths = await window.api.showFilesDialog([{ name: 'Images', extensions: [...IMPORT_EXTENSIONS] }])
+              return paths.map((path) => ({ path, name: path }))
+            }).catch(() => undefined)
+          }}
+        >
+          <ImagePlus size={16} aria-hidden="true" />
+          Import image…
         </Button>
         <p className="min-w-0 truncate text-sm text-fg-muted">
           {shotCount} · inbox {settings.form.inbox_dir}
@@ -2107,6 +2234,12 @@ export function CapturePage() {
           </div>
         </Disclosure>
       </div>
+      <BulkResultToast
+        result={importNote}
+        onDismiss={() => {
+          setImportNote(null)
+        }}
+      />
       <div className="flex flex-1 gap-3 min-h-[16rem]">
         <aside className="w-[12.5rem] shrink-0">
           <CaptureFilmstrip

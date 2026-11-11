@@ -2,6 +2,7 @@ import { basename } from 'node:path'
 
 import { z } from 'zod'
 
+import type { PasteOutcome } from './capture-picker'
 import { readStartAtSignIn, writeStartAtSignIn, type LoginItemDeps } from './login-item'
 import { buildSetupPrompt, MCP_CLIENTS, type McpClient, type McpScope } from './mcp-setup-prompt'
 
@@ -38,6 +39,7 @@ export const RENDERER_TO_MAIN_CHANNELS = [
   'login-item-set',
   'write-clipboard-image',
   'get-mcp-setup-prompt',
+  'capture-paste-image',
 ] as const
 
 export const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] as const
@@ -107,6 +109,7 @@ const schemas: Record<(typeof RENDERER_TO_MAIN_CHANNELS)[number], z.ZodType> = {
     })
     .strict(),
   'get-mcp-setup-prompt': z.object({ client: z.enum(MCP_CLIENTS), scope: z.enum(['user', 'project']) }).strict(),
+  'capture-paste-image': noPayloadSchema,
 }
 
 export type SideEffects = {
@@ -153,6 +156,7 @@ export type IpcDeps = {
     timestamp: number
   }) => Promise<void>
   captureRegion?: () => Promise<void>
+  pasteCaptureImage?: () => Promise<PasteOutcome>
   getHotkeyStatus?: () => Promise<{ accelerator: string; registered: boolean; inUse: boolean }>
   loginItem?: LoginItemDeps
   mcpServerLaunch?: { command: string; serverPath: string }
@@ -478,6 +482,16 @@ export async function handleIpc(
       } catch (error) {
         return { ok: false, error: error instanceof Error ? error.message : String(error) }
       }
+    }
+    case 'capture-paste-image': {
+      // PASTE_IPC: main's paste never rejects; a missing dep or a thrown one still answers failed.
+      let outcome: PasteOutcome = { kind: 'failed' }
+      try {
+        outcome = (await deps.pasteCaptureImage?.()) ?? outcome
+      } catch {
+        // Nothing to add: the renderer's toast says the paste could not be saved.
+      }
+      return { ok: true, value: outcome }
     }
     default:
       return { ok: false, error: `unknown channel ${channel}` }

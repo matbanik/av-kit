@@ -68,6 +68,9 @@
 | `convert:gpu_refresh` | Refresh GPU chip | no | `POST /conversions/gpu/refresh` | specified | 08 |
 | `convert:browse_output_dir` | Output folder Browse | no | IPC `showDirectoryDialog` + `converter.output_dir` | specified | 08 / 06 |
 | `capture:region` | Capture region / F2 | yes | IPC `capture-region` then `POST /captures` | specified | 09 |
+| `capture:import` | Import image… button | no | IPC `showFilesDialog` then `POST /captures` (mode import) per file | specified | 09 |
+| `capture:drop` | Drop image files on the Capture page | no | preload `getPathForFile` then `POST /captures` (mode import) per file | specified | 09 |
+| `capture:paste` | Ctrl+V with an image on the clipboard (Capture page, outside text fields) | no | IPC `pasteCaptureImage` | specified | 09 |
 | `capture:save` | Save annotated / Ctrl+S | yes | `POST /captures/{id}/annotate` | specified | 09 |
 | `capture:open_file` | Open file | no | IPC `openPath` | specified | 09 / 06 IPC |
 | `capture:open_folder` | Open folder | yes | IPC `showItemInFolder` | specified | 09 / 06 IPC |

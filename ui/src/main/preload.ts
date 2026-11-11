@@ -25,6 +25,7 @@ const API_KEYS = [
   'loginItemSet',
   'writeClipboardImage',
   'getMcpSetupPrompt',
+  'pasteCaptureImage',
 ] as const
 
 export function getPreloadApiKeys(): string[] {
@@ -75,6 +76,7 @@ export function exposePreload(): void {
     writeClipboardImage: (png: Uint8Array) => ipcRenderer.invoke('write-clipboard-image', { png }),
     getMcpSetupPrompt: (opts: { client: string; scope: 'user' | 'project' }) =>
       ipcRenderer.invoke('get-mcp-setup-prompt', opts),
+    pasteCaptureImage: () => ipcRenderer.invoke('capture-paste-image'),
     onInboxChanged: (cb: () => void) => {
       const listener = () => {
         cb()

@@ -98,7 +98,7 @@ describe('MEU-88 writePngToClipboard (MAIN_IMAGE_WRITE)', () => {
 describe('MEU-88 IMAGE_CHANNEL registration (PRELOAD_KEY)', () => {
   it('AC-88.8 the channel is registered, the census list has 20 entries, and preload invokes it with { png }', () => {
     const registered = listRegisteredChannels()
-    expect(RENDERER_TO_MAIN_CHANNELS).toHaveLength(21)
+    expect(RENDERER_TO_MAIN_CHANNELS).toHaveLength(22)
     expect(registered).toEqual([...RENDERER_TO_MAIN_CHANNELS])
     expect(registered).toContain('write-clipboard-image')
     expect(getPreloadApiKeys()).toContain('writeClipboardImage')

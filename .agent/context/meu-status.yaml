@@ -26,8 +26,8 @@ phases:
   execution_plans:
   - docs/execution/plans/2026-08-19-p2-persistence-io/
   - docs/execution/plans/2026-08-19-p2-external-adapters/
-  last_updated: '2026-08-19'
-  note: MEU-5+8 persistence-io approved; MEU-6/7/9 external-adapters approved.
+  last_updated: '2026-11-10'
+  note: MEU-5+8 persistence-io approved; MEU-6/7/9 external-adapters approved. MEU-138–141 residuals (SABR check result, yt-dlp log detail, YouTube client fallback, yt-dlp JS runtime) registered 2026-11-10.
 - id: '3'
   name: Service layer
   band: P1
@@ -35,10 +35,10 @@ phases:
   - docs/build-plan/03-service-layer.md
   execution_plans:
   - docs/execution/plans/2026-08-19-p3-services/
-  last_updated: '2026-11-04'
+  last_updated: '2026-11-10'
   note: MEU-10–13 bound to p3-services — ready_for_review pending H1. MEU-62 residual (TTS runtime assets) registered 2026-09-30. MEU-73/74/75/77/78 residuals (TTS voice assets, language runtime, device
     fallback, async generate, ffmpeg resolver) registered 2026-10-09. MEU-75 delivered by Session 35 tts-voice-panel. MEU-98 residual (TTS sideload load) registered 2026-10-17. MEU-115/116 (transcript failure
-    reason, block stop), MEU-117/119/121 (TTS build capability, load order, FP16 audio) and MEU-122 (transcript source metadata) residuals registered 2026-11-04.
+    reason, block stop), MEU-117/119/121 (TTS build capability, load order, FP16 audio) and MEU-122 (transcript source metadata) residuals registered 2026-11-04. MEU-137/142 residuals (download failure reason, download audio extract) registered 2026-11-10.
 - id: '4'
   name: REST API
   band: P2
@@ -3461,18 +3461,18 @@ meus:
     anchor: gui-image-import
     text: Phase 9 §GUI image import
   description: Drag and drop, an Import image button and Ctrl+V paste bring images into the Capture inbox through the import endpoint or the hotkey publication path.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-129, MEU-39
   dependency_parse_status: parsed
   depends_on:
   - MEU-129
   - MEU-39
-  execution_plan: null
-  updated: '2026-11-08'
+  execution_plan: docs/execution/plans/2026-11-10-gui-capture-image-import/
+  updated: '2026-11-10'
   closed_reason: null
   note: Registered 2026-11-08 from the capture crop design (_inspiration/capture-crop/design.md). Mat asked for crop in the GUI, MCP and API, agent first (design D-2), and ruled D-1 (a crop writes a new
     shot) on 2026-11-08.
@@ -3579,6 +3579,165 @@ meus:
   closed_reason: null
   note: Registered 2026-11-09 from the video stills design (_inspiration/video-stills/design.md). Mat asked whether agents can take stills from video through av-kit and accepted every recommendation (D-1
     to D-5) on 2026-11-09.
+- row_key: MEU-137
+  id: MEU-137
+  slug: svc-download-failure-reason
+  phase: '3'
+  band: P2
+  matrix_item: '3.19'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: download-failure-reason-residual
+    text: Phase 3 §Download failure reason (residual)
+  description: 'A failed download stores one short av-kit message per cause, the Downloader card shows it, and the job logs started, done and failed lines with the message and yt-dlp''s redacted line.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-10, MEU-15, MEU-46, MEU-115
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-10
+  - MEU-15
+  - MEU-46
+  - MEU-115
+  execution_plan: null
+  updated: '2026-11-10'
+  closed_reason: null
+  note: 'Registered 2026-11-10 from DOWNLOAD-FAILED-NO-REASON (triage D-531), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+- row_key: MEU-138
+  id: MEU-138
+  slug: infra-sabr-check-result
+  phase: '2'
+  band: P2
+  matrix_item: '2.6'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: sabr-check-result-residual
+    text: Phase 2 §SABR check result (residual)
+  description: 'The SABR scan and Check SABR match yt-dlp''s current SABR messages, the page shows every check''s result with its time, and each SABR action logs one line.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-6, MEU-10, MEU-20
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-6
+  - MEU-10
+  - MEU-20
+  execution_plan: null
+  updated: '2026-11-10'
+  closed_reason: null
+  note: 'Registered 2026-11-10 from SABR-CHECK-MISSES-CURRENT-MESSAGES (triage D-532), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+- row_key: MEU-139
+  id: MEU-139
+  slug: infra-ytdlp-log-detail
+  phase: '2'
+  band: P2
+  matrix_item: '2.7'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: ytdlp-log-detail-residual
+    text: Phase 2 §yt-dlp log detail (residual)
+  description: 'yt-dlp warnings and errors always reach the Console with their text in a kept, redacted field; the debug switch in Settings adds info lines and applies without a restart.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-6, MEU-13, MEU-23, MEU-115
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-6
+  - MEU-13
+  - MEU-23
+  - MEU-115
+  execution_plan: null
+  updated: '2026-11-10'
+  closed_reason: null
+  note: 'Registered 2026-11-10 from YTDLP-LOG-TEXT-DROPPED (triage D-533), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+- row_key: MEU-140
+  id: MEU-140
+  slug: infra-youtube-client-fallback
+  phase: '2'
+  band: P2
+  matrix_item: '2.8'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: youtube-client-fallback-residual
+    text: Phase 2 §YouTube client fallback (residual)
+  description: 'A download chooses its YouTube clients and its one retry per grouping D-539, the video selector gets a catch-all, and the add-time extract uses the download''s cookie and client options.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-6, MEU-124, MEU-137
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-6
+  - MEU-124
+  - MEU-137
+  execution_plan: null
+  updated: '2026-11-10'
+  closed_reason: null
+  note: 'Registered 2026-11-10 from DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT (triage D-529); client strategy is grouping D-539, ruled A by Mat on 2026-11-10, found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+- row_key: MEU-141
+  id: MEU-141
+  slug: infra-ytdlp-js-runtime
+  phase: '2'
+  band: P2
+  matrix_item: '2.9'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: ytdlp-js-runtime-residual
+    text: Phase 2 §yt-dlp JS runtime (residual)
+  description: 'yt-dlp gets a JS runtime and the EJS solver in dev and in the packaged backend, per grouping D-540, and Health names the runtime in use.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-6, MEU-13, MEU-140
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-6
+  - MEU-13
+  - MEU-140
+  execution_plan: null
+  updated: '2026-11-10'
+  closed_reason: null
+  note: 'Registered 2026-11-10 from YTDLP-NO-JS-RUNTIME (triage D-530); runtime delivery is grouping D-540, ruled A (bundle Deno) by Mat on 2026-11-10, found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+- row_key: MEU-142
+  id: MEU-142
+  slug: svc-download-audio-extract
+  phase: '3'
+  band: P2
+  matrix_item: '3.20'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: download-audio-extract-residual
+    text: Phase 3 §Download audio extract (residual)
+  description: 'An MP3 audio download is converted to MP3 through MediaPort.convert after the download, in any cookie mode, with no ConversionJob row.'
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-8, MEU-10, MEU-78, MEU-137
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-8
+  - MEU-10
+  - MEU-78
+  - MEU-137
+  execution_plan: null
+  updated: '2026-11-10'
+  closed_reason: null
+  note: 'Registered 2026-11-10 from DOWNLOAD-MP3-NOT-CONVERTED (triage D-534), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
 summary_bands:
 - key: P0
   label: P0
@@ -3588,7 +3747,7 @@ summary_bands:
   range: MEU-5–13 (Phases 2–3)
 - key: P2
   label: P2
-  range: MEU-14–136 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+  range: MEU-14–142 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
     triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127;
-    2026-11-08 capture crop residuals MEU-128–132; 2026-11-09 video stills residuals MEU-133–136)
+    2026-11-08 capture crop residuals MEU-128–132; 2026-11-09 video stills residuals MEU-133–136; 2026-11-10 download reliability residuals MEU-137–142)
 narrative_sections: []

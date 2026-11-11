@@ -497,3 +497,6 @@ export const CAPTURE_CROP_DIM = 'capture-crop-dim'
 export const CAPTURE_CROP_OUTLINE = 'capture-crop-outline'
 export const CAPTURE_CROP_THIRDS = 'capture-crop-thirds'
 export const CAPTURE_CROP_HANDLE = 'capture-crop-handle'
+
+// MEU-132 Capture image import (additive IDs).
+export const CAPTURE_IMPORT = 'capture-import'

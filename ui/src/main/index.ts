@@ -45,8 +45,10 @@ import { probeSetupReadiness } from './setup-readiness'
 import {
   captureRegionFromGui,
   expandInboxDir,
+  pasteClipboardImage,
   PICKER_PATH_PROBE_FLAG,
   PICKER_PATH_PROBE_PREFIX,
+  resolvePasteInbox,
   resolvePickerExePath,
 } from './capture-picker'
 import { registerCaptureHotkey, getHotkeyStatus } from './capture-hotkey'
@@ -427,6 +429,16 @@ export async function boot(): Promise<void> {
         window: current,
       })
     },
+    // MEU-132 PASTE_IPC: the inbox comes from the backend settings read at paste time.
+    pasteCaptureImage: async () =>
+      pasteClipboardImage({
+        resolveInboxDir: () => resolvePasteInbox(fetchCaptureRuntime),
+        window: BrowserWindow.getAllWindows()[0],
+        readClipboardPng: () => {
+          const image = clipboard.readImage()
+          return image.isEmpty() ? null : image.toPNG()
+        },
+      }),
     getHotkeyStatus: async () => getHotkeyStatus(),
     loginItem: {
       platform: process.platform,

@@ -1,0 +1,29 @@
+ M .agent/context/known-issues.md	e50915b6d3c6f8fb52160643b8121a808efb25211411bc1114ad4b8ef6887fc1
+ M .agent/context/known-issues.yaml	1b95db39781e22478c4e3cb21fc6fb6f5844cdf5ed2c53ae3feb557d77a64f36
+ M .agent/context/meu-registry.md	cbb6583869751b881a5f30b8941e433d8aa3fed8725202eb8beccb5c84a5d7e2
+ M .agent/context/meu-status.yaml	3eed5f0a68f2d7baf30f8d01aaa6306cbe4326cddab4ba6e8f079a86b21fcbb3
+ M .agent/context/triage-output.yaml	f05092973c4cf977d2d9a176754f48fa5511cb3cf0bf3e90c00771540e4fd51b
+ M docs/BUILD_PLAN.md	81dec97b4b41994e28693ec23778e50451cebdfa3405c8afa54190e70082a036
+ M docs/build-plan/02-infrastructure.md	bec9cd78572e81fa7cdd123bb6478d82b9c39a96e177dbdf3d1f8018a71166de
+ M docs/build-plan/03-service-layer.md	9434f0868d4d238932c3b11833cf32626d80d43ee6560515106736c667c184f3
+ M docs/build-plan/06-gui.md	082f45a4b063fe40c7e02d5feeab43b1cc1005c6b31cbf2835d855bc0daac2d5
+ M docs/build-plan/build-priority-matrix.md	c9533e038c8d2271c6d5eaa3abd90562c63712ae4b24483ec116d754da7b182d
+?? .agent/context/grouping/2026-11-10-download-reliability-session-grouping.md	5d73f8e27af399f1ebca1a37220b9f1ee50f6afbe7ee887dd8ebdeea4b8479bf
+?? .agent/context/handoffs/2026-11-10-gui-capture-image-import-plan-critical-review.md	f8515fb8d8b181171c3cabb61365d44ee49f58915433adabe9a26771a1fd6519
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/baseline.ps1	9dcc39db7cf92946697654a7f6dced542efbb072532769b8d8fb09e17fb962df
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/baseline.sha	d757de66817e8cd6cb42efa6022e3bf2212f6d32b172b3d1710881e02e8852b9
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/dev-app-procs.py	3490674f0b5d4d6146c87cce29a3957758ceb714374c6d477055575ee941977a
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/hotkey-free.py	2770f03a6b52d782e1c9ca695c12bd8a54102fb784a7a7f7d8acaa3e8a720295
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/identity.py	7aba4ebf4ea893bad915eb52dcbfe23b18321fdbb89d66b3214f3526877bfe8b
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/implementation-plan.md	6dfebe7007ca0a1531e1225054be8cc2c0c0ae69b1b86810d8cb93edbbb7fee9
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/look-check.py	0b03688933bcf6fd22cfca1bc27f43d1b9927ffa649c987b102864a716856227
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/look-launch.ps1	6004a538927cc4b156d46734355eaa4ea0a07d65ff1962dd2531f1bf80d3a789
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/look-seed.py	cb0d1355726069e17dfd96f91139bb3c26ed475f217cdeecdbad63a03407aa22
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/red-check.py	51c4e05736bda8efc8e385985f11a1b47ac25ec7ac256fec9b3e06ec01e32928
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/session-gate.ps1	a9336b75c5d953b3936115a1db709a684bfe28c64a13bbeca65278a8d386833b
+?? docs/execution/plans/2026-11-10-gui-capture-image-import/task.md	50248e339615cd894d869ec7996a614bcd44dca5aacde12546801ad3e78eb3d6
+?? docs/proposals/2026-11-10-download-logic-divergence-report.md	bbaf04eb4a20460affb5b4d87b13ba5b62efd120f3d2fefa8a1a56729fd1c0ec
+ M .agent/context/meu-registry.md	f714d98218b422a46ca74b99b721cef65a7535c3dd15ad34af5d6a9e5348ae54
+ M .agent/context/meu-status.yaml	c852baeb757096db1bec62b1c9bb78dced1e624bad9a0a41db7c746883a5cb9b
+ M docs/build-plan/02-infrastructure.md	9a42d94623de7372fcf8bf18957470651939b4865d9c7efa3f69819603d638bc
+?? .agent/context/grouping/2026-11-10-download-reliability-session-grouping.md	e3c258f98dd25a0266411dd4556bc34d7223a8da850abf624e0292888723fc0e

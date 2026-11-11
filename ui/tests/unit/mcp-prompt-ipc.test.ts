@@ -66,9 +66,9 @@ describe('MEU-71 PROMPT_HANDLER (AC-71.6)', () => {
 })
 
 describe('MEU-71 PROMPT_CHANNEL and PRELOAD_KEY (AC-71.7)', () => {
-  it('AC-71.7 the channel is registered, the list has 21 entries, and preload invokes it with opts', () => {
+  it('AC-71.7 the channel is registered, the list has 22 entries, and preload invokes it with opts', () => {
     const registered = listRegisteredChannels()
-    expect(RENDERER_TO_MAIN_CHANNELS).toHaveLength(21)
+    expect(RENDERER_TO_MAIN_CHANNELS).toHaveLength(22)
     expect(registered).toEqual([...RENDERER_TO_MAIN_CHANNELS])
     expect(registered.indexOf(CHANNEL)).toBe(registered.indexOf('write-clipboard-image') + 1)
     expect(getPreloadApiKeys()).toContain('getMcpSetupPrompt')
