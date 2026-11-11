@@ -119,6 +119,7 @@ export const ACTION_INDEX: ActionRow[] = [
   { tool: "avkit_convert", action: "clear", method: "DELETE", path: "/conversions" },
   { tool: "avkit_convert", action: "gpu", method: "GET", path: "/conversions/gpu" },
   { tool: "avkit_convert", action: "gpu_refresh", method: "POST", path: "/conversions/gpu/refresh" },
+  { tool: "avkit_convert", action: "probe", method: "POST", path: "/conversions/probe" },
   { tool: "avkit_capture", action: "list", method: "GET", path: "/captures" },
   { tool: "avkit_capture", action: "get", method: "GET", path: "/captures/{id}" },
   { tool: "avkit_capture", action: "image", method: "GET", path: "/captures/{id}/image" },
@@ -131,6 +132,7 @@ export const ACTION_INDEX: ActionRow[] = [
   { tool: "avkit_capture", action: "flatten", method: "POST", path: "/captures/{id}/flatten" },
   { tool: "avkit_capture", action: "revert", method: "POST", path: "/captures/{id}/revert" },
   { tool: "avkit_capture", action: "crop", method: "POST", path: "/captures/{id}/crop" },
+  { tool: "avkit_capture", action: "frames", method: "POST", path: "/captures/frames" },
   // MEU-62: appended so the KEEP / Convert / Capture positions stay fixed.
   { tool: "avkit_models", action: "download_asset", method: "POST", path: "/models/download" },
 ];
@@ -387,7 +389,8 @@ export async function handleTool(tool: string, args: unknown, runtime?: ToolRunt
     : interpolatePath(row.path, record);
   const timeoutMs = (
     ((tool === "avkit_download" || tool === "avkit_transcript" || tool === "avkit_convert") && action === "add")
-    || (tool === "avkit_capture" && (action === "capture" || action === "crop"))
+    // FRAMES_MCP under D-577 A: frames waits up to FRAMES_RETURN_S + COMMIT_WAIT_S (111 s).
+    || (tool === "avkit_capture" && (action === "capture" || action === "crop" || action === "frames"))
   )
     ? ADD_TIMEOUT_MS
     : undefined;

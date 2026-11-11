@@ -24,6 +24,7 @@ CAPTURE_SOURCE_MEMBERS = (
     "Scan",
     "Import",
     "Crop",
+    "Video",
 )
 CAPTURE_REQUEST_STATUS_MEMBERS = ("Pending", "Completed", "Cancelled", "Expired")
 # TA-1 (Session 39, MEU-90, MEU-91): + Pixelate, Eraser.
@@ -888,5 +889,45 @@ def test_ac_130_7_capture_source_crop(ac_id: str) -> None:
     from avkit_core.domain.enums import CaptureSource
 
     assert "Crop" in CaptureSource.__members__
-    assert list(CaptureSource.__members__)[-1] == "Crop"
+    # Moved by Session 62 row 1: `Video` follows `Crop`, and AC-134.1 checks the last member.
+    members = list(CaptureSource.__members__)
+    assert members[members.index("Crop") + 1] == "Video"
     assert CaptureSource.Crop.value == "Crop"
+
+
+@pytest.mark.parametrize("ac_id", ["AC-134.1"], ids=["AC-134.1"])
+@pytest.mark.unit
+def test_ac_134_1_video_source_and_frame_port(ac_id: str) -> None:
+    """A characterisation of Session 62 row 1's names (VIDEO_SOURCE, FRAME_PORT)."""
+    assert ac_id == "AC-134.1"
+    from typing import get_args
+
+    from avkit_api.schemas.captures import RegisterSourceWire
+    from avkit_core.domain.enums import CaptureSource
+    from avkit_core.ports import capture as ports
+    from avkit_infra.media.adapter import FFmpegAdapter
+
+    members = list(CaptureSource.__members__)
+    assert members[-1] == "Video"
+    assert members[-2] == "Crop"
+    assert CaptureSource.Video.value == "Video"
+    assert "video" not in get_args(RegisterSourceWire)
+    assert "Video" not in get_args(RegisterSourceWire)
+    assert get_args(ports.FrameSeek) == ("input", "output")
+    for name in ("probe", "grab_frame"):
+        assert callable(getattr(ports.FramePort, name, None)), name
+        assert callable(getattr(FFmpegAdapter, name, None)), name
+    grab = inspect.signature(ports.FramePort.grab_frame).parameters
+    assert list(grab) == ["self", "path", "time_ms", "seek", "timeout_s"]
+    assert grab["seek"].kind is inspect.Parameter.KEYWORD_ONLY
+    assert grab["timeout_s"].kind is inspect.Parameter.KEYWORD_ONLY
+    probe = inspect.signature(ports.FramePort.probe).parameters
+    assert list(probe) == ["self", "file_path", "timeout_s"]
+    assert probe["timeout_s"].kind is inspect.Parameter.KEYWORD_ONLY
+    assert probe["timeout_s"].default is None
+    for name in ("probe", "grab_frame"):
+        port = inspect.signature(getattr(ports.FramePort, name)).parameters
+        adapter = inspect.signature(getattr(FFmpegAdapter, name)).parameters
+        assert [(key, value.kind, value.default) for key, value in port.items()] == [
+            (key, value.kind, value.default) for key, value in adapter.items()
+        ], name

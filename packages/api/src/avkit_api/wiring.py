@@ -219,6 +219,7 @@ def build_services(
         capture=grab,
         annotate=grab,
         settings=settings,
+        frames=media,
     )
     return (
         AppServices(

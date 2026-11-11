@@ -323,6 +323,221 @@
         "title": "CaptureCropRequestedOut",
         "type": "object"
       },
+      "CaptureFrameOut": {
+        "additionalProperties": false,
+        "description": "One new shot taken from the video, and the time it was taken at.",
+        "properties": {
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "time_ms": {
+            "title": "Time Ms",
+            "type": "integer"
+          },
+          "timecode": {
+            "title": "Timecode",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "path",
+          "time_ms",
+          "timecode",
+          "width",
+          "height"
+        ],
+        "title": "CaptureFrameOut",
+        "type": "object"
+      },
+      "CaptureFramesIn": {
+        "additionalProperties": false,
+        "description": "POST /captures/frames body (MEU-134, FRAMES_ROUTE): `at` times or a `count` of frames.\n\n`start` and `end` go with `count` only. Each time is read by TIME_PARSE in the service.",
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "maxItems": 20,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "maximum": 20.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count"
+          },
+          "end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "End"
+          },
+          "path": {
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          },
+          "start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "CaptureFramesIn",
+        "type": "object"
+      },
+      "CaptureFramesOut": {
+        "additionalProperties": false,
+        "description": "POST /captures/frames 201 (FRAMES_ROUTE). No image bytes.",
+        "properties": {
+          "frames": {
+            "items": {
+              "$ref": "#/components/schemas/CaptureFrameOut"
+            },
+            "title": "Frames",
+            "type": "array"
+          },
+          "video": {
+            "$ref": "#/components/schemas/CaptureFramesVideoOut"
+          }
+        },
+        "required": [
+          "video",
+          "frames"
+        ],
+        "title": "CaptureFramesOut",
+        "type": "object"
+      },
+      "CaptureFramesVideoOut": {
+        "additionalProperties": false,
+        "description": "The video the frames came from (FRAMES_ROUTE); `duration_ms` is null for a raw stream.",
+        "properties": {
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "fps": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fps"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          }
+        },
+        "required": [
+          "path",
+          "duration_ms",
+          "width",
+          "height",
+          "fps"
+        ],
+        "title": "CaptureFramesVideoOut",
+        "type": "object"
+      },
       "CaptureFullscreenIn": {
         "additionalProperties": false,
         "description": "POST /captures body for mode=fullscreen.",
@@ -1262,6 +1477,143 @@
           "processor"
         ],
         "title": "ConversionListOut",
+        "type": "object"
+      },
+      "ConversionProbeIn": {
+        "additionalProperties": false,
+        "description": "POST /conversions/probe body (MEU-133 PROBE_ROUTE): one local video path.",
+        "properties": {
+          "path": {
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ConversionProbeIn",
+        "type": "object"
+      },
+      "ConversionProbeOut": {
+        "additionalProperties": false,
+        "description": "A local video's duration, size, codecs and streams (MEU-133 PROBE_MAP).\n\n`duration_ms` and `timecode` are null for a raw stream with no duration.",
+        "properties": {
+          "audio_codec": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Codec"
+          },
+          "container": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Container"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "fps": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fps"
+          },
+          "has_audio": {
+            "title": "Has Audio",
+            "type": "boolean"
+          },
+          "has_video": {
+            "title": "Has Video",
+            "type": "boolean"
+          },
+          "height": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "timecode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timecode"
+          },
+          "video_codec": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Codec"
+          },
+          "width": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width"
+          }
+        },
+        "required": [
+          "path",
+          "duration_ms",
+          "timecode",
+          "container",
+          "video_codec",
+          "audio_codec",
+          "width",
+          "height",
+          "fps",
+          "has_video",
+          "has_audio"
+        ],
+        "title": "ConversionProbeOut",
         "type": "object"
       },
       "ConversionReorderIn": {
@@ -3608,6 +3960,50 @@
         "summary": "Create Capture"
       }
     },
+    "/api/v1/captures/frames": {
+      "post": {
+        "description": "FRAMES_ROUTE (MEU-134): stills from a local video, each a new shot with source Video.",
+        "operationId": "capture_frames_api_v1_captures_frames_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureFramesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureFramesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Capture Frames"
+      }
+    },
     "/api/v1/captures/requests": {
       "get": {
         "description": "Expire stale rows, then list interactive requests.",
@@ -4607,6 +5003,50 @@
           }
         ],
         "summary": "Pause Conversions"
+      }
+    },
+    "/api/v1/conversions/probe": {
+      "post": {
+        "description": "PROBE_ROUTE (MEU-133): a local video's duration, size, codecs and streams.\n\nSynchronous and read-only: the video is read in place and no job is written.",
+        "operationId": "probe_conversion_input_api_v1_conversions_probe_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionProbeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionProbeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Probe Conversion Input"
       }
     },
     "/api/v1/conversions/reorder": {

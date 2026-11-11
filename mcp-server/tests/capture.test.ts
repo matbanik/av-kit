@@ -34,6 +34,8 @@ const CAPTURE_ACTIONS = [
   { action: "revert", method: "POST", path: "/captures/{id}/revert" },
   // MEU-130 (Session 59): +crop after revert.
   { action: "crop", method: "POST", path: "/captures/{id}/crop" },
+  // MEU-134 (Session 62): +frames after crop.
+  { action: "frames", method: "POST", path: "/captures/frames" },
 ] as const;
 const REST_ONLY = ["complete", "cancel", "register"] as const;
 // TA-4 (Session 30, MEU-67): + flatten_backup, backup_dir, annotated_format.
@@ -106,7 +108,9 @@ describe("MEU-38 avkit_capture", () => {
     // TA-9 (Session 27, MEU-62): +1 avkit_models.download_asset, appended.
     // TA-1 (Session 30, MEU-67): +avkit_capture.flatten, +avkit_capture.revert.
     // MEU-130 (Session 59): +avkit_capture.crop after revert.
-    expect(ACTION_INDEX).toHaveLength(71);
+    // MEU-133 (Session 62): +avkit_convert.probe after gpu_refresh.
+    // MEU-134 (Session 62): +avkit_capture.frames after crop.
+    expect(ACTION_INDEX).toHaveLength(73);
     expect([...COMPOUND_TOOLS]).toEqual([
       "avkit_download",
       "avkit_transcript",
@@ -118,13 +122,13 @@ describe("MEU-38 avkit_capture", () => {
       "avkit_capture",
     ]);
     expect(ACTION_INDEX.slice(0, 59).every((row) => row.tool !== "avkit_capture")).toBe(true);
-    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_convert")).toHaveLength(13);
+    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_convert")).toHaveLength(14);
   });
 
   it("AC-38.2 CAPTURE_ACTIONS match REST 1:1; REST_ONLY absent", () => {
     const rows = ACTION_INDEX.filter((row) => row.tool === "avkit_capture");
-    // TA-2 (Session 30, MEU-67); MEU-130 (Session 59): +crop.
-    expect(rows).toHaveLength(11);
+    // TA-2 (Session 30, MEU-67); MEU-130 (Session 59): +crop; MEU-134 (Session 62): +frames.
+    expect(rows).toHaveLength(12);
     expect(rows.map((row) => ({ action: row.action, method: row.method, path: row.path }))).toEqual(
       CAPTURE_ACTIONS.map((row) => ({ action: row.action, method: row.method, path: row.path })),
     );
@@ -882,7 +886,8 @@ describe("MEU-130 capture crop", () => {
   });
 
   it("AC-130.26 ACTION_INDEX has the crop row after revert", () => {
-    expect(ACTION_INDEX).toHaveLength(71);
+    // MEU-134 (Session 62): +avkit_capture.frames after crop.
+    expect(ACTION_INDEX).toHaveLength(73);
     const keys = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`);
     const revert = keys.indexOf("avkit_capture.revert");
     expect(revert).toBeGreaterThan(-1);
@@ -894,6 +899,179 @@ describe("MEU-130 capture crop", () => {
       path: "/captures/{id}/crop",
     });
     expect(keys[keys.length - 1]).toBe("avkit_models.download_asset");
-    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(11);
+    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(12);
+  });
+});
+
+// MEU-134 capture-video-frames (Session 62): FRAMES_MCP.
+const FRAMES_PATH = "C:\\videos\\clip.mp4";
+const FRAMES_BODY = {
+  video: { path: FRAMES_PATH, duration_ms: 3000, width: 320, height: 240, fps: 25 },
+  frames: [
+    {
+      id: "f1",
+      path: "C:/tmp/inbox/clip-t00h00m00.500s.png",
+      time_ms: 500,
+      timecode: "00:00:00.500",
+      width: 320,
+      height: 240,
+    },
+    {
+      id: "f2",
+      path: "C:/tmp/inbox/clip-t00h00m01.500s.png",
+      time_ms: 1500,
+      timecode: "00:00:01.500",
+      width: 320,
+      height: 240,
+    },
+  ],
+};
+const FRAMES_TEXT_MARKERS = [
+  "Workflow: call avkit_convert probe for the duration, then avkit_capture frames to POST /captures/frames, then image to view a frame.",
+  "Prerequisite: a local absolute video path and FFmpeg; the video is read in place, never changed or uploaded.",
+  "Returns: JSON with the video's duration and size and each new shot's id, path, time_ms and timecode; no image bytes.",
+  "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
+] as const;
+
+function framesFetch(calls: { url: string; method?: string; body: unknown }[]) {
+  return vi.fn(async (url: string, init?: RequestInit) => {
+    calls.push({
+      url: String(url),
+      method: init?.method,
+      body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+    });
+    return okJson(FRAMES_BODY, 201);
+  });
+}
+
+describe("MEU-134 capture frames", () => {
+  it("AC-134.15 frames accepts the at and count shapes and refuses the rest before fetch", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const good: Record<string, unknown>[] = [
+      { action: "frames", path: FRAMES_PATH, at: [0, 1.5, "00:00:02.250"] },
+      { action: "frames", path: FRAMES_PATH, at: Array.from({ length: 20 }, (_v, i) => i) },
+      { action: "frames", path: FRAMES_PATH, count: 3 },
+      { action: "frames", path: FRAMES_PATH, count: 20, start: 1, end: "2.5" },
+      { action: "frames", path: FRAMES_PATH, at: ["1".repeat(32)] },
+    ];
+    for (const args of good) {
+      expect(captureSchema.safeParse(args).success, JSON.stringify(args)).toBe(true);
+    }
+    const bad: Record<string, unknown>[] = [
+      { action: "frames", path: FRAMES_PATH, at: [1], count: 2 },
+      { action: "frames", path: FRAMES_PATH },
+      { action: "frames", path: FRAMES_PATH, at: [1], start: 0 },
+      { action: "frames", path: FRAMES_PATH, at: [1], end: 2 },
+      { action: "frames", path: FRAMES_PATH, at: Array.from({ length: 21 }, (_v, i) => i) },
+      { action: "frames", path: FRAMES_PATH, at: [] },
+      { action: "frames", path: FRAMES_PATH, count: 21 },
+      { action: "frames", path: FRAMES_PATH, count: 0 },
+      { action: "frames", path: FRAMES_PATH, count: 1.5 },
+      { action: "frames", path: FRAMES_PATH, at: [-1] },
+      { action: "frames", path: FRAMES_PATH, count: 2, start: -1 },
+      { action: "frames", path: FRAMES_PATH, at: ["1".repeat(33)] },
+      { action: "frames", path: FRAMES_PATH, at: [""] },
+      { action: "frames", path: FRAMES_PATH, count: 2, start: null },
+      { action: "frames", path: FRAMES_PATH, count: 2, nope: 1 },
+      { action: "frames", path: "", count: 2 },
+      { action: "frames", path: "a".repeat(4097), count: 2 },
+    ];
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = framesFetch(calls);
+    for (const args of bad) {
+      expect(captureSchema.safeParse(args).success, JSON.stringify(args).slice(0, 120)).toBe(false);
+      const result = await handleTool("avkit_capture", args, {
+        env: toolEnv(appData),
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      });
+      expect(result.isError, JSON.stringify(args).slice(0, 120)).toBe(true);
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(0);
+  });
+
+  it("AC-134.15 frames posts the body minus action with ADD_TIMEOUT_MS (D-577 A)", async () => {
+    const { ADD_TIMEOUT_MS } = await import("../src/client.js");
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = framesFetch(calls);
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    try {
+      const result = await handleTool(
+        "avkit_capture",
+        { action: "frames", path: FRAMES_PATH, count: 2, start: 0, end: "3" },
+        { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+      );
+      expect(calls).toHaveLength(1);
+      expect(result.isError).not.toBe(true);
+      expect(calls[0]?.method).toBe("POST");
+      expect(calls[0]?.url).not.toContain("?");
+      expect(calls[0]?.url.endsWith("/captures/frames")).toBe(true);
+      expect(calls[0]?.body).toEqual({ path: FRAMES_PATH, count: 2, start: 0, end: "3" });
+      expect(timeout).toHaveBeenCalledWith(ADD_TIMEOUT_MS);
+      calls.length = 0;
+      await handleTool(
+        "avkit_capture",
+        { action: "frames", path: FRAMES_PATH, at: [0.5, "00:00:01.500"] },
+        { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+      );
+      expect(calls[0]?.body).toEqual({ path: FRAMES_PATH, at: [0.5, "00:00:01.500"] });
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
+  it("AC-134.15 frames has its own four markers, says at or after and names avkit_convert probe", async () => {
+    const { captureDescriptions } = await import("../src/toolsets/capture.js");
+    const text = captureDescriptions["avkit_capture.frames"] ?? "";
+    expect(text.length).toBeGreaterThan(0);
+    for (const line of FRAMES_TEXT_MARKERS) {
+      expect(text, line).toContain(line);
+    }
+    expect(text).not.toContain("Prerequisite: local screen grab or inbox files");
+    expect(text).toContain("at or after");
+    expect(text).toContain("avkit_convert probe");
+    expect(text).toContain("Give at (1-20 times");
+    expect(text).toContain("A raw stream with no duration takes only at");
+    expect(M7.filter((marker) => text.includes(marker))).toEqual([...M7]);
+    expect(DESTRUCTIVE_ACTIONS.has("avkit_capture.frames")).toBe(false);
+  });
+
+  it("AC-134.16 ACTION_INDEX has the frames row after crop", () => {
+    const keys = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`);
+    const crop = keys.indexOf("avkit_capture.crop");
+    expect(crop).toBeGreaterThan(-1);
+    expect(keys[crop + 1]).toBe("avkit_capture.frames");
+    expect(ACTION_INDEX[crop + 1]).toEqual({
+      tool: "avkit_capture",
+      action: "frames",
+      method: "POST",
+      path: "/captures/frames",
+    });
+    expect(ACTION_INDEX).toHaveLength(73);
+    expect(keys[keys.length - 1]).toBe("avkit_models.download_asset");
+  });
+
+  it("AC-134.16 transport parity: the fake backend's 201 body reaches the tool result", async () => {
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = framesFetch(calls);
+    const result = await handleTool(
+      "avkit_capture",
+      { action: "frames", path: FRAMES_PATH, at: [0.5, 1.5] },
+      { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+    );
+    expect(calls).toHaveLength(1);
+    expect(result.isError).not.toBe(true);
+    const parsed = JSON.parse(result.content[0].text) as typeof FRAMES_BODY;
+    expect(Object.keys(parsed).sort()).toEqual(["frames", "video"]);
+    expect(Object.keys(parsed.video).sort()).toEqual(Object.keys(FRAMES_BODY.video).sort());
+    expect(parsed.frames.map((f) => Object.keys(f).sort())).toEqual(
+      FRAMES_BODY.frames.map((f) => Object.keys(f).sort()),
+    );
+    expect(parsed).toEqual(FRAMES_BODY);
   });
 });

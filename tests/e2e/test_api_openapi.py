@@ -34,6 +34,7 @@ ROUTE_INDEX: tuple[tuple[str, str], ...] = (
     ("GET", "/api/v1/conversions"),
     ("GET", "/api/v1/conversions/gpu"),
     ("POST", "/api/v1/conversions/gpu/refresh"),
+    ("POST", "/api/v1/conversions/probe"),
     ("POST", "/api/v1/conversions/start"),
     ("POST", "/api/v1/conversions/pause"),
     ("POST", "/api/v1/conversions/resume"),
@@ -49,6 +50,7 @@ ROUTE_INDEX: tuple[tuple[str, str], ...] = (
     ("POST", "/api/v1/captures/requests"),
     ("POST", "/api/v1/captures/requests/{id}/complete"),
     ("POST", "/api/v1/captures/requests/{id}/cancel"),
+    ("POST", "/api/v1/captures/frames"),  # FRAMES_ROUTE (Session 62, MEU-134)
     ("GET", "/api/v1/captures/{id}"),
     ("GET", "/api/v1/captures/{id}/image"),
     ("POST", "/api/v1/captures/{id}/annotate"),
@@ -111,14 +113,17 @@ def test_ac_16_6_openapi_path_census() -> None:
     assert schema["info"]["version"] == __version__
     paths = set(schema["paths"])
     assert paths == ROUTE_PATHS
-    assert len(ROUTE_INDEX) == 74  # TA-8 (Session 30, MEU-67); MEU-130 + crop
+    # TA-8 (Session 30, MEU-67); MEU-130 + crop; MEU-133 + probe
+    # MEU-134 (Session 62) + POST /captures/frames
+    assert len(ROUTE_INDEX) == 76
 
 
 @pytest.mark.parametrize("method,path", ROUTE_INDEX)
 def test_ac_16_6_each_route_index_row(method: str, path: str) -> None:
     client, _trx, _tts, _models = make_client()
-    operations = client.app.openapi()["paths"][path]
-    assert method.lower() in operations
+    paths = client.app.openapi()["paths"]
+    assert path in paths
+    assert method.lower() in paths[path]
 
 
 def test_ac_16_8_export_check_and_static_before_id(tmp_path: Path) -> None:
@@ -135,3 +140,94 @@ def test_ac_16_8_export_check_and_static_before_id(tmp_path: Path) -> None:
     out = tmp_path / "openapi.json"
     export.write_openapi(out)
     export.check_openapi(out)
+
+def test_ac_133_9_probe_route_in_committed_openapi_and_before_id() -> None:
+    import json
+
+    committed = json.loads((REPO_ROOT / "openapi.committed.json").read_text(encoding="utf-8"))
+    operation = committed.get("paths", {}).get("/api/v1/conversions/probe", {}).get("post")
+    assert operation is not None, "POST /api/v1/conversions/probe is not in openapi.committed.json"
+    schemas = committed.get("components", {}).get("schemas", {})
+    assert {"ConversionProbeIn", "ConversionProbeOut"} <= set(schemas)
+    request = operation.get("requestBody", {}).get("content", {}).get("application/json", {})
+    assert request.get("schema") == {"$ref": "#/components/schemas/ConversionProbeIn"}
+    replies = operation.get("responses", {})
+    reply = replies.get("200", {}).get("content", {}).get("application/json", {})
+    assert reply.get("schema") == {"$ref": "#/components/schemas/ConversionProbeOut"}
+    probe_in = schemas["ConversionProbeIn"]
+    assert set(probe_in.get("properties", {})) == {"path"}
+    assert probe_in.get("required") == ["path"]
+    assert probe_in.get("additionalProperties") is False
+    assert probe_in["properties"]["path"].get("minLength") == 1
+    assert set(schemas["ConversionProbeOut"].get("properties", {})) == {
+        "path",
+        "duration_ms",
+        "timecode",
+        "container",
+        "video_codec",
+        "audio_codec",
+        "width",
+        "height",
+        "fps",
+        "has_video",
+        "has_audio",
+    }
+    export = _load_export()
+    drift: str | None = None
+    try:
+        export.check_openapi(REPO_ROOT / "openapi.committed.json")
+    except SystemExit as exc:
+        drift = str(exc)
+    assert drift is None
+    source = (REPO_ROOT / "packages/api/src/avkit_api/routes/conversions.py").read_text(
+        encoding="utf-8"
+    )
+    probe_at = source.find('"/probe"')
+    id_at = source.find('"/{id}"')
+    assert probe_at != -1, "routes/conversions.py declares no /probe route"
+    assert id_at != -1
+    assert probe_at < id_at
+
+
+def test_ac_134_17_frames_route_in_committed_openapi_and_before_id() -> None:
+    import json
+
+    committed = json.loads((REPO_ROOT / "openapi.committed.json").read_text(encoding="utf-8"))
+    operation = committed.get("paths", {}).get("/api/v1/captures/frames", {}).get("post")
+    assert operation is not None, "POST /api/v1/captures/frames is not in openapi.committed.json"
+    operations = sum(
+        1
+        for item in committed.get("paths", {}).values()
+        for method in item
+        if method in {"get", "post", "put", "delete", "patch"}
+    )
+    assert operations == 76
+    schemas = committed.get("components", {}).get("schemas", {})
+    assert {"CaptureFramesIn", "CaptureFramesOut"} <= set(schemas)
+    request = operation.get("requestBody", {}).get("content", {}).get("application/json", {})
+    assert request.get("schema") == {"$ref": "#/components/schemas/CaptureFramesIn"}
+    replies = operation.get("responses", {})
+    reply = replies.get("201", {}).get("content", {}).get("application/json", {})
+    assert reply.get("schema") == {"$ref": "#/components/schemas/CaptureFramesOut"}
+    frames_in = schemas["CaptureFramesIn"]
+    assert set(frames_in.get("properties", {})) == {"path", "at", "count", "start", "end"}
+    assert frames_in.get("required") == ["path"]
+    assert frames_in.get("additionalProperties") is False
+    assert frames_in["properties"]["path"].get("minLength") == 1
+    assert frames_in["properties"]["path"].get("maxLength") == 4096
+    assert set(schemas["CaptureFramesOut"].get("properties", {})) == {"video", "frames"}
+    export = _load_export()
+    drift: str | None = None
+    try:
+        export.check_openapi(REPO_ROOT / "openapi.committed.json")
+    except SystemExit as exc:
+        drift = str(exc)
+    assert drift is None
+    source = (REPO_ROOT / "packages/api/src/avkit_api/routes/captures.py").read_text(
+        encoding="utf-8"
+    )
+    frames_at = source.find('"/frames"')
+    id_at = source.find('"/{id}"')
+    assert frames_at != -1, "routes/captures.py declares no /frames route"
+    assert id_at != -1
+    assert frames_at < id_at

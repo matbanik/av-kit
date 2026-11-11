@@ -63,6 +63,7 @@ jobs:
           --deselect "tests/unit/test_packaging_backend.py::test_pack_dist_onedir_layout[AC-24.10]"
           --deselect "tests/unit/test_packaging_installer.py::test_nsis_pack_check_script[AC-25.10]"
           --deselect tests/integration/test_extract_real_ffmpeg.py
+          --deselect tests/integration/test_video_real_ffmpeg.py
       - name: OpenAPI matches the committed file
         run: uv run --locked --no-sync python tools/export_openapi.py --check openapi.committed.json
       - name: Rendered project state is current

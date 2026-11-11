@@ -41,6 +41,11 @@ from avkit_core.domain.queue import QueueRuntime
 from avkit_core.ports.media import MediaPort
 from avkit_core.ports.storage import UnitOfWork
 from avkit_core.services.settings import SettingsService
+from avkit_core.services.video_input import (
+    VideoProbe,
+    require_local_video,
+    video_probe,
+)
 
 UoWFactory = Callable[[], UnitOfWork]
 log = structlog.get_logger(module="convert")
@@ -184,6 +189,24 @@ class ConversionService:
 
     def get_gpu(self) -> GPUCapabilities | None:
         return self._gpu
+
+    def probe_file(self, path: str) -> VideoProbe:
+        """PROBE_MAP (MEU-133): a local video's duration, size, codecs and streams.
+
+        Read-only: it writes no job row and starts nothing. A probe failure becomes a fixed
+        `ValidationError`, raised after the `try` statement has ended, so ffprobe's stderr
+        (which names the path) is neither its `__cause__` nor its `__context__`.
+        `FFmpegNotFoundError` passes through to the 503.
+        """
+        resolved = require_local_video(path)
+        info: MediaInfo | None = None
+        try:
+            info = self._media.probe(resolved)
+        except MediaProbeError:
+            info = None
+        if info is None:
+            raise ValidationError("the file could not be probed")
+        return video_probe(resolved, info)
 
     def add_to_queue(self, paths: list[Path], spec: ConversionAddSpec):
         if not isinstance(paths, list) or not paths:

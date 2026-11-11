@@ -2,9 +2,10 @@
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Protocol
+from typing import Literal, Protocol
 
 from avkit_core.domain.capture import AnnotatedFormat, Annotation, BBox, ImageProbe, ViewFrame
+from avkit_core.domain.progress import MediaInfo
 
 
 class ScreenCapturePort(Protocol):
@@ -55,4 +56,19 @@ class ImageAnnotatePort(Protocol):
 
         No resampling; the ICC profile is kept and no other metadata is written (MEU-130).
         """
+        ...
+
+
+# FRAME_PORT (MEU-134): how `grab_frame` seeks. "output" decodes from the start, for a raw
+# stream with no duration (NO_DURATION).
+FrameSeek = Literal["input", "output"]
+
+
+class FramePort(Protocol):
+    """Read a local video's streams and one of its frames. The FFmpeg adapter implements it."""
+
+    def probe(self, file_path: Path, *, timeout_s: float | None = None) -> MediaInfo: ...
+
+    def grab_frame(self, path: Path, time_ms: int, *, seek: FrameSeek, timeout_s: float) -> bytes:
+        """FRAME_GRAB: the frame at `time_ms` as PNG bytes, or b"" when FFmpeg gives none."""
         ...

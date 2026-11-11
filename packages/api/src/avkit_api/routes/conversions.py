@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import threading
 from pathlib import Path
 from typing import Any
@@ -28,6 +29,8 @@ from avkit_api.schemas.conversions import (
     ConversionExtractIn,
     ConversionJobOut,
     ConversionListOut,
+    ConversionProbeIn,
+    ConversionProbeOut,
     ConversionReorderIn,
     GPUCapabilitiesOut,
 )
@@ -181,6 +184,19 @@ def refresh_conversion_gpu(
     """Re-run the GPU probe."""
     del body
     return _gpu_out(conversion.detect_gpu())
+
+
+@router.post("/probe", response_model=ConversionProbeOut)
+def probe_conversion_input(
+    body: ConversionProbeIn,
+    conversion: Any = Depends(get_conversion_service),
+) -> ConversionProbeOut:
+    """PROBE_ROUTE (MEU-133): a local video's duration, size, codecs and streams.
+
+    Synchronous and read-only: the video is read in place and no job is written.
+    """
+    probe = conversion.probe_file(body.path)
+    return ConversionProbeOut(**dataclasses.asdict(probe))
 
 
 @router.post("/start", status_code=202)

@@ -51,6 +51,21 @@ const REGION_VIEW_TEXT =
 const CROP_TEXT =
   "Writes the region as a NEW shot (PNG) and returns its id and paths; the source is never changed. Same coordinates as image: original pixels, or unit: \"fraction\" (0–1). A box past the edge is clamped and `applied` reports what was cut. Saved marks are carried over and clipped to the region; `marks` counts kept, clipped and dropped. Optional name sets the file name (letters, digits, space, dot, underscore, hyphen). Like ImageMagick `-crop WxH+X+Y +repage`, without the virtual canvas.";
 
+// FRAMES_MCP (MEU-134, D-583): frames has its own four markers, not desc()'s shared lines.
+// D-577 A: at most 20 frames. D-576 A: a raw stream with no duration takes only at.
+const FRAMES_MAX = 20;
+const timeValue = z.union([z.number().nonnegative(), z.string().min(1).max(32)]);
+const FRAMES_TEXT = [
+  "Workflow: call avkit_convert probe for the duration, then avkit_capture frames to POST /captures/frames, then image to view a frame.",
+  "Prerequisite: a local absolute video path and FFmpeg; the video is read in place, never changed or uploaded.",
+  "Returns: JSON with the video's duration and size and each new shot's id, path, time_ms and timecode; no image bytes.",
+  "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
+  'Give at (1-20 times: seconds, or "HH:MM:SS.mmm") or count (1-20 evenly spaced frames, with optional start and end).',
+  "Each frame is the first one at or after its time; a time after the last video frame but before the end returns the last frame.",
+  "Frames are new shots, so image, crop and annotate work on them.",
+  "A raw stream with no duration takes only at, and is slow; remuxing it with avkit_convert add (fast copy) gives it a duration.",
+].join(" ");
+
 const ANNOTATE_EXAMPLE =
   'Example annotations: [{"type": "arrow", "from": [10, 10], "to": [80, 40], "color": "red", "stroke_width": 3}, {"type": "text", "x": 12, "y": 48, "text": "Note", "color": "white", "font_size": 16}].';
 
@@ -66,6 +81,7 @@ export const captureDescriptions: Record<string, string> = {
   "avkit_capture.flatten": `${desc("flatten", "POST", "/captures/{id}/flatten")} Bakes the saved marks into the image file (backup first when capture.flatten_backup is on; a JPEG/WebP shot gets a new PNG copy instead); the user must also accept in the IDE.`,
   "avkit_capture.revert": `${desc("revert", "POST", "/captures/{id}/revert")} Overwrites the image file from its newest backup; the user must also accept in the IDE.`,
   "avkit_capture.crop": `${desc("crop", "POST", "/captures/{id}/crop")} ${CROP_TEXT}`,
+  "avkit_capture.frames": FRAMES_TEXT,
 };
 
 function withDesc<T extends z.ZodTypeAny>(action: string, schema: T): T {
@@ -254,5 +270,24 @@ export const captureSchema = z.union([
         name: z.string().min(1).max(80).optional(),
       })
       .strict(),
+  ),
+  withDesc(
+    "frames",
+    z
+      .object({
+        action: z.literal("frames"),
+        path: z.string().min(1).max(4096),
+        at: z.array(timeValue).min(1).max(FRAMES_MAX).optional(),
+        count: z.number().int().min(1).max(FRAMES_MAX).optional(),
+        start: timeValue.optional(),
+        end: timeValue.optional(),
+      })
+      .strict()
+      .refine(
+        (v) =>
+          (v.at === undefined) !== (v.count === undefined)
+          && (v.at === undefined || (v.start === undefined && v.end === undefined)),
+        { message: "frames takes either at or count; start and end go with count" },
+      ),
   ),
 ]);

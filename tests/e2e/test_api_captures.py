@@ -99,6 +99,7 @@ SOURCE_OUT = (
     "Scan",
     "Import",
     "Crop",
+    "Video",
 )
 STATUS_OUT = ("Pending", "Completed", "Cancelled", "Expired")
 APPSERVICES_SITES = (

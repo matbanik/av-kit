@@ -1242,6 +1242,12 @@ function makeSource(ctx: StepContext, stateKey: string, file: string, seconds: n
   return made;
 }
 
+// The 2 s 320x240 clip that convert.probe and capture.frames share (MEU-133, MEU-134).
+function probeClip(ctx: StepContext): string {
+  const made = ctx.state.get("probe:src");
+  return typeof made === "string" ? made : makeSource(ctx, "probe", "probe.mp4", 2, "320x240");
+}
+
 function waitConversion(stateKey: string, want: (row: Rec, proc: string) => boolean, timeoutMs: number) {
   return async (ctx: StepContext) =>
     pollJson(ctx, "/conversions", timeoutMs, (json) => {
@@ -1283,6 +1289,22 @@ const CONVERT_STEPS: StepSpec[] = [
       const rest = asRec((await ctx.rest.get("/conversions/gpu")).json);
       const ok = !result.isError && rest.checked_at === asRec(payload(result)).checked_at;
       return obs(ok, `REST checked_at=${str(rest.checked_at)}`);
+    },
+  }),
+  // MEU-133: probe a made clip offline; it reads the file in place and writes no job.
+  simpleStep({
+    id: "convert.probe",
+    tool: "avkit_convert",
+    action: "probe",
+    phase: "functional",
+    // capture.frames reuses this clip through state probe:src (MEU-134).
+    args: (ctx) => ({ action: "probe", path: probeClip(ctx) }),
+    observe: async (_ctx, result) => {
+      if (result.isError) return obs(false, `MCP error: ${result.text.slice(0, 200)}`);
+      const body = asRec(payload(result));
+      const ms = Number(body.duration_ms);
+      const ok = ms > 0 && body.width === 320 && body.height === 240 && body.has_video === true;
+      return obs(ok, `duration_ms=${str(body.duration_ms)} size=${str(body.width)}x${str(body.height)}`);
     },
   }),
   addConversion("convert.add.long1", "cv_l1", "long1.mp4", 10, "1280x720"),
@@ -1608,6 +1630,37 @@ const CAPTURE_STEPS: StepSpec[] = [
         );
       } else {
         observable = obs(false, `MCP error or no id: ${result.text.slice(0, 200)}`);
+      }
+      return { kind: "simple", isError: result.isError, expectError: false, observable, text: result.text };
+    },
+  },
+  // FRAMES_MCP (MEU-134): the frame at 0 s of the probe clip is a new shot; the clip is only read.
+  {
+    id: "capture.frames",
+    tool: "avkit_capture",
+    action: "frames",
+    phase: "functional",
+    // It makes its own clip when convert.probe never ran, so it waits on no step.
+    depends_on: [],
+    execute: async (ctx) => {
+      const clip = probeClip(ctx);
+      const result = await ctx.call("avkit_capture", { action: "frames", path: clip, at: [0] });
+      let observable: ObservableResult;
+      if (result.isError) {
+        observable = obs(false, `MCP error: ${result.text.slice(0, 200)}`);
+      } else {
+        const body = asRec(payload(result));
+        const frames = Array.isArray(body.frames) ? body.frames.map(asRec) : [];
+        for (const frame of frames) {
+          if (typeof frame.id === "string" && frame.id) ctx.ledger.register("capture", frame.id);
+        }
+        const first = frames[0];
+        const shot = first && typeof first.id === "string" ? await ctx.rest.get(`/captures/${first.id}`) : null;
+        const ok = frames.length === 1 && first?.time_ms === 0 && shot?.status === 200;
+        observable = obs(
+          ok,
+          `frames=${frames.length} time_ms=${str(first?.time_ms)} REST shot ${String(shot?.status ?? "none")}`,
+        );
       }
       return { kind: "simple", isError: result.isError, expectError: false, observable, text: result.text };
     },

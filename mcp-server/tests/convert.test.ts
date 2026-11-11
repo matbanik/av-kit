@@ -34,6 +34,7 @@ const CONVERT_ACTIONS = [
   { action: "clear", method: "DELETE", path: "/conversions" },
   { action: "gpu", method: "GET", path: "/conversions/gpu" },
   { action: "gpu_refresh", method: "POST", path: "/conversions/gpu/refresh" },
+  { action: "probe", method: "POST", path: "/conversions/probe" },
 ] as const;
 const CONVERTER_KEYS = ["output_dir", "default_preset", "skip_existing", "gpu_preference"] as const;
 const CONVERTER_DEFAULTS = {
@@ -54,7 +55,9 @@ describe("MEU-32 avkit_convert", () => {
     // TA-9 (Session 27, MEU-62): +1 avkit_models.download_asset, appended.
     // TA-1 (Session 30, MEU-67): +avkit_capture.flatten, +avkit_capture.revert.
     // MEU-130 (Session 59): +avkit_capture.crop after revert.
-    expect(ACTION_INDEX).toHaveLength(71);
+    // MEU-133 (Session 62): +avkit_convert.probe after gpu_refresh.
+    // MEU-134 (Session 62): +avkit_capture.frames after crop.
+    expect(ACTION_INDEX).toHaveLength(73);
     expect([...COMPOUND_TOOLS]).toEqual([
       "avkit_download",
       "avkit_transcript",
@@ -71,7 +74,7 @@ describe("MEU-32 avkit_convert", () => {
 
   it("AC-32.2 CONVERT_ACTIONS match REST 1:1 with no stop", () => {
     const rows = ACTION_INDEX.filter((row) => row.tool === "avkit_convert");
-    expect(rows).toHaveLength(13);
+    expect(rows).toHaveLength(14);
     expect(rows.map((row) => ({ action: row.action, method: row.method, path: row.path }))).toEqual(
       CONVERT_ACTIONS.map((row) => ({ action: row.action, method: row.method, path: row.path })),
     );
@@ -264,5 +267,129 @@ describe("MEU-32 avkit_convert", () => {
       stream_mode: "first",
       stream_index: 2,
     });
+  });
+});
+
+const PROBE_TEXT =
+  "Reads a local video's duration, size, codecs and streams without changing it or writing a job. " +
+  "duration_ms and timecode are null for a raw stream with no duration. " +
+  "Use it before avkit_capture frames to pick times.";
+const PROBE_PATH = "C:\\videos\\clip.mp4";
+const PROBE_BODY = {
+  path: PROBE_PATH,
+  duration_ms: 3000,
+  timecode: "00:00:03.000",
+  container: "mov,mp4,m4a,3gp,3g2,mj2",
+  video_codec: "h264",
+  audio_codec: "aac",
+  width: 320,
+  height: 240,
+  fps: 25,
+  has_video: true,
+  has_audio: true,
+};
+const PROBE_KEYS = [
+  "path",
+  "duration_ms",
+  "timecode",
+  "container",
+  "video_codec",
+  "audio_codec",
+  "width",
+  "height",
+  "fps",
+  "has_video",
+  "has_audio",
+] as const;
+
+describe("MEU-133 avkit_convert probe", () => {
+  it("AC-133.8 probe takes action and path; an extra key, an empty or long path and no path fail before fetch", async () => {
+    const { convertSchema } = await import("../src/toolsets/convert.js");
+    expect(convertSchema.safeParse({ action: "probe", path: PROBE_PATH }).success).toBe(true);
+    expect(convertSchema.safeParse({ action: "probe", path: "a".repeat(4096) }).success).toBe(true);
+    const refused: Record<string, unknown>[] = [
+      { action: "probe", path: PROBE_PATH, extra: 1 },
+      { action: "probe", path: "" },
+      { action: "probe" },
+      { action: "probe", path: "a".repeat(4097) },
+      { action: "probe", path: 3 },
+    ];
+    const appData = tempAppData();
+    temps.push(appData);
+    for (const args of refused) {
+      const label = JSON.stringify(args).slice(0, 60);
+      expect(convertSchema.safeParse(args).success, label).toBe(false);
+      const fetchImpl = vi.fn();
+      const result = await handleTool("avkit_convert", args, {
+        env: toolEnv(appData),
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      });
+      expect(result.isError, label).toBe(true);
+      expect(fetchImpl, label).toHaveBeenCalledTimes(0);
+    }
+  });
+
+  it("AC-133.8 ACTION_INDEX has the probe row after gpu_refresh", () => {
+    const keys = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`);
+    const gpuRefresh = keys.indexOf("avkit_convert.gpu_refresh");
+    expect(gpuRefresh).toBeGreaterThan(-1);
+    expect(keys[gpuRefresh + 1]).toBe("avkit_convert.probe");
+    expect(ACTION_INDEX[gpuRefresh + 1]).toEqual({
+      tool: "avkit_convert",
+      action: "probe",
+      method: "POST",
+      path: "/conversions/probe",
+    });
+    expect(keys.filter((key) => key === "avkit_convert.probe")).toHaveLength(1);
+  });
+
+  it("AC-133.8 probe POSTs exactly the path with the default timeout and returns the eleven keys", async () => {
+    const { ADD_TIMEOUT_MS, DEFAULT_TIMEOUT_MS } = await import("../src/client.js");
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push({
+        url: String(url),
+        method: init?.method,
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+      });
+      return okJson(PROBE_BODY);
+    });
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    try {
+      const result = await handleTool(
+        "avkit_convert",
+        { action: "probe", path: PROBE_PATH },
+        { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+      );
+      expect(calls).toHaveLength(1);
+      expect(result.isError).not.toBe(true);
+      expect(calls[0]?.method).toBe("POST");
+      expect(calls[0]?.url).not.toContain("?");
+      expect(calls[0]?.url.endsWith("/conversions/probe")).toBe(true);
+      expect(calls[0]?.body).toEqual({ path: PROBE_PATH });
+      expect(timeout).toHaveBeenCalledWith(DEFAULT_TIMEOUT_MS);
+      expect(timeout).not.toHaveBeenCalledWith(ADD_TIMEOUT_MS);
+      const parsed = JSON.parse(String(result.content[0]?.text)) as Record<string, unknown>;
+      expect(Object.keys(parsed).sort()).toEqual([...PROBE_KEYS].sort());
+      expect(parsed).toEqual(PROBE_BODY);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
+  it("AC-133.8 probe description carries the four M7 markers and PROBE_TEXT", async () => {
+    const { convertDescriptions } = await import("../src/toolsets/convert.js");
+    const raw: unknown = convertDescriptions["avkit_convert.probe"];
+    expect(typeof raw).toBe("string");
+    const text = String(raw);
+    for (const marker of M7) {
+      expect(text, marker).toContain(marker);
+    }
+    expect(text).toContain("POST /conversions/probe");
+    expect(text).toContain(PROBE_TEXT);
+    expect(DESTRUCTIVE_ACTIONS.has("avkit_convert.probe")).toBe(false);
+    expect(NON_DESTRUCTIVE_STOPS.has("avkit_convert.probe")).toBe(false);
   });
 });

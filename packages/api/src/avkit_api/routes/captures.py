@@ -21,6 +21,10 @@ from avkit_api.schemas.captures import (
     CaptureCropMarksOut,
     CaptureCropOut,
     CaptureCropRequestedOut,
+    CaptureFrameOut,
+    CaptureFramesIn,
+    CaptureFramesOut,
+    CaptureFramesVideoOut,
     CaptureFullscreenIn,
     CaptureImportIn,
     CaptureItemOut,
@@ -308,6 +312,38 @@ def cancel_capture_request(
     """Cancel a pending overlay wait."""
     del body
     return _request_out(capture.cancel_request(id))
+
+
+@router.post("/frames", status_code=201, response_model=CaptureFramesOut)
+def capture_frames(
+    body: CaptureFramesIn,
+    capture: Any = Depends(get_capture_service),
+) -> CaptureFramesOut:
+    """FRAMES_ROUTE (MEU-134): stills from a local video, each a new shot with source Video."""
+    result = capture.frames_from_video(
+        body.path, at=body.at, count=body.count, start=body.start, end=body.end
+    )
+    video = result.video
+    return CaptureFramesOut(
+        video=CaptureFramesVideoOut(
+            path=video.path,
+            duration_ms=video.duration_ms,
+            width=video.width,
+            height=video.height,
+            fps=video.fps,
+        ),
+        frames=[
+            CaptureFrameOut(
+                id=frame.id,
+                path=frame.path,
+                time_ms=frame.time_ms,
+                timecode=frame.timecode,
+                width=frame.width,
+                height=frame.height,
+            )
+            for frame in result.frames
+        ],
+    )
 
 
 @router.get("/{id}", response_model=CaptureShotDetailOut)

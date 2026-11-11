@@ -15,7 +15,10 @@ const COMMITTED_BASELINE = path.resolve(
 // D-499 A (Session 59, MEU-130): served actions the committed baseline doesn't hold yet,
 // because YOUTUBE-CAPTIONS-IP-BLOCK blocks an authoritative --update-baseline. That update
 // adds them, empties this list and closes MCP-AUDIT-BASELINE-PENDING-CROP.
-const BASELINE_PENDING = ["avkit_capture.crop"];
+// MEU-133 (Session 62): + avkit_convert.probe on the same terms. The list is in
+// ACTION_INDEX order, because baselineCoverage reports `missing` in that order.
+// MEU-134 (Session 62): + avkit_capture.frames, after crop.
+const BASELINE_PENDING = ["avkit_convert.probe", "avkit_capture.crop", "avkit_capture.frames"];
 
 /** The pending keys that aren't served, or that the baseline already holds. */
 function pendingProblems(pending: string[], baselineKeys: string[], served: string[]): string[] {
@@ -29,9 +32,11 @@ describe("AC-68.5 AUDIT_PLAN coverage of AUDIT_ACTION_SET", () => {
   // 68 since MEU-62 appended avkit_models.download_asset (registry.ts; plan amendment A7).
   // TA-1 (Session 30, MEU-67): 70 with avkit_capture.flatten and avkit_capture.revert.
   // MEU-130 (Session 59): 71 with avkit_capture.crop.
-  it("AC-68.5 AUDIT_ACTION_SET is the 71 registry rows", () => {
-    expect(ACTION_SET).toHaveLength(71);
-    expect(new Set(ACTION_SET).size).toBe(71);
+  // MEU-133 (Session 62): 72 with avkit_convert.probe.
+  // MEU-134 (Session 62): 73 with avkit_capture.frames.
+  it("AC-68.5 AUDIT_ACTION_SET is the 73 registry rows", () => {
+    expect(ACTION_SET).toHaveLength(73);
+    expect(new Set(ACTION_SET).size).toBe(73);
   });
 
   it("AC-68.5 every registry action appears in at least one AUDIT_PLAN step", () => {
@@ -153,5 +158,65 @@ describe("MEU-130 crop audit", () => {
     expect(pendingProblems(["avkit_capture.ghost"], baselineKeys, ACTION_SET)).toEqual([
       "avkit_capture.ghost is not served",
     ]);
+  });
+});
+
+// MEU-134 capture-video-frames (Session 62): the audit plan's probe and frames steps.
+describe("MEU-134 probe and frames audit", () => {
+  it("AC-134.16 AUDIT_PLAN probes after gpu_refresh and grabs frames after crop", async () => {
+    const ids = AUDIT_PLAN.map((s) => s.id);
+    const frames = AUDIT_PLAN.find((s) => s.id === "capture.frames");
+    expect(frames, "capture.frames step").toBeDefined();
+    if (!frames) return;
+    expect(ids.indexOf("capture.frames")).toBe(ids.indexOf("capture.crop") + 1);
+    expect([frames.tool, frames.action]).toEqual(["avkit_capture", "frames"]);
+    expect(frames.destructive ?? false).toBe(false);
+    const probe = AUDIT_PLAN.find((s) => s.id === "convert.probe");
+    expect(probe, "convert.probe step").toBeDefined();
+    if (!probe) return;
+    expect(ids.indexOf("convert.probe")).toBe(ids.indexOf("convert.gpu_refresh") + 1);
+    expect([probe.tool, probe.action]).toEqual(["avkit_convert", "probe"]);
+    // The frames step on a fake context, with the probe step's clip already made.
+    const calls: { tool: string; args: Record<string, unknown> }[] = [];
+    const ledger = new CleanupLedger();
+    const clip = "unused/src/probe.mp4";
+    const ctx: StepContext = {
+      mode: "container",
+      platform: "linux",
+      fixtures: {} as unknown as StepContext["fixtures"],
+      root: "unused",
+      out: (sub) => `unused/${sub}`,
+      call: async (tool, args) => {
+        calls.push({ tool, args });
+        return {
+          isError: false,
+          text: JSON.stringify({
+            video: { path: clip, duration_ms: 2000, width: 320, height: 240, fps: 30 },
+            frames: [
+              { id: "f1", path: "unused/probe-t00h00m00.000s.png", time_ms: 0, timecode: "00:00:00.000", width: 320, height: 240 },
+            ],
+          }),
+        };
+      },
+      rest: {
+        get: async () => ({ status: 404, json: null, text: "" }),
+        send: async () => ({ status: 404, json: null, text: "" }),
+        bytes: async () => ({ status: 404, bytes: new Uint8Array() }),
+      },
+      ledger,
+      state: new Map<string, unknown>([["probe:src", clip]]),
+      firstId: () => "f1",
+      poll: async () => null,
+    };
+    await frames.execute(ctx);
+    expect(calls).toEqual([{ tool: "avkit_capture", args: { action: "frames", path: clip, at: [0] } }]);
+    expect(ledger.outstanding()).toEqual([{ kind: "capture", id: "f1" }]);
+  });
+
+  it("AC-134.16 coverage fails when the frames step is missing", () => {
+    const without = AUDIT_PLAN.filter((s) => s.id !== "capture.frames");
+    expect(without.length).toBe(AUDIT_PLAN.length - 1);
+    expect(coverage(planKeys(without), ACTION_SET)).toEqual(["avkit_capture.frames"]);
+    expect(coverage(planKeys(AUDIT_PLAN), ACTION_SET)).toEqual([]);
   });
 });

@@ -11,6 +11,7 @@ import threading
 import time
 from collections.abc import Callable
 from datetime import UTC, datetime
+from decimal import ROUND_FLOOR, Decimal, InvalidOperation
 from pathlib import Path
 
 import structlog
@@ -32,6 +33,7 @@ from avkit_core.domain.errors import (
     ValidationError,
 )
 from avkit_core.domain.progress import ConvertOptions, MediaInfo, ProgressSnapshot
+from avkit_core.ports.capture import FrameSeek
 
 log = structlog.get_logger(module="media")
 convert_log = structlog.get_logger(module="convert")
@@ -42,6 +44,8 @@ FRAME_RE = re.compile(r"frame=\s*(\d+)")
 TIME_RE = re.compile(r"time=\s*(\d+):(\d+):(\d+(?:\.\d+)?)")
 SPEED_RE = re.compile(r"speed=\s*([0-9.]+)x")
 ENCODER_FLAG_RE = re.compile(r"^[VASD.]{6,}$")
+# END_GAP (MEU-134, D-575): the packet read starts this far before the requested time.
+END_GAP_LOOKBACK_MS = 60_000
 AUDIO_BITRATE_K = {
     AudioEncodeMode.Aac96: 96,
     AudioEncodeMode.Aac128: 128,
@@ -60,6 +64,33 @@ def even_scale_filter(height: int) -> str:
 def _ms_to_seconds(ms: int) -> str:
     text = f"{ms / 1000:.3f}".rstrip("0").rstrip(".")
     return text if text else "0"
+
+
+def _seek_text(ms: int) -> str:
+    """FRAME_GRAB: `ms` as FFmpeg seconds with exactly three decimals, with no float."""
+    return f"{ms // 1000}.{ms % 1000:03d}"
+
+
+def _last_packet_ms(stdout: str) -> int | None:
+    """END_GAP: the largest finite packet time on `stdout`, in whole milliseconds.
+
+    B-frame packets don't arrive in time order, so the largest value wins; `N/A` and blank
+    lines are skipped.
+    """
+    best: Decimal | None = None
+    for line in stdout.splitlines():
+        text = line.strip().rstrip(",")
+        if not text:
+            continue
+        try:
+            value = Decimal(text)
+        except InvalidOperation:
+            continue
+        if value.is_finite() and (best is None or value > best):
+            best = value
+    if best is None:
+        return None
+    return int((best * 1000).to_integral_value(rounding=ROUND_FLOOR))
 
 
 def _ensure_output_parent(output_path: Path) -> None:
@@ -260,13 +291,31 @@ class FFmpegAdapter:
         name = "ffprobe.exe" if ffmpeg.suffix.lower() == ".exe" else "ffprobe"
         return ffmpeg.with_name(name)
 
-    def _run(self, command: list[str]) -> subprocess.CompletedProcess[str]:
+    def _run(
+        self, command: list[str], *, timeout: float | None = None
+    ) -> subprocess.CompletedProcess[str]:
+        # FRAME_PORT (MEU-134): `timeout=` only when one is given, so every caller that gives
+        # none makes exactly the call it made before.
         try:
+            # RUN_UTF8 (MEU-133, D-573 A): ffprobe's JSON and ffmpeg's text are UTF-8, and a
+            # byte that isn't becomes U+FFFD, so a path or tag outside cp1252 can't fail a decode.
+            if timeout is None:
+                return subprocess.run(
+                    command,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    errors="replace",
+                )
             return subprocess.run(
                 command,
                 check=False,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=timeout,
             )
         except FileNotFoundError as exc:
             raise FFmpegNotFoundError("ffmpeg binary was not found") from exc
@@ -400,7 +449,7 @@ class FFmpegAdapter:
             raise FilesystemError(result.stderr or "ffmpeg convert failed")
         log.info("media.convert", input=str(input_path), output=str(output_path))
 
-    def probe(self, file_path: Path) -> MediaInfo:
+    def probe(self, file_path: Path, *, timeout_s: float | None = None) -> MediaInfo:
         ffmpeg = self._require_ffmpeg()
         ffprobe = self._resolve_ffprobe(ffmpeg)
         if ffprobe is None:
@@ -417,7 +466,15 @@ class FFmpegAdapter:
             "-show_streams",
             str(file_path),
         ]
-        result = self._run(command)
+        result: subprocess.CompletedProcess[str] | None = None
+        try:
+            result = self._run(command, timeout=timeout_s)
+        except subprocess.TimeoutExpired:
+            result = None
+        if result is None:
+            # FRAME_PORT: raised after the clause, so the TimeoutExpired (whose text holds the
+            # command and its path) is neither cause nor context.
+            raise MediaProbeError("ffprobe timed out")
         if result.returncode != 0:
             raise MediaProbeError(result.stderr or "ffprobe failed")
         try:
@@ -484,6 +541,108 @@ class FFmpegAdapter:
             field_order=field_order,
             streams=parsed_streams,
         )
+
+    def grab_frame(self, path: Path, time_ms: int, *, seek: FrameSeek, timeout_s: float) -> bytes:
+        """FRAME_GRAB (MEU-134): the frame at `time_ms` as PNG bytes, or b"".
+
+        One deadline is set on entry; every process this starts gets the time left to it, and
+        none starts once no time is left. FFmpeg writes to a pipe, never to a file, and its
+        stderr is dropped. Its only raise is `FFmpegNotFoundError`.
+        """
+        deadline = time.monotonic() + timeout_s
+        ffmpeg = self._require_ffmpeg()
+        data = self._grab_once(ffmpeg, path, time_ms, seek, deadline)
+        if data or seek != "input":
+            return data
+        # END_GAP (D-575): past the last video frame but before the end, input seek gives no
+        # frame, so grab again just before the last video packet. Output seek has no fallback.
+        last_ms = self._last_video_ms(ffmpeg, path, time_ms, deadline)
+        if last_ms is None or last_ms >= time_ms:
+            return b""
+        return self._grab_once(ffmpeg, path, max(0, last_ms - 1), "input", deadline)
+
+    @staticmethod
+    def _grab_once(
+        ffmpeg: Path, path: Path, time_ms: int, seek: FrameSeek, deadline: float
+    ) -> bytes:
+        """FRAME_GRAB: one bounded `ffmpeg` run, in bytes mode; b"" on a timeout or a failure."""
+        left = deadline - time.monotonic()
+        if left <= 0:
+            return b""
+        at = ["-ss", _seek_text(time_ms)]
+        source = ["-i", str(path)]
+        order = [*at, *source] if seek == "input" else [*source, *at]
+        command = [
+            str(ffmpeg),
+            "-hide_banner",
+            "-nostdin",
+            "-v",
+            "error",
+            *order,
+            "-frames:v",
+            "1",
+            "-c:v",
+            "png",
+            "-f",
+            "image2pipe",
+            "pipe:1",
+        ]
+        try:
+            result = subprocess.run(command, capture_output=True, check=False, timeout=left)
+        except FileNotFoundError as exc:
+            raise FFmpegNotFoundError("ffmpeg binary was not found") from exc
+        except subprocess.TimeoutExpired:
+            return b""
+        if result.returncode != 0 or not isinstance(result.stdout, bytes):
+            return b""
+        return result.stdout
+
+    def _last_video_ms(self, ffmpeg: Path, path: Path, time_ms: int, deadline: float) -> int | None:
+        """END_GAP: the last video packet's whole milliseconds, read from 60 s before `time_ms`.
+
+        Its own bounded `subprocess.run`, not `_run`, so the timeout and the decoding sit in one
+        call. A timeout, a non-zero exit or no usable time gives `None`.
+        """
+        ffprobe = self._resolve_ffprobe(ffmpeg)
+        if ffprobe is None:
+            raise FFmpegNotFoundError("ffprobe binary was not found") from FileNotFoundError(
+                "ffprobe binary was not found"
+            )
+        left = deadline - time.monotonic()
+        if left <= 0:
+            return None
+        start = max(0, time_ms - END_GAP_LOOKBACK_MS)
+        command = [
+            str(ffprobe),
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-read_intervals",
+            f"{_seek_text(start)}%",
+            "-show_entries",
+            "packet=pts_time",
+            "-of",
+            "csv=p=0",
+            str(path),
+        ]
+        try:
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                check=False,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=left,
+            )
+        except FileNotFoundError as exc:
+            raise FFmpegNotFoundError("ffprobe binary was not found") from exc
+        except subprocess.TimeoutExpired:
+            return None
+        if result.returncode != 0:
+            return None
+        return _last_packet_ms(result.stdout or "")
 
     def detect_gpu(self) -> GPUCapabilities:
         ffmpeg = self._require_ffmpeg()

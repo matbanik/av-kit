@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import Field
+from pydantic import Field, StrictFloat, StrictInt, StrictStr, model_validator
 
 from avkit_api.schemas.common import ApiModel
 from avkit_core.domain.capture import (
@@ -15,6 +15,7 @@ from avkit_core.domain.capture import (
     PIXELATE_BLOCK_MIN,
     TEXT_MAX_CHARS,
 )
+from avkit_core.services.video_input import FRAMES_MAX, MAX_PATH_CHARS
 
 RegisterSourceWire = Literal["hotkey", "gui", "scan"]
 RequestStatusQueryWire = Literal["pending", "completed", "cancelled", "expired"]
@@ -254,3 +255,56 @@ class CaptureCropOut(ApiModel):
     applied: CaptureCropAppliedOut
     clamped: bool
     marks: CaptureCropMarksOut
+
+
+#: FRAMES_ROUTE: a time is seconds as a number, or text that TIME_PARSE reads.
+TimeWire = StrictInt | StrictFloat | StrictStr
+
+
+class CaptureFramesIn(ApiModel):
+    """POST /captures/frames body (MEU-134, FRAMES_ROUTE): `at` times or a `count` of frames.
+
+    `start` and `end` go with `count` only. Each time is read by TIME_PARSE in the service.
+    """
+
+    path: str = Field(min_length=1, max_length=MAX_PATH_CHARS)
+    at: Annotated[list[TimeWire], Field(min_length=1, max_length=FRAMES_MAX)] | None = None
+    count: Annotated[StrictInt, Field(ge=1, le=FRAMES_MAX)] | None = None
+    start: TimeWire | None = None
+    end: TimeWire | None = None
+
+    @model_validator(mode="after")
+    def _at_or_count(self) -> CaptureFramesIn:
+        if (self.at is None) == (self.count is None):
+            raise ValueError("use either at or count")
+        if self.at is not None and (self.start is not None or self.end is not None):
+            raise ValueError("start and end go with count")
+        return self
+
+
+class CaptureFramesVideoOut(ApiModel):
+    """The video the frames came from (FRAMES_ROUTE); `duration_ms` is null for a raw stream."""
+
+    path: str
+    duration_ms: int | None
+    width: int | None
+    height: int | None
+    fps: float | None
+
+
+class CaptureFrameOut(ApiModel):
+    """One new shot taken from the video, and the time it was taken at."""
+
+    id: str
+    path: str
+    time_ms: int
+    timecode: str
+    width: int
+    height: int
+
+
+class CaptureFramesOut(ApiModel):
+    """POST /captures/frames 201 (FRAMES_ROUTE). No image bytes."""
+
+    video: CaptureFramesVideoOut
+    frames: list[CaptureFrameOut]

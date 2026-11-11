@@ -74,6 +74,7 @@ export const CONVERT_ACTION_INDEX: ActionRow[] = [
   { tool: "avkit_convert", action: "clear", method: "DELETE", path: "/conversions" },
   { tool: "avkit_convert", action: "gpu", method: "GET", path: "/conversions/gpu" },
   { tool: "avkit_convert", action: "gpu_refresh", method: "POST", path: "/conversions/gpu/refresh" },
+  { tool: "avkit_convert", action: "probe", method: "POST", path: "/conversions/probe" },
 ];
 
 export const CAPTURE_ACTION_INDEX: ActionRow[] = [
@@ -210,6 +211,7 @@ export function minimalInput(tool: string, action: string): Record<string, unkno
     "avkit_convert.clear": { action: "clear", confirm: true },
     "avkit_convert.gpu": { action: "gpu" },
     "avkit_convert.gpu_refresh": { action: "gpu_refresh" },
+    "avkit_convert.probe": { action: "probe", path: "C:/tmp/clip.mp4" },
     "avkit_capture.list": { action: "list" },
     "avkit_capture.get": { action: "get", id: "s1" },
     "avkit_capture.image": { action: "image", id: "s1" },
@@ -220,6 +222,7 @@ export function minimalInput(tool: string, action: string): Record<string, unkno
     "avkit_capture.remove": { action: "remove", id: "s1", confirm: true },
     "avkit_capture.flatten": { action: "flatten", id: "s1", confirm: true },
     "avkit_capture.revert": { action: "revert", id: "s1", confirm: true },
+    "avkit_capture.frames": { action: "frames", path: "C:/tmp/clip.mp4", count: 3 },
   };
   const found = table[key];
   if (!found) {
@@ -296,6 +299,7 @@ export function expectedBody(tool: string, action: string): unknown {
     "avkit_convert.clear": undefined,
     "avkit_convert.gpu": undefined,
     "avkit_convert.gpu_refresh": {},
+    "avkit_convert.probe": { path: "C:/tmp/clip.mp4" },
     "avkit_capture.list": undefined,
     "avkit_capture.get": undefined,
     "avkit_capture.image": undefined,
@@ -306,6 +310,7 @@ export function expectedBody(tool: string, action: string): unknown {
     "avkit_capture.remove": undefined,
     "avkit_capture.flatten": {},
     "avkit_capture.revert": {},
+    "avkit_capture.frames": { path: "C:/tmp/clip.mp4", count: 3 },
   };
   if (!(key in table)) {
     throw new Error(`no expected body for ${key}`);

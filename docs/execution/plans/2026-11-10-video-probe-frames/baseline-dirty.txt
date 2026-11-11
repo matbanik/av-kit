@@ -1,0 +1,8 @@
+?? .agent/context/handoffs/2026-11-10-video-probe-frames-plan-critical-review.md	18dc0940db3a9801d1658d885ab58ed37809726d98abf021599fa0a21f685ed4
+?? docs/execution/plans/2026-11-10-video-probe-frames/baseline.ps1	b7cbc05d46fafea49692ad688f86514e569bca2d8f26e3da9ba4bf00f3d019dc
+?? docs/execution/plans/2026-11-10-video-probe-frames/baseline.sha	5eb84ad27c91fa2265dae54860b6ca9c552fc7f931f44de7ea161c93a1a321b3
+?? docs/execution/plans/2026-11-10-video-probe-frames/identity.py	72d1f596ab4bf4fcd6eca44687c2a866313e2db73a29b116c18a799bc72d7196
+?? docs/execution/plans/2026-11-10-video-probe-frames/implementation-plan.md	239445dd28dea8c388e60bea43c832003cdb03ecd301312ac0b7101bf7ce79a5
+?? docs/execution/plans/2026-11-10-video-probe-frames/red-check.py	20456b8de35913da54b38e010a0d5b0835d1f67fd285fac22223920a394aee26
+?? docs/execution/plans/2026-11-10-video-probe-frames/session-gate.ps1	8ae1449281e838c85c055982109a282f567230f258345fd8c5e59debf27c1e16
+?? docs/execution/plans/2026-11-10-video-probe-frames/task.md	c7fc79b8399106a6cb607686eaba33258c2ab0b94bcfec0bc935cca691da7e92

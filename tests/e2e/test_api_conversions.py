@@ -44,6 +44,7 @@ CONVERT_ROUTES = (
     ("GET", "/api/v1/conversions"),
     ("GET", "/api/v1/conversions/gpu"),
     ("POST", "/api/v1/conversions/gpu/refresh"),
+    ("POST", "/api/v1/conversions/probe"),
     ("POST", "/api/v1/conversions/start"),
     ("POST", "/api/v1/conversions/pause"),
     ("POST", "/api/v1/conversions/resume"),
@@ -54,7 +55,16 @@ CONVERT_ROUTES = (
     ("POST", "/api/v1/conversions/{id}/reset"),
     ("DELETE", "/api/v1/conversions/{id}"),
 )
-STATIC_BEFORE_ID = ("/gpu", "/gpu/refresh", "/start", "/pause", "/resume", "/cancel", "/reorder")
+STATIC_BEFORE_ID = (
+    "/gpu",
+    "/gpu/refresh",
+    "/probe",
+    "/start",
+    "/pause",
+    "/resume",
+    "/cancel",
+    "/reorder",
+)
 FORBIDDEN_RESPONSE_KEYS = ("media_bytes", "audio_bytes", "cookie_bytes")
 JOB_OUT_FIELDS = (
     "id",
@@ -625,6 +635,7 @@ def test_ac_31_17_openapi_static_auth_console(ac_id: str) -> None:
     schema = client.get("/openapi.json").json()
     paths = schema["paths"]
     for method, path in CONVERT_ROUTES:
+        assert path in paths
         ops = paths[path]
         assert method.lower() in ops
     unauth = client.get(PREFIX)

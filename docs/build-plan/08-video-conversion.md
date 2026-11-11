@@ -626,6 +626,14 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 | Errors | Fixed messages that name no path: `video file not found`, the existing ffmpeg-not-found error, and a fixed probe failure. Extra keys fail the strict schema | Research-backed design §8 |
 | Tests | Route and MCP field parity; a real-ffmpeg probe of generated clips with and without audio, and of one with no duration; OpenAPI regenerated | Local Canon |
 
+> **Delivered (Session 62).**
+> - `require_local_video` in `services/video_input.py:93` takes a local absolute path to a regular file, UNC included, and refuses an empty, over-long, relative or URL path, a control character or a lone surrogate with `path must be a local absolute file path`, and a missing file, a folder or a symlink loop with `video file not found`. Neither names any part of the path, and each is raised after the `try` has ended, so no path-bearing exception is its cause or context (`VIDEO_INPUT`). `format_timecode` at `:121` gives `HH:MM:SS.mmm`, and `duration_ms` at `:129` gives whole milliseconds rounded half up, or `None` with no usable duration (`TIMECODE`).
+> - `ConversionService.probe_file` in `services/conversion.py:193` resolves the path and calls `MediaPort.probe`, whose ffprobe parse is unchanged; `video_probe` at `video_input.py:143` maps the `MediaInfo` to the eleven fields, with `duration_ms` and `timecode` null for a raw stream. A `MediaProbeError` becomes `the file could not be probed`, and `FFmpegNotFoundError` gives the existing 503. No job row is written and the queue is untouched (`PROBE_MAP`).
+> - `POST /conversions/probe` at `routes/conversions.py:189`, declared before `/{id}` (`PROBE_ROUTE`). MCP `avkit_convert` `probe` at `mcp-server/src/toolsets/convert.ts:112` is `.strict()`, carries `PROBE_TEXT` (`:9`), keeps the default timeout, and has its `ACTION_INDEX` row after `gpu_refresh`'s (`toolsets/registry.ts:122`) (`PROBE_MCP`).
+> - Under D-573 A, `FFmpegAdapter._run` (`media/adapter.py:294`) decodes FFmpeg's output as UTF-8 with `errors="replace"`, so a `Ł` in a path or a title tag no longer breaks a probe (`RUN_UTF8`). That is the one departure from the Reuse rule's "as it is". `_run` also gains the `timeout` keyword that frames use ([09 §Video frames](09-screenshot-capture.md#video-frames)), which its existing callers leave unset.
+> - `tests/integration/test_video_real_ffmpeg.py` probes generated clips with and without audio, a raw `.h264` stream, a `Ł` file name and a `Ł` title tag through the pinned `packaging/ffmpeg-win64/` binaries, and checks each clip's SHA-256 is unchanged. CI's Tests step deselects it (`.github/workflows/ci.yml:66`).
+> - AC-133.1 to AC-133.9. Plan `docs/execution/plans/2026-11-10-video-probe-frames/`.
+
 ---
 
 ## MEUs

@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import math
 import os
 import re
 import shutil
 import threading
+import time
 from collections.abc import Callable, Sequence
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
+from io import BufferedWriter
 from pathlib import Path
 from uuid import uuid4
 
@@ -48,12 +51,26 @@ from avkit_core.domain.errors import (
     CaptureRequestConflictError,
     ConflictError,
     InboxPathError,
+    MediaProbeError,
     NotFoundError,
     ValidationError,
 )
-from avkit_core.ports.capture import ImageAnnotatePort, ScreenCapturePort
+from avkit_core.domain.progress import MediaInfo
+from avkit_core.ports.capture import FramePort, FrameSeek, ImageAnnotatePort, ScreenCapturePort
 from avkit_core.ports.storage import UnitOfWork
 from avkit_core.services.settings import SettingsService
+from avkit_core.services.video_input import (
+    FRAMES_MAX,
+    VideoFrame,
+    VideoFrames,
+    duration_ms,
+    format_timecode,
+    frame_name,
+    frame_times,
+    parse_time,
+    require_local_video,
+    video_probe,
+)
 
 UoWFactory = Callable[[], UnitOfWork]
 Clock = Callable[[], datetime]
@@ -95,6 +112,26 @@ CONVERT_STEM_TAG = "-converted"
 # The API is a single uvicorn process; this lock is not reentrant, so a held section never calls
 # another locked public method.
 CAPTURE_FILE_LOCK = threading.Lock()
+# FRAME_DEADLINE (MEU-134, D-577 A): a frames call commits nothing after this many seconds.
+FRAMES_DEADLINE_S = 100
+# FRAME_DEADLINE (e), the return gate (MEU-134, D-587): the call answers by FRAMES_RETURN_S,
+# and waits COMMIT_WAIT_S more only for a worker that is already committing.
+FRAMES_RETURN_S = 105
+COMMIT_WAIT_S = 6
+# FRAME_DEADLINE (e): the worker thread's name and the caller's join step.
+FRAMES_WORKER = "avkit-frames"
+FRAMES_JOIN_STEP_S = 0.05
+# FRAME_WRITE: a grab's bytes must start with this, and the masked failure's fixed text.
+PNG_SIGNATURE = bytes.fromhex("89504e470d0a1a0a")
+FRAMES_NOT_WRITTEN = "the frames could not be written"
+# FRAME_CHECKS' fixed refusals. None echoes the input.
+FRAMES_EITHER = "use either at or count"
+FRAMES_AT_RANGE = f"at takes 1 to {FRAMES_MAX} times"
+FRAMES_COUNT_RANGE = f"count must be 1 to {FRAMES_MAX}"
+FRAMES_NOT_PROBED = "the file could not be probed"
+FRAMES_NOT_VIDEO = "not a video: no video stream"
+FRAMES_BEFORE_END = "start must be before end"
+FRAMES_NO_DURATION = "count needs a duration; this video has none, so use at"
 
 # CROP_NAME (MEU-130, D-483): a crop's file name. A given `name` keeps these characters only.
 CROP_NAME_MAX = 80
@@ -377,6 +414,40 @@ def _annotation_to_wire(annotation: Annotation) -> dict[str, object]:
     raise AnnotationValidationError(f"unsupported annotation type: {type(annotation)!r}")
 
 
+class _FramesGate:
+    """FRAME_DEADLINE (e): what a frames call and its worker share, under `lock`.
+
+    `state` is `running`, `committing` or `abandoned`; `last_ms` is the call's last time once
+    it is known, the time an abandoned call reports.
+    """
+
+    def __init__(self) -> None:
+        self.lock = threading.Lock()
+        self.state = "running"
+        self.last_ms = 0
+        self.done = False
+        self.result: VideoFrames | None = None
+        self.error: BaseException | None = None
+
+
+class _FrameFailed(Exception):
+    """Internal to FRAME_WRITE: a failure the caller reports as `frame grab failed at t`."""
+
+    def __init__(self, ms: int) -> None:
+        super().__init__(ms)
+        self.ms = ms
+
+
+def _frame_failed_text(ms: int) -> str:
+    return f"frame grab failed at {format_timecode(ms)}"
+
+
+def _past_end(ms: int, total_ms: int) -> ValidationError:
+    return ValidationError(
+        f"time {format_timecode(ms)} is past the end ({format_timecode(total_ms)})"
+    )
+
+
 class CaptureService:
     """Synchronous capture inbox and annotation service. Not a processor queue."""
 
@@ -388,12 +459,16 @@ class CaptureService:
         annotate: ImageAnnotatePort,
         settings: SettingsService,
         clock: Clock | None = None,
+        frames: FramePort | None = None,
+        monotonic: Callable[[], float] | None = None,
     ) -> None:
         self._uow_factory = uow_factory
         self._capture = capture
         self._annotate = annotate
         self._settings = settings
         self._clock = clock if clock is not None else (lambda: datetime.now(UTC))
+        self._frames = frames
+        self._monotonic = monotonic if monotonic is not None else time.monotonic
 
     def scan_inbox(self) -> list[CaptureShot]:
         """Upsert inbox images, drop rows whose original vanished, and clear stale derived paths."""
@@ -563,6 +638,335 @@ class CaptureService:
             )
             uow.capture_shots.save(updated)
             return updated
+
+    def frames_from_video(
+        self,
+        path: str,
+        *,
+        at: Sequence[object] | None = None,
+        count: int | None = None,
+        start: object | None = None,
+        end: object | None = None,
+    ) -> VideoFrames:
+        """FRAME_CHECKS to FRAME_WRITE (MEU-134): stills from a local video as new shots.
+
+        The body runs on a daemon worker named `avkit-frames`; this call waits for it in
+        `FRAMES_JOIN_STEP_S` steps and answers by FRAME_DEADLINE (e)'s return gate whatever
+        the body is waiting on. The worker's error is raised here as the same object, outside
+        any `except` clause, so its `__context__` stays `None`.
+        """
+        began = self._monotonic()
+        deadline = began + FRAMES_DEADLINE_S
+        gate = _FramesGate()
+
+        def work() -> None:
+            result: VideoFrames | None = None
+            error: BaseException | None = None
+            try:
+                result = self._frames_body(gate, deadline, path, at, count, start, end)
+            except BaseException as exc:  # handed to the caller, which raises it
+                error = exc
+            with gate.lock:
+                gate.result = result
+                gate.error = error
+                gate.done = True
+
+        worker = threading.Thread(target=work, name=FRAMES_WORKER, daemon=True)
+        worker.start()
+        returned: BaseException | None = None
+        while True:
+            worker.join(FRAMES_JOIN_STEP_S)
+            elapsed = self._monotonic() - began
+            with gate.lock:
+                if gate.done:
+                    break
+                if elapsed < FRAMES_RETURN_S:
+                    continue
+                if gate.state == "running":
+                    gate.state = "abandoned"
+                state = gate.state
+                last_ms = gate.last_ms
+            if state == "abandoned":
+                returned = ValidationError(_frame_failed_text(last_ms))
+                break
+            if elapsed >= FRAMES_RETURN_S + COMMIT_WAIT_S:
+                returned = CaptureFailedError(FRAMES_NOT_WRITTEN)
+                break
+        if returned is None:
+            returned = gate.error
+        if returned is None and gate.result is not None:
+            return gate.result
+        if returned is None:
+            returned = CaptureFailedError(FRAMES_NOT_WRITTEN)
+        raise returned
+
+    def _frames_body(
+        self,
+        gate: _FramesGate,
+        deadline: float,
+        path: str,
+        at: Sequence[object] | None,
+        count: int | None,
+        start: object | None,
+        end: object | None,
+    ) -> VideoFrames:
+        """FRAME_CHECKS, then FRAME_WRITE's three phases, on the worker thread."""
+        if (at is None) == (count is None) or (
+            at is not None and (start is not None or end is not None)
+        ):
+            raise ValidationError(FRAMES_EITHER)
+        resolved = require_local_video(path)
+        at_ms = None if at is None else sorted({parse_time(value) for value in at})
+        start_ms = None if start is None else parse_time(start)
+        end_ms = None if end is None else parse_time(end)
+        if at is not None and not 1 <= len(at) <= FRAMES_MAX:
+            raise ValidationError(FRAMES_AT_RANGE)
+        if count is not None and (
+            isinstance(count, bool) or not isinstance(count, int) or not 1 <= count <= FRAMES_MAX
+        ):
+            raise ValidationError(FRAMES_COUNT_RANGE)
+        if at_ms:
+            gate.last_ms = at_ms[-1]
+        elif start_ms is not None:
+            gate.last_ms = start_ms
+        port = self._frames
+        if port is None:
+            raise CaptureFailedError(FRAMES_NOT_WRITTEN)
+        info: MediaInfo | None = None
+        try:
+            info = port.probe(resolved, timeout_s=deadline - self._monotonic())
+        except MediaProbeError:
+            info = None
+        if info is None:
+            raise ValidationError(FRAMES_NOT_PROBED)
+        if info.video_codec is None:
+            raise ValidationError(FRAMES_NOT_VIDEO)
+        times, seek = self._frame_plan(info, at_ms, count, start_ms, end_ms)
+        gate.last_ms = times[-1]
+        inbox = self._inbox()
+        shots: list[CaptureShot] = []
+        probes: list[ImageProbe] = []
+        failed_ms: int | None = None
+        masked = False
+        try:
+            shots, probes = self._write_frames(gate, deadline, port, resolved, inbox, times, seek)
+        except _FrameFailed as exc:
+            failed_ms = exc.ms
+        except Exception:
+            masked = True
+        if failed_ms is not None:
+            raise ValidationError(_frame_failed_text(failed_ms))
+        if masked:
+            raise CaptureFailedError(FRAMES_NOT_WRITTEN)
+        log.info("capture.frames", count=len(shots), shot_ids=[shot.id for shot in shots])
+        return VideoFrames(
+            video=video_probe(resolved, info),
+            frames=tuple(
+                VideoFrame(
+                    id=shot.id,
+                    path=str(shot.original_path),
+                    time_ms=ms,
+                    timecode=format_timecode(ms),
+                    width=probe.width,
+                    height=probe.height,
+                )
+                for shot, probe, ms in zip(shots, probes, times, strict=True)
+            ),
+        )
+
+    @staticmethod
+    def _frame_plan(
+        info: MediaInfo,
+        at_ms: list[int] | None,
+        count: int | None,
+        start_ms: int | None,
+        end_ms: int | None,
+    ) -> tuple[list[int], FrameSeek]:
+        """FRAME_CHECKS after the probe, and NO_DURATION (D-576 A): the times and the seek."""
+        total = duration_ms(info.duration)
+        if total is None:
+            if at_ms is None:
+                raise ValidationError(FRAMES_NO_DURATION)
+            return at_ms, "output"
+        if at_ms is not None:
+            for ms in at_ms:
+                if ms >= total:
+                    raise _past_end(ms, total)
+            return at_ms, "input"
+        first = 0 if start_ms is None else start_ms
+        last = total if end_ms is None else end_ms
+        if first >= total:
+            raise _past_end(first, total)
+        if last > total:
+            raise _past_end(last, total)
+        if first >= last:
+            raise ValidationError(FRAMES_BEFORE_END)
+        if count is None:
+            raise ValidationError(FRAMES_EITHER)
+        return frame_times(first, last, count), "input"
+
+    def _file_lock_by(self, deadline: float) -> threading.Lock | None:
+        """FRAME_WRITE: `CAPTURE_FILE_LOCK`, waited for no longer than the time left, or None."""
+        lock = CAPTURE_FILE_LOCK
+        left = deadline - self._monotonic()
+        if left <= 0 or not lock.acquire(timeout=left):
+            return None
+        return lock
+
+    def _write_frames(
+        self,
+        gate: _FramesGate,
+        deadline: float,
+        port: FramePort,
+        resolved: Path,
+        inbox: Path,
+        times: list[int],
+        seek: FrameSeek,
+    ) -> tuple[list[CaptureShot], list[ImageProbe]]:
+        """FRAME_WRITE: reserve, grab, publish. Any failure leaves nothing this call made.
+
+        Every handle is closed and every temp this call made and hasn't moved is unlinked; a
+        temp another writer made is never touched.
+        """
+        handles: list[BufferedWriter] = []
+        temps: list[Path] = []
+        dests: list[Path] = []
+        owned: list[Path] = []
+        try:
+            self._reserve_frames(
+                deadline, inbox, resolved.stem, times, handles, temps, dests, owned
+            )
+            probes = self._grab_frames(deadline, port, resolved, times, seek, handles, temps)
+            shots = self._publish_frames(
+                gate, deadline, inbox, resolved.stem, times, temps, dests, owned, probes
+            )
+        finally:
+            for handle in handles:
+                with contextlib.suppress(OSError):
+                    handle.close()
+            for tmp in owned:
+                with contextlib.suppress(OSError):
+                    tmp.unlink(missing_ok=True)
+        return shots, probes
+
+    def _reserve_frames(
+        self,
+        deadline: float,
+        inbox: Path,
+        stem: str,
+        times: list[int],
+        handles: list[BufferedWriter],
+        temps: list[Path],
+        dests: list[Path],
+        owned: list[Path],
+    ) -> None:
+        """FRAME_WRITE (1): under the lock, each time's name and its exclusive temp file."""
+        lock = self._file_lock_by(deadline)
+        if lock is None:
+            raise _FrameFailed(times[0])
+        try:
+            with self._uow_factory() as uow:
+                self._annotate.ensure_dir(inbox)
+                for ms in times:
+                    dest = self._import_dest(uow, inbox, frame_name(stem, ms), ".png")
+                    tmp = dest.with_name(dest.name + TMP_SUFFIX)
+                    handles.append(tmp.open("xb"))
+                    owned.append(tmp)
+                    temps.append(tmp)
+                    dests.append(dest)
+        finally:
+            lock.release()
+
+    def _grab_frames(
+        self,
+        deadline: float,
+        port: FramePort,
+        resolved: Path,
+        times: list[int],
+        seek: FrameSeek,
+        handles: list[BufferedWriter],
+        temps: list[Path],
+    ) -> list[ImageProbe]:
+        """FRAME_WRITE (2), unlocked: grab, check, write and probe each frame in time order."""
+        probes: list[ImageProbe] = []
+        for index, ms in enumerate(times):
+            left = deadline - self._monotonic()
+            if left <= 0:  # FRAME_DEADLINE (a)
+                raise _FrameFailed(ms)
+            data = port.grab_frame(resolved, ms, seek=seek, timeout_s=left)
+            if deadline - self._monotonic() <= 0:  # FRAME_DEADLINE (b)
+                raise _FrameFailed(ms)
+            if not isinstance(data, bytes) or not data.startswith(PNG_SIGNATURE):
+                raise _FrameFailed(ms)
+            handle = handles[index]
+            handle.write(data)
+            handle.close()
+            probe: ImageProbe | None = None
+            try:
+                probe = self._annotate.probe(temps[index])
+            except InboxPathError:
+                probe = None
+            if probe is None:
+                raise _FrameFailed(ms)
+            probes.append(probe)
+        return probes
+
+    def _publish_frames(
+        self,
+        gate: _FramesGate,
+        deadline: float,
+        inbox: Path,
+        stem: str,
+        times: list[int],
+        temps: list[Path],
+        dests: list[Path],
+        owned: list[Path],
+        probes: list[ImageProbe],
+    ) -> list[CaptureShot]:
+        """FRAME_WRITE (3): under the lock and one unit of work, move, register and commit.
+
+        A failure unlinks every dest this call moved before the lock is released, and the unit
+        of work rolls back.
+        """
+        last = times[-1]
+        lock = self._file_lock_by(deadline)
+        if lock is None:  # FRAME_DEADLINE (c), the lock not had in time
+            raise _FrameFailed(last)
+        moved: list[Path] = []
+        shots: list[CaptureShot] = []
+        failure: BaseException | None = None
+        try:
+            try:
+                with self._uow_factory() as uow:
+                    if deadline - self._monotonic() <= 0:  # FRAME_DEADLINE (c)
+                        raise _FrameFailed(last)
+                    now = self._now()
+                    for index, tmp in enumerate(temps):
+                        dest = dests[index]
+                        if _is_file(dest) or uow.capture_shots.get_by_path(dest) is not None:
+                            name = frame_name(stem, times[index])
+                            dest = self._import_dest(uow, inbox, name, ".png")
+                        os.replace(tmp, dest)
+                        owned.remove(tmp)
+                        moved.append(dest)
+                        shot = self._upsert_shot(uow, dest, probes[index], now, CaptureSource.Video)
+                        shots.append(shot)
+                    with gate.lock:  # FRAME_DEADLINE (d)
+                        expired = gate.state == "abandoned" or deadline - self._monotonic() <= 0
+                        if not expired:
+                            gate.state = "committing"
+                    if expired:
+                        raise _FrameFailed(last)
+            except BaseException as exc:
+                failure = exc
+                for dest in moved:
+                    with contextlib.suppress(OSError):
+                        dest.unlink(missing_ok=True)
+        finally:
+            lock.release()
+        if failure is not None:
+            raise failure
+        return shots
 
     def _import_copy(
         self, source: Path, inbox: Path, data: bytes, orientation: int

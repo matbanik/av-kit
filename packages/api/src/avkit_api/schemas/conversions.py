@@ -118,3 +118,28 @@ class GPUCapabilitiesOut(ApiModel):
     software_h264: bool
     recommended_encoder: str
     checked_at: str | None
+
+
+class ConversionProbeIn(ApiModel):
+    """POST /conversions/probe body (MEU-133 PROBE_ROUTE): one local video path."""
+
+    path: str = Field(min_length=1)
+
+
+class ConversionProbeOut(ApiModel):
+    """A local video's duration, size, codecs and streams (MEU-133 PROBE_MAP).
+
+    `duration_ms` and `timecode` are null for a raw stream with no duration.
+    """
+
+    path: str
+    duration_ms: int | None
+    timecode: str | None
+    container: str | None
+    video_codec: str | None
+    audio_codec: str | None
+    width: int | None
+    height: int | None
+    fps: float | None
+    has_video: bool
+    has_audio: bool

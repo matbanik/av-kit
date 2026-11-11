@@ -21,6 +21,8 @@ def _valid_body(path: str) -> dict[str, object]:
         return {"paths": ["C:/tmp/clip.mp4"], "kind": "compress"}
     if path == "/api/v1/conversions/reorder":
         return {"job_ids": [SAMPLE_ID]}
+    if path == "/api/v1/conversions/probe":
+        return {"path": "C:/tmp/clip.mp4"}
     if path == "/api/v1/transcripts":
         return {"channel_url": "https://www.youtube.com/@demo"}
     if path == "/api/v1/transcripts/reorder":
@@ -43,6 +45,8 @@ def _valid_body(path: str) -> dict[str, object]:
         return {"theme": "dark"}
     if path == "/api/v1/health/startup-metrics":
         return {"key": "boot", "value_ms": 12}
+    if path == "/api/v1/captures/frames":
+        return {"path": "C:/tmp/clip.mp4", "count": 3}
     if path == "/api/v1/captures/{id}/crop":
         return {"x": 0, "y": 0, "width": 8, "height": 8}
     return {}

@@ -219,6 +219,8 @@ class CaptureSource(StrEnum):
     Import = "Import"
     # CROP_SOURCE (MEU-130, D-484): a region cut from another shot by POST /captures/{id}/crop.
     Crop = "Crop"
+    # VIDEO_SOURCE (MEU-134, D-582): a still taken from a local video by POST /captures/frames.
+    Video = "Video"
 
 
 class CaptureRequestStatus(StrEnum):
