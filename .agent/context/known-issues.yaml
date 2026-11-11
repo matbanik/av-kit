@@ -4647,7 +4647,7 @@ issues:
     status: open
     discovered: '2026-11-10'
     root_cause: Each compound MCP tool registers its per-action text only under _meta.action_descriptions (mcp-server/src/toolsets/registry.ts:599-610 at 237732d); description holds TOOL_TOP_LEVEL and inputSchema the flattened schema. Claude Code passes a model the server instructions, the top-level description and the input schema, not _meta. So the crop paragraph (CROP_TEXT, mcp-server/src/toolsets/capture.ts:51) and every other action's text never reach a Claude Code agent.
-    blast_radius: 'A Claude Code agent learns an action''s inputs, units and limits only from the flattened schema, which has no per-action text. Session 60''s D-521 run (Haiku 5.5, given only that surface) still cropped a named region in one list and one crop call, and reported that neither the description nor the server instructions mention crop, that crop''s inputs appear only in the schema, and that the unit enum doesn''t say which value is the default. Clients that do read _meta are unaffected.'
+    blast_radius: A Claude Code agent learns an action's inputs, units and limits only from the flattened schema, which has no per-action text. Session 60's D-521 run (Haiku 5.5, given only that surface) still cropped a named region in one list and one crop call, and reported that neither the description nor the server instructions mention crop, that crop's inputs appear only in the schema, and that the unit enum doesn't say which value is the default. Clients that do read _meta are unaffected.
     verification:
       last_checked: '2026-11-10'
       method: d494-harness.ts describe against this tree's mcp-server/dist/index.js (C:/Temp/av-kit/s60-plan-d494-describe.txt), compared with avkit_capture's tool schema as Claude Code loaded it in Session 60, without calling the server
@@ -4666,7 +4666,7 @@ issues:
       decision_log:
         - id: D-528
           stage: closeout
-          question: 'Claude Code doesn''t show a model _meta.action_descriptions, where each MCP action''s text lives. Register it as a known issue, or leave it as the plan''s observation?'
+          question: Claude Code doesn't show a model _meta.action_descriptions, where each MCP action's text lives. Register it as a known issue, or leave it as the plan's observation?
           resolution: human
           class: two-way
           chosen: 'A: register it, as recommended: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL, P3, open, linked to MEU-131, no fix planned, filed at closeout in Session 60''s commit'
@@ -4680,3 +4680,242 @@ issues:
             sources: []
           reasoning: The gap was found on this session's own tool schema and changes what an agent can learn about every action, but the session's scope is renderer-only and changes no MCP text. Registering records the probe and the D-521 run's feedback for a plan of its own. Doing nothing leaves it in a plan note the register doesn't show. Two-way.
           human_message_reference: 'A: Register it (Recommended)'
+  - id: DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT
+    title: Downloads pin three YouTube clients and fail when only another client works
+    severity: high
+    component: infrastructure
+    status: open
+    discovered: '2026-11-10'
+    root_cause: 'Every download pins its clients (_cookie_opts, packages/infrastructure/src/avkit_infra/youtube/adapter.py:412-435 at 55d1289): with cookies, extractor_args youtube.player_client is tv, web_safari, web (COOKIE_EXTRACTOR_ARGS, :67-71); with cookie mode none it is android, tv, ios with player_skip and hls/dash skipped (SABR_EXTRACTOR_ARGS, :72-80). Both were copied from P:/yt-dlp_GUI (youtube_downloader.py:961-977). Any player_client replaces yt-dlp''s own choice (2026.10.26: tv_samsung, visionos, web, and visionos alone with no JS runtime, yt_dlp/extractor/youtube/_video.py:143-145) and turns off its ''No JS runtime'' warning (_video.py:2994). When YouTube gives the three pinned clients a SABR-only or reload response, the job fails with ''The page needs to be reloaded.'' while yt-dlp''s default choice works. Two riders: the video selector bestvideo[height<=N]+bestaudio/best[height<=N] (_quality_selector, adapter.py:102-110) has no catch-all, so a video whose formats all miss it fails with ''Requested format is not available''; and the add-time extract_info (adapter.py:470-474) runs with _base_opts only, without the download''s cookie and client options, so the add succeeds and the download fails.'
+    blast_radius: 'Measured 2026-11-10 on gKcOjnDJfzk (firefox cookies, 360p) through the yt-dlp Python API in av-kit''s .venv: av-kit''s options failed with ''The page needs to be reloaded.'' with cookies, without cookies and with Node; the same options without the player_client override returned 134+251 at 262p; of eight clients probed one at a time only visionos worked (docs/proposals/2026-11-10-download-logic-divergence-report.md §2). The job showed Failed with no reason (DOWNLOAD-FAILED-NO-REASON). Later the same video downloaded on unchanged code because YouTube''s response changed, so the failure comes and goes per video and per request. Check SABR, Force SABR and the firefox cookie option did not help: none of them changes the pinned clients. The no-cookie pin (android, tv, ios) was not probed.'
+    verification:
+      last_checked: '2026-11-10'
+      method: A/B and per-client probes with yt-dlp 2026.10.26 (extract only, no download), and a read of youtube/adapter.py at 55d1289
+      result: only the runs without the player_client override, or with visionos, extract the video; the pinned set fails
+    category: MEU-NEW
+    priority: P2
+    related:
+      - YTDLP-NO-JS-RUNTIME
+      - DOWNLOAD-FAILED-NO-REASON
+      - SABR-CHECK-MISSES-CURRENT-MESSAGES
+    meu_links:
+      - MEU-140
+    notes: Found 2026-11-10 while comparing av-kit's download path with P:/yt-dlp_GUI (docs/proposals/2026-11-10-download-logic-divergence-report.md, R1, R5, R7). The GUI pins the same clients and failed the same probes; it succeeded at the time Mat ran it because YouTube's response had changed. The fix strategy (retry with yt-dlp's default choice, drop the pin, or add visionos) is an open grouping decision.
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: human
+      decision_log:
+        - id: D-529
+          stage: triage
+          question: File DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT from the 2026-11-10 download comparison report, or leave it in the report?
+          resolution: human
+          class: two-way
+          chosen: 'File it: MEU-NEW, P2 (severity high, standalone, per the triage priority matrix), open, linked to MEU-140'
+          source_tag: Human-approved
+          precedents:
+            - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+            - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the register and from /session-grouping. Two-way.'
+          human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+  - id: YTDLP-NO-JS-RUNTIME
+    title: yt-dlp runs with no JavaScript runtime and no EJS solver
+    severity: medium
+    component: infrastructure
+    status: open
+    discovered: '2026-11-10'
+    root_cause: 'yt-dlp needs a JS runtime and the yt-dlp-ejs solver scripts to solve YouTube''s signature and n challenges; without them it keeps to clients that need none and drops formats. av-kit sets no js_runtimes, so yt-dlp looks only for deno, which on this machine is in ~/.deno/bin and not on PATH. packages/infrastructure/pyproject.toml:12 depends on plain yt-dlp, not yt-dlp[default], so the .venv has no yt_dlp_ejs module, and packaging/avkit-backend.spec collects yt_dlp (:23) but no solver script. P:/yt-dlp_GUI passes js_runtimes={''node'': {}} (youtube_downloader.py:1222) and bundles yt_dlp_ejs 0.8.0.'
+    blast_radius: 'Every YouTube extract runs on the JS-less path, which yt-dlp marks as degraded and narrows to the clients that need no solver; the pinned clients hide the warning that would say so (DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT). Adding Node alone did not fix gKcOjnDJfzk on 2026-11-10 (docs/proposals/2026-11-10-download-logic-divergence-report.md §2, case B), so this is a reliability gap, not that video''s cause. The installed app has the same gap: no runtime is shipped or fetched.'
+    verification:
+      last_checked: '2026-11-10'
+      method: import yt_dlp_ejs in .venv (ModuleNotFoundError), a read of pyproject.toml and avkit-backend.spec, PATH lookup for deno/node/bun
+      result: no solver module, no js_runtimes option, deno not on PATH; Node 26 and bun are on PATH but unused
+    category: MEU-NEW
+    priority: P3
+    related:
+      - DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT
+    meu_links:
+      - MEU-141
+    notes: Found 2026-11-10 in the P:/yt-dlp_GUI comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md, R2). How a runtime reaches the installed app (managed download as with ffmpeg and models, Node from PATH, or bundled) is an open grouping decision; the triage D-22 rule is that runtime assets are managed downloads.
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: human
+      decision_log:
+        - id: D-530
+          stage: triage
+          question: File YTDLP-NO-JS-RUNTIME from the 2026-11-10 download comparison report, or leave it in the report?
+          resolution: human
+          class: two-way
+          chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-141'
+          source_tag: Human-approved
+          precedents:
+            - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+            - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the register and from /session-grouping. Two-way.'
+          human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+  - id: DOWNLOAD-FAILED-NO-REASON
+    title: A failed download shows no reason on its card and logs nothing
+    severity: high
+    component: core
+    status: open
+    discovered: '2026-11-10'
+    root_cause: 'DownloadService stores the reason (_finish(job.id, Failed, error=str(exc)), packages/core/src/avkit_core/services/download.py:544-549) and the API returns it (routes/downloads.py:56, schemas/downloads.py:61), but DownloaderPage builds each QueueCardJob without errorMessage (ui/src/renderer/src/features/downloader/DownloaderPage.tsx:476-485), so QueueCard.tsx:277 falls back to the placeholder. The failure branches log nothing, and the download path has only three log calls (download.py:178, :180, :199): no line for a job starting, finishing or failing.'
+    blast_radius: Mat's gKcOjnDJfzk job on 2026-11-10 showed Failed with an empty Console; the reason ('The page needs to be reloaded.') was found only by running yt-dlp by hand (docs/proposals/2026-11-10-download-logic-divergence-report.md §4). Every failed download is silent this way, so a YouTube block, a missing format and a cookie error look the same. The transcript and TTS pages had the same gap and were fixed (TRANSCRIPT-FAILED-NO-REASON by MEU-115, TTS-GENERATE-FAILED-SILENT by MEU-62).
+    verification:
+      last_checked: '2026-11-10'
+      method: A read of services/download.py, routes/downloads.py, DownloaderPage.tsx and QueueCard.tsx at 55d1289
+      result: error_message is stored and served but never mapped to the card; no log call on the failure branches
+    category: MEU-NEW
+    priority: P2
+    related:
+      - TRANSCRIPT-FAILED-NO-REASON
+      - TTS-GENERATE-FAILED-SILENT
+      - YTDLP-LOG-TEXT-DROPPED
+    meu_links:
+      - MEU-137
+    notes: 'Found 2026-11-10 in the P:/yt-dlp_GUI comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md, R3, R4, R12). The fix follows MEU-115''s pattern: a short av-kit message per cause on the card, and one log line per failure with the same text in a kept field.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: human
+      decision_log:
+        - id: D-531
+          stage: triage
+          question: File DOWNLOAD-FAILED-NO-REASON from the 2026-11-10 download comparison report, or leave it in the report?
+          resolution: human
+          class: two-way
+          chosen: 'File it: MEU-NEW, P2 (severity high, standalone, per the triage priority matrix), open, linked to MEU-137'
+          source_tag: Human-approved
+          precedents:
+            - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+            - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the register and from /session-grouping. Two-way.'
+          human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+  - id: SABR-CHECK-MISSES-CURRENT-MESSAGES
+    title: Check SABR misses yt-dlp's current SABR messages and shows nothing when it finds none
+    severity: medium
+    component: infrastructure
+    status: open
+    discovered: '2026-11-10'
+    root_cause: 'check_sabr_status (packages/infrastructure/src/avkit_infra/youtube/adapter.py:555-561) reports Active only when a logger line holds one of SABR_LOG_NEEDLES (:81-85): ''require a gvs po token'', ''android client sabr formats require'', ''ios client sabr formats require''. yt-dlp 2026.10.26 says ''Some android client https formats have been skipped as they are missing a URL ... SABR-only streaming experiment'' and ''forcing SABR'', which none of them matches. The page shows the result only when Active (DownloaderPage.tsx:664, hidden={!sabrActive}; ''Checking...'' only while running, :667), and the SABR routes (routes/downloads.py:95-133) and service methods (services/download.py:345-398) log nothing. The phrases are the build-plan''s (02-infrastructure.md:377, 06-gui.md:457), so the spec is stale too.'
+    blast_radius: 'Measured 2026-11-10 (docs/proposals/2026-11-10-download-logic-divergence-report.md §6a): Check SABR returned Inactive while yt-dlp printed the SABR-only warning, and Mat saw no message and no Console line after pressing it. The passive check in every download uses the same phrases, so SABR mode never turns on by itself. P:/yt-dlp_GUI''s probe matches ''sabr'', ''missing a url'' and ''forcing sabr'' (youtube_downloader.py:3717).'
+    verification:
+      last_checked: '2026-11-10'
+      method: check_sabr_status run against yt-dlp 2026.10.26 with every logger line captured, and a read of the page and routes at 55d1289
+      result: the warning lines carry 'SABR' and 'missing a URL'; no needle matched; the page hides Inactive
+    category: MEU-NEW
+    priority: P3
+    related:
+      - DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT
+      - YTDLP-LOG-TEXT-DROPPED
+    meu_links:
+      - MEU-138
+    notes: Found 2026-11-10 when Mat reported that Check SABR shows nothing (docs/proposals/2026-11-10-download-logic-divergence-report.md, R8, R9, R10).
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: human
+      decision_log:
+        - id: D-532
+          stage: triage
+          question: File SABR-CHECK-MISSES-CURRENT-MESSAGES from the 2026-11-10 download comparison report, or leave it in the report?
+          resolution: human
+          class: two-way
+          chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-138'
+          source_tag: Human-approved
+          precedents:
+            - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+            - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the register and from /session-grouping. Two-way.'
+          human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+  - id: YTDLP-LOG-TEXT-DROPPED
+    title: yt-dlp's own log lines never reach the Console
+    severity: medium
+    component: infrastructure
+    status: open
+    discovered: '2026-11-10'
+    root_cause: '_YtDlpLogger (packages/infrastructure/src/avkit_infra/youtube/adapter.py:315-340) logs a line only when downloader.yt_dlp_debug is on, and puts its text in a ''message'' field. HealthService keeps only CONSOLE_FIELDS (packages/core/src/avkit_core/services/health.py:47-62: job_id, video_id, variant_id, device, error, detail, request_id, route), so the text is dropped even then. The setting defaults to False (services/settings.py:57), has no control in Settings, and is read once at startup (packages/api/src/avkit_api/wiring.py:149). The stored app.log_level is read by nothing.'
+    blast_radius: A user or agent sees none of yt-dlp's warnings or errors, which name the real cause of most download failures (docs/proposals/2026-11-10-download-logic-divergence-report.md §6b). P:/yt-dlp_GUI forwards every line when debug is on and has 279 log_message calls; av-kit's download path has three. Turning the setting on through the API does nothing until the backend restarts, and then logs empty lines.
+    verification:
+      last_checked: '2026-11-10'
+      method: A read of the adapter logger, health.py CONSOLE_FIELDS, settings.py and wiring.py at 55d1289, and the local settings table
+      result: the text field is not kept, the toggle has no UI and is read once; app.log_level=DEBUG is stored and unread
+    category: MEU-NEW
+    priority: P3
+    related:
+      - DOWNLOAD-FAILED-NO-REASON
+      - SABR-CHECK-MISSES-CURRENT-MESSAGES
+    meu_links:
+      - MEU-139
+    notes: 'Found 2026-11-10 when Mat asked why P:/yt-dlp_GUI logs far more (docs/proposals/2026-11-10-download-logic-divergence-report.md, R11). The kept field must go through the same redaction as Session 50''s (D-247): yt-dlp lines can hold URLs and file paths.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: human
+      decision_log:
+        - id: D-533
+          stage: triage
+          question: File YTDLP-LOG-TEXT-DROPPED from the 2026-11-10 download comparison report, or leave it in the report?
+          resolution: human
+          class: two-way
+          chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-139'
+          source_tag: Human-approved
+          precedents:
+            - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+            - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the register and from /session-grouping. Two-way.'
+          human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+  - id: DOWNLOAD-MP3-NOT-CONVERTED
+    title: An MP3 audio download saves the source m4a or webm, not an MP3
+    severity: medium
+    component: core
+    status: open
+    discovered: '2026-11-10'
+    root_cause: 'AudioFormat.StandardMp3 maps to ''bestaudio/best[height<=480]/best'' (packages/infrastructure/src/avkit_infra/youtube/adapter.py:61) and the adapter adds no postprocessor. docs/build-plan/02-infrastructure.md:432 and 03-service-layer.md:56 say download audio extract goes through MediaPort.convert with ConvertOptions from the chosen AudioFormat, but DownloadService takes no MediaPort (packages/api/src/avkit_api/wiring.py:164-169) and services/download.py has no convert call. In cookie mode browser or file the chosen audio format is ignored altogether: _audio_selector returns COOKIE_AUDIO_SELECTOR, an HLS-first bestaudio chain (adapter.py:64-66, :113-115).'
+    blast_radius: Anyone who picks MP3 for an audio-only download gets an .m4a or .webm file. SABR mode allows only StandardMp3 and HighM4a for audio (03-service-layer.md:165), so under SABR the MP3 choice is one of two and is never honoured. P:/yt-dlp_GUI adds an FFmpegExtractAudio postprocessor (youtube_downloader.py:1134-1188).
+    verification:
+      last_checked: '2026-11-10'
+      method: A read of AUDIO_FORMAT_SELECTORS, DownloadService wiring and the 02/03 build-plan rows at 55d1289
+      result: no convert step or postprocessor exists for StandardMp3; the spec's MediaPort path was never built
+    category: MEU-NEW
+    priority: P3
+    related: []
+    meu_links:
+      - MEU-142
+    notes: Found 2026-11-10 in the P:/yt-dlp_GUI comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md, R6). Not measured with a real download.
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: human
+      decision_log:
+        - id: D-534
+          stage: triage
+          question: File DOWNLOAD-MP3-NOT-CONVERTED from the 2026-11-10 download comparison report, or leave it in the report?
+          resolution: human
+          class: two-way
+          chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-142'
+          source_tag: Human-approved
+          precedents:
+            - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+            - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the register and from /session-grouping. Two-way.'
+          human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'

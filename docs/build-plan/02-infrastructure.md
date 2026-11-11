@@ -374,11 +374,11 @@ Audio-only: map the nine `AudioFormat` values to yt-dlp format strings from [_do
 
 | Path | Behavior |
 |------|----------|
-| Passive | Custom yt-dlp logger watches `"require a gvs po token"`, `"android client sabr formats require"`, `"ios client sabr formats require"`. Set Phase 1 `DownloadResult.sabr_detected=True`. Do not write a DB row |
+| Passive | Custom yt-dlp logger watches `"require a gvs po token"`, `"android client sabr formats require"`, `"ios client sabr formats require"`. Set Phase 1 `DownloadResult.sabr_detected=True`. Do not write a DB row. These phrases are stale for yt-dlp 2026.10.26; [§SABR check result (residual)](#sabr-check-result-residual) (MEU-138) replaces them |
 | `check_sabr_status()` | Test extract on a known public video; return `SABRStatus(mode, source=Detected, checked_at)` |
 | Force / Clear | **Not adapter methods.** Session state on `DownloadService` |
 
-SABR-mode client fallback: set `extractor_args` client order that avoids blocked clients ([_downloader_pseudo_logic.md §3](../../_inspiration/_downloader_pseudo_logic.md)). Cookie mode further restricts viable clients.
+SABR-mode client fallback: set `extractor_args` client order that avoids blocked clients ([_downloader_pseudo_logic.md §3](../../_inspiration/_downloader_pseudo_logic.md)). Cookie mode further restricts viable clients. A fixed client list goes stale as YouTube changes: [§YouTube client fallback (residual)](#youtube-client-fallback-residual) (MEU-140).
 
 ### Cookie test
 
@@ -522,6 +522,67 @@ Phase 1 already defines `test_cookies`, `sabr_detected`, `FilesystemPort`, `Mode
 | Model manager | Mock `hf_hub_download`; sideload existing file |
 
 Do not hit live YouTube or Hugging Face in the default suite.
+
+---
+
+## Residuals registered 2026-11-10
+
+> Registered 2026-11-10 from the download comparison with P:/yt-dlp_GUI ([report](../proposals/2026-11-10-download-logic-divergence-report.md)) and the known issues filed from it (triage D-529 to D-534). Grouping: [`2026-11-10-download-reliability-session-grouping.md`](../../.agent/context/grouping/2026-11-10-download-reliability-session-grouping.md), D-535 to D-543.
+
+<a id="sabr-check-result-residual"></a>
+
+### SABR check result (residual)
+
+> **MEU-138.** From `SABR-CHECK-MISSES-CURRENT-MESSAGES`. `check_sabr_status` (`youtube/adapter.py:555-561`) and the passive scan (`_YtDlpLogger._scan`, `:315-340`) match only the three phrases in [§SABR](#sabr), and yt-dlp 2026.10.26 says none of them. On 2026-11-10 the check returned Inactive while yt-dlp printed "Some android client https formats have been skipped as they are missing a URL … SABR-only streaming experiment". The page hides an Inactive result (`DownloaderPage.tsx:664`), and nothing on the path logs.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Phrases | The passive scan and the check match case-insensitively on `sabr`, `missing a url`, `forcing sabr` and `po token`, which covers the three old phrases. The set lives in one constant both paths use. | Local Canon: P:/yt-dlp_GUI `detect_sabr_mode` (`youtube_downloader.py:3717`); measured 2026-11-10; grouping D-541 |
+| Shown | The Downloader page states the result of every check, Active or Inactive, with its `checked_at` time; a failed check states its error. | Local Canon: grouping D-541 |
+| Log | Check, Force and Clear each log one line with the result (`download.sabr_check`, `download.sabr_force`, `download.sabr_clear`), with the matched phrase in a kept field. | Local Canon: MEU-115's one-line-per-outcome rule; grouping D-541 |
+| Spec | [§SABR](#sabr) Passive and [06 §SABR detection sources](06-gui.md) name this section instead of the old phrases. | Local Canon |
+| Tests | Unit: each phrase, case, and a line with none; a captured 2026.10.26 warning line is Active. Renderer: Inactive and Active both shown with a time. Route: each SABR action logs once. No live YouTube. | Local Canon |
+
+<a id="ytdlp-log-detail-residual"></a>
+
+### yt-dlp log detail (residual)
+
+> **MEU-139.** From `YTDLP-LOG-TEXT-DROPPED`. `_YtDlpLogger` logs only when `downloader.yt_dlp_debug` is on and puts the text in `message`, which `CONSOLE_FIELDS` (`services/health.py:47-62`) drops. The setting has no control and is read once at startup (`api/wiring.py:149`).
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Warnings and errors | yt-dlp warning and error lines always log at WARNING and ERROR, with the text in the kept `detail` field, whatever the debug setting. | Local Canon: [§Logging](#logging); grouping D-543 |
+| Debug lines | With `downloader.yt_dlp_debug` on, info and debug lines also log at DEBUG with the text in `detail`. | Spec: [§download](#downloadurl-options) Debug row; grouping D-543 |
+| Redaction | The kept text goes through the Console redaction Session 50 set up (D-247): one line, home folder as `~`, cookie values never kept. | Local Canon: 03 [§Transcript failure reason](03-service-layer.md#transcript-failure-reason-residual) Console fields row |
+| Live | The adapter reads the setting per download and per check, so a change applies without a restart, as `LIVE_SOURCE` does for ffmpeg. | Local Canon: `api/wiring.py:151` |
+| Control | Settings → Downloader has a "yt-dlp debug log" switch for the setting. | Local Canon: grouping D-543 |
+| Tests | Unit: a warning logs with `detail` when debug is off; a debug line logs only when on; a line holding a home path and a cookie-looking value is redacted. Renderer: the switch saves the setting. | Local Canon |
+
+<a id="youtube-client-fallback-residual"></a>
+
+### YouTube client fallback (residual)
+
+> **MEU-140.** From `DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT`. `_cookie_opts` (`youtube/adapter.py:412-435`) pins `tv`, `web_safari`, `web` with cookies and `android`, `tv`, `ios` with hls/dash skipped without them. On 2026-11-10 gKcOjnDJfzk failed on the pin and extracted with yt-dlp's own client choice; only `visionos` worked alone. The video selector has no catch-all, and the add-time extract uses none of the download's cookie or client options.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Client choice | Per grouping D-539 (ruled A, 2026-11-10): the first attempt sets no `player_client` in either cookie mode, so yt-dlp picks its own clients; on a client-side error (reload page, no formats, SABR-only, requested format not available) it retries once with today's cookie pin (`tv`, `web_safari`, `web`), and both attempts log. | Human-approved: grouping D-539 (Mat, 2026-11-10) |
+| Catch-all | The video selector ends with `/best`, so a video with formats but none at the height still downloads, and the received height (MEU-124) shows the difference. | Local Canon: P:/yt-dlp_GUI selector ends in `/worst` (`youtube_downloader.py:1029-1044`); grouping D-539 |
+| Add-time check | The add-time extract uses the same cookie and client options as the download. | Local Canon: report R7 |
+| Tests | Unit with a mocked `YoutubeDL`: the retry runs once and only on the listed errors; a cancel or cookie error never retries; both attempts log. A recorded live probe on one video is a manual check, not part of the suite. | Local Canon |
+
+<a id="ytdlp-js-runtime-residual"></a>
+
+### yt-dlp JS runtime (residual)
+
+> **MEU-141.** From `YTDLP-NO-JS-RUNTIME`. av-kit sets no `js_runtimes`, deno is not on PATH, the `.venv` has no `yt_dlp_ejs`, and `packaging/avkit-backend.spec` collects no solver script, so every extract runs on yt-dlp's JS-less path.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Runtime | Per grouping D-540 (ruled A, 2026-11-10): ship `deno.exe` in the Windows installer and resolve it as ffmpeg is resolved (the setting, then the bundled file, then PATH), passing it through `js_runtimes`; the plan measures its size against the installer budget, and Deno's MIT notice goes in `LICENSES.txt`. | Human-approved: grouping D-540 (Mat, 2026-11-10) |
+| Solver | The dependency is `yt-dlp[default]`, so the `yt-dlp-ejs` version yt-dlp pins comes with it, and its scripts are collected into the packaged backend. | Research-backed: yt-dlp EJS wiki (github.com/yt-dlp/yt-dlp/wiki/EJS) |
+| Health | The Health page names the runtime in use, or says none was found and what that costs. | Local Canon: 02 [§Logging](#logging), Health dependency rows |
+| Tests | Unit: runtime lookup order and the none-found result; a packaged smoke that the solver module imports in the onedir. | Local Canon |
 
 ---
 

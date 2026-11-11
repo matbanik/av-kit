@@ -12,7 +12,7 @@
 |------|------|------|
 | P0 | MEU-1–4 | Domain first. No infrastructure until ports exist. |
 | P1 | MEU-5–13 | Adapters then services. Never import infra from domain. |
-| P2 | MEU-14–136 | API before MCP/GUI. Distribution after GUI shell. Conversion (MEU-28–33) after the YouTube toolkit exists. Capture (MEU-34–40) after Convert. Capture annotation geometry (MEU-59) after the Capture page and native picker. Capture edit-until-Save (MEU-60) after MEU-59. Queue cards (MEU-41–49) after every page exists. Page layout (MEU-50–58) after the queue cards it composes around. Login item (MEU-61) after Settings (MEU-23) and the NSIS installer (MEU-25). 2026-09-30 residuals: TTS runtime assets (MEU-62) before the TTS page residuals (MEU-63/64) and the MCP live audit (MEU-68); Capture toolbar (MEU-65) before zoom (MEU-66); flatten-with-backup (MEU-67) after MEU-60; header toggles (MEU-69) and Settings emphasis (MEU-70) last. 2026-10-17 residuals: shortcut binding (MEU-95) before palette curation (MEU-96) before common shortcuts (MEU-97); path fields (MEU-93) and theme-reactive selects (MEU-94) stand alone; TTS sideload load (MEU-98) after the device fallback (MEU-75). 2026-11-08 crop residuals: region view (MEU-128) before crop (MEU-130) before the crop tool (MEU-131); image import (MEU-129) before GUI import (MEU-132). 2026-11-09 video stills residuals: probe (MEU-133) before frames (MEU-134) before the sheet (MEU-135); frames and the export copy (MEU-136) after crop (MEU-130). |
+| P2 | MEU-14–142 | API before MCP/GUI. Distribution after GUI shell. Conversion (MEU-28–33) after the YouTube toolkit exists. Capture (MEU-34–40) after Convert. Capture annotation geometry (MEU-59) after the Capture page and native picker. Capture edit-until-Save (MEU-60) after MEU-59. Queue cards (MEU-41–49) after every page exists. Page layout (MEU-50–58) after the queue cards it composes around. Login item (MEU-61) after Settings (MEU-23) and the NSIS installer (MEU-25). 2026-09-30 residuals: TTS runtime assets (MEU-62) before the TTS page residuals (MEU-63/64) and the MCP live audit (MEU-68); Capture toolbar (MEU-65) before zoom (MEU-66); flatten-with-backup (MEU-67) after MEU-60; header toggles (MEU-69) and Settings emphasis (MEU-70) last. 2026-10-17 residuals: shortcut binding (MEU-95) before palette curation (MEU-96) before common shortcuts (MEU-97); path fields (MEU-93) and theme-reactive selects (MEU-94) stand alone; TTS sideload load (MEU-98) after the device fallback (MEU-75). 2026-11-08 crop residuals: region view (MEU-128) before crop (MEU-130) before the crop tool (MEU-131); image import (MEU-129) before GUI import (MEU-132). 2026-11-09 video stills residuals: probe (MEU-133) before frames (MEU-134) before the sheet (MEU-135); frames and the export copy (MEU-136) after crop (MEU-130). 2026-11-10 download reliability residuals: failure reason (MEU-137) before client fallback (MEU-140) before the JS runtime (MEU-141), and before the audio extract (MEU-142); SABR check result (MEU-138) and yt-dlp log detail (MEU-139) stand alone. |
 
 ## MEU order
 
@@ -27,6 +27,10 @@
 | 2.3 | MEU-7 | `infra-transcript` | [02 §Transcript adapter](02-infrastructure.md#transcript-adapter-transcriptadapterpy) | MEU-4 |
 | 2.4 | MEU-8 | `infra-filesystem-media` | [02 §Filesystem](02-infrastructure.md#filesystem-adapter-filesystemwriterpy) + Media | MEU-4 |
 | 2.5 | MEU-9 | `infra-tts-models` | [02 §TTS](02-infrastructure.md#tts-adapter-ttsadapterpy) + Model manager | MEU-4 |
+| 2.6 | MEU-138 | `infra-sabr-check-result` | [02 §SABR check result (residual)](02-infrastructure.md#sabr-check-result-residual) | MEU-6, MEU-10, MEU-20 |
+| 2.7 | MEU-139 | `infra-ytdlp-log-detail` | [02 §yt-dlp log detail (residual)](02-infrastructure.md#ytdlp-log-detail-residual) | MEU-6, MEU-13, MEU-23, MEU-115 |
+| 2.8 | MEU-140 | `infra-youtube-client-fallback` | [02 §YouTube client fallback (residual)](02-infrastructure.md#youtube-client-fallback-residual) | MEU-6, MEU-124, MEU-137 |
+| 2.9 | MEU-141 | `infra-ytdlp-js-runtime` | [02 §yt-dlp JS runtime (residual)](02-infrastructure.md#ytdlp-js-runtime-residual) | MEU-6, MEU-13, MEU-140 |
 | 3.1 | MEU-10 | `svc-download` | [03 §DownloadService](03-service-layer.md#downloadservice) | MEU-5, MEU-6, MEU-8 |
 | 3.2 | MEU-11 | `svc-transcript` | [03 §TranscriptService](03-service-layer.md#transcriptservice) | MEU-5, MEU-6, MEU-7, MEU-8 |
 | 3.3 | MEU-12 | `svc-tts-models` | [03 §TTSService](03-service-layer.md#ttsservice) + Prepare + Models | MEU-5, MEU-8, MEU-9 |
@@ -45,6 +49,8 @@
 | 3.16 | MEU-121 | `svc-tts-fp16-nonfinite` | [03 §TTS ONNX FP16 audio (residual)](03-service-layer.md#tts-onnx-fp16-audio-residual) | MEU-62, MEU-72, MEU-117 |
 | 3.17 | MEU-122 | `svc-transcript-metadata` | [03 §Transcript source metadata (residual)](03-service-layer.md#transcript-source-metadata-residual) | MEU-7, MEU-11 |
 | 3.18 | MEU-127 | `svc-tts-fp16-phase-guard` | [03 §TTS FP16 phase guard (residual)](03-service-layer.md#tts-fp16-phase-guard-residual) | MEU-121 |
+| 3.19 | MEU-137 | `svc-download-failure-reason` | [03 §Download failure reason (residual)](03-service-layer.md#download-failure-reason-residual) | MEU-10, MEU-15, MEU-46, MEU-115 |
+| 3.20 | MEU-142 | `svc-download-audio-extract` | [03 §Download audio extract (residual)](03-service-layer.md#download-audio-extract-residual) | MEU-8, MEU-10, MEU-78, MEU-137 |
 | 4.1 | MEU-14 | `api-app-auth` | [04 §App factory](04-rest-api.md#app-factory-and-lifespan) + Auth | MEU-10–13 |
 | 4.2 | MEU-15 | `api-downloads-health-settings` | [04 §Downloads](04-rest-api.md#routes--downloads) + Health + Settings | MEU-14 |
 | 4.3 | MEU-16 | `api-transcripts-tts-models` | [04 §Transcripts](04-rest-api.md#routes--transcripts) + TTS + Models | MEU-14 |

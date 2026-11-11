@@ -697,6 +697,33 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Outcome | What ships, a patched graph or nothing, comes back to Mat with the spike's counts. | Human-approved: D-336 |
 | Tests | The packaged `--phase sentences` smoke on the patched FP16 graph, 149 jobs, each WAV with its full payload (AC-121.8). | Local Canon |
 
+<a id="download-failure-reason-residual"></a>
+
+## Download failure reason (residual)
+
+> **MEU-137.** Registered 2026-11-10 from `DOWNLOAD-FAILED-NO-REASON` (triage D-531; grouping D-535). The reason is stored (`services/download.py:544-549`) and served (`routes/downloads.py:56`), but `DownloaderPage.tsx:476-485` builds each card without `errorMessage`, so `QueueCard.tsx:277` shows the placeholder, and the failure branches log nothing. Mat's gKcOjnDJfzk job showed Failed with an empty Console on 2026-11-10.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Card | The Downloader card shows the job's `error_message` on a Failed or AgeRestricted row, as the Transcript card does. | Local Canon: [§Transcript failure reason](#transcript-failure-reason-residual) Card row; `TTS-GENERATE-FAILED-SILENT` |
+| Message | A failure stores one short av-kit message per cause: YouTube refused the request (reload page, SABR-only, bot check), no format at that quality, cookies failed, file write failed, or other with yt-dlp's first line. yt-dlp's multi-line text is not stored whole. | Local Canon: triage D-218 pattern |
+| Log | A job logs `download.started`, `download.done` and `download.failed`; the failure line is ERROR with the message in `error` and yt-dlp's raw line, redacted, in `detail`. | Local Canon: [§Transcript failure reason](#transcript-failure-reason-residual) Log and Console rows (D-247) |
+| Done | A failed download's card states the reason and the Console has a matching line. | Local Canon |
+| Tests | Unit for each cause with a mocked port; a renderer test for the card; a test that the failure line keeps `error` and `detail` through redaction. | Local Canon |
+
+<a id="download-audio-extract-residual"></a>
+
+## Download audio extract (residual)
+
+> **MEU-142.** Registered 2026-11-10 from `DOWNLOAD-MP3-NOT-CONVERTED` (triage D-534; grouping D-542). `StandardMp3` maps to plain `bestaudio` (`youtube/adapter.py:61`), and in cookie mode every audio format maps to `COOKIE_AUDIO_SELECTOR` (`:113-115`). `DownloadService` gets no `MediaPort` (`api/wiring.py:164-169`), so the MP3 convert in [02 §Media adapter](02-infrastructure.md#media-adapter-mediaadapterpy) was never built.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Convert | When the job's audio format is `StandardMp3`, the service converts the downloaded file with `MediaPort.convert` to MP3 and stores the MP3 as the job's file, in any cookie mode. The source file is removed after a good convert. | Spec: 02 §Media adapter `convert` row; [§Construction](#construction) `MediaPort` row; grouping D-542 |
+| No row | The convert creates no `ConversionJob` row. | Spec: [08 §`ConversionJob` — persistable](08-video-conversion.md#conversionjob--persistable) |
+| No ffmpeg | Without ffmpeg the job fails with the `FFmpegNotFoundError` message on its card (MEU-137), and the downloaded file stays. | Spec: 02 §download, audio-only paragraph |
+| Tests | Unit with a fake `MediaPort`: MP3 converts, other formats do not, a failed convert keeps the source; one real-ffmpeg integration test on a generated clip, deselected on CI. | Local Canon |
+
 ## What this layer must not do
 
 | Forbidden | Why |

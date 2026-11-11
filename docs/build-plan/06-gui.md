@@ -453,7 +453,7 @@ Each nav rail item maps to a single-page module. No internal tab routing — eac
 - Items already `QualityBlocked` reset to `Pending` when SABR is cleared
 
 **Detection sources** ([_downloader_pseudo_logic.md §3](../../_inspiration/_downloader_pseudo_logic.md)):
-- **Passive detection**: yt-dlp logger watches for SABR indicator strings during download:
+- **Passive detection**: yt-dlp logger watches for SABR indicator strings during download (stale for yt-dlp 2026.10.26; [02 §SABR check result (residual)](02-infrastructure.md#sabr-check-result-residual), MEU-138, replaces them and makes the page show every check's result):
   - `"require a gvs po token"`
   - `"android client sabr formats require"`
   - `"ios client sabr formats require"`

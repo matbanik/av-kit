@@ -3011,6 +3011,204 @@ actionable:
       reasoning: The baseline is a governed snapshot that only an authoritative run updates, and that run is blocked while the caption block holds. Naming the one gap in the test and here keeps main green
         and tells the next release audit what to accept. Two-way.
       human_message_reference: '**Mat''s ruling (2026-11-09):** option A, as recommended: `BASELINE_PENDING` in the test, plus a filed issue. Mat''s words: "D-499 A".'
+- id: CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST
+  title: One inbox-root file the scan can't open breaks the capture list
+  severity: medium
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-507
+      stage: closeout
+      question: 'Session 59 found a pre-existing scan defect outside the crop: one inbox-root file the scan can''t open breaks GET /captures, with a 422 naming its path or a 500. File it, or leave it as
+        the handoff''s observation?'
+      resolution: human
+      class: two-way
+      chosen: 'File it, as recommended: CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST, P2, open, linked to MEU-130, in Session 59''s commit. Mat''s words (2026-11-10): ''File it (Recommended)'''
+      source_tag: Human-approved
+      precedents:
+      - packages/core/src/avkit_core/services/capture.py:411 — scan_inbox calls probe on each scan-extension file with no catch
+      - packages/infrastructure/src/avkit_infra/capture/adapter.py:316 — probe raises InboxPathError naming the path, mapped to 422
+      - .agent/context/handoffs/2026-11-08-capture-crop-copy-MEU-130-handoff.md — row 5's observation, not fixed
+      research:
+        engine: none
+        sources: []
+      reasoning: Session 50's rule says a raw value that reaches an API message is fixed or raised, never left as a residual, and the defect predates this session and lies outside MEU-130's scope. Filing
+        records the probe and its two failure shapes for a plan of its own. Leaving it as a handoff observation hides it from the register. Two-way.
+      human_message_reference: File it (Recommended)
+- id: DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT
+  title: Downloads pin three YouTube clients and fail when only another client works
+  severity: high
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-529
+      stage: triage
+      question: File DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT from the 2026-11-10 download comparison report, or leave it in the report?
+      resolution: human
+      class: two-way
+      chosen: 'File it: MEU-NEW, P2 (severity high, standalone, per the triage priority matrix), open, linked to MEU-140'
+      source_tag: Human-approved
+      precedents:
+      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
+        register and from /session-grouping. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+- id: YTDLP-NO-JS-RUNTIME
+  title: yt-dlp runs with no JavaScript runtime and no EJS solver
+  severity: medium
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-530
+      stage: triage
+      question: File YTDLP-NO-JS-RUNTIME from the 2026-11-10 download comparison report, or leave it in the report?
+      resolution: human
+      class: two-way
+      chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-141'
+      source_tag: Human-approved
+      precedents:
+      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
+        register and from /session-grouping. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+- id: DOWNLOAD-FAILED-NO-REASON
+  title: A failed download shows no reason on its card and logs nothing
+  severity: high
+  component: core
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-531
+      stage: triage
+      question: File DOWNLOAD-FAILED-NO-REASON from the 2026-11-10 download comparison report, or leave it in the report?
+      resolution: human
+      class: two-way
+      chosen: 'File it: MEU-NEW, P2 (severity high, standalone, per the triage priority matrix), open, linked to MEU-137'
+      source_tag: Human-approved
+      precedents:
+      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
+        register and from /session-grouping. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+- id: SABR-CHECK-MISSES-CURRENT-MESSAGES
+  title: Check SABR misses yt-dlp's current SABR messages and shows nothing when it finds none
+  severity: medium
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-532
+      stage: triage
+      question: File SABR-CHECK-MISSES-CURRENT-MESSAGES from the 2026-11-10 download comparison report, or leave it in the report?
+      resolution: human
+      class: two-way
+      chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-138'
+      source_tag: Human-approved
+      precedents:
+      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
+        register and from /session-grouping. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+- id: YTDLP-LOG-TEXT-DROPPED
+  title: yt-dlp's own log lines never reach the Console
+  severity: medium
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-533
+      stage: triage
+      question: File YTDLP-LOG-TEXT-DROPPED from the 2026-11-10 download comparison report, or leave it in the report?
+      resolution: human
+      class: two-way
+      chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-139'
+      source_tag: Human-approved
+      precedents:
+      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
+        register and from /session-grouping. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+- id: DOWNLOAD-MP3-NOT-CONVERTED
+  title: An MP3 audio download saves the source m4a or webm, not an MP3
+  severity: medium
+  component: core
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-534
+      stage: triage
+      question: File DOWNLOAD-MP3-NOT-CONVERTED from the 2026-11-10 download comparison report, or leave it in the report?
+      resolution: human
+      class: two-way
+      chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-142'
+      source_tag: Human-approved
+      precedents:
+      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
+        register and from /session-grouping. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -3267,11 +3465,53 @@ deferred:
         because KModel loaded without those packages in the 2026-11-04 test, though only in the dev venv and without generating speech, and the bare-parent import is not a kokoro API, so it is tied to the
         kokoro pin. This is not legal advice. See the brief.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+- id: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL
+  title: Claude Code doesn't show a model the per-action text in _meta.action_descriptions
+  severity: low
+  component: mcp-server
+  status: open
+  category: UPSTREAM
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-528
+      stage: closeout
+      question: Claude Code doesn't show a model _meta.action_descriptions, where each MCP action's text lives. Register it as a known issue, or leave it as the plan's observation?
+      resolution: human
+      class: two-way
+      chosen: 'A: register it, as recommended: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL, P3, open, linked to MEU-131, no fix planned, filed at closeout in Session 60''s commit'
+      source_tag: Human-approved
+      precedents:
+      - mcp-server/src/toolsets/registry.ts:599-610 — action text is registered only under _meta.action_descriptions
+      - C:/Temp/av-kit/s60-plan-d494-describe.txt — the crop text sits under the heading not shown to the agent
+      - docs/execution/plans/2026-11-10-gui-capture-crop-tool/implementation-plan.md — User Review Required, The gate, 2026-11-10
+      research:
+        engine: none
+        sources: []
+      reasoning: The gap was found on this session's own tool schema and changes what an agent can learn about every action, but the session's scope is renderer-only and changes no MCP text. Registering
+        records the probe and the D-521 run's feedback for a plan of its own. Doing nothing leaves it in a plan note the register doesn't show. Two-way.
+      human_message_reference: 'A: Register it (Recommended)'
 proposed_batches:
-- slug: infrastructure-tts-onnx-fp16-nonfinite-audio
+- slug: infrastructure-tts-onnx-fp16-nonfinite-audio-capture-scan-unprobeable-file-breaks-list-download-client-pin-misses-working-client
   issues:
   - TTS-ONNX-FP16-NONFINITE-AUDIO
+  - CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST
+  - DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT
+  - YTDLP-NO-JS-RUNTIME
+  - SABR-CHECK-MISSES-CURRENT-MESSAGES
+  - YTDLP-LOG-TEXT-DROPPED
   component: infrastructure
   priority_band: P2
-  complexity: S
+  complexity: L
+  has_duplicates: true
+- slug: core-download-failed-no-reason-download-mp3-not-converted
+  issues:
+  - DOWNLOAD-FAILED-NO-REASON
+  - DOWNLOAD-MP3-NOT-CONVERTED
+  component: core
+  priority_band: P2
+  complexity: M
   has_duplicates: false
