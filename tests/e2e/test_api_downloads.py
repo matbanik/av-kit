@@ -369,13 +369,14 @@ QUALITY_BLOCKED_REMEDIATION = (
 )
 AGE_RESTRICTED_REASON = "video is age-restricted"
 REQUEUE_ROUTE_DOCSTRING = "Re-queue a job from a re-queueable state."
-ROUTE_COUNT_AFTER = 77  # TA-6 (Session 30, MEU-67): + POST /captures/{id}/flatten, /revert
+ROUTE_COUNT_AFTER = 78  # TA-6 (Session 30, MEU-67): + POST /captures/{id}/flatten, /revert
 # MEU-130 (Session 59): + POST /captures/{id}/crop and the avkit_capture.crop action.
 # MEU-133 (Session 62): + POST /conversions/probe and the avkit_convert.probe action.
 # MEU-134 (Session 62): + POST /captures/frames and the avkit_capture.frames action.
 # MEU-135 (Session 63): + POST /captures/sheet and the avkit_capture.sheet action.
+# MEU-136 (Session 64): + POST /captures/{id}/export and the avkit_capture.export action.
 # TA-9 (Session 27, MEU-62): +1 appended MCP action avkit_models.download_asset.
-ACTION_INDEX_AFTER = 74  # TA-8 (Session 30, MEU-67): + avkit_capture.flatten, .revert
+ACTION_INDEX_AFTER = 75  # TA-8 (Session 30, MEU-67): + avkit_capture.flatten, .revert
 BLOCKER_REASON_MIGRATION_PREDICATE = (
     "status = 'QualityBlocked' AND (error_message IS NULL OR error_message <> '"
     + QUALITY_BLOCKED_REASON

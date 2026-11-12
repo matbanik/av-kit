@@ -42,7 +42,8 @@ describe("ACTION_INDEX census", () => {
     // MEU-133 (Session 62): +avkit_convert.probe after gpu_refresh.
     // MEU-134 (Session 62): +avkit_capture.frames after crop.
     // MEU-135 (Session 63): +avkit_capture.sheet after frames.
-    expect(ACTION_INDEX).toHaveLength(74);
+    // MEU-136 (Session 64): +avkit_capture.export after sheet.
+    expect(ACTION_INDEX).toHaveLength(75);
     expect(EXPECTED_ACTION_INDEX).toHaveLength(46);
     expect(ACTION_INDEX.slice(0, 46)).toEqual(EXPECTED_ACTION_INDEX);
     expect([...COMPOUND_TOOLS]).toEqual([...EXPECTED_COMPOUND_TOOLS]);

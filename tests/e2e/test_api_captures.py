@@ -100,6 +100,8 @@ SOURCE_OUT = (
     "Import",
     "Crop",
     "Video",
+    # Session 64 row 1 (MEU-136, D-618).
+    "Export",
 )
 STATUS_OUT = ("Pending", "Completed", "Cancelled", "Expired")
 APPSERVICES_SITES = (

@@ -81,6 +81,13 @@ const SHEET_TEXT = [
   "Needs a video with a duration.",
 ].join(" ");
 
+// EXPORT_MCP (MEU-136, D-616): export writes a resized or re-encoded copy as a new shot.
+const EXPORT_TEXT =
+  "Writes a resized or re-encoded copy as a NEW shot and returns its id, path, width, height and bytes; the source is never changed. format png, jpeg or webp. max_edge (64-16383) shrinks the long edge and never enlarges. quality (1-100, default 90) is for jpeg and webp only. Exports the shot as shown: the annotated image when it has saved marks, else the original. Keeps the colour profile and no other metadata. To get under a byte size, export again with a smaller max_edge or quality and check bytes.";
+
+// EXPORT_MCP (D-620): an unknown key's name never comes back in the refusal; it may be a path.
+export const EXPORT_UNKNOWN_KEY = "export accepts only action, id, format, max_edge and quality";
+
 const ANNOTATE_EXAMPLE =
   'Example annotations: [{"type": "arrow", "from": [10, 10], "to": [80, 40], "color": "red", "stroke_width": 3}, {"type": "text", "x": 12, "y": 48, "text": "Note", "color": "white", "font_size": 16}].';
 
@@ -98,6 +105,7 @@ export const captureDescriptions: Record<string, string> = {
   "avkit_capture.crop": `${desc("crop", "POST", "/captures/{id}/crop")} ${CROP_TEXT}`,
   "avkit_capture.frames": FRAMES_TEXT,
   "avkit_capture.sheet": SHEET_TEXT,
+  "avkit_capture.export": `${desc("export", "POST", "/captures/{id}/export")} ${EXPORT_TEXT}`,
 };
 
 function withDesc<T extends z.ZodTypeAny>(action: string, schema: T): T {
@@ -318,5 +326,19 @@ export const captureSchema = z.union([
         max_edge: z.number().int().min(64).max(2576).optional(),
       })
       .strict(),
+  ),
+  withDesc(
+    "export",
+    z.strictObject(
+      {
+        action: z.literal("export"),
+        id: captureId,
+        format: z.enum(["png", "jpeg", "webp"]),
+        // A first filter only; the API's EXPORT_CHECKS messages stay the contract.
+        max_edge: z.number().int().min(64).max(16383).optional(),
+        quality: z.number().int().min(1).max(100).optional(),
+      },
+      { error: (issue) => (issue.code === "unrecognized_keys" ? EXPORT_UNKNOWN_KEY : undefined) },
+    ),
   ),
 ]);

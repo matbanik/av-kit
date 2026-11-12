@@ -25,6 +25,8 @@ CAPTURE_SOURCE_MEMBERS = (
     "Import",
     "Crop",
     "Video",
+    # Session 64 row 1 (MEU-136, D-618): Export is last.
+    "Export",
 )
 CAPTURE_REQUEST_STATUS_MEMBERS = ("Pending", "Completed", "Cancelled", "Expired")
 # TA-1 (Session 39, MEU-90, MEU-91): + Pixelate, Eraser.
@@ -907,9 +909,10 @@ def test_ac_134_1_video_source_and_frame_port(ac_id: str) -> None:
     from avkit_core.ports import capture as ports
     from avkit_infra.media.adapter import FFmpegAdapter
 
+    # Moved by Session 64 row 1: Export follows Video, and AC-136.1 checks the last member.
     members = list(CaptureSource.__members__)
-    assert members[-1] == "Video"
-    assert members[-2] == "Crop"
+    assert members[-2] == "Video"
+    assert members[-3] == "Crop"
     assert CaptureSource.Video.value == "Video"
     assert "video" not in get_args(RegisterSourceWire)
     assert "Video" not in get_args(RegisterSourceWire)
@@ -974,3 +977,48 @@ def test_ac_135_1_sheet_port_and_cell_box(ac_id: str) -> None:
         ]
         assert actual == expected, port.__qualname__
         assert get_type_hints(adapter) == get_type_hints(port), port.__qualname__
+
+
+# MEU-136 capture-export-copy (Session 64): EXPORT_SOURCE_MEMBER and EXPORT_ENCODE's port.
+@pytest.mark.parametrize("ac_id", ["AC-136.1"], ids=["AC-136.1"])
+@pytest.mark.unit
+def test_ac_136_1_export_source_and_port(ac_id: str) -> None:
+    """A characterisation of Session 64 row 1's names (EXPORT_SOURCE_MEMBER, EXPORT_ENCODE)."""
+    assert ac_id == "AC-136.1"
+    from typing import get_args
+
+    from avkit_api.schemas.captures import RegisterSourceWire
+    from avkit_core.domain.capture import ImageProbe
+    from avkit_core.domain.enums import CaptureSource
+    from avkit_core.ports import capture as ports
+    from avkit_infra.capture.adapter import CaptureAdapter
+
+    members = list(CaptureSource.__members__)
+    assert members[-3:] == ["Crop", "Video", "Export"]
+    assert CaptureSource.Export.value == "Export"
+    assert "Export" not in get_args(RegisterSourceWire)
+    assert "export" not in get_args(RegisterSourceWire)
+    port = ports.ImageAnnotatePort.export
+    export = inspect.signature(port).parameters
+    assert list(export) == ["self", "source", "source_size", "out", "fmt", "size", "quality"]
+    for name in ("source", "source_size", "out"):
+        assert export[name].kind is inspect.Parameter.POSITIONAL_OR_KEYWORD, name
+    for name in ("fmt", "size", "quality"):
+        assert export[name].kind is inspect.Parameter.KEYWORD_ONLY, name
+        assert export[name].default is inspect.Parameter.empty, name
+    hints = get_type_hints(port)
+    assert hints["source"] is Path
+    assert hints["source_size"] == tuple[int, int]
+    assert hints["out"] is Path
+    assert hints["fmt"] is str
+    assert hints["size"] == tuple[int, int]
+    assert hints["quality"] == int | None
+    assert hints["return"] is ImageProbe
+    # The adapter's module defers annotations, so they are compared resolved.
+    expected = [(key, value.kind, value.default) for key, value in export.items()]
+    actual = [
+        (key, value.kind, value.default)
+        for key, value in inspect.signature(CaptureAdapter.export).parameters.items()
+    ]
+    assert actual == expected
+    assert get_type_hints(CaptureAdapter.export) == hints

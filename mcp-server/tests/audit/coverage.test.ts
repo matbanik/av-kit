@@ -19,11 +19,13 @@ const COMMITTED_BASELINE = path.resolve(
 // ACTION_INDEX order, because baselineCoverage reports `missing` in that order.
 // MEU-134 (Session 62): + avkit_capture.frames, after crop.
 // MEU-135 (Session 63): + avkit_capture.sheet, after frames.
+// MEU-136 (Session 64): + avkit_capture.export, after sheet.
 const BASELINE_PENDING = [
   "avkit_convert.probe",
   "avkit_capture.crop",
   "avkit_capture.frames",
   "avkit_capture.sheet",
+  "avkit_capture.export",
 ];
 
 /** The pending keys that aren't served, or that the baseline already holds. */
@@ -41,9 +43,10 @@ describe("AC-68.5 AUDIT_PLAN coverage of AUDIT_ACTION_SET", () => {
   // MEU-133 (Session 62): 72 with avkit_convert.probe.
   // MEU-134 (Session 62): 73 with avkit_capture.frames.
   // MEU-135 (Session 63): 74 with avkit_capture.sheet.
-  it("AC-68.5 AUDIT_ACTION_SET is the 74 registry rows", () => {
-    expect(ACTION_SET).toHaveLength(74);
-    expect(new Set(ACTION_SET).size).toBe(74);
+  // MEU-136 (Session 64): 75 with avkit_capture.export.
+  it("AC-68.5 AUDIT_ACTION_SET is the 75 registry rows", () => {
+    expect(ACTION_SET).toHaveLength(75);
+    expect(new Set(ACTION_SET).size).toBe(75);
   });
 
   it("AC-68.5 every registry action appears in at least one AUDIT_PLAN step", () => {
@@ -294,8 +297,37 @@ describe("MEU-135 sheet audit", () => {
   });
 
   it("AC-135.19 sheet parity and audit coverage: BASELINE_PENDING ends with the served sheet action", () => {
-    expect(BASELINE_PENDING[BASELINE_PENDING.length - 1]).toBe("avkit_capture.sheet");
+    // MEU-136 (Session 64): avkit_capture.export follows sheet and is last.
+    expect(BASELINE_PENDING.slice(-2)).toEqual(["avkit_capture.sheet", "avkit_capture.export"]);
     expect(ACTION_SET).toContain("avkit_capture.sheet");
     expect(ACTION_SET.indexOf("avkit_capture.sheet")).toBe(ACTION_SET.indexOf("avkit_capture.frames") + 1);
+  });
+});
+
+// MEU-136 capture-export-copy (Session 64): EXPORT_AUDIT.
+describe("MEU-136 export audit", () => {
+  it("AC-136.18 export parity and audit coverage: AUDIT_PLAN has an export step after sheet that depends on crop", () => {
+    const ids = AUDIT_PLAN.map((s) => s.id);
+    const step = AUDIT_PLAN.find((s) => s.id === "capture.export");
+    expect(ids.indexOf("capture.sheet")).toBeGreaterThan(-1);
+    expect(ids.indexOf("capture.export")).toBe(ids.indexOf("capture.sheet") + 1);
+    expect(
+      step && { tool: step.tool, action: step.action, phase: step.phase, deps: step.depends_on },
+    ).toEqual({ tool: "avkit_capture", action: "export", phase: "lifecycle", deps: ["capture.crop"] });
+    expect(step?.destructive ?? false).toBe(false);
+    expect(ids.indexOf("capture.crop")).toBeLessThan(ids.indexOf("capture.export"));
+  });
+
+  it("AC-136.18 export parity and audit coverage: coverage fails when the export step is missing", () => {
+    const without = AUDIT_PLAN.filter((s) => s.id !== "capture.export");
+    expect(without.length).toBe(AUDIT_PLAN.length - 1);
+    expect(coverage(planKeys(without), ACTION_SET)).toEqual(["avkit_capture.export"]);
+    expect(coverage(planKeys(AUDIT_PLAN), ACTION_SET)).toEqual([]);
+  });
+
+  it("AC-136.18 export parity and audit coverage: BASELINE_PENDING ends with the served export action", () => {
+    expect(BASELINE_PENDING[BASELINE_PENDING.length - 1]).toBe("avkit_capture.export");
+    expect(ACTION_SET).toContain("avkit_capture.export");
+    expect(ACTION_SET.indexOf("avkit_capture.export")).toBe(ACTION_SET.indexOf("avkit_capture.sheet") + 1);
   });
 });

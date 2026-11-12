@@ -323,6 +323,106 @@
         "title": "CaptureCropRequestedOut",
         "type": "object"
       },
+      "CaptureExportIn": {
+        "additionalProperties": false,
+        "description": "POST /captures/{id}/export body (MEU-136, EXPORT_ROUTE).\n\nAn explicit `null` is refused, as MCP refuses it (D-610); leave a key out for its default.\n`quality` with `png` is the service's fixed 422 (D-609).",
+        "properties": {
+          "format": {
+            "enum": [
+              "png",
+              "jpeg",
+              "webp"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "max_edge": {
+            "anyOf": [
+              {
+                "maximum": 16383.0,
+                "minimum": 64.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Edge"
+          },
+          "quality": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality"
+          }
+        },
+        "required": [
+          "format"
+        ],
+        "title": "CaptureExportIn",
+        "type": "object"
+      },
+      "CaptureExportOut": {
+        "additionalProperties": false,
+        "description": "POST /captures/{id}/export 201 (EXPORT_ROUTE, D-618). No image bytes.",
+        "properties": {
+          "shot": {
+            "$ref": "#/components/schemas/CaptureExportShotOut"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "shot",
+          "source_id"
+        ],
+        "title": "CaptureExportOut",
+        "type": "object"
+      },
+      "CaptureExportShotOut": {
+        "additionalProperties": false,
+        "description": "The new shot that holds the export, with its file size.",
+        "properties": {
+          "bytes": {
+            "title": "Bytes",
+            "type": "integer"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "path",
+          "width",
+          "height",
+          "bytes"
+        ],
+        "title": "CaptureExportShotOut",
+        "type": "object"
+      },
       "CaptureFrameOut": {
         "additionalProperties": false,
         "description": "One new shot taken from the video, and the time it was taken at.",
@@ -4612,6 +4712,61 @@
           }
         ],
         "summary": "Crop Capture"
+      }
+    },
+    "/api/v1/captures/{id}/export": {
+      "post": {
+        "description": "Write a resized or re-encoded copy as a new shot (source `Export`); the source is kept.",
+        "operationId": "export_capture_api_v1_captures__id__export_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureExportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CaptureExportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Export Capture"
       }
     },
     "/api/v1/captures/{id}/flatten": {

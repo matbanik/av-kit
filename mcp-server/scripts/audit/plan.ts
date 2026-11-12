@@ -1618,6 +1618,8 @@ const CAPTURE_STEPS: StepSpec[] = [
       let observable: ObservableResult;
       if (id) {
         ctx.ledger.register("capture", id);
+        // EXPORT_AUDIT (MEU-136): capture.export exports this crop.
+        ctx.state.set("crop_id", id);
         const crop = await ctx.rest.get(`/captures/${id}`);
         const row = asRec(crop.json);
         const f = fileReport(str(row.original_path), ctx.root);
@@ -1690,6 +1692,42 @@ const CAPTURE_STEPS: StepSpec[] = [
         observable = obs(
           ok,
           `cells=${cells.length} shot ${id ?? "none"} REST shot ${String(shot?.status ?? "none")}`,
+        );
+      }
+      return { kind: "simple", isError: result.isError, expectError: false, observable, text: result.text };
+    },
+  },
+  // EXPORT_AUDIT (MEU-136): a 64-px JPEG export of the crop is a new Export shot, and the
+  // crop's bytes are the same before and after.
+  {
+    id: "capture.export",
+    tool: "avkit_capture",
+    action: "export",
+    phase: "lifecycle",
+    depends_on: ["capture.crop"],
+    execute: async (ctx) => {
+      if (!ctx.state.has("crop_id")) return { kind: "blocked", by: "state:crop_id", detail: "crop_id was never established" };
+      const cropId = str(ctx.state.get("crop_id"));
+      const before = asRec((await ctx.rest.get(`/captures/${cropId}`)).json);
+      const sourceSha = sha256Of(str(before.original_path));
+      const result = await ctx.call("avkit_capture", { action: "export", id: cropId, format: "jpeg", max_edge: 64 });
+      let observable: ObservableResult;
+      if (result.isError) {
+        observable = obs(false, `MCP error: ${result.text.slice(0, 200)}`);
+      } else {
+        const body = asRec(payload(result));
+        const shot = asRec(body.shot);
+        const id = typeof shot.id === "string" && shot.id ? shot.id : null;
+        if (id) ctx.ledger.register("capture", id);
+        const exported = id ? await ctx.rest.get(`/captures/${id}`) : null;
+        const row = asRec(exported?.json);
+        const f = fileReport(str(row.original_path), ctx.root);
+        const after = asRec((await ctx.rest.get(`/captures/${cropId}`)).json);
+        const unchanged = sourceSha !== null && sha256Of(str(after.original_path)) === sourceSha;
+        const isExport = exported?.status === 200 && row.source === "Export" && body.source_id === cropId;
+        observable = obs(
+          isExport && f.ok && unchanged,
+          `REST export ${String(exported?.status ?? "none")} source ${str(row.source)}; ${f.detail}; source bytes unchanged ${String(unchanged)}`,
         );
       }
       return { kind: "simple", isError: result.isError, expectError: false, observable, text: result.text };

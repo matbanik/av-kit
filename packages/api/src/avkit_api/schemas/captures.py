@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import Field, StrictFloat, StrictInt, StrictStr, model_validator
+from pydantic import Field, StrictFloat, StrictInt, StrictStr, field_validator, model_validator
 
 from avkit_api.schemas.common import ApiModel
 from avkit_core.domain.capture import (
@@ -18,6 +18,7 @@ from avkit_core.domain.capture import (
     REGION_MAX_EDGE_MIN,
     TEXT_MAX_CHARS,
 )
+from avkit_core.services.capture import EXPORT_MAX_EDGE_MAX
 from avkit_core.services.video_input import (
     FRAMES_MAX,
     MAX_PATH_CHARS,
@@ -264,6 +265,44 @@ class CaptureCropOut(ApiModel):
     applied: CaptureCropAppliedOut
     clamped: bool
     marks: CaptureCropMarksOut
+
+
+class CaptureExportIn(ApiModel):
+    """POST /captures/{id}/export body (MEU-136, EXPORT_ROUTE).
+
+    An explicit `null` is refused, as MCP refuses it (D-610); leave a key out for its default.
+    `quality` with `png` is the service's fixed 422 (D-609).
+    """
+
+    format: Literal["png", "jpeg", "webp"]
+    max_edge: Annotated[StrictInt, Field(ge=REGION_MAX_EDGE_MIN, le=EXPORT_MAX_EDGE_MAX)] | None = (
+        None
+    )
+    quality: Annotated[StrictInt, Field(ge=1, le=100)] | None = None
+
+    @field_validator("max_edge", "quality", mode="before")
+    @classmethod
+    def _refuse_null(cls, value: object) -> object:
+        if value is None:
+            raise ValueError("leave the key out instead of sending null")
+        return value
+
+
+class CaptureExportShotOut(ApiModel):
+    """The new shot that holds the export, with its file size."""
+
+    id: str
+    path: str
+    width: int
+    height: int
+    bytes: int
+
+
+class CaptureExportOut(ApiModel):
+    """POST /captures/{id}/export 201 (EXPORT_ROUTE, D-618). No image bytes."""
+
+    shot: CaptureExportShotOut
+    source_id: str
 
 
 #: FRAMES_ROUTE: a time is seconds as a number, or text that TIME_PARSE reads.

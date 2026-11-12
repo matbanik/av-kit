@@ -51,6 +51,8 @@ def _valid_body(path: str) -> dict[str, object]:
         return {"path": "C:/tmp/clip.mp4"}
     if path == "/api/v1/captures/{id}/crop":
         return {"x": 0, "y": 0, "width": 8, "height": 8}
+    if path == "/api/v1/captures/{id}/export":
+        return {"format": "png"}
     return {}
 
 

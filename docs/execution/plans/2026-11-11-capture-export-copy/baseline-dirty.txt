@@ -1,0 +1,12 @@
+?? .agent/context/handoffs/2026-11-11-capture-export-copy-plan-critical-review.md	a56149a1bd28a4b2a87a8341729cd4f4dee5be7503fa7ddd2f24c1533b0084a6
+?? docs/execution/plans/2026-11-11-capture-export-copy/baseline.ps1	4bbc33d2d21f3aa4e7c55ed9c15c757b456993b5def8417d0d33b8ef885b7c27
+?? docs/execution/plans/2026-11-11-capture-export-copy/baseline.sha	162dce9d5168d6c267fde1a19a99b479b3b447da7e3272de7b447b9ceea3cc4e
+?? docs/execution/plans/2026-11-11-capture-export-copy/eval-check.py	fe1c618be7f1c73e73b3d504564815e1c7978151bad69f131fa15edd595f9d58
+?? docs/execution/plans/2026-11-11-capture-export-copy/eval-harness.ts	4edef3a4bc7ebbedfdccb429aa10e68107f1df5da1e8b17830669b5bfea91a05
+?? docs/execution/plans/2026-11-11-capture-export-copy/eval-run.md	9e6bf7350b7907d394bdfce6f63f8872e407d333804da8bfa8282e278a274401
+?? docs/execution/plans/2026-11-11-capture-export-copy/eval-seed.py	457f0eddd38f94f7dd5bac80d9d4f06464a3c1f08de940e81ea86e4cf18217d5
+?? docs/execution/plans/2026-11-11-capture-export-copy/identity.py	5b497d79fae059a20f05e83a309478514898f16b93029c7fad6cc140b758f9f0
+?? docs/execution/plans/2026-11-11-capture-export-copy/implementation-plan.md	4090e0ab0d2828df456e74f6ed23dcb2b0588e1d7ee6723591762d050e36c58c
+?? docs/execution/plans/2026-11-11-capture-export-copy/red-check.py	00753dc8202e9b674c40a25c2dc2daf54575bba1248fb54b0ddd613938226019
+?? docs/execution/plans/2026-11-11-capture-export-copy/session-gate.ps1	ea8cebcb2d531095296f155006c5c8983e1359243195e04bd2197540a2bbc664
+?? docs/execution/plans/2026-11-11-capture-export-copy/task.md	8f148ed841d5acd35a004dfd267544b96395c05ac2a4a81928b6fec51d1ce377

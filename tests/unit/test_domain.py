@@ -305,6 +305,8 @@ ENUM_MEMBERS: dict[str, tuple[str, ...]] = {
         "Import",
         "Crop",
         "Video",
+        # Session 64 row 1 (MEU-136, D-618).
+        "Export",
     ),
     "CaptureRequestStatus": ("Pending", "Completed", "Cancelled", "Expired"),
     # TA-6 (Session 39, D-24): + Pixelate, Eraser.

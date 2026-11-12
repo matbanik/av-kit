@@ -11,7 +11,7 @@ import shutil
 import threading
 import time
 from collections.abc import Callable, Sequence
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 from io import BufferedWriter
 from pathlib import Path
@@ -186,6 +186,30 @@ CROP_REFUSALS: tuple[type[Exception], ...] = (
     InboxPathError,
 )
 
+# EXPORT_CHECKS, EXPORT_NAME and EXPORT_WRITE (MEU-136): the formats, bounds, names and
+# fixed texts of POST /captures/{id}/export. None echoes the input (D-609, D-610, D-615).
+EXPORT_FORMATS = ("png", "jpeg", "webp")
+EXPORT_SUFFIXES: dict[str, str] = {"png": ".png", "jpeg": ".jpg", "webp": ".webp"}
+EXPORT_STEM_TAG = "-export"
+EXPORT_STEM_FALLBACK = "export"
+EXPORT_MAX_EDGE_MAX = 16383
+# The largest edge each lossy format stores (D-610).
+EXPORT_EDGE_LIMIT: dict[str, int] = {"jpeg": 65500, "webp": 16383}
+EXPORT_QUALITY_PNG = "quality applies to jpeg and webp only"
+EXPORT_TOO_LARGE = "the export is too large for this format; lower max_edge"
+EXPORT_NOT_WRITTEN = "the export could not be written"
+# EXPORT_WRITE: raised before the encode has run, these are refusals and pass unchanged.
+EXPORT_REFUSALS: tuple[type[Exception], ...] = CROP_REFUSALS
+
+
+@dataclass(frozen=True)
+class ExportResult:
+    """EXPORT_WRITE (MEU-136): the export's new shot, its source's id and its file size."""
+
+    shot: CaptureShot
+    source_id: str
+    bytes: int
+
 
 def crop_name_stem(name: str) -> str:
     """CROP_NAME: a caller's `name` made into a crop stem, or a fixed 422 that never repeats it."""
@@ -210,6 +234,27 @@ def crop_default_stem(source_stem: str) -> str:
     """CROP_NAME: `{stem}-crop` from the source's stem, cut to IMPORT_STEM_MAX characters."""
     stem = source_stem[:IMPORT_STEM_MAX].strip(_CROP_NAME_STRIP)
     return f"{stem}{CROP_STEM_TAG}" if stem else CROP_STEM_TAG.lstrip("-")
+
+
+def export_size(width: int, height: int, max_edge: int | None) -> tuple[int, int]:
+    """EXPORT_SIZE (MEU-136): the long edge at `max_edge`, never enlarged.
+
+    Integers only: the short edge is `max_edge * short / long` rounded half up, at least 1,
+    and the pair keeps the source's orientation.
+    """
+    long_edge = max(width, height)
+    if max_edge is None or max_edge >= long_edge:
+        return (width, height)
+    short_edge = min(width, height)
+    scaled = max(1, (2 * max_edge * short_edge + long_edge) // (2 * long_edge))
+    return (max_edge, scaled) if width >= height else (scaled, max_edge)
+
+
+def export_stem(source_stem: str) -> str:
+    """EXPORT_NAME (MEU-136, D-612): `{stem}-export`, its stem made safe, or `export`."""
+    text = _IMPORT_STEM_DROP.sub("_", source_stem).strip(" _-")[:IMPORT_STEM_MAX]
+    text = text.strip(" _-")
+    return f"{text}{EXPORT_STEM_TAG}" if text else EXPORT_STEM_FALLBACK
 
 
 def resolve_backup_dir(raw: str, inbox: Path) -> Path:
@@ -1643,6 +1688,87 @@ class CaptureService:
             dropped=counts["dropped"],
         )
 
+    def export_shot(
+        self,
+        shot_id: str,
+        *,
+        fmt: str,
+        max_edge: int | None = None,
+        quality: int | None = None,
+    ) -> ExportResult:
+        """EXPORT_CHECKS to EXPORT_WRITE (MEU-136): write a resized or re-encoded copy.
+
+        The copy is a new shot in the inbox; the source's file, sidecar, bake and row are
+        only read. Every refusal is a fixed text, and any other failure removes only what
+        this call wrote and raises the fixed 503 (D-609, D-610, D-611).
+        """
+        if fmt not in EXPORT_FORMATS:
+            raise ValidationError("format must be png, jpeg or webp")
+        if max_edge is not None and (
+            not isinstance(max_edge, int)
+            or isinstance(max_edge, bool)
+            or not REGION_MAX_EDGE_MIN <= max_edge <= EXPORT_MAX_EDGE_MAX
+        ):
+            raise ValidationError(
+                f"max_edge must be between {REGION_MAX_EDGE_MIN} and {EXPORT_MAX_EDGE_MAX}"
+            )
+        if quality is not None and (
+            not isinstance(quality, int) or isinstance(quality, bool) or not 1 <= quality <= 100
+        ):
+            raise ValidationError("quality must be between 1 and 100")
+        if quality is not None and fmt == "png":
+            raise ValidationError(EXPORT_QUALITY_PNG)
+        tmp: Path | None = None
+        dest: Path | None = None
+        encoded = False
+        moved = False
+        with CAPTURE_FILE_LOCK:
+            try:
+                with self._uow_factory() as uow:
+                    shot = uow.capture_shots.get(shot_id)
+                    if shot is None:
+                        raise NotFoundError(f"capture shot {shot_id} not found")
+                    marks = self._saved_marks(shot.original_path)
+                    source = self._variant_path(shot, "annotated" if marks else "original")
+                    size = export_size(shot.width, shot.height, max_edge)
+                    limit = EXPORT_EDGE_LIMIT.get(fmt)
+                    if limit is not None and max(size) > limit:
+                        raise ValidationError(EXPORT_TOO_LARGE)
+                    inbox = self._inbox()
+                    self._annotate.ensure_dir(inbox)
+                    dest = self._crop_dest(
+                        uow, inbox, export_stem(shot.original_path.stem), ext=EXPORT_SUFFIXES[fmt]
+                    )
+                    with dest.with_name(dest.name + TMP_SUFFIX).open("xb") as handle:
+                        tmp = Path(handle.name)
+                    self._annotate.export(
+                        source,
+                        (shot.width, shot.height),
+                        tmp,
+                        fmt=fmt,
+                        size=size,
+                        quality=quality,
+                    )
+                    encoded = True
+                    os.replace(tmp, dest)
+                    moved = True
+                    # The name is no longer this call's once it is moved; never remove it later.
+                    tmp = None
+                    probe = self._annotate.probe(dest)
+                    size_bytes = dest.stat().st_size
+                    now = self._now()
+                    new = self._upsert_shot(uow, dest, probe, now, CaptureSource.Export)
+            except Exception as exc:
+                self._discard(tmp)
+                if moved and dest is not None:
+                    # EXPORT_NAME found this name free under this hold, so it is the export's.
+                    self._discard(dest)
+                if not encoded and isinstance(exc, EXPORT_REFUSALS):
+                    raise
+                raise CaptureFailedError(EXPORT_NOT_WRITTEN) from exc
+        log.info("capture.export", shot_id=new.id, source_id=shot.id)
+        return ExportResult(shot=new, source_id=shot.id, bytes=size_bytes)
+
     @staticmethod
     def _saved_marks(original: Path) -> list[Annotation]:
         """CROP_READ: the source's saved marks. A missing sidecar is []; a malformed one is 422."""
@@ -1656,8 +1782,12 @@ class CaptureService:
         return annotations_from_sidecar(payload)
 
     @staticmethod
-    def _crop_dest(uow: UnitOfWork, inbox: Path, stem: str) -> Path:
-        """CROP_NAME: `{stem}.png`, then `{stem}_2.png` … until the stem is free.
+    def _crop_dest(
+        uow: UnitOfWork, inbox: Path, stem: str, *, ext: str = FLATTEN_PNG_SUFFIX
+    ) -> Path:
+        """CROP_NAME: `{stem}{ext}`, then `{stem}_2{ext}` … until the stem is free.
+
+        `ext` is `.png` for a crop; an export passes its format's suffix (MEU-136, D-615).
 
         A stem is taken when an inbox-root entry case-folds to it plus any suffix in
         CROP_TAKEN_SUFFIXES, or a row in the inbox root holds its PNG name. A name whose
@@ -1680,7 +1810,7 @@ class CaptureService:
         while any(f"{candidate}{suffix}".casefold() in taken for suffix in CROP_TAKEN_SUFFIXES):
             candidate = f"{stem}_{index}"
             index += 1
-        return inbox / f"{candidate}{FLATTEN_PNG_SUFFIX}"
+        return inbox / f"{candidate}{ext}"
 
     def _discard(self, path: Path | None) -> None:
         """Remove a file this call wrote; a failed removal can't replace the fixed 503."""

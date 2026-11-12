@@ -73,6 +73,24 @@ class ImageAnnotatePort(Protocol):
         """
         ...
 
+    def export(
+        self,
+        source: Path,
+        source_size: tuple[int, int],
+        out: Path,
+        *,
+        fmt: str,
+        size: tuple[int, int],
+        quality: int | None,
+    ) -> ImageProbe:
+        """EXPORT_ENCODE (MEU-136): write `source` as `fmt` (png, jpeg or webp) at `size`.
+
+        `source_size` is the size the caller listed; any other size is crop's fixed
+        conflict. `size` never exceeds it. The ICC profile is kept and no other metadata
+        is written (D-613, D-614, D-619). Writes `out` and returns its probe.
+        """
+        ...
+
 
 # FRAME_PORT (MEU-134): how `grab_frame` seeks. "output" decodes from the start, for a raw
 # stream with no duration (NO_DURATION).

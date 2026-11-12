@@ -195,7 +195,7 @@
 | MEU-132 | `gui-capture-image-import` | 9.39 | [Phase 9 §GUI image import](../../docs/build-plan/09-screenshot-capture.md#gui-image-import) | Drag and drop, an Import image button and Ctrl+V paste bring images into the Capture inbox through the import endpoint or the hotkey publication path. | ✅ approved |
 | MEU-134 | `capture-video-frames` | 9.40 | [Phase 9 §Video frames](../../docs/build-plan/09-screenshot-capture.md#video-frames) | avkit_capture frames and POST /captures/frames grab frames at given times or evenly spaced from a local video as new inbox shots (CaptureSource.Video). | ✅ approved |
 | MEU-135 | `capture-video-sheet` | 9.41 | [Phase 9 §Video sheet](../../docs/build-plan/09-screenshot-capture.md#video-sheet) | avkit_capture sheet and POST /captures/sheet write one labelled grid image of a video span, sized for the vision token budget, as a new shot. | ✅ approved |
-| MEU-136 | `capture-export-copy` | 9.42 | [Phase 9 §Export copy](../../docs/build-plan/09-screenshot-capture.md#export-copy) | avkit_capture export and POST /captures/{id}/export write a resized png, jpeg or webp copy of a shot as a new shot, with no metadata. | ⬜ pending |
+| MEU-136 | `capture-export-copy` | 9.42 | [Phase 9 §Export copy](../../docs/build-plan/09-screenshot-capture.md#export-copy) | avkit_capture export and POST /captures/{id}/export write a resized png, jpeg or webp copy of a shot as a new shot, with no metadata. | ✅ approved |
 
 
 ## Queue card UI (P2)

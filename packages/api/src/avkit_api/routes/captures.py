@@ -21,6 +21,9 @@ from avkit_api.schemas.captures import (
     CaptureCropMarksOut,
     CaptureCropOut,
     CaptureCropRequestedOut,
+    CaptureExportIn,
+    CaptureExportOut,
+    CaptureExportShotOut,
     CaptureFrameOut,
     CaptureFramesIn,
     CaptureFramesOut,
@@ -491,6 +494,29 @@ def crop_capture(
         marks=CaptureCropMarksOut(
             kept=result.kept, clipped=result.clipped, dropped=result.dropped
         ),
+    )
+
+
+@router.post("/{id}/export", status_code=201, response_model=CaptureExportOut)
+def export_capture(
+    id: str,
+    body: CaptureExportIn,
+    capture: Any = Depends(get_capture_service),
+) -> CaptureExportOut:
+    """Write a resized or re-encoded copy as a new shot (source `Export`); the source is kept."""
+    result = capture.export_shot(
+        id, fmt=body.format, max_edge=body.max_edge, quality=body.quality
+    )
+    shot = result.shot
+    return CaptureExportOut(
+        shot=CaptureExportShotOut(
+            id=shot.id,
+            path=str(shot.original_path),
+            width=shot.width,
+            height=shot.height,
+            bytes=result.bytes,
+        ),
+        source_id=result.source_id,
     )
 
 

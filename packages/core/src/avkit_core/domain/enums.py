@@ -221,6 +221,9 @@ class CaptureSource(StrEnum):
     Crop = "Crop"
     # VIDEO_SOURCE (MEU-134, D-582): a still taken from a local video by POST /captures/frames.
     Video = "Video"
+    # EXPORT_SOURCE (MEU-136, D-618): a resized or re-encoded copy written by
+    # POST /captures/{id}/export.
+    Export = "Export"
 
 
 class CaptureRequestStatus(StrEnum):

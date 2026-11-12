@@ -58,6 +58,7 @@ ROUTE_INDEX: tuple[tuple[str, str], ...] = (
     ("POST", "/api/v1/captures/{id}/flatten"),  # TA-8 (Session 30, MEU-67)
     ("POST", "/api/v1/captures/{id}/revert"),  # TA-8 (Session 30, MEU-67)
     ("POST", "/api/v1/captures/{id}/crop"),  # CROP_REQUEST (Session 59, MEU-130)
+    ("POST", "/api/v1/captures/{id}/export"),  # EXPORT_ROUTE (Session 64, MEU-136)
     ("DELETE", "/api/v1/captures/{id}"),
     ("POST", "/api/v1/transcripts"),
     ("GET", "/api/v1/transcripts"),
@@ -117,7 +118,8 @@ def test_ac_16_6_openapi_path_census() -> None:
     # TA-8 (Session 30, MEU-67); MEU-130 + crop; MEU-133 + probe
     # MEU-134 (Session 62) + POST /captures/frames
     # MEU-135 (Session 63) + POST /captures/sheet
-    assert len(ROUTE_INDEX) == 77
+    # MEU-136 (Session 64) + POST /captures/{id}/export
+    assert len(ROUTE_INDEX) == 78
 
 
 @pytest.mark.parametrize("method,path", ROUTE_INDEX)
@@ -203,7 +205,7 @@ def test_ac_134_17_frames_route_in_committed_openapi_and_before_id() -> None:
         for method in item
         if method in {"get", "post", "put", "delete", "patch"}
     )
-    assert operations == 77  # MEU-135 (Session 63): + POST /captures/sheet
+    assert operations == 78  # MEU-136 (Session 64): + POST /captures/{id}/export
     schemas = committed.get("components", {}).get("schemas", {})
     assert {"CaptureFramesIn", "CaptureFramesOut"} <= set(schemas)
     request = operation.get("requestBody", {}).get("content", {}).get("application/json", {})
@@ -248,7 +250,7 @@ def test_ac_135_20_openapi_has_sheet(ac_id: str) -> None:
         for method in item
         if method in {"get", "post", "put", "delete", "patch"}
     )
-    assert operations == 77
+    assert operations == 78  # MEU-136 (Session 64): + POST /captures/{id}/export
     schemas = committed.get("components", {}).get("schemas", {})
     assert {"CaptureSheetIn", "CaptureSheetOut"} <= set(schemas)
     request = operation.get("requestBody", {}).get("content", {}).get("application/json", {})
@@ -290,3 +292,51 @@ def test_ac_135_20_openapi_has_sheet(ac_id: str) -> None:
     assert frames_at != -1
     assert id_at != -1
     assert frames_at < sheet_at < id_at
+
+
+@pytest.mark.parametrize("ac_id", ["AC-136.16"], ids=["AC-136.16"])
+def test_ac_136_16_openapi_has_export(ac_id: str) -> None:
+    assert ac_id == "AC-136.16"
+    import json
+
+    committed = json.loads((REPO_ROOT / "openapi.committed.json").read_text(encoding="utf-8"))
+    operation = committed.get("paths", {}).get("/api/v1/captures/{id}/export", {}).get("post")
+    assert operation is not None, "POST /api/v1/captures/{id}/export is not in the snapshot"
+    operations = sum(
+        1
+        for item in committed.get("paths", {}).values()
+        for method in item
+        if method in {"get", "post", "put", "delete", "patch"}
+    )
+    assert operations == 78
+    schemas = committed.get("components", {}).get("schemas", {})
+    assert {"CaptureExportIn", "CaptureExportOut", "CaptureExportShotOut"} <= set(schemas)
+    request = operation.get("requestBody", {}).get("content", {}).get("application/json", {})
+    assert request.get("schema") == {"$ref": "#/components/schemas/CaptureExportIn"}
+    replies = operation.get("responses", {})
+    reply = replies.get("201", {}).get("content", {}).get("application/json", {})
+    assert reply.get("schema") == {"$ref": "#/components/schemas/CaptureExportOut"}
+    export_in = schemas["CaptureExportIn"]
+    assert set(export_in.get("properties", {})) == {"format", "max_edge", "quality"}
+    assert export_in.get("required") == ["format"]
+    assert export_in.get("additionalProperties") is False
+    assert set(schemas["CaptureExportOut"].get("properties", {})) == {"shot", "source_id"}
+    shot_out = schemas["CaptureExportShotOut"].get("properties", {})
+    assert set(shot_out) == {"id", "path", "width", "height", "bytes"}
+    export = _load_export()
+    drift: str | None = None
+    try:
+        export.check_openapi(REPO_ROOT / "openapi.committed.json")
+    except SystemExit as exc:
+        drift = str(exc)
+    assert drift is None
+    source = (REPO_ROOT / "packages/api/src/avkit_api/routes/captures.py").read_text(
+        encoding="utf-8"
+    )
+    crop_at = source.find('@router.post("/{id}/crop"')
+    export_at = source.find('@router.post("/{id}/export"')
+    delete_at = source.find('@router.delete("/{id}"')
+    assert crop_at != -1
+    assert export_at != -1, "routes/captures.py declares no /{id}/export route"
+    assert delete_at != -1
+    assert crop_at < export_at < delete_at

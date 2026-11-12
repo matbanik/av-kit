@@ -44,7 +44,7 @@ function registeredResourceUris(server: ReturnType<typeof createServer>): string
 }
 
 describe("M7_PER_ACTION", () => {
-  it("ACTION_DESCRIPTIONS has exactly 74 keys each with ≥3 distinct M7 markers", () => {
+  it("ACTION_DESCRIPTIONS has exactly 75 keys each with ≥3 distinct M7 markers", () => {
     const keys = Object.keys(ACTION_DESCRIPTIONS).sort();
     const expected = ACTION_INDEX.map((r) => `${r.tool}.${r.action}`).sort();
     expect(keys).toEqual(expected);
@@ -54,7 +54,8 @@ describe("M7_PER_ACTION", () => {
     // MEU-133 (Session 62): +avkit_convert.probe after gpu_refresh.
     // MEU-134 (Session 62): +avkit_capture.frames.
     // MEU-135 (Session 63): +avkit_capture.sheet.
-    expect(keys).toHaveLength(74);
+    // MEU-136 (Session 64): +avkit_capture.export.
+    expect(keys).toHaveLength(75);
     for (const key of keys) {
       const text = ACTION_DESCRIPTIONS[key];
       expect(typeof text).toBe("string");
@@ -66,7 +67,7 @@ describe("M7_PER_ACTION", () => {
     expect(ACTION_DESCRIPTIONS["avkit_settings.set"]).toContain(SETTINGS_SCHEMA_URI);
   });
 
-  it("registers the 74 ACTION_DESCRIPTIONS on Zod action options and listTools _meta", () => {
+  it("registers the 75 ACTION_DESCRIPTIONS on Zod action options and listTools _meta", () => {
     const server = createServer();
     const fromSchema = registeredActionDescriptions(server);
     const expected = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`).sort();
@@ -75,7 +76,8 @@ describe("M7_PER_ACTION", () => {
     // MEU-133 (Session 62): +avkit_convert.probe.
     // MEU-134 (Session 62): +avkit_capture.frames.
     // MEU-135 (Session 63): +avkit_capture.sheet.
-    expect(Object.keys(fromSchema)).toHaveLength(74);
+    // MEU-136 (Session 64): +avkit_capture.export.
+    expect(Object.keys(fromSchema)).toHaveLength(75);
     const tools = registeredTools(server);
     for (const row of ACTION_INDEX) {
       const key = `${row.tool}.${row.action}`;

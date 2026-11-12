@@ -10,6 +10,7 @@ import warnings
 from collections.abc import Callable, Sequence
 from pathlib import Path
 
+import numpy as np
 import structlog
 from PIL import (
     Image,
@@ -78,6 +79,13 @@ _UPRIGHT_MODES = frozenset({"RGB", "RGBA", "L", "LA"})
 _CROP_KEPT_MODES = frozenset({"1", "L", "LA", "P", "RGB", "RGBA", "I;16"})
 _CROP_ICC_CONVERT_MODES = frozenset({"CMYK", "YCbCr", "LAB"})
 _PIL_FORMAT: dict[str, str] = {"png": "PNG", "jpeg": "JPEG", "webp": "WEBP"}
+# EXPORT_ENCODE (MEU-136, D-619): the depth modes the export maps to 8-bit `L` when the
+# output can't keep them.
+EXPORT_DEPTH_MODES = ("I;16", "I;16L", "I;16B", "I;16N", "I")
+# EXPORT_ENCODE (D-614): the bytes before a PNG's IHDR bit depth (24) and colour type (25).
+_PNG_HEADER_LEN = 26
+_PNG_HEAD = b"\x89PNG\r\n\x1a\n\x00\x00\x00\x0dIHDR"
+_KEY_MODES = frozenset({"1", "L", "P", "RGB"})
 NAMED_RGB: dict[str, tuple[int, int, int]] = {
     "red": (255, 0, 0),
     "orange": (255, 165, 0),
@@ -298,6 +306,31 @@ def _to_srgb(image: Image.Image, icc: bytes | None) -> tuple[Image.Image, bytes 
         if managed is not None:
             return managed, srgb.tobytes()
     return image.convert("RGB"), None
+
+
+def _png_key(image: Image.Image, header: bytes) -> Image.Image:
+    """D-614: put a PNG's `transparency` key on the scale of the samples Pillow gives.
+
+    A gray PNG at depth 2 or 4 has its samples scaled to 0 to 255 but not its key, so the
+    key is scaled to match. A 16-bit RGB PNG keeps only each sample's high byte, so no exact
+    key exists and it is removed. Any other image is unchanged.
+    """
+    key = image.info.get("transparency")
+    if key is None or len(header) < _PNG_HEADER_LEN or not header.startswith(_PNG_HEAD):
+        return image
+    depth, colour = header[24], header[25]
+    if colour == 0 and depth in (2, 4) and isinstance(key, int):
+        image.info["transparency"] = key * (255 // (2**depth - 1))
+    elif colour == 2 and depth == 16:
+        del image.info["transparency"]
+    return image
+
+
+def _depth_to_l(image: Image.Image) -> Image.Image:
+    """D-619: each depth value `v` to `v * 255 / 65535` rounded half up, clamped to 0..255."""
+    values = np.asarray(image).astype(np.int64)
+    levels = np.clip((2 * values * 255 + 65535) // (2 * 65535), 0, 255).astype(np.uint8)
+    return Image.fromarray(levels)
 
 
 class CaptureAdapter:
@@ -535,6 +568,95 @@ class CaptureAdapter:
         buffer = io.BytesIO()
         canvas.save(buffer, format="PNG")
         return buffer.getvalue()
+
+    def export(
+        self,
+        source: Path,
+        source_size: tuple[int, int],
+        out: Path,
+        *,
+        fmt: str,
+        size: tuple[int, int],
+        quality: int | None,
+    ) -> ImageProbe:
+        """EXPORT_ENCODE (MEU-136): write `source` as `fmt` at `size`, keeping only its profile.
+
+        Resized with LANCZOS only when `size` differs. JPEG drops alpha and any key before a
+        resize, so a transparent pixel shows its stored colour. No `exif_transpose`: the
+        export is the stored frame (D-613). The only refusals are the two fixed, path-free
+        ones; a save failure is a fixed `OSError` (D-614, D-619).
+        """
+        try:
+            with source.open("rb") as handle:
+                header = handle.read(_PNG_HEADER_LEN)
+                handle.seek(0)
+                with Image.open(handle) as opened:
+                    opened.load()
+                    image = opened.copy()
+        except Exception as exc:
+            # Pillow and the file system raise many types, and an OSError's text holds the
+            # path; each becomes the one fixed refusal (D-421).
+            raise InboxPathError("the image could not be opened") from exc
+        if image.size != source_size:
+            raise ConflictError(
+                "the image file changed since the captures were listed; list them again and retry"
+            )
+        icc = image.info.get("icc_profile")
+        resize = size != image.size
+        # (1) A colour space PNG, JPEG and WebP can't hold goes to sRGB; its profile goes too.
+        if image.mode in _CROP_ICC_CONVERT_MODES:
+            image, icc = _to_srgb(image, icc)
+        # (1b) The key on the samples' scale.
+        image = _png_key(image, header)
+        key = image.info.get("transparency")
+        # (2) The depth map.
+        if image.mode in EXPORT_DEPTH_MODES and (
+            fmt != "png" or image.mode not in _CROP_KEPT_MODES or (resize and key is not None)
+        ):
+            level = _depth_to_l(image)
+            if fmt != "jpeg" and isinstance(key, int):
+                alpha = np.where(np.asarray(image) == key, 0, 255).astype(np.uint8)
+                image = Image.merge("LA", (level, Image.fromarray(alpha)))
+            else:
+                image = level
+        if fmt == "jpeg":
+            # (3) Before any resize: a resize of an alpha image turns transparent pixels black.
+            image = image.convert("RGB")
+        elif resize and image.info.get("transparency") is not None and image.mode in _KEY_MODES:
+            # (4) Pillow's own convert turns the key into alpha 0 and drops `transparency`.
+            image = image.convert("LA" if image.mode in ("1", "L") else "RGBA")
+        elif resize and image.mode == "P":
+            image = image.convert("RGB")
+        elif resize and image.mode == "1":
+            image = image.convert("L")
+        # (5)
+        if resize:
+            image = image.resize(size, Image.Resampling.LANCZOS)
+        # (6)
+        has_alpha = (
+            "A" in image.mode or "a" in image.mode or image.info.get("transparency") is not None
+        )
+        params: dict[str, object] = {}
+        if fmt == "webp":
+            image = image.convert("RGBA" if has_alpha else "RGB")
+        elif fmt == "png" and image.mode not in _CROP_KEPT_MODES:
+            image = image.convert("RGBA" if has_alpha else "RGB")
+        if fmt == "png":
+            # Read from the image being saved, so no key is written beside an alpha band.
+            transparency = image.info.get("transparency")
+            if transparency is not None and "A" not in image.mode:
+                params["transparency"] = transparency
+        else:
+            params["quality"] = quality if quality is not None else LOSSY_QUALITY
+        if icc:
+            params["icc_profile"] = icc
+        # Only the profile, and a kept mode's key, are written: no EXIF, XMP or text.
+        image.info = {}
+        try:
+            image.save(out, format=_PIL_FORMAT[fmt], **params)
+            return self.probe(out)
+        except Exception as exc:
+            raise OSError("the export could not be saved") from exc
 
     def _require_windows(self) -> None:
         if self._platform != "win32":

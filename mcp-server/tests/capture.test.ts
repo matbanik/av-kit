@@ -38,6 +38,8 @@ const CAPTURE_ACTIONS = [
   { action: "frames", method: "POST", path: "/captures/frames" },
   // MEU-135 (Session 63): +sheet after frames.
   { action: "sheet", method: "POST", path: "/captures/sheet" },
+  // MEU-136 (Session 64): +export after sheet.
+  { action: "export", method: "POST", path: "/captures/{id}/export" },
 ] as const;
 const REST_ONLY = ["complete", "cancel", "register"] as const;
 // TA-4 (Session 30, MEU-67): + flatten_backup, backup_dir, annotated_format.
@@ -113,7 +115,8 @@ describe("MEU-38 avkit_capture", () => {
     // MEU-133 (Session 62): +avkit_convert.probe after gpu_refresh.
     // MEU-134 (Session 62): +avkit_capture.frames after crop.
     // MEU-135 (Session 63): +avkit_capture.sheet after frames.
-    expect(ACTION_INDEX).toHaveLength(74);
+    // MEU-136 (Session 64): +avkit_capture.export after sheet.
+    expect(ACTION_INDEX).toHaveLength(75);
     expect([...COMPOUND_TOOLS]).toEqual([
       "avkit_download",
       "avkit_transcript",
@@ -131,8 +134,8 @@ describe("MEU-38 avkit_capture", () => {
   it("AC-38.2 CAPTURE_ACTIONS match REST 1:1; REST_ONLY absent", () => {
     const rows = ACTION_INDEX.filter((row) => row.tool === "avkit_capture");
     // TA-2 (Session 30, MEU-67); MEU-130 (Session 59): +crop; MEU-134 (Session 62): +frames.
-    // MEU-135 (Session 63): +sheet.
-    expect(rows).toHaveLength(13);
+    // MEU-135 (Session 63): +sheet. MEU-136 (Session 64): +export.
+    expect(rows).toHaveLength(14);
     expect(rows.map((row) => ({ action: row.action, method: row.method, path: row.path }))).toEqual(
       CAPTURE_ACTIONS.map((row) => ({ action: row.action, method: row.method, path: row.path })),
     );
@@ -892,7 +895,8 @@ describe("MEU-130 capture crop", () => {
   it("AC-130.26 ACTION_INDEX has the crop row after revert", () => {
     // MEU-134 (Session 62): +avkit_capture.frames after crop.
     // MEU-135 (Session 63): +avkit_capture.sheet after frames.
-    expect(ACTION_INDEX).toHaveLength(74);
+    // MEU-136 (Session 64): +avkit_capture.export after sheet.
+    expect(ACTION_INDEX).toHaveLength(75);
     const keys = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`);
     const revert = keys.indexOf("avkit_capture.revert");
     expect(revert).toBeGreaterThan(-1);
@@ -904,7 +908,8 @@ describe("MEU-130 capture crop", () => {
       path: "/captures/{id}/crop",
     });
     expect(keys[keys.length - 1]).toBe("avkit_models.download_asset");
-    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(13);
+    // MEU-136 (Session 64): +avkit_capture.export.
+    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(14);
   });
 });
 
@@ -1057,7 +1062,8 @@ describe("MEU-134 capture frames", () => {
       path: "/captures/frames",
     });
     // MEU-135 (Session 63): +avkit_capture.sheet after frames.
-    expect(ACTION_INDEX).toHaveLength(74);
+    // MEU-136 (Session 64): +avkit_capture.export after sheet.
+    expect(ACTION_INDEX).toHaveLength(75);
     expect(keys[keys.length - 1]).toBe("avkit_models.download_asset");
   });
 
@@ -1249,7 +1255,8 @@ describe("MEU-135 capture sheet", () => {
   });
 
   it("AC-135.19 sheet parity and audit coverage: ACTION_INDEX has the sheet row after frames", () => {
-    expect(ACTION_INDEX).toHaveLength(74);
+    // MEU-136 (Session 64): +avkit_capture.export after sheet.
+    expect(ACTION_INDEX).toHaveLength(75);
     const keys = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`);
     const crop = keys.indexOf("avkit_capture.crop");
     const frames = keys.indexOf("avkit_capture.frames");
@@ -1264,7 +1271,8 @@ describe("MEU-135 capture sheet", () => {
     });
     expect(keys.filter((key) => key === "avkit_capture.sheet")).toHaveLength(1);
     expect(keys[keys.length - 1]).toBe("avkit_models.download_asset");
-    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(13);
+    // MEU-136 (Session 64): +avkit_capture.export.
+    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(14);
   });
 
   it("AC-135.19 sheet parity and audit coverage: the fake backend's 201 body reaches the tool result", async () => {
@@ -1287,5 +1295,299 @@ describe("MEU-135 capture sheet", () => {
       SHEET_BODY.cells.map(() => ["cell", "time_ms", "timecode"]),
     );
     expect(parsed).toEqual(SHEET_BODY);
+  });
+});
+
+// MEU-136 capture-export-copy (Session 64): EXPORT_MCP.
+const EXPORT_UNKNOWN_KEY_TEXT = "export accepts only action, id, format, max_edge and quality";
+const EXPORT_MARKER_KEY = "C:/private-marker/source.png";
+const EXPORT_BODY = {
+  shot: { id: "e1", path: "C:/tmp/inbox/shot-export.jpg", width: 64, height: 43, bytes: 2048 },
+  source_id: "s1",
+};
+const EXPORT_GOOD = { action: "export", id: "s1", format: "png" } as const;
+type ExportProp = { type?: string; minimum?: number; maximum?: number; enum?: string[]; anyOf?: ExportProp[] };
+
+function exportFetch(calls: { url: string; method?: string; body: unknown; raw?: string }[]) {
+  return vi.fn(async (url: string, init?: RequestInit) => {
+    calls.push({
+      url: String(url),
+      method: init?.method,
+      body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+      raw: init?.body === undefined ? undefined : String(init.body),
+    });
+    return okJson(EXPORT_BODY, 201);
+  });
+}
+
+/** The committed OpenAPI's schema by name, or undefined. */
+function committedSchema(name: string): { properties?: Record<string, ExportProp>; required?: string[] } | undefined {
+  const committed = JSON.parse(readFileSync(OPENAPI_COMMITTED, "utf8")) as {
+    components?: { schemas?: Record<string, { properties?: Record<string, ExportProp>; required?: string[] }> };
+  };
+  return committed.components?.schemas?.[name];
+}
+
+/** The branch of an OpenAPI property that has the given type, looking inside anyOf. */
+function branchOf(prop: ExportProp | undefined, type: string): ExportProp | undefined {
+  if (prop === undefined) return undefined;
+  if (prop.type === type) return prop;
+  return (prop.anyOf ?? []).find((branch) => branch.type === type);
+}
+
+/** Captures stderr writes and console output while fn runs. */
+async function captureStderr<T>(fn: () => Promise<T>): Promise<{ value: T; written: string }> {
+  const chunks: string[] = [];
+  const write = vi.spyOn(process.stderr, "write").mockImplementation(((chunk: unknown) => {
+    chunks.push(String(chunk));
+    return true;
+  }) as unknown as typeof process.stderr.write);
+  const spies = (["error", "warn", "log", "info", "debug"] as const).map((name) =>
+    vi.spyOn(console, name).mockImplementation((...args: unknown[]) => {
+      chunks.push(args.map(String).join(" "));
+    }),
+  );
+  try {
+    const value = await fn();
+    return { value, written: chunks.join("\n") };
+  } finally {
+    write.mockRestore();
+    for (const spy of spies) spy.mockRestore();
+  }
+}
+
+describe("MEU-136 capture export", () => {
+  it("AC-136.17 capture export schema, call and description: the schema takes id, format and every optional key", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const good: Record<string, unknown>[] = [
+      { ...EXPORT_GOOD },
+      { action: "export", id: "s1", format: "jpeg", max_edge: 64, quality: 1 },
+      { action: "export", id: "s1", format: "webp", max_edge: 16383, quality: 100 },
+      { action: "export", id: "s1", format: "png", max_edge: 1000 },
+      { action: "export", id: "s1", format: "jpeg", quality: 90 },
+      // D-610: quality with png is refused by the API, not by the schema.
+      { action: "export", id: "s1", format: "png", quality: 50 },
+    ];
+    for (const args of good) {
+      expect(captureSchema.safeParse(args).success, JSON.stringify(args)).toBe(true);
+    }
+  });
+
+  it("AC-136.17 capture export schema, call and description: refusals come before fetch", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    // The positive control: the base call is accepted, so each refusal below is the bad key's.
+    expect(captureSchema.safeParse({ ...EXPORT_GOOD }).success).toBe(true);
+    const bad: Record<string, unknown>[] = [
+      { ...EXPORT_GOOD, nope: 1 },
+      { action: "export", id: "s1" },
+      { action: "export", format: "png" },
+      { action: "export", id: "../s1", format: "png" },
+      { ...EXPORT_GOOD, format: "gif" },
+      { ...EXPORT_GOOD, format: "PNG" },
+      { ...EXPORT_GOOD, max_edge: 63 },
+      { ...EXPORT_GOOD, max_edge: 16384 },
+      { ...EXPORT_GOOD, max_edge: 64.5 },
+      { ...EXPORT_GOOD, max_edge: "64" },
+      { ...EXPORT_GOOD, max_edge: null },
+      { ...EXPORT_GOOD, format: "jpeg", quality: 0 },
+      { ...EXPORT_GOOD, format: "jpeg", quality: 101 },
+      { ...EXPORT_GOOD, format: "jpeg", quality: 50.5 },
+      { ...EXPORT_GOOD, format: "jpeg", quality: null },
+    ];
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = exportFetch(calls);
+    for (const args of bad) {
+      expect(captureSchema.safeParse(args).success, JSON.stringify(args)).toBe(false);
+      const result = await handleTool("avkit_capture", args, {
+        env: toolEnv(appData),
+        fetchImpl: fetchImpl as unknown as typeof fetch,
+      });
+      expect(result.isError, JSON.stringify(args)).toBe(true);
+      expect(result.content[0].text, JSON.stringify(args)).toContain("validation_error");
+    }
+    expect(fetchImpl).toHaveBeenCalledTimes(0);
+    expect(calls).toEqual([]);
+  });
+
+  it("AC-136.17 capture export schema, call and description: an unknown key gets the fixed text and is never echoed (D-620)", async () => {
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = exportFetch(calls);
+    const runtime = { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch };
+    // The positive control: crop echoes an unknown key, so this test can see an echo.
+    const crop = await captureStderr(() =>
+      handleTool(
+        "avkit_capture",
+        { action: "crop", id: "s1", x: 0, y: 0, width: 8, height: 8, [EXPORT_MARKER_KEY]: 1 },
+        runtime,
+      ),
+    );
+    expect(crop.value.isError).toBe(true);
+    expect(crop.value.content[0].text).toContain(EXPORT_MARKER_KEY);
+    const exported = await captureStderr(() =>
+      handleTool("avkit_capture", { ...EXPORT_GOOD, [EXPORT_MARKER_KEY]: 1 }, runtime),
+    );
+    expect(exported.value.isError).toBe(true);
+    expect(exported.value.content[0].text).toBe(`validation_error: ${EXPORT_UNKNOWN_KEY_TEXT}`);
+    expect(exported.value.content[0].text).not.toContain("private-marker");
+    expect(exported.written).not.toContain("private-marker");
+    expect(fetchImpl).toHaveBeenCalledTimes(0);
+  });
+
+  it("AC-136.17 capture export schema, call and description: an integral JSON number reaches REST as an integer (D-610)", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const args = JSON.parse(
+      '{"action":"export","id":"cap-1","format":"jpeg","max_edge":64.0,"quality":80.0}',
+    ) as Record<string, unknown>;
+    expect(captureSchema.safeParse(args).success).toBe(true);
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown; raw?: string }[] = [];
+    const fetchImpl = exportFetch(calls);
+    const result = await handleTool("avkit_capture", args, {
+      env: toolEnv(appData),
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    expect(result.isError).not.toBe(true);
+    expect(calls).toHaveLength(1);
+    const raw = calls[0]?.raw ?? "";
+    expect(raw).toContain('"max_edge":64');
+    expect(raw).toContain('"quality":80');
+    expect(raw).not.toContain(".0");
+    expect(calls[0]?.url.endsWith("/captures/cap-1/export")).toBe(true);
+  });
+
+  it("AC-136.17 capture export schema, call and description: it posts the body minus action and id with ADD_TIMEOUT_MS (D-616)", async () => {
+    const { ADD_TIMEOUT_MS } = await import("../src/client.js");
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = exportFetch(calls);
+    const timeout = vi.spyOn(AbortSignal, "timeout");
+    try {
+      const result = await handleTool(
+        "avkit_capture",
+        { action: "export", id: "s1", format: "webp", max_edge: 512, quality: 70 },
+        { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+      );
+      expect(calls).toHaveLength(1);
+      expect(result.isError).not.toBe(true);
+      expect(calls[0]?.method).toBe("POST");
+      expect(calls[0]?.url).not.toContain("?");
+      expect(calls[0]?.url.endsWith("/captures/s1/export")).toBe(true);
+      expect(calls[0]?.body).toEqual({ format: "webp", max_edge: 512, quality: 70 });
+      expect(timeout).toHaveBeenCalledWith(ADD_TIMEOUT_MS);
+      calls.length = 0;
+      timeout.mockClear();
+      await handleTool(
+        "avkit_capture",
+        { ...EXPORT_GOOD },
+        { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch },
+      );
+      expect(calls).toHaveLength(1);
+      expect(calls[0]?.body).toEqual({ format: "png" });
+      expect(timeout).toHaveBeenCalledWith(ADD_TIMEOUT_MS);
+    } finally {
+      timeout.mockRestore();
+    }
+  });
+
+  it("AC-136.17 capture export schema, call and description: crop's shared markers and the export advice", async () => {
+    const { captureDescriptions } = await import("../src/toolsets/capture.js");
+    const { advertisedSchema } = await import("../src/toolsets/registry.js");
+    const { USER_CONFIRM_ACTIONS } = await import("../src/destructive.js");
+    const text = captureDescriptions["avkit_capture.export"] ?? "";
+    expect(text.length).toBeGreaterThan(0);
+    for (const line of [
+      "Workflow: call avkit_capture export to POST /captures/{id}/export then poll list/get.",
+      "Prerequisite: local screen grab or inbox files; Capture never uploads YouTube.",
+      "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
+    ]) {
+      expect(text, line).toContain(line);
+    }
+    expect(M7.filter((marker) => text.includes(marker))).toEqual([...M7]);
+    for (const needle of [
+      "NEW shot",
+      "never enlarges",
+      "jpeg and webp only",
+      "annotated image when it has saved marks",
+      "bytes",
+    ]) {
+      expect(text, needle).toContain(needle);
+    }
+    const keys = Object.keys(advertisedSchema("avkit_capture").shape);
+    expect(keys).toEqual(expect.arrayContaining(["format", "max_edge", "quality"]));
+    expect(DESTRUCTIVE_ACTIONS.has("avkit_capture.export")).toBe(false);
+    expect(USER_CONFIRM_ACTIONS.has("avkit_capture.export")).toBe(false);
+  });
+
+  it("AC-136.18 export parity and audit coverage: ACTION_INDEX has the export row after sheet", () => {
+    expect(ACTION_INDEX).toHaveLength(75);
+    const keys = ACTION_INDEX.map((row) => `${row.tool}.${row.action}`);
+    const sheet = keys.indexOf("avkit_capture.sheet");
+    expect(sheet).toBeGreaterThan(-1);
+    expect(keys[sheet + 1]).toBe("avkit_capture.export");
+    expect(ACTION_INDEX[sheet + 1]).toEqual({
+      tool: "avkit_capture",
+      action: "export",
+      method: "POST",
+      path: "/captures/{id}/export",
+    });
+    expect(keys.filter((key) => key === "avkit_capture.export")).toHaveLength(1);
+    expect(keys[keys.length - 1]).toBe("avkit_models.download_asset");
+    expect(ACTION_INDEX.filter((row) => row.tool === "avkit_capture")).toHaveLength(14);
+  });
+
+  it("AC-136.18 export parity and audit coverage: the REST body keys and bounds are the zod object's", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const rest = committedSchema("CaptureExportIn");
+    expect(rest, "CaptureExportIn in openapi.committed.json").toBeDefined();
+    const props = rest?.properties ?? {};
+    const option = captureSchema.options.find((candidate) => candidate.safeParse({ ...EXPORT_GOOD }).success);
+    expect(option, "the export option of captureSchema").toBeDefined();
+    const shape = (option as unknown as { shape?: Record<string, unknown> } | undefined)?.shape ?? {};
+    const zodKeys = Object.keys(shape).filter((key) => key !== "action" && key !== "id").sort();
+    expect(Object.keys(props).sort()).toEqual(zodKeys);
+    expect(rest?.required).toEqual(["format"]);
+    expect(branchOf(props.format, "string")?.enum).toEqual(["png", "jpeg", "webp"]);
+    const accepts = (extra: Record<string, unknown>): boolean =>
+      captureSchema.safeParse({ ...EXPORT_GOOD, format: "jpeg", ...extra }).success;
+    for (const key of ["max_edge", "quality"]) {
+      const bounds = branchOf(props[key], "integer");
+      expect(bounds, `${key} is an integer in CaptureExportIn`).toBeDefined();
+      const minimum = Number(bounds?.minimum);
+      const maximum = Number(bounds?.maximum);
+      expect(
+        [minimum - 1, minimum, maximum, maximum + 1].map((value) => accepts({ [key]: value })),
+        key,
+      ).toEqual([false, true, true, false]);
+    }
+    expect([props.max_edge, props.quality].map((prop) => branchOf(prop, "integer"))).toEqual([
+      expect.objectContaining({ minimum: 64, maximum: 16383 }),
+      expect.objectContaining({ minimum: 1, maximum: 100 }),
+    ]);
+  });
+
+  it("AC-136.18 export parity and audit coverage: the fake backend's 201 body reaches the tool result", async () => {
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = exportFetch(calls);
+    const result = await handleTool("avkit_capture", { ...EXPORT_GOOD, max_edge: 64 }, {
+      env: toolEnv(appData),
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+    expect(calls).toHaveLength(1);
+    expect(result.isError).not.toBe(true);
+    const parsed = JSON.parse(result.content[0].text) as typeof EXPORT_BODY;
+    expect(Object.keys(parsed).sort()).toEqual(["shot", "source_id"]);
+    expect(Object.keys(parsed.shot).sort()).toEqual(["bytes", "height", "id", "path", "width"]);
+    const out = Object.keys(committedSchema("CaptureExportOut")?.properties ?? {}).sort();
+    const shotOut = Object.keys(committedSchema("CaptureExportShotOut")?.properties ?? {}).sort();
+    expect([out, shotOut]).toEqual([Object.keys(parsed).sort(), Object.keys(parsed.shot).sort()]);
+    expect(parsed).toEqual(EXPORT_BODY);
   });
 });
