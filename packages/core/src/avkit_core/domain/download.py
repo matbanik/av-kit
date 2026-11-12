@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
 
-from avkit_core.domain.enums import AudioFormat, DownloadStatus, QualityPreset, SABRMode, SABRSource
+from avkit_core.domain.enums import (
+    AudioFormat,
+    DownloadFailureCause,
+    DownloadStatus,
+    QualityPreset,
+    SABRMode,
+    SABRSource,
+)
 from avkit_core.domain.errors import (
     ConflictError,
     ValidationError,
@@ -25,7 +33,7 @@ from avkit_core.domain.errors import (
     require_uuid_str,
 )
 
-SABR_STATUS_FIELDS: tuple[str, ...] = ("mode", "source", "checked_at")
+SABR_STATUS_FIELDS: tuple[str, ...] = ("mode", "source", "checked_at", "matched_phrase")
 DOWNLOAD_TRANSITIONS: dict[DownloadStatus, frozenset[DownloadStatus]] = {
     DownloadStatus.Pending: frozenset(
         {
@@ -76,6 +84,52 @@ BLOCKER_REMEDIATION: dict[DownloadStatus, str] = {
 _BLOCKER_REASON_VALUES: frozenset[str] = frozenset(BLOCKER_REASONS.values())
 
 
+#: FAILURE_MESSAGE (MEU-137): the card text of each named cause. `other` is built from its
+#: reason. This is the only place the texts are written.
+_FAILURE_MESSAGES: dict[DownloadFailureCause, str] = {
+    DownloadFailureCause.refused: (
+        "YouTube refused the download (page reload, SABR-only or bot check). Try again later."
+    ),
+    DownloadFailureCause.no_format: (
+        "No format at the chosen quality. Pick another quality and requeue."
+    ),
+    DownloadFailureCause.cookies: (
+        "Couldn't read the browser sign-in data. Check Settings → Downloader, then requeue."
+    ),
+    DownloadFailureCause.write_failed: (
+        "Couldn't write the file. Check the output folder, then requeue."
+    ),
+}
+#: CLEAN_LINE (D-627): an ANSI CSI sequence, and the categories a cleaned line drops.
+ANSI_CSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
+DROPPED_CATEGORIES: frozenset[str] = frozenset({"Cc", "Cf", "Cs"})
+_SPACE_RUNS = re.compile(" +")
+
+
+def download_failure_message(cause: DownloadFailureCause, reason: str | None = None) -> str:
+    """The card's one-sentence message for a failed download (`FAILURE_MESSAGE`, MEU-137).
+
+    Only `other` uses `reason`: "Download failed: {reason}." or, with no reason,
+    "Download failed."
+    """
+    require_enum(cause, DownloadFailureCause, "cause")
+    if cause is DownloadFailureCause.other:
+        return f"Download failed: {reason}." if reason else "Download failed."
+    return _FAILURE_MESSAGES[cause]
+
+
+def clean_line(text: str) -> str:
+    """`text` as one readable line with no control characters (`CLEAN_LINE`, D-627).
+
+    In order: drop ANSI CSI sequences; turn each whitespace character into a space; drop
+    each `Cc`, `Cf` or `Cs` code point; collapse runs of spaces and strip. Never raises.
+    """
+    text = ANSI_CSI.sub("", text)
+    text = "".join(" " if char.isspace() else char for char in text)
+    text = "".join(char for char in text if unicodedata.category(char) not in DROPPED_CATEGORIES)
+    return _SPACE_RUNS.sub(" ", text).strip()
+
+
 def normalize_blocker_reason(job: DownloadJob) -> DownloadJob:
     """Return `job` with its blocker reason made consistent with its status.
 
@@ -101,6 +155,7 @@ class SABRStatus:
     mode: SABRMode
     source: SABRSource | None
     checked_at: datetime | None
+    matched_phrase: str | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.mode, SABRMode):
@@ -111,6 +166,16 @@ class SABRStatus:
             raise ValidationError("source must be SABRSource | None")
         if self.checked_at is not None and not isinstance(self.checked_at, datetime):
             raise ValidationError("checked_at must be datetime | None")
+        # SABR_STATUS_PHRASE: a phrase is a non-empty str, only on an Active, Detected status.
+        if self.matched_phrase is not None and not (
+            isinstance(self.matched_phrase, str)
+            and self.matched_phrase != ""
+            and self.mode is SABRMode.Active
+            and self.source is SABRSource.Detected
+        ):
+            raise ValidationError(
+                "matched_phrase must be a non-empty str on an Active, Detected status"
+            )
 
 
 @dataclass(frozen=True)

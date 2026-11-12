@@ -126,3 +126,34 @@ def test_ac_78_6_cleared_setting_falls_back_neg(
         assert resolve() == on_path
     finally:
         dispose()
+
+
+def test_ac_139_4_debug_source_follows_a_settings_put(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """YTDLP_LIVE: the adapter's debug source reads the setting a `PUT /settings` wrote."""
+    from avkit_core.services.health import HealthService
+
+    monkeypatch.setattr(HealthService, "_active", None)
+    captured = _live_location(monkeypatch)
+    services, dispose = build_services(app_data=tmp_path, database_path=tmp_path / "avkit.db")
+    try:
+        assert len(captured) == 1
+        source = captured[0].get("yt_dlp_debug")
+        assert callable(source)
+        app = create_app(
+            tokens=frozenset({"s65-token"}),
+            services=services,
+            engine_dispose=dispose,
+        )
+        auth = {"Authorization": "Bearer s65-token"}
+        path = "/api/v1/settings/downloader"
+        with TestClient(app) as client:
+            seen: list[object] = [source()]
+            seen.append(client.put(path, headers=auth, json={"yt_dlp_debug": True}).status_code)
+            seen.append(source())
+            seen.append(client.put(path, headers=auth, json={"yt_dlp_debug": False}).status_code)
+            seen.append(source())
+        assert seen == [False, 200, True, 200, False]
+    finally:
+        dispose()

@@ -4764,14 +4764,15 @@ issues:
     title: A failed download shows no reason on its card and logs nothing
     severity: high
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-10'
     root_cause: 'DownloadService stores the reason (_finish(job.id, Failed, error=str(exc)), packages/core/src/avkit_core/services/download.py:544-549) and the API returns it (routes/downloads.py:56, schemas/downloads.py:61), but DownloaderPage builds each QueueCardJob without errorMessage (ui/src/renderer/src/features/downloader/DownloaderPage.tsx:476-485), so QueueCard.tsx:277 falls back to the placeholder. The failure branches log nothing, and the download path has only three log calls (download.py:178, :180, :199): no line for a job starting, finishing or failing.'
     blast_radius: Mat's gKcOjnDJfzk job on 2026-11-10 showed Failed with an empty Console; the reason ('The page needs to be reloaded.') was found only by running yt-dlp by hand (docs/proposals/2026-11-10-download-logic-divergence-report.md §4). Every failed download is silent this way, so a YouTube block, a missing format and a cookie error look the same. The transcript and TTS pages had the same gap and were fixed (TRANSCRIPT-FAILED-NO-REASON by MEU-115, TTS-GENERATE-FAILED-SILENT by MEU-62).
     verification:
-      last_checked: '2026-11-10'
-      method: A read of services/download.py, routes/downloads.py, DownloaderPage.tsx and QueueCard.tsx at 55d1289
-      result: error_message is stored and served but never mapped to the card; no log call on the failure branches
+      last_checked: '2026-11-12'
+      method: 'Session 65 task row 3 receipts C:/Temp/av-kit/s65-py-green-137.txt and s65-ui-green-137.txt (plan 2026-11-11-download-failure-visibility, MEU-137), after the row 2a Red receipts that s65-red-137-check.txt accepted: the cause and message units, the adapter raise with a mocked YoutubeDL, the real-stack failure line through the Console, and the Downloader card renderer test'
+      result: '286 passed (Python) and 104 passed (renderer). AC-137.1 to AC-137.11 hold: each cause stores its own av-kit message, a failure logs download.failed at ERROR with error and a redacted detail, download.started and download.done log, the card shows error_message, and no filename or home path reaches the Console'
+    resolution_path: 'Fixed in Session 65 on 2026-11-12 (plan docs/execution/plans/2026-11-11-download-failure-visibility/, MEU-137): FAILURE_CAUSE_ENUM, FAILURE_MESSAGE, CLEAN_LINE, SCRUB_LINE, FAILED_ERROR, FAILURE_CAUSE, FAILURE_RAISE, FAILURE_LOG and CARD_REASON. A failed download''s card states the reason, and the Console has a matching download.failed line.'
     category: MEU-NEW
     priority: P2
     related:
@@ -4805,14 +4806,15 @@ issues:
     title: Check SABR misses yt-dlp's current SABR messages and shows nothing when it finds none
     severity: medium
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-10'
     root_cause: 'check_sabr_status (packages/infrastructure/src/avkit_infra/youtube/adapter.py:555-561) reports Active only when a logger line holds one of SABR_LOG_NEEDLES (:81-85): ''require a gvs po token'', ''android client sabr formats require'', ''ios client sabr formats require''. yt-dlp 2026.10.26 says ''Some android client https formats have been skipped as they are missing a URL ... SABR-only streaming experiment'' and ''forcing SABR'', which none of them matches. The page shows the result only when Active (DownloaderPage.tsx:664, hidden={!sabrActive}; ''Checking...'' only while running, :667), and the SABR routes (routes/downloads.py:95-133) and service methods (services/download.py:345-398) log nothing. The phrases are the build-plan''s (02-infrastructure.md:377, 06-gui.md:457), so the spec is stale too.'
     blast_radius: 'Measured 2026-11-10 (docs/proposals/2026-11-10-download-logic-divergence-report.md §6a): Check SABR returned Inactive while yt-dlp printed the SABR-only warning, and Mat saw no message and no Console line after pressing it. The passive check in every download uses the same phrases, so SABR mode never turns on by itself. P:/yt-dlp_GUI''s probe matches ''sabr'', ''missing a url'' and ''forcing sabr'' (youtube_downloader.py:3717).'
     verification:
-      last_checked: '2026-11-10'
-      method: check_sabr_status run against yt-dlp 2026.10.26 with every logger line captured, and a read of the page and routes at 55d1289
-      result: the warning lines carry 'SABR' and 'missing a URL'; no needle matched; the page hides Inactive
+      last_checked: '2026-11-12'
+      method: 'Session 65 task row 4 receipts C:/Temp/av-kit/s65-py-green-138.txt and s65-ui-green-138.txt (plan 2026-11-11-download-failure-visibility, MEU-138), after the row 2b Red receipts: the phrase units with the captured yt-dlp 2026.10.26 warning line, the scan and check with a mocked YoutubeDL, each SABR route''s one Console line, and the sabr-panel renderer test'
+      result: '296 passed (Python) and 108 passed (renderer). AC-138.1 to AC-138.8 hold: the missing-a-URL warning is Active, Sabrina and a PO Token line alone are not, Check, Force and Clear each log one line, and the panel shows Active and Inactive with a time'
+    resolution_path: 'Fixed in Session 65 on 2026-11-12 (plan docs/execution/plans/2026-11-11-download-failure-visibility/, MEU-138): SABR_MATCH, SABR_SCAN, SABR_STATUS_PHRASE, SABR_RESULT, SABR_LOG and SABR_SHOWN, with whole-word phrases and require a gvs po token on Mat''s D-623 and D-624.'
     category: MEU-NEW
     priority: P3
     related:
@@ -4845,14 +4847,15 @@ issues:
     title: yt-dlp's own log lines never reach the Console
     severity: medium
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-10'
     root_cause: '_YtDlpLogger (packages/infrastructure/src/avkit_infra/youtube/adapter.py:315-340) logs a line only when downloader.yt_dlp_debug is on, and puts its text in a ''message'' field. HealthService keeps only CONSOLE_FIELDS (packages/core/src/avkit_core/services/health.py:47-62: job_id, video_id, variant_id, device, error, detail, request_id, route), so the text is dropped even then. The setting defaults to False (services/settings.py:57), has no control in Settings, and is read once at startup (packages/api/src/avkit_api/wiring.py:149). The stored app.log_level is read by nothing.'
     blast_radius: A user or agent sees none of yt-dlp's warnings or errors, which name the real cause of most download failures (docs/proposals/2026-11-10-download-logic-divergence-report.md §6b). P:/yt-dlp_GUI forwards every line when debug is on and has 279 log_message calls; av-kit's download path has three. Turning the setting on through the API does nothing until the backend restarts, and then logs empty lines.
     verification:
-      last_checked: '2026-11-10'
-      method: A read of the adapter logger, health.py CONSOLE_FIELDS, settings.py and wiring.py at 55d1289, and the local settings table
-      result: the text field is not kept, the toggle has no UI and is read once; app.log_level=DEBUG is stored and unread
+      last_checked: '2026-11-12'
+      method: 'Session 65 task row 5 receipts C:/Temp/av-kit/s65-py-green-139.txt and s65-ui-green-139.txt (plan 2026-11-11-download-failure-visibility, MEU-139), after the row 2c Red receipts that s65-red-139-check.txt accepted: the logger units, the per-call source with a mocked YoutubeDL, the wiring test through a real PUT /settings, the redaction test through the Console, and the Settings switch renderer test'
+      result: '306 passed (Python) and 134 passed (renderer). AC-139.1 to AC-139.9 hold: warnings and ERROR lines log with detail when debug is off, debug lines only when on, a PUT applies to the next call without a restart, and home paths, links and cookie-looking values are redacted'
+    resolution_path: 'Fixed in Session 65 on 2026-11-12 (plan docs/execution/plans/2026-11-11-download-failure-visibility/, MEU-139): YTDLP_LINE and YTDLP_LIVE. The control is the existing Settings → Downloader yt-dlp debug switch (D-630).'
     category: MEU-NEW
     priority: P3
     related:

@@ -74,7 +74,7 @@ import {
   type AudioWire,
   type QualityWire,
 } from './quality-options'
-import { fetchSabr } from './sabr-panel'
+import { fetchSabr, sabrResultText } from './sabr-panel'
 import { DOWNLOADER_HELP_SECTIONS } from './downloader-help-content'
 import { QUERY_KEY, useDownloadQueue } from './useDownloadQueue'
 
@@ -482,6 +482,7 @@ export function DownloaderPage() {
     fileSize: item.file_size,
     outputPath: item.file_path,
     sourceUrl: item.url,
+    errorMessage: item.error_message ?? null,
   }))
 
   /*
@@ -661,10 +662,10 @@ export function DownloaderPage() {
           className="border-t border-border pt-2"
         >
         <div className="flex flex-col gap-3 pt-2">
-        <div data-testid="sabr-status" hidden={!sabrActive} className="text-sm text-fg-muted">
-          SABR active — quality limited to 360p
+        {/* SABR_SHOWN (D-635): the last result is always shown; no separate Checking line. */}
+        <div data-testid="sabr-status" className="text-sm text-fg-muted">
+          {sabrResultText(sabrQuery.data)}
         </div>
-        {sabrQuery.data?.mode === 'checking' ? <p>Checking…</p> : null}
         <div className="flex flex-wrap gap-2">
           <Button data-testid="sabr-check-btn" variant="secondary" size="sm" loading={busy} onClick={() => void run(checkSabr)}>
             Check SABR

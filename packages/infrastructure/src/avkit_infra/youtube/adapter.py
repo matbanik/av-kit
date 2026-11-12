@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 import time
 import unicodedata
 from collections.abc import Callable
@@ -15,6 +16,7 @@ from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
 
 from avkit_core.domain.download import (
+    ANSI_CSI,
     CookieTestResult,
     DownloadOptions,
     DownloadResult,
@@ -25,15 +27,23 @@ from avkit_core.domain.download import (
     VideoInfo,
     VideoListing,
 )
-from avkit_core.domain.enums import AudioFormat, QualityPreset, SABRMode, SABRSource
+from avkit_core.domain.enums import (
+    AudioFormat,
+    DownloadFailureCause,
+    QualityPreset,
+    SABRMode,
+    SABRSource,
+)
 from avkit_core.domain.errors import (
     AgeRestrictedError,
     CookieTestError,
     DomainError,
     DownloadCancelledError,
+    DownloadFailedError,
     ExtractError,
     ValidationError,
 )
+from avkit_core.services.download import first_line, scrub_line
 
 log = structlog.get_logger(module="youtube")
 
@@ -78,11 +88,35 @@ SABR_EXTRACTOR_ARGS: dict[str, dict[str, object]] = {
         "include_dash_manifest": False,
     }
 }
-SABR_LOG_NEEDLES = (
-    "require a gvs po token",
-    "android client sabr formats require",
-    "ios client sabr formats require",
+# SABR_MATCH (D-623, D-624): yt-dlp 2026.10.26's own SABR words, matched as whole words.
+# They replace the three old needles, which `require a gvs po token` and `sabr` still match.
+SABR_PHRASES: tuple[str, ...] = ("forcing sabr", "missing a url", "require a gvs po token", "sabr")
+# FAILURE_CAUSE (D-636): each cause with the case-folded needles that name it, in order.
+FAILURE_CAUSE_NEEDLES: tuple[tuple[DownloadFailureCause, tuple[str, ...]], ...] = (
+    (
+        DownloadFailureCause.refused,
+        ("the page needs to be reloaded", "confirm you're not a bot", "confirm you’re not a bot"),
+    ),
+    (
+        DownloadFailureCause.no_format,
+        (
+            "requested format is not available",
+            "no video formats found",
+            "only images are available",
+        ),
+    ),
+    (
+        DownloadFailureCause.cookies,
+        (
+            "could not copy chrome cookie database",
+            "failed to decrypt with dpapi",
+            "cookies database",
+        ),
+    ),
+    (DownloadFailureCause.write_failed, ("unable to open for writing", "unable to write data")),
 )
+# FAILURE_CAUSE (D-639): a leading `ERROR:` with the ANSI codes and whitespace around it.
+_ERROR_PREFIX = re.compile(rf"^(?:{ANSI_CSI.pattern}|\s)*ERROR:(?:{ANSI_CSI.pattern}|\s)*")
 SABR_PROBE_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 AGE_GATE_NEEDLES = ("sign in to confirm your age", "age-restricted")
 PROGRESS_MIN_INTERVAL_S = 0.25
@@ -312,32 +346,86 @@ def _result_path(info: dict[str, object], ydl: YoutubeDL) -> Path:
     return Path(ydl.prepare_filename(cast(Any, info)))
 
 
+def sabr_phrase(text: str) -> str | None:
+    """The first `SABR_PHRASES` entry in `text` as a whole word, else None (`SABR_MATCH`)."""
+    folded = text.casefold()
+    for phrase in SABR_PHRASES:
+        if re.search(rf"\b{re.escape(phrase)}\b", folded):
+            return phrase
+    return None
+
+
+def classify_download_error(text: str, sabr_matched: bool) -> tuple[DownloadFailureCause, str]:
+    """The cause and the first line of yt-dlp's error text (`FAILURE_CAUSE`, D-636).
+
+    `detail` is `first_line(text)` as written, with only a leading `ERROR:` and the ANSI codes
+    and whitespace around it dropped (D-639): the service's `scrub_line` cleans it, so a split
+    inside a secret or the home folder reaches the scrubbers. The cause is the first needle's,
+    else `refused` when a SABR phrase is found, else `other`; a `no_format` becomes `refused`
+    when the download's log matched SABR.
+    """
+    detail = _ERROR_PREFIX.sub("", first_line(text), count=1)
+    folded = text.casefold()
+    cause = next(
+        (
+            candidate
+            for candidate, needles in FAILURE_CAUSE_NEEDLES
+            if any(needle in folded for needle in needles)
+        ),
+        None,
+    )
+    if cause is None:
+        found = sabr_phrase(text) is not None
+        cause = DownloadFailureCause.refused if found else DownloadFailureCause.other
+    if cause is DownloadFailureCause.no_format and sabr_matched:
+        cause = DownloadFailureCause.refused
+    return (cause, detail)
+
+
 class _YtDlpLogger:
     def __init__(self, debug_enabled: bool) -> None:
-        self.sabr_detected = False
-        self._debug_enabled = debug_enabled
+        self.matched_phrase: str | None = None
+        self.debug_enabled = debug_enabled
         self._log = structlog.get_logger(module="yt-dlp")
 
-    def _scan(self, message: object) -> None:
-        text = str(message).casefold()
-        for needle in SABR_LOG_NEEDLES:
-            if needle in text:
-                self.sabr_detected = True
-                break
-        if self._debug_enabled:
-            self._log.debug("yt-dlp", message=str(message))
+    @property
+    def sabr_detected(self) -> bool:
+        """True once a line held a SABR phrase (`SABR_SCAN`); read-only."""
+        return self.matched_phrase is not None
+
+    def _scan(self, message: object) -> str:
+        text = str(message)
+        # SABR_SCAN: the first line with a phrase sets it, and it never changes after.
+        if self.matched_phrase is None:
+            self.matched_phrase = sabr_phrase(text)
+        return text
+
+    def _emit(self, level: str, detail: str) -> None:
+        # YTDLP_LINE: `detail` only, already scrubbed; a line that scrubs to nothing logs nothing.
+        if detail != "":
+            getattr(self._log, level)("yt-dlp", detail=detail)
 
     def debug(self, message: object) -> None:
-        self._scan(message)
+        text = self._scan(message)
+        if self.debug_enabled:
+            self._emit("debug", scrub_line(text))
 
     def info(self, message: object) -> None:
-        self._scan(message)
+        text = self._scan(message)
+        if self.debug_enabled:
+            self._emit("debug", scrub_line(text))
 
     def warning(self, message: object) -> None:
-        self._scan(message)
+        self._emit("warning", scrub_line(self._scan(message)))
 
     def error(self, message: object) -> None:
-        self._scan(message)
+        detail = scrub_line(self._scan(message))
+        # D-632: only an `ERROR:` line is an error; a bare traceback is a debug line. The
+        # prefix is read after cleaning, so a coloured `ERROR:` still counts.
+        if detail.startswith("ERROR:"):
+            self._emit("error", detail)
+        elif self.debug_enabled:
+            self._emit("debug", detail)
 
 
 class YouTubeAdapter:
@@ -349,7 +437,7 @@ class YouTubeAdapter:
         playlist_end: int = 0,
         on_progress: Callable[[int, int | None, float | None], None] | None = None,
         should_stop: Callable[[], bool] | None = None,
-        yt_dlp_debug: bool = False,
+        yt_dlp_debug: Callable[[], bool] | None = None,
         ffmpeg_location: Callable[[], Path | None] | None = None,
     ) -> None:
         if not isinstance(playlist_end, int) or isinstance(playlist_end, bool) or playlist_end < 0:
@@ -360,6 +448,18 @@ class YouTubeAdapter:
         self._yt_dlp_debug = yt_dlp_debug
         self._ffmpeg_location = ffmpeg_location
         self._last_progress: float | None = None
+
+    def _debug_now(self) -> bool:
+        """YTDLP_LIVE: the debug switch, read once per public call.
+
+        No source, a source that raises and any answer but True all read as off.
+        """
+        if self._yt_dlp_debug is None:
+            return False
+        try:
+            return self._yt_dlp_debug() is True
+        except Exception:  # noqa: BLE001 - an unreadable switch is off
+            return False
 
     def _progress_hook(self, status: dict[str, object]) -> None:
         if self._should_stop is not None and self._should_stop():
@@ -398,7 +498,8 @@ class YouTubeAdapter:
 
     def _base_opts(self, logger: _YtDlpLogger) -> dict[str, object]:
         opts: dict[str, object] = {
-            "quiet": not self._yt_dlp_debug,
+            "quiet": not logger.debug_enabled,
+            "verbose": logger.debug_enabled,
             "noprogress": True,
             "logger": logger,
             "progress_hooks": [self._progress_hook],
@@ -443,7 +544,7 @@ class YouTubeAdapter:
     ) -> tuple[dict[str, object], _YtDlpLogger]:
         logger = opts.get("logger")
         if not isinstance(logger, _YtDlpLogger):
-            logger = _YtDlpLogger(self._yt_dlp_debug)
+            logger = _YtDlpLogger(self._debug_now())
             opts = {**opts, "logger": logger}
         try:
             with _ydl(opts) as ydl:
@@ -466,7 +567,7 @@ class YouTubeAdapter:
         return _info_dict(raw), logger
 
     def extract_info(self, url: str, flat: bool = False) -> VideoInfo | PlaylistInfo:
-        logger = _YtDlpLogger(self._yt_dlp_debug)
+        logger = _YtDlpLogger(self._debug_now())
         opts = self._base_opts(logger)
         opts["extract_flat"] = True if flat else False
         if self._playlist_end > 0:
@@ -477,7 +578,7 @@ class YouTubeAdapter:
         return _video_from_info(info)
 
     def extract_video_ids(self, channel_url: str) -> VideoListing:
-        logger = _YtDlpLogger(self._yt_dlp_debug)
+        logger = _YtDlpLogger(self._debug_now())
         opts = self._base_opts(logger)
         opts["extract_flat"] = True
         if self._playlist_end > 0:
@@ -492,7 +593,7 @@ class YouTubeAdapter:
 
     def download(self, url: str, options: DownloadOptions) -> DownloadResult:
         self._last_progress = None
-        logger = _YtDlpLogger(self._yt_dlp_debug)
+        logger = _YtDlpLogger(self._debug_now())
         opts = self._base_opts(logger)
         opts.update(self._cookie_opts(options))
         if options.audio_only:
@@ -514,11 +615,15 @@ class YouTubeAdapter:
             text = str(exc).casefold()
             if any(needle in text for needle in AGE_GATE_NEEDLES):
                 raise AgeRestrictedError("video is age-restricted") from exc
-            raise DomainError(str(exc) or "yt-dlp download failed") from exc
+            # FAILURE_RAISE (D-637): the cause and yt-dlp's first line.
+            cause, detail = classify_download_error(str(exc), logger.sabr_detected)
+            raise DownloadFailedError(cause, detail) from exc
         except OSError as exc:
             if options.mode == "file":
                 raise CookieTestError("cookie file is missing or unreadable") from exc
-            raise DomainError("yt-dlp IO failed") from exc
+            # The error's type and strerror only, never its filename (D-637).
+            reason = f"{type(exc).__name__}: {exc.strerror or ''}".rstrip(": ")
+            raise DownloadFailedError(DownloadFailureCause.write_failed, reason) from exc
         if not path.is_file():
             raise DomainError("download completed without an output file") from FileNotFoundError(
                 str(path)
@@ -553,12 +658,18 @@ class YouTubeAdapter:
         return extracted.formats
 
     def check_sabr_status(self) -> SABRStatus:
-        logger = _YtDlpLogger(self._yt_dlp_debug)
+        logger = _YtDlpLogger(self._debug_now())
         opts = self._base_opts(logger)
         opts["extractor_args"] = SABR_EXTRACTOR_ARGS
         _info, logger = self._run_extract(SABR_PROBE_URL, opts, download=False)
         mode = SABRMode.Active if logger.sabr_detected else SABRMode.Inactive
-        return SABRStatus(mode=mode, source=SABRSource.Detected, checked_at=datetime.now(UTC))
+        # SABR_RESULT: the phrase the scan matched travels with an Active result.
+        return SABRStatus(
+            mode=mode,
+            source=SABRSource.Detected,
+            checked_at=datetime.now(UTC),
+            matched_phrase=logger.matched_phrase if mode is SABRMode.Active else None,
+        )
 
     def test_cookies(
         self,
@@ -585,7 +696,7 @@ class YouTubeAdapter:
                 profile=profile,
                 cookie_file=cookie_file,
             )
-            logger = _YtDlpLogger(False)
+            logger = _YtDlpLogger(self._debug_now())
             opts = self._base_opts(logger)
             opts.update(self._cookie_opts(options))
             with _ydl(opts) as ydl:

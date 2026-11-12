@@ -142,6 +142,16 @@ class SABRSource(StrEnum):
     Forced = "Forced"
 
 
+class DownloadFailureCause(StrEnum):
+    """Why a download failed (`FAILURE_CAUSE_ENUM`, MEU-137); each cause has one card message."""
+
+    refused = "refused"
+    no_format = "no_format"
+    cookies = "cookies"
+    write_failed = "write_failed"
+    other = "other"
+
+
 class SettingValueType(StrEnum):
     """Serialized settings value kind."""
 

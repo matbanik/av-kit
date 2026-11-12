@@ -1215,6 +1215,119 @@ describe('MEU-46 DownloaderPage queue surface', () => {
     expect(meta('dl-2')).toContain('720p')
     expect(meta('dl-2')).not.toContain('asked')
   })
+
+  it('AC-137.10 a failed card shows why it failed, or the placeholder when no reason is stored', async () => {
+    const missing = queueItem({ id: 'dl-74', title: 'Fourth', status: 'Failed', quality: '', queue_position: 4 })
+    delete (missing as { error_message?: string | null }).error_message
+    rows = [
+      queueItem({
+        id: 'dl-71',
+        title: 'First',
+        status: 'Failed',
+        quality: '',
+        error_message: 'No format at the chosen quality. Pick another quality and requeue.',
+        queue_position: 1,
+      }),
+      queueItem({ id: 'dl-72', title: 'Second', status: 'Failed', quality: '', error_message: null, queue_position: 2 }),
+      queueItem({
+        id: 'dl-73',
+        title: 'Third',
+        status: 'AgeRestricted',
+        quality: '',
+        error_message: 'video is age-restricted',
+        queue_position: 3,
+      }),
+      missing,
+    ]
+    expect('error_message' in missing).toBe(false)
+    await renderQueue()
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+
+    const meta = (id: string): string => inside(card(id), 'queue-card-meta')?.textContent ?? ''
+    expect(meta('dl-71')).toContain('No format at the chosen quality. Pick another quality and requeue.')
+    expect(meta('dl-72')).toBe('—')
+    expect(meta('dl-73')).toContain('video is age-restricted')
+    expect(meta('dl-74')).toBe('—')
+  })
+
+  /**
+   * MEU-138: wrap the MEU-46 fetch stub so the SABR routes answer from `snapshot`, and a
+   * check either moves it to `next` or answers `checkFailure`. Every call is still recorded.
+   */
+  function stubSabr(state: {
+    snapshot: { mode: string; source: string | null; checked_at: string | null }
+    next: { mode: string; source: string | null; checked_at: string | null }
+    checkFailure: { status: number; code: string; message: string } | null
+  }): void {
+    const base = globalThis.fetch
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const recorded = await base(input, init)
+        const url = String(input)
+        const method = (init?.method ?? 'GET').toUpperCase()
+        const path = new URL(url).pathname.replace(/\/$/, '')
+        if (path.endsWith('/downloads/sabr/check') && method === 'POST') {
+          if (state.checkFailure !== null) {
+            const { status, code, message } = state.checkFailure
+            return new Response(JSON.stringify({ error: { code, message, details: null } }), { status })
+          }
+          state.snapshot = state.next
+          return new Response(JSON.stringify(state.snapshot), { status: 200 })
+        }
+        if (path.endsWith('/downloads/sabr') && method === 'GET') {
+          return new Response(JSON.stringify(state.snapshot), { status: 200 })
+        }
+        return recorded
+      }),
+    )
+  }
+
+  it('AC-138.7 a rejected SABR check shows its error through the page banner', async () => {
+    const empty = { mode: 'inactive', source: null, checked_at: null }
+    stubSabr({
+      snapshot: empty,
+      next: empty,
+      checkFailure: { status: 422, code: 'extract_error', message: 'x [REDACTED]' },
+    })
+    await renderQueue()
+    const toggle = within(host).getByTestId('add-advanced-toggle')
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await user.click(within(host).getByTestId('sabr-check-btn'))
+    await vi.waitFor(() => expect(requests('/downloads/sabr/check', 'POST')).toHaveLength(1))
+    await vi.waitFor(() =>
+      expect(within(host).getByTestId('error-banner')).toHaveTextContent('x [REDACTED]'),
+    )
+  })
+
+  it('AC-138.8 the SABR panel shows an Inactive and an Active check with their time', async () => {
+    const at = new Date(2026, 10, 12, 9, 5, 7).toISOString()
+    const state = {
+      snapshot: { mode: 'inactive', source: null as string | null, checked_at: null as string | null },
+      next: { mode: 'inactive', source: 'detected' as string | null, checked_at: at as string | null },
+      checkFailure: null,
+    }
+    stubSabr(state)
+    await renderQueue()
+    const toggle = within(host).getByTestId('add-advanced-toggle')
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    const shown = (): string => (within(host).getByTestId('sabr-status').textContent ?? '').replace(/\s+/g, ' ').trim()
+
+    await user.click(within(host).getByTestId('sabr-check-btn'))
+    await vi.waitFor(() => expect(requests('/downloads/sabr/check', 'POST')).toHaveLength(1))
+    await vi.waitFor(() => expect(shown()).toBe('SABR inactive · checked 09:05:07'))
+    expect(within(host).getByTestId('sabr-status')).toBeVisible()
+
+    state.next = { mode: 'active', source: 'detected', checked_at: at }
+    await user.click(within(host).getByTestId('sabr-check-btn'))
+    await vi.waitFor(() => expect(requests('/downloads/sabr/check', 'POST')).toHaveLength(2))
+    await vi.waitFor(() => expect(shown()).toBe('SABR active — quality limited to 360p · checked 09:05:07'))
+    expect(within(host).getByTestId('sabr-status')).toBeVisible()
+  })
 })
 
 // ---------------------------------------------------------------------------

@@ -139,6 +139,7 @@ Held on `DownloadService`, not persisted.
 | `mode` | `SABRMode` |
 | `source` | `SABRSource \| None` | Set when `Active` |
 | `checked_at` | `datetime \| None` |
+| `matched_phrase` | `str \| None` | Set only on `Active` with `source` `Detected`: the `SABR_PHRASES` entry the check matched (MEU-138). Last in `SABR_STATUS_FIELDS`; not on the wire |
 
 ### `QueueRuntime`
 
@@ -543,6 +544,7 @@ Adapters and services raise these. Routes map them to HTTP (Phase 4). Do not use
 | `ConflictError` | 409 | Illegal status transition; start while Processing; generate with no model |
 | `AgeRestrictedError` | — (service maps to `AgeRestricted`) | yt-dlp age gate |
 | `DownloadCancelledError` | — (service maps to `Cancelled`) | User cancel during yt-dlp |
+| `DownloadFailedError` | — (service stores the cause's message on the job) | yt-dlp download failed. Built `DownloadFailedError(cause, detail)`: `.cause` is a `DownloadFailureCause`, `.detail` yt-dlp's raw first line, and `str()` is `download failed: <cause>`, so no yt-dlp text reaches a generic path. Last in `DOMAIN_ERROR_TYPES` (MEU-137) |
 | `SABRDetectedError` | — (service may flip session SABR) | Informational from adapter. **This spelling only** — not `SabrDetectedError` |
 | `CookieTestError` | 200 `{ ok: false }` or 422 | Cookie probe failed |
 | `CookieAccessError` | alias of `CookieTestError` | Browser locked / unreadable cookie file. **Do not** define a second class in Phase 2 |

@@ -326,6 +326,7 @@ def test_ac_122_16_titles_reach_files_not_the_console(
 ) -> None:
     _require_listing()
     import structlog
+    from structlog.testing import capture_logs
 
     from avkit_infra.youtube.adapter import _YtDlpLogger
 
@@ -350,8 +351,13 @@ def test_ac_122_16_titles_reach_files_not_the_console(
 
     structlog.get_logger().error("probe.control", detail=control_marker)
     last = health.console_snapshot(0)[-1].seq
-    _YtDlpLogger(True).debug(f"debug {title_marker} {channel_marker}")
-    assert [event.message for event in health.console_snapshot(last)] == ["yt-dlp"]
+    # Session 65 (D-622): with the debug switch off a debug line logs nothing at all; the
+    # debug-on half, where a redacted title may show, is AC-139.6.
+    with capture_logs() as logged:
+        _YtDlpLogger(False).debug(f"debug {title_marker} {channel_marker}")
+    assert logged == []
+    _YtDlpLogger(False).debug(f"debug {title_marker} {channel_marker}")
+    assert [event.message for event in health.console_snapshot(last)] == []
 
     surfaces = {
         "ring": " ".join(event.message for event in health.console_snapshot(0)),
@@ -363,6 +369,20 @@ def test_ac_122_16_titles_reach_files_not_the_console(
         for name, text in surfaces.items()
     }
     assert found == {"ring": [control_marker], "stdout": [control_marker], "file": [control_marker]}
+
+
+def test_ac_139_6_debug_on_shows_a_title_redacted(tmp_path: Path) -> None:
+    """D-622: with the switch on a debug line reaches the Console, scrubbed, title and all."""
+    from avkit_infra.youtube.adapter import _YtDlpLogger
+
+    title_marker = "SYNTHETIC_TITLE_MARKER"
+    health = _health(tmp_path / "app")
+    before = health.console_snapshot(0)
+    last = before[-1].seq if before else 0
+    _YtDlpLogger(True).debug(f"debug {title_marker} https://e.example/t cookie=SECRET")
+    shown = [event.message for event in health.console_snapshot(last)]
+    assert shown == [f"yt-dlp detail=debug {title_marker} [link] [REDACTED]"]
+    assert [m for m in shown if "secret" in m.casefold() or "e.example" in m] == []
 
 
 def test_ac_122_17_sql_error_text_holds_no_bound_value(tmp_path: Path) -> None:

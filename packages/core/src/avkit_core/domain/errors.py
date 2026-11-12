@@ -8,6 +8,8 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 
+from avkit_core.domain.enums import DownloadFailureCause
+
 
 class DomainError(Exception):
     """Base type for user-visible domain failures."""
@@ -40,6 +42,19 @@ class ExtractError(DomainError):
 
 class DownloadCancelledError(DomainError):
     """User cancelled an in-flight download."""
+
+
+class DownloadFailedError(DomainError):
+    """A download failed (`FAILED_ERROR`, MEU-137, D-631).
+
+    `cause` is the `DownloadFailureCause` and `detail` yt-dlp's raw first line. `str` names
+    only the cause, so no yt-dlp text reaches a generic error path.
+    """
+
+    def __init__(self, cause: DownloadFailureCause, detail: str) -> None:
+        super().__init__(f"download failed: {cause.value}")
+        self.cause = cause
+        self.detail = detail
 
 
 class SABRDetectedError(DomainError):
@@ -262,4 +277,5 @@ DOMAIN_ERROR_TYPES: tuple[type[DomainError], ...] = (
     CaptureRequestConflictError,
     CaptureFlattenConflictError,
     ExtractError,
+    DownloadFailedError,
 )

@@ -20,12 +20,19 @@ from avkit_core.domain.download import (
     SABRStatus,
     VideoInfo,
 )
-from avkit_core.domain.enums import AudioFormat, QualityPreset, SABRMode, SABRSource
+from avkit_core.domain.enums import (
+    AudioFormat,
+    DownloadFailureCause,
+    QualityPreset,
+    SABRMode,
+    SABRSource,
+)
 from avkit_core.domain.errors import (
     AgeRestrictedError,
     CookieTestError,
     DomainError,
     DownloadCancelledError,
+    DownloadFailedError,
     ValidationError,
 )
 from avkit_core.ports.youtube import YouTubePort
@@ -84,8 +91,13 @@ SABR_EXTRACTOR_ARGS = {
         "include_dash_manifest": False,
     }
 }
-SABR_LOG_NEEDLES = (
+# Session 65 (MEU-138, SABR_MATCH): the four SABR_PHRASES plus the two old android and
+# ios phrases, each of which must set sabr_detected.
+SABR_LINE_PHRASES = (
+    "forcing sabr",
+    "missing a url",
     "require a gvs po token",
+    "sabr",
     "android client sabr formats require",
     "ios client sabr formats require",
 )
@@ -469,7 +481,10 @@ def test_ac_6_10_age_gate_and_unmapped_download_error(
     _patch_ydl(monkeypatch, error=other)
     with pytest.raises(DomainError) as domain_err:
         YouTubeAdapter().download("https://youtu.be/vid12345678", _options(tmp_path))
-    assert type(domain_err.value) is DomainError
+    # Session 65 (MEU-137, FAILURE_RAISE): an unmapped DownloadError names its cause.
+    assert type(domain_err.value) is DownloadFailedError
+    assert getattr(domain_err.value, "cause", None) is DownloadFailureCause.other
+    assert getattr(domain_err.value, "detail", None) == "boom"
     assert not isinstance(domain_err.value, AgeRestrictedError)
     assert domain_err.value.__cause__ is other
     assert not isinstance(domain_err.value, type(other))
@@ -484,7 +499,7 @@ def test_ac_6_11_sabr_needles_set_flag_without_raising(
     outfile = tmp_path / "clip.mp4"
     outfile.write_bytes(b"x")
     info = {**_video_info_payload(), "requested_downloads": [{"filepath": str(outfile)}]}
-    for needle in SABR_LOG_NEEDLES:
+    for needle in SABR_LINE_PHRASES:
         _patch_ydl(monkeypatch, info=info, sabr_msg=f"WARN: {needle} extra")
         result = YouTubeAdapter().download("https://youtu.be/vid12345678", _options(tmp_path))
         assert result.sabr_detected is True
@@ -733,7 +748,10 @@ def test_ac_76_6_age_gate_and_media_download_keep_their_types_neg(
     _patch_ydl(monkeypatch, error=_download_error("boom"))
     with pytest.raises(DomainError) as failed:
         YouTubeAdapter().download("https://youtu.be/vid12345678", _options(tmp_path))
-    assert type(failed.value) is DomainError
+    # Session 65 (MEU-137, FAILURE_RAISE): a media download failure names its cause.
+    assert type(failed.value) is DownloadFailedError
+    assert getattr(failed.value, "cause", None) is DownloadFailureCause.other
+    assert getattr(failed.value, "detail", None) == "boom"
 
 
 def _require_ffmpeg_location() -> None:

@@ -205,6 +205,7 @@ DOMAIN_ERROR_TYPE_NAMES = (
     "CaptureRequestConflictError",
     "CaptureFlattenConflictError",  # TA-7 (Session 30, MEU-67)
     "ExtractError",  # TA-1 (Session 33, MEU-76)
+    "DownloadFailedError",  # Session 65, MEU-137 (D-631)
 )
 
 
@@ -217,8 +218,11 @@ def test_ac_4_10_domain_error_types_are_distinct() -> None:
     names = [cls.__name__ for cls in table]
     assert names == list(DOMAIN_ERROR_TYPE_NAMES)
     assert len(table) == len(set(table))
+    from avkit_core.domain.enums import DownloadFailureCause
+
+    ERROR_ARGS = {"DownloadFailedError": (DownloadFailureCause.other, "domain failure")}
     for cls in table:
-        err = cls("domain failure")
+        err = cls(*ERROR_ARGS.get(cls.__name__, ("domain failure",)))
         assert isinstance(err, Exception)
         assert type(err) is cls
 
@@ -323,7 +327,7 @@ SPEC_PROGRESS_SNAPSHOT_FIELDS = (
     "error",
 )
 SPEC_ERROR_INFO_FIELDS = ("message", "code")
-SPEC_SABR_STATUS_FIELDS = ("mode", "source", "checked_at")
+SPEC_SABR_STATUS_FIELDS = ("mode", "source", "checked_at", "matched_phrase")
 SPEC_QUEUE_RUNTIME_FIELDS = ("queue_name", "state", "current_job_id")
 SPEC_MODEL_STATUS_FIELDS = ("variant_id", "name", "device", "memory_bytes", "is_loaded")
 # TA-9 (Session 27, MEU-62): + `asset`, the in-flight TTS runtime asset (AC-62.6/62.8).

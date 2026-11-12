@@ -1,0 +1,9 @@
+?? .agent/context/handoffs/2026-11-11-download-failure-visibility-plan-critical-review.md	77794f17a70c69957aaf92261c7bf7444a5d6e1c9395075c727d0af4139792e3
+?? docs/execution/plans/2026-11-11-download-failure-visibility/baseline.ps1	b87e6fca34d9069663d591e628cb57890ac57e6c41d42d977f5a7df219b99c77
+?? docs/execution/plans/2026-11-11-download-failure-visibility/baseline.sha	81c652efe019c3dbf73706ca00b005dc10cf30906f6783fda19589342cc6dfa3
+?? docs/execution/plans/2026-11-11-download-failure-visibility/identity.py	aad54e22807bfd0b09146add7685bcbd1dddd35b2c988ba404635b8b5f5e7dad
+?? docs/execution/plans/2026-11-11-download-failure-visibility/implementation-plan.md	487b885a478a51aef2476797866a1c369be350398419dc5e58017ef61c84f070
+?? docs/execution/plans/2026-11-11-download-failure-visibility/issue-resolve.py	59c5244924ab5ef74758cf2e570fe1fd85829b9b27ada64412d72474337790c5
+?? docs/execution/plans/2026-11-11-download-failure-visibility/red-check.py	88945fcaebdd5cc489edfaa82378d0cdf959f97fa1bee933a6fabe3d16217dd7
+?? docs/execution/plans/2026-11-11-download-failure-visibility/session-gate.ps1	fdaebb273383fec3197cfe318b7c768bd7feb576f4ac95b122893b9819abf956
+?? docs/execution/plans/2026-11-11-download-failure-visibility/task.md	df79f34d3f606c88a30e369d3218e2ce93425544934cbd8c414902ee96ba6a95

@@ -2494,6 +2494,90 @@ archived:
       reasoning: The add path already holds each item's id, and transcripts build the watch URL the same way. Fixing at add leaves a single-video add's URL and the dispatch code unchanged; fixing at dispatch
         would also mend rows already queued but would ignore every URL typed. Doing nothing would ship a rider whose rows fail. Two-way.
       human_message_reference: USER_EXPLICIT 2026-11-08 'Per-video URL at add (Recommended)' (answer to the F1 brief; options in implementation-plan.md §User Review Required)
+- id: DOWNLOAD-FAILED-NO-REASON
+  title: A failed download shows no reason on its card and logs nothing
+  severity: high
+  component: core
+  status: resolved
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-531
+      stage: triage
+      question: File DOWNLOAD-FAILED-NO-REASON from the 2026-11-10 download comparison report, or leave it in the report?
+      resolution: human
+      class: two-way
+      chosen: 'File it: MEU-NEW, P2 (severity high, standalone, per the triage priority matrix), open, linked to MEU-137'
+      source_tag: Human-approved
+      precedents:
+      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
+        register and from /session-grouping. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+- id: SABR-CHECK-MISSES-CURRENT-MESSAGES
+  title: Check SABR misses yt-dlp's current SABR messages and shows nothing when it finds none
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-532
+      stage: triage
+      question: File SABR-CHECK-MISSES-CURRENT-MESSAGES from the 2026-11-10 download comparison report, or leave it in the report?
+      resolution: human
+      class: two-way
+      chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-138'
+      source_tag: Human-approved
+      precedents:
+      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
+        register and from /session-grouping. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+- id: YTDLP-LOG-TEXT-DROPPED
+  title: yt-dlp's own log lines never reach the Console
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-533
+      stage: triage
+      question: File YTDLP-LOG-TEXT-DROPPED from the 2026-11-10 download comparison report, or leave it in the report?
+      resolution: human
+      class: two-way
+      chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-139'
+      source_tag: Human-approved
+      precedents:
+      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
+        register and from /session-grouping. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
 actionable:
 - id: E2E-ELECTRON-LAUNCH-FLAG
   title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
@@ -3097,90 +3181,6 @@ actionable:
       reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
         register and from /session-grouping. Two-way.'
       human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
-- id: DOWNLOAD-FAILED-NO-REASON
-  title: A failed download shows no reason on its card and logs nothing
-  severity: high
-  component: core
-  status: open
-  category: MEU-NEW
-  priority: P2
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-531
-      stage: triage
-      question: File DOWNLOAD-FAILED-NO-REASON from the 2026-11-10 download comparison report, or leave it in the report?
-      resolution: human
-      class: two-way
-      chosen: 'File it: MEU-NEW, P2 (severity high, standalone, per the triage priority matrix), open, linked to MEU-137'
-      source_tag: Human-approved
-      precedents:
-      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
-      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
-      research:
-        engine: none
-        sources: []
-      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
-        register and from /session-grouping. Two-way.'
-      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
-- id: SABR-CHECK-MISSES-CURRENT-MESSAGES
-  title: Check SABR misses yt-dlp's current SABR messages and shows nothing when it finds none
-  severity: medium
-  component: infrastructure
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-532
-      stage: triage
-      question: File SABR-CHECK-MISSES-CURRENT-MESSAGES from the 2026-11-10 download comparison report, or leave it in the report?
-      resolution: human
-      class: two-way
-      chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-138'
-      source_tag: Human-approved
-      precedents:
-      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
-      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
-      research:
-        engine: none
-        sources: []
-      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
-        register and from /session-grouping. Two-way.'
-      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
-- id: YTDLP-LOG-TEXT-DROPPED
-  title: yt-dlp's own log lines never reach the Console
-  severity: medium
-  component: infrastructure
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-533
-      stage: triage
-      question: File YTDLP-LOG-TEXT-DROPPED from the 2026-11-10 download comparison report, or leave it in the report?
-      resolution: human
-      class: two-way
-      chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-139'
-      source_tag: Human-approved
-      precedents:
-      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
-      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
-      research:
-        engine: none
-        sources: []
-      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
-        register and from /session-grouping. Two-way.'
-      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
 - id: DOWNLOAD-MP3-NOT-CONVERTED
   title: An MP3 audio download saves the source m4a or webm, not an MP3
   severity: medium
@@ -3501,17 +3501,14 @@ proposed_batches:
   - CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST
   - DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT
   - YTDLP-NO-JS-RUNTIME
-  - SABR-CHECK-MISSES-CURRENT-MESSAGES
-  - YTDLP-LOG-TEXT-DROPPED
   component: infrastructure
   priority_band: P2
   complexity: L
-  has_duplicates: true
-- slug: core-download-failed-no-reason-download-mp3-not-converted
+  has_duplicates: false
+- slug: core-download-mp3-not-converted
   issues:
-  - DOWNLOAD-FAILED-NO-REASON
   - DOWNLOAD-MP3-NOT-CONVERTED
   component: core
-  priority_band: P2
-  complexity: M
+  priority_band: P3
+  complexity: S
   has_duplicates: false

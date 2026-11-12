@@ -498,6 +498,42 @@ describe('MEU-23 settings page', () => {
     expect(page.className).not.toContain('max-w-3xl')
     expect(screen.queryByTestId('settings-rail')).not.toBeNull()
   })
+
+  it('AC-139.8 the yt-dlp debug switch saves true and then false', async () => {
+    // D-630: a characterisation of the existing switch. The stub keeps the saved value, so
+    // the refetch after each PUT shows what was saved.
+    const base = globalThis.fetch
+    let debug = false
+    const puts: Array<{ path: string; body: unknown }> = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (!String(url).includes('/settings/downloader')) return base(url, init)
+        const method = (init?.method ?? 'GET').toUpperCase()
+        if (method === 'PUT') {
+          const body = JSON.parse(String(init?.body)) as { yt_dlp_debug?: unknown }
+          puts.push({ path: new URL(String(url), 'http://x').pathname, body })
+          if (typeof body.yt_dlp_debug === 'boolean') debug = body.yt_dlp_debug
+        }
+        const stored = (await (await base(url, { method: 'GET' })).json()) as Record<string, unknown>
+        return jsonResponse({ ...stored, yt_dlp_debug: debug })
+      }),
+    )
+    await renderSettingsPage()
+    const toggle = (): HTMLInputElement =>
+      screen.getByTestId('settings-leaf-yt_dlp_debug') as HTMLInputElement
+    await vi.waitFor(() => expect(toggle().checked).toBe(false))
+
+    await user.click(toggle())
+    await vi.waitFor(() => expect(puts).toHaveLength(1))
+    await vi.waitFor(() => expect(toggle().checked).toBe(true))
+    await user.click(toggle())
+    await vi.waitFor(() => expect(puts).toHaveLength(2))
+    expect(puts.map((put) => [put.path.replace(/^.*\/settings\//, ''), put.body])).toEqual([
+      ['downloader', { yt_dlp_debug: true }],
+      ['downloader', { yt_dlp_debug: false }],
+    ])
+  })
 })
 
 describe('MEU-58 settings source location (SETTINGS_SOURCE_LOCATION)', () => {

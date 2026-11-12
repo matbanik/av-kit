@@ -18,6 +18,7 @@ export type DownloadListItem = {
   file_path: string | null
   queue_position: number
   received_height: number | null
+  error_message?: string | null
 }
 
 export type ListEnvelope = {

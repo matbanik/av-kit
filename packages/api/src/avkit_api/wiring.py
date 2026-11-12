@@ -146,7 +146,6 @@ def build_services(
 
     settings = SettingsService(uow_factory)
     playlist_end = _as_playlist_end(settings.get("transcript", "playlist_end"))
-    yt_dlp_debug = settings.get("downloader", "yt_dlp_debug") is True
     hooks = _DownloadHooks()
     # LIVE_SOURCE: the ffmpeg setting is read at each resolution, so a PUT needs no restart.
     media = FFmpegAdapter(
@@ -157,7 +156,8 @@ def build_services(
         playlist_end=playlist_end,
         on_progress=hooks.on_progress,
         should_stop=hooks.should_stop,
-        yt_dlp_debug=yt_dlp_debug,
+        # LIVE_SOURCE: the yt-dlp debug switch is read at each public call (YTDLP_LIVE).
+        yt_dlp_debug=lambda: settings.get("downloader", "yt_dlp_debug") is True,
         ffmpeg_location=lambda: b.ffmpeg if (b := media.ffmpeg_binaries()) else None,
     )
     coordinator = ExtractCoordinator(youtube)

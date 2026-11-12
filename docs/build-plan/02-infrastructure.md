@@ -358,7 +358,7 @@ Build yt-dlp opts from `DownloadOptions`:
 | Cancel | Check stop callback in hook + logger; raise `DownloadCancelledError` |
 | Cookies | `None` / `cookiesfrombrowser=(browser, profile)` / `cookiefile=path`. Never persist cookie bytes |
 | Archive file | Do **not** pass yt-dlp `--download-archive`. Skip is SQLite `download_archive` in the service |
-| Debug | If settings `downloader.yt_dlp_debug`, emit yt-dlp logger lines as structlog DEBUG with module `yt-dlp` |
+| Debug | yt-dlp warning and `ERROR:` lines always log with module `yt-dlp`; with `downloader.yt_dlp_debug` on, debug and info lines also log at DEBUG. The text is in the kept, redacted `detail` field, and the setting is read at each call: [§yt-dlp log detail (residual)](#ytdlp-log-detail-residual) (MEU-139) |
 
 **Quality → format selector** (Local Canon §2):
 
@@ -374,7 +374,7 @@ Audio-only: map the nine `AudioFormat` values to yt-dlp format strings from [_do
 
 | Path | Behavior |
 |------|----------|
-| Passive | Custom yt-dlp logger watches `"require a gvs po token"`, `"android client sabr formats require"`, `"ios client sabr formats require"`. Set Phase 1 `DownloadResult.sabr_detected=True`. Do not write a DB row. These phrases are stale for yt-dlp 2026.10.26; [§SABR check result (residual)](#sabr-check-result-residual) (MEU-138) replaces them |
+| Passive | Custom yt-dlp logger matches each line against the phrases of [§SABR check result (residual)](#sabr-check-result-residual) (MEU-138). Set Phase 1 `DownloadResult.sabr_detected=True`. Do not write a DB row |
 | `check_sabr_status()` | Test extract on a known public video; return `SABRStatus(mode, source=Detected, checked_at)` |
 | Force / Clear | **Not adapter methods.** Session state on `DownloadService` |
 
@@ -537,11 +537,18 @@ Do not hit live YouTube or Hugging Face in the default suite.
 
 | Rule | Contract | Source |
 |------|----------|--------|
-| Phrases | The passive scan and the check match case-insensitively on `sabr`, `missing a url`, `forcing sabr` and `po token`, which covers the three old phrases. The set lives in one constant both paths use. | Local Canon: P:/yt-dlp_GUI `detect_sabr_mode` (`youtube_downloader.py:3717`); measured 2026-11-10; grouping D-541 |
+| Phrases | The passive scan and the check match `forcing sabr`, `missing a url`, `require a gvs po token` and `sabr` as whole words, case-insensitively: `sabr` matches "SABR-only" but not "Sabrina", and a line about PO Tokens alone doesn't match. This covers the three old phrases. The set lives in one constant both paths use. | Human-approved: D-623, D-624 (Mat, 2026-11-11); Local Canon: P:/yt-dlp_GUI `detect_sabr_mode` (`youtube_downloader.py:3717`); measured 2026-11-10; grouping D-541; D-629 |
 | Shown | The Downloader page states the result of every check, Active or Inactive, with its `checked_at` time; a failed check states its error. | Local Canon: grouping D-541 |
 | Log | Check, Force and Clear each log one line with the result (`download.sabr_check`, `download.sabr_force`, `download.sabr_clear`), with the matched phrase in a kept field. | Local Canon: MEU-115's one-line-per-outcome rule; grouping D-541 |
 | Spec | [§SABR](#sabr) Passive and [06 §SABR detection sources](06-gui.md) name this section instead of the old phrases. | Local Canon |
 | Tests | Unit: each phrase, case, and a line with none; a captured 2026.10.26 warning line is Active. Renderer: Inactive and Active both shown with a time. Route: each SABR action logs once. No live YouTube. | Local Canon |
+
+> **Delivered (Session 65).**
+> - `SABR_PHRASES` (`youtube/adapter.py:93`) holds `forcing sabr`, `missing a url`, `require a gvs po token` and `sabr`, and `sabr_phrase` (`:347`) returns the first one found as a whole word in the case-folded line, or `None`. `SABR_LOG_NEEDLES` is gone (`SABR_MATCH`, D-623, D-624). A failure whose text holds a phrase is `refused` (AC-138.2).
+> - `_YtDlpLogger` (`:386`) scans every line it gets: the first line with a phrase sets `matched_phrase`, which never changes after, and `sabr_detected` is a read-only property (`SABR_SCAN`). `check_sabr_status` (`:661`) returns the phrase on Active, and `SABRStatus.matched_phrase` (01 §`SABRStatus`) keeps it; it is not on the wire (`SABR_STATUS_PHRASE`, `SABR_RESULT`, D-626).
+> - `check_sabr`, `force_sabr` and `clear_sabr` (`services/download.py:413`, `:440`, `:450`) each log one line: `download.sabr_check` with `Active, matched '<phrase>'` or `Inactive, no phrase matched`, or at ERROR with the cleaned error before it is re-raised; `download.sabr_force` `Active, forced`; `download.sabr_clear` `Inactive, cleared` (`SABR_LOG`). The phrase comes from `SABR_PHRASES`, never from yt-dlp's text.
+> - `sabrResultText` (`sabr-panel.ts:21`) gives the panel's text for checking, Active, Inactive and not checked, with the local time of the check, force or clear; the `sabr-status` panel is no longer hidden (`SABR_SHOWN`, D-635).
+> - AC-138.1 to AC-138.8. Plan `docs/execution/plans/2026-11-11-download-failure-visibility/`.
 
 <a id="ytdlp-log-detail-residual"></a>
 
@@ -555,8 +562,14 @@ Do not hit live YouTube or Hugging Face in the default suite.
 | Debug lines | With `downloader.yt_dlp_debug` on, info and debug lines also log at DEBUG with the text in `detail`. | Spec: [§download](#downloadurl-options) Debug row; grouping D-543 |
 | Redaction | The kept text goes through the Console redaction Session 50 set up (D-247): one line, home folder as `~`, cookie values never kept. | Local Canon: 03 [§Transcript failure reason](03-service-layer.md#transcript-failure-reason-residual) Console fields row |
 | Live | The adapter reads the setting per download and per check, so a change applies without a restart, as `LIVE_SOURCE` does for ffmpeg. | Local Canon: `api/wiring.py:151` |
-| Control | Settings → Downloader has a "yt-dlp debug log" switch for the setting. | Local Canon: grouping D-543 |
+| Control | Settings → Downloader's existing "yt-dlp debug" switch (leaf `yt_dlp_debug`, `SettingsPage.tsx:724-733`) controls the setting. | Local Canon: grouping D-543; D-630 |
 | Tests | Unit: a warning logs with `detail` when debug is off; a debug line logs only when on; a line holding a home path and a cookie-looking value is redacted. Renderer: the switch saves the setting. | Local Canon |
+
+> **Delivered (Session 65).**
+> - `_YtDlpLogger` (`youtube/adapter.py:386`) logs event `yt-dlp` with module `yt-dlp` and the text only in `detail`, after `scrub_line` (03 §Download failure reason): a warning at WARNING and an `ERROR:` line at ERROR always; debug, info and an error line without the prefix at DEBUG only when debug is on (D-632). A line that cleans to nothing logs nothing, and there is no `message` field (`YTDLP_LINE`).
+> - `YouTubeAdapter` takes `yt_dlp_debug: Callable[[], bool] | None`. `_debug_now` (`:453`) reads it once per public call (download, extract, listing, SABR check, cookie test); no source, a raising source and any answer but `True` read as off. `_base_opts` (`:500`) sets `quiet` and `verbose` from the logger. `api/wiring.py:159` passes a `# LIVE_SOURCE` lambda over the setting, so a `PUT /settings` applies to the next call with no restart (`YTDLP_LIVE`).
+> - The control is Settings → Downloader's existing "yt-dlp debug" switch (D-630).
+> - AC-139.1 to AC-139.9, and AC-122.16 now checks that with debug off a title reaches no Console line. Plan `docs/execution/plans/2026-11-11-download-failure-visibility/`.
 
 <a id="youtube-client-fallback-residual"></a>
 

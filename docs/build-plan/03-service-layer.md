@@ -711,6 +711,14 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Done | A failed download's card states the reason and the Console has a matching line. | Local Canon |
 | Tests | Unit for each cause with a mocked port; a renderer test for the card; a test that the failure line keeps `error` and `detail` through redaction. | Local Canon |
 
+> **Delivered (Session 65).**
+> - `DownloadFailureCause` (`domain/enums.py:145`) is `refused`, `no_format`, `cookies`, `write_failed` and `other`, and `download_failure_message` (`domain/download.py:109`) is the only place the stored texts are written; only `other` carries yt-dlp's reason (`FAILURE_CAUSE_ENUM`, `FAILURE_MESSAGE`).
+> - `classify_download_error` (`youtube/adapter.py:356`) takes the cause from `FAILURE_CAUSE_NEEDLES` (`:95`) or a SABR phrase, and the detail from yt-dlp's first non-empty line without its `ERROR: ` prefix; a `no_format` result with SABR seen is `refused` (D-636). `download` raises `DownloadFailedError` (01 §Domain errors) with them (`:621`), and an `OSError` outside cookie file mode as `write_failed` with only its type name and `strerror`, never the filename (`:627`, D-637) (`FAILURE_CAUSE`, `FAILURE_RAISE`).
+> - `clean_line` (`domain/download.py:121`) and `scrub_line` (`services/download.py:118`) make the one line a site keeps: control and format characters gone, the home folder as `~` even when a tab, line break or dropped character splits it, links and cookie-looking values redacted, and never a raise (`CLEAN_LINE`, `SCRUB_LINE`, D-627).
+> - `_run_one` (`services/download.py:604`) logs `download.started` (`:621`) and `download.done` (`:696`) at INFO, and `download.failed` at ERROR (`:629`, `:658`) with the stored message in `error` and the cleaned raw line in `detail`; AgeRestricted keeps its text and Cancelled logs nothing new (`FAILURE_LOG`, D-633, D-634, D-638).
+> - The Downloader card shows `error_message` (`useDownloadQueue.ts:21`, `DownloaderPage.tsx:485`; `CARD_REASON`).
+> - AC-137.1 to AC-137.11. Plan `docs/execution/plans/2026-11-11-download-failure-visibility/`.
+
 <a id="download-audio-extract-residual"></a>
 
 ## Download audio extract (residual)

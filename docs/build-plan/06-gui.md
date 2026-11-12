@@ -342,7 +342,7 @@ A shared log viewer as a right side sheet. Closed by default (unmounted). Header
 | Log level filtering | Exclusive level buttons: DEBUG, INFO, WARNING, ERROR, CRITICAL. A button shows its level and every more severe level; a line without a level token is hidden. The Console opens at Settings → Log level (`app.log_level`) and falls back to DEBUG. | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md); MEU-27; rc.3 D-1 and D-2 (2026-11-09) |
 | Console output theme | `console-output` uses `--color-console-bg` / `--color-console-fg` (black / console green) | MEU-27 live preview |
 | Module prefix tags | `[Downloader]`, `[Transcript]`, `[TTS]`, `[Convert]`, `[Capture]`, `[yt-dlp]` | All source apps + Phase 8/9 |
-| yt-dlp debug toggle | Separate checkbox: "Show yt-dlp debug output" | [_downloader_pseudo_logic.md §9](../../_inspiration/_downloader_pseudo_logic.md) |
+| yt-dlp debug toggle | The Settings → Downloader "yt-dlp debug" switch (leaf `yt_dlp_debug`); with it on, yt-dlp's debug lines reach the Console, and its warnings and errors always do ([02 §yt-dlp log detail (residual)](02-infrastructure.md#ytdlp-log-detail-residual), MEU-139) | [_downloader_pseudo_logic.md §9](../../_inspiration/_downloader_pseudo_logic.md); D-630 |
 | Search/filter | Text search within displayed logs | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
 | Log to file | Errors (and lines flagged `persist`) always go to `{app_data}/logs/console.log`; the toggle adds every other line | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
 | Clear button | Clears current log display (not backend logs) | All three source apps |
@@ -453,10 +453,10 @@ Each nav rail item maps to a single-page module. No internal tab routing — eac
 - Items already `QualityBlocked` reset to `Pending` when SABR is cleared
 
 **Detection sources** ([_downloader_pseudo_logic.md §3](../../_inspiration/_downloader_pseudo_logic.md)):
-- **Passive detection**: yt-dlp logger watches for SABR indicator strings during download (stale for yt-dlp 2026.10.26; [02 §SABR check result (residual)](02-infrastructure.md#sabr-check-result-residual), MEU-138, replaces them and makes the page show every check's result):
+- **Passive detection**: yt-dlp logger matches each line during download against the phrases of [02 §SABR check result (residual)](02-infrastructure.md#sabr-check-result-residual) (MEU-138), as whole words, case-insensitively:
+  - `"forcing sabr"`, `"missing a url"` and `"sabr"`
   - `"require a gvs po token"`
-  - `"android client sabr formats require"`
-  - `"ios client sabr formats require"`
+  - the old `"android client sabr formats require"` and `"ios client sabr formats require"` still match, through `"sabr"`
 - **Manual check**: `Check SABR` button runs test extraction
 - **Force mode**: `Force SABR` activates without detection
 

@@ -146,7 +146,7 @@ On Mat's word, run `/create-plan` once per session, in order. Nothing is planned
 
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
-| 65 | `download-failure-visibility` | MEU-137, MEU-138, MEU-139 | P2 | pending | — |
+| 65 | `download-failure-visibility` | MEU-137, MEU-138, MEU-139 | P2 | executed | `docs/execution/plans/2026-11-11-download-failure-visibility/` |
 | 66 | `youtube-client-runtime` | MEU-140, MEU-141 | P2 | pending | — |
 | 67 | `download-audio-extract` | MEU-142 | P2 | pending | — |
 
@@ -175,6 +175,8 @@ On Mat's word, run `/create-plan` once per session, in order. Nothing is planned
 | D-541 | SABR phrases and the check's visibility | autonomous | Match `sabr`, `missing a url`, `forcing sabr` and `po token`, case-insensitively, from one constant. Show every result with its time. Log each SABR action. | Local Canon | The GUI's own probe uses the first three (`youtube_downloader.py:3717`). `po token` covers the three old phrases. The 2026-11-10 warning line contains `SABR` and `missing a URL`. Hiding Inactive was a page detail, not a ruling. A narrower list keyed to today's exact wording lost, because that is what went stale. Two-way. | — |
 | D-542 | MP3: yt-dlp postprocessor or `MediaPort.convert`? | autonomous | `MediaPort.convert` after the download, in any cookie mode. The source file is removed after a good convert, and no `ConversionJob` row is created. | Local Canon | The spec already names this path (02 §Media adapter `convert` row; 03 §Construction `MediaPort` row; 08 forbids a `ConversionJob` row). It uses the one ffmpeg resolver (MEU-78). The GUI's `FFmpegExtractAudio` lost because it is a second ffmpeg path. Removing the source matches what the GUI and yt-dlp's postprocessor do by default (no keepvideo). Two-way. | — |
 | D-543 | yt-dlp log lines: what and when | autonomous | Warnings and errors always log, with the text in the kept, redacted `detail` field. Debug lines log only with the setting on. The setting is read per call, and a Settings → Downloader switch controls it. | Local Canon | Session 50 (D-247) made `detail` a kept, redacted field. The ffmpeg setting is already read live (`wiring.py:151`). The spec's Debug row already defines the setting, so a switch adds a control, not a behaviour. Warnings only behind the switch lost: the warning is the evidence a failed job needs. Two-way. | — |
+
+## 9. Decision Briefs
 
 ### D-539: How should a download choose YouTube clients?   [source-conflict] [grouping]
 

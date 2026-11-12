@@ -3590,10 +3590,10 @@ meus:
     anchor: download-failure-reason-residual
     text: Phase 3 §Download failure reason (residual)
   description: 'A failed download stores one short av-kit message per cause, the Downloader card shows it, and the job logs started, done and failed lines with the message and yt-dlp''s redacted line.'
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-10, MEU-15, MEU-46, MEU-115
   dependency_parse_status: parsed
@@ -3602,8 +3602,8 @@ meus:
   - MEU-15
   - MEU-46
   - MEU-115
-  execution_plan: null
-  updated: '2026-11-10'
+  execution_plan: docs/execution/plans/2026-11-11-download-failure-visibility/
+  updated: '2026-11-12'
   closed_reason: null
   note: 'Registered 2026-11-10 from DOWNLOAD-FAILED-NO-REASON (triage D-531), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
 - row_key: MEU-138
@@ -3617,10 +3617,10 @@ meus:
     anchor: sabr-check-result-residual
     text: Phase 2 §SABR check result (residual)
   description: 'The SABR scan and Check SABR match yt-dlp''s current SABR messages, the page shows every check''s result with its time, and each SABR action logs one line.'
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-6, MEU-10, MEU-20
   dependency_parse_status: parsed
@@ -3628,8 +3628,8 @@ meus:
   - MEU-6
   - MEU-10
   - MEU-20
-  execution_plan: null
-  updated: '2026-11-10'
+  execution_plan: docs/execution/plans/2026-11-11-download-failure-visibility/
+  updated: '2026-11-12'
   closed_reason: null
   note: 'Registered 2026-11-10 from SABR-CHECK-MISSES-CURRENT-MESSAGES (triage D-532), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
 - row_key: MEU-139
@@ -3643,10 +3643,10 @@ meus:
     anchor: ytdlp-log-detail-residual
     text: Phase 2 §yt-dlp log detail (residual)
   description: 'yt-dlp warnings and errors always reach the Console with their text in a kept, redacted field; the debug switch in Settings adds info lines and applies without a restart.'
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-6, MEU-13, MEU-23, MEU-115
   dependency_parse_status: parsed
@@ -3655,8 +3655,8 @@ meus:
   - MEU-13
   - MEU-23
   - MEU-115
-  execution_plan: null
-  updated: '2026-11-10'
+  execution_plan: docs/execution/plans/2026-11-11-download-failure-visibility/
+  updated: '2026-11-12'
   closed_reason: null
   note: 'Registered 2026-11-10 from YTDLP-LOG-TEXT-DROPPED (triage D-533), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
 - row_key: MEU-140
