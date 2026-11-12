@@ -378,7 +378,7 @@ Audio-only: map the nine `AudioFormat` values to yt-dlp format strings from [_do
 | `check_sabr_status()` | Test extract on a known public video; return `SABRStatus(mode, source=Detected, checked_at)` |
 | Force / Clear | **Not adapter methods.** Session state on `DownloadService` |
 
-SABR-mode client fallback: set `extractor_args` client order that avoids blocked clients ([_downloader_pseudo_logic.md §3](../../_inspiration/_downloader_pseudo_logic.md)). Cookie mode further restricts viable clients. A fixed client list goes stale as YouTube changes: [§YouTube client fallback (residual)](#youtube-client-fallback-residual) (MEU-140).
+SABR-mode client fallback: attempt 1 sets no `extractor_args` in either cookie mode, so yt-dlp chooses its own clients, and a client-side failure retries once with `COOKIE_EXTRACTOR_ARGS` (`ATTEMPT_OPTS`, `RETRY_ONCE`; [_downloader_pseudo_logic.md §3](../../_inspiration/_downloader_pseudo_logic.md)). A fixed client list goes stale as YouTube changes: [§YouTube client fallback (residual)](#youtube-client-fallback-residual) (MEU-140).
 
 ### Cookie test
 
@@ -584,6 +584,14 @@ Do not hit live YouTube or Hugging Face in the default suite.
 | Add-time check | The add-time extract uses the same cookie and client options as the download. | Local Canon: report R7 |
 | Tests | Unit with a mocked `YoutubeDL`: the retry runs once and only on the listed errors; a cancel or cookie error never retries; both attempts log. A recorded live probe on one video is a manual check, not part of the suite. | Local Canon |
 
+> **Delivered (Session 66).**
+> - `_attempt_opts` (`youtube/adapter.py:606`) gives attempt 1 the cookies of `_cookie_opts` with no `extractor_args` in every cookie mode, and attempt 2 `COOKIE_EXTRACTOR_ARGS` (`tv`, `web_safari`, `web`) (`ATTEMPT_OPTS`).
+> - `client_side_error` (`:401`) is False for an age gate, a bot check, a cookie error or a write failure, and otherwise True for no formats, a page reload, a SABR phrase or a SABR log match (`CLIENT_SIDE`, D-643). `_attempt_sequence` (`:621`) runs attempt 2 once on such an error, after a stop check that raises `DownloadCancelledError`. `download` (`:748`) and `extract_info` with options (`:707`) both run it (`RETRY_ONCE`).
+> - A failed attempt that retries logs one `youtube.attempt_failed` warning with `attempt`, `clients` (`default` or `tv,web_safari,web`), `cause` and a `scrub_line` detail, and `youtube.download` gains `attempt` (`ATTEMPT_LOG`, D-644). `sabr_detected` is True when either attempt matched a SABR phrase (`SABR_ACROSS`, D-645).
+> - A height preset's selector ends `/best` (`_quality_selector`, `:151`, `CATCH_ALL`).
+> - `add_to_queue` (`services/download.py:253`) builds the download's options with `_download_options` and passes them to `ExtractCoordinator.extract_info` (`services/extract.py:37`), whose cache key then holds the cookie fields (`ADD_OPTS`, `ADD_CACHE_KEY`, D-646). `YouTubePort.extract_info` (`ports/youtube.py:23`) gains `options: DownloadOptions | None = None`.
+> - AC-140.1 to AC-140.12. The live probes (D-642) are a manual check, recorded in the MEU-140 handoff. Plan `docs/execution/plans/2026-11-12-youtube-client-runtime/`.
+
 <a id="ytdlp-js-runtime-residual"></a>
 
 ### yt-dlp JS runtime (residual)
@@ -593,9 +601,17 @@ Do not hit live YouTube or Hugging Face in the default suite.
 | Rule | Contract | Source |
 |------|----------|--------|
 | Runtime | Per grouping D-540 (ruled A, 2026-11-10): ship `deno.exe` in the Windows installer and resolve it as ffmpeg is resolved (the setting, then the bundled file, then PATH), passing it through `js_runtimes`; the plan measures its size against the installer budget, and Deno's MIT notice goes in `LICENSES.txt`. | Human-approved: grouping D-540 (Mat, 2026-11-10) |
-| Solver | The dependency is `yt-dlp[default]`, so the `yt-dlp-ejs` version yt-dlp pins comes with it, and its scripts are collected into the packaged backend. | Research-backed: yt-dlp EJS wiki (github.com/yt-dlp/yt-dlp/wiki/EJS) |
+| Solver | Per D-640 (ruled A, 2026-11-12): the dependency is `yt-dlp` plus `yt-dlp-ejs==0.8.0`, the version yt-dlp 2026.10.26 pins in its `default` extra, and a test fails when the two disagree; `yt-dlp[default]` would also bring mutagen, a GPL-2.0-or-later package the licence gate refuses. The solver's scripts are collected into the packaged backend. | Human-approved: D-640 (Mat, 2026-11-12); Research-backed: yt-dlp EJS wiki (github.com/yt-dlp/yt-dlp/wiki/EJS) |
 | Health | The Health page names the runtime in use, or says none was found and what that costs. | Local Canon: 02 [§Logging](#logging), Health dependency rows |
 | Tests | Unit: runtime lookup order and the none-found result; a packaged smoke that the solver module imports in the onedir. | Local Canon |
+
+> **Delivered (Session 66).**
+> - `downloader.deno_path` is a string setting, default `""`, last in the downloader namespace (`services/settings.py:59`), and is mirrored in `SettingsPutIn`, the MCP settings schema and the UI settings schema (`DENO_SETTING`, D-647). The MCP audit treats it as an input (`AUDIT_INPUT`, `mcp-server/scripts/audit/classify.ts:34`).
+> - `JsRuntimeLocator.resolve` (`youtube/js_runtime.py:79`) returns the setting's file, then the bundled `resources/deno/deno.exe` (`bundled_deno`, `api/wiring.py:120`), then `deno` on PATH, and reads the setting at each call. An unusable value falls through and is never logged (`JS_RUNTIME_LOOKUP`). `_base_opts` (`youtube/adapter.py:553`) sets `js_runtimes` from it and leaves the key out when none is found (`JS_RUNTIME_OPTS`).
+> - `HealthService.dependencies()` (`services/health.py:269`) carries `js_runtime`: the version from one 5 s `deno --version` run (`probe_deno_version`, `js_runtime.py:97`) and `solver` from `yt_dlp_ejs` (`RUNTIME_HEALTH`). `GET /health/dependencies` serves it as `JsRuntimeOut` (`RUNTIME_WIRE`). Settings shows a JavaScript runtime row and a read-only Deno path with Browse (`RUNTIME_ROW`, `DENO_FIELD`, D-648).
+> - `packages/infrastructure/pyproject.toml:13` pins `yt-dlp-ejs==0.8.0` (`SOLVER_DEP`), and `packaging/avkit-backend.spec:43` collects it (`SOLVER_SPEC`). `tools/fetch_deno_windows.ps1` fetches Deno 2.9.8 pinned by SHA-256, and `ui/electron-builder.yml:39` ships it as `resources/deno` (`DENO_BUNDLE`, D-649). Its MIT licence is in the licence list and `THIRD_PARTY_NOTICES.md` (`DENO_LICENCE`).
+> - `tools/smoke_packaged_runtime.py` passed on the onedir with source `bundled`, version 2.9.8 and the solver (`RUNTIME_SMOKE`). The installer size is in 07 §Deno (locked).
+> - AC-141.1 to AC-141.16. Plan `docs/execution/plans/2026-11-12-youtube-client-runtime/`.
 
 ---
 

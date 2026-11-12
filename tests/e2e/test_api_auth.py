@@ -68,6 +68,10 @@ class _Spy:
             # FIXTURE_REPAIRS (d) (Session 33, MEU-78): the DEPS_FFMPEG fields.
             ffmpeg_path=None,
             ffprobe_available=False,
+            # FIXTURE_REPAIRS (Session 66, MEU-141): the RUNTIME_HEALTH field.
+            js_runtime=SimpleNamespace(
+                available=False, name=None, path=None, version=None, source=None, solver=False
+            ),
         )
 
 

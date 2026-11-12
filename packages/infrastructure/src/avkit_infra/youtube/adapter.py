@@ -9,7 +9,7 @@ import unicodedata
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, TypeVar, cast
 
 import structlog
 from yt_dlp import YoutubeDL
@@ -44,8 +44,10 @@ from avkit_core.domain.errors import (
     ValidationError,
 )
 from avkit_core.services.download import first_line, scrub_line
+from avkit_infra.youtube.js_runtime import JsRuntime
 
 log = structlog.get_logger(module="youtube")
+T = TypeVar("T")
 
 COOKIE_MODES = frozenset({"none", "browser", "file"})
 QUALITY_HEIGHT: dict[QualityPreset, int] = {
@@ -119,6 +121,19 @@ FAILURE_CAUSE_NEEDLES: tuple[tuple[DownloadFailureCause, tuple[str, ...]], ...] 
 _ERROR_PREFIX = re.compile(rf"^(?:{ANSI_CSI.pattern}|\s)*ERROR:(?:{ANSI_CSI.pattern}|\s)*")
 SABR_PROBE_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 AGE_GATE_NEEDLES = ("sign in to confirm your age", "age-restricted")
+# CLIENT_SIDE (D-643): the needles that refuse a retry wherever they appear, and the ones that
+# select it. Both come from FAILURE_CAUSE_NEEDLES; the bot check is `refused` but never retries.
+_CAUSE_NEEDLES = dict(FAILURE_CAUSE_NEEDLES)
+RELOAD_NEEDLE = "the page needs to be reloaded"
+NO_RETRY_NEEDLES: tuple[str, ...] = (
+    *AGE_GATE_NEEDLES,
+    *(needle for needle in _CAUSE_NEEDLES[DownloadFailureCause.refused] if needle != RELOAD_NEEDLE),
+    *_CAUSE_NEEDLES[DownloadFailureCause.cookies],
+    *_CAUSE_NEEDLES[DownloadFailureCause.write_failed],
+)
+RETRY_NEEDLES: tuple[str, ...] = (*_CAUSE_NEEDLES[DownloadFailureCause.no_format], RELOAD_NEEDLE)
+# ATTEMPT_LOG: the `clients` each attempt names; constants, never yt-dlp text.
+ATTEMPT_CLIENTS: dict[int, str] = {1: "default", 2: "tv,web_safari,web"}
 PROGRESS_MIN_INTERVAL_S = 0.25
 WATCH_URL_PREFIX = "https://www.youtube.com/watch?v="
 
@@ -141,7 +156,8 @@ def _quality_selector(preset: QualityPreset) -> str:
     height = QUALITY_HEIGHT.get(preset)
     if height is None:
         raise ValidationError(f"unsupported quality preset: {preset}")
-    return f"bestvideo[height<={height}]+bestaudio/best[height<={height}]"
+    # CATCH_ALL: `/best` takes whatever the client offers when no format fits the height.
+    return f"bestvideo[height<={height}]+bestaudio/best[height<={height}]/best"
 
 
 def _audio_selector(audio_format: AudioFormat, mode: str) -> str:
@@ -382,6 +398,42 @@ def classify_download_error(text: str, sabr_matched: bool) -> tuple[DownloadFail
     return (cause, detail)
 
 
+def client_side_error(text: str, sabr_matched: bool) -> bool:
+    """Whether a failed attempt's error is one another client may avoid (`CLIENT_SIDE`, D-643).
+
+    Two steps over the whole case-folded text: a refusing needle anywhere is never client-side,
+    whatever else the text or the log holds; otherwise a format or reload-page needle, a SABR
+    phrase in the text, or a SABR match in the attempt's log is.
+    """
+    folded = text.casefold()
+    if any(needle in folded for needle in NO_RETRY_NEEDLES):
+        return False
+    if any(needle in folded for needle in RETRY_NEEDLES):
+        return True
+    return sabr_phrase(text) is not None or sabr_matched
+
+
+def _is_age_gate(text: str) -> bool:
+    folded = text.casefold()
+    return any(needle in folded for needle in AGE_GATE_NEEDLES)
+
+
+def _extract_failure(exc: DownloadError) -> DomainError:
+    """An extract's DownloadError as the domain error it raises."""
+    if _is_age_gate(str(exc)):
+        return AgeRestrictedError("video is age-restricted")
+    return ExtractError(str(exc) or "yt-dlp download failed")
+
+
+def _download_failure(exc: DownloadError, logger: _YtDlpLogger) -> DomainError:
+    """A download's DownloadError as the domain error it raises (FAILURE_RAISE, D-637)."""
+    if _is_age_gate(str(exc)):
+        return AgeRestrictedError("video is age-restricted")
+    # The cause and yt-dlp's first line, read with the failing attempt's own log.
+    cause, detail = classify_download_error(str(exc), logger.sabr_detected)
+    return DownloadFailedError(cause, detail)
+
+
 class _YtDlpLogger:
     def __init__(self, debug_enabled: bool) -> None:
         self.matched_phrase: str | None = None
@@ -439,6 +491,7 @@ class YouTubeAdapter:
         should_stop: Callable[[], bool] | None = None,
         yt_dlp_debug: Callable[[], bool] | None = None,
         ffmpeg_location: Callable[[], Path | None] | None = None,
+        js_runtime: Callable[[], JsRuntime | None] | None = None,
     ) -> None:
         if not isinstance(playlist_end, int) or isinstance(playlist_end, bool) or playlist_end < 0:
             raise ValidationError("playlist_end must be a non-negative int")
@@ -447,6 +500,7 @@ class YouTubeAdapter:
         self._should_stop = should_stop
         self._yt_dlp_debug = yt_dlp_debug
         self._ffmpeg_location = ffmpeg_location
+        self._js_runtime = js_runtime
         self._last_progress: float | None = None
 
     def _debug_now(self) -> bool:
@@ -508,7 +562,21 @@ class YouTubeAdapter:
         ffmpeg = self._ffmpeg_location() if self._ffmpeg_location is not None else None
         if ffmpeg is not None:
             opts["ffmpeg_location"] = str(ffmpeg.parent)
+        # JS_RUNTIME_OPTS: read per call; no runtime leaves the key out.
+        runtime = self._runtime_now()
+        if runtime is not None:
+            opts["js_runtimes"] = {runtime.name: {"path": str(runtime.path)}}
         return opts
+
+    def _runtime_now(self) -> JsRuntime | None:
+        """The JS runtime for this call; no source or a source that raises gives None."""
+        if self._js_runtime is None:
+            return None
+        try:
+            found = self._js_runtime()
+        except Exception:  # noqa: BLE001 - an unreadable runtime leaves the key out
+            return None
+        return found if isinstance(found, JsRuntime) else None
 
     def _cookie_opts(self, options: DownloadOptions) -> dict[str, object]:
         if options.mode not in COOKIE_MODES:
@@ -535,6 +603,72 @@ class YouTubeAdapter:
         extra["cookiefile"] = str(cookie_file)
         return extra
 
+    def _attempt_opts(self, options: DownloadOptions, attempt: int) -> dict[str, object]:
+        """The cookie and client options for one attempt (`ATTEMPT_OPTS`).
+
+        Attempt 1 leaves the client choice to yt-dlp (no `extractor_args`) in every mode;
+        attempt 2 pins `COOKIE_EXTRACTOR_ARGS`. Both keep `_cookie_opts`' cookies, and a missing
+        cookie file raises `CookieTestError` before any run.
+        """
+        if attempt not in ATTEMPT_CLIENTS:
+            raise ValidationError(f"unknown attempt: {attempt}")
+        extra = self._cookie_opts(options)
+        extra.pop("extractor_args", None)
+        if attempt == 2:
+            extra["extractor_args"] = COOKIE_EXTRACTOR_ARGS
+        return extra
+
+    def _attempt_sequence(
+        self,
+        url: str,
+        options: DownloadOptions,
+        opts_for: Callable[[_YtDlpLogger], dict[str, object]],
+        run: Callable[[YoutubeDL], T],
+        fail: Callable[[DownloadError, _YtDlpLogger], DomainError],
+        *,
+        stoppable: bool,
+    ) -> tuple[T, int, bool]:
+        """Attempt 1, then attempt 2 once on a client-side error (`RETRY_ONCE`, D-643).
+
+        `download` and `extract_info` with options both run this. It returns `run`'s value, the
+        passing attempt and whether either attempt's log matched a SABR phrase (`SABR_ACROSS`).
+        A DownloadError that does not retry, and attempt 2's, is raised as `fail` maps it with
+        that attempt's own logger; every other exception is raised as `run` raised it. When
+        `stoppable`, a stop requested during attempt 1 raises `DownloadCancelledError` and
+        runs no attempt 2 (D-656: the add-time extract has no job to stop).
+        """
+        debug = self._debug_now()
+        sabr_seen = False
+        attempt = 1
+        while True:
+            extra = self._attempt_opts(options, attempt)
+            logger = _YtDlpLogger(debug)
+            opts = opts_for(logger)
+            opts.update(extra)
+            self._last_progress = None
+            try:
+                with _ydl(opts) as ydl:
+                    value = run(ydl)
+            except DownloadError as exc:
+                sabr_seen = sabr_seen or logger.sabr_detected
+                text = str(exc)
+                if attempt == 2 or not client_side_error(text, logger.sabr_detected):
+                    raise fail(exc, logger) from exc
+                if stoppable and self._should_stop is not None and self._should_stop():
+                    raise DownloadCancelledError("download cancelled") from exc
+                # ATTEMPT_LOG (D-644, D-655): yt-dlp's text only through scrub_line.
+                cause, detail = classify_download_error(text, logger.sabr_detected)
+                log.warning(
+                    "youtube.attempt_failed",
+                    attempt=attempt,
+                    clients=ATTEMPT_CLIENTS[attempt],
+                    cause=cause,
+                    detail=scrub_line(detail),
+                )
+                attempt = 2
+                continue
+            return value, attempt, sabr_seen or logger.sabr_detected
+
     def _run_extract(
         self,
         url: str,
@@ -556,23 +690,43 @@ class YouTubeAdapter:
         except AgeRestrictedError:
             raise
         except DownloadError as exc:
-            text = str(exc).casefold()
-            if any(needle in text for needle in AGE_GATE_NEEDLES):
-                raise AgeRestrictedError("video is age-restricted") from exc
-            raise ExtractError(str(exc) or "yt-dlp download failed") from exc
+            raise _extract_failure(exc) from exc
         except OSError as exc:
             raise ExtractError("yt-dlp IO failed") from exc
         if not isinstance(raw, dict):
             raise ExtractError("yt-dlp returned no info")
         return _info_dict(raw), logger
 
-    def extract_info(self, url: str, flat: bool = False) -> VideoInfo | PlaylistInfo:
-        logger = _YtDlpLogger(self._debug_now())
+    def _extract_opts(self, logger: _YtDlpLogger, flat: bool) -> dict[str, object]:
         opts = self._base_opts(logger)
         opts["extract_flat"] = True if flat else False
         if self._playlist_end > 0:
             opts["playlistend"] = self._playlist_end
-        info, _logger = self._run_extract(url, opts, download=False)
+        return opts
+
+    def extract_info(
+        self, url: str, flat: bool = False, options: DownloadOptions | None = None
+    ) -> VideoInfo | PlaylistInfo:
+        if options is None:
+            # The transcript path: no cookies, one run, as before (ADD_OPTS).
+            opts = self._extract_opts(_YtDlpLogger(self._debug_now()), flat)
+            info, _logger = self._run_extract(url, opts, download=False)
+        else:
+            # ADD_OPTS (D-646): the add-time extract runs the download's attempt sequence.
+            try:
+                raw, _attempt, _sabr = self._attempt_sequence(
+                    url,
+                    options,
+                    lambda logger: self._extract_opts(logger, flat),
+                    lambda ydl: ydl.extract_info(url, download=False),
+                    lambda exc, _logger: _extract_failure(exc),
+                    stoppable=False,
+                )
+            except OSError as exc:
+                raise ExtractError("yt-dlp IO failed") from exc
+            if not isinstance(raw, dict):
+                raise ExtractError("yt-dlp returned no info")
+            info = _info_dict(raw)
         if _is_playlist(info, flat):
             return _playlist_from_info(info)
         return _video_from_info(info)
@@ -593,31 +747,33 @@ class YouTubeAdapter:
 
     def download(self, url: str, options: DownloadOptions) -> DownloadResult:
         self._last_progress = None
-        logger = _YtDlpLogger(self._debug_now())
-        opts = self._base_opts(logger)
-        opts.update(self._cookie_opts(options))
+        # A missing cookie file raises CookieTestError before the format is chosen, as before.
+        self._cookie_opts(options)
         if options.audio_only:
-            opts["format"] = _audio_selector(options.audio_format, options.mode)
+            selector = _audio_selector(options.audio_format, options.mode)
         else:
-            opts["format"] = _quality_selector(options.quality)
-        opts["outtmpl"] = str(options.output_dir / "%(title)s.%(ext)s")
+            selector = _quality_selector(options.quality)
+
+        def opts_for(logger: _YtDlpLogger) -> dict[str, object]:
+            opts = self._base_opts(logger)
+            opts["format"] = selector
+            opts["outtmpl"] = str(options.output_dir / "%(title)s.%(ext)s")
+            return opts
+
+        def run(ydl: YoutubeDL) -> tuple[dict[str, object], Path]:
+            info = _info_dict(ydl.extract_info(url, download=True))
+            return info, _result_path(info, ydl)
+
         try:
-            with _ydl(opts) as ydl:
-                info = _info_dict(ydl.extract_info(url, download=True))
-                path = _result_path(info, ydl)
+            (info, path), attempt, sabr_detected = self._attempt_sequence(
+                url, options, opts_for, run, _download_failure, stoppable=True
+            )
         except DownloadCancelledError:
             raise
         except CookieTestError:
             raise
         except AgeRestrictedError:
             raise
-        except DownloadError as exc:
-            text = str(exc).casefold()
-            if any(needle in text for needle in AGE_GATE_NEEDLES):
-                raise AgeRestrictedError("video is age-restricted") from exc
-            # FAILURE_RAISE (D-637): the cause and yt-dlp's first line.
-            cause, detail = classify_download_error(str(exc), logger.sabr_detected)
-            raise DownloadFailedError(cause, detail) from exc
         except OSError as exc:
             if options.mode == "file":
                 raise CookieTestError("cookie file is missing or unreadable") from exc
@@ -645,10 +801,15 @@ class YouTubeAdapter:
             file_size=path.stat().st_size,
             video_id=video_id,
             title=title,
-            sabr_detected=logger.sabr_detected,
+            sabr_detected=sabr_detected,
             height=height,
         )
-        log.info("youtube.download", video_id=video_id, sabr_detected=result.sabr_detected)
+        log.info(
+            "youtube.download",
+            video_id=video_id,
+            sabr_detected=result.sabr_detected,
+            attempt=attempt,
+        )
         return result
 
     def get_formats(self, video_id: str) -> list[FormatInfo]:

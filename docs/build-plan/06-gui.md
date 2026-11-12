@@ -1050,6 +1050,7 @@ Logical keys below are `namespace.leaf`. Persist with `PUT /api/v1/settings/{nam
 | `downloader.cookie_file_path` | `string` | `""` | [Downloader §8](../../_inspiration/_downloader_pseudo_logic.md) |
 | `downloader.archive_tracking` | `boolean` | `true` | [Downloader §7](../../_inspiration/_downloader_pseudo_logic.md) |
 | `downloader.yt_dlp_debug` | `boolean` | `false` | [Downloader §8](../../_inspiration/_downloader_pseudo_logic.md) |
+| `downloader.deno_path` | `string` | `""` | Phase 7 Deno probe #1, empty means skip to the bundle ([07 §Deno (locked)](07-distribution.md#deno-locked); MEU-141) |
 | `transcript.output_dir` | `string` | `~/Documents/Transcripts` | [Transcript §7](../../_inspiration/_transcript_pseudo_logic.md) |
 | `transcript.requests_per_hour` | `number` | `300` | [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
 | `transcript.delay_between_requests` | `number` | `6` | [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
@@ -1159,7 +1160,7 @@ Adapt Zorivest `SettingsLayout`, `SetupReadinessPanel`, `McpServerStatusPanel` �
 
 | Card | Shows | Actions |
 |------|-------|---------|
-| Dependencies | yt-dlp + FFmpeg version/path, TTS assets (vocab, spaCy model, voice packs; ready/missing/downloading), eSpeak NG (Detected + version, or Not installed + guidance) from `GET /health/dependencies` | Check Dependencies; Get per missing TTS asset; Copy link (eSpeak NG releases URL) |
+| Dependencies | yt-dlp + FFmpeg version/path, TTS assets (vocab, spaCy model, voice packs; ready/missing/downloading), eSpeak NG (Detected + version, or Not installed + guidance), the JavaScript runtime (name, version, source and path, or none found + what that costs; MEU-141) from `GET /health/dependencies` | Check Dependencies; Get per missing TTS asset; Copy link (eSpeak NG releases URL) |
 | Setup readiness | Backend descriptor present, port > 0, models dir writable, FFmpeg probe result | Deep-link to the failing card |
 | MCP / API access | Descriptor present (port shown, not copied), token **masked** (`mcp-token.txt` exists: yes/no). Never display the token. Client and scope selectors and a read-only setup prompt ([07 §MCP setup prompt (residual)](07-distribution.md#mcp-setup-prompt-residual)) | **Copy prompt** → `window.api.getMcpSetupPrompt({ client, scope })`, then `writeClipboardText`. **Advanced** (closed by default) holds **Copy MCP config** → `window.api.copyMcpConfig()` (default omits `AVKIT_API_BASE`) and optional **Pin current endpoint** via `copyMcpConfig({ pinEndpoint: true })` |
 

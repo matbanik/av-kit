@@ -32,7 +32,11 @@ describe("AC-68.8 ISOLATION_KEYS derivation", () => {
   });
 
   it("AC-68.8 ffmpeg_path and cookie_file_path are inputs, never isolation targets", () => {
-    expect([...ISOLATION_INPUT_KEYS].sort()).toEqual(["downloader.cookie_file_path", "downloader.ffmpeg_path"]);
+    expect([...ISOLATION_INPUT_KEYS].sort()).toEqual([
+      "downloader.cookie_file_path",
+      "downloader.deno_path",
+      "downloader.ffmpeg_path",
+    ]);
     expect(isolationKeys(SETTINGS_SCHEMA)).not.toContain("downloader.ffmpeg_path");
   });
 });
@@ -72,5 +76,23 @@ describe("AC-68.8 ISOLATION_GUARD", () => {
     delete partial["converter.output_dir"];
     expect(() => isolationGuard({ schema: SETTINGS_SCHEMA, mapping: MAPPING, readBack: readBackFrom(partial), root: ROOT }))
       .toThrow(IsolationError);
+  });
+});
+
+describe("AC-141.16 AUDIT_INPUT", () => {
+  it("AC-141.16 downloader.deno_path is an input key, and the seven output keys stand", () => {
+    expect([...ISOLATION_INPUT_KEYS]).toContain("downloader.deno_path");
+    expect(isolationKeys(SETTINGS_SCHEMA).sort()).toEqual(Object.keys(MAPPING).sort());
+  });
+
+  it("AC-141.16 [neg] a deno_path string leaf never becomes an isolation target", () => {
+    const schema = {
+      namespaces: {
+        ...SETTINGS_SCHEMA.namespaces,
+        downloader: { ...SETTINGS_SCHEMA.namespaces.downloader, deno_path: { type: "string", default: "" } },
+      },
+    };
+    expect(isolationKeys(schema)).not.toContain("downloader.deno_path");
+    expect(isolationKeys(schema).sort()).toEqual(Object.keys(MAPPING).sort());
   });
 });

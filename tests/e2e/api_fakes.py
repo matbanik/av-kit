@@ -75,6 +75,10 @@ class _Lifecycle:
             tts_espeak=SimpleNamespace(available=False, version=None, path=None),
             ffmpeg_path=None,
             ffprobe_available=False,
+            # FIXTURE_REPAIRS (Session 66, MEU-141): the RUNTIME_HEALTH field.
+            js_runtime=SimpleNamespace(
+                available=False, name=None, path=None, version=None, source=None, solver=False
+            ),
         )
 
 

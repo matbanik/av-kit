@@ -1352,8 +1352,9 @@ def test_ac_4_7_port_method_sets_and_signatures() -> None:
     catalog_progress = inspect.signature(ModelCatalogPort.download).parameters["on_progress"]
     assert catalog_progress.annotation is not inspect.Parameter.empty
     youtube_extract = inspect.signature(YouTubePort.extract_info)
-    assert list(youtube_extract.parameters) == ["self", "url", "flat"]
+    assert list(youtube_extract.parameters) == ["self", "url", "flat", "options"]
     assert youtube_extract.parameters["flat"].default is False
+    assert youtube_extract.parameters["options"].default is None
     assert youtube_extract.parameters["url"].annotation in {"str", str}
     assert "VideoInfo" in str(youtube_extract.return_annotation)
     assert "PlaylistInfo" in str(youtube_extract.return_annotation)

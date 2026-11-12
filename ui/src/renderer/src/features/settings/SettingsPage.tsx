@@ -74,6 +74,17 @@ type DependenciesOut = {
   tts_voice_packs?: TtsAssetRow
   /** MEU-74 `ESPEAK_DETECT`; absent on an older backend, and then not rendered. */
   tts_espeak?: EspeakDependency
+  /** MEU-141 `RUNTIME_WIRE`; absent on an older backend, and then not rendered. */
+  js_runtime?: JsRuntimeDependency
+}
+
+type JsRuntimeDependency = {
+  available: boolean
+  name: string | null
+  path: string | null
+  version: string | null
+  source: 'setting' | 'bundled' | 'path' | null
+  solver: boolean
 }
 
 type EspeakDependency = { available: boolean; version: string | null; path: string | null }
@@ -127,6 +138,31 @@ function espeakVersionLabel(version: string | null): string | null {
  * Get button. When it is absent, the guidance gives the releases URL as text with a Copy link
  * button, because the app has no external-link path (D-96).
  */
+/** MEU-141 `RUNTIME_ROW` (D-648): the runtime yt-dlp is given, or what its absence costs. */
+function JsRuntimeRow({ runtime }: { runtime: JsRuntimeDependency }): React.JSX.Element {
+  const chip = checkChip(runtime.available, 'available', 'missing')
+  const detail = [runtime.name, runtime.version, runtime.source, runtime.path].filter(
+    (part): part is string => typeof part === 'string' && part.length > 0,
+  )
+  return (
+    <li data-testid="deps-js-runtime-row" className="flex min-w-0 flex-col gap-1.5">
+      <div className="flex min-w-0 items-center gap-2">
+        <StatusChip label={chip.label} tone={chip.tone} />
+        <span>JavaScript runtime</span>
+        {runtime.available && detail.length > 0 ? (
+          <span className="min-w-0 truncate font-mono text-xs text-fg-muted">{detail.join(' · ')}</span>
+        ) : null}
+      </div>
+      {runtime.available ? null : (
+        <span className="text-xs text-fg-muted">
+          No JavaScript runtime found: yt-dlp runs without one, and some YouTube formats may be missing.
+          Set a Deno path, or install Deno 2.3 or later.
+        </span>
+      )}
+    </li>
+  )
+}
+
 function EspeakRow({ espeak }: { espeak: EspeakDependency }): React.JSX.Element {
   const chip = checkChip(espeak.available, 'Detected', 'Not installed')
   const version = espeak.available ? espeakVersionLabel(espeak.version) : null
@@ -433,6 +469,16 @@ export function SettingsPage() {
     })
   }
 
+  async function browseDeno(): Promise<void> {
+    await runSettingsAction('downloader', async () => {
+      const chosen = await window.api.showFileDialog([{ name: 'Executables', extensions: ['exe', ''] }])
+      if (chosen === undefined) {
+        return
+      }
+      await putNow('downloader', { deno_path: chosen })
+    })
+  }
+
   async function browseCookieFile(): Promise<void> {
     await runSettingsAction('downloader', async () => {
       const chosen = await window.api.showFileDialog([{ name: 'Text', extensions: ['txt'] }])
@@ -649,6 +695,16 @@ export function SettingsPage() {
             readOnly
             inputTestId="settings-leaf-ffmpeg_path"
             browseTestId="browse-ffmpeg-btn"
+          />
+          <PathRow
+            id="settings-deno-path"
+            label="Deno path"
+            value={downloader?.deno_path ?? ''}
+            onChange={() => undefined}
+            onBrowse={() => void browseDeno()}
+            readOnly
+            inputTestId="settings-leaf-deno_path"
+            browseTestId="browse-deno-btn"
           />
           <div className="grid gap-1.5 sm:grid-cols-[10.5rem_minmax(0,1fr)] sm:items-start">
             <span className="text-sm text-fg">Cookie mode</span>
@@ -1163,6 +1219,7 @@ export function SettingsPage() {
               <StatusChip label={ffprobeChip.label} tone={ffprobeChip.tone} />
               <span>FFprobe</span>
             </li>
+            {depsQuery.data?.js_runtime ? <JsRuntimeRow runtime={depsQuery.data.js_runtime} /> : null}
             {presentAssetRows(depsQuery.data).map(([wire, row]) => {
               const chip = assetChip(row.state)
               return (

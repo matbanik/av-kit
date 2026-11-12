@@ -147,7 +147,7 @@ On Mat's word, run `/create-plan` once per session, in order. Nothing is planned
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
 | 65 | `download-failure-visibility` | MEU-137, MEU-138, MEU-139 | P2 | executed | `docs/execution/plans/2026-11-11-download-failure-visibility/` |
-| 66 | `youtube-client-runtime` | MEU-140, MEU-141 | P2 | pending | — |
+| 66 | `youtube-client-runtime` | MEU-140, MEU-141 | P2 | executed | `docs/execution/plans/2026-11-12-youtube-client-runtime/` |
 | 67 | `download-audio-extract` | MEU-142 | P2 | pending | — |
 
 ---

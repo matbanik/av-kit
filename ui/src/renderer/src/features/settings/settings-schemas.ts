@@ -20,6 +20,7 @@ export const downloaderPutSchema = z
     cookie_file_path: z.string().nullable().optional(),
     archive_tracking: z.boolean().nullable().optional(),
     yt_dlp_debug: z.boolean().nullable().optional(),
+    deno_path: z.string().nullable().optional(),
   })
   .strict()
 

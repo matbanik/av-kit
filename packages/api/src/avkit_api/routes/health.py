@@ -15,6 +15,7 @@ from avkit_api.schemas.health import (
     DependenciesOut,
     EspeakOut,
     FfmpegDependencyOut,
+    JsRuntimeOut,
     LivenessOut,
     StartupMetricIn,
     TtsAssetOut,
@@ -55,6 +56,7 @@ def health_dependencies(health: Any = Depends(get_health_service)) -> Dependenci
         tts_spacy_model=_asset_out(deps.tts_spacy_model, deps.tts_spacy_version),
         tts_voice_packs=_asset_out(deps.tts_voice_packs, None),
         tts_espeak=_espeak_out(deps.tts_espeak),
+        js_runtime=_js_runtime_out(deps.js_runtime),
     )
 
 
@@ -64,6 +66,25 @@ def _espeak_out(status: Any) -> EspeakOut:
         available=bool(status.available),
         version=status.version,
         path=None if status.path is None else str(status.path),
+    )
+
+
+_RUNTIME_SOURCES: dict[str, Literal["setting", "bundled", "path"]] = {
+    "setting": "setting",
+    "bundled": "bundled",
+    "path": "path",
+}
+
+
+def _js_runtime_out(status: Any) -> JsRuntimeOut:
+    """Serialize `JsRuntimeStatus` (`RUNTIME_WIRE`); an unknown source reads as None."""
+    return JsRuntimeOut(
+        available=bool(status.available),
+        name=status.name,
+        path=None if status.path is None else str(status.path),
+        version=status.version,
+        source=_RUNTIME_SOURCES.get(str(status.source)),
+        solver=bool(status.solver),
     )
 
 

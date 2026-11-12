@@ -353,7 +353,10 @@ def test_ac_6_6_quality_selectors_exhaustive(
         QualityPreset.Lowest: QUALITY_SELECTOR_LOWEST,
     }
     for preset, height in QUALITY_HEIGHT.items():
-        expected[preset] = f"bestvideo[height<={height}]+bestaudio/best[height<={height}]"
+        # CATCH_ALL (MEU-140): each height selector ends with a `/best` catch-all.
+        expected[preset] = (
+            f"bestvideo[height<={height}]+bestaudio/best[height<={height}]/best"
+        )
     assert set(expected) == set(QualityPreset)
 
     outfile = tmp_path / "clip.mp4"
@@ -608,8 +611,8 @@ def test_ac_6_16_extractor_args_cookie_vs_sabr(
     info = {**_video_info_payload(), "requested_downloads": [{"filepath": str(outfile)}]}
     captured = _patch_ydl(monkeypatch, info=info)
     YouTubeAdapter().download("https://youtu.be/vid12345678", _options(tmp_path, mode="none"))
-    assert captured[0]["extractor_args"] == SABR_EXTRACTOR_ARGS
-    assert "android" in captured[0]["extractor_args"]["youtube"]["player_client"]
+    # ATTEMPT_OPTS (MEU-140): attempt 1 leaves the client choice to yt-dlp in every mode.
+    assert "extractor_args" not in captured[0]
 
     cookie = tmp_path / "cookies.txt"
     cookie.write_text("# Netscape", encoding="utf-8")
@@ -618,8 +621,8 @@ def test_ac_6_16_extractor_args_cookie_vs_sabr(
         "https://youtu.be/vid12345678",
         _options(tmp_path, mode="file", cookie_file=cookie),
     )
-    assert captured[0]["extractor_args"] == COOKIE_EXTRACTOR_ARGS
-    assert "android" not in captured[0]["extractor_args"]["youtube"]["player_client"]
+    assert "extractor_args" not in captured[0]
+    assert captured[0].get("cookiefile") == str(cookie)
 
 
 @pytest.mark.integration

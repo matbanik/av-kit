@@ -55,6 +55,8 @@ SETTINGS_KEY_TABLE: dict[tuple[str, str], SettingSpec] = {
     ("downloader", "cookie_file_path"): SettingSpec("string", ""),
     ("downloader", "archive_tracking"): SettingSpec("boolean", True),
     ("downloader", "yt_dlp_debug"): SettingSpec("boolean", False),
+    # DENO_SETTING (MEU-141): an absolute path to deno.exe; empty means the bundle, then PATH.
+    ("downloader", "deno_path"): SettingSpec("string", ""),
     ("transcript", "output_dir"): SettingSpec("string", "~/Documents/Transcripts"),
     ("transcript", "requests_per_hour"): SettingSpec("number", 300, min_number=0),
     ("transcript", "delay_between_requests"): SettingSpec("number", 6, min_number=0),

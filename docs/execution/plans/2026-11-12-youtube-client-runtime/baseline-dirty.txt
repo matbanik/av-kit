@@ -1,0 +1,10 @@
+?? .agent/context/handoffs/2026-11-12-youtube-client-runtime-plan-critical-review.md	20feb7875172800c46436a1c4280d85a8349be47c49b672d92fc7fc0d39a5ec5
+?? docs/execution/plans/2026-11-12-youtube-client-runtime/active-set.py	698453f0ee0e85067e5a1efe4b6a0ef08e0e18886df1bf69e6c61dc4e2c0acbe
+?? docs/execution/plans/2026-11-12-youtube-client-runtime/baseline.ps1	c327ea58cd4a9ed346a91bf6716e196cd9db0086ce8ac73793b18a98a65330b2
+?? docs/execution/plans/2026-11-12-youtube-client-runtime/baseline.sha	e8c5ed2f2f2eee11b37420ce36fd4ae57d2367687c7029bcba1b6876c58a569c
+?? docs/execution/plans/2026-11-12-youtube-client-runtime/identity.py	655b0bc928e0a725e9a37e09b54f74a54540e3504c707e4ec8e6a156ee0e8b18
+?? docs/execution/plans/2026-11-12-youtube-client-runtime/implementation-plan.md	dcbd6d2d1407a6a4d661394f1d4134e204c32a86566b0d39f95164a9804a9cdf
+?? docs/execution/plans/2026-11-12-youtube-client-runtime/issue-resolve.py	6d680b58e619a025b097fdc03ef1bcc275a6266768a2e93a71817efe5f6c6cd6
+?? docs/execution/plans/2026-11-12-youtube-client-runtime/red-check.py	e4af936b1cca1bd84e2a01eeb5a89708326e998b877b95be0a7d1932a05a6907
+?? docs/execution/plans/2026-11-12-youtube-client-runtime/session-gate.ps1	dbd26bfba7a56d562402d236f1357cc29c44307435bad6911fe57d2fcbe68b03
+?? docs/execution/plans/2026-11-12-youtube-client-runtime/task.md	53969aed178d5014a6ee74c39bf26dbf9af1f0b7ba8ace068abcb149769e240e

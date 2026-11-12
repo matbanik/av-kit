@@ -500,3 +500,7 @@ export const CAPTURE_CROP_HANDLE = 'capture-crop-handle'
 
 // MEU-132 Capture image import (additive IDs).
 export const CAPTURE_IMPORT = 'capture-import'
+
+// MEU-141 YouTube JS runtime (additive IDs).
+export const DEPS_JS_RUNTIME_ROW = 'deps-js-runtime-row'
+export const BROWSE_DENO_BTN = 'browse-deno-btn'

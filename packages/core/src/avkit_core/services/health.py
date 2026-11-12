@@ -15,7 +15,13 @@ from typing import Any
 import structlog
 
 from avkit_core.domain.errors import ValidationError
-from avkit_core.domain.health import ConsoleEvent, DependencyHealth, HealthLiveness
+from avkit_core.domain.health import (
+    JS_RUNTIME_UNAVAILABLE,
+    ConsoleEvent,
+    DependencyHealth,
+    HealthLiveness,
+    JsRuntimeStatus,
+)
 from avkit_core.domain.transcript import replace_links
 from avkit_core.domain.tts import (
     ESPEAK_UNAVAILABLE,
@@ -144,6 +150,7 @@ class HealthService:
         download_runtime: Callable[[], ModelDownloadRuntime],
         ring_capacity: int = CONSOLE_RING_CAPACITY,
         espeak: EspeakPort | None = None,
+        js_runtime: Callable[[], JsRuntimeStatus] | None = None,
     ) -> None:
         if ring_capacity < 1:
             raise ValidationError("ring_capacity must be positive")
@@ -155,6 +162,7 @@ class HealthService:
         self._assets = assets
         self._download_runtime = download_runtime
         self._espeak = espeak
+        self._js_runtime = js_runtime
         self._lock = threading.Lock()
         self._file_lock = threading.Lock()
         self._seq = 0
@@ -273,6 +281,8 @@ class HealthService:
             tts_espeak=ESPEAK_UNAVAILABLE if self._espeak is None else self._espeak.status(),
             ffmpeg_path=str(binaries.ffmpeg) if binaries is not None else None,
             ffprobe_available=binaries is not None and binaries.ffprobe is not None,
+            # RUNTIME_HEALTH: resolved and probed at each call, so a PUT shows at once.
+            js_runtime=JS_RUNTIME_UNAVAILABLE if self._js_runtime is None else self._js_runtime(),
         )
 
     def _asset_state(

@@ -260,7 +260,10 @@ class DownloadService:
         if not isinstance(url, str) or url.strip() == "":
             raise ValidationError("url must be a non-empty str")
         log.info("add_to_queue_extract_start", url=url.strip())
-        info = self._coordinator.extract_info(url.strip())
+        # ADD_OPTS (D-646): the add-time extract runs with the options the download will use,
+        # read fresh from the settings, so a missing cookie file fails the add (422).
+        options = self._download_options(quality, audio_only, audio_format)
+        info = self._coordinator.extract_info(url.strip(), options=options)
         log.info(
             "add_to_queue_extract_done",
             info_type=type(info).__name__,
@@ -538,15 +541,21 @@ class DownloadService:
             raise CookieTestError(str(exc) or "cookie test failed") from exc
 
     def _options_from(self, job: DownloadJob) -> DownloadOptions:
+        return self._download_options(job.quality, job.audio_only, job.audio_format)
+
+    def _download_options(
+        self, quality: QualityPreset, audio_only: bool, audio_format: AudioFormat
+    ) -> DownloadOptions:
+        """The download's options from its own fields and the cookie settings, read fresh."""
         raw_path = str(self._settings.get("downloader", "path"))
         cookie_mode = str(self._settings.get("downloader", "cookie_mode"))
         browser = str(self._settings.get("downloader", "cookie_browser")) or None
         profile = str(self._settings.get("downloader", "cookie_browser_profile")) or None
         cookie_path = str(self._settings.get("downloader", "cookie_file_path"))
         return DownloadOptions(
-            quality=job.quality,
-            audio_only=job.audio_only,
-            audio_format=job.audio_format,
+            quality=quality,
+            audio_only=audio_only,
+            audio_format=audio_format,
             output_dir=Path(raw_path).expanduser(),
             mode=cookie_mode,
             browser=browser,

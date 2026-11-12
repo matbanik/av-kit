@@ -35,6 +35,12 @@ extraResources:
     to: ffmpeg
     filter:
       - "!*.zip"
+  # DENO_BUNDLE (MEU-141): deno.exe and its MIT LICENSE.md, from tools/fetch_deno_windows.ps1.
+  - from: ../packaging/deno-win64
+    to: deno
+    filter:
+      - "!*.zip"
+      - "!*.sha256sum"
   # Licences of the shipped Python components and FFmpeg (MEU-72 NOTICES).
   - from: ../packaging/THIRD_PARTY_NOTICES.md
     to: THIRD_PARTY_NOTICES.md

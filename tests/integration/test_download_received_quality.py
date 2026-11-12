@@ -95,7 +95,7 @@ class _RecordingYouTube:
         self.height = height
         self.urls: list[str] = []
 
-    def extract_info(self, url: str, flat: bool = False) -> VideoInfo:
+    def extract_info(self, url: str, flat: bool = False, options: object = None) -> VideoInfo:
         return VideoInfo(video_id="vid1", title="One", duration=1.0, formats=[])
 
     def download(self, url: str, options: DownloadOptions) -> DownloadResult:

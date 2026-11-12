@@ -68,8 +68,8 @@ export async function putSettingsNamespace(
     }
   }
   await client.invalidateQueries({ queryKey: QUERY_KEYS[namespace] })
-  // DEPS_REFRESH: a new ffmpeg path changes what the Dependencies card resolves.
-  if (namespace === 'downloader' && 'ffmpeg_path' in body) {
+  // DEPS_REFRESH: a new ffmpeg or Deno path changes what the Dependencies card resolves.
+  if (namespace === 'downloader' && ('ffmpeg_path' in body || 'deno_path' in body)) {
     await client.invalidateQueries({ queryKey: QUERY_HEALTH_DEPENDENCIES })
   }
 }

@@ -131,7 +131,7 @@ def test_ac_122_6_playlist_info_and_extract_info_unchanged() -> None:
     import inspect
     import typing
 
-    from avkit_core.domain.download import VideoInfo
+    from avkit_core.domain.download import DownloadOptions, VideoInfo
     from avkit_core.ports.youtube import YouTubePort
 
     assert [field.name for field in dataclasses.fields(PlaylistInfo)] == [
@@ -140,9 +140,20 @@ def test_ac_122_6_playlist_info_and_extract_info_unchanged() -> None:
         "video_ids",
     ]
     hints = typing.get_type_hints(YouTubePort.extract_info)
-    assert hints == {"url": str, "flat": bool, "return": VideoInfo | PlaylistInfo}
-    assert list(inspect.signature(YouTubePort.extract_info).parameters) == ["self", "url", "flat"]
+    assert hints == {
+        "url": str,
+        "flat": bool,
+        "options": DownloadOptions | None,
+        "return": VideoInfo | PlaylistInfo,
+    }
+    assert list(inspect.signature(YouTubePort.extract_info).parameters) == [
+        "self",
+        "url",
+        "flat",
+        "options",
+    ]
     assert inspect.signature(YouTubePort.extract_info).parameters["flat"].default is False
+    assert inspect.signature(YouTubePort.extract_info).parameters["options"].default is None
 
 
 def test_ac_122_7_coordinator_caches_the_listing() -> None:

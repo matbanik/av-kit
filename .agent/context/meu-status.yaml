@@ -3670,10 +3670,10 @@ meus:
     anchor: youtube-client-fallback-residual
     text: Phase 2 §YouTube client fallback (residual)
   description: 'A download chooses its YouTube clients and its one retry per grouping D-539, the video selector gets a catch-all, and the add-time extract uses the download''s cookie and client options.'
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-6, MEU-124, MEU-137
   dependency_parse_status: parsed
@@ -3681,8 +3681,8 @@ meus:
   - MEU-6
   - MEU-124
   - MEU-137
-  execution_plan: null
-  updated: '2026-11-10'
+  execution_plan: docs/execution/plans/2026-11-12-youtube-client-runtime/
+  updated: '2026-11-12'
   closed_reason: null
   note: 'Registered 2026-11-10 from DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT (triage D-529); client strategy is grouping D-539, ruled A by Mat on 2026-11-10, found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
 - row_key: MEU-141
@@ -3696,10 +3696,10 @@ meus:
     anchor: ytdlp-js-runtime-residual
     text: Phase 2 §yt-dlp JS runtime (residual)
   description: 'yt-dlp gets a JS runtime and the EJS solver in dev and in the packaged backend, per grouping D-540, and Health names the runtime in use.'
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-6, MEU-13, MEU-140
   dependency_parse_status: parsed
@@ -3707,8 +3707,8 @@ meus:
   - MEU-6
   - MEU-13
   - MEU-140
-  execution_plan: null
-  updated: '2026-11-10'
+  execution_plan: docs/execution/plans/2026-11-12-youtube-client-runtime/
+  updated: '2026-11-12'
   closed_reason: null
   note: 'Registered 2026-11-10 from YTDLP-NO-JS-RUNTIME (triage D-530); runtime delivery is grouping D-540, ruled A (bundle Deno) by Mat on 2026-11-10, found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
 - row_key: MEU-142

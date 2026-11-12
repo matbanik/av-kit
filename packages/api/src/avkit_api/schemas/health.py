@@ -43,6 +43,22 @@ class EspeakOut(ApiModel):
     path: str | None
 
 
+class JsRuntimeOut(ApiModel):
+    """The JS runtime yt-dlp is given (`RUNTIME_WIRE`); `solver` is the yt-dlp-ejs import."""
+
+    available: bool
+    name: str | None
+    path: str | None
+    version: str | None
+    source: Literal["setting", "bundled", "path"] | None
+    solver: bool
+
+
+JS_RUNTIME_OUT_UNAVAILABLE = JsRuntimeOut(
+    available=False, name=None, path=None, version=None, source=None, solver=False
+)
+
+
 class DependenciesOut(ApiModel):
     """`GET /health/dependencies` body."""
 
@@ -52,6 +68,7 @@ class DependenciesOut(ApiModel):
     tts_spacy_model: TtsAssetOut
     tts_voice_packs: TtsAssetOut
     tts_espeak: EspeakOut
+    js_runtime: JsRuntimeOut = JS_RUNTIME_OUT_UNAVAILABLE
 
 
 class ConsoleEventOut(ApiModel):

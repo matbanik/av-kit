@@ -39,9 +39,12 @@ hiddenimports = [
     *collect_submodules("num2words"),
     "avkit_infra.tts.g2p",
     "avkit_infra.tts.espeak",
+    # SOLVER_SPEC (MEU-141): yt-dlp's challenge solver scripts, run by the bundled Deno.
+    "yt_dlp_ejs",
+    *collect_submodules("yt_dlp_ejs"),
 ]
 
-datas = [*collect_data_files("misaki")]
+datas = [*collect_data_files("misaki"), *collect_data_files("yt_dlp_ejs")]
 
 a = Analysis(  # noqa: F821
     [ENTRY],

@@ -170,6 +170,20 @@ Missing after all three → `FFmpegNotFoundError`; Settings → Check Dependenci
 
 Do not leave “bundle OR PATH” as an open product decision for Windows.
 
+## Deno (locked)
+
+**Windows (ship gate):** bundle `deno.exe` and its MIT `LICENSE.md` in `resources/deno/` (MEU-141; grouping D-540, D-649). `tools/fetch_deno_windows.ps1` fetches Deno 2.9.8 (`deno-x86_64-pc-windows-msvc.zip`) and its licence, each pinned by SHA-256, into the git-ignored `packaging/deno-win64/`, and `ui/electron-builder.yml` copies it without the zip. yt-dlp's challenge solver (`yt-dlp-ejs`) ships inside the backend ([02 §yt-dlp JS runtime (residual)](02-infrastructure.md#ytdlp-js-runtime-residual)).
+
+**Probe order** (`JsRuntimeLocator.resolve`, read at each call):
+
+1. Setting `downloader.deno_path` if set and the file exists ([06-gui.md](06-gui.md) key table)
+2. Bundled `{install}/resources/deno/deno.exe`
+3. `deno` on `PATH`
+
+Missing after all three → yt-dlp runs without a JS runtime and `js_runtimes` is left out; Settings → Dependencies says so and what it costs.
+
+**Installer size:** Session 66 measured `av-kit-Setup-0.1.0-rc.3.exe` with Deno at 371,477,462 B, against rc.2's 340,362,828 B (+31,114,634 B), under the 500 MB budget (AC-141.15).
+
 ---
 
 ## Electron packaging (electron-builder)

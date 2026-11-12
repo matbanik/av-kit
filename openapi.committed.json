@@ -1961,6 +1961,13 @@
           "ffmpeg": {
             "$ref": "#/components/schemas/FfmpegDependencyOut"
           },
+          "js_runtime": {
+            "$ref": "#/components/schemas/JsRuntimeOut",
+            "default": {
+              "available": false,
+              "solver": false
+            }
+          },
           "tts_espeak": {
             "$ref": "#/components/schemas/EspeakOut"
           },
@@ -2462,6 +2469,79 @@
           "opacity"
         ],
         "title": "HighlightAnnotationIn",
+        "type": "object"
+      },
+      "JsRuntimeOut": {
+        "additionalProperties": false,
+        "description": "The JS runtime yt-dlp is given (`RUNTIME_WIRE`); `solver` is the yt-dlp-ejs import.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "solver": {
+            "title": "Solver",
+            "type": "boolean"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "setting",
+                  "bundled",
+                  "path"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "available",
+          "name",
+          "path",
+          "version",
+          "source",
+          "solver"
+        ],
+        "title": "JsRuntimeOut",
         "type": "object"
       },
       "LivenessOut": {
@@ -3145,6 +3225,17 @@
               }
             ],
             "title": "Delay Between Requests"
+          },
+          "deno_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deno Path"
           },
           "device": {
             "anyOf": [

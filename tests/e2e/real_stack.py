@@ -63,7 +63,7 @@ class StubCoordinator:
         self.title = title
         self.calls: list[str] = []
 
-    def extract_info(self, url: str) -> VideoInfo:
+    def extract_info(self, url: str, options: object = None) -> VideoInfo:
         self.calls.append(url)
         return VideoInfo(video_id=self.video_id, title=self.title, duration=1.0, formats=[])
 

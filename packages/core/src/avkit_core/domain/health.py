@@ -37,6 +37,23 @@ class ConsoleEvent:
 
 
 @dataclass(frozen=True)
+class JsRuntimeStatus:
+    """`RUNTIME_HEALTH`: the JS runtime yt-dlp is given, its version and the solver."""
+
+    available: bool
+    name: str | None
+    path: str | None
+    version: str | None
+    source: str | None
+    solver: bool
+
+
+JS_RUNTIME_UNAVAILABLE = JsRuntimeStatus(
+    available=False, name=None, path=None, version=None, source=None, solver=False
+)
+
+
+@dataclass(frozen=True)
 class DependencyHealth:
     """Optional binary versions from frozen ports, plus TTS runtime-asset readiness."""
 
@@ -49,6 +66,7 @@ class DependencyHealth:
     tts_espeak: EspeakStatus = ESPEAK_UNAVAILABLE
     ffmpeg_path: str | None = None
     ffprobe_available: bool = False
+    js_runtime: JsRuntimeStatus = JS_RUNTIME_UNAVAILABLE
 
 
 @dataclass(frozen=True)

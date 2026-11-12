@@ -70,6 +70,7 @@ These licence files are installed alongside this one:
   resources/LICENSE: av-kit itself
   resources/THIRD_PARTY_NOTICES.md: where the main components come from
   resources/ffmpeg/LICENSE.txt: FFmpeg
+  resources/deno/LICENSE.md: Deno
   resources/mcp-server/LICENSES.txt: the packages bundled into the MCP server
 """
 

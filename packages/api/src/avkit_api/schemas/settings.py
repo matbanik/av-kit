@@ -23,6 +23,7 @@ class SettingsPutIn(ApiModel):
     cookie_file_path: str | None = None
     archive_tracking: bool | None = None
     yt_dlp_debug: bool | None = None
+    deno_path: str | None = None
     output_dir: str | None = None
     default_preset: str | None = None
     skip_existing: bool | None = None

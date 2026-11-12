@@ -381,7 +381,7 @@ class FakeYouTube:
     def __init__(self, version: str | None = "2026.01.01") -> None:
         self._version = version
 
-    def extract_info(self, url: str, flat: bool = False) -> object:
+    def extract_info(self, url: str, flat: bool = False, options: object = None) -> object:
         raise AssertionError("extract_info not used in MEU-13")
 
     def extract_video_ids(self, channel_url: str) -> list[str]:
@@ -668,7 +668,9 @@ class DownloadYouTube(FakeYouTube):
         self.last_options: object | None = None
         self.download_urls: list[str] = []
 
-    def extract_info(self, url: str, flat: bool = False) -> VideoInfo | PlaylistInfo:
+    def extract_info(
+        self, url: str, flat: bool = False, options: object = None
+    ) -> VideoInfo | PlaylistInfo:
         self.extract_calls += 1
         self.in_flight += 1
         self.max_in_flight = max(self.max_in_flight, self.in_flight)

@@ -38,6 +38,7 @@ from avkit_infra.tts.adapter import KokoroAdapter
 from avkit_infra.tts.assets import TtsAssetAdapter, resolve_vocab_path
 from avkit_infra.tts.espeak import EspeakCliAdapter
 from avkit_infra.youtube.adapter import YouTubeAdapter
+from avkit_infra.youtube.js_runtime import JsRuntimeLocator, runtime_status
 
 
 class _DownloadRuntime(Protocol):
@@ -116,6 +117,13 @@ def bundled_ffmpeg() -> Path | None:
     return Path(sys.executable).resolve().parent.parent / "ffmpeg" / "ffmpeg.exe"
 
 
+def bundled_deno() -> Path | None:
+    """Resolve packaged Deno from the frozen onedir sibling layout (`DENO_BUNDLE`)."""
+    if not getattr(sys, "frozen", False):
+        return None
+    return Path(sys.executable).resolve().parent.parent / "deno" / "deno.exe"
+
+
 def _ffmpeg_configured(value: object) -> Path | None:
     if not isinstance(value, str) or value.strip() == "":
         return None
@@ -152,6 +160,8 @@ def build_services(
         configured_source=lambda: _ffmpeg_configured(settings.get("downloader", "ffmpeg_path")),
         bundle_path=bundled_ffmpeg(),
     )
+    # LIVE_SOURCE: the deno setting is read at each resolution, so a PUT needs no restart.
+    js_runtime = JsRuntimeLocator(lambda: settings.get("downloader", "deno_path"), bundled_deno())
     youtube = YouTubeAdapter(
         playlist_end=playlist_end,
         on_progress=hooks.on_progress,
@@ -159,6 +169,7 @@ def build_services(
         # LIVE_SOURCE: the yt-dlp debug switch is read at each public call (YTDLP_LIVE).
         yt_dlp_debug=lambda: settings.get("downloader", "yt_dlp_debug") is True,
         ffmpeg_location=lambda: b.ffmpeg if (b := media.ffmpeg_binaries()) else None,
+        js_runtime=js_runtime.resolve,
     )
     coordinator = ExtractCoordinator(youtube)
     download = DownloadService(
@@ -211,6 +222,7 @@ def build_services(
         assets=assets,
         download_runtime=models.get_download_runtime,
         espeak=espeak,
+        js_runtime=lambda: runtime_status(js_runtime),
     )
     conversion = ConversionService(uow_factory, media=media, settings=settings)
     grab = CaptureAdapter()

@@ -171,8 +171,8 @@ class _BotWallCoordinator:
     def __init__(self) -> None:
         self.error: BaseException = AssertionError("the test did not set an error")
 
-    def extract_info(self, url: str, flat: bool = False) -> object:
-        del url, flat
+    def extract_info(self, url: str, flat: bool = False, options: object = None) -> object:
+        del url, flat, options
         raise self.error
 
     def extract_video_ids(self, url: str) -> list[str]:

@@ -33,6 +33,7 @@ native/**/publish/
 packaging/build/
 packaging/dist/
 packaging/ffmpeg-win64/
+packaging/deno-win64/
 
 # --- Third-party reference sources kept locally, not redistributed ---
 _inspiration/external_code/

@@ -3,14 +3,13 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 133** — Active: 44 | Mitigated: 1 | Resolved: 86
+**Total: 133** — Active: 42 | Mitigated: 1 | Resolved: 88
 
 ## Active Issues
 
 | Sev | ID | Title | Component | Status | Discovered |
 |-----|-----|-------|-----------|--------|------------|
 | 🟠 | `TTS-ONNX-FP16-NONFINITE-AUDIO` | ONNX FP16 fails on some ordinary sentences with 'generated audio must b… | infrastructure | ⬜ open | 2026-11-04 |
-| 🟠 | `DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT` | Downloads pin three YouTube clients and fail when only another client w… | infrastructure | ⬜ open | 2026-11-10 |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | ⬜ open | 2026-09-30 |
 | 🟡 | `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` | Non-English voices via the real espeak-ng CLI were never run end to end… | infrastructure | ⬜ open | 2026-10-15 |
 | 🟡 | `YOUTUBE-CAPTIONS-IP-BLOCK` | YouTube is blocking caption requests from the maintainer's IP | infrastructure | ⬜ open | 2026-11-03 |
@@ -18,7 +17,6 @@
 | 🟡 | `TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS` | verify --deep and discover report noise, and verify stamps last_checked… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟡 | `CAPTURE-EXIF-SCANNED-ORIENTATION` | A scanned JPEG or WebP with EXIF orientation 5 to 8 is sized and marked… | infrastructure | ⬜ open | 2026-11-08 |
 | 🟡 | `CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST` | One inbox-root file the scan can't open breaks the capture list | infrastructure | ⬜ open | 2026-11-09 |
-| 🟡 | `YTDLP-NO-JS-RUNTIME` | yt-dlp runs with no JavaScript runtime and no EJS solver | infrastructure | ⬜ open | 2026-11-10 |
 | 🟡 | `DOWNLOAD-MP3-NOT-CONVERTED` | An MP3 audio download saves the source m4a or webm, not an MP3 | core | ⬜ open | 2026-11-10 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
 | 🟢 | `E2E-ELECTRON-LAUNCH-FLAG` | ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch -… | ui | ⬜ open | 2026-09-02 |
@@ -60,9 +58,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (86)
+## Resolved (88)
 
-86 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+88 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

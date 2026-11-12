@@ -27,6 +27,7 @@ export const SETTINGS_SCHEMA: {
       cookie_file_path: { type: "string", default: "" },
       archive_tracking: { type: "boolean", default: true },
       [YTDLP_DEBUG_LEAF]: { type: "boolean", default: false },
+      deno_path: { type: "string", default: "" },
     },
     transcript: {
       output_dir: { type: "string", default: "~/Documents/Transcripts" },
@@ -101,6 +102,7 @@ const settingsLeaves = {
   cookie_file_path: z.string().optional(),
   archive_tracking: z.boolean().optional(),
   [YTDLP_DEBUG_LEAF]: z.boolean().optional(),
+  deno_path: z.string().optional(),
   output_dir: z.string().optional(),
   requests_per_hour: z.number().optional(),
   delay_between_requests: z.number().optional(),

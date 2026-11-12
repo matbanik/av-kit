@@ -20,7 +20,9 @@ from avkit_core.domain.download import (
 class YouTubePort(Protocol):
     """IO-shaped YouTube operations implemented in Phase 2."""
 
-    def extract_info(self, url: str, flat: bool = False) -> VideoInfo | PlaylistInfo: ...
+    def extract_info(
+        self, url: str, flat: bool = False, options: DownloadOptions | None = None
+    ) -> VideoInfo | PlaylistInfo: ...
 
     def extract_video_ids(self, channel_url: str) -> VideoListing: ...
 

@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import threading
 import time
+from pathlib import Path
 
-from avkit_core.domain.download import PlaylistInfo, VideoInfo, VideoListing
+from avkit_core.domain.download import DownloadOptions, PlaylistInfo, VideoInfo, VideoListing
 from avkit_core.ports.youtube import YouTubePort
 
 EXTRACT_CACHE_TTL_S = 300.0
+#: `(url, flat)`, or `(url, flat, mode, browser, profile, cookie_file)` with options.
+InfoKey = tuple[str, bool] | tuple[str, bool, str, str | None, str | None, Path | None]
 
 
 class ExtractCoordinator:
@@ -18,7 +21,7 @@ class ExtractCoordinator:
         self._youtube = youtube
         self._ttl_s = ttl_s
         self._lock = threading.Lock()
-        self._info_cache: dict[tuple[str, bool], tuple[float, VideoInfo | PlaylistInfo]] = {}
+        self._info_cache: dict[InfoKey, tuple[float, VideoInfo | PlaylistInfo]] = {}
         self._ids_cache: dict[str, tuple[float, VideoListing]] = {}
         self.in_flight = 0
         self.max_in_flight = 0
@@ -31,10 +34,18 @@ class ExtractCoordinator:
     def _leave(self) -> None:
         self.in_flight -= 1
 
-    def extract_info(self, url: str, flat: bool = False) -> VideoInfo | PlaylistInfo:
+    def extract_info(
+        self, url: str, flat: bool = False, options: DownloadOptions | None = None
+    ) -> VideoInfo | PlaylistInfo:
         url = url.strip()
         # A flat result lacks formats, so it never answers a full request (or the reverse).
-        key = (url, flat)
+        # ADD_CACHE_KEY (D-646): an extract with options is keyed by its cookie fields too, so
+        # a cookie change within the TTL runs a new extract; the no-options key is unchanged.
+        key: InfoKey = (
+            (url, flat)
+            if options is None
+            else (url, flat, options.mode, options.browser, options.profile, options.cookie_file)
+        )
         now = time.monotonic()
         with self._lock:
             cached = self._info_cache.get(key)
@@ -42,7 +53,12 @@ class ExtractCoordinator:
                 return cached[1]
             self._enter()
             try:
-                result = self._youtube.extract_info(url, flat=flat)
+                # ADD_OPTS: `options=` is forwarded only when given, so the transcript path's
+                # call (and every port fake without the keyword) stays as written.
+                if options is None:
+                    result = self._youtube.extract_info(url, flat=flat)
+                else:
+                    result = self._youtube.extract_info(url, flat=flat, options=options)
                 self._info_cache[key] = (time.monotonic(), result)
                 return result
             finally:

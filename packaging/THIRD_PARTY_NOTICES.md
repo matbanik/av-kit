@@ -73,6 +73,14 @@ through onnxruntime.
   (https://github.com/BtbN/FFmpeg-Builds) with their patches, and the toolchain sources. Its
   `README.md` names what those scripts don't pin.
 
+## Deno 2.9.8
+
+- **Licence:** MIT. The licence text ships next to the binary as `resources/deno/LICENSE.md`.
+- **Source:** https://github.com/denoland/deno (release `v2.9.8`,
+  `deno-x86_64-pc-windows-msvc.zip`, pinned by SHA256 in `tools/fetch_deno_windows.ps1`).
+- **Use:** `resources/deno/deno.exe` runs yt-dlp's YouTube challenge solver (yt-dlp-ejs) as
+  a separate program. av-kit passes its path to yt-dlp and never links it.
+
 ## Appendix: GNU Lesser General Public License, version 2.1
 
 The text below is copied verbatim from num2words 0.5.14's `COPYING`.

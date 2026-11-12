@@ -28,7 +28,11 @@ export class BaselineError extends Error {}
 export class IsolationError extends Error {}
 
 /** Settings path keys that are inputs (read, never written by the audit). */
-export const ISOLATION_INPUT_KEYS: readonly string[] = ["downloader.ffmpeg_path", "downloader.cookie_file_path"];
+export const ISOLATION_INPUT_KEYS: readonly string[] = [
+  "downloader.ffmpeg_path",
+  "downloader.cookie_file_path",
+  "downloader.deno_path",
+];
 
 type VerdictOut = { verdict: Verdict; reason: string | null };
 
