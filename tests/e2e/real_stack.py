@@ -77,6 +77,9 @@ class StubMedia:
     def ffmpeg_version(self) -> str:
         return "6.0"
 
+    def convert(self, input_path: object, output_path: object, options: object) -> None:
+        raise AssertionError("convert is not used by the re-queue paths")
+
 
 class RealStack:
     """Production download/conversion services over a real temp SQLite file."""
@@ -97,6 +100,7 @@ class RealStack:
         self.download = DownloadService(
             self.uow_factory,
             youtube=self.youtube,
+            media=StubMedia(),
             coordinator=self.coordinator,
             settings=self.settings,
         )

@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 133** — Active: 42 | Mitigated: 1 | Resolved: 88
+**Total: 133** — Active: 41 | Mitigated: 1 | Resolved: 89
 
 ## Active Issues
 
@@ -17,7 +17,6 @@
 | 🟡 | `TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS` | verify --deep and discover report noise, and verify stamps last_checked… | infrastructure | ⬜ open | 2026-11-04 |
 | 🟡 | `CAPTURE-EXIF-SCANNED-ORIENTATION` | A scanned JPEG or WebP with EXIF orientation 5 to 8 is sized and marked… | infrastructure | ⬜ open | 2026-11-08 |
 | 🟡 | `CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST` | One inbox-root file the scan can't open breaks the capture list | infrastructure | ⬜ open | 2026-11-09 |
-| 🟡 | `DOWNLOAD-MP3-NOT-CONVERTED` | An MP3 audio download saves the source m4a or webm, not an MP3 | core | ⬜ open | 2026-11-10 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
 | 🟢 | `E2E-ELECTRON-LAUNCH-FLAG` | ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch -… | ui | ⬜ open | 2026-09-02 |
 | 🟢 | `TOOLING-ADOPTION-FIXTURE-LIVE-GOVERNANCE` | Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the… | infrastructure | ⬜ open | 2026-09-30 |
@@ -58,9 +57,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (88)
+## Resolved (89)
 
-88 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+89 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

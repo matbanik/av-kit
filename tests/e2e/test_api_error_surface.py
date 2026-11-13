@@ -200,7 +200,11 @@ def real_add_client(tmp_path: Path) -> Iterator[tuple[TestClient, _BotWallCoordi
     settings = SettingsService(uow_factory)
     coordinator = _BotWallCoordinator()
     download = DownloadService(
-        uow_factory, youtube=_Unreached(), coordinator=coordinator, settings=settings
+        uow_factory,
+        youtube=_Unreached(),
+        media=_Unreached(),
+        coordinator=coordinator,
+        settings=settings,
     )
     transcript = TranscriptService(
         uow_factory,

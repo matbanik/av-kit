@@ -60,7 +60,7 @@
 | MEU-122 | `svc-transcript-metadata` | 3.17 | [Phase 3 §Transcript source metadata (residual)](../../docs/build-plan/03-service-layer.md#transcript-source-metadata-residual) | Transcript titles and the channel name come from the flat enumeration add_channel already runs, with the video ID and today's title as fallbacks. | ✅ approved |
 | MEU-127 | `svc-tts-fp16-phase-guard` | 3.18 | [Phase 3 §TTS FP16 phase guard (residual)](../../docs/build-plan/03-service-layer.md#tts-fp16-phase-guard-residual) | A spike counts FP16's zero denominators at the decoder's phase Div and tries a guarded phase computation on a copy of the graph; what ships comes back to Mat. | ⬜ pending |
 | MEU-137 | `svc-download-failure-reason` | 3.19 | [Phase 3 §Download failure reason (residual)](../../docs/build-plan/03-service-layer.md#download-failure-reason-residual) | A failed download stores one short av-kit message per cause, the Downloader card shows it, and the job logs started, done and failed lines with the message and yt-dlp's redacted line. | ✅ approved |
-| MEU-142 | `svc-download-audio-extract` | 3.20 | [Phase 3 §Download audio extract (residual)](../../docs/build-plan/03-service-layer.md#download-audio-extract-residual) | An MP3 audio download is converted to MP3 through MediaPort.convert after the download, in any cookie mode, with no ConversionJob row. | ⬜ pending |
+| MEU-142 | `svc-download-audio-extract` | 3.20 | [Phase 3 §Download audio extract (residual)](../../docs/build-plan/03-service-layer.md#download-audio-extract-residual) | An MP3 audio download is converted to MP3 through MediaPort.convert after the download, in any cookie mode, with no ConversionJob row. | ✅ approved |
 
 
 ## REST API (P2)

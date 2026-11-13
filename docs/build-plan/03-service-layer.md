@@ -53,7 +53,7 @@ UoWFactory = Callable[[], UnitOfWork]
 | `YouTubePort` | DownloadService, TranscriptService (resolve IDs) |
 | `TranscriptPort` | TranscriptService |
 | `TTSPort` | TTSService, ModelService (load/unload/status) |
-| `MediaPort` | DownloadService (optional audio convert), TTSService (WAV→MP3), HealthService. **Phase 8:** also `ConversionService` ([08-video-conversion.md](08-video-conversion.md)) |
+| `MediaPort` | DownloadService (audio extract), TTSService (WAV→MP3), HealthService. **Phase 8:** also `ConversionService` ([08-video-conversion.md](08-video-conversion.md)) |
 | `ScreenCapturePort` / `ImageAnnotatePort` | **Phase 9:** `CaptureService` only ([09-screenshot-capture.md](09-screenshot-capture.md)) |
 | `FilesystemPort` | TranscriptService, TTSService (Phase 1 protocol) |
 | `ModelCatalogPort` | ModelService (Phase 1 protocol) |
@@ -723,7 +723,7 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 
 ## Download audio extract (residual)
 
-> **MEU-142.** Registered 2026-11-10 from `DOWNLOAD-MP3-NOT-CONVERTED` (triage D-534; grouping D-542). `StandardMp3` maps to plain `bestaudio` (`youtube/adapter.py:61`), and in cookie mode every audio format maps to `COOKIE_AUDIO_SELECTOR` (`:113-115`). `DownloadService` gets no `MediaPort` (`api/wiring.py:164-169`), so the MP3 convert in [02 §Media adapter](02-infrastructure.md#media-adapter-mediaadapterpy) was never built.
+> **MEU-142.** Registered 2026-11-10 from `DOWNLOAD-MP3-NOT-CONVERTED` (triage D-534; grouping D-542). `StandardMp3` maps to plain `bestaudio` (`youtube/adapter.py:61`), and in cookie mode every audio format maps to `COOKIE_AUDIO_SELECTOR` (`:113-115`). Before Session 67, `DownloadService` got no `MediaPort` (its construction, now `api/wiring.py:175-181`), so the MP3 convert in [02 §Media adapter](02-infrastructure.md#media-adapter-mediaadapterpy) was never built.
 
 | Rule | Contract | Source |
 |------|----------|--------|
@@ -731,6 +731,14 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | No row | The convert creates no `ConversionJob` row. | Spec: [08 §`ConversionJob` — persistable](08-video-conversion.md#conversionjob--persistable) |
 | No ffmpeg | Without ffmpeg the job fails with the `FFmpegNotFoundError` message on its card (MEU-137), and the downloaded file stays. | Spec: 02 §download, audio-only paragraph |
 | Tests | Unit with a fake `MediaPort`: MP3 converts, other formats do not, a failed convert keeps the source; one real-ffmpeg integration test on a generated clip, deselected on CI. | Local Canon |
+
+> **Delivered (Session 67).**
+> - `DownloadService` takes `media: MediaPort`, a required keyword after `youtube`, and `build_services` passes it the one `FFmpegAdapter` that the other services hold (`MEDIA_PORT`, D-664).
+> - The Convert rule applies to audio-only jobs, the only jobs whose audio format the adapter reads (`youtube/adapter.py:752`). `AUDIO_EXTRACT` maps `StandardMp3` to `.mp3` with `libmp3lame` at 192 kbps, and `_run_one` converts after the download when the source is not already an `.mp3` (`AUDIO_EXTRACT`, `EXTRACT_TRIGGER`, D-665).
+> - The MP3 takes a new name beside the source, `-2`, `-3` and so on when a name is taken, so no existing file is overwritten (`MP3_RESERVE`, D-666). The Done row with the MP3 is committed before the source is removed; a row removed during the convert keeps both files; a file that cannot be removed logs `download.source_kept` or `download.partial_kept` (`CONVERT_DONE`, `ROW_GONE`, `KEPT_LOGS`, D-667).
+> - A failed convert keeps the source, removes only the MP3 it reserved and fails the job with the not-found, write-failed or `MP3 convert failed` card; the Console detail is the last line of FFmpeg's text with paths masked, or `[REDACTED]` (`CONVERT_FAIL`, `SOURCE_KEPT`, `FAIL_DETAIL`, `LAST_LINE`, D-668).
+> - A cancel during the convert lets the job finish Done, and the convert writes no `ConversionJob` row (`CONVERT_CANCEL`, `NO_CONVERSION_ROW`, D-669). CI deselects the real-FFmpeg test (`CI_DESELECT`, D-670).
+> - Tests: AC-142.1 to AC-142.19. Plan `docs/execution/plans/2026-11-12-download-audio-extract/`.
 
 ## What this layer must not do
 

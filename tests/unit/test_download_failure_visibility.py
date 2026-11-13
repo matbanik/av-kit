@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 from structlog.testing import capture_logs
-from tests.unit.test_services import DownloadYouTube, _download_stack
+from tests.unit.test_services import DownloadYouTube, FakeMedia, _download_stack
 
 from avkit_core.domain import download as download_domain
 from avkit_core.domain.download import SABRStatus, clean_line, download_failure_message
@@ -273,6 +273,7 @@ def _sqlite_stack(tmp_path: Path) -> tuple[DownloadService, DownloadYouTube, Any
     service = DownloadService(
         factory,
         youtube=youtube,
+        media=FakeMedia(),
         coordinator=ExtractCoordinator(youtube),
         settings=SettingsService(factory),
         sleep=lambda _seconds: None,

@@ -175,6 +175,7 @@ def build_services(
     download = DownloadService(
         uow_factory,
         youtube=youtube,
+        media=media,
         coordinator=coordinator,
         settings=settings,
     )

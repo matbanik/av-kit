@@ -1,0 +1,10 @@
+?? .agent/context/handoffs/2026-11-12-download-audio-extract-plan-critical-review.md	47ef02ec1e34127624852088bf2cc161c3ab7627188bdd0b13ce18713400df00
+?? docs/execution/plans/2026-11-12-download-audio-extract/baseline.ps1	2c644f6f513b2f3885d060dd7b32adefdd1fb45c22b276011cc74b9bd657603e
+?? docs/execution/plans/2026-11-12-download-audio-extract/baseline.sha	47742d16c9000d820db20a3838255d6a5b484f7673a52f3596dcae86bef16de8
+?? docs/execution/plans/2026-11-12-download-audio-extract/ci-collect.py	318459894f1ff74184eaf8ade883fb73aa775680f842121b5d8bee0a4b10881a
+?? docs/execution/plans/2026-11-12-download-audio-extract/identity.py	e06f904441381d4d43f17a9c6b3fcb5274d5a0d94e6e7fffc77d516e4501bb7b
+?? docs/execution/plans/2026-11-12-download-audio-extract/implementation-plan.md	2c8790785256472a6451382106b6bc6e8bc99841c8683bea2139b2d7586361af
+?? docs/execution/plans/2026-11-12-download-audio-extract/issue-resolve.py	e5d8cf87173b304bc419c4169b17846c19ea165d308eb29b614e49009e17994b
+?? docs/execution/plans/2026-11-12-download-audio-extract/red-check.py	e3b0e9f3430a83c7731b6eb6eb48c9d52004f2882a9f8e3e1c1eff4ba9bc2b0f
+?? docs/execution/plans/2026-11-12-download-audio-extract/session-gate.ps1	3d3a40f599d6e4a4d88beab165be12e9719600ce433465e9546dd60cb7dcbe8e
+?? docs/execution/plans/2026-11-12-download-audio-extract/task.md	1f0a7eeee7cbd5dfdf967cf2915cc71b2e8a2baab90b3e2d22bb062022bf830e

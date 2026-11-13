@@ -743,6 +743,7 @@ def _download_stack() -> tuple[DownloadService, SettingsService, DownloadYouTube
     service = DownloadService(
         factory,
         youtube=youtube,
+        media=FakeMedia(),
         coordinator=coordinator,
         settings=settings,
         sleep=lambda _seconds: None,
@@ -971,6 +972,7 @@ def test_ac_10_14_g29_real_tmp_uow_download(tmp_path: Path) -> None:
     service = DownloadService(
         factory,
         youtube=youtube,
+        media=FakeMedia(),
         coordinator=ExtractCoordinator(youtube),
         settings=settings,
         sleep=lambda _seconds: None,
@@ -1514,6 +1516,7 @@ def test_ac_11_15_shared_extract_mutex(tmp_path: Path) -> None:
     download = DownloadService(
         SharedFakeFactory(uow),
         youtube=youtube,
+        media=FakeMedia(),
         coordinator=coordinator,
         settings=SettingsService(SharedFakeFactory(uow)),
         sleep=lambda _seconds: None,

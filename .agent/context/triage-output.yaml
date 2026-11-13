@@ -2634,6 +2634,34 @@ archived:
       reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
         register and from /session-grouping. Two-way.'
       human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+- id: DOWNLOAD-MP3-NOT-CONVERTED
+  title: An MP3 audio download saves the source m4a or webm, not an MP3
+  severity: medium
+  component: core
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-534
+      stage: triage
+      question: File DOWNLOAD-MP3-NOT-CONVERTED from the 2026-11-10 download comparison report, or leave it in the report?
+      resolution: human
+      class: two-way
+      chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-142'
+      source_tag: Human-approved
+      precedents:
+      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
+      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
+        register and from /session-grouping. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
 actionable:
 - id: E2E-ELECTRON-LAUNCH-FLAG
   title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
@@ -3181,34 +3209,6 @@ actionable:
       reasoning: Session 50's rule says a raw value that reaches an API message is fixed or raised, never left as a residual, and the defect predates this session and lies outside MEU-130's scope. Filing
         records the probe and its two failure shapes for a plan of its own. Leaving it as a handoff observation hides it from the register. Two-way.
       human_message_reference: File it (Recommended)
-- id: DOWNLOAD-MP3-NOT-CONVERTED
-  title: An MP3 audio download saves the source m4a or webm, not an MP3
-  severity: medium
-  component: core
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-534
-      stage: triage
-      question: File DOWNLOAD-MP3-NOT-CONVERTED from the 2026-11-10 download comparison report, or leave it in the report?
-      resolution: human
-      class: two-way
-      chosen: 'File it: MEU-NEW, P3 (severity medium, standalone, per the triage priority matrix), open, linked to MEU-142'
-      source_tag: Human-approved
-      precedents:
-      - docs/proposals/2026-11-10-download-logic-divergence-report.md — the finding and its probes
-      - .agent/workflows/issue-triage.md §4 — the severity by impact matrix
-      research:
-        engine: none
-        sources: []
-      reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
-        register and from /session-grouping. Two-way.'
-      human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -3502,11 +3502,4 @@ proposed_batches:
   component: infrastructure
   priority_band: P2
   complexity: M
-  has_duplicates: false
-- slug: core-download-mp3-not-converted
-  issues:
-  - DOWNLOAD-MP3-NOT-CONVERTED
-  component: core
-  priority_band: P3
-  complexity: S
   has_duplicates: false

@@ -15,7 +15,7 @@ from typing import Any
 import pytest
 from tests.integration.test_youtube_adapter import COOKIE_EXTRACTOR_ARGS, _download_error
 from tests.integration.test_youtube_client_fallback import BOT, RELOAD, _script
-from tests.unit.test_services import DownloadYouTube
+from tests.unit.test_services import DownloadYouTube, FakeMedia
 
 from avkit_core.domain.download import DownloadOptions, PlaylistInfo, VideoInfo
 from avkit_core.domain.enums import AudioFormat, DownloadStatus, QualityPreset
@@ -91,6 +91,7 @@ def _service(tmp_path: Path) -> Iterator[tuple[DownloadService, OptionsYouTube, 
     service = DownloadService(
         factory,
         youtube=youtube,
+        media=FakeMedia(),
         coordinator=ExtractCoordinator(youtube),
         settings=settings,
         sleep=lambda _seconds: None,

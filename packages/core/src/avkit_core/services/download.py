@@ -44,12 +44,15 @@ from avkit_core.domain.errors import (
     CookieTestError,
     DownloadCancelledError,
     DownloadFailedError,
+    FFmpegNotFoundError,
     NotFoundError,
     ValidationError,
 )
+from avkit_core.domain.progress import ConvertOptions
 from avkit_core.domain.queue import QueueRuntime
 from avkit_core.domain.transcript import replace_links, safe_reason
 from avkit_core.domain.wire import AUDIO_WIRE_MAP, COOKIE_MODE_WIRES, QUALITY_WIRE_MAP
+from avkit_core.ports.media import MediaPort
 from avkit_core.ports.storage import UnitOfWork
 from avkit_core.ports.youtube import YouTubePort
 from avkit_core.services import health
@@ -62,6 +65,17 @@ SABR_COMPAT_AUDIO = SABR_RESTRICTED_AUDIO
 PROGRESS_COMMIT_INTERVAL_S = 1.0
 # `VIDEO_TARGET` (D-392): a list item's job stores its own video's URL, not the list's.
 WATCH_URL_PREFIX = "https://www.youtube.com/watch?v="
+#: `AUDIO_EXTRACT` (D-665): the audio formats a finished audio-only job is converted to, with
+#: the converted file's suffix and the `MediaPort.convert` options.
+AUDIO_EXTRACT: dict[AudioFormat, tuple[str, ConvertOptions]] = {
+    AudioFormat.StandardMp3: (
+        ".mp3",
+        ConvertOptions(codec="libmp3lame", bitrate_kbps=192, sample_rate=None, channels=None),
+    ),
+}
+#: `CONVERT_FAIL` (D-668): the card reason for a convert failure that is neither a missing
+#: FFmpeg nor an `OSError`.
+CONVERT_FAILED_REASON = "MP3 convert failed"
 
 UoWFactory = Callable[[], UnitOfWork]
 log = structlog.get_logger(module="download")
@@ -146,6 +160,78 @@ def first_line(text: str) -> str:
     return ""
 
 
+def last_line(text: str) -> str:
+    """The last line of `text` that `scrub_line` leaves non-empty, as written (`LAST_LINE`).
+
+    Only CR, LF and CRLF end a line, as in `first_line`. Returns "" when no line has text.
+    Never raises (D-668).
+    """
+    for line in reversed(_LINE_BREAKS.split(text)):
+        if scrub_line(line):
+            return line
+    return ""
+
+
+#: `FAIL_DETAIL` (D-668): any run of `\` or `/` between a path's parts, so the forward-slash,
+#: mixed and doubled-backslash (`str(OSError)`) forms of a path all match.
+_SEPARATOR_RUN = r"[\\/]+"
+
+
+def _path_pattern(path: Path) -> str:
+    parts = [part for part in re.split(_SEPARATOR_RUN, str(path)) if part]
+    return _SEPARATOR_RUN.join(re.escape(part) for part in parts)
+
+
+def _mask_paths(text: str, paths: tuple[Path, ...]) -> str:
+    """`text` with each path as "[file]", then each parent folder as "[folder]", then each
+    file name as "[file]"; in any case when `health.HOME_IGNORES_CASE` is set."""
+    flags = re.IGNORECASE if health.HOME_IGNORES_CASE else 0
+    passes = (
+        [(_path_pattern(path), "[file]") for path in paths]
+        + [(_path_pattern(path.parent), "[folder]") for path in paths]
+        + [(re.escape(path.name), "[file]") for path in paths]
+    )
+    for pattern, mark in passes:
+        if pattern:
+            text = re.sub(pattern, mark, text, flags=flags)
+    return text
+
+
+def _convert_detail(text: str, paths: tuple[Path, ...]) -> str:
+    """The Console detail of a failed convert (`FAIL_DETAIL`, D-668).
+
+    The last readable line of the masked text, scrubbed, kept only when the whole masked text
+    scrubbed as one line ends with it; otherwise "[REDACTED]". So the detail is always a
+    suffix of the whole-text scrub, and a needle or home folder split over earlier lines
+    cannot leave part of itself in it.
+    """
+    masked = _mask_paths(text, paths)
+    tail = scrub_line(last_line(masked))
+    return tail if scrub_line(masked).endswith(tail) else "[REDACTED]"
+
+
+def _reserve(source: Path, suffix: str, tried: list[Path]) -> Path:
+    """`MP3_RESERVE` (D-666): a new empty file beside `source`, named by its stem and `suffix`.
+
+    `open(path, "xb")` creates the file only when no file has that name, so an existing file
+    is never opened, truncated or overwritten; a taken name gains `-2`, `-3` and so on.
+    Each name is appended to `tried` before it is opened, so a failure's detail can mask
+    the name it failed on (FAIL_DETAIL; execution review F1).
+    """
+    number = 1
+    while True:
+        stem = source.stem if number == 1 else f"{source.stem}-{number}"
+        candidate = source.with_name(f"{stem}{suffix}")
+        tried.append(candidate)
+        try:
+            with candidate.open("xb"):
+                pass
+        except FileExistsError:
+            number += 1
+            continue
+        return candidate
+
+
 def _is_finite_number(value: object) -> bool:
     return (
         isinstance(value, int | float)
@@ -168,6 +254,7 @@ class DownloadService:
         uow_factory: UoWFactory,
         *,
         youtube: YouTubePort,
+        media: MediaPort,
         coordinator: ExtractCoordinator,
         settings: SettingsService,
         sleep: Callable[[float], None] | None = None,
@@ -175,6 +262,7 @@ class DownloadService:
     ) -> None:
         self._uow_factory = uow_factory
         self._youtube = youtube
+        self._media = media
         self._coordinator = coordinator
         self._settings = settings
         self._sleep = sleep or time.sleep
@@ -693,15 +781,28 @@ class DownloadService:
                 checked_at=_now(),
             )
             self.apply_lock()
+        # EXTRACT_TRIGGER (D-665): an audio-only job in a mapped format whose file is not
+        # already that suffix is converted here, in any cookie mode, with no `ConversionJob`
+        # row (NO_CONVERSION_ROW). The status stays Downloading and nothing stops the convert
+        # once it starts; a cancel takes effect at the worker's next loop (CONVERT_CANCEL).
+        file_path, file_size = result.file_path, result.file_size
+        extract = AUDIO_EXTRACT.get(job.audio_format) if job.audio_only else None
+        if extract is not None and result.file_path.suffix.casefold() != extract[0].casefold():
+            converted = self._convert(job, result.file_path, *extract)
+            if converted is None:
+                return
+            file_path, file_size = converted
         with self._uow_factory() as uow:
             latest = uow.downloads.get(job.id)
             if latest is None:
+                # ROW_GONE (D-667): removed or cleared during the download or the convert;
+                # no commit, and neither file is removed.
                 return
             done = DownloadJob(
                 **{
                     **latest.transition(DownloadStatus.Done).__dict__,
-                    "file_path": result.file_path,
-                    "file_size": result.file_size,
+                    "file_path": file_path,
+                    "file_size": file_size,
                     "progress": 1.0,
                     "updated_at": _now(),
                     "received_height": None if latest.audio_only else result.height,
@@ -718,11 +819,60 @@ class DownloadService:
             )
             uow.commit()
         log.info("download.done", job_id=job.id, video_id=job.video_id)
+        if file_path != result.file_path:
+            # CONVERT_DONE (D-667): the source goes only after the MP3's Done row is committed.
+            self._remove(job, result.file_path, "download.source_kept")
         self._runtime = QueueRuntime(
             queue_name="downloads",
             state=self._runtime.state,
             current_job_id=None,
         )
+
+    def _convert(
+        self, job: DownloadJob, source: Path, suffix: str, options: ConvertOptions
+    ) -> tuple[Path, int] | None:
+        """The converted file and its size, or None once the job has failed (D-666, D-668).
+
+        Every filesystem call on the MP3 sits inside the error mapping. On a failure the
+        source stays as it is and only the MP3 this job reserved is removed (SOURCE_KEPT).
+        """
+        mp3: Path | None = None
+        tried: list[Path] = []
+        try:
+            mp3 = _reserve(source, suffix, tried)
+            self._media.convert(source, mp3, options)
+            return mp3, mp3.stat().st_size
+        except Exception as exc:
+            # CONVERT_FAIL (D-668): no new cause, and the archive entry is not added.
+            if isinstance(exc, FFmpegNotFoundError):
+                cause = DownloadFailureCause.other
+                reason: str | None = safe_reason(scrub_line(str(exc)))
+            elif isinstance(exc, OSError):
+                cause, reason = DownloadFailureCause.write_failed, None
+            else:
+                cause, reason = DownloadFailureCause.other, CONVERT_FAILED_REASON
+            if mp3 is not None:
+                self._remove(job, mp3, "download.partial_kept")
+            stored = download_failure_message(cause, reason)
+            self._finish(job.id, DownloadStatus.Failed, error=stored)
+            log.error(
+                "download.failed",
+                job_id=job.id,
+                video_id=job.video_id,
+                error=stored,
+                detail=_convert_detail(str(exc), (source, *tried)),
+            )
+            return None
+
+    def _remove(self, job: DownloadJob, path: Path, kept_event: str) -> None:
+        """Remove `path`; a failure logs one `kept_event` warning with the error's type name,
+        never a path, and leaves the job as it is (`KEPT_LOGS`, D-667, D-668)."""
+        try:
+            path.unlink(missing_ok=True)
+        except OSError as exc:
+            log.warning(
+                kept_event, job_id=job.id, video_id=job.video_id, error=type(exc).__name__
+            )
 
     def _finish(self, job_id: str, status: DownloadStatus, error: str | None = None) -> None:
         with self._uow_factory() as uow:

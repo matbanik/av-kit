@@ -4890,14 +4890,15 @@ issues:
     title: An MP3 audio download saves the source m4a or webm, not an MP3
     severity: medium
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-10'
     root_cause: 'AudioFormat.StandardMp3 maps to ''bestaudio/best[height<=480]/best'' (packages/infrastructure/src/avkit_infra/youtube/adapter.py:61) and the adapter adds no postprocessor. docs/build-plan/02-infrastructure.md:432 and 03-service-layer.md:56 say download audio extract goes through MediaPort.convert with ConvertOptions from the chosen AudioFormat, but DownloadService takes no MediaPort (packages/api/src/avkit_api/wiring.py:164-169) and services/download.py has no convert call. In cookie mode browser or file the chosen audio format is ignored altogether: _audio_selector returns COOKIE_AUDIO_SELECTOR, an HLS-first bestaudio chain (adapter.py:64-66, :113-115).'
     blast_radius: Anyone who picks MP3 for an audio-only download gets an .m4a or .webm file. SABR mode allows only StandardMp3 and HighM4a for audio (03-service-layer.md:165), so under SABR the MP3 choice is one of two and is never honoured. P:/yt-dlp_GUI adds an FFmpegExtractAudio postprocessor (youtube_downloader.py:1134-1188).
     verification:
-      last_checked: '2026-11-10'
-      method: A read of AUDIO_FORMAT_SELECTORS, DownloadService wiring and the 02/03 build-plan rows at 55d1289
-      result: no convert step or postprocessor exists for StandardMp3; the spec's MediaPort path was never built
+      last_checked: '2026-11-12'
+      method: 'Session 67 task row 3 receipt C:/Temp/av-kit/s67-py-green.txt (plan 2026-11-12-download-audio-extract, MEU-142), after the row 2 Red receipt C:/Temp/av-kit/s67-py-red.txt that s67-red-check.txt accepted, and the row 4 receipt s67-r4-ci-collect.txt: the AUDIO_EXTRACT map, the trigger over all 9 audio formats audio-only and not, the reserved MP3 name, the traced order from download to source removal, SQLite with no ConversionJob row, every cookie mode, the no-ffmpeg, FilesystemError and OSError cards, the kept source, last_line, twelve Console detail cases through the real HealthService, a row removed during the convert, the kept-file warnings, cancel, the real adapter with no ffmpeg, and the pinned FFmpeg converting a generated m4a. The one live public MP3 download under D-671 B runs after the gate as a recorded manual check (task row H1-2m), so it is an open manual check and not part of this verification'
+      result: '336 passed in 15.59s, with no skip, and ci-collect: 0 problem(s). AC-142.1 to AC-142.19 hold: an audio-only StandardMp3 job converts its file to MP3 with MediaPort.convert in any cookie mode and is Done with the MP3, the source is removed only after the Done commit, no other format converts, a failed convert keeps the source and shows the ffmpeg not-found, write-failed or MP3 convert failed card, and CI deselects the real-FFmpeg module'
+    resolution_path: 'Fixed in Session 67 on 2026-11-12 (plan docs/execution/plans/2026-11-12-download-audio-extract/, MEU-142): MEDIA_PORT, AUDIO_EXTRACT, EXTRACT_TRIGGER, MP3_RESERVE, CONVERT_DONE, ROW_GONE, KEPT_LOGS, CONVERT_FAIL, SOURCE_KEPT, FAIL_DETAIL, LAST_LINE, CONVERT_CANCEL, NO_CONVERSION_ROW and CI_DESELECT. DownloadService takes the one FFmpegAdapter and converts an audio-only StandardMp3 download to MP3 after it finishes.'
     category: MEU-NEW
     priority: P3
     related: []

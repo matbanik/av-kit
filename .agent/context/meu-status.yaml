@@ -38,7 +38,8 @@ phases:
   last_updated: '2026-11-10'
   note: MEU-10–13 bound to p3-services — ready_for_review pending H1. MEU-62 residual (TTS runtime assets) registered 2026-09-30. MEU-73/74/75/77/78 residuals (TTS voice assets, language runtime, device
     fallback, async generate, ffmpeg resolver) registered 2026-10-09. MEU-75 delivered by Session 35 tts-voice-panel. MEU-98 residual (TTS sideload load) registered 2026-10-17. MEU-115/116 (transcript failure
-    reason, block stop), MEU-117/119/121 (TTS build capability, load order, FP16 audio) and MEU-122 (transcript source metadata) residuals registered 2026-11-04. MEU-137/142 residuals (download failure reason, download audio extract) registered 2026-11-10.
+    reason, block stop), MEU-117/119/121 (TTS build capability, load order, FP16 audio) and MEU-122 (transcript source metadata) residuals registered 2026-11-04. MEU-137/142 residuals (download failure
+    reason, download audio extract) registered 2026-11-10.
 - id: '4'
   name: REST API
   band: P2
@@ -3589,7 +3590,7 @@ meus:
     path: build-plan/03-service-layer.md
     anchor: download-failure-reason-residual
     text: Phase 3 §Download failure reason (residual)
-  description: 'A failed download stores one short av-kit message per cause, the Downloader card shows it, and the job logs started, done and failed lines with the message and yt-dlp''s redacted line.'
+  description: A failed download stores one short av-kit message per cause, the Downloader card shows it, and the job logs started, done and failed lines with the message and yt-dlp's redacted line.
   status: approved
   status_labels:
     registry: ✅ approved
@@ -3605,7 +3606,8 @@ meus:
   execution_plan: docs/execution/plans/2026-11-11-download-failure-visibility/
   updated: '2026-11-12'
   closed_reason: null
-  note: 'Registered 2026-11-10 from DOWNLOAD-FAILED-NO-REASON (triage D-531), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+  note: Registered 2026-11-10 from DOWNLOAD-FAILED-NO-REASON (triage D-531), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to
+    file the findings and group them on 2026-11-10 (grouping D-535).
 - row_key: MEU-138
   id: MEU-138
   slug: infra-sabr-check-result
@@ -3616,7 +3618,7 @@ meus:
     path: build-plan/02-infrastructure.md
     anchor: sabr-check-result-residual
     text: Phase 2 §SABR check result (residual)
-  description: 'The SABR scan and Check SABR match yt-dlp''s current SABR messages, the page shows every check''s result with its time, and each SABR action logs one line.'
+  description: The SABR scan and Check SABR match yt-dlp's current SABR messages, the page shows every check's result with its time, and each SABR action logs one line.
   status: approved
   status_labels:
     registry: ✅ approved
@@ -3631,7 +3633,8 @@ meus:
   execution_plan: docs/execution/plans/2026-11-11-download-failure-visibility/
   updated: '2026-11-12'
   closed_reason: null
-  note: 'Registered 2026-11-10 from SABR-CHECK-MISSES-CURRENT-MESSAGES (triage D-532), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+  note: Registered 2026-11-10 from SABR-CHECK-MISSES-CURRENT-MESSAGES (triage D-532), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat
+    asked to file the findings and group them on 2026-11-10 (grouping D-535).
 - row_key: MEU-139
   id: MEU-139
   slug: infra-ytdlp-log-detail
@@ -3642,7 +3645,7 @@ meus:
     path: build-plan/02-infrastructure.md
     anchor: ytdlp-log-detail-residual
     text: Phase 2 §yt-dlp log detail (residual)
-  description: 'yt-dlp warnings and errors always reach the Console with their text in a kept, redacted field; the debug switch in Settings adds info lines and applies without a restart.'
+  description: yt-dlp warnings and errors always reach the Console with their text in a kept, redacted field; the debug switch in Settings adds info lines and applies without a restart.
   status: approved
   status_labels:
     registry: ✅ approved
@@ -3658,7 +3661,8 @@ meus:
   execution_plan: docs/execution/plans/2026-11-11-download-failure-visibility/
   updated: '2026-11-12'
   closed_reason: null
-  note: 'Registered 2026-11-10 from YTDLP-LOG-TEXT-DROPPED (triage D-533), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+  note: Registered 2026-11-10 from YTDLP-LOG-TEXT-DROPPED (triage D-533), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file
+    the findings and group them on 2026-11-10 (grouping D-535).
 - row_key: MEU-140
   id: MEU-140
   slug: infra-youtube-client-fallback
@@ -3669,7 +3673,7 @@ meus:
     path: build-plan/02-infrastructure.md
     anchor: youtube-client-fallback-residual
     text: Phase 2 §YouTube client fallback (residual)
-  description: 'A download chooses its YouTube clients and its one retry per grouping D-539, the video selector gets a catch-all, and the add-time extract uses the download''s cookie and client options.'
+  description: A download chooses its YouTube clients and its one retry per grouping D-539, the video selector gets a catch-all, and the add-time extract uses the download's cookie and client options.
   status: approved
   status_labels:
     registry: ✅ approved
@@ -3684,7 +3688,8 @@ meus:
   execution_plan: docs/execution/plans/2026-11-12-youtube-client-runtime/
   updated: '2026-11-12'
   closed_reason: null
-  note: 'Registered 2026-11-10 from DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT (triage D-529); client strategy is grouping D-539, ruled A by Mat on 2026-11-10, found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+  note: Registered 2026-11-10 from DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT (triage D-529); client strategy is grouping D-539, ruled A by Mat on 2026-11-10, found in the P:/yt-dlp_GUI download comparison
+    (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).
 - row_key: MEU-141
   id: MEU-141
   slug: infra-ytdlp-js-runtime
@@ -3695,7 +3700,7 @@ meus:
     path: build-plan/02-infrastructure.md
     anchor: ytdlp-js-runtime-residual
     text: Phase 2 §yt-dlp JS runtime (residual)
-  description: 'yt-dlp gets a JS runtime and the EJS solver in dev and in the packaged backend, per grouping D-540, and Health names the runtime in use.'
+  description: yt-dlp gets a JS runtime and the EJS solver in dev and in the packaged backend, per grouping D-540, and Health names the runtime in use.
   status: approved
   status_labels:
     registry: ✅ approved
@@ -3710,7 +3715,8 @@ meus:
   execution_plan: docs/execution/plans/2026-11-12-youtube-client-runtime/
   updated: '2026-11-12'
   closed_reason: null
-  note: 'Registered 2026-11-10 from YTDLP-NO-JS-RUNTIME (triage D-530); runtime delivery is grouping D-540, ruled A (bundle Deno) by Mat on 2026-11-10, found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+  note: Registered 2026-11-10 from YTDLP-NO-JS-RUNTIME (triage D-530); runtime delivery is grouping D-540, ruled A (bundle Deno) by Mat on 2026-11-10, found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md).
+    Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).
 - row_key: MEU-142
   id: MEU-142
   slug: svc-download-audio-extract
@@ -3721,11 +3727,11 @@ meus:
     path: build-plan/03-service-layer.md
     anchor: download-audio-extract-residual
     text: Phase 3 §Download audio extract (residual)
-  description: 'An MP3 audio download is converted to MP3 through MediaPort.convert after the download, in any cookie mode, with no ConversionJob row.'
-  status: pending
+  description: An MP3 audio download is converted to MP3 through MediaPort.convert after the download, in any cookie mode, with no ConversionJob row.
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-8, MEU-10, MEU-78, MEU-137
   dependency_parse_status: parsed
@@ -3734,10 +3740,11 @@ meus:
   - MEU-10
   - MEU-78
   - MEU-137
-  execution_plan: null
-  updated: '2026-11-10'
+  execution_plan: docs/execution/plans/2026-11-12-download-audio-extract/
+  updated: '2026-11-12'
   closed_reason: null
-  note: 'Registered 2026-11-10 from DOWNLOAD-MP3-NOT-CONVERTED (triage D-534), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to file the findings and group them on 2026-11-10 (grouping D-535).'
+  note: Registered 2026-11-10 from DOWNLOAD-MP3-NOT-CONVERTED (triage D-534), found in the P:/yt-dlp_GUI download comparison (docs/proposals/2026-11-10-download-logic-divergence-report.md). Mat asked to
+    file the findings and group them on 2026-11-10 (grouping D-535).
 summary_bands:
 - key: P0
   label: P0

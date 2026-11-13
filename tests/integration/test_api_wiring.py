@@ -157,3 +157,28 @@ def test_ac_139_4_debug_source_follows_a_settings_put(
         assert seen == [False, 200, True, 200, False]
     finally:
         dispose()
+
+
+def test_ac_142_3_one_ffmpeg_adapter_serves_download_and_the_other_services(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """MEDIA_PORT (D-664): `build_services` hands the one `FFmpegAdapter` to `DownloadService`."""
+    from avkit_core.services.health import HealthService
+    from avkit_infra.media.adapter import FFmpegAdapter
+
+    monkeypatch.setattr(HealthService, "_active", None)
+    services, dispose = build_services(app_data=tmp_path, database_path=tmp_path / "avkit.db")
+    try:
+        held = {
+            name: getattr(getattr(services, name), "_media", None)
+            for name in ("download", "conversion", "tts", "health")
+        }
+        assert isinstance(held["download"], FFmpegAdapter)
+        assert {name: media is held["download"] for name, media in held.items()} == {
+            "download": True,
+            "conversion": True,
+            "tts": True,
+            "health": True,
+        }
+    finally:
+        dispose()

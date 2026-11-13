@@ -130,6 +130,8 @@ def _patch_bare_channel(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def _real_service(db_path: Path, youtube: object, coordinator_port: object) -> Any:
+    from tests.unit.test_services import FakeMedia
+
     from avkit_core.services.download import DownloadService
     from avkit_core.services.extract import ExtractCoordinator
     from avkit_core.services.settings import SettingsService
@@ -150,6 +152,7 @@ def _real_service(db_path: Path, youtube: object, coordinator_port: object) -> A
     service = DownloadService(
         factory,  # type: ignore[arg-type]
         youtube=youtube,  # type: ignore[arg-type]
+        media=FakeMedia(),  # type: ignore[arg-type]
         coordinator=ExtractCoordinator(coordinator_port),  # type: ignore[arg-type]
         settings=SettingsService(factory),  # type: ignore[arg-type]
         sleep=lambda _seconds: None,
