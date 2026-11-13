@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { Button } from '../../components/ui/Button'
-import type { Annotation } from './capture-annotate'
+import { SegmentedControl } from '../../components/ui/SegmentedControl'
+import type { Annotation, RedactMode } from './capture-annotate'
 import type { CropBox } from './capture-crop'
 import { arrowHeadPoints, arrowShaftEnd } from './capture-arrow-head'
 import { contrastText, hexForNamedColor, NAMED_COLOR_HEX, normalizeHex } from './capture-color'
@@ -78,7 +79,7 @@ function cropCursorClass(cursor: CropCursor | null): string {
   return RESIZE_CURSOR_CLASS[cursorForHandle(cursor)]
 }
 
-export type CaptureTool = 'select' | 'arrow' | 'box' | 'highlight' | 'text' | 'pixelate' | 'eraser' | 'crop'
+export type CaptureTool = 'select' | 'arrow' | 'box' | 'highlight' | 'text' | 'redact' | 'eraser' | 'crop'
 export type CaptureViewVariant = 'original' | 'annotated'
 
 export type TextDraft = {
@@ -131,6 +132,8 @@ type CaptureViewportProps = {
   textBg?: string
   /** BLOCK_CONTROL: the Block size field's text. */
   blockSize?: string
+  /** REDACT_MODE (D-680): the checked Redact mode, the selected redaction's own when one is selected. */
+  redactMode?: RedactMode
   annotations: Annotation[]
   preview?: Annotation | null
   selectedIndex?: number | null
@@ -163,6 +166,7 @@ type CaptureViewportProps = {
   onToggleToolLock?: () => void
   onTextBg?: (color: string) => void
   onBlockSize?: (size: string) => void
+  onRedactMode?: (mode: RedactMode) => void
   onViewVariant?: (variant: CaptureViewVariant) => void
   onUndo: () => void
   onRedo: () => void
@@ -192,6 +196,12 @@ type CaptureViewportProps = {
 function toolVariant(active: boolean): 'primary' | 'outline' {
   return active ? 'primary' : 'outline'
 }
+
+/** REDACT_MODE (D-680): the Redact tool's two modes, Solid first. */
+const REDACT_MODE_OPTIONS = [
+  { id: 'capture-redact-solid', testId: 'capture-redact-solid', value: 'solid', label: 'Solid' },
+  { id: 'capture-redact-pixelate', testId: 'capture-redact-pixelate', value: 'pixelate', label: 'Pixelate' },
+] as const
 
 function AnnotationMark({ ann }: { ann: Annotation }) {
   if (ann.type === 'arrow') {
@@ -256,7 +266,7 @@ function AnnotationMark({ ann }: { ann: Annotation }) {
       />
     )
   }
-  if (ann.type === 'pixelate' || ann.type === 'eraser') {
+  if (ann.type === 'eraser') {
     // REGION_MARK_SVG: a transparent rect for selection and counting; REGION_PREVIEW draws the pixels.
     return (
       <rect
@@ -268,6 +278,26 @@ function AnnotationMark({ ann }: { ann: Annotation }) {
         height={ann.height}
         fill="none"
         stroke="none"
+      />
+    )
+  }
+  if (ann.type === 'pixelate' || ann.type === 'redact') {
+    // REDACT_OUTLINE (D-684): a redaction draws a 1 px dashed outline here, in the Original view only; no bake
+    // and no Annotated view draws it. REGION_PREVIEW draws the pixels under it.
+    return (
+      <rect
+        data-testid="capture-annotation"
+        data-annotation-type={ann.type}
+        x={ann.x}
+        y={ann.y}
+        width={ann.width}
+        height={ann.height}
+        fill="none"
+        stroke="var(--color-fg)"
+        strokeOpacity={0.7}
+        strokeWidth={1}
+        strokeDasharray="4 3"
+        vectorEffect="non-scaling-stroke"
       />
     )
   }
@@ -477,6 +507,7 @@ export function CaptureViewport({
   fontSize = '16',
   textBg = '',
   blockSize = '10',
+  redactMode = 'solid',
   annotations,
   preview = null,
   selectedIndex = null,
@@ -505,6 +536,7 @@ export function CaptureViewport({
   onToggleToolLock = () => undefined,
   onTextBg = () => undefined,
   onBlockSize = () => undefined,
+  onRedactMode = () => undefined,
   onViewVariant = () => undefined,
   onUndo,
   onRedo,
@@ -549,7 +581,7 @@ export function CaptureViewport({
   // TEXT_REEDIT: the mark under an edit draft has no handles.
   const showBodyHandle =
     showVectors && selected !== null && selected.type !== 'arrow' && textDraft?.editIndex !== selectedIndex
-  const options = optionGroups(tool, selected)
+  const options = optionGroups(tool, selected, redactMode)
   // CROP_ENTRY: why the Crop button is disabled, if it is.
   const cropOff = hasSelection ? cropDisabledReason : NO_SHOT_HINT
   // SCRUB_BASE: an invalid field scrubs from the applicable selected mark, else the default.
@@ -920,13 +952,13 @@ export function CaptureViewport({
               onClick={() => onTool('text')}
             />
             <ToolbarIconButton
-              spec={TOOLBAR_BUTTONS['capture-tool-pixelate']}
-              id="capture-tool-pixelate"
-              variant={toolVariant(tool === 'pixelate')}
-              pressed={tool === 'pixelate'}
+              spec={TOOLBAR_BUTTONS['capture-tool-redact']}
+              id="capture-tool-redact"
+              variant={toolVariant(tool === 'redact')}
+              pressed={tool === 'redact'}
               disabled={!hasSelection || cropReason !== undefined}
               reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
-              onClick={() => onTool('pixelate')}
+              onClick={() => onTool('redact')}
             />
             <ToolbarIconButton
               spec={TOOLBAR_BUTTONS['capture-tool-eraser']}
@@ -1144,6 +1176,21 @@ export function CaptureViewport({
               onCommit={onStrokeCommit}
               onCancel={onStrokeCancel}
               resetKey={`${strokeEpoch}:${scrubTarget}`}
+            />
+          ) : null}
+          {options.includes('mode') ? (
+            <SegmentedControl
+              key="capture-redact-mode"
+              name="capture-redact-mode"
+              label="Redact mode"
+              testId="capture-redact-mode"
+              className="shrink-0"
+              size="sm"
+              value={redactMode}
+              options={REDACT_MODE_OPTIONS}
+              onValueChange={(value) => {
+                onRedactMode(value === 'pixelate' ? 'pixelate' : 'solid')
+              }}
             />
           ) : null}
           {options.includes('block') ? (

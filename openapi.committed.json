@@ -14,6 +14,7 @@
                   "highlight": "#/components/schemas/HighlightAnnotationIn",
                   "pixelate": "#/components/schemas/PixelateAnnotationIn",
                   "rect": "#/components/schemas/RectAnnotationIn",
+                  "redact": "#/components/schemas/RedactAnnotationIn",
                   "text": "#/components/schemas/TextAnnotationIn"
                 },
                 "propertyName": "type"
@@ -36,6 +37,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/EraserAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/RedactAnnotationIn"
                 }
               ]
             },
@@ -1013,6 +1017,7 @@
                   "highlight": "#/components/schemas/HighlightAnnotationIn",
                   "pixelate": "#/components/schemas/PixelateAnnotationIn",
                   "rect": "#/components/schemas/RectAnnotationIn",
+                  "redact": "#/components/schemas/RedactAnnotationIn",
                   "text": "#/components/schemas/TextAnnotationIn"
                 },
                 "propertyName": "type"
@@ -1035,6 +1040,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/EraserAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/RedactAnnotationIn"
                 }
               ]
             },
@@ -2978,6 +2986,50 @@
           "stroke_width"
         ],
         "title": "RectAnnotationIn",
+        "type": "object"
+      },
+      "RedactAnnotationIn": {
+        "additionalProperties": false,
+        "description": "Redact region (REDACT_API, D-682): the rectangle filled with one solid colour.",
+        "properties": {
+          "color": {
+            "default": "#000000",
+            "pattern": "^#[0-9A-Fa-f]{6}$|^(black|blue|green|orange|red|white|yellow)$",
+            "title": "Color",
+            "type": "string"
+          },
+          "height": {
+            "minimum": 0.0,
+            "title": "Height",
+            "type": "integer"
+          },
+          "type": {
+            "const": "redact",
+            "title": "Type",
+            "type": "string"
+          },
+          "width": {
+            "minimum": 0.0,
+            "title": "Width",
+            "type": "integer"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "title": "RedactAnnotationIn",
         "type": "object"
       },
       "ReorderIn": {

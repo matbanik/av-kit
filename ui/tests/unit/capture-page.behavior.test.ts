@@ -1442,27 +1442,32 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     ['capture-tool-box', 'Box'],
     ['capture-tool-highlight', 'Highlight'],
     ['capture-tool-text', 'Text'],
-    ['capture-tool-pixelate', 'Pixelate'],
-    ['capture-tool-eraser', 'Eraser'],
+    ['capture-tool-redact', 'Redact'],
+    ['capture-tool-eraser', 'Smart eraser'],
     ['capture-undo', 'Undo'],
     ['capture-redo', 'Redo'],
     ['capture-view-original', 'Original'],
     ['capture-view-annotated', 'Annotated'],
   ]
   // TA-2 (Session 43): Undo and Redo hints name their chord (HISTORY_HINTS); the aria-label stays the name.
-  const HINT_OVERRIDE: Record<string, string> = { 'capture-undo': 'Undo (Ctrl+Z)', 'capture-redo': 'Redo (Ctrl+Y)' }
+  // Session 68 SMART_ERASER (D-683): the eraser's tooltip reads the name, a colon and the hint.
+  const HINT_OVERRIDE: Record<string, string> = {
+    'capture-undo': 'Undo (Ctrl+Z)',
+    'capture-redo': 'Redo (Ctrl+Y)',
+    'capture-tool-eraser': 'Smart eraser: Covers an area with the surrounding colour',
+  }
   const MEU65_TOGGLES = [
     'capture-tool-select',
     'capture-tool-arrow',
     'capture-tool-box',
     'capture-tool-highlight',
     'capture-tool-text',
-    'capture-tool-pixelate',
+    'capture-tool-redact',
     'capture-tool-eraser',
     'capture-view-original',
     'capture-view-annotated',
   ]
-  const MEU65_OPTION_IDS: Record<'color' | 'stroke' | 'text' | 'block', string[]> = {
+  const MEU65_OPTION_IDS: Record<'color' | 'stroke' | 'text' | 'block' | 'mode', string[]> = {
     color: [
       'capture-color-well',
       'capture-color',
@@ -1473,12 +1478,14 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     stroke: ['capture-stroke'],
     text: ['capture-font-size', 'capture-text-bg', 'capture-text-bg-clear'],
     block: ['capture-block-size'],
+    // Session 68 MODE_GROUPS (D-680): the Redact mode control.
+    mode: ['capture-redact-mode'],
   }
 
-  function expectOptionGroups(groups: Array<'color' | 'stroke' | 'text' | 'block'>, label: string): void {
+  function expectOptionGroups(groups: Array<'color' | 'stroke' | 'text' | 'block' | 'mode'>, label: string): void {
     const tools = screen.getByTestId('capture-chrome-tools')
     const options = screen.getByTestId('capture-chrome-options')
-    for (const [group, ids] of Object.entries(MEU65_OPTION_IDS) as Array<['color' | 'stroke' | 'text' | 'block', string[]]>) {
+    for (const [group, ids] of Object.entries(MEU65_OPTION_IDS) as Array<['color' | 'stroke' | 'text' | 'block' | 'mode', string[]]>) {
       for (const id of ids) {
         const element = screen.queryByTestId(id)
         if (groups.includes(group)) {
@@ -1555,12 +1562,12 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
 
   it('AC-65.3 the options row renders exactly OPTIONS_BY_TOOL and the tools row holds no option control [TA-10]', async () => {
     await openSelectedSurface()
-    const cases: Array<[string, Array<'color' | 'stroke' | 'text' | 'block'>]> = [
+    const cases: Array<[string, Array<'color' | 'stroke' | 'text' | 'block' | 'mode'>]> = [
       ['capture-tool-select', ['color', 'stroke']],
       ['capture-tool-arrow', ['color', 'stroke']],
       ['capture-tool-box', ['color', 'stroke']],
       ['capture-tool-highlight', ['color']],
-      ['capture-tool-pixelate', ['block']],
+      ['capture-tool-redact', ['mode']],
       ['capture-tool-eraser', []],
       ['capture-tool-text', ['color', 'text']],
     ]
@@ -1625,9 +1632,12 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
 
   it('AC-90.10 a Pixelate drag makes one block-10 mark; Block size applies valid values as one undo step; select, move, Delete guard and Save REGION_DTO', async () => {
     const surface = await openSelectedSurface()
-    expect(screen.queryByTestId('capture-tool-pixelate')).not.toBeNull()
-    await user.click(screen.getByTestId('capture-tool-pixelate'))
-    expect(screen.getByTestId('capture-tool-pixelate').getAttribute('aria-pressed')).toBe('true')
+    // Session 68 (D-679, D-680): Pixelate is the Redact tool's second mode.
+    expect(screen.queryByTestId('capture-tool-redact')).not.toBeNull()
+    await user.click(screen.getByTestId('capture-tool-redact'))
+    expect(screen.getByTestId('capture-tool-redact').getAttribute('aria-pressed')).toBe('true')
+    expect(screen.queryByTestId('capture-redact-pixelate')).not.toBeNull()
+    await user.click(screen.getByTestId('capture-redact-pixelate'))
     const blockField = () => screen.getByTestId('capture-block-size') as HTMLInputElement
     expect(blockField().value).toBe('10')
     expect(blockField().getAttribute('aria-label')).toBe('Block size')
@@ -1690,7 +1700,9 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     const mark = pixelateRects()[0] as Element
     expect(mark.tagName.toLowerCase()).toBe('rect')
     expect(mark.getAttribute('fill')).toBe('none')
-    expect(mark.getAttribute('stroke')).toBe('none')
+    // Session 68 REDACT_OUTLINE (D-684, DEP-2): a pixelate is a redaction, so it draws a 1 px dashed outline.
+    expect(mark.getAttribute('stroke')).not.toBe('none')
+    expect(mark.getAttribute('stroke-dasharray')).not.toBeNull()
     expect(rectGeometry(mark)).toEqual([1, 1, 4, 3])
     // Negative: the mark is not drawn by the text branch.
     expect(document.querySelectorAll('[data-annotation-type="text"]')).toHaveLength(0)
@@ -1718,7 +1730,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     await drag(surface, 25, 25, 150, 125)
     expect(eraserRects()).toHaveLength(1)
     expect(rectGeometry(eraserRects()[0])).toEqual([1, 1, 5, 4])
-    const chip = () => within(screen.getByTestId('capture-mark-list')).getByRole('button', { name: 'Eraser 1' })
+    const chip = () => within(screen.getByTestId('capture-mark-list')).getByRole('button', { name: 'Smart eraser 1' })
     expect(chip().getAttribute('aria-pressed')).toBe('true')
     expectOptionGroups([], 'new eraser')
     expect(await saveBody()).toEqual({ annotations: [{ type: 'eraser', x: 1, y: 1, width: 5, height: 4 }] })
@@ -2963,12 +2975,12 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       })
     }
 
-    it('AC-100.6 dragging the se handle of a selected box, highlight, pixelate or eraser resizes it as one history step; Save carries it', async () => {
+    it('AC-100.6 dragging the se handle of a selected box, highlight, redact or eraser resizes it as one history step; Save carries it', async () => {
       const surface = await openSelectedSurface()
       const cases: Array<[string, string]> = [
         ['capture-tool-box', 'rect'],
         ['capture-tool-highlight', 'highlight'],
-        ['capture-tool-pixelate', 'pixelate'],
+        ['capture-tool-redact', 'redact'],
         ['capture-tool-eraser', 'eraser'],
       ]
       for (const [toolId, type] of cases) {
@@ -2987,7 +2999,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       expect(saved.annotations).toEqual([
         { type: 'rect', ...resized, color: expect.any(String), stroke_width: expect.any(Number) },
         { type: 'highlight', ...resized, color: expect.any(String), opacity: 0.35 },
-        { type: 'pixelate', ...resized, block_size: 10 },
+        { type: 'redact', ...resized, color: '#000000' },
         { type: 'eraser', ...resized },
       ])
     })

@@ -107,6 +107,10 @@ def _eraser(x: int, y: int, width: int, height: int) -> dict[str, object]:
     return {"type": "eraser", "x": x, "y": y, "width": width, "height": height}
 
 
+def _redact(x: int, y: int, width: int, height: int, color: str) -> dict[str, object]:
+    return {"type": "redact", "x": x, "y": y, "width": width, "height": height, "color": color}
+
+
 _Rgb = tuple[int, int, int]
 
 
@@ -182,6 +186,41 @@ def crop_cases() -> list[RegionCase]:
     ]
 
 
+def redact_cases() -> list[RegionCase]:
+    """The redact cases (MEU-103, D-685), appended last; their own seed keeps the others' bytes."""
+    rng = random.Random(REGION_SEED + 2)
+    return [
+        ("redact-interior", 16, 12, _noise(rng, 16, 12), [_redact(2, 1, 11, 8, "#000000")]),
+        ("redact-clipped", 16, 12, _noise(rng, 16, 12), [_redact(9, 6, 12, 10, "#FF0000")]),
+        ("redact-negative-origin", 16, 12, _noise(rng, 16, 12), [_redact(-3, 2, 9, 7, "#1a2B3c")]),
+        ("redact-named", 16, 12, _noise(rng, 16, 12), [_redact(4, 3, 7, 5, "orange")]),
+        # List order: a later pixelate averages the redact colour in; a later redact covers
+        # the mosaic.
+        (
+            "redact-then-pixelate",
+            32,
+            24,
+            _boundary_pattern(32, 24),
+            [_redact(4, 4, 12, 10, "#FFFFFF"), _pixelate(0, 0, 32, 24, 4)],
+        ),
+        (
+            "redact-over-pixelate",
+            32,
+            24,
+            _boundary_pattern(32, 24),
+            [_pixelate(0, 0, 32, 24, 4), _redact(4, 4, 12, 10, "blue")],
+        ),
+        # An eraser whose ring is mostly the redact colour fills with it.
+        (
+            "redact-then-eraser",
+            20,
+            14,
+            _stems_pattern(20, 14),
+            [_redact(4, 2, 9, 9, "green"), _eraser(6, 4, 5, 5)],
+        ),
+    ]
+
+
 def region_cases() -> list[RegionCase]:
     """``REGION_CASES`` inputs ``(name, width, height, pixels, marks)``; marks in wire form."""
     rng = random.Random(REGION_SEED)
@@ -219,6 +258,7 @@ def region_cases() -> list[RegionCase]:
             [_pixelate(0, 0, 32, 24, 3), _eraser(10, 7, 6, 5)],
         ),
         *crop_cases(),
+        *redact_cases(),
     ]
 
 

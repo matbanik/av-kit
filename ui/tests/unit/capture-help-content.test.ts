@@ -9,7 +9,8 @@ const HELP_EDIT_SENTENCE =
   'Select a mark to move it or drag an arrow end until Save. Arrow keys nudge the selected mark, or the arrow end you grabbed or tabbed to; Apply commits color.'
 const HISTORY_HELP_SENTENCE =
   'Ctrl+Z undoes and Ctrl+Y or Ctrl+Shift+Z redoes while the image has focus; a text field keeps its own undo.'
-const RESIZE_HELP_SENTENCE = 'Drag a square handle on a selected box, highlight, pixelate or eraser mark to resize it.'
+// Session 68 REDACT_HELP (D-686, DEP-3): the resize sentence names the redact mark.
+const RESIZE_HELP_SENTENCE = 'Drag a square handle on a selected box, highlight, redact, pixelate or eraser mark to resize it.'
 const TEXT_EDIT_HELP_SENTENCE =
   'Double-click a text mark, or press Enter with it selected, to edit its text; drag a corner of its plate to scale it.'
 
@@ -100,7 +101,8 @@ describe('MEU-91 help', () => {
     expect(section?.title).toBe('Annotation tools')
     // Negative: the old title is gone.
     expect(section?.title).not.toBe('four tools')
-    for (const tool of ['Arrow', 'Box', 'Highlight', 'Text', 'Pixelate', 'Eraser']) {
+    // Session 68 REDACT_HELP (D-686): Redact with its Pixelate mode, and the Smart eraser.
+    for (const tool of ['Arrow', 'Box', 'Highlight', 'Text', 'Redact', 'Pixelate', 'Smart eraser']) {
       expect(section?.body, tool).toContain(tool)
     }
   })

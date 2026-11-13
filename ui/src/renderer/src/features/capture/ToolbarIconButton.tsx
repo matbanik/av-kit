@@ -18,7 +18,8 @@ type ToolbarIconButtonProps = {
 
 /**
  * ICON_BUTTON: an `sm` button whose only child is its hidden 16 px lucide icon. The name is the aria-label and
- * the rendered Tooltip hint; there is no `title`.
+ * the rendered Tooltip hint; there is no `title`. SMART_ERASER: a spec's `hint` follows the name (and the
+ * shortcut) after a colon, unless a disabled reason is shown instead.
  */
 export function ToolbarIconButton({
   spec,
@@ -30,8 +31,10 @@ export function ToolbarIconButton({
   shortcut,
   onClick,
 }: ToolbarIconButtonProps) {
-  const { icon: Icon, name } = spec
-  const label = shortcut === undefined ? name : `${name} (${shortcut})`
+  const { icon: Icon, name, hint } = spec
+  const named = shortcut === undefined ? name : `${name} (${shortcut})`
+  const reasonShown = disabled && reason !== undefined && reason !== ''
+  const label = hint === undefined || reasonShown ? named : `${named}: ${hint}`
   return (
     <Tooltip id={id} label={label} reason={reason} disabled={disabled}>
       <Button

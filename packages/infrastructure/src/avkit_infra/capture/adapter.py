@@ -34,6 +34,7 @@ from avkit_core.domain.capture import (
     ImageProbe,
     PixelateAnnotation,
     RectAnnotation,
+    RedactAnnotation,
     TextAnnotation,
     ViewFrame,
 )
@@ -197,7 +198,7 @@ def _draw_sheet_label(cell: Image.Image, label: str) -> None:
 
 
 def region_clip(
-    annotation: PixelateAnnotation | EraserAnnotation, width: int, height: int
+    annotation: PixelateAnnotation | EraserAnnotation | RedactAnnotation, width: int, height: int
 ) -> tuple[int, int, int, int] | None:
     """``REGION_RECT``: ``[x, x + width) x [y, y + height)`` within the image, else ``None``."""
     x0 = max(0, annotation.x)
@@ -266,6 +267,15 @@ def _apply_eraser(canvas: Image.Image, annotation: EraserAnnotation) -> Image.Im
     return canvas
 
 
+def _apply_redact(canvas: Image.Image, annotation: RedactAnnotation) -> Image.Image:
+    # REDACT_BAKE: the clipped rectangle becomes the mark's colour at alpha 255.
+    box = region_clip(annotation, canvas.width, canvas.height)
+    if box is None:
+        return canvas
+    canvas.paste((*_color_rgb(annotation.color), 255), box)
+    return canvas
+
+
 def apply_region_pass(canvas: Image.Image, annotations: Sequence[Annotation]) -> Image.Image:
     """``REGION_PASS`` step 1: every region mark in list order; drawn marks are skipped."""
     for annotation in annotations:
@@ -273,6 +283,8 @@ def apply_region_pass(canvas: Image.Image, annotations: Sequence[Annotation]) ->
             canvas = _apply_pixelate(canvas, annotation)
         elif isinstance(annotation, EraserAnnotation):
             canvas = _apply_eraser(canvas, annotation)
+        elif isinstance(annotation, RedactAnnotation):
+            canvas = _apply_redact(canvas, annotation)
     return canvas
 
 
@@ -766,7 +778,7 @@ class CaptureAdapter:
         )
 
     def _apply(self, canvas: Image.Image, annotation: Annotation) -> Image.Image:
-        if isinstance(annotation, (PixelateAnnotation, EraserAnnotation)):
+        if isinstance(annotation, (PixelateAnnotation, EraserAnnotation, RedactAnnotation)):
             return canvas  # applied by apply_region_pass before the drawn marks
         if isinstance(annotation, HighlightAnnotation):
             return self._apply_highlight(canvas, annotation)

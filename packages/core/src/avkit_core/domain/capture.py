@@ -409,6 +409,31 @@ class EraserAnnotation:
             raise AnnotationValidationError("eraser size must not be negative")
 
 
+@dataclass(frozen=True)
+class RedactAnnotation:
+    """Region mark (``REDACT_TYPE``, D-679): the rectangle filled with one solid colour."""
+
+    x: int
+    y: int
+    width: int
+    height: int
+    color: str = "#000000"
+
+    def __post_init__(self) -> None:
+        _require_int(self.x, "x")
+        _require_int(self.y, "y")
+        _require_int(self.width, "width")
+        _require_int(self.height, "height")
+        if self.width < 0 or self.height < 0:
+            raise AnnotationValidationError("redact size must not be negative")
+        try:
+            color = _require_color(self.color, "color")
+        except ValidationError as exc:
+            # A non-str or empty colour is an annotation error like any other bad colour.
+            raise AnnotationValidationError(str(exc)) from exc
+        object.__setattr__(self, "color", color)
+
+
 Annotation = (
     ArrowAnnotation
     | RectAnnotation
@@ -416,6 +441,7 @@ Annotation = (
     | TextAnnotation
     | PixelateAnnotation
     | EraserAnnotation
+    | RedactAnnotation
 )
 
 MarkCarry = Literal["kept", "clipped", "dropped"]
@@ -441,6 +467,8 @@ def clip_mark(
             return _clip_half_open(mark, left, top, width, height)
         case EraserAnnotation():
             return _clip_half_open(mark, left, top, width, height)
+        case RedactAnnotation():
+            return _clip_half_open(mark, left, top, width, height)
         case TextAnnotation():
             return _clip_text(mark, left, top, width, height)
         case _:
@@ -448,14 +476,18 @@ def clip_mark(
 
 
 _HalfOpenMark = TypeVar(
-    "_HalfOpenMark", HighlightAnnotation, PixelateAnnotation, EraserAnnotation
+    "_HalfOpenMark",
+    HighlightAnnotation,
+    PixelateAnnotation,
+    EraserAnnotation,
+    RedactAnnotation,
 )
 
 
 def _clip_half_open(
     mark: _HalfOpenMark, left: int, top: int, width: int, height: int
 ) -> tuple[_HalfOpenMark | None, MarkCarry]:
-    """MARK_CLIP_BOX: highlight, pixelate and eraser cover `[x, x+w) x [y, y+h)` (D-486)."""
+    """MARK_CLIP_BOX: highlight, pixelate, eraser and redact cover `[x, x+w) x [y, y+h)` (D-486)."""
     x0, y0 = mark.x - left, mark.y - top
     x1, y1 = x0 + mark.width, y0 + mark.height
     if mark.width == 0 or mark.height == 0:
@@ -647,6 +679,7 @@ __all__ = (
     "REGION_MAX_EDGE_MIN",
     "REGION_UPSCALE_MAX",
     "RectAnnotation",
+    "RedactAnnotation",
     "RegionUnit",
     "TextAnnotation",
     "ViewFrame",

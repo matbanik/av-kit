@@ -40,6 +40,7 @@ from avkit_core.domain.capture import (
     ImageProbe,
     PixelateAnnotation,
     RectAnnotation,
+    RedactAnnotation,
     RegionUnit,
     TextAnnotation,
     ViewFrame,
@@ -401,6 +402,18 @@ def _annotation_from_wire(item: object) -> Annotation:
                 width=item["width"],
                 height=item["height"],
             )
+        if kind == AnnotationType.Redact.to_wire():
+            # REDACT_WIRE (D-682): exactly these keys; the sidecar always carries the colour.
+            extra = sorted(set(item) - set(("type", "x", "y", "width", "height", "color")))
+            if extra:
+                raise AnnotationValidationError(f"unexpected redact field(s): {extra}")
+            return RedactAnnotation(
+                x=item["x"],
+                y=item["y"],
+                width=item["width"],
+                height=item["height"],
+                color=item["color"],
+            )
     except KeyError as exc:
         raise AnnotationValidationError(f"missing annotation field: {exc}") from exc
     raise AnnotationValidationError(f"unsupported annotation type: {kind!r}")
@@ -481,6 +494,15 @@ def _annotation_to_wire(annotation: Annotation) -> dict[str, object]:
             "y": annotation.y,
             "width": annotation.width,
             "height": annotation.height,
+        }
+    if isinstance(annotation, RedactAnnotation):
+        return {
+            "type": AnnotationType.Redact.to_wire(),
+            "x": annotation.x,
+            "y": annotation.y,
+            "width": annotation.width,
+            "height": annotation.height,
+            "color": annotation.color,
         }
     raise AnnotationValidationError(f"unsupported annotation type: {type(annotation)!r}")
 
@@ -2115,7 +2137,14 @@ class CaptureService:
                 ),
             )
         if isinstance(
-            annotation, (RectAnnotation, HighlightAnnotation, PixelateAnnotation, EraserAnnotation)
+            annotation,
+            (
+                RectAnnotation,
+                HighlightAnnotation,
+                PixelateAnnotation,
+                EraserAnnotation,
+                RedactAnnotation,
+            ),
         ):
             return replace(
                 annotation,

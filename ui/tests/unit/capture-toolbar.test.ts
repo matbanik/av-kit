@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { Lock } from 'lucide-react'
-import { Eraser, Grid3x3 } from 'lucide-react'
+import { Eraser, EyeOff } from 'lucide-react'
 import { describe, expect, it } from 'vitest'
 
 import type { Annotation } from '../../src/renderer/src/features/capture/capture-annotate'
@@ -15,15 +15,20 @@ import {
   type OptionGroup,
   type ToolbarButtonSpec,
 } from '../../src/renderer/src/features/capture/capture-toolbar'
+import type { RedactMode } from '../../src/renderer/src/features/capture/capture-annotate'
 import type { CaptureTool } from '../../src/renderer/src/features/capture/CaptureViewport'
 
 const ui = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const captureDir = resolve(ui, 'src/renderer/src/features/capture')
 
-// TA-2 (Session 39): + pixelate, eraser. MEU-131: + crop.
-const TOOLS: CaptureTool[] = ['select', 'arrow', 'box', 'highlight', 'text', 'pixelate', 'eraser', 'crop']
+// TA-2 (Session 39): + pixelate, eraser. MEU-131: + crop. Session 68 (D-679): redact takes pixelate's slot.
+const TOOLS: CaptureTool[] = ['select', 'arrow', 'box', 'highlight', 'text', 'redact', 'eraser', 'crop']
+const MODES = ['solid', 'pixelate'] as const
 
-const MARKS: Record<'none' | 'arrow' | 'rect' | 'highlight' | 'text' | 'pixelate' | 'eraser', Annotation | null> = {
+const MARKS: Record<
+  'none' | 'arrow' | 'rect' | 'highlight' | 'text' | 'pixelate' | 'eraser' | 'redact',
+  Annotation | null
+> = {
   none: null,
   arrow: { type: 'arrow', color: '#FF0000', stroke_width: 3, from: [1, 1], to: [6, 6] },
   rect: { type: 'rect', x: 1, y: 1, width: 4, height: 4, color: '#FF0000', stroke_width: 3 },
@@ -31,17 +36,24 @@ const MARKS: Record<'none' | 'arrow' | 'rect' | 'highlight' | 'text' | 'pixelate
   text: { type: 'text', x: 1, y: 1, text: 'Hi', color: '#FF0000', font_size: 16 },
   pixelate: { type: 'pixelate', x: 1, y: 1, width: 4, height: 4, block_size: 10 },
   eraser: { type: 'eraser', x: 1, y: 1, width: 4, height: 4 },
+  redact: { type: 'redact', x: 1, y: 1, width: 4, height: 4, color: '#000000' },
 }
 
-/** OPTIONS_BY_TOOL, restated independently of the implementation (plan §Single-statement contracts). */
-function expectedGroups(tool: CaptureTool, selected: Annotation | null): OptionGroup[] {
+/** OPTIONS_BY_TOOL with MODE_GROUPS (Session 68 D-680), restated independently of the implementation. */
+function expectedGroups(tool: CaptureTool, selected: Annotation | null, mode: RedactMode = 'solid'): OptionGroup[] {
   // CROP_ENTRY (MEU-131): the crop has no option group, whatever mark is selected.
   if (tool === 'crop') {
     return []
   }
-  // OPTIONS_BY_TOOL_V2 (Session 39): the leading region rule.
-  if (tool === 'pixelate' || selected?.type === 'pixelate') {
-    return ['block']
+  // MODE_GROUPS: a selected redaction mark shows its mode; a pixelate also its block size.
+  if (selected?.type === 'redact') {
+    return ['mode']
+  }
+  if (selected?.type === 'pixelate') {
+    return ['mode', 'block']
+  }
+  if (tool === 'redact' && selected === null) {
+    return mode === 'pixelate' ? ['mode', 'block'] : ['mode']
   }
   if (tool === 'eraser' || selected?.type === 'eraser') {
     return []
@@ -84,8 +96,8 @@ describe('MEU-65 capture toolbar table and options rule', () => {
       'capture-tool-box': 'Box',
       'capture-tool-highlight': 'Highlight',
       'capture-tool-text': 'Text',
-      'capture-tool-pixelate': 'Pixelate',
-      'capture-tool-eraser': 'Eraser',
+      'capture-tool-redact': 'Redact',
+      'capture-tool-eraser': 'Smart eraser',
       'capture-undo': 'Undo',
       'capture-redo': 'Redo',
       'capture-view-original': 'Original',
@@ -93,20 +105,24 @@ describe('MEU-65 capture toolbar table and options rule', () => {
     })
   })
 
-  it('AC-65.1 optionGroups implements OPTIONS_BY_TOOL for every tool and selection', () => {
+  it('AC-65.1 optionGroups implements OPTIONS_BY_TOOL for every tool, selection and redact mode', () => {
     expect(typeof optionGroups).toBe('function')
-    for (const tool of TOOLS) {
-      for (const [kind, mark] of Object.entries(MARKS)) {
-        const got = [...optionGroups(tool, mark)].sort()
-        expect(got, `${tool} × ${kind}`).toEqual(expectedGroups(tool, mark).sort())
-        const regionCase =
-          tool === 'pixelate' ||
-          mark?.type === 'pixelate' ||
-          tool === 'eraser' ||
-          mark?.type === 'eraser' ||
-          tool === 'crop'
-        expect(got.includes('color'), `${tool} × ${kind} color`).toBe(!regionCase)
-        expect(got.includes('text') && got.includes('stroke'), `${tool} × ${kind} text+stroke`).toBe(false)
+    for (const mode of MODES) {
+      for (const tool of TOOLS) {
+        for (const [kind, mark] of Object.entries(MARKS)) {
+          const where = `${tool} × ${kind} × ${mode}`
+          const got = [...optionGroups(tool, mark, mode)].sort()
+          expect(got, where).toEqual(expectedGroups(tool, mark, mode).sort())
+          const regionCase =
+            (tool === 'redact' && mark === null) ||
+            mark?.type === 'redact' ||
+            mark?.type === 'pixelate' ||
+            tool === 'eraser' ||
+            mark?.type === 'eraser' ||
+            tool === 'crop'
+          expect(got.includes('color'), `${where} color`).toBe(!regionCase)
+          expect(got.includes('text') && got.includes('stroke'), `${where} text+stroke`).toBe(false)
+        }
       }
     }
   })
@@ -158,7 +174,7 @@ describe('MEU-87 tool lock entry (TOOL_LOCK)', () => {
       'crop',
       'eraser',
       'highlight',
-      'pixelate',
+      'redact',
       'select',
       'text',
     ])
@@ -166,39 +182,39 @@ describe('MEU-87 tool lock entry (TOOL_LOCK)', () => {
 })
 
 describe('MEU-90 pixelate tool', () => {
-  it('AC-90.9 the Pixelate tool has its id, the Grid3x3 icon and the name; optionGroups gives block for it and a selected pixelate', () => {
-    expect(TOOL_BUTTON_IDS.pixelate).toBe('capture-tool-pixelate')
-    const entry = TOOLBAR_BUTTONS['capture-tool-pixelate']
-    expect(entry?.name).toBe('Pixelate')
-    expect(entry?.icon).toBe(Grid3x3)
-    expect(optionGroups('pixelate', null)).toEqual(['block'])
+  // Session 68 (D-679, D-680): Pixelate is the Redact tool's second mode; the Pixelate button is gone.
+  it('AC-90.9 Pixelate is the Redact tool mode with the EyeOff icon; optionGroups gives mode and block for it and a selected pixelate', () => {
+    expect(TOOL_BUTTON_IDS.redact).toBe('capture-tool-redact')
+    expect(Object.keys(TOOLBAR_BUTTONS)).not.toContain('capture-tool-pixelate')
+    const entry = TOOLBAR_BUTTONS['capture-tool-redact']
+    expect(entry?.name).toBe('Redact')
+    expect(entry?.icon).toBe(EyeOff)
+    expect(optionGroups('redact', null, 'pixelate')).toEqual(['mode', 'block'])
     // Negative: not the Session 34 fallthrough for an unknown tool.
-    expect(optionGroups('pixelate', null)).not.toEqual(['color', 'stroke'])
+    expect(optionGroups('redact', null, 'pixelate')).not.toEqual(['color', 'stroke'])
     // CROP_ENTRY (MEU-131): the crop's leading rule wins over a selected pixelate.
     for (const tool of TOOLS.filter((t) => t !== 'crop')) {
-      expect(optionGroups(tool, MARKS.pixelate), `${tool} × selected pixelate`).toEqual(['block'])
+      expect(optionGroups(tool, MARKS.pixelate), `${tool} × selected pixelate`).toEqual(['mode', 'block'])
     }
     expect(optionGroups('crop', MARKS.pixelate)).toEqual([])
-    for (const kind of ['arrow', 'rect', 'highlight', 'text'] as const) {
-      expect(optionGroups('pixelate', MARKS[kind]), `pixelate × ${kind}`).toEqual(['block'])
-    }
   })
 })
 
 describe('MEU-91 eraser tool', () => {
-  it('AC-91.8 the Eraser tool has its id, the Eraser icon and the name; optionGroups gives no group for it and a selected eraser', () => {
+  it('AC-91.8 the Smart eraser tool has its id, the Eraser icon, the name and hint; optionGroups gives no group for it and a selected eraser', () => {
     expect(TOOL_BUTTON_IDS.eraser).toBe('capture-tool-eraser')
-    const entry = TOOLBAR_BUTTONS['capture-tool-eraser']
-    expect(entry?.name).toBe('Eraser')
+    const entry = TOOLBAR_BUTTONS['capture-tool-eraser'] as ToolbarButtonSpec & { hint?: string }
+    // Session 68 SMART_ERASER (D-683): the GUI name changes; the JSON type stays eraser.
+    expect(entry?.name).toBe('Smart eraser')
+    expect(entry?.hint).toBe('Covers an area with the surrounding colour')
     expect(entry?.icon).toBe(Eraser)
     expect(optionGroups('eraser', null)).toEqual([])
     // Negative: not the fallthrough color group.
     expect(optionGroups('eraser', null)).not.toEqual(['color'])
-    for (const tool of TOOLS.filter((item) => item !== 'pixelate')) {
+    // MODE_GROUPS: the Redact tool's rule needs nothing selected, so a selected eraser gives no group under every tool.
+    for (const tool of TOOLS) {
       expect(optionGroups(tool, MARKS.eraser), `${tool} × selected eraser`).toEqual([])
     }
-    // OPTIONS_BY_TOOL_V2 order: the pixelate rule is first, so the Pixelate tool keeps Block size.
-    expect(optionGroups('pixelate', MARKS.eraser)).toEqual(['block'])
     for (const kind of ['arrow', 'rect', 'highlight', 'text'] as const) {
       expect(optionGroups('eraser', MARKS[kind]), `eraser × ${kind}`).toEqual([])
     }

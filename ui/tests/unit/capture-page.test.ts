@@ -271,7 +271,9 @@ describe('MEU-39 capture gui', () => {
     expect(viewport).toContain('capture-tool-box')
     expect(viewport).toContain('capture-tool-highlight')
     expect(viewport).toContain('capture-tool-text')
-    expect(viewport).toContain('capture-tool-pixelate')
+    // Session 68 (D-679): Redact takes the Pixelate button's slot.
+    expect(viewport).toContain('capture-tool-redact')
+    expect(viewport).not.toContain('capture-tool-pixelate')
     expect(viewport).toContain('capture-tool-eraser')
     expect(viewport).toContain('capture-undo')
     expect(viewport).toContain('capture-redo')

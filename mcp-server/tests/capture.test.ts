@@ -1591,3 +1591,54 @@ describe("MEU-136 capture export", () => {
     expect(parsed).toEqual(EXPORT_BODY);
   });
 });
+
+// MEU-103 capture-redact-mark (Session 68): REDACT_MCP (D-682).
+describe("MEU-103 avkit_capture redact", () => {
+  it("AC-103.13 annotate forwards a redact with and without color unchanged; bad fields are zod errors", async () => {
+    const capture = await import("../src/toolsets/capture.js");
+    expect(typeof capture.captureSchema.safeParse).toBe("function");
+    const plain = { type: "redact", x: 2, y: 3, width: 20, height: 10 };
+    const coloured = { ...plain, x: 40, color: "#FF0000" };
+    // The server's 422 decides the colour, so an odd colour string is still forwarded.
+    const odd = { ...plain, x: 60, color: "#000" };
+    const body = { action: "annotate", id: "s1", annotations: [plain, coloured, odd] };
+    expect(capture.captureSchema.safeParse(body).success).toBe(true);
+    const appData = tempAppData();
+    temps.push(appData);
+    const calls: { url: string; method?: string; body: unknown }[] = [];
+    const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+      calls.push({
+        url: String(url),
+        method: init?.method,
+        body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+      });
+      return okJson(SHOT_ITEM);
+    });
+    const deps = { env: toolEnv(appData), fetchImpl: fetchImpl as unknown as typeof fetch };
+    const result = await handleTool("avkit_capture", body, deps);
+    expect(result.isError).not.toBe(true);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.method).toBe("POST");
+    expect(calls[0]?.url.endsWith("/captures/s1/annotate")).toBe(true);
+    expect(calls[0]?.body).toEqual({ annotations: [plain, coloured, odd] });
+
+    const refusedCases: [string, Record<string, unknown>][] = [
+      ["extra-block-size", { ...plain, block_size: 10 }],
+      ["extra-note", { ...plain, note: "x" }],
+      ["neg-width", { ...plain, width: -1 }],
+      ["neg-height", { ...plain, height: -1 }],
+      ["float-x", { ...plain, x: 1.5 }],
+      ["str-y", { ...plain, y: "1" }],
+      ["non-str-color", { ...plain, color: 5 }],
+      ["blur-type", { ...plain, type: "blur" }],
+    ];
+    for (const [name, bad] of refusedCases) {
+      const badBody = { ...body, annotations: [bad] };
+      expect(capture.captureSchema.safeParse(badBody).success, name).toBe(false);
+      const before = calls.length;
+      const refused = await handleTool("avkit_capture", badBody, deps);
+      expect(refused.isError, name).toBe(true);
+      expect(calls.length, `${name} reached the backend`).toBe(before);
+    }
+  });
+});

@@ -5,8 +5,8 @@ import {
   Delete,
   Eraser,
   ExternalLink,
+  EyeOff,
   FolderOpen,
-  Grid3x3,
   Highlighter,
   Image as ImageIcon,
   Layers,
@@ -26,13 +26,15 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 
-import type { Annotation } from './capture-annotate'
+import type { Annotation, RedactMode } from './capture-annotate'
 import type { CaptureTool } from './CaptureViewport'
 
 /** One icon button of the Capture tools row: its lucide icon and accessible name (TOOLBAR_BUTTONS). */
 export type ToolbarButtonSpec = {
   readonly icon: LucideIcon
   readonly name: string
+  /** SMART_ERASER (D-683): what the tool does; the tooltip shows it after the name and a colon. */
+  readonly hint?: string
 }
 
 /**
@@ -45,8 +47,9 @@ export const TOOLBAR_BUTTONS = {
   'capture-tool-box': { icon: Square, name: 'Box' },
   'capture-tool-highlight': { icon: Highlighter, name: 'Highlight' },
   'capture-tool-text': { icon: Type, name: 'Text' },
-  'capture-tool-pixelate': { icon: Grid3x3, name: 'Pixelate' },
-  'capture-tool-eraser': { icon: Eraser, name: 'Eraser' },
+  // REDACT_TOOL (D-679): Redact takes the Pixelate button's slot; Pixelate is its second mode.
+  'capture-tool-redact': { icon: EyeOff, name: 'Redact' },
+  'capture-tool-eraser': { icon: Eraser, name: 'Smart eraser', hint: 'Covers an area with the surrounding colour' },
   // TOOL_LOCK (MEU-87): a toggle, not a tool, so it is not in TOOL_BUTTON_IDS.
   'capture-tool-lock': { icon: Lock, name: 'Keep tool after drawing' },
   // CROP_ENTRY (MEU-131): a tool, after the lock in the row.
@@ -93,13 +96,13 @@ export const TOOL_BUTTON_IDS: Readonly<Record<CaptureTool, ToolbarButtonId>> = {
   box: 'capture-tool-box',
   highlight: 'capture-tool-highlight',
   text: 'capture-tool-text',
-  pixelate: 'capture-tool-pixelate',
+  redact: 'capture-tool-redact',
   eraser: 'capture-tool-eraser',
   crop: 'capture-tool-crop',
 }
 
 /** The option groups the contextual options row can show (OPTIONS_BY_TOOL, OPTIONS_BY_TOOL_V2). */
-export type OptionGroup = 'color' | 'stroke' | 'text' | 'block'
+export type OptionGroup = 'color' | 'stroke' | 'text' | 'block' | 'mode'
 
 function assertNever(value: never): never {
   throw new Error(`Unhandled capture tool: ${String(value)}`)
@@ -115,7 +118,7 @@ function strokeApplies(tool: CaptureTool, selected: Annotation | null): boolean 
       return selected === null || selected.type === 'arrow' || selected.type === 'rect'
     case 'highlight':
     case 'text':
-    case 'pixelate':
+    case 'redact':
     case 'eraser':
     case 'crop':
       return false
@@ -125,17 +128,28 @@ function strokeApplies(tool: CaptureTool, selected: Annotation | null): boolean 
 }
 
 /**
- * OPTIONS_BY_TOOL_V2: the option groups for the active tool and the selected mark, first rule that
- * matches. The crop has no option group (MEU-131 CROP_ENTRY); a pixelate (tool or selected mark) has
- * only its block size; an eraser has no option at all;
+ * MODE_GROUPS (D-680, after OPTIONS_BY_TOOL_V2): the option groups for the active tool, the selected mark
+ * and the Redact mode, first rule that matches. The crop has no option group (MEU-131 CROP_ENTRY); a
+ * selected redact has the mode; a selected pixelate has the mode and its block size; the Redact tool
+ * with nothing selected has the mode, and the block size under Pixelate; an eraser has no option at all;
  * otherwise color is present and text options win over stroke, so the two are never shown together.
  */
-export function optionGroups(tool: CaptureTool, selected: Annotation | null): readonly OptionGroup[] {
+export function optionGroups(
+  tool: CaptureTool,
+  selected: Annotation | null,
+  mode: RedactMode = 'solid',
+): readonly OptionGroup[] {
   if (tool === 'crop') {
     return []
   }
-  if (tool === 'pixelate' || selected?.type === 'pixelate') {
-    return ['block']
+  if (selected?.type === 'redact') {
+    return ['mode']
+  }
+  if (selected?.type === 'pixelate') {
+    return ['mode', 'block']
+  }
+  if (tool === 'redact' && selected === null) {
+    return mode === 'pixelate' ? ['mode', 'block'] : ['mode']
   }
   if (tool === 'eraser' || selected?.type === 'eraser') {
     return []

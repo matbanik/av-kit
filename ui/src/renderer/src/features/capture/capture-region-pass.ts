@@ -1,4 +1,5 @@
 import type { Annotation } from './capture-annotate'
+import { displayHex } from './capture-color'
 
 /** PIXELATE_BLOCK (Session 39, MEU-90): the pixelate mark's block edge in pixels; parity with the API. */
 export const PIXELATE_BLOCK_MIN = 2
@@ -6,13 +7,13 @@ export const PIXELATE_BLOCK_MAX = 100
 export const PIXELATE_BLOCK_DEFAULT = 10
 
 /** A mark that changes the pixels under its rectangle (REGION_PASS step 1) instead of painting over them. */
-export type RegionMark = Extract<Annotation, { type: 'pixelate' | 'eraser' }>
+export type RegionMark = Extract<Annotation, { type: 'pixelate' | 'eraser' | 'redact' }>
 
 /** A clipped rectangle, half-open: `[x0, x1) x [y0, y1)`. */
 export type RegionBox = { x0: number; y0: number; x1: number; y1: number }
 
 export function isRegionMark(mark: Annotation): mark is RegionMark {
-  return mark.type === 'pixelate' || mark.type === 'eraser'
+  return mark.type === 'pixelate' || mark.type === 'eraser' || mark.type === 'redact'
 }
 
 /** REGION_RECT: `[x, x + width) x [y, y + height)` within the image, or null when nothing is left (or a drawn mark). */
@@ -104,7 +105,7 @@ export function eraserFill(rgba: Uint8ClampedArray, width: number, height: numbe
   return [(best >> 16) & 255, (best >> 8) & 255, best & 255]
 }
 
-/** The eraser fill: the clipped rectangle becomes one opaque colour. */
+/** The eraser and redact fill: the clipped rectangle becomes one opaque colour. */
 function erase(rgba: Uint8ClampedArray, width: number, box: RegionBox, fill: [number, number, number]): void {
   for (let y = box.y0; y < box.y1; y += 1) {
     for (let x = box.x0; x < box.x1; x += 1) {
@@ -115,6 +116,13 @@ function erase(rgba: Uint8ClampedArray, width: number, box: RegionBox, fill: [nu
       rgba[i + 3] = 255
     }
   }
+}
+
+/** REDACT_PREVIEW: the mark's colour as RGB, through `displayHex` as the bake reads a named colour. */
+function redactFill(color: string): [number, number, number] {
+  const hex = displayHex(color)
+  const channel = (offset: number): number => Number.parseInt(hex.slice(offset, offset + 2), 16) || 0
+  return [channel(1), channel(3), channel(5)]
 }
 
 /**
@@ -132,6 +140,8 @@ export function applyRegionPass(rgba: Uint8ClampedArray, width: number, height: 
     }
     if (mark.type === 'pixelate') {
       pixelate(rgba, width, box, mark.block_size)
+    } else if (mark.type === 'redact') {
+      erase(rgba, width, box, redactFill(mark.color))
     } else {
       erase(rgba, width, box, eraserFill(rgba, width, height, box))
     }

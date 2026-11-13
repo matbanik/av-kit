@@ -242,7 +242,8 @@ describe('MEU-91 eraser hit-test (REGION_EDIT)', () => {
   it('AC-91.9 markLabel names an eraser; a click inside its rectangle hits the body; translateBody keeps size', async () => {
     const mod = await import('../../src/renderer/src/features/capture/capture-hit-test')
     const eraser: Annotation = { type: 'eraser', x: 10, y: 10, width: 60, height: 40 }
-    expect(mod.markLabel(eraser, 0)).toBe('Eraser 1')
+    // Session 68 SMART_ERASER (D-683): the chip names the Smart eraser; the JSON type stays eraser.
+    expect(mod.markLabel(eraser, 0)).toBe('Smart eraser 1')
     const at = (cssX: number, cssY: number, annotations: Annotation[]) =>
       mod.hitTestMarks({
         cssX,

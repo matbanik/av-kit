@@ -78,16 +78,42 @@ const eraserSchema = z
   })
   .strict()
 
+/** REDACT_TYPE (D-679): a solid box over a region; the GUI always sends its colour (`#000000`). */
+const redactSchema = z
+  .object({
+    type: z.literal('redact'),
+    x: z.number().int(),
+    y: z.number().int(),
+    width: z.number().int(),
+    height: z.number().int(),
+    color: colorSchema,
+  })
+  .strict()
+
 export const annotateInSchema = z
   .object({
     annotations: z.array(
-      z.discriminatedUnion('type', [arrowSchema, rectSchema, highlightSchema, textSchema, pixelateSchema, eraserSchema]),
+      z.discriminatedUnion('type', [
+        arrowSchema,
+        rectSchema,
+        highlightSchema,
+        textSchema,
+        pixelateSchema,
+        eraserSchema,
+        redactSchema,
+      ]),
     ),
   })
   .strict()
 
 export type AnnotateBody = z.infer<typeof annotateInSchema>
 export type Annotation = AnnotateBody['annotations'][number]
+
+/** REDACT_TYPE (D-679): a solid box over a region. */
+export type RedactAnnotation = Extract<Annotation, { type: 'redact' }>
+
+/** REDACT_MODE (D-680): what the Redact tool draws. */
+export type RedactMode = 'solid' | 'pixelate'
 
 export function parseAnnotateBody(input: unknown): AnnotateBody | null {
   const parsed = annotateInSchema.safeParse(input)

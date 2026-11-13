@@ -169,7 +169,7 @@ function hitBody(mark: Annotation, input: HitTestInput): boolean {
   const w = mark.width * input.scale
   const h = mark.height * input.scale
   // REGION_EDIT: a region mark is a filled body, like a highlight.
-  if (mark.type === 'highlight' || mark.type === 'pixelate' || mark.type === 'eraser') {
+  if (mark.type === 'highlight' || mark.type === 'pixelate' || mark.type === 'eraser' || mark.type === 'redact') {
     return inPaddedRect(input.cssX, input.cssY, origin.x, origin.y, w, h, HIT_PADDING_CSS)
   }
   return distToRectOutline(input.cssX, input.cssY, origin.x, origin.y, w, h) <= Math.max(HIT_RADIUS_CSS, HIT_PADDING_CSS)
@@ -324,8 +324,12 @@ export function markLabel(mark: Annotation, index: number): string {
   if (mark.type === 'pixelate') {
     return `Pixelate ${index + 1}`
   }
+  if (mark.type === 'redact') {
+    return `Redact ${index + 1}`
+  }
+  // SMART_ERASER (D-683): the chip names the Smart eraser; the JSON type stays eraser.
   if (mark.type === 'eraser') {
-    return `Eraser ${index + 1}`
+    return `Smart eraser ${index + 1}`
   }
   return `Text ${index + 1}`
 }

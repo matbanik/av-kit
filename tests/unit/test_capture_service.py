@@ -1199,13 +1199,15 @@ def test_ac_130_5_carry_is_a_fixed_point_of_the_clamp(ac_id: str, tmp_path: Path
         HighlightAnnotation,
         PixelateAnnotation,
         RectAnnotation,
+        RedactAnnotation,
         TextAnnotation,
         clip_mark,
     )
 
     service, _uow, _port, _inbox = _stack(tmp_path)
     rng = random.Random(130)
-    kinds = ("arrow", "rect", "highlight", "text", "pixelate", "eraser")
+    # Session 68 (AC-103.5): + redact.
+    kinds = ("arrow", "rect", "highlight", "text", "pixelate", "eraser", "redact")
     counts: Counter[str] = Counter()
     by_kind: Counter[tuple[str, str]] = Counter()
     moved_by_clamp: list[tuple[int, str]] = []
@@ -1231,8 +1233,10 @@ def test_ac_130_5_carry_is_a_fixed_point_of_the_clamp(ac_id: str, tmp_path: Path
             mark = TextAnnotation(x=x, y=y, text="note", color="white", font_size=18, bg_color=None)
         elif kind == "pixelate":
             mark = PixelateAnnotation(x=x, y=y, width=w, height=h, block_size=rng.randint(2, 100))
-        else:
+        elif kind == "eraser":
             mark = EraserAnnotation(x=x, y=y, width=w, height=h)
+        else:
+            mark = RedactAnnotation(x=x, y=y, width=w, height=h, color="#FF0000")
         before = copy.deepcopy(mark)
         out, carry = clip_mark(mark, left, top, width, height)
         assert mark == before

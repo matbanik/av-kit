@@ -179,6 +179,18 @@ const eraserAnn = z
   })
   .strict();
 
+/** REDACT_MCP (D-682): forwarded unchanged; the server's 422 decides the colour. */
+const redactAnn = z
+  .object({
+    type: z.literal("redact"),
+    x: z.number().int(),
+    y: z.number().int(),
+    width: z.number().int().nonnegative(),
+    height: z.number().int().nonnegative(),
+    color: z.string().optional(),
+  })
+  .strict();
+
 const annotation = z.discriminatedUnion("type", [
   arrowAnn,
   rectAnn,
@@ -186,6 +198,7 @@ const annotation = z.discriminatedUnion("type", [
   textAnn,
   pixelateAnn,
   eraserAnn,
+  redactAnn,
 ]);
 
 const captureFullscreen = withDesc(

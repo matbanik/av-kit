@@ -46,6 +46,7 @@ from avkit_api.schemas.captures import (
     HighlightAnnotationIn,
     PixelateAnnotationIn,
     RectAnnotationIn,
+    RedactAnnotationIn,
     TextAnnotationIn,
 )
 from avkit_api.schemas.common import EmptyIn
@@ -57,6 +58,7 @@ from avkit_core.domain.capture import (
     HighlightAnnotation,
     PixelateAnnotation,
     RectAnnotation,
+    RedactAnnotation,
     TextAnnotation,
     ViewFrame,
 )
@@ -216,6 +218,13 @@ def _annotations_from_in(items: list[AnnotationIn]) -> list[Annotation]:
         if isinstance(item, EraserAnnotationIn):
             parsed.append(
                 EraserAnnotation(x=item.x, y=item.y, width=item.width, height=item.height)
+            )
+            continue
+        if isinstance(item, RedactAnnotationIn):
+            parsed.append(
+                RedactAnnotation(
+                    x=item.x, y=item.y, width=item.width, height=item.height, color=item.color
+                )
             )
             continue
     return parsed

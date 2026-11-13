@@ -940,7 +940,7 @@ Lazy route `/convert`, rail item below TTS, `Ctrl+4`. Downloader-shaped queue: t
 
 > **SSOT:** [09-screenshot-capture.md](09-screenshot-capture.md). Do not implement under MEU-19–23 or MEU-33.
 
-Lazy route `/capture`, rail item below Convert, `Ctrl+5`. Inbox path + hotkey + **Capture region**; filmstrip + viewport with arrow/box/highlight/text/pixelate/eraser; Save bakes `{stem}.annotated.png`. Tray + global F2 live in Electron main. Catalog poll `{ items }` (no processor). No inner routes.
+Lazy route `/capture`, rail item below Convert, `Ctrl+5`. Inbox path + hotkey + **Capture region**; filmstrip + viewport with arrow/box/highlight/text/redact/smart eraser; Save bakes `{stem}.annotated.png`. Tray + global F2 live in Electron main. Catalog poll `{ items }` (no processor). No inner routes.
 
 ---
 

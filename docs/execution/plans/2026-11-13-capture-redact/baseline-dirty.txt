@@ -1,0 +1,12 @@
+ M .agent/context/grouping/2026-10-29-capture-annotation-editor-session-grouping.md	a0fe83860b3262c568f25169e94b903e01c55c0ef175e0374cdebdc2b73172bd
+ M docs/build-plan/09-screenshot-capture.md	32844ab48a5f74bc4668a23c2f76ff01e917b327fdab18172a72ac4070a61a2d
+?? .agent/context/handoffs/2026-11-13-capture-redact-plan-critical-review.md	840651c633f29cd3c94eefe9e903fa64a0c1d7207893739de69eb9c64483c31c
+?? docs/execution/plans/2026-11-13-capture-redact/assert-never-probe.py	7826a6dcd5087976131d41dc161c241d3a13cb0b2262e1d0f20201eacf93257c
+?? docs/execution/plans/2026-11-13-capture-redact/baseline.ps1	b0020b6a2c05e064d9395008e7ffa4f26196cc8a93f964fbaf24049618dc08d1
+?? docs/execution/plans/2026-11-13-capture-redact/baseline.sha	24acf62625e8000057239570f9646a8abeb2154ab295ed75e58fcecf0fa1160a
+?? docs/execution/plans/2026-11-13-capture-redact/id-length.py	deda2631973a77cfd96414cbef4f5813a86712f64a13a7fbc301fe1a18cfa7df
+?? docs/execution/plans/2026-11-13-capture-redact/identity.py	ae5893ade66953a93aec455fbf1cb39b5133a19d226950c90b46dee291db421e
+?? docs/execution/plans/2026-11-13-capture-redact/implementation-plan.md	1dbd334109bb8eaf98caec43233b332e8cc75009f560271459fa3784a0407b18
+?? docs/execution/plans/2026-11-13-capture-redact/red-check.py	3e56eda90398fea743b8536f1c4aefb9c768585ff47b4682fe6b5b70c612bf59
+?? docs/execution/plans/2026-11-13-capture-redact/session-gate.ps1	3eea6d4d054ec570a7508a05c535f5696d2f21b14b1e83fc1776f1e1fb84a367
+?? docs/execution/plans/2026-11-13-capture-redact/task.md	346cb3c390b9ae4493ce47b7993d6cc6c52621e8d13c94dada28b92948d33c08

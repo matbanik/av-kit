@@ -212,3 +212,41 @@ describe('MEU-91 renderer eraser', () => {
     expect(fill('eraser-cover')).toEqual([1, 2, 3])
   })
 })
+
+/** MEU-103 (Session 68, D-685): every case before the redact cases, in fixture order, unchanged. */
+const EARLIER_CASES = [
+  'pixelate-interior',
+  'pixelate-clipped',
+  'pixelate-negative-origin',
+  'pixelate-big-block',
+  'pixelate-empty',
+  'pixelate-repeat-overlap',
+  'eraser-stems',
+  'eraser-tie',
+  'eraser-clipped',
+  'eraser-cover',
+  'pixelate-then-eraser',
+  'crop-pixelate-sliver',
+  'crop-pixelate-corner',
+  'crop-eraser-edge',
+  'crop-eraser-ring',
+]
+
+describe('MEU-103 renderer redact', () => {
+  it('AC-103.9 applyRegionPass equals the bake for every redact- REGION_CASE, after the earlier cases', () => {
+    const names = loadCases().map((c) => c.name)
+    expect(names.slice(0, EARLIER_CASES.length)).toEqual(EARLIER_CASES)
+    const cases = loadCases().filter((c) => c.name.startsWith('redact-'))
+    expect(cases.length, 'the redact case list is not empty').toBeGreaterThan(0)
+    expect(names.slice(EARLIER_CASES.length)).toEqual(cases.map((c) => c.name))
+    for (const c of cases) {
+      expect(c.marks.length, c.name).toBeGreaterThan(0)
+      expect(c.marks.map((mark) => isRegionMark(mark)), c.name).toEqual(c.marks.map(() => true))
+      expect(c.expected, `${c.name} changes pixels`).not.toEqual(c.pixels)
+      const canvas = rgba(c.pixels)
+      applyRegionPass(canvas, c.width, c.height, c.marks)
+      expect(firstDiff(c.name, c.width, canvas, c.expected)).toBeNull()
+      expect(opaque(canvas), `${c.name} alpha`).toBe(true)
+    }
+  })
+})

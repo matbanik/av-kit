@@ -446,7 +446,6 @@ export const CAPTURE_FONT_SIZE_SCRUB = 'capture-font-size-scrub'
 export const CAPTURE_TOOL_LOCK = 'capture-tool-lock'
 
 // MEU-90 Capture pixelate mark (additive IDs).
-export const CAPTURE_TOOL_PIXELATE = 'capture-tool-pixelate'
 export const CAPTURE_TOOL_ERASER = 'capture-tool-eraser'
 export const CAPTURE_BLOCK_SIZE = 'capture-block-size'
 export const CAPTURE_REGION_LAYER = 'capture-region-layer'
@@ -504,3 +503,9 @@ export const CAPTURE_IMPORT = 'capture-import'
 // MEU-141 YouTube JS runtime (additive IDs).
 export const DEPS_JS_RUNTIME_ROW = 'deps-js-runtime-row'
 export const BROWSE_DENO_BTN = 'browse-deno-btn'
+
+// MEU-103 Capture redact mark (additive IDs; Redact replaces the Pixelate tool button).
+export const CAPTURE_TOOL_REDACT = 'capture-tool-redact'
+export const CAPTURE_REDACT_MODE = 'capture-redact-mode'
+export const CAPTURE_REDACT_SOLID = 'capture-redact-solid'
+export const CAPTURE_REDACT_PIXELATE = 'capture-redact-pixelate'

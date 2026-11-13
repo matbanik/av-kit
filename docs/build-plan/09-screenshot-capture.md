@@ -281,7 +281,7 @@ Enums live in `domain/enums.py` (MEU-34 extends MEU-2). Do **not** add `"capture
 |------|--------|---------|
 | `CaptureSource` | `Hotkey`, `Gui`, `McpFullscreen`, `McpRegion`, `McpInteractive`, `Scan`, `Import`, `Crop` (MEU-130) | yes (`.name`) |
 | `CaptureRequestStatus` | `Pending`, `Completed`, `Cancelled`, `Expired` | yes |
-| `AnnotationType` | `Arrow`, `Rect`, `Highlight`, `Text`, `Pixelate`, `Eraser` | sidecar JSON + API (wire lowercase) |
+| `AnnotationType` | `Arrow`, `Rect`, `Highlight`, `Text`, `Pixelate`, `Eraser`, `Redact` | sidecar JSON + API (wire lowercase) |
 
 No `CaptureStatus` job machine. Presence of `annotated_path` is the annotated flag.
 
@@ -346,6 +346,7 @@ Wire objects (pixel space of the **original** image):
 | `text` | `x`, `y`, `text` (1–500 chars), `color`, `font_size`, `bg_color` (optional) |
 | `pixelate` | `x`, `y`, `width`, `height`, `block_size` (2–100, default 10); no `color` (`REGION_DTO`) |
 | `eraser` | `x`, `y`, `width`, `height`; no `color`: the fill is sampled from the border (`REGION_DTO`) |
+| `redact` | `x`, `y`, `width`, `height`, `color` (default `#000000`): the box is filled with that colour (MEU-103) |
 
 Colors: named `red`, `orange`, `yellow`, `green`, `blue`, `white`, `black` **or** `#RRGGBB`. Unknown → 422.
 
@@ -823,7 +824,7 @@ Twelve residual MEUs from Mat's Session 29/30 looks and the 2026-10-09 triage (`
 | Bake | Downscale the rectangle by the block size, upscale with nearest-neighbour; default block 10 px, adjustable with the size control | Triage D-60 (Research-backed: ShareX/Greenshot pixel size) |
 | Preview | The editor previews the mosaic live | Mat's request |
 | Tests | Bake fixture, schema contract tests, MCP annotate test, preview test | Local Canon |
-| Plan | `REGION_PASS`: region marks (pixelate, eraser) are applied first in list order, then the drawn marks are painted on top, in the bake and the preview alike. `PIXELATE_BLOCK`: `block_size` 2–100, default 10 | Session 39 plan D-10, D-11, D-12 |
+| Plan | `REGION_PASS`: region marks (pixelate, eraser, redact) are applied first in list order, then the drawn marks are painted on top, in the bake and the preview alike. `PIXELATE_BLOCK`: `block_size` 2–100, default 10 | Session 39 plan D-10, D-11, D-12 |
 
 <a id="eraser-mark"></a>
 
@@ -841,6 +842,8 @@ Twelve residual MEUs from Mat's Session 29/30 looks and the 2026-10-09 triage (`
 ## Residuals registered 2026-10-29
 
 Nine residual MEUs from the Human-approved capture annotation synthesis (`_inspiration/capture-annotation-tools/synthesis.md`, accepted by Mat on 2026-10-29: all recommendations, D-1 to D-3). They bring the editor to the behaviour users expect from other annotation tools while keeping the MVP scope. Grouping: `.agent/context/grouping/2026-10-29-capture-annotation-editor-session-grouping.md`.
+
+Planning notes added 2026-11-12, after the crop, video-stills and download sessions landed: `.agent/context/grouping/2026-10-29-capture-annotation-editor-session-grouping.md` §9 renumbers the pending sessions to 68 to 72 (D-674), gives each new or changed mark its crop rule (D-675, D-676), adds C Crop to the letters, and settles how the two "Copy image" entries meet (D-677, D-678). The rows marked 2026-11-12 below come from it.
 
 <a id="canvas-history-chords"></a>
 
@@ -929,6 +932,15 @@ Nine residual MEUs from the Human-approved capture annotation synthesis (`_inspi
 | Tool | One Redact tool with a Solid / Pixelate toggle, Solid by default; switching a selected mark replaces it as one undo step. Redact marks get the MEU-100 handles | Human-approved 2026-10-29 synthesis C-2 |
 | Rename | Eraser is shown as "Smart eraser" with the tooltip "Covers an area with the surrounding colour"; the JSON type `eraser` and its algorithm are unchanged | Human-approved 2026-10-29 synthesis C-10, D-3 |
 | Outlines | Redaction marks show a dashed editor-only outline, never baked | Human-approved 2026-10-29 synthesis A-16 |
+| Crop | `redact` takes MARK_CLIP_BOX's half-open rule (`_clip_half_open`, as pixelate), with the straddling, outside, inside and zero-size cases tested; `clip_mark`'s `assert_never` fails the type check until the case exists | Local Canon 2026-11-12 planning notes D-675 (crop grouping D-406) |
+
+> **Delivered (Session 68).**
+> - `RedactAnnotation` is the last member of the `Annotation` union, with `AnnotationType.Redact` (wire `redact`) and its validation (`REDACT_TYPE`). The sidecar reads and writes its five keys and refuses a missing or extra key (`REDACT_WIRE`); the clamp and `clip_mark` treat it as a half-open box, as pixelate (`REDACT_CLAMP`, `REDACT_CLIP`).
+> - The region pass fills a redact's clipped box with its colour at full opacity, in list order with pixelate and eraser, before the drawn marks (`REDACT_BAKE`); the editor preview does the same (`REDACT_PREVIEW`), and the region fixture gains seven `redact-` cases (`REDACT_FIXTURE`).
+> - The API takes `RedactAnnotationIn` with `color` defaulting to `#000000` (`REDACT_API`), and MCP `annotate` takes a strict `redact` entry (`REDACT_MCP`).
+> - The Redact tool takes Pixelate's slot, with a Solid / Pixelate mode control, Solid by default (`REDACT_TOOL`, `REDACT_MODE`, `MODE_GROUPS`). Picking the other mode with a redaction selected swaps it as one undo step (`MODE_SWAP`). The eraser shows as Smart eraser with its hint (`SMART_ERASER`); redact and pixelate marks get a dashed editor-only outline (`REDACT_OUTLINE`), the MEU-100 handles and a `Redact N` chip (`REDACT_HIT`), and the help names them (`REDACT_HELP`).
+> - AC-103.1 to AC-103.25; plan `docs/execution/plans/2026-11-13-capture-redact/`.
+> - Gate: the H1-2 `session-gate.ps1` record in the Session 68 handoff.
 
 <a id="copy-image-and-action-names"></a>
 
@@ -940,6 +952,7 @@ Nine residual MEUs from the Human-approved capture annotation synthesis (`_inspi
 |------|----------|--------|
 | Copy image | A Copy image button and canvas Ctrl+C put the image with the current, possibly unsaved, marks on the clipboard. It is rendered by a new `POST /captures/{id}/render` that bakes the posted marks exactly as Save would, without writing a file. Text fields keep native copy | Human-approved 2026-10-29 synthesis C-5, G-6(a) |
 | Labels | The action row reads "Save annotations", "Flatten into image…" and "Restore backup…"; the dirty-flatten confirm offers "Save and flatten" | Human-approved 2026-10-29 synthesis C-14, B-1 |
+| Filmstrip | The filmstrip's "Copy image" (MEU-88) copies `variant=original` today, so saved marks are left out. Once this MEU lands it fetches `annotated` when saved marks exist, else `original` (the as-shown rule MEU-136 uses), so every "Copy image" means the image as you see it (D-677 A; the do-nothing of keeping `original` was rejected). Ctrl+C follows Session 61's PASTE_KEY pattern with no registry entry (D-678). The render route encodes in memory as MEU-128 does and bakes through MEU-136's path | Human-approved 2026-11-12 planning notes D-677 A; Local Canon D-678 |
 
 <a id="style-and-tool-flow"></a>
 
@@ -952,8 +965,8 @@ Nine residual MEUs from the Human-approved capture annotation synthesis (`_inspi
 | Colour | Swatches apply on click; the hex field applies on Enter or blur; one click or scrub is one undo step. The Apply/Cancel gate goes | Human-approved 2026-10-29 synthesis A-8 |
 | Tool style | Each tool remembers its own style as an app preference, never mark JSON. With a mark selected a control restyles only that mark | Human-approved 2026-10-29 synthesis A-9 |
 | Lock | Lock is on by default and persisted, with a one-shot preference; the just-drawn mark stays selected, and while a tool is armed a press on the selected mark edits it while a press elsewhere draws | Human-approved 2026-10-29 synthesis C-6, D-2 |
-| Letters | V Select, A Arrow, R Box, H Highlight, T Text, X Redact, E Smart eraser, as page-scoped registry entries that never fire in a field | Human-approved 2026-10-29 synthesis C-12, A-12 |
-| Modifiers | Shift constrains aspect or square and snaps arrows to 45 degrees; Alt draws from the centre; Shift+arrow nudges 10 px. Pixelate block size gets a scrub | Human-approved 2026-10-29 synthesis A-13, B-12 |
+| Letters | V Select, A Arrow, R Box, H Highlight, T Text, X Redact, E Smart eraser, C Crop, as page-scoped registry entries that never fire in a field. C is the crop tool's letter the crop grouping deferred here (D-404, D-508). X also swaps the crop's aspect while the crop is open; that holds because tool letters are ignored under CROP_MODAL, and the plan tests both sides | Human-approved 2026-10-29 synthesis C-12, A-12; 2026-11-12 planning notes |
+| Modifiers | Shift constrains aspect or square and snaps arrows to 45 degrees; Alt draws from the centre; Shift+arrow nudges 10 px. Pixelate block size gets a scrub. The nudge step and aspect snaps reuse the crop tool's `FIELD_STEP_SHIFT` and `CROP_RATIO` rather than new constants | Human-approved 2026-10-29 synthesis A-13, B-12; 2026-11-12 planning notes |
 
 <a id="line-and-ellipse"></a>
 
@@ -965,7 +978,8 @@ Nine residual MEUs from the Human-approved capture annotation synthesis (`_inspi
 |------|----------|--------|
 | Line | `arrow.head?: "end" | "none" | "both"`, default `"end"`; Line is an arrow with `head: "none"` | Human-approved 2026-10-29 synthesis C-13 |
 | Ellipse | `rect.shape?: "rect" | "ellipse"`, default `"rect"`, with the MEU-100 handles | Human-approved 2026-10-29 synthesis A-14 |
-| Duplicate | Ctrl+D duplicates the selected mark with an offset, clamped, and selects the copy | Human-approved 2026-10-29 synthesis B-7 |
+| Duplicate | Ctrl+D duplicates the selected mark with an offset, clamped, and selects the copy. Ctrl+D is not in RESERVED_CHORDS; it is a page-scoped registry entry, or reserved and page-handled if the registry refuses a Ctrl chord | Human-approved 2026-10-29 synthesis B-7; 2026-11-12 planning notes |
+| Crop | `head` rides `_clip_arrow` unchanged (a clipped `both` arrow keeps a head at the crop edge, as D-487 already does for `end`), tested once per `head` value. An ellipse takes MARK_CLIP_ELLIPSE: kept when its box lies inside the closed crop, otherwise dropped, never clipped (D-676 A; inheriting `_clip_rect`, which draws a smaller ellipse, was rejected) | Local Canon 2026-11-12 planning notes D-675; Human-approved D-676 A (crop grouping D-406) |
 
 <a id="step-mark"></a>
 
@@ -976,6 +990,7 @@ Nine residual MEUs from the Human-approved capture annotation synthesis (`_inspi
 | Rule | Contract | Source |
 |------|----------|--------|
 | Mark | A new `step {x, y, number, color, size}` type through every layer, so an agent reads the number directly; the badge text is centred in the preview and the bake alike | Human-approved 2026-10-29 synthesis C-8 |
+| Crop | `step` takes MARK_CLIP_TEXT's anchor rule: kept when `(x, y)` is in `[0, width) x [0, height)`, else dropped, never clipped; `clip_mark`'s `assert_never` fails the type check until the case exists | Local Canon 2026-11-12 planning notes D-675 (crop grouping D-406) |
 
 ## Residuals registered 2026-11-08
 

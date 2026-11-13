@@ -85,8 +85,8 @@
 | `capture:tool_box` | Box tool | no | local canvas | specified | 09 |
 | `capture:tool_highlight` | Highlight tool | no | local canvas | specified | 09 |
 | `capture:tool_text` | Text tool | no | local canvas | specified | 09 |
-| `capture:tool_pixelate` | Pixelate tool | no | local canvas | specified | 09 |
-| `capture:tool_eraser` | Eraser tool | no | local canvas | specified | 09 |
+| `capture:tool_redact` | Redact tool (Solid / Pixelate) | no | local canvas | specified | 09 |
+| `capture:tool_eraser` | Smart eraser tool | no | local canvas | specified | 09 |
 | `capture:tool_lock` | Keep tool after drawing (tool lock) | no | local canvas | specified | 09 |
 | `capture:undo` | Undo overlay; Ctrl+Z on the image | no | local | specified | 09 |
 | `capture:redo` | Redo overlay; Ctrl+Y or Ctrl+Shift+Z on the image | no | local | specified | 09 |

@@ -254,6 +254,7 @@ class AnnotationType(StrEnum):
     Text = "Text"
     Pixelate = "Pixelate"
     Eraser = "Eraser"
+    Redact = "Redact"
 
     def to_wire(self) -> str:
         """Return the sidecar/API lowercase type token."""
@@ -264,6 +265,7 @@ class AnnotationType(StrEnum):
             AnnotationType.Text: "text",
             AnnotationType.Pixelate: "pixelate",
             AnnotationType.Eraser: "eraser",
+            AnnotationType.Redact: "redact",
         }
         return mapping[self]
 

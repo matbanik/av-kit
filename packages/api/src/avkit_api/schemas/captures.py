@@ -146,13 +146,25 @@ class EraserAnnotationIn(ApiModel):
     height: int
 
 
+class RedactAnnotationIn(ApiModel):
+    """Redact region (REDACT_API, D-682): the rectangle filled with one solid colour."""
+
+    type: Literal["redact"]
+    x: StrictInt
+    y: StrictInt
+    width: Annotated[StrictInt, Field(ge=0)]
+    height: Annotated[StrictInt, Field(ge=0)]
+    color: StrictStr = Field(default="#000000", pattern=COLOR_PATTERN)
+
+
 AnnotationIn = Annotated[
     ArrowAnnotationIn
     | RectAnnotationIn
     | HighlightAnnotationIn
     | TextAnnotationIn
     | PixelateAnnotationIn
-    | EraserAnnotationIn,
+    | EraserAnnotationIn
+    | RedactAnnotationIn,
     Field(discriminator="type"),
 ]
 

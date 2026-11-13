@@ -41,7 +41,7 @@ import {
 } from './capture-flatten'
 import { CAPTURE_HELP_SECTIONS } from './capture-help-content'
 import { parsePositiveInt } from './capture-scrub'
-import type { Annotation } from './capture-annotate'
+import type { Annotation, RedactMode } from './capture-annotate'
 import { parseAnnotateBody } from './capture-annotate'
 import { CaptureFilmstrip, type FilmstripShotActions } from './CaptureFilmstrip'
 import { rangeBetween, toggleSelection } from './capture-filmstrip-select'
@@ -269,6 +269,9 @@ function draftCommits(draft: TextDraft | null, list: Annotation[]): boolean {
   return mark?.type === 'text' && mark.text !== draft.value
 }
 
+/** REDACT_TOOL (D-679): the colour a Solid redact gets from the GUI. */
+const REDACT_SOLID_COLOR = '#000000'
+
 function createDrawnMark(
   tool: CaptureTool,
   start: { x: number; y: number },
@@ -276,6 +279,7 @@ function createDrawnMark(
   color: string,
   stroke: string,
   blockSize: string,
+  redactMode: RedactMode,
 ): Annotation | null {
   if (tool === 'select' || tool === 'text' || tool === 'crop') {
     return null
@@ -311,9 +315,13 @@ function createDrawnMark(
       stroke_width: strokeWidth,
     }
   }
-  if (tool === 'pixelate') {
-    // BLOCK_CONTROL: the field's value when it is a valid block, else the default.
-    return { type: 'pixelate', x, y, width, height, block_size: parseBlockSize(blockSize) ?? PIXELATE_BLOCK_DEFAULT }
+  if (tool === 'redact') {
+    if (redactMode === 'pixelate') {
+      // BLOCK_CONTROL: the field's value when it is a valid block, else the default.
+      return { type: 'pixelate', x, y, width, height, block_size: parseBlockSize(blockSize) ?? PIXELATE_BLOCK_DEFAULT }
+    }
+    // REDACT_TOOL (D-679): Solid draws a black box.
+    return { type: 'redact', x, y, width, height, color: REDACT_SOLID_COLOR }
   }
   if (tool === 'eraser') {
     // REGION_DTO: a rectangle only; the fill is sampled at preview and bake time.
@@ -358,6 +366,8 @@ export function CapturePage() {
   const [fontSize, setFontSize] = useState('16')
   const [textBg, setTextBg] = useState('')
   const [blockSize, setBlockSize] = useState(String(PIXELATE_BLOCK_DEFAULT))
+  // REDACT_MODE (D-680): what the Redact tool draws; Solid on mount, never persisted.
+  const [redactMode, setRedactMode] = useState<RedactMode>('solid')
   const [viewVariant, setViewVariant] = useState<CaptureViewVariant>('original')
   const [annotations, setAnnotations] = useState<Annotation[]>([])
   const [past, setPast] = useState<Annotation[][]>([])
@@ -438,9 +448,12 @@ export function CapturePage() {
     [items, selectedId],
   )
   const selectedMark = selectedIndex !== null ? annotations[selectedIndex] : undefined
-  // A region mark has no color, so its baseline is the tool color (the color group is hidden for it).
+  // A region mark has no color option (a redact's own colour is not edited here), so its baseline is the tool
+  // color (the color group is hidden for it).
   const colorBaseline =
-    selectedMark !== undefined && 'color' in selectedMark ? displayHex(selectedMark.color) : displayHex(color)
+    selectedMark !== undefined && 'color' in selectedMark && selectedMark.type !== 'redact'
+      ? displayHex(selectedMark.color)
+      : displayHex(color)
   const colorDirty = !namedPreview && displayHex(candidate) !== colorBaseline
   const gestureOpen = gestureRef.current !== null || preview !== null
   const dirty = JSON.stringify(annotations) !== JSON.stringify(saved) || draftCommits(textDraft, annotations)
@@ -1065,7 +1078,7 @@ export function CapturePage() {
       setBlockSize(String(mark.block_size))
       return
     }
-    if (mark.type === 'eraser') {
+    if (mark.type === 'eraser' || mark.type === 'redact') {
       setCandidate(displayHex(color))
       return
     }
@@ -1211,6 +1224,7 @@ export function CapturePage() {
           color,
           stroke,
           blockSize,
+          redactMode,
         )
         if (next === null) {
           return
@@ -1288,6 +1302,7 @@ export function CapturePage() {
           color,
           stroke,
           blockSize,
+          redactMode,
         )
         setPreview(draft)
         return
@@ -1354,6 +1369,30 @@ export function CapturePage() {
     applyHistory(replaceAt(annotationsRef.current, selectedIndex, { ...mark, block_size: parsed }))
   }
 
+  /**
+   * MODE_SWAP (D-680): with a redaction selected, the other mode replaces it in place on the same box as one
+   * undo step (Solid gives #000000, Pixelate the current block size); with nothing selected the pick only sets
+   * the mode for the next box. The checked mode is a no-op.
+   */
+  function changeRedactMode(next: RedactMode): void {
+    const mark = selectedIndex === null ? undefined : annotationsRef.current[selectedIndex]
+    if (selectedIndex === null || mark === undefined) {
+      setRedactMode(next)
+      return
+    }
+    if (mark.type === 'redact' && next === 'pixelate') {
+      const block = parseBlockSize(blockSize) ?? PIXELATE_BLOCK_DEFAULT
+      const swapped: Annotation = { type: 'pixelate', x: mark.x, y: mark.y, width: mark.width, height: mark.height, block_size: block }
+      setBlockSize(String(block))
+      applyHistory(replaceAt(annotationsRef.current, selectedIndex, swapped))
+      return
+    }
+    if (mark.type === 'pixelate' && next === 'solid') {
+      const swapped: Annotation = { type: 'redact', x: mark.x, y: mark.y, width: mark.width, height: mark.height, color: REDACT_SOLID_COLOR }
+      applyHistory(replaceAt(annotationsRef.current, selectedIndex, swapped))
+    }
+  }
+
   function changeFontSize(value: string): void {
     finishSize()
     setFontSize(value)
@@ -1399,7 +1438,7 @@ export function CapturePage() {
       return
     }
     const mark = annotationsRef.current[selectedIndex]
-    if (mark === undefined || !('color' in mark) || displayHex(mark.color) === hex) {
+    if (mark === undefined || !('color' in mark) || mark.type === 'redact' || displayHex(mark.color) === hex) {
       return
     }
     applyHistory(replaceAt(annotationsRef.current, selectedIndex, { ...mark, color: hex }))
@@ -1943,6 +1982,9 @@ export function CapturePage() {
       </div>
     ) : null
 
+  // REDACT_MODE: a selected redaction shows its own mode checked; otherwise the mode for the next box.
+  const shownRedactMode: RedactMode =
+    selectedMark?.type === 'redact' ? 'solid' : selectedMark?.type === 'pixelate' ? 'pixelate' : redactMode
   const paintedAnnotations = (() => {
     if (preview === null || gestureRef.current === null || gestureRef.current.kind === 'drawing') {
       return annotations
@@ -2292,6 +2334,7 @@ export function CapturePage() {
           fontSize={fontSize}
           textBg={textBg}
           blockSize={blockSize}
+          redactMode={shownRedactMode}
           annotations={paintedAnnotations}
           preview={drawingPreview}
           selectedIndex={selectedIndex}
@@ -2302,6 +2345,7 @@ export function CapturePage() {
           colorApplyEnabled={applyEnabled}
           colorCancelEnabled={applyEnabled}
           onTool={chooseTool}
+          onRedactMode={changeRedactMode}
           toolLocked={toolLocked}
           onToggleToolLock={() => {
             setToolLocked((locked) => !locked)

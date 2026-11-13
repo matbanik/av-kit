@@ -51,7 +51,7 @@ const NO_SHOT_IDS = new Set([
   'capture-tool-box',
   'capture-tool-highlight',
   'capture-tool-text',
-  'capture-tool-pixelate',
+  'capture-tool-redact',
   'capture-tool-eraser',
   'capture-tool-crop',
   'capture-zoom-out',
@@ -59,7 +59,12 @@ const NO_SHOT_IDS = new Set([
   'capture-zoom-fit',
 ])
 /** TA-3 (D-177): MEU-99 `HISTORY_HINTS` adds the chord to the Undo and Redo hints; the names are unchanged. */
-const HINT_OVERRIDE: Record<string, string> = { 'capture-undo': 'Undo (Ctrl+Z)', 'capture-redo': 'Redo (Ctrl+Y)' }
+/** Session 68 SMART_ERASER (D-683): the eraser's hint follows its name after a colon. */
+const HINT_OVERRIDE: Record<string, string> = {
+  'capture-undo': 'Undo (Ctrl+Z)',
+  'capture-redo': 'Redo (Ctrl+Y)',
+  'capture-tool-eraser': 'Smart eraser: Covers an area with the surrounding colour',
+}
 
 const SHOT = {
   id: 'shot-1',

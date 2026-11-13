@@ -314,7 +314,8 @@ ENUM_MEMBERS: dict[str, tuple[str, ...]] = {
     ),
     "CaptureRequestStatus": ("Pending", "Completed", "Cancelled", "Expired"),
     # TA-6 (Session 39, D-24): + Pixelate, Eraser.
-    "AnnotationType": ("Arrow", "Rect", "Highlight", "Text", "Pixelate", "Eraser"),
+    # Session 68 (D-679): Redact appended after Eraser.
+    "AnnotationType": ("Arrow", "Rect", "Highlight", "Text", "Pixelate", "Eraser", "Redact"),
 }
 
 SPEC_PROGRESS_SNAPSHOT_FIELDS = (

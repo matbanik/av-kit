@@ -873,7 +873,7 @@ test('AC-65.4 NO_OVERFLOW at the default window: tools, options and marks rows n
   await page.getByTestId('capture-filmstrip-item').first().click()
   await page.waitForSelector('[data-testid="capture-draw-surface"][data-overlay-ready="true"]')
   await windowSettled(page)
-  for (const tool of ['select', 'arrow', 'box', 'highlight', 'text', 'pixelate', 'eraser']) {
+  for (const tool of ['select', 'arrow', 'box', 'highlight', 'text', 'redact', 'eraser']) {
     await page.getByTestId(`capture-tool-${tool}`).click()
     await expectNoOverflow(page, `tool ${tool}`)
   }
@@ -2684,7 +2684,11 @@ test('AC-90.12 REGION_PIXEL_ORACLE: the pixelate layer matches the bake, the 1:1
   // (c) live: during a Pixelate drag on the gradient half, before pointer-up, the layer has the mosaic.
   await page.getByTestId('capture-view-original').click()
   await expect(page.locator('[data-annotation-type="pixelate"]')).toHaveCount(1)
-  await page.getByTestId('capture-tool-pixelate').click()
+  // Session 68 (D-679): the Pixelate drag runs through the Redact tool's Pixelate mode.
+  await expect(page.getByTestId('capture-tool-redact')).toBeVisible()
+  await page.getByTestId('capture-tool-redact').click()
+  await expect(page.getByTestId('capture-redact-pixelate')).toBeVisible()
+  await page.getByTestId('capture-redact-pixelate').click()
   const box = await page.getByTestId('capture-viewport-image').boundingBox()
   expect(box).not.toBeNull()
   const at = (x: number, y: number): [number, number] => [(box?.x ?? 0) + x + 0.5, (box?.y ?? 0) + y + 0.5]
@@ -3168,5 +3172,35 @@ test('AC-131.24 CROP_ELECTRON: Square, swap, a W entry, Reset, Cancel and Esc dr
   await expect(page.getByTestId('capture-crop-bar')).toHaveCount(0)
   expect(await ledger(page, 'POST', '/crop')).toBe(0)
   expect(await cropBodies(page)).toEqual([])
+  await app.close()
+})
+
+// ── MEU-103 capture redact mark (Session 68 plan AC-103.24) ──────────────────────────────────────────
+
+test('AC-103.24 the Redact button shows with Solid checked; the Smart eraser tooltip shows its hint', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await installSeam(page, [sampleShot('e2e-redact-1', 'a.png', '2026-11-13T12:00:00Z')])
+  await page.getByTestId('nav-capture').click()
+  await page.getByTestId('capture-filmstrip-item').first().click()
+  await page.waitForSelector('[data-testid="capture-draw-surface"][data-overlay-ready="true"]')
+  await windowSettled(page)
+  const redact = page.getByTestId('capture-tool-redact')
+  await expect(redact).toBeVisible()
+  await expect(redact).toHaveAttribute('aria-label', 'Redact')
+  await expect(page.getByTestId('capture-tool-pixelate')).toHaveCount(0)
+  await redact.click()
+  await expect(redact).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('capture-redact-mode')).toBeVisible()
+  await expect(page.getByTestId('capture-redact-solid')).toBeChecked()
+  await expect(page.getByTestId('capture-redact-pixelate')).not.toBeChecked()
+  const eraser = page.getByTestId('capture-tool-eraser')
+  await expect(eraser).toBeVisible()
+  await expect(eraser).toHaveAttribute('aria-label', 'Smart eraser')
+  await eraser.hover()
+  await page.waitForTimeout(HINT_DELAY_MS)
+  const hint = page.getByTestId('capture-tool-eraser-hint')
+  await expect(hint).toBeVisible()
+  await expect(hint).toHaveText('Smart eraser: Covers an area with the surrounding colour')
   await app.close()
 })

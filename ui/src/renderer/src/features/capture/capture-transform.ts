@@ -11,7 +11,7 @@ export const RESIZE_HANDLE_CSS = 8
 /** Hit square side, in CSS px at every zoom. */
 export const RESIZE_HIT_CSS = 12
 
-export type BoxMark = Extract<Annotation, { type: 'rect' | 'highlight' | 'pixelate' | 'eraser' }>
+export type BoxMark = Extract<Annotation, { type: 'rect' | 'highlight' | 'pixelate' | 'eraser' | 'redact' }>
 export type TextMark = Extract<Annotation, { type: 'text' }>
 
 /** A text plate corner: TEXT_SCALE has no edge handles. */
@@ -22,7 +22,13 @@ type Box = { x: number; y: number; width: number; height: number }
 const CORNERS: ReadonlySet<HandleId> = new Set(['nw', 'ne', 'se', 'sw'])
 
 export function isBoxMark(mark: Annotation): mark is BoxMark {
-  return mark.type === 'rect' || mark.type === 'highlight' || mark.type === 'pixelate' || mark.type === 'eraser'
+  return (
+    mark.type === 'rect' ||
+    mark.type === 'highlight' ||
+    mark.type === 'pixelate' ||
+    mark.type === 'eraser' ||
+    mark.type === 'redact'
+  )
 }
 
 export function boxHandlePoints({ x, y, width, height }: Box): Record<HandleId, ImagePoint> {
