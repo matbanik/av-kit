@@ -452,6 +452,23 @@ def annotate_capture(
     return _shot_out(capture.annotate_and_save(id, _annotations_from_in(body.annotations)))
 
 
+# RENDER_ROUTE (MEU-104, D-689): the shot baked with these marks, as PNG bytes. Writes
+# nothing; the same body rules as annotate (D-699). No IMAGE_MAX_BYTES cap (D-695).
+@router.post(
+    "/{id}/render",
+    response_class=Response,
+    responses={200: {"content": {"image/png": {}}, "description": "The shot with the marks."}},
+)
+def render_capture(
+    id: str,
+    body: AnnotateIn,
+    capture: Any = Depends(get_capture_service),
+) -> Response:
+    """Return the shot baked with the given annotations as a PNG, without saving."""
+    png = capture.render_marks(id, _annotations_from_in(body.annotations))
+    return Response(content=png, media_type="image/png")
+
+
 @router.post("/{id}/flatten", response_model=CaptureShotDetailOut)
 def flatten_capture(
     id: str,

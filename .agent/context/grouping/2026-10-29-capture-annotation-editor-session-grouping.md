@@ -120,7 +120,7 @@ Run `/create-plan` once per session, in order. Session 43 is planned now (Mat's 
 |---------|------|------|------|--------|-------------|
 | 43 | `capture-editor-repair` | MEU-99, MEU-100, MEU-101 | P2 | approved | `docs/execution/plans/2026-10-29-capture-editor-repair/` |
 | 44 | `capture-redact` | MEU-103 | P2 | executed | `docs/execution/plans/2026-11-13-capture-redact/` |
-| 45 | `capture-copy-image` | MEU-104 | P2 | pending | — |
+| 45 | `capture-copy-image` | MEU-104 | P2 | executed (Session 69) | `docs/execution/plans/2026-11-13-capture-copy-image/` |
 | 46 | `capture-text-multiline` | MEU-102 | P3 | pending | — |
 | 47 | `capture-style-tool-flow` | MEU-105 | P3 | pending | — |
 | 48 | `capture-shapes-steps` | MEU-106, MEU-107 | P3 | pending | — |

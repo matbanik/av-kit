@@ -55,6 +55,7 @@ ROUTE_INDEX: tuple[tuple[str, str], ...] = (
     ("GET", "/api/v1/captures/{id}"),
     ("GET", "/api/v1/captures/{id}/image"),
     ("POST", "/api/v1/captures/{id}/annotate"),
+    ("POST", "/api/v1/captures/{id}/render"),  # RENDER_ROUTE (Session 69, MEU-104)
     ("POST", "/api/v1/captures/{id}/flatten"),  # TA-8 (Session 30, MEU-67)
     ("POST", "/api/v1/captures/{id}/revert"),  # TA-8 (Session 30, MEU-67)
     ("POST", "/api/v1/captures/{id}/crop"),  # CROP_REQUEST (Session 59, MEU-130)
@@ -119,7 +120,8 @@ def test_ac_16_6_openapi_path_census() -> None:
     # MEU-134 (Session 62) + POST /captures/frames
     # MEU-135 (Session 63) + POST /captures/sheet
     # MEU-136 (Session 64) + POST /captures/{id}/export
-    assert len(ROUTE_INDEX) == 78
+    # MEU-104 (Session 69) + POST /captures/{id}/render
+    assert len(ROUTE_INDEX) == 79
 
 
 @pytest.mark.parametrize("method,path", ROUTE_INDEX)
@@ -205,7 +207,7 @@ def test_ac_134_17_frames_route_in_committed_openapi_and_before_id() -> None:
         for method in item
         if method in {"get", "post", "put", "delete", "patch"}
     )
-    assert operations == 78  # MEU-136 (Session 64): + POST /captures/{id}/export
+    assert operations == 79  # MEU-104 (Session 69): + POST /captures/{id}/render
     schemas = committed.get("components", {}).get("schemas", {})
     assert {"CaptureFramesIn", "CaptureFramesOut"} <= set(schemas)
     request = operation.get("requestBody", {}).get("content", {}).get("application/json", {})
@@ -250,7 +252,7 @@ def test_ac_135_20_openapi_has_sheet(ac_id: str) -> None:
         for method in item
         if method in {"get", "post", "put", "delete", "patch"}
     )
-    assert operations == 78  # MEU-136 (Session 64): + POST /captures/{id}/export
+    assert operations == 79  # MEU-104 (Session 69): + POST /captures/{id}/render
     schemas = committed.get("components", {}).get("schemas", {})
     assert {"CaptureSheetIn", "CaptureSheetOut"} <= set(schemas)
     request = operation.get("requestBody", {}).get("content", {}).get("application/json", {})
@@ -308,7 +310,7 @@ def test_ac_136_16_openapi_has_export(ac_id: str) -> None:
         for method in item
         if method in {"get", "post", "put", "delete", "patch"}
     )
-    assert operations == 78
+    assert operations == 79
     schemas = committed.get("components", {}).get("schemas", {})
     assert {"CaptureExportIn", "CaptureExportOut", "CaptureExportShotOut"} <= set(schemas)
     request = operation.get("requestBody", {}).get("content", {}).get("application/json", {})

@@ -100,7 +100,7 @@ Krug’s first law: **don’t make me think** — pages must be self-evident. Ap
 │                                                                                      │
 │  ┌─ FILMSTRIP ──┐  ┌─ VIEWPORT ────────────────────────────────────────────────────┐ │
 │  │ newest ↑     │  │  [Arrow] [Box] [Highlight] [Text]   color · stroke            │ │
-│  │ [thumb]      │  │  [Undo] [Redo] [Save annotated]                               │ │
+│  │ [thumb]      │  │  [Undo] [Redo] [Save annotations]                             │ │
 │  │ [thumb] ★    │  │                                                               │ │
 │  │ [thumb]      │  │           (selected image + vector overlay)                   │ │
 │  │ …            │  │                                                               │ │
@@ -526,6 +526,7 @@ Python `assert` is not validation.
 | `GET` | `/captures/{id}` | get | 200 | metadata + paths + `annotations` list; **no** bytes. Malformed sidecar → 422 |
 | `GET` | `/captures/{id}/image` | `read_image` | 200 `image/png` (or jpeg) | Query `variant=original\|annotated`. Cap 15 MiB → 413 |
 | `POST` | `/captures/{id}/annotate` | bake | 200 shot | Body `{ "annotations": [ ... ] }` |
+| `POST` | `/captures/{id}/render` | `render_marks` | 200 `image/png` | Body `{ "annotations": [ ... ] }`, the same rules as annotate. Bakes in memory and writes nothing; REST-only, no MCP action (MEU-104, D-691) |
 | `DELETE` | `/captures/{id}` | remove | 204 | **Deletes files.** MCP confirm |
 
 ### `POST /captures` body
@@ -607,7 +608,7 @@ Instructions file addition: Capture is **local screen + local files**. Still nev
 | E2E | Wave **9** `gui-capture` — `[B]` + CI if no display (`E2E-SANDBOX-NODISPLAY`) |
 | Tray | Main-process; not a React route |
 
-Settings page: new **Capture** card (inbox dir, hotkey, copy to clipboard, close to tray) + Browse; since MEU-67 also `flatten_backup` ("Back up the original before Apply to image"), `backup_dir` (with Browse) and `annotated_format` ("Save overlay format").
+Settings page: new **Capture** card (inbox dir, hotkey, copy to clipboard, close to tray) + Browse; since MEU-67 also `flatten_backup` ("Back up the original before Flatten into image"), `backup_dir` (with Browse) and `annotated_format` ("Save annotations format").
 
 ---
 
@@ -661,7 +662,7 @@ Three residual MEUs from the 2026-09-30 GUI walkthrough (known issues `CAPTURE-T
 | Revert | `POST /captures/{id}/revert` restores the newest backup for that stem over `original_path` and returns the shot; 404 when no backup exists | Human-approved ("in case user will want to revert") |
 | Settings | `capture.flatten_backup: bool = true`, `capture.backup_dir: str` default `{inbox}/.avkit-backup`; no retention cap (the user prunes) — no new governance number | Human-approved ("This needs to be also a setting"); Spec |
 | MCP | `avkit_capture.flatten` and `avkit_capture.revert`, both destructive → `confirm: true` required | Spec §Destructive actions [05](05-mcp-server.md) |
-| GUI | **Apply to image** button beside Save, enabled only when the shot has saved annotations and the overlay is not dirty; inline confirm strip names the backup path; **Revert** appears when a backup exists; `capture-status` reports success/failure | Local Canon [11 §Capture page layout](11-page-layout.md#capture-page-layout) confirm strips |
+| GUI | **Flatten into image…** button beside Save annotations, enabled when the shot has saved marks, or with unsaved marks that can be saved, when the confirm reads **Save and flatten** and saves them first (MEU-104, D-693); inline confirm strip names the backup path; **Restore backup…** appears when a backup exists; `capture-status` reports success/failure | Local Canon [11 §Capture page layout](11-page-layout.md#capture-page-layout) confirm strips |
 | Invariants | Original bytes are recoverable from the backup after a flatten; `probe` dimensions unchanged; the filmstrip thumbnail refreshes; the inbox watcher ignores the backup dir | Spec |
 | Tests | Service unit tests (backup written before bake, failure leaves original untouched), contract tests for both routes and the 409/404 cases, MCP tests for confirm handling, one Electron case flatten → revert | Local Canon Phase 9 testing |
 | Inputs and convert | Flatten works on PNG in place. A JPEG or WebP shot is converted on Apply: the saved marks are baked into a new `{stem}-converted.png` shot (then `_n` on a name clash), with the usual backup rule; the JPEG/WebP file, its annotated copy, sidecar and row are never touched. Other suffixes are 409 | Session 30 plan D-10; Session 30 plan D-22 |
@@ -669,7 +670,7 @@ Three residual MEUs from the 2026-09-30 GUI walkthrough (known issues `CAPTURE-T
 | Backup folder | `capture.backup_dir` `""` (the default) means `{inbox}/.avkit-backup`, resolved at use time; any other value must be absolute after `~` expansion and must not be the inbox itself (409 at flatten) | Session 30 plan D-11 |
 | Detail field | `GET /captures/{id}`, flatten and revert return `backup_path` (the newest backup or `null`); list items keep their key set | Session 30 plan D-13 |
 | Revert keeps the backup | Revert copies the backup over the original (the backup stays) and re-bakes the annotated copy when saved marks remain | Session 30 plan D-14 |
-| Save overlay format | `capture.annotated_format` `png` \| `jpeg` \| `webp` (default `png`; lossy quality 90) chooses the annotated copy's format when Save overlay runs; one annotated sibling exists at a time, and the inbox scan skips all three | Session 30 plan D-23 |
+| Save annotations format | `capture.annotated_format` `png` \| `jpeg` \| `webp` (default `png`; lossy quality 90) chooses the annotated copy's format when Save annotations runs; one annotated sibling exists at a time, and the inbox scan skips all three | Session 30 plan D-23 |
 | User confirmation (MCP) | `avkit_capture.remove`, `flatten` and `revert` also ask the person through MCP elicitation and run only on an accept with `confirm: true`; decline, cancel, an error or the 120 s timeout refuse with `user_confirmation_refused`; a client without elicitation, or a decline under 250 ms (an auto-decline), falls back to a native Windows Yes/No dialog | Session 30 plan D-24, A-11 |
 
 ---
@@ -701,7 +702,7 @@ Twelve residual MEUs from Mat's Session 29/30 looks and the 2026-10-09 triage (`
 
 | Rule | Contract | Source |
 |------|----------|--------|
-| Icons | Per-shot and per-mark actions become icon buttons through `ToolbarIconButton` with `aria-label` and the MEU-80 hint: Remove mark, Save overlay, Apply to image, Revert, Open file, Open folder; Delete shot is red at the far right after a separator | Human-approved 2026-10-03 (Mat), triage D-49 |
+| Icons | Per-shot and per-mark actions become icon buttons through `ToolbarIconButton` with `aria-label` and the MEU-80 hint: Remove mark, Save annotations, Copy image, Flatten into image…, Restore backup…, Open file, Open folder (names since MEU-104, D-694); Delete shot is red at the far right after a separator | Human-approved 2026-10-03 (Mat), triage D-49 |
 | Removed | Body/Tail/Head and the four nudge buttons are removed for every mark type; arrow keys nudge the selected mark or the focused endpoint; the drag handles stay | Human-approved 2026-10-03, D-49 (amends MEU-60 ACs) |
 | No eyedropper | The Sample original button and its sampling state are removed; hex and Named cover colour choice | Human-approved 2026-10-03, triage D-51 (amends AC-60 sampling ACs) |
 | Row size | The row is `shrink-0` and has no horizontal scroll at the default window (NO_OVERFLOW assertion as AC-65.4) | Triage D-50 |
@@ -796,7 +797,7 @@ Twelve residual MEUs from Mat's Session 29/30 looks and the 2026-10-09 triage (`
 | Clipboard | Path and image copies run in the main process through preload IPC (`clipboard.writeText` / `writeImage`) | Triage D-58; Local Canon G27 |
 | Index | New actions are added to the gui-actions-index at plan time | Local Canon |
 | Tests | Behaviour tests per item; main-process clipboard test; keyboard access (context-menu key) | Local Canon |
-| Copy image source | Copy image copies the shot's original (`variant=original`). The renderer fetches it through the authorized image route and re-encodes a non-PNG file to PNG; main decodes the PNG bytes with `nativeImage.createFromBuffer` and calls `clipboard.writeImage` (strict `write-clipboard-image` channel) | Session 38 plan D-10, D-11 |
+| Copy image source | The filmstrip's Copy image copies the shot as shown: `variant=annotated` when the shot has an annotated file, else `variant=original` (MEU-104, D-677 A). The editor's Copy image button and Ctrl+C copy the PNG that `POST /captures/{id}/render` bakes from the current marks. The renderer fetches the filmstrip's file through the authorized image route and re-encodes a non-PNG file to PNG; main decodes the PNG bytes with `nativeImage.createFromBuffer` and calls `clipboard.writeImage` (strict `write-clipboard-image` channel) | Session 38 plan D-10, D-11 |
 
 <a id="filmstrip-multi-select"></a>
 
@@ -953,6 +954,8 @@ Planning notes added 2026-11-12, after the crop, video-stills and download sessi
 | Copy image | A Copy image button and canvas Ctrl+C put the image with the current, possibly unsaved, marks on the clipboard. It is rendered by a new `POST /captures/{id}/render` that bakes the posted marks exactly as Save would, without writing a file. Text fields keep native copy | Human-approved 2026-10-29 synthesis C-5, G-6(a) |
 | Labels | The action row reads "Save annotations", "Flatten into image…" and "Restore backup…"; the dirty-flatten confirm offers "Save and flatten" | Human-approved 2026-10-29 synthesis C-14, B-1 |
 | Filmstrip | The filmstrip's "Copy image" (MEU-88) copies `variant=original` today, so saved marks are left out. Once this MEU lands it fetches `annotated` when saved marks exist, else `original` (the as-shown rule MEU-136 uses), so every "Copy image" means the image as you see it (D-677 A; the do-nothing of keeping `original` was rejected). Ctrl+C follows Session 61's PASTE_KEY pattern with no registry entry (D-678). The render route encodes in memory as MEU-128 does and bakes through MEU-136's path | Human-approved 2026-11-12 planning notes D-677 A; Local Canon D-678 |
+
+> **Delivered (Session 69).** MEU-104 shipped RENDER_PORT, RENDER_BAKE, RENDER_SERVICE, RENDER_ROUTE, RENDER_CLIENT, COPY_BUTTON, COPY_KEY, FILMSTRIP_AS_SHOWN, ACTION_LABELS, SAVE_AND_FLATTEN and COPY_HELP, covered by AC-104.1 to AC-104.23. Plan: `docs/execution/plans/2026-11-13-capture-copy-image/`.
 
 <a id="style-and-tool-flow"></a>
 

@@ -41,7 +41,7 @@ const CAPTURE_ACTIONS = [
   // MEU-136 (Session 64): +export after sheet.
   { action: "export", method: "POST", path: "/captures/{id}/export" },
 ] as const;
-const REST_ONLY = ["complete", "cancel", "register"] as const;
+const REST_ONLY = ["complete", "cancel", "register", "render"] as const;
 // TA-4 (Session 30, MEU-67): + flatten_backup, backup_dir, annotated_format.
 const CAPTURE_KEYS = [
   "inbox_dir",
@@ -1640,5 +1640,16 @@ describe("MEU-103 avkit_capture redact", () => {
       expect(refused.isError, name).toBe(true);
       expect(calls.length, `${name} reached the backend`).toBe(before);
     }
+  });
+});
+
+describe("MEU-104 render stays REST-only", () => {
+  it("AC-104.9 REST_ONLY names render and avkit_capture has no render action", async () => {
+    expect(REST_ONLY).toContain("render");
+    const rows = ACTION_INDEX.filter((row) => row.tool === "avkit_capture");
+    expect(rows.some((row) => row.action === "render")).toBe(false);
+    expect(rows.some((row) => row.path.endsWith("/render"))).toBe(false);
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    expect(captureSchema.safeParse({ action: "render", id: "s1", annotations: [] }).success).toBe(false);
   });
 });

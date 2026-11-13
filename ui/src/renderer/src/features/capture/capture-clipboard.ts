@@ -1,4 +1,5 @@
-import { fetchAuthorizedBlob } from './capture-image'
+import { parseAnnotateBody, type Annotation } from './capture-annotate'
+import { fetchAuthorizedBlob, postAuthorizedBlob } from './capture-image'
 
 /** The 8-byte PNG file signature (W3C PNG §5.2). */
 export const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] as const
@@ -6,6 +7,7 @@ export const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] as
 export const COPY_IMAGE_FETCH_ERROR = 'the image could not be loaded'
 export const COPY_IMAGE_ENCODE_ERROR = 'the image could not be converted to PNG'
 export const COPY_IMAGE_UNAVAILABLE = 'copying images is not available in this window'
+export const COPY_IMAGE_MARKS_ERROR = 'the current marks could not be read'
 
 function startsWithPng(bytes: Uint8Array): boolean {
   return PNG_SIGNATURE.every((byte, index) => bytes[index] === byte)
@@ -72,9 +74,25 @@ export async function encodePng(blob: Blob): Promise<Uint8Array> {
   }
 }
 
-/** COPY_IMAGE_SOURCE plus RENDERER_PNG: the shot's original file as PNG bytes. */
-export async function loadClipboardPng(id: string): Promise<Uint8Array> {
-  const blob = await fetchAuthorizedBlob(`/captures/${encodeURIComponent(id)}/image?variant=original`)
+/**
+ * COPY_IMAGE_SOURCE plus RENDERER_PNG: the shot's file as PNG bytes. FILMSTRIP_AS_SHOWN
+ * (MEU-104, D-677 A): the caller asks for `annotated` when the shot has an annotated file.
+ */
+export async function loadClipboardPng(
+  id: string,
+  variant: 'original' | 'annotated' = 'original',
+): Promise<Uint8Array> {
+  const blob = await fetchAuthorizedBlob(`/captures/${encodeURIComponent(id)}/image?variant=${variant}`)
+  return toClipboardPng(blob, encodePng)
+}
+
+/** RENDER_CLIENT (MEU-104): the shot baked with `annotations` by the render route, as PNG bytes. */
+export async function renderClipboardPng(id: string, annotations: readonly Annotation[]): Promise<Uint8Array> {
+  const body = parseAnnotateBody({ annotations })
+  if (body === null) {
+    throw new Error(COPY_IMAGE_MARKS_ERROR)
+  }
+  const blob = await postAuthorizedBlob(`/captures/${encodeURIComponent(id)}/render`, body)
   return toClipboardPng(blob, encodePng)
 }
 

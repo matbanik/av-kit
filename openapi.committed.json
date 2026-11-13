@@ -5163,6 +5163,57 @@
         "summary": "Get Capture Image"
       }
     },
+    "/api/v1/captures/{id}/render": {
+      "post": {
+        "description": "Return the shot baked with the given annotations as a PNG, without saving.",
+        "operationId": "render_capture_api_v1_captures__id__render_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnotateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "image/png": {}
+            },
+            "description": "The shot with the marks."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Render Capture"
+      }
+    },
     "/api/v1/captures/{id}/revert": {
       "post": {
         "description": "Restore the newest backup over the original; the backup file is kept.",

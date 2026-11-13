@@ -32,6 +32,7 @@ import {
 import { displayHex, hexForNamedColor, normalizeHex } from './capture-color'
 import { viewedFilePath } from './capture-viewed-file'
 import {
+  APPLY_TITLES,
   applyState,
   assertNever,
   flattenConfirmText,
@@ -45,7 +46,7 @@ import type { Annotation, RedactMode } from './capture-annotate'
 import { parseAnnotateBody } from './capture-annotate'
 import { CaptureFilmstrip, type FilmstripShotActions } from './CaptureFilmstrip'
 import { rangeBetween, toggleSelection } from './capture-filmstrip-select'
-import { COPY_IMAGE_UNAVAILABLE, copyErrorMessage, loadClipboardPng } from './capture-clipboard'
+import { COPY_IMAGE_UNAVAILABLE, copyErrorMessage, loadClipboardPng, renderClipboardPng } from './capture-clipboard'
 import { CaptureCropBar } from './CaptureCropBar'
 import {
   applyPreset,
@@ -200,6 +201,12 @@ function historyOwnsFocus(): boolean {
     return false
   }
   return active === null || active === document.body || annotationOwnsFocus()
+}
+
+/** COPY_KEY (MEU-104): selected text on the page keeps the native copy. */
+function selectionCollapsed(): boolean {
+  const selection = window.getSelection()
+  return selection === null || selection.isCollapsed
 }
 
 /** HISTORY_CHORDS (D-163): Ctrl/Meta+Z undoes; Ctrl/Meta+Y and Ctrl/Meta+Shift+Z redo; Alt opts out. */
@@ -469,6 +476,9 @@ export function CapturePage() {
     !gestureOpen &&
     !txOpen
   canSaveRef.current = canSave
+  // COPY_BUTTON (MEU-104, D-696): the render route bakes the current marks, so only a shot, its loaded
+  // overlay and no open text draft are needed.
+  const copyEnabled = selected !== null && overlayReady && textDraft === null
   // PAGE_STATE: capture-save is mounted while dirty and enabled while canSave.
   usePublishCommandState('/capture', { 'capture:save': dirty && canSave })
   const cropImage = { width: selected?.width ?? 0, height: selected?.height ?? 0 }
@@ -1663,6 +1673,25 @@ export function CapturePage() {
       }
       return
     }
+    // COPY_KEY (MEU-104, D-692): Ctrl+C or Cmd+C with the image focused copies it with the current marks.
+    // A text field, a selection, a repeat, Shift or Alt, an open confirm or a disabled Copy image all keep
+    // the native copy: no preventDefault.
+    if (
+      (event.ctrlKey || event.metaKey) &&
+      event.key.toLowerCase() === 'c' &&
+      !event.shiftKey &&
+      !event.altKey &&
+      !event.repeat &&
+      confirm === null &&
+      historyOwnsFocus() &&
+      !isEditableTarget(event.target) &&
+      selectionCollapsed() &&
+      copyEnabled
+    ) {
+      event.preventDefault()
+      copyCurrentImage()
+      return
+    }
     if (event.key === 'Escape') {
       event.preventDefault()
       gestureRef.current = null
@@ -1784,6 +1813,23 @@ export function CapturePage() {
     })()
   }
 
+  /** COPY_BUTTON (MEU-104, D-690): the open shot baked with its current marks, saved or not. */
+  function copyCurrentImage(): void {
+    if (selected === null) {
+      return
+    }
+    const target = selected
+    const marks = annotationsRef.current
+    reportCopy(target, async () => {
+      const writeImage = window.api.writeClipboardImage
+      if (writeImage === undefined) {
+        throw new Error(COPY_IMAGE_UNAVAILABLE)
+      }
+      await writeImage(await renderClipboardPng(target.id, marks))
+      return `Copied ${target.display_name} as an image.`
+    })
+  }
+
   const filmstripActions: FilmstripShotActions = {
     onCopyPath: (target) => {
       reportCopy(target, async () => {
@@ -1797,7 +1843,10 @@ export function CapturePage() {
         if (writeImage === undefined) {
           throw new Error(COPY_IMAGE_UNAVAILABLE)
         }
-        await writeImage(await loadClipboardPng(target.id))
+        // FILMSTRIP_AS_SHOWN (MEU-104, D-677 A): the annotated file when the shot has one.
+        const variant =
+          typeof target.annotated_path === 'string' && target.annotated_path.length > 0 ? 'annotated' : 'original'
+        await writeImage(await loadClipboardPng(target.id, variant))
         return `Copied ${target.display_name} as an image.`
       })
     },
@@ -1872,7 +1921,20 @@ export function CapturePage() {
     if (kind === 'flatten' && selectedId !== null) {
       const id = selectedId
       const before = backupPath
+      const unsaved = dirty
       void run(async () => {
+        if (unsaved) {
+          // SAVE_AND_FLATTEN (MEU-104, D-693): save the current marks as Save does; a refused save stops here.
+          if (!canSaveRef.current) {
+            throw new Error(APPLY_TITLES.dirty)
+          }
+          const savedOk = await saveAnnotations()
+          if (!savedOk) {
+            throw new Error(APPLY_TITLES.dirty)
+          }
+          setSaved(annotationsRef.current)
+          setBaked(true)
+        }
         const detail = await flattenCapture(id)
         setViewVariant('original')
         if (detail.id !== id) {
@@ -1936,17 +1998,18 @@ export function CapturePage() {
             originalPath: selected?.original_path ?? '',
             backupEnabled: settings.form.flatten_backup,
             backupDir: settings.form.backup_dir,
+            unsaved: dirty,
           }),
           cancelId: 'capture-flatten-confirm-cancel',
           acceptId: 'capture-flatten-confirm',
-          acceptLabel: 'Apply to image',
+          acceptLabel: dirty ? 'Save and flatten' : 'Flatten into image',
         }
       case 'revert':
         return {
           message: revertConfirmText(selected?.display_name ?? '', backupPath ?? ''),
           cancelId: 'capture-revert-confirm-cancel',
           acceptId: 'capture-revert-confirm',
-          acceptLabel: 'Revert image',
+          acceptLabel: 'Restore backup',
         }
       default:
         return assertNever(kind)
@@ -2013,7 +2076,9 @@ export function CapturePage() {
   const apply = applyState({
     selected: selected !== null,
     savedCount: saved.length,
+    currentCount: annotations.length,
     dirty,
+    canSave,
     confirmOpen: confirm !== null,
     originalPath: selected?.original_path ?? '',
   })
@@ -2054,6 +2119,14 @@ export function CapturePage() {
           onClick={saveOverlay}
         />
       ) : null}
+      <ToolbarIconButton
+        spec={ACTION_BUTTONS['capture-copy-image']}
+        id="capture-copy-image"
+        variant="ghost"
+        shortcut="Ctrl+C"
+        disabled={!copyEnabled}
+        onClick={copyCurrentImage}
+      />
       <ToolbarIconButton
         spec={ACTION_BUTTONS['capture-apply-image']}
         id="capture-apply-image"

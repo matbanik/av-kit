@@ -43,7 +43,7 @@ describe('MEU-66 help', () => {
 const ORIGINAL_ANNOTATED_SENTENCE =
   'The filmstrip lists originals. Sidecar .annotated.png files are baked copies and are skipped by the inbox watcher.'
 const FLATTEN_HELP_SENTENCE =
-  'Apply to image bakes the saved marks into the original file after copying it to the backup folder (Settings → Capture); a JPEG or WebP shot gets a new PNG copy instead, and the original stays unchanged. Revert restores the newest backup. Save overlay can write PNG, JPEG or WebP (Settings → Capture).'
+  'Flatten into image bakes the saved marks into the original file after copying it to the backup folder (Settings → Capture); a JPEG or WebP shot gets a new PNG copy instead, and the original stays unchanged. Restore backup restores the newest backup. Save annotations can write PNG, JPEG or WebP (Settings → Capture).'
 
 describe('MEU-67 help', () => {
   it('AC-67.25 original-annotated body appends FLATTEN_HELP_SENTENCE and keeps the old sentence verbatim', () => {

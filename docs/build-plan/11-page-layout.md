@@ -38,7 +38,7 @@ This is the single Phase 11 `DECISION_SET` of 37 §06 choices: DL1–DL4, CV1–
 | TT5 | Keep muted “No output yet” in the idle run-bar slot, so no-output state remains explicit. | `docs/proposals/2026-09-03-tts-page-layout-mockup.html` §06; COMPOSITION_LOCK | MEU-56 | Keep `last-output`/idle-copy meaning. |
 | TT6 | Add no voice preview control because there is no preview endpoint in the current contract. | `docs/proposals/2026-09-03-tts-page-layout-mockup.html` §06; COMPOSITION_LOCK | MEU-56 | Existing voice IDs remain; no dead preview ID. |
 | TT7 | Place the run bar statically below the two columns, not sticky to the viewport. | `docs/proposals/2026-09-03-tts-page-layout-mockup.html` §06; §04 | MEU-56 | Move output/progress/action IDs into the static bar. |
-| CP1 | Mount Save overlay only when dirty, retaining `capture-save` whenever actionable. | `docs/proposals/2026-09-03-capture-page-layout-mockup.html` §06; COMPOSITION_LOCK | MEU-57 | Keep `capture-save` on the dirty overlay action. |
+| CP1 | Mount Save annotations only when dirty, retaining `capture-save` whenever actionable. | `docs/proposals/2026-09-03-capture-page-layout-mockup.html` §06; COMPOSITION_LOCK | MEU-57 | Keep `capture-save` on the dirty overlay action. |
 | CP2 | Put the hotkey key cap inside the Capture button only when a hotkey is registered. | `docs/proposals/2026-09-03-capture-page-layout-mockup.html` §06; COMPOSITION_LOCK | MEU-57 | Keep `capture-region`; no fake unregistered key cap. |
 | CP3 | Keep both Capture-page Settings disclosure controls and Settings-page controls with their existing save targets. | `docs/proposals/2026-09-03-capture-page-layout-mockup.html` §06; COMPOSITION_LOCK | MEU-57 | Keep path/hotkey/Save IDs; add disclosure toggle ID. |
 | CP4 | Strip the date from visible filmstrip name and show time below; retain full original name accessibly. | `docs/proposals/2026-09-03-capture-page-layout-mockup.html` §06; COMPOSITION_LOCK | MEU-57 | Keep `capture-filmstrip-item` and accessible full name. |
@@ -90,7 +90,7 @@ MEU-57 composes a Capture header, Settings disclosure, filmstrip, viewport toolb
 
 Since MEU-65 the header disclosure is titled **Options** (a secondary button with an icon and a chevron), and the viewport toolbar is icon buttons with a contextual options row; see [09 §Viewport toolbar icons and Options](09-screenshot-capture.md#viewport-toolbar-icons-and-options).
 
-Since MEU-67 the per-shot actions also include **Apply to image** and, once a backup exists, **Revert**, behind the same inline confirm strip; see [09 §Flatten with backup](09-screenshot-capture.md#flatten-with-backup).
+Since MEU-67 the per-shot actions also include **Flatten into image…** and, once a backup exists, **Restore backup…**, behind the same inline confirm strip (names since MEU-104, D-694); see [09 §Flatten with backup](09-screenshot-capture.md#flatten-with-backup).
 
 Since MEU-81 the per-shot and per-mark actions are icon buttons with MEU-80 hints, Delete sits red at the far right after a separator, and the hotkey status shows inline in the header instead of a reserved band; see [09 §Capture action row](09-screenshot-capture.md#capture-action-row).
 

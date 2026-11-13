@@ -1490,6 +1490,22 @@ class CaptureService:
             uow.capture_shots.save(updated)
             return updated
 
+    def render_marks(self, shot_id: str, annotations: Sequence[Annotation]) -> bytes:
+        """RENDER_SERVICE (MEU-104): the shot baked with `annotations`, as PNG bytes.
+
+        Clamps each mark as `annotate_and_save` does and writes nothing: no file, no row.
+        """
+        with CAPTURE_FILE_LOCK, self._uow_factory() as uow:
+            shot = uow.capture_shots.get(shot_id)
+            if shot is None:
+                raise NotFoundError(f"capture shot {shot_id} not found")
+            if not _is_file(shot.original_path):
+                raise NotFoundError("original image is missing")
+            clamped = [
+                self._clamp_annotation(item, shot.width, shot.height) for item in annotations
+            ]
+            return self._annotate.render(shot.original_path, clamped)
+
     def read_image(self, shot_id: str, variant: str) -> bytes:
         """Return original or annotated file bytes."""
         return self._variant_path(self.get_shot(shot_id), variant).read_bytes()

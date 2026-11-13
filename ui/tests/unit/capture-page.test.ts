@@ -100,6 +100,8 @@ const WAVE9_EXTRA_TESTIDS = [
   'capture-filmstrip-item',
   'capture-color',
   'capture-stroke',
+  // MEU-104 (Session 69): COPY_BUTTON.
+  'capture-copy-image',
 ] as const
 
 const CAPTURE_PALETTE_IDS = ['nav:capture', 'capture:region', 'capture:save', 'capture:open_folder'] as const
@@ -610,8 +612,8 @@ describe('MEU-67 capture settings schema (AC-67.24)', () => {
       'settings-leaf-capture-backup_dir',
       'settings-capture-backup-browse',
       'settings-leaf-annotated_format',
-      'Back up the original before Apply to image',
-      'Save overlay format',
+      'Back up the original before Flatten into image',
+      'Save annotations format',
     ]) {
       expect(settings, id).toContain(id)
     }

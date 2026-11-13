@@ -12,11 +12,11 @@ export const CONVERTIBLE_SUFFIXES = ['.jpg', '.jpeg', '.webp'] as const
 
 export const APPLY_TITLES = {
   noMarks: 'Save marks first',
-  dirty: 'Save the overlay first',
+  dirty: 'Save annotations first',
   fileType: 'This file type cannot be flattened',
 } as const
 
-export const REVERT_DIRTY_TITLE = 'Save or discard overlay marks first'
+export const REVERT_DIRTY_TITLE = 'Save or discard unsaved marks first'
 
 export type ControlState = { enabled: boolean; title: string | undefined }
 
@@ -41,25 +41,36 @@ export function basename(path: string): string {
   return parts[parts.length - 1] ?? path
 }
 
-/** APPLY_ENABLED; a disabled button names the first unmet reason in order. */
+/**
+ * APPLY_ENABLED; a disabled button names the first unmet reason in order. SAVE_AND_FLATTEN
+ * (MEU-104, D-693): with unsaved marks it counts the current marks and needs a possible save,
+ * because accepting saves them first.
+ */
 export function applyState(input: {
   selected: boolean
   savedCount: number
+  currentCount: number
   dirty: boolean
+  canSave: boolean
   confirmOpen: boolean
   originalPath: string
 }): ControlState {
   if (!input.selected) {
     return { enabled: false, title: undefined }
   }
-  const title =
-    input.savedCount < 1
+  const title = input.dirty
+    ? input.currentCount < 1
       ? APPLY_TITLES.noMarks
-      : input.dirty
+      : !input.canSave
         ? APPLY_TITLES.dirty
         : !isFlattenInput(input.originalPath)
           ? APPLY_TITLES.fileType
           : undefined
+    : input.savedCount < 1
+      ? APPLY_TITLES.noMarks
+      : !isFlattenInput(input.originalPath)
+        ? APPLY_TITLES.fileType
+        : undefined
   return { enabled: title === undefined && !input.confirmOpen, title }
 }
 
@@ -71,22 +82,24 @@ export function revertState(input: { dirty: boolean; confirmOpen: boolean }): Co
   return { enabled: !input.confirmOpen, title: undefined }
 }
 
-/** FLATTEN_CONFIRM_TEXT for the three cases. */
+/** FLATTEN_CONFIRM_TEXT for the three cases; `unsaved` names the current marks, saved first (D-693). */
 export function flattenConfirmText(input: {
   displayName: string
   originalPath: string
   backupEnabled: boolean
   backupDir: string
+  unsaved: boolean
 }): string {
   const name = input.displayName
+  const lead = input.unsaved ? 'Save the current marks, then bake them into' : 'Bake the saved marks into'
   if (isConvertible(input.originalPath)) {
-    return `Bake the saved marks into a new PNG copy of ${name}? ${name} itself stays unchanged.`
+    return `${lead} a new PNG copy of ${name}? ${name} itself stays unchanged.`
   }
   if (!input.backupEnabled) {
-    return `Bake the saved marks into ${name}? Backups are off, so this cannot be undone.`
+    return `${lead} ${name}? Backups are off, so this cannot be undone.`
   }
   const folder = input.backupDir.trim().length > 0 ? input.backupDir.trim() : 'the backup folder in the inbox'
-  return `Bake the saved marks into ${name}? The original is copied to ${folder} first.`
+  return `${lead} ${name}? The original is copied to ${folder} first.`
 }
 
 /** REVERT_CONFIRM_TEXT. */
@@ -104,12 +117,12 @@ export function flattenStatus(outcome: FlattenOutcome): string {
   switch (outcome.kind) {
     case 'flatten':
       return outcome.backupAfter !== null && outcome.backupAfter !== outcome.backupBefore
-        ? `Applied to image. Backup: ${outcome.backupAfter}`
-        : 'Applied to image (no backup).'
+        ? `Flattened into image. Backup: ${outcome.backupAfter}`
+        : 'Flattened into image (no backup).'
     case 'convert':
-      return `Applied to a new PNG copy: ${outcome.displayName}.`
+      return `Flattened into a new PNG copy: ${outcome.displayName}.`
     case 'revert':
-      return `Reverted from ${basename(outcome.backupPath)}.`
+      return `Restored from ${basename(outcome.backupPath)}.`
     default:
       return assertNever(outcome)
   }

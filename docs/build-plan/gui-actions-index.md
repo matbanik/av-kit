@@ -71,16 +71,17 @@
 | `capture:import` | Import image… button | no | IPC `showFilesDialog` then `POST /captures` (mode import) per file | specified | 09 |
 | `capture:drop` | Drop image files on the Capture page | no | preload `getPathForFile` then `POST /captures` (mode import) per file | specified | 09 |
 | `capture:paste` | Ctrl+V with an image on the clipboard (Capture page, outside text fields) | no | IPC `pasteCaptureImage` | specified | 09 |
-| `capture:save` | Save annotated / Ctrl+S | yes | `POST /captures/{id}/annotate` | specified | 09 |
+| `capture:save` | Save annotations / Ctrl+S | yes | `POST /captures/{id}/annotate` | specified | 09 |
 | `capture:open_file` | Open file | no | IPC `openPath` | specified | 09 / 06 IPC |
 | `capture:open_folder` | Open folder | yes | IPC `showItemInFolder` | specified | 09 / 06 IPC |
 | `capture:delete` | Delete shot | no | `DELETE /captures/{id}` | specified | 09 |
 | `capture:copy_path` | Copy full path (thumbnail menu) | no | IPC `writeClipboardText` | specified | 09 |
-| `capture:copy_image` | Copy image (thumbnail menu) | no | IPC `writeClipboardImage` | specified | 09 |
+| `capture:copy_image` | Copy image (thumbnail menu; the annotated file when the shot has one) | no | IPC `writeClipboardImage` | specified | 09 |
+| `capture:copy_shot` | Copy image button / Ctrl+C (editor, current marks) | no | `POST /captures/{id}/render` then IPC `writeClipboardImage` | specified | 09 |
 | `capture:menu_delete` | Delete (thumbnail menu) | no | `DELETE /captures/{id}` | specified | 09 |
 | `capture:batch_delete` | Delete {n} shots (thumbnail menu, ticked shots or Shift-click range) | no | `DELETE /captures/{id}` per shot | specified | 09 |
-| `capture:apply_image` | Apply to image (bake saved marks after a backup) | no | `POST /captures/{id}/flatten` | specified | 09 |
-| `capture:revert_image` | Revert image from its newest backup | no | `POST /captures/{id}/revert` | specified | 09 |
+| `capture:apply_image` | Flatten into image… (bake saved marks after a backup) | no | `POST /captures/{id}/flatten` | specified | 09 |
+| `capture:revert_image` | Restore backup… from its newest backup | no | `POST /captures/{id}/revert` | specified | 09 |
 | `capture:tool_arrow` | Arrow tool | no | local canvas | specified | 09 |
 | `capture:tool_box` | Box tool | no | local canvas | specified | 09 |
 | `capture:tool_highlight` | Highlight tool | no | local canvas | specified | 09 |

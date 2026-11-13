@@ -29,6 +29,13 @@ class ImageAnnotatePort(Protocol):
         output_format: AnnotatedFormat = "png",
     ) -> ImageProbe: ...
 
+    def render(self, original_path: Path, annotations: Sequence[Annotation]) -> bytes:
+        """RENDER_BAKE (MEU-104): bake `annotations` as `bake` does and return PNG bytes.
+
+        No file is written, whatever `capture.annotated_format` says.
+        """
+        ...
+
     def ensure_dir(self, path: Path) -> None:
         """Create a folder (and parents) if missing; services never call mkdir (AC-12.8)."""
         ...

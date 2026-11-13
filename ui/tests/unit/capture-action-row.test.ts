@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ArchiveRestore, Delete, ExternalLink, FolderOpen, Save, Stamp, Trash2 } from 'lucide-react'
+import { ArchiveRestore, Copy, Delete, ExternalLink, FolderOpen, Save, Stamp, Trash2 } from 'lucide-react'
 import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -42,9 +42,11 @@ const UI = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 /** ACTION_BUTTONS (plan §Single-statement contracts), in ACTION_ORDER. */
 const ACTIONS = [
   { id: 'capture-remove-mark', icon: Delete, name: 'Remove mark', variant: 'ghost' },
-  { id: 'capture-save', icon: Save, name: 'Save overlay', variant: 'primary' },
-  { id: 'capture-apply-image', icon: Stamp, name: 'Apply to image', variant: 'secondary' },
-  { id: 'capture-revert-image', icon: ArchiveRestore, name: 'Revert image', variant: 'secondary' },
+  { id: 'capture-save', icon: Save, name: 'Save annotations', variant: 'primary' },
+  // MEU-104 (Session 69): COPY_BUTTON after Save; ACTION_LABELS renames Save, Apply and Revert.
+  { id: 'capture-copy-image', icon: Copy, name: 'Copy image', variant: 'ghost' },
+  { id: 'capture-apply-image', icon: Stamp, name: 'Flatten into image…', variant: 'secondary' },
+  { id: 'capture-revert-image', icon: ArchiveRestore, name: 'Restore backup…', variant: 'secondary' },
   { id: 'capture-open-file', icon: ExternalLink, name: 'Open file', variant: 'ghost' },
   { id: 'capture-open-folder', icon: FolderOpen, name: 'Open folder', variant: 'ghost' },
   { id: 'capture-delete', icon: Trash2, name: 'Delete shot', variant: 'destructive' },
@@ -359,7 +361,7 @@ describe('MEU-81 Capture action row', () => {
     expect(document.querySelectorAll('[data-annotation-type="arrow"]')).toHaveLength(1)
   })
 
-  it('AC-81.1: ACTION_BUTTONS has the 7 ids, icons and names, disjoint from TOOLBAR_BUTTONS', () => {
+  it('AC-81.1: ACTION_BUTTONS has the 8 ids, icons and names, disjoint from TOOLBAR_BUTTONS', () => {
     const table = (toolbar as unknown as Record<string, unknown>).ACTION_BUTTONS as
       | Record<string, { icon: unknown; name: string }>
       | undefined
@@ -382,19 +384,27 @@ describe('MEU-81 Capture action row', () => {
     await selectMark(0)
     // Clean: Apply and Revert enabled; Save unmounted.
     expect(screen.queryByTestId('capture-save')).toBeNull()
-    expectSlotOrder(['capture-remove-mark', 'capture-apply-image', 'capture-revert-image', 'capture-open-file', 'capture-open-folder'])
+    expectSlotOrder([
+      'capture-remove-mark',
+      'capture-copy-image',
+      'capture-apply-image',
+      'capture-revert-image',
+      'capture-open-file',
+      'capture-open-folder',
+    ])
     for (const action of ACTIONS.filter((row) => row.id !== 'capture-save')) {
       expectIconAction(action)
     }
     expect((screen.getByTestId('capture-apply-image') as HTMLButtonElement).disabled).toBe(false)
     expect((screen.getByTestId('capture-revert-image') as HTMLButtonElement).disabled).toBe(false)
-    // Dirty: a new arrow mounts Save; Apply and Revert are disabled and still carry no title.
+    // Dirty: a new arrow mounts Save; Flatten stays enabled (SAVE_AND_FLATTEN), Revert is disabled, neither carries a title.
     await user.click(screen.getByTestId('capture-tool-arrow'))
     await drag(surface, 20, 120, 120, 180)
     expect(document.querySelectorAll('[data-annotation-type="arrow"]')).toHaveLength(2)
     expectSlotOrder([
       'capture-remove-mark',
       'capture-save',
+      'capture-copy-image',
       'capture-apply-image',
       'capture-revert-image',
       'capture-open-file',
@@ -403,7 +413,7 @@ describe('MEU-81 Capture action row', () => {
     for (const action of ACTIONS) {
       expectIconAction(action)
     }
-    expect((screen.getByTestId('capture-apply-image') as HTMLButtonElement).disabled).toBe(true)
+    expect((screen.getByTestId('capture-apply-image') as HTMLButtonElement).disabled).toBe(false)
     expect((screen.getByTestId('capture-revert-image') as HTMLButtonElement).disabled).toBe(true)
     // No action button holds a text node.
     for (const action of ACTIONS) {
@@ -417,7 +427,7 @@ describe('MEU-81 Capture action row', () => {
     // Revert with no backup is unmounted, and the order closes up around it.
     await openShot([ARROW])
     expect(screen.queryByTestId('capture-revert-image')).toBeNull()
-    expectSlotOrder(['capture-apply-image', 'capture-open-file', 'capture-open-folder'])
+    expectSlotOrder(['capture-copy-image', 'capture-apply-image', 'capture-open-file', 'capture-open-folder'])
   })
 
   it('AC-81.3: each icon action keeps its behaviour', async () => {

@@ -13,7 +13,9 @@ type FlattenModule = {
   applyState: (input: {
     selected: boolean
     savedCount: number
+    currentCount: number
     dirty: boolean
+    canSave: boolean
     confirmOpen: boolean
     originalPath: string
   }) => { enabled: boolean; title: string | undefined }
@@ -40,7 +42,15 @@ async function load(): Promise<FlattenModule> {
   return mod as FlattenModule
 }
 
-const READY = { selected: true, savedCount: 2, dirty: false, confirmOpen: false, originalPath: 'C:/inbox/a.png' }
+const READY = {
+  selected: true,
+  savedCount: 2,
+  currentCount: 2,
+  dirty: false,
+  canSave: true,
+  confirmOpen: false,
+  originalPath: 'C:/inbox/a.png',
+}
 
 describe('MEU-67 APPLY_ENABLED and REVERT_VISIBLE rules', () => {
   it('AC-67.20 Apply is enabled for PNG, JPEG and WebP shots with saved marks and a clean overlay', async () => {
@@ -53,12 +63,18 @@ describe('MEU-67 APPLY_ENABLED and REVERT_VISIBLE rules', () => {
   it('AC-67.20 each disabled reason names the first unmet rule in order', async () => {
     const { applyState } = await load()
     expect(applyState({ ...READY, savedCount: 0 })).toEqual({ enabled: false, title: 'Save marks first' })
-    expect(applyState({ ...READY, savedCount: 0, dirty: true })).toEqual({ enabled: false, title: 'Save marks first' })
-    expect(applyState({ ...READY, dirty: true })).toEqual({ enabled: false, title: 'Save the overlay first' })
+    // SAVE_AND_FLATTEN (MEU-104): a dirty overlay counts its current marks and needs canSave.
+    expect(applyState({ ...READY, savedCount: 0, currentCount: 0, dirty: true })).toEqual({ enabled: false, title: 'Save marks first' })
+    expect(applyState({ ...READY, dirty: true, canSave: false })).toEqual({ enabled: false, title: 'Save annotations first' })
+    expect(applyState({ ...READY, dirty: true, canSave: false, originalPath: 'C:/inbox/a.bmp' })).toEqual({
+      enabled: false,
+      title: 'Save annotations first',
+    })
     expect(applyState({ ...READY, dirty: true, originalPath: 'C:/inbox/a.bmp' })).toEqual({
       enabled: false,
-      title: 'Save the overlay first',
+      title: 'This file type cannot be flattened',
     })
+    expect(applyState({ ...READY, savedCount: 0, dirty: true })).toEqual({ enabled: true, title: undefined })
     expect(applyState({ ...READY, originalPath: 'C:/inbox/a.bmp' })).toEqual({
       enabled: false,
       title: 'This file type cannot be flattened',
@@ -72,7 +88,7 @@ describe('MEU-67 APPLY_ENABLED and REVERT_VISIBLE rules', () => {
     expect(revertState({ dirty: false, confirmOpen: false })).toEqual({ enabled: true, title: undefined })
     expect(revertState({ dirty: true, confirmOpen: false })).toEqual({
       enabled: false,
-      title: 'Save or discard overlay marks first',
+      title: 'Save or discard unsaved marks first',
     })
     expect(revertState({ dirty: false, confirmOpen: true }).enabled).toBe(false)
   })
@@ -118,21 +134,21 @@ describe('MEU-67 confirm and status texts', () => {
   it('AC-67.22 AC-67.33 FLATTEN_STATUS for each outcome', async () => {
     const { flattenStatus } = await load()
     expect(flattenStatus({ kind: 'flatten', backupBefore: null, backupAfter: 'C:/b/a.1.png' })).toBe(
-      'Applied to image. Backup: C:/b/a.1.png',
+      'Flattened into image. Backup: C:/b/a.1.png',
     )
     expect(flattenStatus({ kind: 'flatten', backupBefore: 'C:/b/a.1.png', backupAfter: 'C:/b/a.2.png' })).toBe(
-      'Applied to image. Backup: C:/b/a.2.png',
+      'Flattened into image. Backup: C:/b/a.2.png',
     )
     // Backups off: no new backup, even when an older one is still the newest.
     expect(flattenStatus({ kind: 'flatten', backupBefore: 'C:/b/a.1.png', backupAfter: 'C:/b/a.1.png' })).toBe(
-      'Applied to image (no backup).',
+      'Flattened into image (no backup).',
     )
-    expect(flattenStatus({ kind: 'flatten', backupBefore: null, backupAfter: null })).toBe('Applied to image (no backup).')
+    expect(flattenStatus({ kind: 'flatten', backupBefore: null, backupAfter: null })).toBe('Flattened into image (no backup).')
     expect(flattenStatus({ kind: 'convert', displayName: 'photo-converted.png' })).toBe(
-      'Applied to a new PNG copy: photo-converted.png.',
+      'Flattened into a new PNG copy: photo-converted.png.',
     )
     expect(flattenStatus({ kind: 'revert', backupPath: 'C:\\b\\a.20261003-120000.png' })).toBe(
-      'Reverted from a.20261003-120000.png.',
+      'Restored from a.20261003-120000.png.',
     )
   })
 })

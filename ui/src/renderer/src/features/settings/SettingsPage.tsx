@@ -1053,7 +1053,7 @@ export function SettingsPage() {
           />
           <CheckboxRow
             id="settings-flatten-backup"
-            label="Back up the original before Apply to image"
+            label="Back up the original before Flatten into image"
             leaf="flatten_backup"
             testId="settings-leaf-flatten_backup"
             checked={capture.form.flatten_backup}
@@ -1083,7 +1083,7 @@ export function SettingsPage() {
           />
           <GridSelect
             id="settings-annotated-format"
-            label="Save overlay format"
+            label="Save annotations format"
             testId="settings-leaf-annotated_format"
             value={capture.form.annotated_format}
             options={ANNOTATED_FORMAT_OPTIONS}

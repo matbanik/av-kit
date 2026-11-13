@@ -1,6 +1,7 @@
 import {
   ArchiveRestore,
   ArrowLeftRight,
+  Copy,
   Crop,
   Delete,
   Eraser,
@@ -71,9 +72,11 @@ export type ToolbarButtonId = keyof typeof TOOLBAR_BUTTONS
  */
 export const ACTION_BUTTONS = {
   'capture-remove-mark': { icon: Delete, name: 'Remove mark' },
-  'capture-save': { icon: Save, name: 'Save overlay' },
-  'capture-apply-image': { icon: Stamp, name: 'Apply to image' },
-  'capture-revert-image': { icon: ArchiveRestore, name: 'Revert image' },
+  'capture-save': { icon: Save, name: 'Save annotations' },
+  // COPY_BUTTON (MEU-104, D-696): between Save annotations and Flatten into image.
+  'capture-copy-image': { icon: Copy, name: 'Copy image' },
+  'capture-apply-image': { icon: Stamp, name: 'Flatten into image…' },
+  'capture-revert-image': { icon: ArchiveRestore, name: 'Restore backup…' },
   'capture-open-file': { icon: ExternalLink, name: 'Open file' },
   'capture-open-folder': { icon: FolderOpen, name: 'Open folder' },
   'capture-delete': { icon: Trash2, name: 'Delete shot' },

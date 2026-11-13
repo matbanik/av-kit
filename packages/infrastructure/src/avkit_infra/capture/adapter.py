@@ -538,13 +538,31 @@ class CaptureAdapter:
                 canvas = opened.convert("RGBA")
         except (UnidentifiedImageError, OSError) as exc:
             raise InboxPathError(f"{original_path} is not an image") from exc
-        # REGION_PASS: region marks first, then the drawn marks painted over the result.
-        canvas = apply_region_pass(canvas, annotations)
-        for annotation in annotations:
-            canvas = self._apply(canvas, annotation)
+        canvas = self._bake_canvas(canvas, annotations)
         if output_format == "png":
             return self._write_png(canvas.convert("RGB"), output_path)
         return self._write_lossy(canvas.convert("RGB"), output_path, output_format)
+
+    def render(self, original_path: Path, annotations: Sequence[Annotation]) -> bytes:
+        """RENDER_BAKE (MEU-104): bake `annotations` in memory and return PNG bytes.
+
+        The same canvas and the same PNG encode as `bake(..., "png")`; nothing is written.
+        """
+        try:
+            with Image.open(original_path) as opened:
+                canvas = opened.convert("RGBA")
+        except (UnidentifiedImageError, OSError) as exc:
+            # No path in the message: it reaches the renderer's status line.
+            raise InboxPathError("the image could not be opened") from exc
+        canvas = self._bake_canvas(canvas, annotations)
+        return _encode_view(canvas.convert("RGB"), ".png")
+
+    def _bake_canvas(self, canvas: Image.Image, annotations: Sequence[Annotation]) -> Image.Image:
+        """The shared bake path: REGION_PASS first, then the drawn marks painted over it."""
+        canvas = apply_region_pass(canvas, annotations)
+        for annotation in annotations:
+            canvas = self._apply(canvas, annotation)
+        return canvas
 
     def sheet(
         self,

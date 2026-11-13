@@ -509,3 +509,6 @@ export const CAPTURE_TOOL_REDACT = 'capture-tool-redact'
 export const CAPTURE_REDACT_MODE = 'capture-redact-mode'
 export const CAPTURE_REDACT_SOLID = 'capture-redact-solid'
 export const CAPTURE_REDACT_PIXELATE = 'capture-redact-pixelate'
+
+// MEU-104 Capture copy image (additive IDs).
+export const CAPTURE_COPY_IMAGE = 'capture-copy-image'

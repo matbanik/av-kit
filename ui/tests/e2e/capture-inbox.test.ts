@@ -751,7 +751,7 @@ test('AC-57.10 Save overlay mount rule, inline confirm strips and shot info vers
   await drawArrow(page)
   await expect(page.locator('[data-annotation-type="arrow"]')).toHaveCount(1)
   await expect(page.getByTestId('capture-save')).toBeEnabled()
-  await expect(page.getByTestId('capture-save')).toHaveAttribute('aria-label', 'Save overlay')
+  await expect(page.getByTestId('capture-save')).toHaveAttribute('aria-label', 'Save annotations')
   await expect(page.getByTestId('capture-filmstrip-item').first()).toHaveAttribute('data-dirty', 'true')
   await page.getByTestId('capture-filmstrip-item').nth(1).click()
   const strip = page.getByTestId('capture-viewport').getByTestId('capture-confirm-strip')
@@ -1460,6 +1460,17 @@ async function openFlattenShot(page: Page, index = 0): Promise<void> {
   await expect(page.getByTestId('capture-mark-list').locator('button')).toHaveCount(1)
 }
 
+/** SAVE_AND_FLATTEN (MEU-104): removing the only saved mark leaves a dirty overlay with no current marks. */
+async function removeOnlyMark(page: Page): Promise<void> {
+  const row = page.getByTestId('capture-mark-list').locator('button').first()
+  await expect(row).toBeVisible()
+  await row.click()
+  const remove = page.getByTestId('capture-remove-mark')
+  await expect(remove).toBeVisible()
+  await remove.click()
+  await expect(page.getByTestId('capture-mark-list').locator('button')).toHaveCount(0)
+}
+
 test('AC-67.20 AC-67.21 AC-67.22 Apply: enabled with saved marks, off after an edit; Cancel sends nothing; Confirm bakes once and refetches [TA-22]', async () => {
   const app = await launchApp()
   const page = await app.firstWindow()
@@ -1473,9 +1484,8 @@ test('AC-67.20 AC-67.21 AC-67.22 Apply: enabled with saved marks, off after an e
   await expect(applyButton).toBeEnabled()
   await page.getByTestId('capture-tool-arrow').click()
   await drawArrow(page)
-  await expect(applyButton).toBeDisabled()
-  await page.getByTestId('capture-apply-image-tip').hover()
-  await expect(page.getByTestId('capture-apply-image-hint')).toHaveText('Apply to image — Save the overlay first')
+  // SAVE_AND_FLATTEN (MEU-104): a dirty overlay that can save keeps Flatten enabled.
+  await expect(applyButton).toBeEnabled()
   await page.getByTestId('capture-undo').click()
   await expect(applyButton).toBeEnabled()
   await applyButton.click()
@@ -1489,7 +1499,7 @@ test('AC-67.20 AC-67.21 AC-67.22 Apply: enabled with saved marks, off after an e
   const before = await imageFetches(page, 'e2e-f-1')
   await applyButton.click()
   await page.getByTestId('capture-flatten-confirm').click()
-  await expect(page.getByTestId('capture-status')).toHaveText(`Applied to image. Backup: ${S30_BACKUP}`)
+  await expect(page.getByTestId('capture-status')).toHaveText(`Flattened into image. Backup: ${S30_BACKUP}`)
   expect(await ledger(page, 'POST', '/captures/e2e-f-1/flatten')).toBe(1)
   await expect(page.getByTestId('capture-mark-list').locator('button')).toHaveCount(0)
   await expect(page.getByTestId('capture-view-annotated')).toBeDisabled()
@@ -1510,7 +1520,7 @@ test('AC-67.23 flatten then revert round trip on one shot', async () => {
   await expect(page.getByTestId('capture-revert-image')).toHaveCount(0)
   await page.getByTestId('capture-apply-image').click()
   await page.getByTestId('capture-flatten-confirm').click()
-  await expect(page.getByTestId('capture-status')).toHaveText(`Applied to image. Backup: ${S30_BACKUP}`)
+  await expect(page.getByTestId('capture-status')).toHaveText(`Flattened into image. Backup: ${S30_BACKUP}`)
   const revert = page.getByTestId('capture-revert-image')
   await expect(revert).toBeEnabled()
   await revert.click()
@@ -1522,7 +1532,7 @@ test('AC-67.23 flatten then revert round trip on one shot', async () => {
   const before = await imageFetches(page, 'e2e-f-1')
   await revert.click()
   await page.getByTestId('capture-revert-confirm').click()
-  await expect(page.getByTestId('capture-status')).toHaveText('Reverted from a.20261003-120000.png.')
+  await expect(page.getByTestId('capture-status')).toHaveText('Restored from a.20261003-120000.png.')
   expect(await ledger(page, 'POST', '/captures/e2e-f-1/revert')).toBe(1)
   await expect.poll(async () => (await imageFetches(page, 'e2e-f-1')).viewport).toBeGreaterThan(before.viewport)
   await app.close()
@@ -1542,7 +1552,7 @@ test('AC-67.33 a JPEG shot bakes into a new PNG copy that becomes the selection;
     'Bake the saved marks into a new PNG copy of photo.jpg? photo.jpg itself stays unchanged.',
   )
   await page.getByTestId('capture-flatten-confirm').click()
-  await expect(page.getByTestId('capture-status')).toHaveText('Applied to a new PNG copy: photo-converted.png.')
+  await expect(page.getByTestId('capture-status')).toHaveText('Flattened into a new PNG copy: photo-converted.png.')
   expect(await ledger(page, 'POST', '/captures/e2e-j-1/flatten')).toBe(1)
   await expect(page.locator('[data-testid="capture-filmstrip-item"][aria-current="true"]')).toContainText(
     'photo-converted.png',
@@ -1589,8 +1599,8 @@ test('AC-67.20 A-6 a disabled Apply shows its reason where the pointer lands [TA
     marks: { 'e2e-f-1': [S30_MARK] },
   })
   await openFlattenShot(page)
-  await page.getByTestId('capture-tool-arrow').click()
-  await drawArrow(page)
+  // SAVE_AND_FLATTEN (MEU-104): a dirty overlay that can save is enabled, so no current marks disables it.
+  await removeOnlyMark(page)
   const applyButton = page.getByTestId('capture-apply-image')
   await expect(applyButton).toBeDisabled()
   const box = await applyButton.boundingBox()
@@ -1599,7 +1609,7 @@ test('AC-67.20 A-6 a disabled Apply shows its reason where the pointer lands [TA
   // MEU-80: the wrapper under the pointer shows the reason through the rendered hint, not a native title.
   const hint = page.getByTestId('capture-apply-image-hint')
   await expect(hint).toBeVisible()
-  await expect(hint).toHaveText('Apply to image — Save the overlay first')
+  await expect(hint).toHaveText('Flatten into image… — Save marks first')
   await app.close()
 })
 
@@ -1616,17 +1626,17 @@ test('AC-67.35 A-10 hovering the disabled Apply shows a visible reason label ins
   // Enabled: after a real hover and HINT_DELAY_MS the hint shows the plain name; moving away hides it.
   await applyButton.hover()
   await page.waitForTimeout(HINT_DELAY_MS)
-  await expect(reason).toHaveText('Apply to image')
+  await expect(reason).toHaveText('Flatten into image…')
   await page.mouse.move(5, 5)
   await page.waitForTimeout(HINT_GRACE_MS)
   await expect(reason).toHaveCount(0)
-  await page.getByTestId('capture-tool-arrow').click()
-  await drawArrow(page)
+  // SAVE_AND_FLATTEN (MEU-104): a dirty overlay that can save is enabled, so no current marks disables it.
+  await removeOnlyMark(page)
   await expect(applyButton).toBeDisabled()
   const box = await applyButton.boundingBox()
   await page.mouse.move((box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2)
   await expect(reason).toBeVisible()
-  await expect(reason).toHaveText('Apply to image — Save the overlay first')
+  await expect(reason).toHaveText('Flatten into image… — Save marks first')
   const tip = await reason.boundingBox()
   const size = page.viewportSize() ?? (await page.evaluate(() => ({ width: window.innerWidth, height: window.innerHeight })))
   expect(tip).toBeTruthy()
@@ -1697,6 +1707,7 @@ test('AC-80.10: a real hover shows the enabled Arrow hint and the disabled Undo 
 const ACTION_IDS = [
   'capture-remove-mark',
   'capture-save',
+  'capture-copy-image',
   'capture-apply-image',
   'capture-revert-image',
   'capture-open-file',
@@ -3202,5 +3213,53 @@ test('AC-103.24 the Redact button shows with Solid checked; the Smart eraser too
   const hint = page.getByTestId('capture-tool-eraser-hint')
   await expect(hint).toBeVisible()
   await expect(hint).toHaveText('Smart eraser: Covers an area with the surrounding colour')
+  await app.close()
+})
+
+// ── MEU-104 Copy image and the shot action names (Session 69 plan AC-104.22) ───────────────────
+
+test('AC-104.22 the action row reads Save annotations, Copy image and Flatten into image…; a dirty flatten accepts with Save and flatten', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await installFlattenSeam(page, {
+    shots: [sampleShot('e2e-f-1', 'a.png', '2026-10-03T12:00:00Z')],
+    marks: { 'e2e-f-1': [S30_MARK] },
+  })
+  await installFetchLedger(page)
+  await openFlattenShot(page)
+  // No step clicks Copy image or presses Ctrl+C, so nothing writes the system clipboard.
+  const copy = page.getByTestId('capture-copy-image')
+  await expect(copy).toBeVisible()
+  await expect(copy).toHaveAttribute('aria-label', 'Copy image')
+  await expect(copy).toHaveAttribute('aria-keyshortcuts', 'Control+C')
+  const flatten = page.getByTestId('capture-apply-image')
+  await expect(flatten).toHaveAttribute('aria-label', 'Flatten into image…')
+  const arrowTool = page.getByTestId('capture-tool-arrow')
+  await expect(arrowTool).toBeVisible()
+  await arrowTool.click()
+  await drawArrow(page)
+  const save = page.getByTestId('capture-save')
+  await expect(save).toBeVisible()
+  await expect(save).toHaveAttribute('aria-label', 'Save annotations')
+  const order = await page.evaluate(() =>
+    Array.from(
+      document.querySelectorAll(
+        '[data-testid="capture-save"], [data-testid="capture-copy-image"], [data-testid="capture-apply-image"]',
+      ),
+    ).map((node) => node.getAttribute('data-testid')),
+  )
+  expect(order).toEqual(['capture-save', 'capture-copy-image', 'capture-apply-image'])
+  await expect(flatten).toBeVisible()
+  await expect(flatten).toBeEnabled()
+  await flatten.click()
+  const accept = page.getByTestId('capture-flatten-confirm')
+  await expect(accept).toBeVisible()
+  await expect(accept).toHaveText('Save and flatten')
+  const cancel = page.getByTestId('capture-flatten-confirm-cancel')
+  await expect(cancel).toBeVisible()
+  await cancel.click()
+  expect(await ledger(page, 'POST', '/flatten')).toBe(0)
+  expect(await ledger(page, 'POST', '/annotate')).toBe(0)
+  expect(await ledger(page, 'POST', '/render')).toBe(0)
   await app.close()
 })

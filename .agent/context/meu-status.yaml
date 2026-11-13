@@ -2727,18 +2727,18 @@ meus:
     anchor: copy-image-and-action-names
     text: Phase 9 §Copy image and action names
   description: Copy image renders the current marks through a render endpoint to the clipboard from a button or canvas Ctrl+C, and the action row reads Save annotations, Flatten into image and Restore backup.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-81, MEU-99
   dependency_parse_status: parsed
   depends_on:
   - MEU-81
   - MEU-99
-  execution_plan: null
-  updated: '2026-10-29'
+  execution_plan: docs/execution/plans/2026-11-13-capture-copy-image/
+  updated: '2026-11-13'
   closed_reason: null
   note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
 - row_key: MEU-105

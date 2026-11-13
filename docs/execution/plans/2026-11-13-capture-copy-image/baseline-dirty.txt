@@ -1,0 +1,9 @@
+?? .agent/context/handoffs/2026-11-13-capture-copy-image-plan-critical-review.md	83e56719b30b7e6aadc573d5988774802dc218f215f046fc2f14e898c05c50fe
+?? docs/execution/plans/2026-11-13-capture-copy-image/baseline.ps1	b86d5f7326f15d25ddb835f12ffa132887ae38cee1d7fbcd8e31214359b716f5
+?? docs/execution/plans/2026-11-13-capture-copy-image/baseline.sha	770b0e63a1218e857551fd8d7b842b5ce6d953d99eb6b6f883391ce5c081c249
+?? docs/execution/plans/2026-11-13-capture-copy-image/id-length.py	000c782526ce93d5a9735933e7f1cc277e449dbc83fea4889216c3e4809788b1
+?? docs/execution/plans/2026-11-13-capture-copy-image/identity.py	ac465eb6df4ec58dfd365f8b43a246264a4c9020d1b085345dc9c66dc1e9a442
+?? docs/execution/plans/2026-11-13-capture-copy-image/implementation-plan.md	178f618cc61c942b5a1a33562cf1108cfb7840620252aa80ef32ce52e33b7939
+?? docs/execution/plans/2026-11-13-capture-copy-image/red-check.py	5845d8cc05e956ecb4eca2efee9ae80fc04f1410d3319939fc942dbab666269a
+?? docs/execution/plans/2026-11-13-capture-copy-image/session-gate.ps1	ca522e6dc913175e9c3486a3c0df3df307c3b48456ec365a281c718102dd5faa
+?? docs/execution/plans/2026-11-13-capture-copy-image/task.md	15d5e4019d9e0d1133564c5e95a07e352b53d0e3509d0fc37bcc8830b36ecf53

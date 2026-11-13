@@ -1317,12 +1317,12 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     expect((screen.getByTestId('capture-open-folder') as HTMLButtonElement).disabled).toBe(false)
   })
 
-  it('AC-57.6 Save overlay mounts only when dirty and posts once [TA-9]', async () => {
+  it('AC-57.6 Save annotations mounts only when dirty and posts once [TA-9]', async () => {
     const surface = await openSelectedSurface()
     expect(screen.queryByTestId('capture-save')).toBeNull()
     await drag(surface, 25, 25, 150, 150)
     const save = screen.getByTestId('capture-save') as HTMLButtonElement
-    expect(save.getAttribute('aria-label')).toBe('Save overlay')
+    expect(save.getAttribute('aria-label')).toBe('Save annotations')
     expect(save.textContent?.trim()).toBe('')
     expect(save.disabled).toBe(false)
     expect(save.className).toMatch(/h-7/)
@@ -3841,9 +3841,9 @@ describe('MEU-67 capture flatten and revert GUI', () => {
       surface.dispatchEvent(new MouseEvent('mousedown', { clientX: 10, clientY: 10, bubbles: true }))
       surface.dispatchEvent(new MouseEvent('mouseup', { clientX: 40, clientY: 50, bubbles: true }))
     })
-    expect(apply().disabled).toBe(true)
+    // SAVE_AND_FLATTEN (MEU-104): a dirty overlay that can save keeps Flatten enabled.
+    expect(apply().disabled).toBe(false)
     expect(apply().getAttribute('title')).toBeNull()
-    expect(focusedHint(screen.getByTestId('capture-apply-image-tip'), 'capture-apply-image-hint')).toBe('Apply to image — Save the overlay first')
     await user.click(screen.getByTestId('capture-undo'))
     expect(apply().disabled).toBe(false)
     await select('photo.jpg')
@@ -3852,7 +3852,7 @@ describe('MEU-67 capture flatten and revert GUI', () => {
     expect(apply().disabled).toBe(true)
     expect(apply().getAttribute('title')).toBeNull()
     expect(focusedHint(screen.getByTestId('capture-apply-image-tip'), 'capture-apply-image-hint')).toBe(
-      'Apply to image — This file type cannot be flattened',
+      'Flatten into image… — This file type cannot be flattened',
     )
   })
 
@@ -3861,7 +3861,7 @@ describe('MEU-67 capture flatten and revert GUI', () => {
     await open(0)
     expect(apply().disabled).toBe(true)
     expect(apply().getAttribute('title')).toBeNull()
-    expect(focusedHint(screen.getByTestId('capture-apply-image-tip'), 'capture-apply-image-hint')).toBe('Apply to image — Save marks first')
+    expect(focusedHint(screen.getByTestId('capture-apply-image-tip'), 'capture-apply-image-hint')).toBe('Flatten into image… — Save marks first')
   })
 
   it('AC-67.21 the strip shows FLATTEN_CONFIRM_TEXT; Cancel sends nothing; Confirm POSTs {} once; the strip locks the page', async () => {
@@ -3916,7 +3916,7 @@ describe('MEU-67 capture flatten and revert GUI', () => {
     await user.click(apply())
     await user.click(screen.getByTestId('capture-flatten-confirm'))
     await vi.waitFor(() => {
-      expect(screen.getByTestId('capture-status').textContent).toBe(`Applied to image. Backup: ${BACKUP}`)
+      expect(screen.getByTestId('capture-status').textContent).toBe(`Flattened into image. Backup: ${BACKUP}`)
     })
     await vi.waitFor(() => {
       expect(screen.getByTestId('capture-mark-list').children.length).toBe(0)
@@ -3964,7 +3964,7 @@ describe('MEU-67 capture flatten and revert GUI', () => {
     await user.click(screen.getByTestId('capture-revert-image'))
     await user.click(screen.getByTestId('capture-revert-confirm'))
     await vi.waitFor(() => {
-      expect(screen.getByTestId('capture-status').textContent).toBe('Reverted from a.20261003-120000.png.')
+      expect(screen.getByTestId('capture-status').textContent).toBe('Restored from a.20261003-120000.png.')
     })
     expect(count('POST', '/captures/png-1/revert')).toBe(1)
     expect(calls.find((c) => c.url.includes('/revert'))?.body).toEqual({})
@@ -3987,7 +3987,7 @@ describe('MEU-67 capture flatten and revert GUI', () => {
     expect(revert.disabled).toBe(true)
     expect(revert.getAttribute('title')).toBeNull()
     expect(focusedHint(screen.getByTestId('capture-revert-image-tip'), 'capture-revert-image-hint')).toBe(
-      'Revert image — Save or discard overlay marks first',
+      'Restore backup… — Save or discard unsaved marks first',
     )
   })
 
@@ -4000,7 +4000,7 @@ describe('MEU-67 capture flatten and revert GUI', () => {
     )
     await user.click(screen.getByTestId('capture-flatten-confirm'))
     await vi.waitFor(() => {
-      expect(screen.getByTestId('capture-status').textContent).toBe('Applied to a new PNG copy: photo-converted.png.')
+      expect(screen.getByTestId('capture-status').textContent).toBe('Flattened into a new PNG copy: photo-converted.png.')
     })
     expect(count('POST', '/captures/jpg-1/flatten')).toBe(1)
     await vi.waitFor(() => {
@@ -4036,14 +4036,14 @@ describe('MEU-67 capture flatten and revert GUI', () => {
       surface.dispatchEvent(new MouseEvent('mousedown', { clientX: 10, clientY: 10, bubbles: true }))
       surface.dispatchEvent(new MouseEvent('mouseup', { clientX: 40, clientY: 50, bubbles: true }))
     })
-    expect(apply().disabled).toBe(true)
+    // SAVE_AND_FLATTEN (MEU-104): dirty, Flatten stays enabled; Revert is the disabled one.
+    expect(apply().disabled).toBe(false)
     // The disabled button ignores the pointer (Button primitive), so the wrapper is the hover and focus
     // target and shows the reason through the hint, never a native title.
     expect(applyTip.getAttribute('title')).toBeNull()
     expect(revertTip.getAttribute('title')).toBeNull()
-    expect(focusedHint(applyTip, 'capture-apply-image-hint')).toBe('Apply to image — Save the overlay first')
     expect(focusedHint(revertTip, 'capture-revert-image-hint')).toBe(
-      'Revert image — Save or discard overlay marks first',
+      'Restore backup… — Save or discard unsaved marks first',
     )
     expect(applyTip.className).not.toMatch(/pointer-events-none/)
     expect(revertTip.className).not.toMatch(/pointer-events-none/)
@@ -4062,7 +4062,7 @@ describe('MEU-67 capture flatten and revert GUI', () => {
     // Enabled: the hint shows the plain name, then goes once the pointer leaves.
     await user.hover(screen.getByTestId('capture-apply-image-tip'))
     await vi.waitFor(() => {
-      expect(hintText('capture-apply-image-hint')).toBe('Apply to image')
+      expect(hintText('capture-apply-image-hint')).toBe('Flatten into image…')
     }, settle)
     await user.unhover(screen.getByTestId('capture-apply-image-tip'))
     await vi.waitFor(() => {
@@ -4075,7 +4075,8 @@ describe('MEU-67 capture flatten and revert GUI', () => {
     })
     await user.hover(screen.getByTestId('capture-apply-image-tip'))
     await vi.waitFor(() => {
-      expect(hintText('capture-apply-image-hint')).toBe('Apply to image — Save the overlay first')
+      // SAVE_AND_FLATTEN (MEU-104): dirty and able to save, Flatten shows its plain name.
+      expect(hintText('capture-apply-image-hint')).toBe('Flatten into image…')
     }, settle)
     expect(screen.getByTestId('capture-apply-image-hint').getAttribute('role')).toBe('tooltip')
     await user.unhover(screen.getByTestId('capture-apply-image-tip'))
@@ -4084,7 +4085,7 @@ describe('MEU-67 capture flatten and revert GUI', () => {
     }, settle)
     await user.hover(screen.getByTestId('capture-revert-image-tip'))
     await vi.waitFor(() => {
-      expect(hintText('capture-revert-image-hint')).toBe('Revert image — Save or discard overlay marks first')
+      expect(hintText('capture-revert-image-hint')).toBe('Restore backup… — Save or discard unsaved marks first')
     }, settle)
   })
 
