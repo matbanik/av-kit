@@ -95,12 +95,15 @@ import { ACTION_BUTTONS } from './capture-toolbar'
 import { ToolbarIconButton } from './ToolbarIconButton'
 import { useCaptureCatalog, type CaptureListItem, sortFilmstrip } from './useCaptureCatalog'
 import { useCaptureSettings } from './useCaptureSettings'
+import { styleToolFor, type StyleTool, type ToolStyle } from './capture-tool-style'
+import { useCaptureToolStyles } from './useCaptureToolStyles'
 
 const HOTKEY_IN_USE_TEMPLATE = '{accelerator} is in use — quit ShareX or pick another key'
 const EMPTY_STATE = 'Press F2 or Capture region'
 const DRAG_THRESHOLD_CSS = 3
 const KEYBOARD_NUDGE_PX = 1
-const COLOR_GATE_MESSAGE = 'Apply or Cancel color'
+// STYLE_STORE (MEU-105): a failed tool-style PUT; it names no value.
+const STYLE_SAVE_FAILED = "Couldn't save the tool style"
 const TEXT_GATE_MESSAGE = 'Finish or cancel the text label'
 // CROP_MODAL, CROP_UNSAVED_GATE, CROP_ERRORS (MEU-131): the crop's reasons and its pending status.
 const CROP_REASON = 'Finish or cancel the crop first'
@@ -143,12 +146,41 @@ function insideBox(box: CropBox, point: { x: number; y: number }): boolean {
   return point.x >= box.x && point.x <= box.x + box.width && point.y >= box.y && point.y <= box.y + box.height
 }
 
-/** SIZE_BURST (MEU-85): the field text and marks before one Stroke or Size scrub; `index` is the live mark, if any. */
+/**
+ * SIZE_BURST (MEU-85): the field text and marks before one Stroke, Size or Block size scrub; `index` is the live
+ * mark, if any. BLOCK_SCRUB (MEU-105): with no mark, `styleTool` is the tool whose style the commit saves and
+ * `value` the last step.
+ */
 type SizeBurst = {
-  field: 'stroke' | 'font'
+  field: 'stroke' | 'font' | 'block'
   startText: string
   origin: Annotation[] | null
   index: number | null
+  styleTool: StyleTool | null
+  value: number | null
+}
+
+/** COLOR_WELL, TEXT_BG_WELL (MEU-105): the marks before a well's previews on one mark. */
+type ColorField = 'color' | 'textBg'
+type ColorBurst = { field: ColorField; origin: Annotation[]; index: number }
+
+/** STYLE_TARGET: `mark` with `field` set to `hex`, or null when the mark has no such field. */
+function restyleMark(mark: Annotation, field: ColorField, hex: string): Annotation | null {
+  if (field === 'textBg') {
+    return mark.type === 'text' ? { ...mark, bg_color: hex === '' ? null : hex } : null
+  }
+  if (!('color' in mark) || mark.type === 'redact') {
+    return null
+  }
+  return { ...mark, color: hex }
+}
+
+/** STYLE_TARGET: the mark's current value of `field`, in display form, or null when it has none. */
+function markColorValue(mark: Annotation, field: ColorField): string | null {
+  if (field === 'textBg') {
+    return mark.type === 'text' ? (mark.bg_color ? displayHex(mark.bg_color) : '') : null
+  }
+  return 'color' in mark && mark.type !== 'redact' ? displayHex(mark.color) : null
 }
 
 /** PIXELATE_BLOCK: an int in range, else null (the field holds the text and applies nothing). */
@@ -278,20 +310,22 @@ function draftCommits(draft: TextDraft | null, list: Annotation[]): boolean {
 
 /** REDACT_TOOL (D-679): the colour a Solid redact gets from the GUI. */
 const REDACT_SOLID_COLOR = '#000000'
+/** STYLE_MODEL: the colour every style tool starts with. */
+const DEFAULT_TOOL_COLOR = '#E0AF68'
 
+/** STYLE_DRAW (MEU-105): a new mark takes the armed tool's style, never the fields' text. */
 function createDrawnMark(
   tool: CaptureTool,
   start: { x: number; y: number },
   end: { x: number; y: number },
-  color: string,
-  stroke: string,
-  blockSize: string,
+  style: ToolStyle,
   redactMode: RedactMode,
 ): Annotation | null {
   if (tool === 'select' || tool === 'text' || tool === 'crop') {
     return null
   }
-  const strokeWidth = Number.parseInt(stroke, 10) || 3
+  const color = style.color ?? DEFAULT_TOOL_COLOR
+  const strokeWidth = style.stroke ?? 3
   if (tool === 'arrow') {
     if (Math.hypot(end.x - start.x, end.y - start.y) === 0) {
       return null
@@ -324,8 +358,7 @@ function createDrawnMark(
   }
   if (tool === 'redact') {
     if (redactMode === 'pixelate') {
-      // BLOCK_CONTROL: the field's value when it is a valid block, else the default.
-      return { type: 'pixelate', x, y, width, height, block_size: parseBlockSize(blockSize) ?? PIXELATE_BLOCK_DEFAULT }
+      return { type: 'pixelate', x, y, width, height, block_size: style.blockSize ?? PIXELATE_BLOCK_DEFAULT }
     }
     // REDACT_TOOL (D-679): Solid draws a black box.
     return { type: 'redact', x, y, width, height, color: REDACT_SOLID_COLOR }
@@ -362,13 +395,15 @@ type FilmstripRange = { anchorId: string | null; rangeIds: string[] }
 export function CapturePage() {
   const catalog = useCaptureCatalog()
   const settings = useCaptureSettings()
+  const toolStyles = useCaptureToolStyles()
+  const { styles, saveToolStyle } = toolStyles
   const items = useMemo(() => catalog.data?.items ?? [], [catalog.data?.items])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [tool, setTool] = useState<CaptureTool>('arrow')
   // LOCK_PERSISTS (MEU-87): only the lock button changes this; choosing a tool keeps it.
   const [toolLocked, setToolLocked] = useState(false)
-  const [color, setColor] = useState('#E0AF68')
-  const [candidate, setCandidate] = useState('#E0AF68')
+  // STYLE_DISPLAY (MEU-105): the fields' colour, a selected mark's or else the armed tool's style.
+  const [color, setColor] = useState(DEFAULT_TOOL_COLOR)
   const [stroke, setStroke] = useState('3')
   const [fontSize, setFontSize] = useState('16')
   const [textBg, setTextBg] = useState('')
@@ -412,7 +447,6 @@ export function CapturePage() {
   const [preview, setPreview] = useState<Annotation | null>(null)
   // Read by the window key handler, so a ref: a focus and a keydown in one task see the new end.
   const nudgeTargetRef = useRef<NudgeTarget>('body')
-  const [namedPreview, setNamedPreview] = useState(false)
   const [txOpen, setTxOpen] = useState(false)
   const gestureRef = useRef<Gesture | null>(null)
   // HOVER_CURSOR: the resize handle under an idle pointer, or the handle a resize gesture grabbed.
@@ -426,8 +460,11 @@ export function CapturePage() {
   const canSaveRef = useRef(false)
   const nudgeBurstRef = useRef<Annotation[] | null>(null)
   const sizeBurstRef = useRef<SizeBurst | null>(null)
-  // SCRUB_BASE: tells the Stroke or Size field that the page closed its burst.
-  const [sizeEpoch, setSizeEpoch] = useState({ stroke: 0, font: 0 })
+  const colorBurstRef = useRef<ColorBurst | null>(null)
+  // SCRUB_BASE: tells the Stroke, Size or Block size field that the page closed its burst.
+  const [sizeEpoch, setSizeEpoch] = useState({ stroke: 0, font: 0, block: 0 })
+  // STYLE_DISPLAY: the style tool of the armed tool and Redact mode, or null.
+  const styleTool = styleToolFor(tool, redactMode)
   // CROP_STATE (D-510): pointer and key events read the ref in the same task; updateCrop sets both.
   const [crop, setCrop] = useState<CropState | null>(null)
   const cropRef = useRef<CropState | null>(null)
@@ -455,13 +492,37 @@ export function CapturePage() {
     [items, selectedId],
   )
   const selectedMark = selectedIndex !== null ? annotations[selectedIndex] : undefined
-  // A region mark has no color option (a redact's own colour is not edited here), so its baseline is the tool
-  // color (the color group is hidden for it).
-  const colorBaseline =
-    selectedMark !== undefined && 'color' in selectedMark && selectedMark.type !== 'redact'
-      ? displayHex(selectedMark.color)
-      : displayHex(color)
-  const colorDirty = !namedPreview && displayHex(candidate) !== colorBaseline
+  // STYLE_DISPLAY: with no mark selected the fields show the armed tool's stored style, again whenever the
+  // tool, the Redact mode, the selection or the loaded styles change.
+  useEffect(() => {
+    if (selectedIndex !== null || styleTool === null) {
+      return
+    }
+    const style = styles[styleTool]
+    if (style.color !== undefined) {
+      setColor(displayHex(style.color))
+    }
+    if (style.stroke !== undefined) {
+      setStroke(String(style.stroke))
+    }
+    if (style.fontSize !== undefined) {
+      setFontSize(String(style.fontSize))
+    }
+    if (style.textBg !== undefined) {
+      setTextBg(style.textBg === '' ? '' : displayHex(style.textBg))
+    }
+    if (style.blockSize !== undefined) {
+      setBlockSize(String(style.blockSize))
+    }
+  }, [selectedIndex, styleTool, styles])
+  // STYLE_STORE: a failed style PUT shows its status once per failure.
+  const styleFailuresSeen = useRef(toolStyles.failures)
+  useEffect(() => {
+    if (toolStyles.failures > styleFailuresSeen.current) {
+      setNotice({ shotId: selectedId, text: STYLE_SAVE_FAILED })
+    }
+    styleFailuresSeen.current = toolStyles.failures
+  }, [toolStyles.failures, selectedId])
   const gestureOpen = gestureRef.current !== null || preview !== null
   const dirty = JSON.stringify(annotations) !== JSON.stringify(saved) || draftCommits(textDraft, annotations)
   // TEXT_REEDIT: an edit draft holds an index into the marks, so nothing may reorder them while it is open.
@@ -472,7 +533,6 @@ export function CapturePage() {
     imageEpoch > 0 &&
     viewVariant === 'original' &&
     textDraft === null &&
-    !colorDirty &&
     !gestureOpen &&
     !txOpen
   canSaveRef.current = canSave
@@ -642,10 +702,10 @@ export function CapturePage() {
       setPreview(null)
       setBaked(false)
       setBackupPath(null)
-      setNamedPreview(false)
       setTxOpen(false)
       gestureRef.current = null
       sizeBurstRef.current = null
+      colorBurstRef.current = null
       return
     }
     let cancelled = false
@@ -659,10 +719,10 @@ export function CapturePage() {
     setPreview(null)
     setBaked(false)
     setBackupPath(null)
-    setNamedPreview(false)
     setTxOpen(false)
     gestureRef.current = null
     sizeBurstRef.current = null
+    colorBurstRef.current = null
     overlayEditGen.current = 0
     const loadGen = overlayEditGen.current
     const loadId = selectedId
@@ -772,7 +832,6 @@ export function CapturePage() {
       selectedId === null ||
       cropDisabledReason !== undefined ||
       textDraft !== null ||
-      colorDirty ||
       txOpen ||
       gestureRef.current !== null
     ) {
@@ -996,7 +1055,7 @@ export function CapturePage() {
   }
 
   function chooseTool(next: CaptureTool): void {
-    if (cropRef.current !== null || textDraft !== null || colorDirty || txOpen || gestureRef.current !== null) {
+    if (cropRef.current !== null || textDraft !== null || txOpen || gestureRef.current !== null) {
       return
     }
     finishSize()
@@ -1004,8 +1063,6 @@ export function CapturePage() {
     nudgeTargetRef.current = 'body'
     if (next !== 'select') {
       setSelectedIndex(null)
-      setNamedPreview(false)
-      setCandidate(displayHex(color))
     }
   }
 
@@ -1079,20 +1136,17 @@ export function CapturePage() {
 
   function inspectMark(index: number): void {
     const mark = annotationsRef.current[index]
-    setNamedPreview(false)
     if (mark === undefined) {
       return
     }
     if (mark.type === 'pixelate') {
-      setCandidate(displayHex(color))
       setBlockSize(String(mark.block_size))
       return
     }
     if (mark.type === 'eraser' || mark.type === 'redact') {
-      setCandidate(displayHex(color))
       return
     }
-    setCandidate(displayHex(mark.color))
+    setColor(displayHex(mark.color))
     if (mark.type === 'text') {
       setFontSize(String(mark.font_size))
       setTextBg(mark.bg_color ? displayHex(mark.bg_color) : '')
@@ -1172,8 +1226,6 @@ export function CapturePage() {
         if (hit === null) {
           setSelectedIndex(null)
           nudgeTargetRef.current = 'body'
-          setNamedPreview(false)
-          setCandidate(displayHex(color))
           return
         }
         setSelectedIndex(hit.index)
@@ -1231,9 +1283,7 @@ export function CapturePage() {
           tool,
           { x: gesture.startImageX, y: gesture.startImageY },
           current,
-          color,
-          stroke,
-          blockSize,
+          styleTool === null ? {} : styles[styleTool],
           redactMode,
         )
         if (next === null) {
@@ -1309,9 +1359,7 @@ export function CapturePage() {
           tool,
           { x: gesture.startImageX, y: gesture.startImageY },
           current,
-          color,
-          stroke,
-          blockSize,
+          styleTool === null ? {} : styles[styleTool],
           redactMode,
         )
         setPreview(draft)
@@ -1352,7 +1400,11 @@ export function CapturePage() {
     finishSize()
     setStroke(value)
     const parsed = parsePositiveInt(value)
-    if (parsed === null || selectedIndex === null) {
+    if (parsed === null) {
+      return
+    }
+    if (selectedIndex === null) {
+      saveSizeStyle(styleTool, 'stroke', parsed)
       return
     }
     const mark = annotationsRef.current[selectedIndex]
@@ -1367,9 +1419,14 @@ export function CapturePage() {
 
   /** BLOCK_CONTROL: as changeStroke; a valid block applied to a selected pixelate is one undo step. */
   function changeBlockSize(value: string): void {
+    finishSize()
     setBlockSize(value)
     const parsed = parseBlockSize(value)
-    if (parsed === null || selectedIndex === null) {
+    if (parsed === null) {
+      return
+    }
+    if (selectedIndex === null) {
+      saveSizeStyle(styleTool, 'block', parsed)
       return
     }
     const mark = annotationsRef.current[selectedIndex]
@@ -1407,7 +1464,11 @@ export function CapturePage() {
     finishSize()
     setFontSize(value)
     const parsed = parsePositiveInt(value)
-    if (parsed === null || selectedIndex === null) {
+    if (parsed === null) {
+      return
+    }
+    if (selectedIndex === null) {
+      saveSizeStyle(styleTool, 'font', parsed)
       return
     }
     const mark = annotationsRef.current[selectedIndex]
@@ -1417,46 +1478,123 @@ export function CapturePage() {
     applyHistory(replaceAt(annotationsRef.current, selectedIndex, { ...mark, font_size: parsed }))
   }
 
-  function changeTextBg(value: string): void {
-    const trimmed = value.trim()
-    const nextValue =
-      trimmed.length === 0 ? '' : (normalizeHex(trimmed) ?? hexForNamedColor(trimmed) ?? trimmed)
-    setTextBg(nextValue)
+  /** STYLE_TARGET: save a size field as `tool`'s style when it differs; previews never call this. */
+  function saveSizeStyle(tool: StyleTool | null, field: SizeBurst['field'], value: number): void {
+    if (tool === null) {
+      return
+    }
+    const key = field === 'stroke' ? 'stroke' : field === 'font' ? 'fontSize' : 'blockSize'
+    const current = styles[tool][key]
+    if (current === undefined || current === value) {
+      return
+    }
+    const patch: ToolStyle = key === 'stroke' ? { stroke: value } : key === 'fontSize' ? { fontSize: value } : { blockSize: value }
+    saveToolStyle(tool, patch)
+  }
+
+  function showColor(field: ColorField, hex: string): void {
+    if (field === 'color') {
+      setColor(hex === '' ? hex : displayHex(hex))
+    } else {
+      setTextBg(hex === '' ? '' : displayHex(hex))
+    }
+  }
+
+  /** COLOR_WELL, TEXT_BG_WELL: one well `input`; it paints the selected mark with no undo step and no save. */
+  function previewColor(field: ColorField, value: string): void {
+    const hex = normalizeHex(value.trim())
+    if (hex === null || gestureRef.current !== null) {
+      return
+    }
+    showColor(field, hex)
     if (selectedIndex === null) {
       return
     }
     const mark = annotationsRef.current[selectedIndex]
-    if (mark === undefined || mark.type !== 'text') {
+    const next = mark === undefined ? null : restyleMark(mark, field, hex)
+    if (next === null) {
       return
     }
-    const nextBg = nextValue.length > 0 ? nextValue : null
-    if (mark.bg_color === nextBg) {
-      return
+    const open = colorBurstRef.current
+    if (open !== null && (open.field !== field || open.index !== selectedIndex)) {
+      finishColor()
     }
-    applyHistory(replaceAt(annotationsRef.current, selectedIndex, { ...mark, bg_color: nextBg }))
+    if (colorBurstRef.current === null) {
+      finishSize()
+      finishNudge()
+      colorBurstRef.current = { field, origin: annotationsRef.current, index: selectedIndex }
+    }
+    const list = replaceAt(annotationsRef.current, selectedIndex, next)
+    setAnnotations(list)
+    annotationsRef.current = list
   }
 
-  function applyColor(): void {
-    const hex = normalizeHex(candidate)
+  /** COLOR_WELL: end an open well preview, keeping what it painted as one undo step. Idempotent. */
+  function finishColor(): void {
+    const burst = colorBurstRef.current
+    if (burst === null) {
+      return
+    }
+    colorBurstRef.current = null
+    if (JSON.stringify(burst.origin) === JSON.stringify(annotationsRef.current)) {
+      return
+    }
+    overlayEditGen.current += 1
+    setPast((stack) => [...stack, burst.origin])
+    setFuture([])
+  }
+
+  /** COLOR_WELL: Escape drops an open well preview and restores the mark. Idempotent. */
+  function cancelColorPreview(): void {
+    const burst = colorBurstRef.current
+    if (burst === null) {
+      return
+    }
+    colorBurstRef.current = null
+    setAnnotations(burst.origin)
+    annotationsRef.current = burst.origin
+    inspectMark(burst.index)
+  }
+
+  /**
+   * STYLE_TARGET (D-719): one colour or background commit. With a mark selected it restyles only that mark as
+   * one undo step; with none, it saves the armed tool's style. A value equal to the current one does nothing.
+   */
+  function commitColor(field: ColorField, value: string): void {
+    const burst = colorBurstRef.current
+    if (burst !== null && burst.field === field && burst.index === selectedIndex) {
+      colorBurstRef.current = null
+      setAnnotations(burst.origin)
+      annotationsRef.current = burst.origin
+    } else {
+      finishColor()
+    }
+    finishSize()
+    const trimmed = value.trim()
+    const hex = field === 'textBg' && trimmed === '' ? '' : (normalizeHex(trimmed) ?? hexForNamedColor(trimmed))
     if (hex === null) {
       return
     }
-    setNamedPreview(false)
-    setColor(hex)
-    setCandidate(hex)
-    if (selectedIndex === null) {
+    showColor(field, hex)
+    if (selectedIndex !== null) {
+      const mark = annotationsRef.current[selectedIndex]
+      if (mark === undefined || markColorValue(mark, field) === (hex === '' ? '' : displayHex(hex))) {
+        return
+      }
+      const next = restyleMark(mark, field, hex)
+      if (next !== null) {
+        applyHistory(replaceAt(annotationsRef.current, selectedIndex, next))
+      }
       return
     }
-    const mark = annotationsRef.current[selectedIndex]
-    if (mark === undefined || !('color' in mark) || mark.type === 'redact' || displayHex(mark.color) === hex) {
+    if (styleTool === null) {
       return
     }
-    applyHistory(replaceAt(annotationsRef.current, selectedIndex, { ...mark, color: hex }))
-  }
-
-  function cancelColor(): void {
-    setNamedPreview(false)
-    setCandidate(colorBaseline)
+    const current = styles[styleTool][field]
+    if (current === undefined || (current === '' ? '' : displayHex(current)) === (hex === '' ? '' : displayHex(hex))) {
+      return
+    }
+    saveToolStyle(styleTool, field === 'color' ? { color: hex } : { textBg: hex })
   }
 
   function removeSelectedMark(): void {
@@ -1467,9 +1605,6 @@ export function CapturePage() {
     applyHistory(next)
     setSelectedIndex(null)
     nudgeTargetRef.current = 'body'
-    // As an empty-click deselect: the removed mark's color must not linger as an unapplied candidate.
-    setNamedPreview(false)
-    setCandidate(displayHex(color))
   }
 
   function nudgeSelected(dx: number, dy: number): void {
@@ -1524,6 +1659,7 @@ export function CapturePage() {
       return
     }
     finishNudge()
+    finishColor()
     if (sizeBurstRef.current !== null && sizeBurstRef.current.field !== field) {
       finishSize()
     }
@@ -1532,22 +1668,31 @@ export function CapturePage() {
       const mark = selectedIndex !== null ? annotationsRef.current[selectedIndex] : undefined
       const applies =
         mark !== undefined &&
-        (field === 'stroke' ? mark.type === 'arrow' || mark.type === 'rect' : mark.type === 'text')
+        (field === 'stroke'
+          ? mark.type === 'arrow' || mark.type === 'rect'
+          : field === 'font'
+            ? mark.type === 'text'
+            : mark.type === 'pixelate')
       burst = {
         field,
-        startText: field === 'stroke' ? stroke : fontSize,
+        startText: field === 'stroke' ? stroke : field === 'font' ? fontSize : blockSize,
         origin: applies ? annotationsRef.current : null,
         index: applies ? selectedIndex : null,
+        styleTool: applies || selectedIndex !== null ? null : styleTool,
+        value: null,
       }
       sizeBurstRef.current = burst
       if (applies) {
         setTxOpen(true)
       }
     }
+    burst.value = value
     if (field === 'stroke') {
       setStroke(String(value))
-    } else {
+    } else if (field === 'font') {
       setFontSize(String(value))
+    } else {
+      setBlockSize(String(value))
     }
     if (burst.index === null) {
       return
@@ -1558,6 +1703,8 @@ export function CapturePage() {
       next = { ...mark, stroke_width: value }
     } else if (field === 'font' && mark !== undefined && mark.type === 'text') {
       next = { ...mark, font_size: value }
+    } else if (field === 'block' && mark !== undefined && mark.type === 'pixelate') {
+      next = { ...mark, block_size: value }
     }
     if (next === null) {
       return
@@ -1569,6 +1716,7 @@ export function CapturePage() {
 
   /** SIZE_BURST: end the open scrub as one undo step. Idempotent; runs first in every handler that writes the marks. */
   function finishSize(): void {
+    finishColor()
     const burst = sizeBurstRef.current
     if (burst === null) {
       return
@@ -1577,6 +1725,10 @@ export function CapturePage() {
     setSizeEpoch((epoch) => ({ ...epoch, [burst.field]: epoch[burst.field] + 1 }))
     const origin = burst.origin
     if (origin === null) {
+      // STYLE_TARGET: a scrub with no mark saves the armed tool's style once, at its commit.
+      if (burst.value !== null) {
+        saveSizeStyle(burst.styleTool, burst.field, burst.value)
+      }
       return
     }
     setTxOpen(false)
@@ -1598,8 +1750,10 @@ export function CapturePage() {
     setSizeEpoch((epoch) => ({ ...epoch, [burst.field]: epoch[burst.field] + 1 }))
     if (burst.field === 'stroke') {
       setStroke(burst.startText)
-    } else {
+    } else if (burst.field === 'font') {
       setFontSize(burst.startText)
+    } else {
+      setBlockSize(burst.startText)
     }
     if (burst.origin === null) {
       return
@@ -1697,9 +1851,7 @@ export function CapturePage() {
       gestureRef.current = null
       setPreview(null)
       setTxOpen(false)
-      if (colorDirty) {
-        cancelColor()
-      }
+      cancelColorPreview()
       if (nudgeBurstRef.current !== null) {
         setAnnotations(nudgeBurstRef.current)
         annotationsRef.current = nudgeBurstRef.current
@@ -1785,8 +1937,6 @@ export function CapturePage() {
   }
 
   const banner = HOTKEY_IN_USE_TEMPLATE.replace('{accelerator}', settings.form.hotkey)
-  const pendingHex = normalizeHex(candidate)
-  const applyEnabled = pendingHex !== null && pendingHex !== colorBaseline
 
   function cancelConfirm(): void {
     setConfirm(null)
@@ -2061,13 +2211,11 @@ export function CapturePage() {
     cropStatus ??
     (textDraft !== null
       ? TEXT_GATE_MESSAGE
-      : applyEnabled || colorDirty
-        ? COLOR_GATE_MESSAGE
-        : notice !== null && notice.shotId === selectedId
-          ? notice.text
-          : rangeIds.length > 1
-            ? `${rangeIds.length} shots selected`
-            : '')
+      : notice !== null && notice.shotId === selectedId
+        ? notice.text
+        : rangeIds.length > 1
+          ? `${rangeIds.length} shots selected`
+          : '')
 
   const settingsSaveLabel = settings.isDirty ? 'Save settings •' : 'Save settings'
   const shotCount = `${items.length} ${items.length === 1 ? 'shot' : 'shots'}`
@@ -2402,7 +2550,7 @@ export function CapturePage() {
           hasAnnotated={Boolean(selected?.annotated_path) || baked}
           viewVariant={viewVariant}
           tool={tool}
-          color={candidate}
+          color={color}
           stroke={stroke}
           fontSize={fontSize}
           textBg={textBg}
@@ -2415,8 +2563,6 @@ export function CapturePage() {
           canUndo={past.length > 0 && !txOpen && !editingText}
           canRedo={future.length > 0 && !txOpen && !editingText}
           textDraft={textDraft}
-          colorApplyEnabled={applyEnabled}
-          colorCancelEnabled={applyEnabled}
           onTool={chooseTool}
           onRedactMode={changeRedactMode}
           toolLocked={toolLocked}
@@ -2424,16 +2570,15 @@ export function CapturePage() {
             setToolLocked((locked) => !locked)
           }}
           onColor={(value) => {
-            setNamedPreview(false)
-            setCandidate(value)
+            commitColor('color', value)
           }}
-          onColorApply={applyColor}
-          onColorCancel={cancelColor}
+          onColorPreview={(value) => {
+            previewColor('color', value)
+          }}
           onNamedColor={(name) => {
             const hex = hexForNamedColor(name)
             if (hex !== null) {
-              setNamedPreview(true)
-              setCandidate(hex)
+              commitColor('color', hex)
             }
           }}
           onStroke={changeStroke}
@@ -2450,8 +2595,19 @@ export function CapturePage() {
           onFontSizeCancel={cancelSize}
           strokeEpoch={sizeEpoch.stroke}
           fontSizeEpoch={sizeEpoch.font}
-          onTextBg={changeTextBg}
+          onTextBg={(value) => {
+            commitColor('textBg', value)
+          }}
+          onTextBgPreview={(value) => {
+            previewColor('textBg', value)
+          }}
           onBlockSize={changeBlockSize}
+          onBlockSizePreview={(value) => {
+            previewSize('block', value)
+          }}
+          onBlockSizeCommit={finishSize}
+          onBlockSizeCancel={cancelSize}
+          blockSizeEpoch={sizeEpoch.block}
           onViewVariant={setViewVariant}
           onUndo={undo}
           onRedo={redo}
@@ -2484,9 +2640,9 @@ export function CapturePage() {
                 x: textDraft.x,
                 y: textDraft.y,
                 text: textDraft.value,
-                color,
-                font_size: Number.parseInt(fontSize, 10) || 16,
-                bg_color: textBg.trim().length > 0 ? textBg : null,
+                color: styles.text.color ?? DEFAULT_TOOL_COLOR,
+                font_size: styles.text.fontSize ?? 16,
+                bg_color: styles.text.textBg ? styles.text.textBg : null,
               },
             ]
             applyHistory(list)

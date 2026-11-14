@@ -16,6 +16,8 @@ export type CaptureScrubFieldProps = {
   value: string
   /** Where a gesture starts when the field text is not a positive whole number. */
   fallback: number
+  /** BLOCK_SCRUB (MEU-105, D-722): the lowest value a gesture reaches; SCRUB_MIN when absent. */
+  min?: number
   max: number
   inputClassName?: string
   onChange: (value: string) => void
@@ -48,6 +50,7 @@ export function CaptureScrubField({
   ariaLabel,
   value,
   fallback,
+  min = SCRUB_MIN,
   max,
   inputClassName,
   onChange,
@@ -65,8 +68,8 @@ export function CaptureScrubField({
   const wheelAccRef = useRef<WheelAccumulator>(WHEEL_IDLE)
   const wheelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   // The listeners below are bound once; these refs give them the current render's values.
-  const latest = useRef({ value, fallback, max, onPreview, onCommit, onCancel })
-  latest.current = { value, fallback, max, onPreview, onCommit, onCancel }
+  const latest = useRef({ value, fallback, min, max, onPreview, onCommit, onCancel })
+  latest.current = { value, fallback, min, max, onPreview, onCommit, onCancel }
 
   function clearWheelTimer(): void {
     if (wheelTimerRef.current !== null) {
@@ -77,9 +80,9 @@ export function CaptureScrubField({
   }
 
   function step(delta: number): void {
-    const { value: text, fallback: base, max: top, onPreview: preview } = latest.current
+    const { value: text, fallback: base, min: bottom, max: top, onPreview: preview } = latest.current
     const from = burstRef.current ?? parsePositiveInt(text) ?? base
-    const next = clampScrub(from, delta, SCRUB_MIN, top)
+    const next = clampScrub(from, delta, bottom, top)
     burstRef.current = next
     if (next !== from) {
       preview(next)

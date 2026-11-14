@@ -6,7 +6,7 @@ import { CAPTURE_HELP_SECTIONS } from '../../src/renderer/src/features/capture/c
 
 const HELP_PIXEL_SENTENCE = 'Marks use original image pixels and survive Save then reload.'
 const HELP_EDIT_SENTENCE =
-  'Select a mark to move it or drag an arrow end until Save. Arrow keys nudge the selected mark, or the arrow end you grabbed or tabbed to; Apply commits color.'
+  'Select a mark to move it or drag an arrow end until Save. Arrow keys nudge the selected mark, or the arrow end you grabbed or tabbed to.'
 const HISTORY_HELP_SENTENCE =
   'Ctrl+Z undoes and Ctrl+Y or Ctrl+Shift+Z redoes while the image has focus; a text field keeps its own undo.'
 // Session 68 REDACT_HELP (D-686, DEP-3): the resize sentence names the redact mark.
@@ -74,7 +74,7 @@ describe('MEU-89 help', () => {
 })
 
 const SCRUB_HELP_SENTENCE =
-  'Drag the Stroke or Size label, or use the mouse wheel or Up/Down over its field, to change the size; each gesture is one undo step.'
+  'Drag the Stroke, Size or Block size label, or use the mouse wheel or Up/Down over its field, to change the size; each gesture is one undo step.'
 
 describe('MEU-85 help', () => {
   it('AC-85.11 HelpCard four-tools body includes the scrub sentence and keeps the zoom sentence', () => {

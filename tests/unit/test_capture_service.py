@@ -25,6 +25,16 @@ CAPTURE_KEYS = (
     "flatten_backup",
     "backup_dir",
     "annotated_format",
+    # STYLE_SETTINGS (Session 71, MEU-105): each style tool's own persisted style.
+    "arrow_color",
+    "arrow_stroke",
+    "box_color",
+    "box_stroke",
+    "highlight_color",
+    "text_color",
+    "text_font_size",
+    "text_bg_color",
+    "pixelate_block_size",
 )
 CAPTURE_DEFAULTS = {
     "inbox_dir": "~/Pictures/av-kit",
@@ -34,6 +44,15 @@ CAPTURE_DEFAULTS = {
     "flatten_backup": True,
     "backup_dir": "",
     "annotated_format": "png",
+    "arrow_color": "#E0AF68",
+    "arrow_stroke": 3,
+    "box_color": "#E0AF68",
+    "box_stroke": 3,
+    "highlight_color": "#E0AF68",
+    "text_color": "#E0AF68",
+    "text_font_size": 16,
+    "text_bg_color": "",
+    "pixelate_block_size": 10,
 }
 
 
@@ -417,6 +436,9 @@ def test_ac_36_12_capture_settings_keys(ac_id: str, tmp_path: Path) -> None:
     assert SETTINGS_KEY_TABLE[("capture", "backup_dir")].default == CAPTURE_DEFAULTS["backup_dir"]
     annotated_default = CAPTURE_DEFAULTS["annotated_format"]
     assert SETTINGS_KEY_TABLE[("capture", "annotated_format")].default == annotated_default
+    # STYLE_SETTINGS (Session 71, MEU-105): the nine style leaves and their defaults.
+    for key in CAPTURE_KEYS[7:]:
+        assert SETTINGS_KEY_TABLE[("capture", key)].default == CAPTURE_DEFAULTS[key], key
     settings = SettingsService(SharedFakeFactory(FakeUnitOfWork()))
     with pytest.raises(ValidationError):
         settings.get("capture", "not_a_leaf")

@@ -51,6 +51,16 @@ const CAPTURE_KEYS = [
   "flatten_backup",
   "backup_dir",
   "annotated_format",
+  // STYLE_MCP (Session 71, MEU-105): each style tool's own persisted style.
+  "arrow_color",
+  "arrow_stroke",
+  "box_color",
+  "box_stroke",
+  "highlight_color",
+  "text_color",
+  "text_font_size",
+  "text_bg_color",
+  "pixelate_block_size",
 ] as const;
 const CAPTURE_DEFAULTS = {
   inbox_dir: "~/Pictures/av-kit",
@@ -60,6 +70,15 @@ const CAPTURE_DEFAULTS = {
   flatten_backup: true,
   backup_dir: "",
   annotated_format: "png",
+  arrow_color: "#E0AF68",
+  arrow_stroke: 3,
+  box_color: "#E0AF68",
+  box_stroke: 3,
+  highlight_color: "#E0AF68",
+  text_color: "#E0AF68",
+  text_font_size: 16,
+  text_bg_color: "",
+  pixelate_block_size: 10,
 };
 const M7 = ["Workflow:", "Prerequisite:", "Returns:", "Errors:"] as const;
 const SHOT_OUT_FIELDS = [
@@ -203,6 +222,10 @@ describe("MEU-38 avkit_capture", () => {
     expect(capture.flatten_backup?.default).toBe(CAPTURE_DEFAULTS.flatten_backup);
     expect(capture.backup_dir?.default).toBe(CAPTURE_DEFAULTS.backup_dir);
     expect(capture.annotated_format?.default).toBe(CAPTURE_DEFAULTS.annotated_format);
+    // STYLE_MCP (Session 71, MEU-105): the nine style leaves and their defaults.
+    for (const key of CAPTURE_KEYS.slice(7)) {
+      expect(capture[key]?.default, key).toBe(CAPTURE_DEFAULTS[key]);
+    }
   });
 
   it("AC-38.7 catalog envelope rejects processor; convert still requires processor", async () => {
@@ -1690,5 +1713,34 @@ describe("MEU-102 avkit_capture multi-line text", () => {
       annotations: [{ type: "text", x: 12, y: 48, text: "Hi\nHi", color: "white", font_size: 16 }],
     });
     expect(twoLines.success).toBe(true);
+  });
+
+  it("AC-105.5 SETTINGS_SCHEMA and the set schema carry the nine capture style leaves", () => {
+    const capture = SETTINGS_SCHEMA.namespaces.capture;
+    expect(Object.keys(capture)).toEqual([...CAPTURE_KEYS]);
+    const types: Record<string, string> = {
+      arrow_color: "string",
+      arrow_stroke: "number",
+      box_color: "string",
+      box_stroke: "number",
+      highlight_color: "string",
+      text_color: "string",
+      text_font_size: "number",
+      text_bg_color: "string",
+      pixelate_block_size: "number",
+    };
+    for (const key of CAPTURE_KEYS.slice(7)) {
+      expect(capture[key], key).toEqual({ type: types[key], default: CAPTURE_DEFAULTS[key] });
+    }
+    const set = (extra: Record<string, unknown>) =>
+      settingsSchema.safeParse({ action: "set", namespace: "capture", ...extra }).success;
+    expect(set({ arrow_color: "#12ABCD", arrow_stroke: 5 })).toBe(true);
+    expect(set({ text_bg_color: "", text_font_size: 24, pixelate_block_size: 2 })).toBe(true);
+    expect(set({ arrow_stroke: 2.5 })).toBe(false);
+    expect(set({ arrow_stroke: true })).toBe(false);
+    expect(set({ arrow_color: 5 })).toBe(false);
+    expect(set({ arrow_colour: "#12ABCD" })).toBe(false);
+    const actions = ACTION_INDEX.filter((row) => row.tool === "avkit_settings").map((row) => row.action);
+    expect(actions).toEqual(["get", "set"]);
   });
 });

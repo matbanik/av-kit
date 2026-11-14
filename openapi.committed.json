@@ -3124,6 +3124,28 @@
             ],
             "title": "Archive Tracking"
           },
+          "arrow_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrow Color"
+          },
+          "arrow_stroke": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arrow Stroke"
+          },
           "audio_format": {
             "anyOf": [
               {
@@ -3167,6 +3189,28 @@
               }
             ],
             "title": "Batch Size"
+          },
+          "box_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Box Color"
+          },
+          "box_stroke": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Box Stroke"
           },
           "chunk_max_chars": {
             "anyOf": [
@@ -3333,6 +3377,17 @@
             ],
             "title": "Gpu Preference"
           },
+          "highlight_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Highlight Color"
+          },
           "hotkey": {
             "anyOf": [
               {
@@ -3477,6 +3532,17 @@
             ],
             "title": "Pause Between Batches"
           },
+          "pixelate_block_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pixelate Block Size"
+          },
           "playlist_end": {
             "anyOf": [
               {
@@ -3542,6 +3608,39 @@
               }
             ],
             "title": "Speed"
+          },
+          "text_bg_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Bg Color"
+          },
+          "text_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Color"
+          },
+          "text_font_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Font Size"
           },
           "theme": {
             "anyOf": [

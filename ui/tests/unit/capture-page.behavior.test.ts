@@ -687,28 +687,30 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     expect(screen.getByTestId('capture-delete')).toBeTruthy()
   })
 
-  it('AC-60.8 well/hex update a candidate only; Apply writes #RRGGBB; Cancel writes nothing; named green is not dirty', async () => {
+  // MEU-105 (COLOR_HEX, COLOR_WELL, COLOR_NAMED): the hex field commits on Enter, the well commits on
+  // change, a named pick paints at once, and there is no Cancel.
+  it('AC-60.8 the hex commits #RRGGBB on Enter; the well commits on change; there is no Cancel; named green paints', async () => {
     const surface = await openSelectedSurface()
     await drag(surface, 25, 25, 150, 150)
+    expect(screen.queryByTestId('capture-color-cancel')).toBeNull()
     const hex = screen.getByTestId('capture-color') as HTMLInputElement
     const well = screen.getByTestId('capture-color-well') as HTMLInputElement
     await user.clear(hex)
     await user.type(hex, '#12abcd')
     expect(document.querySelector('[data-annotation-type="arrow"]')?.getAttribute('stroke')).not.toBe('#12ABCD')
-    await user.click(screen.getByTestId('capture-color-apply'))
+    await user.keyboard('{Enter}')
     expect(document.querySelector('[data-annotation-type="arrow"]')?.getAttribute('stroke')?.toUpperCase()).toBe(
       '#12ABCD',
     )
-    well.value = '#00ff00'
-    well.dispatchEvent(new Event('input', { bubbles: true }))
-    await user.click(screen.getByTestId('capture-color-cancel'))
+    fireEvent.input(well, { target: { value: '#00ff00' } })
+    fireEvent.change(well, { target: { value: '#00ff00' } })
     expect(document.querySelector('[data-annotation-type="arrow"]')?.getAttribute('stroke')?.toUpperCase()).toBe(
-      '#12ABCD',
+      '#00FF00',
     )
     await user.selectOptions(screen.getByTestId('capture-named-color'), 'green')
     expect((screen.getByTestId('capture-color') as HTMLInputElement).value.toUpperCase()).toBe('#008000')
     expect(document.querySelector('[data-annotation-type="arrow"]')?.getAttribute('stroke')?.toUpperCase()).toBe(
-      '#12ABCD',
+      '#008000',
     )
     expect((screen.getByTestId('capture-save') as HTMLButtonElement).disabled).toBe(false)
   })
@@ -718,7 +720,8 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       { type: 'arrow', color: 'green', stroke_width: 3, from: [1, 1], to: [6, 6] },
     ]
     await openSelectedSurface()
-    const hexBefore = (screen.getByTestId('capture-color') as HTMLInputElement).value
+    // SELECT_NO_STYLE (MEU-105, D-721): the load arms Select, so no colour field shows before the pick.
+    expect(screen.queryByTestId('capture-color')).toBeNull()
     await user.click(screen.getByTestId('capture-mark-list').querySelector('button') as HTMLElement)
     expect((screen.getByTestId('capture-color') as HTMLInputElement).value.toUpperCase()).toBe(
       NAMED_COLOR_HEX.green,
@@ -727,7 +730,6 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     // TM-9 (CP1): re-selecting a saved mark leaves the shot clean, so Save stays unmounted.
     expect(screen.getByTestId('capture-draw-surface').getAttribute('data-overlay-ready')).toBe('true')
     expect(screen.queryByTestId('capture-save')).toBeNull()
-    expect(hexBefore.toUpperCase()).not.toBe(NAMED_COLOR_HEX.green)
   })
 
   it('AC-60.10 button and palette capture:save refuse when a transaction is open', async () => {
@@ -810,13 +812,13 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     expect(screen.queryByTestId('capture-handle-from')).toBeNull()
   })
 
-  it('AC-60.13 Select uses outline/primary; color well/Apply/Cancel are visible; handles only for the selected arrow on original [TA-2]', async () => {
+  it('AC-60.13 Select uses outline/primary; the color well is visible and Apply/Cancel are gone; handles only for the selected arrow on original [TA-2]', async () => {
     const surface = await openSelectedSurface()
     const select = screen.getByTestId('capture-tool-select')
     expect(select.className).toMatch(/btn-(outline|primary)/)
     expect(screen.getByTestId('capture-color-well')).toBeTruthy()
-    expect(screen.getByTestId('capture-color-apply')).toBeTruthy()
-    expect(screen.getByTestId('capture-color-cancel')).toBeTruthy()
+    expect(screen.queryByTestId('capture-color-apply')).toBeNull()
+    expect(screen.queryByTestId('capture-color-cancel')).toBeNull()
     await drag(surface, 25, 25, 150, 150)
     expect(screen.getByTestId('capture-handle-from')).toBeTruthy()
     expect(screen.getByTestId('capture-handle-to')).toBeTruthy()
@@ -1082,14 +1084,18 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     }
   })
 
-  it('AC-60.8 Save status names the color Apply/Cancel gate instead of looking inert', async () => {
+  // MEU-105 (COLOR_GATE_GONE): hex text that is not yet a colour blocks nothing.
+  it('AC-60.8 Save stays on while the hex holds text, and the status never names an Apply/Cancel gate', async () => {
     const surface = await openSelectedSurface()
     await drag(surface, 25, 25, 150, 150)
     const hex = screen.getByTestId('capture-color') as HTMLInputElement
     await user.clear(hex)
-    await user.type(hex, '#12ABCD')
-    expect((screen.getByTestId('capture-save') as HTMLButtonElement).disabled).toBe(true)
-    expect(screen.getByTestId('capture-status').textContent).toMatch(/Apply or Cancel color/i)
+    await user.type(hex, '#12AB')
+    expect((screen.getByTestId('capture-save') as HTMLButtonElement).disabled).toBe(false)
+    expect(screen.getByTestId('capture-status').textContent).not.toMatch(/Apply or Cancel color/i)
+    await user.type(hex, 'CD')
+    expect((screen.getByTestId('capture-save') as HTMLButtonElement).disabled).toBe(false)
+    expect(screen.getByTestId('capture-status').textContent).not.toMatch(/Apply or Cancel color/i)
   })
 
   it('AC-60.19 the arrow handles are labeled, focusable nudge targets [TA-5]', async () => {
@@ -1127,25 +1133,21 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     expect(screen.getByTestId('capture-handle-to')).toBeTruthy()
   })
 
-  it('AC-60.8 Apply stays off until the candidate differs; named orange then Apply paints the selected mark', async () => {
+  // MEU-105 (COLOR_NAMED, COLOR_GATE_GONE): there is no Apply; a named pick paints the selected mark at once.
+  it('AC-60.8 there is no Apply; named orange then blue each paint the selected mark at once', async () => {
     const surface = await openSelectedSurface()
     await drag(surface, 25, 25, 150, 150)
-    expect((screen.getByTestId('capture-color-apply') as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.queryByTestId('capture-color-apply')).toBeNull()
     await user.selectOptions(screen.getByTestId('capture-named-color'), 'orange')
     expect((screen.getByTestId('capture-color') as HTMLInputElement).value.toUpperCase()).toBe('#FFA500')
-    expect(document.querySelector('[data-annotation-type="arrow"]')?.getAttribute('stroke')?.toUpperCase()).not.toBe(
-      '#FFA500',
-    )
-    expect((screen.getByTestId('capture-color-apply') as HTMLButtonElement).disabled).toBe(false)
-    await user.click(screen.getByTestId('capture-color-apply'))
     expect(document.querySelector('[data-annotation-type="arrow"]')?.getAttribute('stroke')?.toUpperCase()).toBe(
       '#FFA500',
     )
+    expect((screen.getByTestId('capture-named-color') as HTMLSelectElement).value).toBe('')
     await user.selectOptions(screen.getByTestId('capture-named-color'), 'blue')
-    await user.click(screen.getByTestId('capture-color-cancel'))
-    expect((screen.getByTestId('capture-color') as HTMLInputElement).value.toUpperCase()).toBe('#FFA500')
+    expect((screen.getByTestId('capture-color') as HTMLInputElement).value.toUpperCase()).toBe('#0000FF')
     expect(document.querySelector('[data-annotation-type="arrow"]')?.getAttribute('stroke')?.toUpperCase()).toBe(
-      '#FFA500',
+      '#0000FF',
     )
   })
 
@@ -1471,8 +1473,6 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     color: [
       'capture-color-well',
       'capture-color',
-      'capture-color-apply',
-      'capture-color-cancel',
       'capture-named-color',
     ],
     stroke: ['capture-stroke'],
@@ -1563,7 +1563,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
   it('AC-65.3 the options row renders exactly OPTIONS_BY_TOOL and the tools row holds no option control [TA-10]', async () => {
     await openSelectedSurface()
     const cases: Array<[string, Array<'color' | 'stroke' | 'text' | 'block' | 'mode'>]> = [
-      ['capture-tool-select', ['color', 'stroke']],
+      ['capture-tool-select', []],
       ['capture-tool-arrow', ['color', 'stroke']],
       ['capture-tool-box', ['color', 'stroke']],
       ['capture-tool-highlight', ['color']],

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -27,6 +28,9 @@ TTS_SPEED_MIN = 0.5
 TTS_SPEED_MAX = 2.0
 COOKIE_VALUE_MAX_LEN = 4096
 COOKIE_NEEDLES: tuple[str, ...] = ("HTTP_COOKIE", "#HttpOnly_")
+# STYLE_SETTINGS (MEU-105, D-714): a tool colour is # and six hex digits; Bg may be empty.
+COLOR_HEX = "#[0-9A-Fa-f]{6}"
+COLOR_HEX_OR_EMPTY = "(#[0-9A-Fa-f]{6})?"
 
 ValueKind = Literal["string", "boolean", "number"]
 
@@ -41,6 +45,10 @@ class SettingSpec:
     min_number: float | None = None
     max_number: float | None = None
     allow_negative: bool = False
+    # STYLE_SETTINGS (MEU-105, D-714): a full-match pattern for a string value.
+    pattern: str | None = None
+    # STYLE_SETTINGS (MEU-105, D-716): the number must be an int, range-checked before any float().
+    integer: bool = False
 
 
 SETTINGS_KEY_TABLE: dict[tuple[str, str], SettingSpec] = {
@@ -97,6 +105,24 @@ SETTINGS_KEY_TABLE: dict[tuple[str, str], SettingSpec] = {
     ("capture", "flatten_backup"): SettingSpec("boolean", True),
     ("capture", "backup_dir"): SettingSpec("string", ""),
     ("capture", "annotated_format"): SettingSpec("string", "png", frozenset(ANNOTATED_FORMATS)),
+    # STYLE_SETTINGS (MEU-105, D-715, D-716): each style tool's own persisted style.
+    ("capture", "arrow_color"): SettingSpec("string", "#E0AF68", pattern=COLOR_HEX),
+    ("capture", "arrow_stroke"): SettingSpec(
+        "number", 3, min_number=1, max_number=100, integer=True
+    ),
+    ("capture", "box_color"): SettingSpec("string", "#E0AF68", pattern=COLOR_HEX),
+    ("capture", "box_stroke"): SettingSpec(
+        "number", 3, min_number=1, max_number=100, integer=True
+    ),
+    ("capture", "highlight_color"): SettingSpec("string", "#E0AF68", pattern=COLOR_HEX),
+    ("capture", "text_color"): SettingSpec("string", "#E0AF68", pattern=COLOR_HEX),
+    ("capture", "text_font_size"): SettingSpec(
+        "number", 16, min_number=1, max_number=400, integer=True
+    ),
+    ("capture", "text_bg_color"): SettingSpec("string", "", pattern=COLOR_HEX_OR_EMPTY),
+    ("capture", "pixelate_block_size"): SettingSpec(
+        "number", 10, min_number=2, max_number=100, integer=True
+    ),
 }
 
 UoWFactory = Callable[[], UnitOfWork]
@@ -128,6 +154,15 @@ def _encode(spec: SettingSpec, key: str, value: object) -> str:
     if spec.kind == "number":
         if isinstance(value, bool) or not isinstance(value, int | float):
             raise ValidationError(f"{key} must be a number")
+        if spec.integer:
+            # Range-check the int itself: float() of a huge int raises OverflowError (F2).
+            if not isinstance(value, int):
+                raise ValidationError(f"{key} must be a whole number")
+            if spec.min_number is not None and value < spec.min_number:
+                raise ValidationError(f"{key} is out of range")
+            if spec.max_number is not None and value > spec.max_number:
+                raise ValidationError(f"{key} is out of range")
+            return str(value)
         number = float(value)
         if not math.isfinite(number):
             raise ValidationError(f"{key} must be a finite number")
@@ -144,6 +179,8 @@ def _encode(spec: SettingSpec, key: str, value: object) -> str:
         raise ValidationError(f"{key} must be a string")
     if spec.wires is not None and value not in spec.wires:
         raise ValidationError(f"{key} is not a known wire value")
+    if spec.pattern is not None and re.fullmatch(spec.pattern, value) is None:
+        raise ValidationError(f"{key} is not in its format")
     return value
 
 

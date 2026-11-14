@@ -65,7 +65,7 @@ const RETIRED_IDS = [
 ]
 
 const HELP_EDIT_TEXT =
-  'Select a mark to move it or drag an arrow end until Save. Arrow keys nudge the selected mark, or the arrow end you grabbed or tabbed to; Apply commits color.'
+  'Select a mark to move it or drag an arrow end until Save. Arrow keys nudge the selected mark, or the arrow end you grabbed or tabbed to.'
 
 /** A 100×100 shot on a 200×200 surface: Fit gives s = 2 and no letterbox, so client = 2 × image. */
 const SHOT = {
@@ -467,7 +467,7 @@ describe('MEU-81 Capture action row', () => {
     expect((posted?.body as { annotations: unknown[] }).annotations).toHaveLength(1)
   })
 
-  it('AC-81.4: the retired controls are gone in every state, and the Color options are well, hex, Apply, Cancel, Named', async () => {
+  it('AC-81.4: the retired controls are gone in every state, and the Color options are well, hex, Named', async () => {
     await openShot([ARROW, BOX, HIGHLIGHT, TEXT])
     const expectRetiredAbsent = (state: string): void => {
       for (const id of RETIRED_IDS) {
@@ -487,7 +487,7 @@ describe('MEU-81 Capture action row', () => {
     const group = screen.getByTestId('capture-color-well').closest('[role="group"]') as HTMLElement
     expect(group).not.toBeNull()
     const ids = Array.from(group.querySelectorAll('[data-testid]')).map((node) => node.getAttribute('data-testid'))
-    expect(ids).toEqual(['capture-color-well', 'capture-color', 'capture-color-apply', 'capture-color-cancel', 'capture-named-color'])
+    expect(ids).toEqual(['capture-color-well', 'capture-color', 'capture-named-color'])
     // The sampler module is gone.
     expect(existsSync(resolve(UI, 'src/renderer/src/features/capture/capture-sample.ts'))).toBe(false)
     const samplePath = '../../src/renderer/src/features/capture/capture-sample'

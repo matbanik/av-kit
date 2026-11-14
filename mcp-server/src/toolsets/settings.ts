@@ -72,6 +72,16 @@ export const SETTINGS_SCHEMA: {
       flatten_backup: { type: "boolean", default: true },
       backup_dir: { type: "string", default: "" },
       annotated_format: { type: "string", default: "png", enum: ANNOTATED_FORMATS },
+      // STYLE_MCP (MEU-105, D-717): each style tool's own persisted style.
+      arrow_color: { type: "string", default: "#E0AF68" },
+      arrow_stroke: { type: "number", default: 3 },
+      box_color: { type: "string", default: "#E0AF68" },
+      box_stroke: { type: "number", default: 3 },
+      highlight_color: { type: "string", default: "#E0AF68" },
+      text_color: { type: "string", default: "#E0AF68" },
+      text_font_size: { type: "number", default: 16 },
+      text_bg_color: { type: "string", default: "" },
+      pixelate_block_size: { type: "number", default: 10 },
     },
   },
 };
@@ -134,6 +144,16 @@ const settingsLeaves = {
   flatten_backup: z.boolean().optional(),
   backup_dir: z.string().optional(),
   annotated_format: z.enum(ANNOTATED_FORMATS).optional(),
+  // STYLE_MCP (MEU-105): the API applies each leaf's own pattern and range.
+  arrow_color: z.string().optional(),
+  arrow_stroke: z.number().int().optional(),
+  box_color: z.string().optional(),
+  box_stroke: z.number().int().optional(),
+  highlight_color: z.string().optional(),
+  text_color: z.string().optional(),
+  text_font_size: z.number().int().optional(),
+  text_bg_color: z.string().optional(),
+  pixelate_block_size: z.number().int().optional(),
   rail: z.unknown().optional(),
   panel: z.unknown().optional(),
 };

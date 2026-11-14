@@ -971,7 +971,7 @@ Planning notes added 2026-11-12, after the crop, video-stills and download sessi
 
 ### Style and tool flow
 
-> **MEU-105.** Synthesis slice 6 (A-8, A-9, A-10, A-12, A-13, B-12; C-4, C-6, C-12; D-2).
+> **MEU-105.** Synthesis slice 6 (A-8, A-9, A-10, A-12, A-13, B-12; C-4, C-6, C-12; D-2). Split by D-713 (2026-11-13): MEU-105 holds the Colour and Tool style rows and the Modifiers row's Pixelate block size scrub; MEU-143 `gui-capture-tool-flow` holds the Lock and Letters rows and the rest of Modifiers.
 
 | Rule | Contract | Source |
 |------|----------|--------|
@@ -980,6 +980,8 @@ Planning notes added 2026-11-12, after the crop, video-stills and download sessi
 | Lock | Lock is on by default and persisted, with a one-shot preference; the just-drawn mark stays selected, and while a tool is armed a press on the selected mark edits it while a press elsewhere draws | Human-approved 2026-10-29 synthesis C-6, D-2 |
 | Letters | V Select, A Arrow, R Box, H Highlight, T Text, X Redact, E Smart eraser, C Crop, as page-scoped registry entries that never fire in a field. C is the crop tool's letter the crop grouping deferred here (D-404, D-508). X also swaps the crop's aspect while the crop is open; that holds because tool letters are ignored under CROP_MODAL, and the plan tests both sides | Human-approved 2026-10-29 synthesis C-12, A-12; 2026-11-12 planning notes |
 | Modifiers | Shift constrains aspect or square and snaps arrows to 45 degrees; Alt draws from the centre; Shift+arrow nudges 10 px. Pixelate block size gets a scrub. The nudge step and aspect snaps reuse the crop tool's `FIELD_STEP_SHIFT` and `CROP_RATIO` rather than new constants | Human-approved 2026-10-29 synthesis A-13, B-12; 2026-11-12 planning notes |
+
+> **Delivered (Session 71).** MEU-105 shipped the Colour and Tool style rows and the Pixelate block size scrub through STYLE_SETTINGS, STYLE_API, STYLE_MCP, STYLE_MODEL, STYLE_STORE, STYLE_DISPLAY, STYLE_TARGET, STYLE_DRAW, COLOR_NAMED, COLOR_HEX, COLOR_WELL, TEXT_BG_WELL, COLOR_GATE_GONE, TEXT_DRAFT_STYLE, BLOCK_SCRUB, SELECT_NO_STYLE, STYLE_HELP and STYLE_ACTIONS_INDEX, proved by AC-105.1 to AC-105.32. Lock, Letters and the other modifiers (Shift, Alt, Shift+arrow nudge) are MEU-143's (D-713). Plan: [2026-11-13-capture-style-tool-flow](../execution/plans/2026-11-13-capture-style-tool-flow/implementation-plan.md).
 
 <a id="line-and-ellipse"></a>
 
@@ -1093,7 +1095,7 @@ Five residual MEUs from the capture crop design (`_inspiration/capture-crop/desi
 
 | Rule | Contract | Source |
 |------|----------|--------|
-| Entry | A toolbar button with the lucide `Crop` icon and the tooltip "Crop (C)". `CaptureTool` gains `'crop'`. C is a page-scoped shortcut registry entry; if the registry has no page-scoped letter entries yet, C arrives with MEU-105 and the button ships alone | Research-backed design D-11 (R-11); Local Canon design L-14 |
+| Entry | A toolbar button with the lucide `Crop` icon and the tooltip "Crop (C)". `CaptureTool` gains `'crop'`. C is a page-scoped shortcut registry entry; if the registry has no page-scoped letter entries yet, C arrives with MEU-143 and the button ships alone | Research-backed design D-11 (R-11); Local Canon design L-14 |
 | Box | The box starts as the whole image with 8 handles from `capture-transform.ts`. Dragging a handle resizes, dragging inside moves, dragging outside draws a new box, and Shift keeps the aspect ratio | Research-backed design D-11 (R-10, R-11); Local Canon design L-13 |
 | Look | The area outside the box is dimmed, a rule-of-thirds grid shows only while dragging, and the size reads out in original px | Research-backed design D-11 (R-11) |
 | Aspect | Free, Original, Square, 16:9, 4:3 and 3:2. The swap button or X swaps portrait and landscape | Research-backed design D-11 (R-10, R-11) |
@@ -1104,7 +1106,7 @@ Five residual MEUs from the capture crop design (`_inspiration/capture-crop/desi
 | Unsaved marks | Crop is disabled while marks are unsaved, with the tooltip "Save or discard your marks first" | Local Canon design §7.1 (one code path for the GUI and agents) |
 | Tests | Behaviour tests for each rule; Electron proof of a real handle drag, Save as copy and the new shot selected | Local Canon |
 
-> **Entry (D-508).** The shortcut registry has no page-scoped letter entries yet, so under the Entry rule's own clause the Crop button ships alone, with the tooltip "Crop" and no `aria-keyshortcuts`. C arrives with MEU-105.
+> **Entry (D-508).** The shortcut registry has no page-scoped letter entries yet, so under the Entry rule's own clause the Crop button ships alone, with the tooltip "Crop" and no `aria-keyshortcuts`. C arrives with MEU-143.
 
 > **Delivered (Session 60).**
 > - `CaptureTool` gains `'crop'`, and a Crop button sits after the lock, outside the Annotation tool group (`CROP_ENTRY`). Crop is disabled with no shot, on a shot under 8 px a side, and while marks are unsaved, checked in that order (`CROP_UNSAVED_GATE`).
@@ -1296,7 +1298,7 @@ Three residual MEUs from the video stills design (`_inspiration/video-stills/des
 | MEU-103 | `capture-redact-mark` | [Redact mark](#redact-mark) | MEU-91, MEU-100 |
 | MEU-104 | `capture-copy-image-actions` | [Copy image and action names](#copy-image-and-action-names) | MEU-81, MEU-99 |
 | MEU-105 | `gui-capture-style-tool-flow` | [Style and tool flow](#style-and-tool-flow) | MEU-87, MEU-99, MEU-100 |
-| MEU-106 | `capture-line-ellipse-shapes` | [Line and ellipse](#line-and-ellipse) | MEU-100, MEU-105 |
+| MEU-106 | `capture-line-ellipse-shapes` | [Line and ellipse](#line-and-ellipse) | MEU-100, MEU-105, MEU-143 |
 | MEU-107 | `capture-step-mark` | [Step mark](#step-mark) | MEU-105 |
 | MEU-128 | `capture-region-view` | [Region view](#region-view) | MEU-37, MEU-38, MEU-111 |
 | MEU-129 | `capture-image-import` | [Image import](#image-import) | MEU-36, MEU-37, MEU-38 |
@@ -1306,6 +1308,7 @@ Three residual MEUs from the video stills design (`_inspiration/video-stills/des
 | MEU-134 | `capture-video-frames` | [Video frames](#video-frames) | MEU-133, MEU-129, MEU-130 |
 | MEU-135 | `capture-video-sheet` | [Video sheet](#video-sheet) | MEU-134 |
 | MEU-136 | `capture-export-copy` | [Export copy](#export-copy) | MEU-130 |
+| MEU-143 | `gui-capture-tool-flow` | [Style and tool flow](#style-and-tool-flow) | MEU-87, MEU-99, MEU-100, MEU-105 |
 
 ---
 

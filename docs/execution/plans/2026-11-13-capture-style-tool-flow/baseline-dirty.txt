@@ -1,0 +1,9 @@
+?? .agent/context/handoffs/2026-11-13-capture-style-tool-flow-plan-critical-review.md	e143082778cb060925f9e6f57b51f911cd861c616e64e018503477fc5e4b9221
+?? docs/execution/plans/2026-11-13-capture-style-tool-flow/baseline.ps1	05aa4b6e8836c288c50583c2d8d9e6f6a904b25502e6554312eb4662a7bed6db
+?? docs/execution/plans/2026-11-13-capture-style-tool-flow/baseline.sha	848994659b08e4196ac9605e34bf5ed535961840a8b23fe94e031dc3f9d3be9d
+?? docs/execution/plans/2026-11-13-capture-style-tool-flow/id-length.py	41954c41d9e86e7d212231e5cd2f078513be7377639fe3d2a3367bf0734a9342
+?? docs/execution/plans/2026-11-13-capture-style-tool-flow/identity.py	a096b2d9f06961ac4ba161a3caf7f52117136901f18359e434722647e20d4da9
+?? docs/execution/plans/2026-11-13-capture-style-tool-flow/implementation-plan.md	4d2fedf9d35a29c2e7db735b6f8cc9e2425ce6b34ce312c3b264ac68b575bf4d
+?? docs/execution/plans/2026-11-13-capture-style-tool-flow/red-check.py	a54244f206e17ee3069ef0a7cd7958c3d9afd2870237a47d03cbf11b538539f7
+?? docs/execution/plans/2026-11-13-capture-style-tool-flow/session-gate.ps1	a365eb9920b3e8ba439bbdbecb3c29a3a4b94c81a9c8ab94dc2dec7537ef2a50
+?? docs/execution/plans/2026-11-13-capture-style-tool-flow/task.md	1631d0d84cd2a20fe4d1ae7da9e6c5f74b7f3f489c02727a8bb1f95b06980027

@@ -58,6 +58,10 @@ function expectedGroups(tool: CaptureTool, selected: Annotation | null, mode: Re
   if (tool === 'eraser' || selected?.type === 'eraser') {
     return []
   }
+  // SELECT_NO_STYLE (MEU-105, D-721): Select with nothing selected sets no tool's style.
+  if (tool === 'select' && selected === null) {
+    return []
+  }
   const text = tool === 'text' || selected?.type === 'text'
   const stroke =
     !text &&
@@ -119,7 +123,8 @@ describe('MEU-65 capture toolbar table and options rule', () => {
             mark?.type === 'pixelate' ||
             tool === 'eraser' ||
             mark?.type === 'eraser' ||
-            tool === 'crop'
+            tool === 'crop' ||
+            (tool === 'select' && mark === null)
           expect(got.includes('color'), `${where} color`).toBe(!regionCase)
           expect(got.includes('text') && got.includes('stroke'), `${where} text+stroke`).toBe(false)
         }
@@ -135,7 +140,7 @@ describe('MEU-65 capture toolbar table and options rule', () => {
     expect(optionGroups('select', MARKS.highlight)).not.toContain('stroke')
     expect(optionGroups('arrow', MARKS.text)).toContain('text')
     expect(optionGroups('arrow', MARKS.text)).not.toContain('stroke')
-    expect(optionGroups('select', null)).toContain('stroke')
+    expect(optionGroups('select', null)).toEqual([])
   })
 
   it('AC-65.7 MEU-65 test ids are registered after the MEU-51 marker and used by the source', () => {

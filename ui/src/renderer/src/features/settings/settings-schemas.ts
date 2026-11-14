@@ -89,6 +89,28 @@ export const capturePutSchema = z
   })
   .strict()
 
+const CAPTURE_COLOR = /^#[0-9A-Fa-f]{6}$/
+const CAPTURE_COLOR_OR_EMPTY = /^(#[0-9A-Fa-f]{6})?$/
+
+/**
+ * STYLE_STORE (MEU-105, D-720): the body of one tool-style PUT, only the style leaves it changes. The
+ * Capture card's `capturePutSchema` keeps its seven keys.
+ */
+export const captureStylePutSchema = z
+  .object({
+    arrow_color: z.string().regex(CAPTURE_COLOR),
+    arrow_stroke: z.number().int().min(1).max(100),
+    box_color: z.string().regex(CAPTURE_COLOR),
+    box_stroke: z.number().int().min(1).max(100),
+    highlight_color: z.string().regex(CAPTURE_COLOR),
+    text_color: z.string().regex(CAPTURE_COLOR),
+    text_font_size: z.number().int().min(1).max(400),
+    text_bg_color: z.string().regex(CAPTURE_COLOR_OR_EMPTY),
+    pixelate_block_size: z.number().int().min(2).max(100),
+  })
+  .partial()
+  .strict()
+
 export type DownloaderPut = z.infer<typeof downloaderPutSchema>
 export type TranscriptPut = z.infer<typeof transcriptPutSchema>
 export type TtsPut = z.infer<typeof ttsPutSchema>
@@ -96,6 +118,7 @@ export type AppPut = z.infer<typeof appPutSchema>
 export type UiPut = z.infer<typeof uiPutSchema>
 export type ConverterPut = z.infer<typeof converterPutSchema>
 export type CapturePut = z.infer<typeof capturePutSchema>
+export type CaptureStylePut = z.infer<typeof captureStylePutSchema>
 
 export type SettingsNamespace = 'downloader' | 'transcript' | 'tts' | 'app' | 'ui' | 'converter' | 'capture'
 

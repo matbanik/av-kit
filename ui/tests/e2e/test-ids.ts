@@ -515,3 +515,6 @@ export const CAPTURE_COPY_IMAGE = 'capture-copy-image'
 
 // MEU-102 Capture multi-line text (additive IDs).
 export const CAPTURE_TEXT_DRAFT_HINT = 'capture-text-draft-hint'
+
+// MEU-105 Capture style (additive IDs).
+export const CAPTURE_BLOCK_SIZE_SCRUB = 'capture-block-size-scrub'

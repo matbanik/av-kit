@@ -122,7 +122,8 @@ Run `/create-plan` once per session, in order. Session 43 is planned now (Mat's 
 | 44 | `capture-redact` | MEU-103 | P2 | executed | `docs/execution/plans/2026-11-13-capture-redact/` |
 | 45 | `capture-copy-image` | MEU-104 | P2 | executed (Session 69) | `docs/execution/plans/2026-11-13-capture-copy-image/` |
 | 46 | `capture-text-multiline` | MEU-102 | P3 | executed (Session 70) | `docs/execution/plans/2026-11-13-capture-text-multiline/` |
-| 47 | `capture-style-tool-flow` | MEU-105 | P3 | pending | — |
+| 47 | `capture-style-tool-flow` (style half; MEU-143 split out by D-713) | MEU-105 | P3 | executed (Session 71) | `docs/execution/plans/2026-11-13-capture-style-tool-flow/` |
+| 47b | `capture-tool-flow` | MEU-143 | P3 | pending | — |
 | 48 | `capture-shapes-steps` | MEU-106, MEU-107 | P3 | pending | — |
 
 ---
@@ -204,3 +205,11 @@ A new type (`redact`, `step`) or field (`head`, `shape`) lands in one session ac
 | D-678 | How does Ctrl+C reach the canvas? | autonomous | Page key handler with `isEditableTarget` excluded, following Session 61's PASTE_KEY; Ctrl+C stays in RESERVED_CHORDS | Local Canon | Same chord class and the same text-field guard as Ctrl+V; a registry entry would need the reserved list to change for one key. Two-way. | — |
 
 Carry-forward: Sessions 68 to 72 carry D-674 and D-675, and the row among D-676 to D-678 their MEU touches, with stage `grouping`.
+
+### 9.9 Split of MEU-105
+
+| ID | Question | Resolution | Chosen | Source tag | Reasoning (why this; why the alternatives lost) | Human ref |
+|----|----------|------------|--------|------------|--------------------------------------------------|-----------|
+| D-713 | Does one session deliver all five rule rows of 09 §Style and tool flow? | human | A: split. MEU-105 (Session 71) keeps the Colour and Tool style rows and the Modifiers row's Pixelate block-size scrub; the new MEU-143 `gui-capture-tool-flow` (Session 71b) takes the Lock and Letters rows and the rest of Modifiers. Rejected do-nothing: one session for all five rule rows | Human-approved | The style rows share one store across the settings service, the API, MCP and the page, and that alone is a full session; Lock, Letters and the modifiers share the page key handler and the tool state instead. Do-nothing keeps D-159's one MEU per slice, at the price of one oversized session. | USER_EXPLICIT 2026-11-13 "A" |
+
+§9.3's bullets on the letters, X, Ctrl+D, Ctrl+C and the Shift constants, and §9.7's crop C key, are now MEU-143's. The Pixelate block-size scrub in §9.3's last bullet stays MEU-105's.

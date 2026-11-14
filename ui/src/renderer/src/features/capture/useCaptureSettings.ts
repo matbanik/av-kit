@@ -9,8 +9,9 @@ import {
   type AnnotatedFormat,
   type CapturePut,
 } from '../settings/settings-schemas'
+import { CAPTURE_SETTINGS_KEY, fetchCaptureSettings } from './capture-style-store'
 
-export const CAPTURE_SETTINGS_KEY = ['settings', 'capture'] as const
+export { CAPTURE_SETTINGS_KEY }
 
 export type CaptureForm = {
   inbox_dir: string
@@ -71,7 +72,8 @@ export function useCaptureSettings() {
   const queryClient = useQueryClient()
   const query = useQuery({
     queryKey: CAPTURE_SETTINGS_KEY,
-    queryFn: async () => apiFetch<CapturePut>('/settings/capture'),
+    // STYLE_STORE (round 2 F3): the shared GET, which keeps a style commit its answer did not see.
+    queryFn: fetchCaptureSettings,
   })
   const [draft, setDraft] = useState<CaptureForm | null>(null)
   const baseline = useMemo(() => asForm(query.data), [query.data])

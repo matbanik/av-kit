@@ -599,7 +599,7 @@ test('AC-60.12 edit until Save: create arrow+text, drag ends and text, typed hex
   await page.getByTestId('capture-mark-list').locator('button').first().click()
   await page.getByTestId('capture-color').fill('#12ABCD')
   await expect(page.getByTestId('capture-color')).toHaveValue('#12ABCD')
-  await page.getByTestId('capture-color-apply').click()
+  await page.getByTestId('capture-color').press('Enter')
   await expect(page.getByTestId('capture-save')).toBeEnabled()
   await page.getByTestId('capture-save').click()
   const posted = await page.evaluate(() => {
@@ -3388,5 +3388,93 @@ test('AC-104.22 the action row reads Save annotations, Copy image and Flatten in
   expect(await ledger(page, 'POST', '/flatten')).toBe(0)
   expect(await ledger(page, 'POST', '/annotate')).toBe(0)
   expect(await ledger(page, 'POST', '/render')).toBe(0)
+  await app.close()
+})
+
+// Session 71 (MEU-105): the colour row in the real app. A named pick paints the selected arrow at once
+// and reaches the save body; a hex commit with Arrow armed sends one style PUT and the next arrow uses
+// it. The settings fake merges each PUT and records its body.
+test('AC-105.26 Electron: a named pick paints the selected arrow and saves; a hex commit styles the next arrow', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await installSeam(page, [sampleShot('e2e-style-1', 'style.png', '2026-11-13T12:00:00Z')])
+  await installAnnotationStore(page)
+  await page.evaluate(() => {
+    const state = window as unknown as { __e2eStylePuts?: unknown[] }
+    state.__e2eStylePuts = []
+    let stored: Record<string, unknown> = {
+      inbox_dir: '~/Pictures/av-kit',
+      hotkey: 'F2',
+      copy_to_clipboard: false,
+      close_to_tray: true,
+      flatten_backup: true,
+      backup_dir: '',
+      annotated_format: 'png',
+    }
+    const original = window.fetch.bind(window)
+    window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      const method = (init?.method ?? 'GET').toUpperCase()
+      if (new URL(url).pathname.includes('/settings/capture')) {
+        if (method === 'PUT') {
+          const body = typeof init?.body === 'string' ? (JSON.parse(init.body) as Record<string, unknown>) : {}
+          state.__e2eStylePuts?.push(body)
+          stored = { ...stored, ...body }
+        }
+        return new Response(JSON.stringify(stored), { status: 200, headers: { 'Content-Type': 'application/json' } })
+      }
+      return original(input, init)
+    }
+  })
+  await expect(page.getByTestId('nav-capture')).toBeVisible()
+  await page.getByTestId('nav-capture').click()
+  await expect(page.getByTestId('capture-page')).toBeVisible()
+  await expect(page.getByTestId('capture-filmstrip-item').first()).toBeVisible()
+  await page.getByTestId('capture-filmstrip-item').first().click()
+  await expect(page.getByTestId('capture-draw-surface')).toHaveAttribute('data-overlay-ready', 'true')
+  await expect(page.getByTestId('capture-tool-arrow')).toBeVisible()
+  await page.getByTestId('capture-tool-arrow').click()
+  await expect(page.getByTestId('capture-color-apply')).toHaveCount(0)
+  await expect(page.getByTestId('capture-color-cancel')).toHaveCount(0)
+  await drawArrow(page)
+  const first = page.locator('[data-annotation-type="arrow"]').first()
+  await expect(first).toHaveCount(1)
+  await expect(page.getByTestId('capture-named-color')).toBeVisible()
+  await page.getByTestId('capture-named-color').selectOption('orange')
+  expect((await first.getAttribute('stroke'))?.toUpperCase()).toBe('#FFA500')
+  await expect(page.getByTestId('capture-save')).toBeVisible()
+  await page.getByTestId('capture-save').click()
+  await expect
+    .poll(async () =>
+      page.evaluate(() => {
+        const stored = (window as unknown as { __e2eAnnotations?: Record<string, unknown[]> }).__e2eAnnotations ?? {}
+        return (stored['e2e-style-1'] ?? []).map((row) => String((row as { color?: unknown }).color).toUpperCase())
+      }),
+    )
+    .toEqual(['#FFA500'])
+  await expect(page.getByTestId('capture-tool-arrow')).toBeVisible()
+  await page.getByTestId('capture-tool-arrow').click()
+  await expect(page.getByTestId('capture-color')).toBeVisible()
+  await page.getByTestId('capture-color').fill('#12ABCD')
+  await page.getByTestId('capture-color').press('Enter')
+  await expect
+    .poll(async () => page.evaluate(() => (window as unknown as { __e2eStylePuts?: unknown[] }).__e2eStylePuts ?? []))
+    .toEqual([{ arrow_color: '#12ABCD' }])
+  const surface = page.getByTestId('capture-draw-surface')
+  const box = await surface.boundingBox()
+  expect(box).toBeTruthy()
+  const scale = Math.min((box?.width ?? 1) / 8, (box?.height ?? 1) / 8)
+  const originX = (box?.x ?? 0) + ((box?.width ?? 0) - 8 * scale) / 2
+  const originY = (box?.y ?? 0) + ((box?.height ?? 0) - 8 * scale) / 2
+  await page.mouse.move(originX + 1 * scale, originY + 6 * scale)
+  await page.mouse.down()
+  await page.mouse.move(originX + 5 * scale, originY + 7 * scale)
+  await page.mouse.up()
+  const arrows = page.locator('[data-annotation-type="arrow"]')
+  await expect(arrows).toHaveCount(2)
+  const colors = (await arrows.evaluateAll((els) => els.map((el) => el.getAttribute('stroke') ?? ''))).map((c) =>
+    c.toUpperCase(),
+  )
+  expect(colors.sort()).toEqual(['#12ABCD', '#FFA500'])
   await app.close()
 })

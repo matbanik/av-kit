@@ -89,6 +89,8 @@
 | `capture:tool_redact` | Redact tool (Solid / Pixelate) | no | local canvas | specified | 09 |
 | `capture:tool_eraser` | Smart eraser tool | no | local canvas | specified | 09 |
 | `capture:tool_lock` | Keep tool after drawing (tool lock) | no | local canvas | specified | 09 |
+| `capture:style_mark` | Color, Stroke, Size, Bg and Block size with a mark selected restyle only that mark | no | local canvas | specified | 09 |
+| `capture:style_tool` | Color, Stroke, Size, Bg and Block size with no mark selected set the armed tool's own saved style | no | `PUT /settings/capture` | specified | 09 |
 | `capture:undo` | Undo overlay; Ctrl+Z on the image | no | local | specified | 09 |
 | `capture:redo` | Redo overlay; Ctrl+Y or Ctrl+Shift+Z on the image | no | local | specified | 09 |
 | `capture:zoom_in` | Zoom in (button / Ctrl+= / wheel) | no | local view | specified | 09 |

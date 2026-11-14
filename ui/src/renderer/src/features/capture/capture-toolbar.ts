@@ -145,6 +145,10 @@ export function optionGroups(
   if (tool === 'crop') {
     return []
   }
+  // SELECT_NO_STYLE (MEU-105, D-721): with Select and nothing selected no tool's style could be set.
+  if (tool === 'select' && selected === null) {
+    return []
+  }
   if (selected?.type === 'redact') {
     return ['mode']
   }

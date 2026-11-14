@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { Button } from '../../components/ui/Button'
 import { SegmentedControl } from '../../components/ui/SegmentedControl'
@@ -19,6 +19,7 @@ import { useG30Styles } from '../../components/ui/SelectInput'
 import {
   applyRegionPass,
   isRegionMark,
+  PIXELATE_BLOCK_DEFAULT,
   PIXELATE_BLOCK_MAX,
   PIXELATE_BLOCK_MIN,
   regionClip,
@@ -56,7 +57,7 @@ import {
 import { ToolbarIconButton } from './ToolbarIconButton'
 import { CaptureCropOverlay } from './CaptureCropOverlay'
 import { CaptureScrubField } from './CaptureScrubField'
-import { FONT_SCRUB_MAX, STROKE_SCRUB_MAX } from './capture-scrub'
+import { FONT_SCRUB_MAX, parsePositiveInt, STROKE_SCRUB_MAX } from './capture-scrub'
 import { isRegistryChord } from '../../registry/commandRegistry'
 
 /** HOVER_CURSOR: literal class names, so Tailwind emits each one. */
@@ -144,12 +145,12 @@ type CaptureViewportProps = {
   canUndo: boolean
   canRedo: boolean
   textDraft: TextDraft | null
-  colorApplyEnabled?: boolean
-  colorCancelEnabled?: boolean
   onTool: (tool: CaptureTool) => void
+  /** COLOR_HEX, COLOR_WELL (MEU-105): one colour commit, from the hex field or the well's `change`. */
   onColor: (color: string) => void
-  onColorApply?: () => void
-  onColorCancel?: () => void
+  /** COLOR_WELL: one native `input` event of the well; it paints with no undo step and no save. */
+  onColorPreview?: (color: string) => void
+  /** COLOR_NAMED: one named pick, which commits. */
   onNamedColor?: (name: string) => void
   onStroke: (stroke: string) => void
   onFontSize?: (size: string) => void
@@ -166,8 +167,15 @@ type CaptureViewportProps = {
   /** TOOL_LOCK (MEU-87): keep the current tool after each mark. Page view state, never persisted. */
   toolLocked?: boolean
   onToggleToolLock?: () => void
+  /** TEXT_BG_WELL (MEU-105): one background commit, from the well's `change` or Clear (''). */
   onTextBg?: (color: string) => void
+  onTextBgPreview?: (color: string) => void
   onBlockSize?: (size: string) => void
+  /** BLOCK_SCRUB (MEU-105): one scrub step on the Block size field, then its commit or cancel. */
+  onBlockSizePreview?: (value: number) => void
+  onBlockSizeCommit?: () => void
+  onBlockSizeCancel?: () => void
+  blockSizeEpoch?: number
   onRedactMode?: (mode: RedactMode) => void
   onViewVariant?: (variant: CaptureViewVariant) => void
   onUndo: () => void
@@ -527,12 +535,9 @@ export function CaptureViewport({
   canUndo,
   canRedo,
   textDraft,
-  colorApplyEnabled = true,
-  colorCancelEnabled = true,
   onTool,
   onColor,
-  onColorApply = () => undefined,
-  onColorCancel = () => undefined,
+  onColorPreview = () => undefined,
   onNamedColor = () => undefined,
   onStroke,
   onFontSize = () => undefined,
@@ -547,7 +552,12 @@ export function CaptureViewport({
   toolLocked = false,
   onToggleToolLock = () => undefined,
   onTextBg = () => undefined,
+  onTextBgPreview = () => undefined,
   onBlockSize = () => undefined,
+  onBlockSizePreview = () => undefined,
+  onBlockSizeCommit = () => undefined,
+  onBlockSizeCancel = () => undefined,
+  blockSizeEpoch = 0,
   onRedactMode = () => undefined,
   onViewVariant = () => undefined,
   onUndo,
@@ -599,6 +609,7 @@ export function CaptureViewport({
   // SCRUB_BASE: an invalid field scrubs from the applicable selected mark, else the default.
   const strokeBase = selected !== null && (selected.type === 'arrow' || selected.type === 'rect') ? selected.stroke_width : 3
   const fontSizeBase = selected?.type === 'text' ? selected.font_size : 16
+  const blockBase = selected?.type === 'pixelate' ? selected.block_size : PIXELATE_BLOCK_DEFAULT
   const scrubTarget = selectedIndex ?? '-'
   const imageBox = { w: imageWidth, h: imageHeight }
   const view = viewTransform(frame, imageBox, zoom)
@@ -629,6 +640,46 @@ export function CaptureViewport({
   if (textBgHex !== null) {
     textBgHold.current = textBgHex.toLowerCase()
   }
+  // COLOR_HEX (MEU-105): the hex field's own text while it is edited; null shows the current colour.
+  const [hexDraft, setHexDraft] = useState<string | null>(null)
+  function commitHexDraft(): void {
+    const text = hexDraft
+    setHexDraft(null)
+    if (text === null) {
+      return
+    }
+    const hex = normalizeHex(text)
+    if (hex !== null) {
+      onColor(hex)
+    }
+  }
+  // COLOR_WELL, TEXT_BG_WELL: the native `change` commits once; React's onChange also fires on `input`.
+  const wellCommits = useRef({ onColor, onTextBg })
+  wellCommits.current = { onColor, onTextBg }
+  const colorWellRef = useCallback((node: HTMLInputElement | null) => {
+    if (node === null) {
+      return undefined
+    }
+    const onNativeChange = (): void => {
+      wellCommits.current.onColor(node.value)
+    }
+    node.addEventListener('change', onNativeChange)
+    return () => {
+      node.removeEventListener('change', onNativeChange)
+    }
+  }, [])
+  const textBgWellRef = useCallback((node: HTMLInputElement | null) => {
+    if (node === null) {
+      return undefined
+    }
+    const onNativeChange = (): void => {
+      wellCommits.current.onTextBg(node.value)
+    }
+    node.addEventListener('change', onNativeChange)
+    return () => {
+      node.removeEventListener('change', onNativeChange)
+    }
+  }, [])
   const namedMenuStyle = useG30Styles()
   const regionLayerRef = useRef<HTMLCanvasElement>(null)
   const [regionSource, setRegionSource] = useState<RegionSource | null>(null)
@@ -865,6 +916,14 @@ export function CaptureViewport({
     const mapped = live === null ? { x: 0, y: 0 } : mapImageToPointerWithView(textDraft, 0, 0, live)
     return { left: mapped.x, top: mapped.y }
   })()
+  // TEXT_DRAFT_STYLE (MEU-105): the draft shows the colour, size and background its mark will take.
+  const draftColor = normalizeHex(color) ?? undefined
+  const draftBg = textBgHex ?? undefined
+  const draftFontPx = (parsePositiveInt(fontSize) ?? fontSizeBase) * (view?.s ?? 1)
+  const draftTextStyle =
+    draftStyle === undefined
+      ? undefined
+      : { ...draftStyle, color: draftColor, fontSize: `${draftFontPx}px`, backgroundColor: draftBg }
   const contentStyle =
     view !== null
       ? { left: view.ox, top: view.oy, width: imageWidth * view.s, height: imageHeight * view.s }
@@ -1082,36 +1141,40 @@ export function CaptureViewport({
             <span role="group" aria-label="Color" className="flex shrink-0 items-center gap-1">
               <span className="text-xs text-fg-muted">Color</span>
               <input
+                ref={colorWellRef}
                 data-testid="capture-color-well"
                 type="color"
                 value={wellHold.current}
                 onInput={(event) => {
-                  onColor(event.currentTarget.value)
+                  onColorPreview(event.currentTarget.value)
                 }}
-                onChange={(event) => {
-                  onColor(event.target.value)
-                }}
+                onChange={() => undefined}
               />
               <input
                 data-testid="capture-color"
                 className="w-24 font-mono"
-                value={color}
+                value={hexDraft ?? color}
                 onChange={(event) => {
-                  onColor(event.target.value)
+                  setHexDraft(event.target.value)
                 }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    commitHexDraft()
+                  } else if (event.key === 'Escape') {
+                    setHexDraft(null)
+                  }
+                }}
+                onBlur={commitHexDraft}
               />
-              <Button size="sm" variant="primary" data-testid="capture-color-apply" disabled={!colorApplyEnabled} onClick={onColorApply}>
-                Apply
-              </Button>
-              <Button size="sm" variant="ghost" data-testid="capture-color-cancel" disabled={!colorCancelEnabled} onClick={onColorCancel}>
-                Cancel
-              </Button>
               <select
                 data-testid="capture-named-color"
-                defaultValue=""
+                value=""
                 style={namedMenuStyle}
                 onChange={(event) => {
-                  onNamedColor(event.target.value)
+                  const name = event.target.value
+                  event.currentTarget.value = ''
+                  onNamedColor(name)
                 }}
               >
                 <option value="" style={namedMenuStyle}>
@@ -1146,6 +1209,7 @@ export function CaptureViewport({
                 Bg
                 <input
                   key="capture-text-bg"
+                  ref={textBgWellRef}
                   data-testid="capture-text-bg"
                   type="color"
                   aria-label="Text background"
@@ -1153,11 +1217,9 @@ export function CaptureViewport({
                   className="h-7 w-8 cursor-pointer bg-transparent p-0"
                   value={textBgHold.current}
                   onInput={(event) => {
-                    onTextBg(event.currentTarget.value)
+                    onTextBgPreview(event.currentTarget.value)
                   }}
-                  onChange={(event) => {
-                    onTextBg(event.target.value)
-                  }}
+                  onChange={() => undefined}
                 />
               </label>
               <Button
@@ -1206,23 +1268,23 @@ export function CaptureViewport({
             />
           ) : null}
           {options.includes('block') ? (
-            <label key="capture-block-size" className="flex shrink-0 items-center gap-1 text-xs text-fg-muted">
-              Block size
-              <input
-                data-testid="capture-block-size"
-                type="number"
+            <span key="capture-block-size" role="group" aria-label="Block size" className="flex shrink-0 items-center">
+              <CaptureScrubField
+                id="capture-block-size"
+                label="Block size"
+                ariaLabel="Block size"
+                inputClassName="w-16 shrink-0 text-sm text-fg"
+                value={blockSize}
+                fallback={blockBase}
                 min={PIXELATE_BLOCK_MIN}
                 max={PIXELATE_BLOCK_MAX}
-                step={1}
-                aria-label="Block size"
-                title="Block size"
-                className="w-16 shrink-0 text-sm text-fg"
-                value={blockSize}
-                onChange={(event) => {
-                  onBlockSize(event.target.value)
-                }}
+                onChange={onBlockSize}
+                onPreview={onBlockSizePreview}
+                onCommit={onBlockSizeCommit}
+                onCancel={onBlockSizeCancel}
+                resetKey={`${blockSizeEpoch}:${scrubTarget}`}
               />
-            </label>
+            </span>
           ) : null}
         </div>
       {/* MARKS_ROW_LAYOUT: only the chip list scrolls; the row and the action slot never do. */}
@@ -1543,7 +1605,7 @@ export function CaptureViewport({
             <textarea
               data-testid="capture-text-draft"
               className="absolute z-10 bg-bg border border-border px-1 resize-none"
-              style={draftStyle}
+              style={draftTextStyle}
               value={textDraft.value}
               rows={Math.max(1, textLines(textDraft.value).length)}
               wrap="off"

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import Field, StrictBool
+from pydantic import Field, StrictBool, StrictInt
 
 from avkit_api.schemas.common import ApiModel
 
@@ -56,3 +56,13 @@ class SettingsPutIn(ApiModel):
     flatten_backup: StrictBool | None = None
     backup_dir: str | None = None
     annotated_format: str | None = None
+    # STYLE_API (MEU-105, D-717): StrictInt refuses 3.0, true and "3" with a 422.
+    arrow_color: str | None = None
+    arrow_stroke: StrictInt | None = None
+    box_color: str | None = None
+    box_stroke: StrictInt | None = None
+    highlight_color: str | None = None
+    text_color: str | None = None
+    text_font_size: StrictInt | None = None
+    text_bg_color: str | None = None
+    pixelate_block_size: StrictInt | None = None
