@@ -512,3 +512,6 @@ export const CAPTURE_REDACT_PIXELATE = 'capture-redact-pixelate'
 
 // MEU-104 Capture copy image (additive IDs).
 export const CAPTURE_COPY_IMAGE = 'capture-copy-image'
+
+// MEU-102 Capture multi-line text (additive IDs).
+export const CAPTURE_TEXT_DRAFT_HINT = 'capture-text-draft-hint'

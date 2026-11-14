@@ -132,3 +132,58 @@ def test_ac_90_8_main_region_writes_only_the_region_set(ac_id: str, tmp_path: Pa
     assert PixelateAnnotation.__name__ == "PixelateAnnotation"
     assert fixture.main(["--region", "--out", str(tmp_path)]) == 0
     assert sorted(path.name for path in tmp_path.iterdir()) == sorted(REGION_NAMES)
+
+
+# ------------------------------------------------- MEU-102 multi-line text fixture (Session 70)
+MULTILINE_NAMES = (
+    "capture-fidelity-multiline-original.png",
+    "capture-fidelity-multiline-annotated.png",
+)
+
+
+def _ac102(n: int, suffix: str = ""):
+    label = f"AC-102.{n}"
+    return pytest.mark.parametrize("ac_id", [label], ids=[label + suffix])
+
+
+@_ac102(8)
+@pytest.mark.unit
+def test_ac_102_8_multiline_fixture_equals_a_fresh_bake(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-102.8"
+    from tools import capture_bake_fixture as fixture
+
+    assert (fixture.MULTILINE_ORIGINAL_NAME, fixture.MULTILINE_ANNOTATED_NAME) == MULTILINE_NAMES
+    assert fixture.MULTILINE_ORIGINAL_SIZE == (240, 160)
+    mark = fixture.MULTILINE_FIXTURE_MARK
+    assert (mark.x, mark.y, mark.text, mark.font_size) == (20, 16, "Hi\n\nHi\n", 32)
+    assert fixture.write_multiline_fixture(tmp_path) == tuple(tmp_path / n for n in MULTILINE_NAMES)
+    mode, size, data = _pixels(tmp_path / fixture.MULTILINE_ORIGINAL_NAME)
+    assert (mode, size) == ("RGB", (240, 160))
+    assert data == b"\xff" * (240 * 160 * 3)
+    for name in MULTILINE_NAMES:
+        assert _pixels(tmp_path / name) == _pixels(FIXTURES / name), name
+    one_line = fixture.bake(
+        FIXTURES / fixture.MULTILINE_ORIGINAL_NAME,
+        [dataclasses.replace(mark, text="Hi")],
+        tmp_path / "one-line.png",
+    )
+    assert _pixels(FIXTURES / fixture.MULTILINE_ANNOTATED_NAME) != _pixels(one_line)
+
+
+@_ac102(8, "-main")
+@pytest.mark.unit
+def test_ac_102_8_main_multiline_writes_only_the_pair(ac_id: str, tmp_path: Path) -> None:
+    assert ac_id == "AC-102.8"
+    from tools import capture_bake_fixture as fixture
+
+    multi, default, region = tmp_path / "multi", tmp_path / "default", tmp_path / "region"
+    assert fixture.main(["--multiline", "--out", str(multi)]) == 0
+    assert sorted(path.name for path in multi.iterdir()) == sorted(MULTILINE_NAMES)
+    assert fixture.main(["--out", str(default)]) == 0
+    assert sorted(path.name for path in default.iterdir()) == sorted(
+        (fixture.ORIGINAL_NAME, fixture.ANNOTATED_NAME)
+    )
+    assert fixture.main(["--region", "--out", str(region)]) == 0
+    assert sorted(path.name for path in region.iterdir()) == sorted(REGION_NAMES)
+    with pytest.raises(SystemExit):
+        fixture.main(["--multiline", "--region", "--out", str(tmp_path / "both")])

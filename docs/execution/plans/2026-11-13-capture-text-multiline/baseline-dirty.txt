@@ -1,0 +1,9 @@
+?? .agent/context/handoffs/2026-11-13-capture-text-multiline-plan-critical-review.md	e3458c6002214250c08916c41130be8e1aec69c7b78f8a8f7d6a3703188b9e01
+?? docs/execution/plans/2026-11-13-capture-text-multiline/baseline.ps1	1f04b043b460c63d3a894e3f58303325822207dde7ef6193176be7086e7a73f5
+?? docs/execution/plans/2026-11-13-capture-text-multiline/baseline.sha	2538487e730858043ba1add21e5f15e33302ea145848a885ec8271bd687e1da7
+?? docs/execution/plans/2026-11-13-capture-text-multiline/id-length.py	bceb9a83fb3c8143413be724de91e524c1ca1688d97933ddc57877c11f650931
+?? docs/execution/plans/2026-11-13-capture-text-multiline/identity.py	a0443d003a875b697064dfdc9af8a349220acc0d083cdd523c15ee9f84856684
+?? docs/execution/plans/2026-11-13-capture-text-multiline/implementation-plan.md	169f80b0982b62b51eaefe68f4326299c7c8e3493e3fe6165017d5a86b613076
+?? docs/execution/plans/2026-11-13-capture-text-multiline/red-check.py	a460efe603af66eaafc0471ea05fb4da7c58b35d394660e513dcc4f25f6a44cf
+?? docs/execution/plans/2026-11-13-capture-text-multiline/session-gate.ps1	90f512aa99951a337f2d82c77b496a39d573a2b4aee59330521d9138d0d93885
+?? docs/execution/plans/2026-11-13-capture-text-multiline/task.md	eb063218fc2df127a9e08676a8ef6c323edc5d53d8bbc5ab8fcf0bc326301cf5

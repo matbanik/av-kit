@@ -98,7 +98,7 @@ export const captureDescriptions: Record<string, string> = {
   "avkit_capture.capture": `${desc("capture", "POST", "/captures")} ${IMPORT_TEXT}`,
   "avkit_capture.capture_interactive": desc("capture_interactive", "POST", "/captures/requests"),
   "avkit_capture.list_requests": desc("list_requests", "GET", "/captures/requests"),
-  "avkit_capture.annotate": `${desc("annotate", "POST", "/captures/{id}/annotate")} ${ANNOTATE_EXAMPLE}`,
+  "avkit_capture.annotate": `${desc("annotate", "POST", "/captures/{id}/annotate")} ${ANNOTATE_EXAMPLE} A text mark's text may hold \\n to start a new line; \\r\\n and \\r are stored as \\n, and lines never wrap.`,
   "avkit_capture.remove": desc("remove", "DELETE", "/captures/{id}"),
   "avkit_capture.flatten": `${desc("flatten", "POST", "/captures/{id}/flatten")} Bakes the saved marks into the image file (backup first when capture.flatten_backup is on; a JPEG/WebP shot gets a new PNG copy instead); the user must also accept in the IDE.`,
   "avkit_capture.revert": `${desc("revert", "POST", "/captures/{id}/revert")} Overwrites the image file from its newest backup; the user must also accept in the IDE.`,

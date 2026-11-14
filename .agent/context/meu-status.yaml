@@ -2678,17 +2678,17 @@ meus:
     anchor: multi-line-text
     text: Phase 9 §Multi-line text
   description: Shift+Enter adds a line to a text mark; newline semantics, multi-line Segoe metrics and bake fixtures keep the preview and the bake in agreement.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-101
   dependency_parse_status: parsed
   depends_on:
   - MEU-101
-  execution_plan: null
-  updated: '2026-10-29'
+  execution_plan: docs/execution/plans/2026-11-13-capture-text-multiline/
+  updated: '2026-11-13'
   closed_reason: null
   note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
 - row_key: MEU-103

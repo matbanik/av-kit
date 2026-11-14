@@ -342,6 +342,14 @@ class HighlightAnnotation:
         object.__setattr__(self, "opacity", _require_opacity(self.opacity, "opacity"))
 
 
+def normalize_text_newlines(text: str) -> str:
+    """TEXT_NEWLINES (MEU-102): a stored text holds LF only; CRLF and a lone CR become LF.
+
+    LF, tab and every other control character pass unchanged, and the function is idempotent.
+    """
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 @dataclass(frozen=True)
 class TextAnnotation:
     """Text overlay. Length is 1–TEXT_MAX_CHARS."""
@@ -354,6 +362,8 @@ class TextAnnotation:
     bg_color: str | None
 
     def __post_init__(self) -> None:
+        if isinstance(self.text, str):
+            object.__setattr__(self, "text", normalize_text_newlines(self.text))
         _require_int(self.x, "x")
         _require_int(self.y, "y")
         if not isinstance(self.text, str) or self.text == "" or len(self.text) > TEXT_MAX_CHARS:

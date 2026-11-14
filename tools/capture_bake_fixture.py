@@ -1,7 +1,8 @@
 """Write the capture fidelity fixture PNGs (Session 36 ``TEXT_FIXTURE``, D-18).
 
 Usage: ``python tools/capture_bake_fixture.py --out ui/tests/e2e/fixtures``
-(``--region`` writes only the Session 39 region set).
+(``--region`` writes only the Session 39 region set; ``--multiline`` writes only the
+Session 70 multi-line text pair).
 
 ``capture-fidelity-original.png`` is a 240x120 all-white RGB image.
 ``capture-fidelity-annotated.png`` is the real ``CaptureAdapter.bake`` of it with
@@ -12,6 +13,10 @@ compares pixels, so the committed PNGs cannot go stale.
 ``REGION_IMAGE_FIXTURE``): ``capture-region-pass.json`` holds ``REGION_CASES``, each input
 with the RGB of its real bake, and ``capture-region-original.png`` /
 ``capture-region-annotated.png`` are the Electron oracle's image pair.
+
+``write_multiline_fixture`` writes the Session 70 pair (``TEXT_FIXTURE_MULTILINE``):
+``capture-fidelity-multiline-original.png`` is a 240x160 all-white RGB image and
+``capture-fidelity-multiline-annotated.png`` is its real bake with ``MULTILINE_FIXTURE_MARK``.
 """
 
 from __future__ import annotations
@@ -39,6 +44,13 @@ ORIGINAL_SIZE = (240, 120)
 TEXT_FIXTURE_MARK = TextAnnotation(
     x=20, y=30, text="Hi", color="#000000", font_size=32, bg_color="#FFD400"
 )
+# TEXT_FIXTURE_MULTILINE (MEU-102, D-710): a text mark with an empty line and a trailing \n.
+MULTILINE_ORIGINAL_NAME = "capture-fidelity-multiline-original.png"
+MULTILINE_ANNOTATED_NAME = "capture-fidelity-multiline-annotated.png"
+MULTILINE_ORIGINAL_SIZE = (240, 160)
+MULTILINE_FIXTURE_MARK = TextAnnotation(
+    x=20, y=16, text="Hi\n\nHi\n", color="#000000", font_size=32, bg_color="#FFD400"
+)
 
 
 def write_original(path: Path, size: tuple[int, int] = ORIGINAL_SIZE) -> Path:
@@ -58,6 +70,13 @@ def write_fixture(out_dir: Path) -> tuple[Path, Path]:
     """Write the original and the annotated fixture PNGs into ``out_dir``."""
     original = write_original(out_dir / ORIGINAL_NAME)
     annotated = bake(original, [TEXT_FIXTURE_MARK], out_dir / ANNOTATED_NAME)
+    return original, annotated
+
+
+def write_multiline_fixture(out_dir: Path) -> tuple[Path, Path]:
+    """Write the multi-line original and its real bake into ``out_dir`` (TEXT_FIXTURE_MULTILINE)."""
+    original = write_original(out_dir / MULTILINE_ORIGINAL_NAME, MULTILINE_ORIGINAL_SIZE)
+    annotated = bake(original, [MULTILINE_FIXTURE_MARK], out_dir / MULTILINE_ANNOTATED_NAME)
     return original, annotated
 
 
@@ -324,11 +343,23 @@ def write_region_fixture(out_dir: Path) -> tuple[Path, Path, Path]:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", type=Path, required=True, help="directory for the fixtures")
-    parser.add_argument(
+    only = parser.add_mutually_exclusive_group()
+    only.add_argument(
         "--region", action="store_true", help="write only the region set (REGION_FIXTURE)"
     )
+    only.add_argument(
+        "--multiline",
+        action="store_true",
+        help="write only the multi-line text pair (TEXT_FIXTURE_MULTILINE)",
+    )
     args = parser.parse_args(argv)
-    paths = write_region_fixture(args.out) if args.region else write_fixture(args.out)
+    paths: tuple[Path, ...]
+    if args.region:
+        paths = write_region_fixture(args.out)
+    elif args.multiline:
+        paths = write_multiline_fixture(args.out)
+    else:
+        paths = write_fixture(args.out)
     for path in paths:
         print(path)
     return 0

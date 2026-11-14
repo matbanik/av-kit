@@ -2107,14 +2107,32 @@ test('AC-81.14: at 100% after a pan the arrow handles track the arrow, a grab mo
 const FIDELITY_MARK = { type: 'text', x: 20, y: 30, text: 'Hi', color: '#000000', font_size: 32, bg_color: '#FFD400' }
 
 type PixelBox = { left: number; top: number; right: number; bottom: number }
-type FidelityBoxes = { ink: PixelBox | null; plate: PixelBox | null; width: number; height: number; rect: { left: number; top: number } }
+type InkRun = { top: number; bottom: number }
+type FidelityBoxes = {
+  ink: PixelBox | null
+  plate: PixelBox | null
+  inkRows: InkRun[]
+  width: number
+  height: number
+  rect: { left: number; top: number }
+}
 
-async function installFidelitySeam(page: Page, shot: CaptureItem): Promise<void> {
+// MEU-102 (Session 70 plan TEXT_PARITY_E2E): the seam serves a fixture pair and its mark; the
+// default is today's TEXT_FIXTURE pair and FIDELITY_MARK.
+type FidelityFixture = { original: string; annotated: string; mark: Record<string, unknown> }
+
+const FIDELITY_FIXTURE: FidelityFixture = {
+  original: 'capture-fidelity-original.png',
+  annotated: 'capture-fidelity-annotated.png',
+  mark: FIDELITY_MARK,
+}
+
+async function installFidelitySeam(page: Page, shot: CaptureItem, fixture: FidelityFixture = FIDELITY_FIXTURE): Promise<void> {
   const fixtures = resolve(here, 'fixtures')
-  const original = readFileSync(join(fixtures, 'capture-fidelity-original.png')).toString('base64')
-  const annotated = readFileSync(join(fixtures, 'capture-fidelity-annotated.png')).toString('base64')
+  const original = readFileSync(join(fixtures, fixture.original)).toString('base64')
+  const annotated = readFileSync(join(fixtures, fixture.annotated)).toString('base64')
   await page.addInitScript(
-    ([item, mark, png]: [CaptureItem, typeof FIDELITY_MARK, { original: string; annotated: string }]) => {
+    ([item, mark, png]: [CaptureItem, Record<string, unknown>, { original: string; annotated: string }]) => {
       const state = window as unknown as { __e2eSeamInstalled?: boolean }
       state.__e2eSeamInstalled = true
       const bytes = (b64: string) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0))
@@ -2149,7 +2167,7 @@ async function installFidelitySeam(page: Page, shot: CaptureItem): Promise<void>
         return original(input, init)
       }
     },
-    [shot, FIDELITY_MARK, { original, annotated }] as [CaptureItem, typeof FIDELITY_MARK, { original: string; annotated: string }],
+    [shot, fixture.mark, { original, annotated }] as [CaptureItem, Record<string, unknown>, { original: string; annotated: string }],
   )
   await page.reload()
   await page.getByTestId('downloader-page').waitFor()
@@ -2184,7 +2202,9 @@ async function fidelityBoxes(page: Page): Promise<FidelityBoxes> {
     })
     let ink: PixelBox | null = null
     let plate: PixelBox | null = null
+    const runs: { top: number; bottom: number }[] = []
     for (let y = inset; y < bitmap.height - inset; y += 1) {
+      let rowInk = false
       for (let x = inset; x < bitmap.width - inset; x += 1) {
         const i = (y * bitmap.width + x) * 4
         const r = pixels[i] as number
@@ -2192,10 +2212,17 @@ async function fidelityBoxes(page: Page): Promise<FidelityBoxes> {
         const b = pixels[i + 2] as number
         if (0.299 * r + 0.587 * g + 0.114 * b < 96) {
           ink = grow(ink, x, y)
+          rowInk = true
         }
         if (Math.abs(r - 0xff) <= 40 && Math.abs(g - 0xd4) <= 40 && Math.abs(b - 0x00) <= 40) {
           plate = grow(plate, x, y)
         }
+      }
+      const last = runs[runs.length - 1]
+      if (rowInk && last !== undefined && last.bottom === y - 1) {
+        last.bottom = y
+      } else if (rowInk) {
+        runs.push({ top: y, bottom: y })
       }
     }
     const toImage = (box: PixelBox | null): PixelBox | null =>
@@ -2210,6 +2237,7 @@ async function fidelityBoxes(page: Page): Promise<FidelityBoxes> {
     return {
       ink: toImage(ink),
       plate: toImage(plate),
+      inkRows: runs.map((run) => ({ top: Math.floor(run.top / dpr), bottom: Math.floor(run.bottom / dpr) })),
       width: bitmap.width / dpr,
       height: bitmap.height / dpr,
       rect: { left: rect.left, top: rect.top },
@@ -2280,6 +2308,105 @@ test('AC-82.6 TEXT_PIXEL_ORACLE: the preview text and plate match the baked PNG 
   expectBoxesAgree(preview.plate, bake.plate)
   expectInkInsidePlate(preview)
   expectInkInsidePlate(bake)
+  await app.close()
+})
+
+// ── MEU-102 multi-line text parity (Session 70 plan AC-102.19, AC-102.20, TEXT_PARITY_E2E) ──
+// AC-102.19 serves the TEXT_FIXTURE_MULTILINE pair (tools/capture_bake_fixture.py --multiline)
+// and its mark; AC-102.20 runs AC-82.6's assertions through the parameterised seam.
+
+const MULTILINE_FIXTURE: FidelityFixture = {
+  original: 'capture-fidelity-multiline-original.png',
+  annotated: 'capture-fidelity-multiline-annotated.png',
+  mark: { type: 'text', x: 20, y: 16, text: 'Hi\n\nHi\n', color: '#000000', font_size: 32, bg_color: '#FFD400' },
+}
+
+/** Opens the seamed shot at 100% and reads the Original view (preview), then the Annotated view (bake). */
+async function fidelityViews(
+  fixture: FidelityFixture,
+  id: string,
+  name: string,
+  size: { width: number; height: number },
+): Promise<{ app: Awaited<ReturnType<typeof launchApp>>; preview: FidelityBoxes; bake: FidelityBoxes }> {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  const shot = {
+    ...sampleShot(id, name, '2026-11-13T12:00:00Z', size),
+    annotated_path: `C:/e2e/${name.replace(/\.png$/, '')}.annotated.png`,
+  }
+  await installFidelitySeam(page, shot, fixture)
+  await page.getByTestId('nav-capture').click()
+  await page.getByTestId('capture-filmstrip-item').first().click()
+  await page.waitForSelector('[data-testid="capture-draw-surface"][data-overlay-ready="true"]')
+  await expect(page.locator('[data-annotation-type="text"]')).toHaveCount(1)
+  await windowSettled(page)
+  const level = page.getByTestId('capture-zoom-level')
+  for (let i = 0; i < 2 * LADDER.length && (await level.textContent()) !== '100%'; i += 1) {
+    const view = await readZoom(page)
+    await page.getByTestId(view.s < 1 ? 'capture-zoom-in' : 'capture-zoom-out').click()
+  }
+  await expect(level).toHaveText('100%')
+  expect((await readZoom(page)).s).toBe(1)
+  await page.mouse.move(1, 1)
+  const loaded = (previous: string) =>
+    page.waitForFunction(
+      ([prior, width]: [string, number]) => {
+        const image = document.querySelector('[data-testid="capture-viewport-image"]') as HTMLImageElement | null
+        return image !== null && image.src !== prior && image.complete && image.naturalWidth === width
+      },
+      [previous, size.width] as [string, number],
+    )
+  await page.getByTestId('capture-view-original').click()
+  await expect(page.locator('[data-annotation-type="text"]')).toHaveCount(1)
+  await loaded('')
+  const originalSrc = await page.getByTestId('capture-viewport-image').evaluate((node) => (node as HTMLImageElement).src)
+  const preview = await fidelityBoxes(page)
+  await page.getByTestId('capture-view-annotated').click()
+  await expect(page.locator('[data-annotation-type="text"]')).toHaveCount(0)
+  await loaded(originalSrc)
+  const bake = await fidelityBoxes(page)
+  return { app, preview, bake }
+}
+
+test('AC-102.19 TEXT_PARITY_E2E: a multi-line preview matches its bake within 1 px, line by line, at 100%', async () => {
+  const { app, preview, bake } = await fidelityViews(MULTILINE_FIXTURE, 'e2e-fid-lines', 'fidelity-lines.png', {
+    width: 240,
+    height: 160,
+  })
+  console.log(`AC-102.19 boxes ${JSON.stringify({ preview, bake })}`)
+  for (const view of [preview, bake]) {
+    expect(Math.abs(view.width - 240)).toBeLessThanOrEqual(1)
+    expect(Math.abs(view.height - 160)).toBeLessThanOrEqual(1)
+  }
+  expect(bake.inkRows).toHaveLength(2)
+  expect(preview.inkRows).toHaveLength(2)
+  for (let i = 0; i < 2; i += 1) {
+    expect(Math.abs((preview.inkRows[i]?.top ?? -9) - (bake.inkRows[i]?.top ?? 9))).toBeLessThanOrEqual(1)
+    expect(Math.abs((preview.inkRows[i]?.bottom ?? -9) - (bake.inkRows[i]?.bottom ?? 9))).toBeLessThanOrEqual(1)
+  }
+  expectBoxesAgree(preview.ink, bake.ink)
+  expectBoxesAgree(preview.plate, bake.plate)
+  expectInkInsidePlate(preview)
+  expectInkInsidePlate(bake)
+  await app.close()
+})
+
+test('AC-102.20 AC-82.6 passes through the parameterised seam with the default pair', async () => {
+  const { app, preview, bake } = await fidelityViews(FIDELITY_FIXTURE, 'e2e-fid-1', 'fidelity.png', {
+    width: 240,
+    height: 120,
+  })
+  console.log(`AC-102.20 boxes ${JSON.stringify({ preview, bake })}`)
+  for (const view of [preview, bake]) {
+    expect(Math.abs(view.width - 240)).toBeLessThanOrEqual(1)
+    expect(Math.abs(view.height - 120)).toBeLessThanOrEqual(1)
+  }
+  expectBoxesAgree(preview.ink, bake.ink)
+  expectBoxesAgree(preview.plate, bake.plate)
+  expectInkInsidePlate(preview)
+  expectInkInsidePlate(bake)
+  expect(preview.inkRows).toHaveLength(1)
+  expect(bake.inkRows).toHaveLength(1)
   await app.close()
 })
 

@@ -921,6 +921,16 @@ Planning notes added 2026-11-12, after the crop, video-stills and download sessi
 | Model | `text` gains defined `\n` semantics; line spacing derives from `font_size` with no new field, unless G-3 shows stored marks need a layout version | Human-approved 2026-10-29 synthesis §7 data-model changes |
 | Parity | The Segoe metrics table extends to multiple lines, and bake fixtures prove the preview and the bake agree. No automatic wrap (wrap width is Later, C-3) | Human-approved 2026-10-29 synthesis A-7, C-3 |
 
+> **Delivered (Session 70).**
+> - G-3: the bake already split a text on `\n`; the preview now matches it. No layout version, because no stored mark held a newline.
+> - A stored text holds LF only: the domain and the API fold `\r\n` and `\r` to `\n` before the length check (`TEXT_NEWLINES`, `TEXT_API_NEWLINES`); the OpenAPI document doesn't change.
+> - Lines sit one pitch apart, the Segoe ascent plus `TEXT_LINE_GAP` (4 px) (`TEXT_LINE_PITCH`); the plate is the union of the lines (`TEXT_PLATE_LINES`); the preview draws one `<tspan>` per line (`TEXT_SVG_LINES`). Lines never wrap.
+> - The field is a textarea: Enter commits, Shift+Enter adds a line, Enter belongs to the IME while composing, and the hint reads "Enter to finish, Shift+Enter for a new line, Esc to cancel" (`TEXT_DRAFT_KEYS`, `TEXT_DRAFT_HINT`).
+> - The MCP annotate description states the newline rule (`TEXT_MCP_DOC`); the geometry fixture and a multi-line bake pair prove the preview agrees with the bake (`TEXT_GEOMETRY`, `TEXT_FIXTURE_MULTILINE`, `TEXT_PARITY_E2E`).
+> - AC-102.1 to AC-102.24.
+> - Gate: `session-gate.ps1`, all steps exit 0 (walkthrough §Gate).
+> - Plan `docs/execution/plans/2026-11-13-capture-text-multiline/`.
+
 <a id="redact-mark"></a>
 
 ### Redact mark

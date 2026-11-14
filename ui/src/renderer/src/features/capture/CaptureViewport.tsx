@@ -48,8 +48,10 @@ import {
   SVG_DOMINANT_BASELINE,
   SVG_TEXT_ANCHOR,
   SVG_TEXT_FONT_FAMILY,
+  segoeLinePitchPx,
   svgTextBaselineY,
   textBackgroundBox,
+  textLines,
 } from './capture-text-metrics'
 import { ToolbarIconButton } from './ToolbarIconButton'
 import { CaptureCropOverlay } from './CaptureCropOverlay'
@@ -327,7 +329,17 @@ function AnnotationMark({ ann }: { ann: Annotation }) {
         textAnchor={SVG_TEXT_ANCHOR}
         dominantBaseline={SVG_DOMINANT_BASELINE}
       >
-        {ann.text}
+        {ann.text.includes('\n')
+          ? textLines(ann.text).map((line, index) => (
+              <tspan
+                key={index}
+                x={ann.x}
+                y={svgTextBaselineY(ann) + index * segoeLinePitchPx(ann.font_size)}
+              >
+                {line}
+              </tspan>
+            ))
+          : ann.text}
       </text>
     </g>
   )
@@ -1518,11 +1530,25 @@ export function CaptureViewport({
           ) : null}
           </div>
           {textDraft !== null && showVectors ? (
-            <input
+            <div
+              id="capture-text-draft-hint"
+              data-testid="capture-text-draft-hint"
+              className="absolute z-10 pointer-events-none whitespace-nowrap rounded bg-bg px-1 text-xs text-fg-muted"
+              style={draftStyle === undefined ? undefined : { ...draftStyle, transform: 'translateY(calc(-100% - 2px))' }}
+            >
+              Enter to finish, Shift+Enter for a new line, Esc to cancel
+            </div>
+          ) : null}
+          {textDraft !== null && showVectors ? (
+            <textarea
               data-testid="capture-text-draft"
-              className="absolute z-10 bg-bg border border-border px-1"
+              className="absolute z-10 bg-bg border border-border px-1 resize-none"
               style={draftStyle}
               value={textDraft.value}
+              rows={Math.max(1, textLines(textDraft.value).length)}
+              wrap="off"
+              spellCheck={false}
+              aria-describedby="capture-text-draft-hint"
               autoFocus
               onPointerDown={(event) => {
                 event.stopPropagation()
@@ -1537,7 +1563,7 @@ export function CaptureViewport({
                 if (event.nativeEvent.isComposing) {
                   return
                 }
-                if (event.key === 'Enter') {
+                if (event.key === 'Enter' && !event.shiftKey) {
                   event.preventDefault()
                   onTextCommit()
                 }

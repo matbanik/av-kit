@@ -1653,3 +1653,42 @@ describe("MEU-104 render stays REST-only", () => {
     expect(captureSchema.safeParse({ action: "render", id: "s1", annotations: [] }).success).toBe(false);
   });
 });
+
+describe("MEU-102 avkit_capture multi-line text", () => {
+  it("AC-102.21 the annotate description says how a text mark holds lines; the actions are unchanged", async () => {
+    const { captureDescriptions, captureSchema } = await import("../src/toolsets/capture.js");
+    const annotate = captureDescriptions["avkit_capture.annotate"];
+    const sentence =
+      "A text mark's text may hold \\n to start a new line; \\r\\n and \\r are stored as \\n, and lines never wrap.";
+    expect(sentence).toContain("\\n");
+    expect(sentence).not.toContain("\n");
+    expect(annotate).toContain(sentence);
+    expect(annotate.endsWith(sentence)).toBe(true);
+    expect(annotate.toLowerCase()).not.toMatch(/\bcircle\b/);
+    expect(annotate.toLowerCase()).not.toMatch(/\bmarker\b/);
+    const rows = ACTION_INDEX.filter((row) => row.tool === "avkit_capture");
+    expect(rows.map((row) => row.action)).toEqual([
+      "list",
+      "get",
+      "image",
+      "capture",
+      "capture_interactive",
+      "list_requests",
+      "annotate",
+      "remove",
+      "flatten",
+      "revert",
+      "crop",
+      "frames",
+      "sheet",
+      "export",
+    ]);
+    expect(ACTION_INDEX).toHaveLength(75);
+    const twoLines = captureSchema.safeParse({
+      action: "annotate",
+      id: "s1",
+      annotations: [{ type: "text", x: 12, y: 48, text: "Hi\nHi", color: "white", font_size: 16 }],
+    });
+    expect(twoLines.success).toBe(true);
+  });
+});

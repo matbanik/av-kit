@@ -67,6 +67,8 @@ SUPERSAMPLE = 4
 # The tile pad past stroke/2: the LANCZOS halo (3 px at 4x) plus 1, so the spread is never cut.
 ARROW_TILE_PAD_PX = 4
 FONT_CANDIDATES = ("segoeui.ttf", "arial.ttf")
+# TEXT_LINE_GAP (MEU-102): px between a text mark's lines; Pillow's default, made explicit.
+TEXT_LINE_GAP = 4
 # LOSSY_QUALITY (MEU-67, Human-approved): Pillow quality for JPEG and lossy WebP bake output.
 LOSSY_QUALITY = 90
 # IMPORT_ACCEPT (MEU-129, D-416, D-417): the fixed, path-free refusals of inspect_import.
@@ -146,7 +148,7 @@ def text_plate_box(x: int, y: int, text: str, font_size: int) -> tuple[int, int,
     """Return Pillow ``la`` ink bbox ``(left, top, right, bottom)``."""
     font = _load_font(max(1, font_size))
     draw = ImageDraw.Draw(Image.new("RGB", (1, 1)))
-    bbox = draw.textbbox((x, y), text, font=font, anchor="la")
+    bbox = draw.textbbox((x, y), text, font=font, anchor="la", spacing=TEXT_LINE_GAP)
     return (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
 
 
@@ -888,5 +890,6 @@ class CaptureAdapter:
             fill=color,
             font=font,
             anchor="la",
+            spacing=TEXT_LINE_GAP,
         )
         return overlay

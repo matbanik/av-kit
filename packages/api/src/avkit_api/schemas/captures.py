@@ -17,6 +17,7 @@ from avkit_core.domain.capture import (
     REGION_MAX_EDGE_MAX,
     REGION_MAX_EDGE_MIN,
     TEXT_MAX_CHARS,
+    normalize_text_newlines,
 )
 from avkit_core.services.capture import EXPORT_MAX_EDGE_MAX
 from avkit_core.services.video_input import (
@@ -121,6 +122,12 @@ class TextAnnotationIn(ApiModel):
     color: str = Field(pattern=COLOR_PATTERN)
     font_size: int
     bg_color: str | None = Field(default=None, pattern=COLOR_PATTERN)
+
+    @field_validator("text", mode="before")
+    @classmethod
+    def _fold_newlines(cls, value: object) -> object:
+        # TEXT_API_NEWLINES (MEU-102): max_length counts the stored, LF-only text.
+        return normalize_text_newlines(value) if isinstance(value, str) else value
 
 
 class PixelateAnnotationIn(ApiModel):
