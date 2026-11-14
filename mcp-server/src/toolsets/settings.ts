@@ -82,6 +82,8 @@ export const SETTINGS_SCHEMA: {
       text_font_size: { type: "number", default: 16 },
       text_bg_color: { type: "string", default: "" },
       pixelate_block_size: { type: "number", default: 10 },
+      // LOCK_LEAF (Session 71b, MEU-143): the capture tool lock, on by default.
+      tool_lock: { type: "boolean", default: true },
     },
   },
 };
@@ -154,6 +156,8 @@ const settingsLeaves = {
   text_font_size: z.number().int().optional(),
   text_bg_color: z.string().optional(),
   pixelate_block_size: z.number().int().optional(),
+  // LOCK_LEAF (MEU-143): a strict boolean; "false" and 0 are refused.
+  tool_lock: z.boolean().optional(),
   rail: z.unknown().optional(),
   panel: z.unknown().optional(),
 };

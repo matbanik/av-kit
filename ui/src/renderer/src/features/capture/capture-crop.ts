@@ -66,7 +66,7 @@ export function fitsRatio(box: CropSize, r: number): boolean {
 }
 
 /** The largest whole driving side whose `ratioBox` fits within `maxW × maxH`; 0 when none does. */
-function largestDriving(r: number, maxW: number, maxH: number): number {
+export function largestDriving(r: number, maxW: number, maxH: number): number {
   const limit = Math.floor(r >= 1 ? maxH : maxW)
   const otherMax = r >= 1 ? maxW : maxH
   const other = (s: number): number => (r >= 1 ? ratioBox(s, r).width : ratioBox(s, r).height)
@@ -96,12 +96,12 @@ export function ratioFeasible(r: number, imageW: number, imageH: number): boolea
 }
 
 /** The driving side a width of `v` gives under ratio `r`. */
-function drivingFromWidth(v: number, r: number): number {
+export function drivingFromWidth(v: number, r: number): number {
   return r >= 1 ? roundHalfUp(v / r) : v
 }
 
 /** The driving side a height of `v` gives under ratio `r`. */
-function drivingFromHeight(v: number, r: number): number {
+export function drivingFromHeight(v: number, r: number): number {
   return r >= 1 ? v : roundHalfUp(v * r)
 }
 

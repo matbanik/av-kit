@@ -82,15 +82,18 @@
 | `capture:batch_delete` | Delete {n} shots (thumbnail menu, ticked shots or Shift-click range) | no | `DELETE /captures/{id}` per shot | specified | 09 |
 | `capture:apply_image` | Flatten into image… (bake saved marks after a backup) | no | `POST /captures/{id}/flatten` | specified | 09 |
 | `capture:revert_image` | Restore backup… from its newest backup | no | `POST /captures/{id}/revert` | specified | 09 |
-| `capture:tool_arrow` | Arrow tool | no | local canvas | specified | 09 |
-| `capture:tool_box` | Box tool | no | local canvas | specified | 09 |
-| `capture:tool_highlight` | Highlight tool | no | local canvas | specified | 09 |
-| `capture:tool_text` | Text tool | no | local canvas | specified | 09 |
-| `capture:tool_redact` | Redact tool (Solid / Pixelate) | no | local canvas | specified | 09 |
-| `capture:tool_eraser` | Smart eraser tool | no | local canvas | specified | 09 |
-| `capture:tool_lock` | Keep tool after drawing (tool lock) | no | local canvas | specified | 09 |
+| `capture:tool_select` | Select tool (V) | no | local canvas | specified | 09 |
+| `capture:tool_arrow` | Arrow tool (A) | no | local canvas | specified | 09 |
+| `capture:tool_box` | Box tool (R) | no | local canvas | specified | 09 |
+| `capture:tool_highlight` | Highlight tool (H) | no | local canvas | specified | 09 |
+| `capture:tool_text` | Text tool (T) | no | local canvas | specified | 09 |
+| `capture:tool_redact` | Redact tool (X) (Solid / Pixelate) | no | local canvas | specified | 09 |
+| `capture:tool_eraser` | Smart eraser tool (E) | no | local canvas | specified | 09 |
+| `capture:tool_crop` | Crop (C) | no | local canvas | specified | 09 |
+| `capture:tool_lock` | Keep tool after drawing (tool lock); on by default; off returns to Select after each mark | no | `PUT /settings/capture` (`capture.tool_lock`) | specified | 09 |
 | `capture:style_mark` | Color, Stroke, Size, Bg and Block size with a mark selected restyle only that mark | no | local canvas | specified | 09 |
 | `capture:style_tool` | Color, Stroke, Size, Bg and Block size with no mark selected set the armed tool's own saved style | no | `PUT /settings/capture` | specified | 09 |
+| `capture:draw_modifiers` | Shift draws a square, keeps a box's shape or snaps an arrow to 45°; Alt draws from the centre; Shift+arrow nudges 10 px | no | local canvas | specified | 09 |
 | `capture:undo` | Undo overlay; Ctrl+Z on the image | no | local | specified | 09 |
 | `capture:redo` | Redo overlay; Ctrl+Y or Ctrl+Shift+Z on the image | no | local | specified | 09 |
 | `capture:zoom_in` | Zoom in (button / Ctrl+= / wheel) | no | local view | specified | 09 |

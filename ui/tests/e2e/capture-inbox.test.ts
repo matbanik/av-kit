@@ -77,13 +77,22 @@ function isCapturesCollection(pathname: string): boolean {
   return /\/api\/v1\/captures\/?$/.test(pathname) || /\/captures\/?$/.test(pathname)
 }
 
-async function installSeam(page: Page, seed: CaptureItem[] = []): Promise<void> {
+/**
+ * MEU-143 (D-744): `lockLeaf` joins both settings answers. Its default keeps the lock off, so a draw
+ * returns to Select; AC-87.6 and AC-143.29 pass `{}` to get the default lock.
+ */
+async function installSeam(
+  page: Page,
+  seed: CaptureItem[] = [],
+  lockLeaf: Record<string, unknown> = { tool_lock: false },
+): Promise<void> {
   const items = [...seed]
-  let captureSettings = {
+  let captureSettings: Record<string, unknown> = {
     inbox_dir: '~/Pictures/av-kit',
     hotkey: 'F2',
     copy_to_clipboard: false,
     close_to_tray: true,
+    ...lockLeaf,
   }
   await page.route((url) => url.pathname.includes('/health/dependencies'), async (route) => {
     await route.fulfill({
@@ -135,7 +144,7 @@ async function installSeam(page: Page, seed: CaptureItem[] = []): Promise<void> 
     }
     await route.fulfill({ json: items[0] ?? {} })
   })
-  await page.addInitScript((seeded: CaptureItem[]) => {
+  await page.addInitScript(([seeded, leaf]: [CaptureItem[], Record<string, unknown>]) => {
     const state = window as unknown as { __e2eSeamInstalled?: boolean; __e2eCaptures?: CaptureItem[] }
     state.__e2eSeamInstalled = true
     state.__e2eCaptures = seeded
@@ -154,6 +163,7 @@ async function installSeam(page: Page, seed: CaptureItem[] = []): Promise<void> 
           hotkey: 'F2',
           copy_to_clipboard: false,
           close_to_tray: true,
+          ...leaf,
         })
       }
       if (url.includes('/captures/requests')) {
@@ -180,7 +190,7 @@ async function installSeam(page: Page, seed: CaptureItem[] = []): Promise<void> 
       }
       return original(input, init)
     }
-  }, seed)
+  }, [seed, lockLeaf] as [CaptureItem[], Record<string, unknown>])
   await page.reload()
   await page.getByTestId('downloader-page').waitFor()
 }
@@ -465,7 +475,7 @@ test('AC-59.12 arrow and text marks survive Save then reload', async () => {
   await app.close()
 })
 
-test('AC-60.12 edit until Save: create arrow+text, drag ends and text, typed hex, Apply, Save, reload, annotated has no SVG [TA-19]', async () => {
+test('AC-60.12 edit until Save: create arrow+text, drag ends and text, typed hex, Enter, Save, reload, annotated has no SVG [TA-19]', async () => {
   const app = await launchApp()
   const page = await app.firstWindow()
   const shot = sampleShot('e2e-edit-1', 'edit.png', '2026-09-20T12:00:00Z')
@@ -1357,6 +1367,7 @@ async function installFlattenSeam(page: Page, seed: FlattenSeed): Promise<void> 
       state.__s30 = s
       let settings: Record<string, unknown> = {
         inbox_dir: 'C:/e2e',
+        tool_lock: false,
         hotkey: 'F2',
         copy_to_clipboard: false,
         close_to_tray: true,
@@ -1672,7 +1683,7 @@ test('AC-80.10: a real hover shows the enabled Arrow hint and the disabled Undo 
   await page.waitForTimeout(HINT_DELAY_MS)
   await expect(arrowHint).toBeVisible()
   await expect(arrowHint).toHaveAttribute('role', 'tooltip')
-  await expect(arrowHint).toHaveText('Arrow')
+  await expect(arrowHint).toHaveText('Arrow (A)')
   await expectInside('capture-tool-arrow-hint')
   await page.mouse.move(5, 5)
   await page.waitForTimeout(HINT_GRACE_MS)
@@ -2148,7 +2159,7 @@ async function installFidelitySeam(page: Page, shot: CaptureItem, fixture: Fidel
           return json({ ffmpeg: { available: true, version: '7.1.2' }, yt_dlp: { available: true } })
         }
         if (path.endsWith('/settings/capture')) {
-          return json({ inbox_dir: 'C:/e2e', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true })
+          return json({ inbox_dir: 'C:/e2e', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true, tool_lock: false })
         }
         if (path.includes('/captures/requests')) {
           return json({ items: [] })
@@ -2555,23 +2566,25 @@ async function dragImage(page: Page, from: [number, number], to: [number, number
   await page.mouse.up()
 }
 
-test('AC-87.6 with the tool lock on, two real Box drags give two boxes and Box stays pressed', async () => {
+// MEU-143 (Session 71b, D-744): the seam serves no tool_lock, so the lock is on at load and is not clicked.
+test('AC-87.6 the tool lock is on at load; two real Box drags keep Box with the second box selected', async () => {
   const app = await launchApp()
   const page = await app.firstWindow()
-  await installSeam(page, [sampleShot('e2e-lock-1', 'lock.png', '2026-10-16T12:00:00Z')])
+  await installSeam(page, [sampleShot('e2e-lock-1', 'lock.png', '2026-10-16T12:00:00Z')], {})
   await page.getByTestId('nav-capture').click()
   await page.getByTestId('capture-filmstrip-item').first().click()
   await expect(page.getByTestId('capture-draw-surface')).toHaveAttribute('data-overlay-ready', 'true')
   expectBuiltRenderer(page)
   expect(await page.getByTestId('capture-tool-lock').count()).toBe(1)
   const lock = page.getByTestId('capture-tool-lock')
-  await lock.click()
   await expect(lock).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('capture-tool-box')).toBeVisible()
   await page.getByTestId('capture-tool-box').click()
   await dragImage(page, [1, 1], [3, 3])
   await dragImage(page, [5, 5], [7, 7])
   await expect(page.locator('rect[data-annotation-type="rect"]')).toHaveCount(2)
   await expect(page.getByTestId('capture-tool-box')).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('capture-mark-list').locator('button').nth(1)).toHaveAttribute('aria-pressed', 'true')
   await expect(lock).toHaveAttribute('aria-pressed', 'true')
   await app.close()
 })
@@ -2621,7 +2634,7 @@ async function installRegionSeam(page: Page, shot: CaptureItem, marks: Array<Rec
           return json({ ffmpeg: { available: true, version: '7.1.2' }, yt_dlp: { available: true } })
         }
         if (path.endsWith('/settings/capture')) {
-          return json({ inbox_dir: 'C:/e2e', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true })
+          return json({ inbox_dir: 'C:/e2e', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true, tool_lock: false })
         }
         if (path.includes('/captures/requests')) {
           return json({ items: [] })
@@ -3170,7 +3183,7 @@ async function installCropSeam(page: Page, shots: CaptureItem[]): Promise<void> 
     state.__e2eSeamInstalled = true
     const s = { items: [...seed], crops: [] as unknown[] }
     state.__s60 = s
-    const settings = { inbox_dir: 'C:/e2e', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true }
+    const settings = { inbox_dir: 'C:/e2e', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true, tool_lock: false }
     const original = window.fetch.bind(window)
     const png = Uint8Array.from([
       137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31,
@@ -3339,7 +3352,7 @@ test('AC-103.24 the Redact button shows with Solid checked; the Smart eraser too
   await page.waitForTimeout(HINT_DELAY_MS)
   const hint = page.getByTestId('capture-tool-eraser-hint')
   await expect(hint).toBeVisible()
-  await expect(hint).toHaveText('Smart eraser: Covers an area with the surrounding colour')
+  await expect(hint).toHaveText('Smart eraser (E): Covers an area with the surrounding colour')
   await app.close()
 })
 
@@ -3403,6 +3416,7 @@ test('AC-105.26 Electron: a named pick paints the selected arrow and saves; a he
     const state = window as unknown as { __e2eStylePuts?: unknown[] }
     state.__e2eStylePuts = []
     let stored: Record<string, unknown> = {
+      tool_lock: false,
       inbox_dir: '~/Pictures/av-kit',
       hotkey: 'F2',
       copy_to_clipboard: false,
@@ -3476,5 +3490,64 @@ test('AC-105.26 Electron: a named pick paints the selected arrow and saves; a he
     c.toUpperCase(),
   )
   expect(colors.sort()).toEqual(['#12ABCD', '#FFA500'])
+  await app.close()
+})
+
+// ── MEU-143 tool flow (Session 71b, AC-143.29) ──────────────────────────────────────────────────────
+// The seam serves no tool_lock, so the lock is on at load. R arms Box, a locked draw keeps Box with the
+// new box selected, an Alt drag draws a second box and V then arms Select (ALT_NO_MENU), a letter typed
+// into the hex field arms nothing, and a Lock click sends one PUT (the body ledger records it).
+test('AC-143.29 Electron: Lock on at load, R arms Box, an Alt drag then V arms Select, a Lock click sends one PUT', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await installSeam(page, [sampleShot('e2e-flow-1', 'flow.png', '2026-11-14T12:00:00Z')], {})
+  await installBodyLedger(page)
+  await expect(page.getByTestId('nav-capture')).toBeVisible()
+  await page.getByTestId('nav-capture').click()
+  await expect(page.getByTestId('capture-filmstrip-item').first()).toBeVisible()
+  await page.getByTestId('capture-filmstrip-item').first().click()
+  const surface = page.getByTestId('capture-draw-surface')
+  await expect(surface).toHaveAttribute('data-overlay-ready', 'true')
+  expectBuiltRenderer(page)
+  const lock = page.getByTestId('capture-tool-lock')
+  await expect(lock).toBeVisible()
+  await expect(lock).toHaveAttribute('aria-pressed', 'true')
+  const boxTool = page.getByTestId('capture-tool-box')
+  await surface.focus()
+  await page.keyboard.press('r')
+  await expect(boxTool).toHaveAttribute('aria-pressed', 'true')
+  await dragImage(page, [1, 1], [3, 3])
+  const boxes = page.locator('rect[data-annotation-type="rect"]')
+  await expect(boxes).toHaveCount(1)
+  await expect(boxTool).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('capture-mark-list').locator('button').nth(0)).toHaveAttribute('aria-pressed', 'true')
+  await page.keyboard.down('Alt')
+  await dragImage(page, [6, 6], [7, 7])
+  await page.keyboard.up('Alt')
+  await expect(boxes).toHaveCount(2)
+  await page.keyboard.press('v')
+  await expect(page.getByTestId('capture-tool-select')).toHaveAttribute('aria-pressed', 'true')
+  await expect(boxTool).toBeVisible()
+  await boxTool.click()
+  await expect(boxTool).toHaveAttribute('aria-pressed', 'true')
+  const hex = page.getByTestId('capture-color')
+  await expect(hex).toBeVisible()
+  await hex.click()
+  await page.keyboard.press('End')
+  await page.keyboard.type('a')
+  await expect(boxTool).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('capture-tool-arrow')).toHaveAttribute('aria-pressed', 'false')
+  await expect(lock).toBeVisible()
+  await lock.click()
+  await expect(lock).toHaveAttribute('aria-pressed', 'false')
+  await expect
+    .poll(async () =>
+      page.evaluate(() =>
+        ((window as unknown as { __e2eBodies?: Array<{ method: string; url: string; body: unknown }> }).__e2eBodies ?? [])
+          .filter((row) => row.method === 'PUT' && row.url.includes('/settings/capture'))
+          .map((row) => row.body),
+      ),
+    )
+    .toEqual([{ tool_lock: false }])
   await app.close()
 })

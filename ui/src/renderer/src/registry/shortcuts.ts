@@ -1,4 +1,5 @@
 import type { CommandRegistryEntry } from './commandRegistry'
+import { isEditableTarget } from '../lib/editable-target'
 
 /** The six routed shell pages (06 §Shortcut binding; `navigateShell` sets the hash). */
 export type ShellPage = '/' | '/transcript' | '/tts' | '/convert' | '/capture' | '/settings'
@@ -37,6 +38,14 @@ export const BOUND_CONTROLS: ReadonlyArray<{ testid: string; commandId: string }
   { testid: 'capture-region', commandId: 'page:primary' },
   { testid: 'convert-browse', commandId: 'convert:browse' },
   { testid: 'capture-save', commandId: 'capture:save' },
+  { testid: 'capture-tool-select', commandId: 'capture:tool_select' },
+  { testid: 'capture-tool-arrow', commandId: 'capture:tool_arrow' },
+  { testid: 'capture-tool-box', commandId: 'capture:tool_box' },
+  { testid: 'capture-tool-highlight', commandId: 'capture:tool_highlight' },
+  { testid: 'capture-tool-text', commandId: 'capture:tool_text' },
+  { testid: 'capture-tool-redact', commandId: 'capture:tool_redact' },
+  { testid: 'capture-tool-eraser', commandId: 'capture:tool_eraser' },
+  { testid: 'capture-tool-crop', commandId: 'capture:tool_crop' },
   { testid: 'theme-dark-btn', commandId: 'appearance:dark' },
   { testid: 'theme-light-btn', commandId: 'appearance:light' },
 ]
@@ -204,8 +213,9 @@ function foreignModalOpen(): boolean {
 
 /**
  * The window keydown handler (SHORTCUT_HANDLER). It returns `true` when it ran a
- * registry command. The focused element is ignored, so Ctrl and F-key chords fire
- * from text fields; field editing keys are reserved and never bound.
+ * registry command. Ctrl, Alt and F-key chords fire from text fields; field editing
+ * keys are reserved and never bound. A letter without Ctrl or Alt never fires from a
+ * text field, an editable element or a menu, so it types or picks there (FIELD_GUARD, D-751).
  */
 export function createShortcutHandler(options: ShortcutHandlerOptions): (event: KeyboardEvent) => boolean {
   const map = buildShortcutMap(options.commands)
@@ -215,6 +225,15 @@ export function createShortcutHandler(options: ShortcutHandlerOptions): (event: 
     }
     const chord = chordFromEvent(event)
     if (chord === null || foreignModalOpen()) {
+      return false
+    }
+    if (
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey &&
+      event.key.length === 1 &&
+      (isEditableTarget(event.target) || (event.target as Element | null)?.tagName === 'SELECT')
+    ) {
       return false
     }
     const page = options.getPage()

@@ -65,7 +65,7 @@ const RETIRED_IDS = [
 ]
 
 const HELP_EDIT_TEXT =
-  'Select a mark to move it or drag an arrow end until Save. Arrow keys nudge the selected mark, or the arrow end you grabbed or tabbed to.'
+  'Select a mark to move it or drag an arrow end until Save. Arrow keys nudge the selected mark (Shift+arrow by 10 px), or the arrow end you grabbed or tabbed to.'
 
 /** A 100×100 shot on a 200×200 surface: Fit gives s = 2 and no letterbox, so client = 2 × image. */
 const SHOT = {
@@ -173,6 +173,7 @@ describe('MEU-81 Capture action row', () => {
       flatten_backup: true,
       backup_dir: '',
       annotated_format: 'png',
+      tool_lock: false,
     }
     // The page's commands refresh the app's QUERY_KEY client (capture-commands.ts), as in the MEU-67 suite.
     queryClient = appQueryClient

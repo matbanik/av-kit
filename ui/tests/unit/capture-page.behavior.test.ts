@@ -202,6 +202,8 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     hotkey: 'F2',
     copy_to_clipboard: false,
     close_to_tray: true,
+    // MEU-143 (D-744): the lock is off here, so a draw still returns to Select; MEU-87 turns it on.
+    tool_lock: false as boolean | undefined,
   }
 
   beforeEach(() => {
@@ -222,6 +224,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       hotkey: 'F2',
       copy_to_clipboard: false,
       close_to_tray: true,
+      tool_lock: false,
     }
     catalogItems = [SHOT, SHOT_B]
     queryClient = makeClient()
@@ -1453,10 +1456,18 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
   ]
   // TA-2 (Session 43): Undo and Redo hints name their chord (HISTORY_HINTS); the aria-label stays the name.
   // Session 68 SMART_ERASER (D-683): the eraser's tooltip reads the name, a colon and the hint.
+  // MEU-143 LETTER_HINTS (D-750): each tool's hint names its letter; the aria-label stays the name.
   const HINT_OVERRIDE: Record<string, string> = {
     'capture-undo': 'Undo (Ctrl+Z)',
     'capture-redo': 'Redo (Ctrl+Y)',
-    'capture-tool-eraser': 'Smart eraser: Covers an area with the surrounding colour',
+    'capture-tool-select': 'Select (V)',
+    'capture-tool-arrow': 'Arrow (A)',
+    'capture-tool-box': 'Box (R)',
+    'capture-tool-highlight': 'Highlight (H)',
+    'capture-tool-text': 'Text (T)',
+    'capture-tool-redact': 'Redact (X)',
+    'capture-tool-eraser': 'Smart eraser (E): Covers an area with the surrounding colour',
+    'capture-tool-crop': 'Crop (C)',
   }
   const MEU65_TOGGLES = [
     'capture-tool-select',
@@ -1550,7 +1561,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       expect(tool.getAttribute('title'), id).toBeNull()
       expect(screen.getByTestId(`${id}-tip`).getAttribute('title'), `${id}-tip`).toBeNull()
       expect(focusedHint(screen.getByTestId(`${id}-tip`), `${id}-hint`), `${id} hint`).toBe(
-        `${new Map(MEU65_TOOLBAR).get(id)} — Select a shot first`,
+        `${HINT_OVERRIDE[id] ?? new Map(MEU65_TOOLBAR).get(id)} — Select a shot first`,
       )
       expect((tool.textContent ?? '').trim(), id).toBe('')
     }
@@ -3289,20 +3300,40 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       await user.type(screen.getByTestId('capture-text-draft'), `${text}{Enter}`)
     }
 
-    it('AC-87.2 the lock sits straight after the Annotation tool group and toggles aria-pressed without touching tool, selection or Save', async () => {
+    /** The bodies of the Lock PUTs (LOCK_STORE); a style PUT never carries tool_lock. */
+    function lockPuts(): unknown[] {
+      return fetches
+        .filter((row) => row.method === 'PUT' && row.url.includes('/settings/capture'))
+        .map((row) => row.body)
+        .filter((body) => typeof body === 'object' && body !== null && 'tool_lock' in body)
+    }
+
+    /** One-shot (ONE_SHOT, MEU-143): the stored lock is off before the page mounts. */
+    function lockOff(): void {
+      captureSettings = { ...captureSettings, tool_lock: false }
+      queryClient.setQueryData(['settings', 'capture'], captureSettings)
+    }
+
+    // MEU-143 (Session 71b, D-744): this suite runs on a GET without tool_lock, so the lock is on at load.
+    beforeEach(() => {
+      captureSettings = { ...captureSettings, tool_lock: undefined }
+      queryClient.setQueryData(['settings', 'capture'], captureSettings)
+    })
+
+    it('AC-87.2 the lock sits after the Annotation tool group, is on at load, and a click sends one PUT without touching tool, selection or Save', async () => {
       const surface = await openSelectedSurface()
       expect(screen.queryByTestId('capture-tool-lock')).not.toBeNull()
       const group = screen.getByRole('group', { name: 'Annotation tool' })
       expect(group.nextElementSibling?.contains(lockButton())).toBe(true)
-      expect(pressed('capture-tool-lock')).toBe('false')
-      expect(pressed('capture-tool-arrow')).toBe('true')
-      await user.click(lockButton())
       expect(pressed('capture-tool-lock')).toBe('true')
       expect(pressed('capture-tool-arrow')).toBe('true')
-      expect(screen.queryByTestId('capture-save')).toBeNull()
       await user.click(lockButton())
       expect(pressed('capture-tool-lock')).toBe('false')
+      expect(pressed('capture-tool-arrow')).toBe('true')
       expect(screen.queryByTestId('capture-save')).toBeNull()
+      await vi.waitFor(() => {
+        expect(lockPuts()).toEqual([{ tool_lock: false }])
+      })
       await drag(surface, 25, 25, 150, 150)
       expect(pressed('capture-tool-select')).toBe('true')
       expect(selectedMarks()).toEqual([0])
@@ -3319,23 +3350,24 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       expect(screen.queryByTestId('capture-tool-lock')).not.toBeNull()
       expect((screen.getByTestId('capture-tool-box') as HTMLButtonElement).disabled).toBe(true)
       expect(lockButton().disabled).toBe(false)
-      await user.click(lockButton())
       expect(pressed('capture-tool-lock')).toBe('true')
+      await user.click(lockButton())
+      expect(pressed('capture-tool-lock')).toBe('false')
     })
 
-    it('AC-87.3 with the lock on, two Box drags keep Box with nothing selected, and two Undos remove them one at a time', async () => {
+    it('AC-87.3 under the lock, two Box drags keep Box with each new box selected, and two Undos remove them one at a time', async () => {
       const surface = await openSelectedSurface()
       expect(screen.queryByTestId('capture-tool-lock')).not.toBeNull()
-      await user.click(lockButton())
+      expect(pressed('capture-tool-lock')).toBe('true')
       await user.click(screen.getByTestId('capture-tool-box'))
       await drag(surface, 20, 20, 60, 60)
       expect(markCount('rect')).toBe(1)
       expect(pressed('capture-tool-box')).toBe('true')
-      expect(selectedMarks()).toEqual([])
+      expect(selectedMarks()).toEqual([0])
       await drag(surface, 100, 100, 150, 150)
       expect(markCount('rect')).toBe(2)
       expect(pressed('capture-tool-box')).toBe('true')
-      expect(selectedMarks()).toEqual([])
+      expect(selectedMarks()).toEqual([1])
       await user.click(undoButton())
       expect(markCount('rect')).toBe(1)
       await user.click(undoButton())
@@ -3343,6 +3375,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     })
 
     it('AC-87.3 negative: with the lock off, a Box drag returns to Select with the new box selected (AC-60.4)', async () => {
+      lockOff()
       const surface = await openSelectedSurface()
       expect(screen.queryByTestId('capture-tool-lock')).not.toBeNull()
       expect(pressed('capture-tool-lock')).toBe('false')
@@ -3353,24 +3386,25 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       expect(selectedMarks()).toEqual([0])
     })
 
-    it('AC-87.4 with the lock on, a text commit keeps Text with nothing selected and the next click opens a new draft', async () => {
+    it('AC-87.4 under the lock, a text commit keeps Text with the new text selected and a click away opens a new draft', async () => {
       const surface = await openSelectedSurface()
       expect(screen.queryByTestId('capture-tool-lock')).not.toBeNull()
-      await user.click(lockButton())
+      expect(pressed('capture-tool-lock')).toBe('true')
       await user.click(screen.getByTestId('capture-tool-text'))
       await placeText(surface, 50, 50, 'One')
       expect(markCount('text')).toBe(1)
       expect(screen.queryByTestId('capture-text-draft')).toBeNull()
       expect(pressed('capture-tool-text')).toBe('true')
-      expect(selectedMarks()).toEqual([])
+      expect(selectedMarks()).toEqual([0])
       await act(async () => {
         dispatchPointer(surface, 'pointerdown', 120, 140)
         dispatchPointer(surface, 'pointerup', 120, 140)
       })
-      expect(screen.getByTestId('capture-text-draft')).toBeTruthy()
+      expect(screen.queryByTestId('capture-text-draft')).not.toBeNull()
     })
 
     it('AC-87.4 negative: with the lock off, a text commit selects the new text and returns to Select', async () => {
+      lockOff()
       const surface = await openSelectedSurface()
       expect(screen.queryByTestId('capture-tool-lock')).not.toBeNull()
       await user.click(screen.getByTestId('capture-tool-text'))
@@ -3380,10 +3414,10 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       expect(selectedMarks()).toEqual([0])
     })
 
-    it('AC-87.5 the lock survives a tool change; turning it off restores auto-Select from the next mark', async () => {
+    it('AC-87.5 the lock survives a tool change and the drawn arrow is selected; turning it off restores auto-Select from the next mark', async () => {
       const surface = await openSelectedSurface()
       expect(screen.queryByTestId('capture-tool-lock')).not.toBeNull()
-      await user.click(lockButton())
+      expect(pressed('capture-tool-lock')).toBe('true')
       await user.click(screen.getByTestId('capture-tool-box'))
       await drag(surface, 20, 20, 60, 60)
       await user.click(screen.getByTestId('capture-tool-arrow'))
@@ -3392,7 +3426,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       expect(markCount('arrow')).toBe(1)
       expect(pressed('capture-tool-arrow')).toBe('true')
       expect(pressed('capture-tool-lock')).toBe('true')
-      expect(selectedMarks()).toEqual([])
+      expect(selectedMarks()).toEqual([1])
       await user.click(lockButton())
       expect(pressed('capture-tool-lock')).toBe('false')
       await drag(surface, 30, 150, 150, 30)
@@ -3401,10 +3435,9 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       expect(selectedMarks()).toEqual([2])
     })
 
-    it('AC-87.5 negative: choosing Arrow while locked does not turn the lock off', async () => {
+    it('AC-87.5 negative: choosing Arrow while locked keeps the lock on', async () => {
       await openSelectedSurface()
       expect(screen.queryByTestId('capture-tool-lock')).not.toBeNull()
-      await user.click(lockButton())
       await user.click(screen.getByTestId('capture-tool-box'))
       await user.click(screen.getByTestId('capture-tool-arrow'))
       expect(pressed('capture-tool-arrow')).toBe('true')
@@ -3721,6 +3754,7 @@ describe('MEU-67 capture flatten and revert GUI', () => {
       flatten_backup: true,
       backup_dir: '',
       annotated_format: 'png',
+      tool_lock: false,
     }
     flattenError = null
     // The page's commands refresh the app's QUERY_KEY client (capture-commands.ts), so this

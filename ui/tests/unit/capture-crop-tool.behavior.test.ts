@@ -253,6 +253,7 @@ describe('MEU-131 capture crop tool', () => {
       hotkey: 'F2',
       copy_to_clipboard: false,
       close_to_tray: true,
+      tool_lock: false,
     })
     mockApi()
     URL.createObjectURL = vi.fn(() => 'blob:capture-shot')
@@ -420,8 +421,8 @@ describe('MEU-131 capture crop tool', () => {
     expect(lockTip.nextElementSibling, 'Crop sits straight after the lock').toBe(cropTip)
     expect(cropTip.nextElementSibling?.getAttribute('aria-label'), 'then the History group').toBe('History')
     expect(tools.querySelector('[role="group"][aria-label="Annotation tool"] [data-testid="capture-tool-crop"]')).toBeNull()
-    expect(hintOf('capture-tool-crop')).toBe('Crop')
-    expect(present('capture-tool-crop').hasAttribute('aria-keyshortcuts')).toBe(false)
+    expect(hintOf('capture-tool-crop')).toBe('Crop (C)')
+    expect(present('capture-tool-crop').getAttribute('aria-keyshortcuts')).toBe('C')
     await user.click(present('capture-view-annotated'))
     expect(pressed('capture-view-annotated')).toBe('true')
     await user.click(present('capture-tool-crop'))
@@ -444,7 +445,7 @@ describe('MEU-131 capture crop tool', () => {
       expect(screen.getByTestId('capture-page')).toBeTruthy()
     })
     expect(present<HTMLButtonElement>('capture-tool-crop').disabled).toBe(true)
-    expect(hintOf('capture-tool-crop')).toBe('Crop — Select a shot first')
+    expect(hintOf('capture-tool-crop')).toBe('Crop (C) — Select a shot first')
   })
 
   it('AC-131.12 CROP_UNSAVED_GATE: unsaved marks and a too-small shot disable Crop; Save and Undo free it', async () => {
@@ -452,7 +453,7 @@ describe('MEU-131 capture crop tool', () => {
     const surface = await open('land.png')
     await drawBox(surface)
     expect(present<HTMLButtonElement>('capture-tool-crop').disabled, 'dirty disables Crop').toBe(true)
-    expect(hintOf('capture-tool-crop')).toBe('Crop — Save or discard your marks first')
+    expect(hintOf('capture-tool-crop')).toBe('Crop (C) — Save or discard your marks first')
     fireEvent.click(present('capture-tool-crop'))
     expect(screen.queryByTestId('capture-crop-bar')).toBeNull()
     await save()
@@ -469,7 +470,7 @@ describe('MEU-131 capture crop tool', () => {
     await user.click(present('capture-crop-cancel'))
     await select('narrow.png')
     expect(present<HTMLButtonElement>('capture-tool-crop').disabled).toBe(true)
-    expect(hintOf('capture-tool-crop')).toBe('Crop — Too small to crop: each side needs 8 px')
+    expect(hintOf('capture-tool-crop')).toBe('Crop (C) — Too small to crop: each side needs 8 px')
     fireEvent.click(present('capture-tool-crop'))
     expect(screen.queryByTestId('capture-crop-bar')).toBeNull()
   })

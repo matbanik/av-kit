@@ -60,10 +60,28 @@ const NO_SHOT_IDS = new Set([
 ])
 /** TA-3 (D-177): MEU-99 `HISTORY_HINTS` adds the chord to the Undo and Redo hints; the names are unchanged. */
 /** Session 68 SMART_ERASER (D-683): the eraser's hint follows its name after a colon. */
+/** MEU-143 LETTER_HINTS (D-750): each tool's hint names its letter. */
+const TOOL_LETTER: Record<string, string> = {
+  'capture-tool-select': 'V',
+  'capture-tool-arrow': 'A',
+  'capture-tool-box': 'R',
+  'capture-tool-highlight': 'H',
+  'capture-tool-text': 'T',
+  'capture-tool-redact': 'X',
+  'capture-tool-eraser': 'E',
+  'capture-tool-crop': 'C',
+}
 const HINT_OVERRIDE: Record<string, string> = {
   'capture-undo': 'Undo (Ctrl+Z)',
   'capture-redo': 'Redo (Ctrl+Y)',
-  'capture-tool-eraser': 'Smart eraser: Covers an area with the surrounding colour',
+  'capture-tool-select': 'Select (V)',
+  'capture-tool-arrow': 'Arrow (A)',
+  'capture-tool-box': 'Box (R)',
+  'capture-tool-highlight': 'Highlight (H)',
+  'capture-tool-text': 'Text (T)',
+  'capture-tool-redact': 'Redact (X)',
+  'capture-tool-eraser': 'Smart eraser (E): Covers an area with the surrounding colour',
+  'capture-tool-crop': 'Crop (C)',
 }
 
 const SHOT = {
@@ -172,7 +190,7 @@ function stubFetch(): void {
     const method = (init?.method ?? 'GET').toUpperCase()
     const path = (url.split('?')[0] ?? url).replace(/^https?:\/\/[^/]+/, '').replace('/api/v1', '')
     if (path === '/settings/capture') {
-      return jsonResponse({ inbox_dir: 'C:/Pictures/av-kit', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true })
+      return jsonResponse({ inbox_dir: 'C:/Pictures/av-kit', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true, tool_lock: false })
     }
     if (path === '/settings/transcript') {
       return jsonResponse({ delay_between_requests: 20 })
@@ -329,7 +347,7 @@ describe('MEU-80 icon-only inventory hints', () => {
     const empty = screen.getByTestId('capture-page')
     for (const [id, spec] of Object.entries(TOOLBAR_BUTTONS)) {
       const control = within(empty).getByTestId(id) as HTMLButtonElement
-      const expected = control.disabled && NO_SHOT_IDS.has(id) ? `${spec.name} — ${NO_SHOT_HINT}` : (HINT_OVERRIDE[id] ?? spec.name)
+      const expected = control.disabled && NO_SHOT_IDS.has(id) ? `${spec.name}${TOOL_LETTER[id] === undefined ? '' : ` (${TOOL_LETTER[id]})`} — ${NO_SHOT_HINT}` : (HINT_OVERRIDE[id] ?? spec.name)
       expectHinted(empty, id, expected, 'no shot')
     }
     for (const id of NO_SHOT_IDS) {

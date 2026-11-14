@@ -6,7 +6,7 @@ import { CAPTURE_HELP_SECTIONS } from '../../src/renderer/src/features/capture/c
 
 const HELP_PIXEL_SENTENCE = 'Marks use original image pixels and survive Save then reload.'
 const HELP_EDIT_SENTENCE =
-  'Select a mark to move it or drag an arrow end until Save. Arrow keys nudge the selected mark, or the arrow end you grabbed or tabbed to.'
+  'Select a mark to move it or drag an arrow end until Save. Arrow keys nudge the selected mark (Shift+arrow by 10 px), or the arrow end you grabbed or tabbed to.'
 const HISTORY_HELP_SENTENCE =
   'Ctrl+Z undoes and Ctrl+Y or Ctrl+Shift+Z redoes while the image has focus; a text field keeps its own undo.'
 // Session 68 REDACT_HELP (D-686, DEP-3): the resize sentence names the redact mark.
@@ -84,13 +84,29 @@ describe('MEU-85 help', () => {
   })
 })
 
-const LOCK_HELP_SENTENCE = 'The lock button keeps the current tool after each mark.'
+// MEU-143 LOCK_HELP (D-744): the lock sentence is LOCK_HELP's first; the old sentence is gone.
+const OLD_LOCK_SENTENCE = 'The lock button keeps the current tool after each mark.'
+const LOCK_HELP_SENTENCE =
+  'The lock is on by default: the tool stays armed after each mark and the new mark stays selected, so a style change restyles it and a press on it moves or resizes it; pick the tool again to set its own style.'
 
 describe('MEU-87 help', () => {
   it('AC-87.7 HelpCard four-tools body includes the lock sentence and keeps the scrub sentence', () => {
     const four = CAPTURE_HELP_SECTIONS.find((section) => section.id === 'four-tools')
     expect(four?.body).toContain(LOCK_HELP_SENTENCE)
     expect(four?.body).toContain(SCRUB_HELP_SENTENCE)
+    expect(four?.body).not.toContain(OLD_LOCK_SENTENCE)
+  })
+})
+
+const LOCK_HELP_TEXT =
+  "The lock is on by default: the tool stays armed after each mark and the new mark stays selected, so a style change restyles it and a press on it moves or resizes it; pick the tool again to set its own style. Turn the lock off to return to Select after each mark; Capture remembers the choice. Press V, A, R, H, T, X, E or C for Select, Arrow, Box, Highlight, Text, Redact, Smart eraser or Crop; letters type normally in a text field. Hold Shift to draw a square, keep a box's shape from a corner or snap an arrow to 45 degrees; hold Alt to draw a box from its centre."
+
+describe('MEU-143 help', () => {
+  it('AC-143.31 the Annotation tools body holds LOCK_HELP and the Shift nudge, not the old lock sentence', () => {
+    const four = CAPTURE_HELP_SECTIONS.find((section) => section.id === 'four-tools')
+    expect(four?.body).toContain(LOCK_HELP_TEXT)
+    expect(four?.body).toContain('Arrow keys nudge the selected mark (Shift+arrow by 10 px), or the arrow end')
+    expect(four?.body).not.toContain(OLD_LOCK_SENTENCE)
   })
 })
 

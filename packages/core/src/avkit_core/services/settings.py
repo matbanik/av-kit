@@ -123,6 +123,8 @@ SETTINGS_KEY_TABLE: dict[tuple[str, str], SettingSpec] = {
     ("capture", "pixelate_block_size"): SettingSpec(
         "number", 10, min_number=2, max_number=100, integer=True
     ),
+    # LOCK_LEAF (Session 71b, MEU-143, D-744): the capture tool lock, on by default.
+    ("capture", "tool_lock"): SettingSpec("boolean", True),
 }
 
 UoWFactory = Callable[[], UnitOfWork]

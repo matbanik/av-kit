@@ -58,6 +58,18 @@ export const CAPTURE_PALETTE_IDS = [
   'capture:open_folder',
 ] as const
 
+/** LETTERS (MEU-143, D-750): the tool letters, chord-only, in toolbar order. */
+export const CAPTURE_TOOL_IDS = [
+  'capture:tool_select',
+  'capture:tool_arrow',
+  'capture:tool_box',
+  'capture:tool_highlight',
+  'capture:tool_text',
+  'capture:tool_redact',
+  'capture:tool_eraser',
+  'capture:tool_crop',
+] as const
+
 export const SETTINGS_PALETTE_IDS = ['settings:check_deps'] as const
 
 export const APPEARANCE_PALETTE_IDS = ['appearance:dark', 'appearance:light'] as const
@@ -75,6 +87,7 @@ export type CommandRegistryEntry = {
     | (typeof TTS_PALETTE_IDS)[number]
     | (typeof CONVERT_PALETTE_IDS)[number]
     | (typeof CAPTURE_PALETTE_IDS)[number]
+    | (typeof CAPTURE_TOOL_IDS)[number]
     | (typeof SETTINGS_PALETTE_IDS)[number]
     | (typeof APPEARANCE_PALETTE_IDS)[number]
     | (typeof HELP_PALETTE_IDS)[number]
@@ -99,6 +112,14 @@ export type CommandRegistryEntry = {
   stateful?: true
   /** Never listed in the palette (AVAILABILITY). */
   palette?: false
+}
+
+/** Click the button with this test id only while it is enabled (PAGE_PRIMARY, LETTERS). */
+function pressEnabledButton(testid: string): void {
+  const control = document.querySelector(`[data-testid="${testid}"]`)
+  if (control instanceof HTMLButtonElement && !control.disabled) {
+    control.click()
+  }
 }
 
 const commands: CommandRegistryEntry[] = [
@@ -443,6 +464,111 @@ const commands: CommandRegistryEntry[] = [
       window.dispatchEvent(new CustomEvent(CAPTURE_EVENTS.open_folder))
     },
   },
+  // LETTERS (MEU-143, D-750): chord-only; each presses its tool button only while it is enabled.
+  {
+    id: 'capture:tool_select',
+    label: 'Select tool',
+    category: 'capture',
+    page: '/capture',
+    stateful: true,
+    palette: false,
+    keywords: [],
+    shortcut: 'V',
+    action: () => {
+      pressEnabledButton('capture-tool-select')
+    },
+  },
+  {
+    id: 'capture:tool_arrow',
+    label: 'Arrow tool',
+    category: 'capture',
+    page: '/capture',
+    stateful: true,
+    palette: false,
+    keywords: [],
+    shortcut: 'A',
+    action: () => {
+      pressEnabledButton('capture-tool-arrow')
+    },
+  },
+  {
+    id: 'capture:tool_box',
+    label: 'Box tool',
+    category: 'capture',
+    page: '/capture',
+    stateful: true,
+    palette: false,
+    keywords: [],
+    shortcut: 'R',
+    action: () => {
+      pressEnabledButton('capture-tool-box')
+    },
+  },
+  {
+    id: 'capture:tool_highlight',
+    label: 'Highlight tool',
+    category: 'capture',
+    page: '/capture',
+    stateful: true,
+    palette: false,
+    keywords: [],
+    shortcut: 'H',
+    action: () => {
+      pressEnabledButton('capture-tool-highlight')
+    },
+  },
+  {
+    id: 'capture:tool_text',
+    label: 'Text tool',
+    category: 'capture',
+    page: '/capture',
+    stateful: true,
+    palette: false,
+    keywords: [],
+    shortcut: 'T',
+    action: () => {
+      pressEnabledButton('capture-tool-text')
+    },
+  },
+  {
+    id: 'capture:tool_redact',
+    label: 'Redact tool',
+    category: 'capture',
+    page: '/capture',
+    stateful: true,
+    palette: false,
+    keywords: [],
+    shortcut: 'X',
+    action: () => {
+      pressEnabledButton('capture-tool-redact')
+    },
+  },
+  {
+    id: 'capture:tool_eraser',
+    label: 'Smart eraser tool',
+    category: 'capture',
+    page: '/capture',
+    stateful: true,
+    palette: false,
+    keywords: [],
+    shortcut: 'E',
+    action: () => {
+      pressEnabledButton('capture-tool-eraser')
+    },
+  },
+  {
+    id: 'capture:tool_crop',
+    label: 'Crop',
+    category: 'capture',
+    page: '/capture',
+    stateful: true,
+    palette: false,
+    keywords: [],
+    shortcut: 'C',
+    action: () => {
+      pressEnabledButton('capture-tool-crop')
+    },
+  },
   {
     id: 'settings:check_deps',
     label: 'Check dependencies',
@@ -501,9 +627,8 @@ const commands: CommandRegistryEntry[] = [
       // PAGE_PRIMARY: press the current page's primary button only while it is enabled.
       const page = currentShellPage()
       const testid = page === null ? null : PAGE_PRIMARY_CONTROL[page]
-      const control = testid === null ? null : document.querySelector(`[data-testid="${testid}"]`)
-      if (control instanceof HTMLButtonElement && !control.disabled) {
-        control.click()
+      if (testid !== null) {
+        pressEnabledButton(testid)
       }
     },
   },

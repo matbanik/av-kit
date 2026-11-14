@@ -104,6 +104,18 @@ export const TOOL_BUTTON_IDS: Readonly<Record<CaptureTool, ToolbarButtonId>> = {
   crop: 'capture-tool-crop',
 }
 
+/** LETTERS (MEU-143, D-750): each tool's one-letter shortcut. */
+export const TOOL_LETTERS: Readonly<Record<CaptureTool, string>> = {
+  select: 'V',
+  arrow: 'A',
+  box: 'R',
+  highlight: 'H',
+  text: 'T',
+  redact: 'X',
+  eraser: 'E',
+  crop: 'C',
+}
+
 /** The option groups the contextual options row can show (OPTIONS_BY_TOOL, OPTIONS_BY_TOOL_V2). */
 export type OptionGroup = 'color' | 'stroke' | 'text' | 'block' | 'mode'
 

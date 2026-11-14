@@ -47,7 +47,7 @@ import { parseAnnotateBody } from './capture-annotate'
 import { CaptureFilmstrip, type FilmstripShotActions } from './CaptureFilmstrip'
 import { rangeBetween, toggleSelection } from './capture-filmstrip-select'
 import { COPY_IMAGE_UNAVAILABLE, copyErrorMessage, loadClipboardPng, renderClipboardPng } from './capture-clipboard'
-import { CaptureCropBar } from './CaptureCropBar'
+import { CaptureCropBar, FIELD_STEP_SHIFT } from './CaptureCropBar'
 import {
   applyPreset,
   CROP_MIN_PX,
@@ -80,7 +80,8 @@ import {
   type ImportEntry,
   type PasteOutcome,
 } from './capture-import'
-import { hitTestMarks, moveEndpoint, translateBody } from './capture-hit-test'
+import { hitTestMarks, moveEndpoint, translateBody, type HitResult } from './capture-hit-test'
+import { drawBounds, keepRatioResize, snapArrowEnd } from './capture-modifiers'
 import {
   boxHandlePoints,
   hitResizeHandle,
@@ -96,6 +97,7 @@ import { ToolbarIconButton } from './ToolbarIconButton'
 import { useCaptureCatalog, type CaptureListItem, sortFilmstrip } from './useCaptureCatalog'
 import { useCaptureSettings } from './useCaptureSettings'
 import { styleToolFor, type StyleTool, type ToolStyle } from './capture-tool-style'
+import { useCaptureToolLock } from './useCaptureToolLock'
 import { useCaptureToolStyles } from './useCaptureToolStyles'
 
 const HOTKEY_IN_USE_TEMPLATE = '{accelerator} is in use — quit ShareX or pick another key'
@@ -104,6 +106,12 @@ const DRAG_THRESHOLD_CSS = 3
 const KEYBOARD_NUDGE_PX = 1
 // STYLE_STORE (MEU-105): a failed tool-style PUT; it names no value.
 const STYLE_SAVE_FAILED = "Couldn't save the tool style"
+// LOCK_STORE (MEU-143): a failed tool-lock PUT; it names no value.
+const LOCK_SAVE_FAILED = "Couldn't save the tool lock"
+// MODIFIERS (MEU-143, D-753): the tools that draw a box, so Shift squares and Alt centres them.
+const BOUNDED_TOOLS: ReadonlySet<CaptureTool> = new Set<CaptureTool>(['box', 'highlight', 'redact', 'eraser'])
+// CHORD_BUBBLE_ONCE (MEU-143, D-752): a key the surface handled and let bubble as a registry chord runs once.
+const handledEditorKeys = new WeakSet<KeyboardEvent>()
 const TEXT_GATE_MESSAGE = 'Finish or cancel the text label'
 // CROP_MODAL, CROP_UNSAVED_GATE, CROP_ERRORS (MEU-131): the crop's reasons and its pending status.
 const CROP_REASON = 'Finish or cancel the crop first'
@@ -283,12 +291,14 @@ function resizeMark(
   point: { x: number; y: number },
   imageW: number,
   imageH: number,
+  keepRatio = false,
 ): Annotation | null {
   if (handle === undefined) {
     return null
   }
   if (isBoxMark(mark)) {
-    return resizeBox(mark, handle, point, imageW, imageH)
+    // MODIFIERS: Shift on a corner keeps the box's ratio; an edge handle ignores it.
+    return keepRatio ? keepRatioResize(mark, handle, point, imageW, imageH) : resizeBox(mark, handle, point, imageW, imageH)
   }
   if (mark.type === 'text' && TEXT_CORNERS.has(handle)) {
     return scaleTextMark(mark, handle as TextCorner, point, imageW, imageH)
@@ -401,7 +411,9 @@ export function CapturePage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [tool, setTool] = useState<CaptureTool>('arrow')
   // LOCK_PERSISTS (MEU-87): only the lock button changes this; choosing a tool keeps it.
-  const [toolLocked, setToolLocked] = useState(false)
+  // LOCK_STORE (MEU-143): on by default, kept in capture.tool_lock through the style queue.
+  const toolLock = useCaptureToolLock()
+  const toolLocked = toolLock.locked
   // STYLE_DISPLAY (MEU-105): the fields' colour, a selected mark's or else the armed tool's style.
   const [color, setColor] = useState(DEFAULT_TOOL_COLOR)
   const [stroke, setStroke] = useState('3')
@@ -523,6 +535,14 @@ export function CapturePage() {
     }
     styleFailuresSeen.current = toolStyles.failures
   }, [toolStyles.failures, selectedId])
+  // LOCK_STORE: a failed lock PUT shows its status once per failure.
+  const lockFailuresSeen = useRef(toolLock.failures)
+  useEffect(() => {
+    if (toolLock.failures > lockFailuresSeen.current) {
+      setNotice({ shotId: selectedId, text: LOCK_SAVE_FAILED })
+    }
+    lockFailuresSeen.current = toolLock.failures
+  }, [toolLock.failures, selectedId])
   const gestureOpen = gestureRef.current !== null || preview !== null
   const dirty = JSON.stringify(annotations) !== JSON.stringify(saved) || draftCommits(textDraft, annotations)
   // TEXT_REEDIT: an edit draft holds an index into the marks, so nothing may reorder them while it is open.
@@ -539,8 +559,6 @@ export function CapturePage() {
   // COPY_BUTTON (MEU-104, D-696): the render route bakes the current marks, so only a shot, its loaded
   // overlay and no open text draft are needed.
   const copyEnabled = selected !== null && overlayReady && textDraft === null
-  // PAGE_STATE: capture-save is mounted while dirty and enabled while canSave.
-  usePublishCommandState('/capture', { 'capture:save': dirty && canSave })
   const cropImage = { width: selected?.width ?? 0, height: selected?.height ?? 0 }
   const cropLive = crop !== null && crop.shotId === selectedId ? crop : null
   const cropReason = cropLive !== null ? CROP_REASON : undefined
@@ -555,6 +573,22 @@ export function CapturePage() {
           : dirty
             ? CROP_DIRTY_REASON
             : undefined
+  // LETTERS (MEU-143, D-750): a letter runs exactly when its button is enabled, the crop is closed and no
+  // text draft, size or pointer transaction or confirm owns the keys. With the crop open every letter is
+  // off, so the crop's own X swap runs.
+  const lettersOpen = selectedId !== null && cropLive === null && textDraft === null && !txOpen && confirm === null
+  // PAGE_STATE: capture-save is mounted while dirty and enabled while canSave.
+  usePublishCommandState('/capture', {
+    'capture:save': dirty && canSave,
+    'capture:tool_select': lettersOpen,
+    'capture:tool_arrow': lettersOpen,
+    'capture:tool_box': lettersOpen,
+    'capture:tool_highlight': lettersOpen,
+    'capture:tool_text': lettersOpen,
+    'capture:tool_redact': lettersOpen,
+    'capture:tool_eraser': lettersOpen,
+    'capture:tool_crop': lettersOpen && cropDisabledReason === undefined,
+  })
 
   // CROP_CANCEL (D-509): another shot, a shot that left the catalog or a view other than Original closes it.
   useEffect(() => {
@@ -1157,6 +1191,65 @@ export function CapturePage() {
     }
   }
 
+  /** The Select branch's gesture on a hit mark, shared with ARMED_EDIT; the armed tool is left as it is. */
+  function startEditGesture(hit: HitResult, event: SurfacePointer, image: { x: number; y: number }): void {
+    setSelectedIndex(hit.index)
+    // NUDGE_TARGET: grabbing an arrow end makes the arrow keys move that end.
+    nudgeTargetRef.current = hit.kind === 'handle' ? hit.end : 'body'
+    inspectMark(hit.index)
+    setTxOpen(true)
+    if (hit.kind === 'resize') {
+      setHoverHandle(hit.handle)
+    }
+    gestureRef.current = {
+      kind: hit.kind === 'handle' ? 'endpoint' : hit.kind === 'resize' ? 'resizing' : 'moving',
+      startCssX: event.cssX,
+      startCssY: event.cssY,
+      startImageX: image.x,
+      startImageY: image.y,
+      origin: annotationsRef.current,
+      index: hit.index,
+      end: hit.kind === 'handle' ? hit.end : undefined,
+      handle: hit.kind === 'resize' ? hit.handle : undefined,
+      pointerId: event.pointerId,
+      epoch: imageEpoch,
+      shotId: selectedId ?? '',
+    }
+  }
+
+  /** MODIFIERS: a draw's two points under Shift and Alt (a box squares and centres, an arrow snaps). */
+  function drawPoints(
+    anchor: { x: number; y: number },
+    point: { x: number; y: number },
+    event: SurfacePointer,
+    imageW: number,
+    imageH: number,
+  ): { start: { x: number; y: number }; end: { x: number; y: number } } {
+    if (BOUNDED_TOOLS.has(tool)) {
+      return drawBounds(anchor, point, { square: event.shiftKey, centre: event.altKey }, imageW, imageH)
+    }
+    if (tool === 'arrow' && event.shiftKey) {
+      return { start: anchor, end: snapArrowEnd(anchor, point, imageW, imageH) }
+    }
+    return { start: anchor, end: point }
+  }
+
+  /** MODIFIERS: Shift snaps a dragged arrow end about the other end. */
+  function endpointPoint(
+    mark: Annotation,
+    end: 'from' | 'to',
+    point: { x: number; y: number },
+    event: SurfacePointer,
+    imageW: number,
+    imageH: number,
+  ): { x: number; y: number } {
+    if (!event.shiftKey || mark.type !== 'arrow') {
+      return point
+    }
+    const other = end === 'to' ? mark.from : mark.to
+    return snapArrowEnd({ x: other[0], y: other[1] }, point, imageW, imageH)
+  }
+
   function handleSurfacePointer(event: SurfacePointer): void {
     if (viewVariant !== 'original' || !overlayReady || imageEpoch < 1) {
       return
@@ -1207,6 +1300,26 @@ export function CapturePage() {
       if (event.image === null) {
         return
       }
+      // ARMED_EDIT (MEU-143): with a tool armed, a press on the selected mark edits it and the tool stays;
+      // a press anywhere else draws. It runs before the text tool's draft.
+      const armedMark = tool !== 'select' && selectedIndex !== null ? annotationsRef.current[selectedIndex] : undefined
+      if (armedMark !== undefined && selectedIndex !== null) {
+        const armedHit = hitTestMarks({
+          cssX: event.cssX,
+          cssY: event.cssY,
+          scale: event.scale,
+          ox: event.ox,
+          oy: event.oy,
+          imageW,
+          imageH,
+          annotations: [armedMark],
+          selectedIndex: 0,
+        })
+        if (armedHit !== null) {
+          startEditGesture({ ...armedHit, index: selectedIndex }, event, event.image)
+          return
+        }
+      }
       if (tool === 'text') {
         setTextDraft({ x: event.image.x, y: event.image.y, value: '' })
         return
@@ -1228,28 +1341,7 @@ export function CapturePage() {
           nudgeTargetRef.current = 'body'
           return
         }
-        setSelectedIndex(hit.index)
-        // NUDGE_TARGET: grabbing an arrow end makes the arrow keys move that end.
-        nudgeTargetRef.current = hit.kind === 'handle' ? hit.end : 'body'
-        inspectMark(hit.index)
-        setTxOpen(true)
-        if (hit.kind === 'resize') {
-          setHoverHandle(hit.handle)
-        }
-        gestureRef.current = {
-          kind: hit.kind === 'handle' ? 'endpoint' : hit.kind === 'resize' ? 'resizing' : 'moving',
-          startCssX: event.cssX,
-          startCssY: event.cssY,
-          startImageX: event.image.x,
-          startImageY: event.image.y,
-          origin: annotationsRef.current,
-          index: hit.index,
-          end: hit.kind === 'handle' ? hit.end : undefined,
-          handle: hit.kind === 'resize' ? hit.handle : undefined,
-          pointerId: event.pointerId,
-          epoch: imageEpoch,
-          shotId: selectedId ?? '',
-        }
+        startEditGesture(hit, event, event.image)
         return
       }
       setTxOpen(true)
@@ -1279,22 +1371,15 @@ export function CapturePage() {
         return
       }
       if (gesture.kind === 'drawing') {
-        const next = createDrawnMark(
-          tool,
-          { x: gesture.startImageX, y: gesture.startImageY },
-          current,
-          styleTool === null ? {} : styles[styleTool],
-          redactMode,
-        )
+        const points = drawPoints({ x: gesture.startImageX, y: gesture.startImageY }, current, event, imageW, imageH)
+        const next = createDrawnMark(tool, points.start, points.end, styleTool === null ? {} : styles[styleTool], redactMode)
         if (next === null) {
           return
         }
         const list = [...annotationsRef.current, next]
         applyHistory(list)
-        // LOCK_KEEPS_TOOL: with the lock on, the tool stays and nothing is selected.
-        if (!toolLocked) {
-          commitSelection(list.length - 1, list)
-        }
+        // LOCK_SELECTS (MEU-143): the new mark is selected; the lock keeps the tool (ONE_SHOT returns to Select).
+        commitSelection(list.length - 1, list, toolLocked ? tool : 'select')
         return
       }
       const originMark = gesture.origin[gesture.index]
@@ -1315,9 +1400,10 @@ export function CapturePage() {
           imageH,
         )
       } else if (gesture.kind === 'resizing') {
-        nextMark = resizeMark(originMark, gesture.handle, current, imageW, imageH)
+        nextMark = resizeMark(originMark, gesture.handle, current, imageW, imageH, event.shiftKey)
       } else if (gesture.end !== undefined) {
-        nextMark = moveEndpoint(originMark, gesture.end, current, imageW, imageH)
+        const point = endpointPoint(originMark, gesture.end, current, event, imageW, imageH)
+        nextMark = moveEndpoint(originMark, gesture.end, point, imageW, imageH)
       }
       if (nextMark === null || JSON.stringify(nextMark) === JSON.stringify(originMark)) {
         return
@@ -1355,14 +1441,8 @@ export function CapturePage() {
     }
     if (event.phase === 'move') {
       if (gesture.kind === 'drawing') {
-        const draft = createDrawnMark(
-          tool,
-          { x: gesture.startImageX, y: gesture.startImageY },
-          current,
-          styleTool === null ? {} : styles[styleTool],
-          redactMode,
-        )
-        setPreview(draft)
+        const points = drawPoints({ x: gesture.startImageX, y: gesture.startImageY }, current, event, imageW, imageH)
+        setPreview(createDrawnMark(tool, points.start, points.end, styleTool === null ? {} : styles[styleTool], redactMode))
         return
       }
       const moved = Math.hypot(event.cssX - gesture.startCssX, event.cssY - gesture.startCssY)
@@ -1385,13 +1465,14 @@ export function CapturePage() {
         return
       }
       if (gesture.kind === 'resizing') {
-        setPreview(resizeMark(originMark, gesture.handle, current, imageW, imageH))
+        setPreview(resizeMark(originMark, gesture.handle, current, imageW, imageH, event.shiftKey))
         return
       }
       if (gesture.end === undefined) {
         return
       }
-      setPreview(moveEndpoint(originMark, gesture.end, current, imageW, imageH))
+      const point = endpointPoint(originMark, gesture.end, current, event, imageW, imageH)
+      setPreview(moveEndpoint(originMark, gesture.end, point, imageW, imageH))
       return
     }
   }
@@ -1799,6 +1880,11 @@ export function CapturePage() {
   }
 
   function handleEditorKey(event: KeyboardEvent): void {
+    // CHORD_BUBBLE_ONCE: the surface handles a key, then a registry chord bubbles to the window listener.
+    if (handledEditorKeys.has(event)) {
+      return
+    }
+    handledEditorKeys.add(event)
     if (recording || textDraft !== null) {
       return
     }
@@ -1886,14 +1972,16 @@ export function CapturePage() {
     }
     let dx = 0
     let dy = 0
+    // SHIFT_NUDGE (MEU-143, D-675): Shift+arrow moves the mark by the fields' Shift step.
+    const step = event.shiftKey ? FIELD_STEP_SHIFT : KEYBOARD_NUDGE_PX
     if (event.key === 'ArrowRight') {
-      dx = KEYBOARD_NUDGE_PX
+      dx = step
     } else if (event.key === 'ArrowLeft') {
-      dx = -KEYBOARD_NUDGE_PX
+      dx = -step
     } else if (event.key === 'ArrowDown') {
-      dy = KEYBOARD_NUDGE_PX
+      dy = step
     } else if (event.key === 'ArrowUp') {
-      dy = -KEYBOARD_NUDGE_PX
+      dy = -step
     } else {
       return
     }
@@ -2567,8 +2655,10 @@ export function CapturePage() {
           onRedactMode={changeRedactMode}
           toolLocked={toolLocked}
           onToggleToolLock={() => {
-            setToolLocked((locked) => !locked)
+            // ONE_SHOT (MEU-143): the button flips the stored lock.
+            toolLock.setLocked(!toolLock.locked)
           }}
+          boundedDrawLive={() => gestureRef.current?.kind === 'drawing' && BOUNDED_TOOLS.has(tool)}
           onColor={(value) => {
             commitColor('color', value)
           }}
@@ -2647,9 +2737,8 @@ export function CapturePage() {
             ]
             applyHistory(list)
             setTextDraft(null)
-            if (!toolLocked) {
-              commitSelection(list.length - 1, list)
-            }
+            // LOCK_SELECTS: the new text is selected; the lock keeps Text (ONE_SHOT returns to Select).
+            commitSelection(list.length - 1, list, toolLocked ? 'text' : 'select')
           }}
           onTextCancel={() => {
             setTextDraft(null)

@@ -983,6 +983,8 @@ Planning notes added 2026-11-12, after the crop, video-stills and download sessi
 
 > **Delivered (Session 71).** MEU-105 shipped the Colour and Tool style rows and the Pixelate block size scrub through STYLE_SETTINGS, STYLE_API, STYLE_MCP, STYLE_MODEL, STYLE_STORE, STYLE_DISPLAY, STYLE_TARGET, STYLE_DRAW, COLOR_NAMED, COLOR_HEX, COLOR_WELL, TEXT_BG_WELL, COLOR_GATE_GONE, TEXT_DRAFT_STYLE, BLOCK_SCRUB, SELECT_NO_STYLE, STYLE_HELP and STYLE_ACTIONS_INDEX, proved by AC-105.1 to AC-105.32. Lock, Letters and the other modifiers (Shift, Alt, Shift+arrow nudge) are MEU-143's (D-713). Plan: [2026-11-13-capture-style-tool-flow](../execution/plans/2026-11-13-capture-style-tool-flow/implementation-plan.md).
 
+> **Delivered (Session 71b).** MEU-143 shipped the Lock, Letters and Modifiers rows and the Entry rule's C through LOCK_LEAF, LOCK_DECODE, LOCK_STORE, ONE_SHOT, LOCK_SELECTS, ARMED_EDIT, ARMED_RECHOOSE, LETTERS, LETTER_HINTS, FIELD_GUARD, CHORD_BUBBLE_ONCE, MODIFIERS, SHIFT_NUDGE, ALT_NO_MENU, LOCK_HELP, FLOW_ACTIONS_INDEX and FLOW_SPEC, proved by AC-143.1 to AC-143.36. The lock is on by default and kept in `capture.tool_lock`; the just-drawn mark stays selected. Plan: [2026-11-14-capture-tool-flow](../execution/plans/2026-11-14-capture-tool-flow/implementation-plan.md).
+
 <a id="line-and-ellipse"></a>
 
 ### Line and ellipse
@@ -1106,7 +1108,7 @@ Five residual MEUs from the capture crop design (`_inspiration/capture-crop/desi
 | Unsaved marks | Crop is disabled while marks are unsaved, with the tooltip "Save or discard your marks first" | Local Canon design §7.1 (one code path for the GUI and agents) |
 | Tests | Behaviour tests for each rule; Electron proof of a real handle drag, Save as copy and the new shot selected | Local Canon |
 
-> **Entry (D-508).** The shortcut registry has no page-scoped letter entries yet, so under the Entry rule's own clause the Crop button ships alone, with the tooltip "Crop" and no `aria-keyshortcuts`. C arrives with MEU-143.
+> **Entry (D-508).** The shortcut registry has no page-scoped letter entries yet, so under the Entry rule's own clause the Crop button ships alone, with the tooltip "Crop" and no `aria-keyshortcuts`. C arrives with MEU-143. MEU-143 (Session 71b) delivered C and the tooltip "Crop (C)".
 
 > **Delivered (Session 60).**
 > - `CaptureTool` gains `'crop'`, and a Crop button sits after the lock, outside the Annotation tool group (`CROP_ENTRY`). Crop is disabled with no shot, on a shot under 8 px a side, and while marks are unsaved, checked in that order (`CROP_UNSAVED_GATE`).

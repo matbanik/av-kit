@@ -80,6 +80,7 @@ async function startBackend(inboxDir: string): Promise<Backend> {
           hotkey: 'F2',
           copy_to_clipboard: false,
           close_to_tray: true,
+          tool_lock: false,
         })
         return
       }

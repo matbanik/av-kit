@@ -35,6 +35,8 @@ CAPTURE_KEYS = (
     "text_font_size",
     "text_bg_color",
     "pixelate_block_size",
+    # LOCK_LEAF (Session 71b, MEU-143): the persisted tool lock.
+    "tool_lock",
 )
 CAPTURE_DEFAULTS = {
     "inbox_dir": "~/Pictures/av-kit",
@@ -53,6 +55,7 @@ CAPTURE_DEFAULTS = {
     "text_font_size": 16,
     "text_bg_color": "",
     "pixelate_block_size": 10,
+    "tool_lock": True,
 }
 
 
@@ -437,8 +440,10 @@ def test_ac_36_12_capture_settings_keys(ac_id: str, tmp_path: Path) -> None:
     annotated_default = CAPTURE_DEFAULTS["annotated_format"]
     assert SETTINGS_KEY_TABLE[("capture", "annotated_format")].default == annotated_default
     # STYLE_SETTINGS (Session 71, MEU-105): the nine style leaves and their defaults.
-    for key in CAPTURE_KEYS[7:]:
+    for key in CAPTURE_KEYS[7:16]:
         assert SETTINGS_KEY_TABLE[("capture", key)].default == CAPTURE_DEFAULTS[key], key
+    # LOCK_LEAF (Session 71b, MEU-143): the tool lock is on by default.
+    assert SETTINGS_KEY_TABLE[("capture", "tool_lock")].default is True
     settings = SettingsService(SharedFakeFactory(FakeUnitOfWork()))
     with pytest.raises(ValidationError):
         settings.get("capture", "not_a_leaf")

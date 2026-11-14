@@ -66,3 +66,5 @@ class SettingsPutIn(ApiModel):
     text_font_size: StrictInt | None = None
     text_bg_color: str | None = None
     pixelate_block_size: StrictInt | None = None
+    # LOCK_LEAF (Session 71b, MEU-143): a strict bool; the service refuses null.
+    tool_lock: StrictBool | None = None

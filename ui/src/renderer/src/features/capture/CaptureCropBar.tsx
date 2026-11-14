@@ -14,7 +14,8 @@ import {
 import { CROP_BUTTONS, type ToolbarButtonSpec } from './capture-toolbar'
 import { ToolbarIconButton } from './ToolbarIconButton'
 
-const FIELD_STEP_SHIFT = 10
+/** CROP_FIELDS and SHIFT_NUDGE (MEU-143): Shift moves a crop field, and a mark, by 10 px. */
+export const FIELD_STEP_SHIFT = 10
 
 const FIELDS: ReadonlyArray<{ field: CropField; key: string; label: string }> = [
   { field: 'x', key: 'x', label: 'X' },

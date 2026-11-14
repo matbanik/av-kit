@@ -197,6 +197,7 @@ describe('MEU-104 capture copy image and shot actions', () => {
       flatten_backup: true,
       backup_dir: '',
       annotated_format: 'png',
+      tool_lock: false,
     }
     queryClient.setQueryData(['captures'], { items: [...items], pendingInteractive: false })
     queryClient.setQueryData(['settings', 'capture'], captureSettings)

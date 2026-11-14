@@ -3653,6 +3653,17 @@
             ],
             "title": "Theme"
           },
+          "tool_lock": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tool Lock"
+          },
           "voice": {
             "anyOf": [
               {

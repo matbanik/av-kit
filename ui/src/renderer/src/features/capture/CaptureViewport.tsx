@@ -34,7 +34,7 @@ import {
   textPlateHandlePoints,
   type HandleId,
 } from './capture-transform'
-import { ACTION_BUTTONS, optionGroups, TOOLBAR_BUTTONS } from './capture-toolbar'
+import { ACTION_BUTTONS, optionGroups, TOOL_LETTERS, TOOLBAR_BUTTONS } from './capture-toolbar'
 import {
   WHEEL_IDLE,
   wheelSteps,
@@ -105,6 +105,8 @@ export type SurfacePointer = {
   imageClamped: ImagePoint | null
   /** CROP_POINTER (MEU-131): Shift keeps the box's ratio under Free. */
   shiftKey: boolean
+  /** MODIFIERS (MEU-143): Alt draws a bounded mark from its centre. */
+  altKey: boolean
 }
 
 type CaptureViewportProps = {
@@ -164,9 +166,11 @@ type CaptureViewportProps = {
   /** SCRUB_BASE: bumped by the page each time it closes that field's burst. */
   strokeEpoch?: number
   fontSizeEpoch?: number
-  /** TOOL_LOCK (MEU-87): keep the current tool after each mark. Page view state, never persisted. */
+  /** TOOL_LOCK (MEU-87): keep the current tool after each mark. LOCK_STORE (MEU-143): the page persists it. */
   toolLocked?: boolean
   onToggleToolLock?: () => void
+  /** ALT_NO_MENU (MEU-143): true while a box, highlight, redact or eraser draw is live. */
+  boundedDrawLive?: () => boolean
   /** TEXT_BG_WELL (MEU-105): one background commit, from the well's `change` or Clear (''). */
   onTextBg?: (color: string) => void
   onTextBgPreview?: (color: string) => void
@@ -449,7 +453,7 @@ function mapEventClamped(
 
 /** SURFACE_POINTER: every surface event carries the VIEW_TRANSFORM it was mapped with. */
 function surfaceFromDom(
-  event: { currentTarget: EventTarget | null; clientX: number; clientY: number; shiftKey?: boolean },
+  event: { currentTarget: EventTarget | null; clientX: number; clientY: number; shiftKey?: boolean; altKey?: boolean },
   phase: SurfacePointer['phase'],
   pointerId: number,
   imageWidth: number,
@@ -473,6 +477,7 @@ function surfaceFromDom(
     image: view === null ? null : mapPointerWithView(event.clientX, event.clientY, box.left, box.top, view, imageWidth, imageHeight),
     imageClamped: loose === null ? null : clampImagePoint(loose, imageWidth, imageHeight),
     shiftKey: event.shiftKey === true,
+    altKey: event.altKey === true,
   }
 }
 
@@ -551,6 +556,7 @@ export function CaptureViewport({
   fontSizeEpoch = 0,
   toolLocked = false,
   onToggleToolLock = () => undefined,
+  boundedDrawLive = () => false,
   onTextBg = () => undefined,
   onTextBgPreview = () => undefined,
   onBlockSize = () => undefined,
@@ -579,6 +585,8 @@ export function CaptureViewport({
   onToggleCrop = () => undefined,
 }: CaptureViewportProps) {
   const pointerSession = useRef(false)
+  // ALT_NO_MENU: an Alt draw ended with Alt still held, so its keyup must not open the menu bar.
+  const altPendingRef = useRef(false)
   const surfaceRef = useRef<HTMLDivElement>(null)
   // The measured surface box; VIEW_TRANSFORM reads it for the observables, handles and content box.
   const [frame, setFrame] = useState({ w: 0, h: 0 })
@@ -952,7 +960,7 @@ export function CaptureViewport({
   const visibleMarks = preview !== null ? [...painted, { ann: preview, index: -1 }] : painted
 
   function emitSurface(
-    event: { currentTarget: EventTarget | null; clientX: number; clientY: number; shiftKey?: boolean },
+    event: { currentTarget: EventTarget | null; clientX: number; clientY: number; shiftKey?: boolean; altKey?: boolean },
     phase: SurfacePointer['phase'],
     pointerId: number,
   ): void {
@@ -984,6 +992,7 @@ export function CaptureViewport({
               pressed={tool === 'select'}
               disabled={!hasSelection || cropReason !== undefined}
               reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
+              shortcut={TOOL_LETTERS.select}
               onClick={() => onTool('select')}
             />
             <ToolbarIconButton
@@ -993,6 +1002,7 @@ export function CaptureViewport({
               pressed={tool === 'arrow'}
               disabled={!hasSelection || cropReason !== undefined}
               reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
+              shortcut={TOOL_LETTERS.arrow}
               onClick={() => onTool('arrow')}
             />
             <ToolbarIconButton
@@ -1002,6 +1012,7 @@ export function CaptureViewport({
               pressed={tool === 'box'}
               disabled={!hasSelection || cropReason !== undefined}
               reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
+              shortcut={TOOL_LETTERS.box}
               onClick={() => onTool('box')}
             />
             <ToolbarIconButton
@@ -1011,6 +1022,7 @@ export function CaptureViewport({
               pressed={tool === 'highlight'}
               disabled={!hasSelection || cropReason !== undefined}
               reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
+              shortcut={TOOL_LETTERS.highlight}
               onClick={() => onTool('highlight')}
             />
             <ToolbarIconButton
@@ -1020,6 +1032,7 @@ export function CaptureViewport({
               pressed={tool === 'text'}
               disabled={!hasSelection || cropReason !== undefined}
               reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
+              shortcut={TOOL_LETTERS.text}
               onClick={() => onTool('text')}
             />
             <ToolbarIconButton
@@ -1029,6 +1042,7 @@ export function CaptureViewport({
               pressed={tool === 'redact'}
               disabled={!hasSelection || cropReason !== undefined}
               reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
+              shortcut={TOOL_LETTERS.redact}
               onClick={() => onTool('redact')}
             />
             <ToolbarIconButton
@@ -1038,6 +1052,7 @@ export function CaptureViewport({
               pressed={tool === 'eraser'}
               disabled={!hasSelection || cropReason !== undefined}
               reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
+              shortcut={TOOL_LETTERS.eraser}
               onClick={() => onTool('eraser')}
             />
           </div>
@@ -1059,6 +1074,7 @@ export function CaptureViewport({
             pressed={tool === 'crop'}
             disabled={cropOff !== undefined}
             reason={cropOff}
+            shortcut={TOOL_LETTERS.crop}
             onClick={onToggleCrop}
           />
           <div role="group" aria-label="History" className="flex shrink-0 items-center gap-0.5">
@@ -1339,6 +1355,9 @@ export function CaptureViewport({
             }
           }}
           onKeyDown={(event) => {
+            if (event.key === 'Alt' && (boundedDrawLive() || altPendingRef.current)) {
+              event.preventDefault()
+            }
             // The view keys run before stopPropagation, which keeps the event from the window listener.
             handleViewKey(event.nativeEvent)
             onEditorKey(event.nativeEvent)
@@ -1348,6 +1367,12 @@ export function CaptureViewport({
             }
           }}
           onKeyUp={(event) => {
+            if (event.key === 'Alt') {
+              if (boundedDrawLive() || altPendingRef.current) {
+                event.preventDefault()
+              }
+              altPendingRef.current = false
+            }
             handleViewKey(event.nativeEvent)
           }}
           onPointerDown={(event) => {
@@ -1389,7 +1414,11 @@ export function CaptureViewport({
               return
             }
             if (useSurface) {
+              const altDraw = boundedDrawLive() && event.altKey
               emitSurface(event, 'up', event.pointerId)
+              if (altDraw) {
+                altPendingRef.current = true
+              }
             } else {
               const clamped = mapEventClamped(event, imageWidth, imageHeight, zoomRef.current)
               if (clamped !== null) {
@@ -1405,7 +1434,11 @@ export function CaptureViewport({
               return
             }
             if (useSurface) {
+              const altDraw = boundedDrawLive() && event.altKey
               emitSurface(event, 'cancel', event.pointerId)
+              if (altDraw) {
+                altPendingRef.current = true
+              }
             }
             pointerSession.current = false
           }}

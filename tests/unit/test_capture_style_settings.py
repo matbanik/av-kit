@@ -47,7 +47,10 @@ def test_ac_105_2_capture_rows_follow_annotated_format() -> None:
     from avkit_core.services.settings import SETTINGS_KEY_TABLE
 
     keys = [key for ns, key in SETTINGS_KEY_TABLE if ns == "capture"]
-    assert keys[keys.index("annotated_format") + 1 :] == list(STYLE_DEFAULTS)
+    after = keys[keys.index("annotated_format") + 1 :]
+    assert after[: len(STYLE_DEFAULTS)] == list(STYLE_DEFAULTS)
+    # LOCK_LEAF (Session 71b, MEU-143): tool_lock is the only key after the style leaves.
+    assert after[len(STYLE_DEFAULTS) :] == ["tool_lock"]
 
 
 @pytest.mark.parametrize("leaf", list(STYLE_DEFAULTS), ids=list(STYLE_DEFAULTS))

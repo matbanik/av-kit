@@ -111,6 +111,9 @@ export const captureStylePutSchema = z
   .partial()
   .strict()
 
+/** LOCK_LEAF (MEU-143, D-746): the body of one tool-lock PUT. */
+export const captureLockPutSchema = z.object({ tool_lock: z.boolean() }).strict()
+
 export type DownloaderPut = z.infer<typeof downloaderPutSchema>
 export type TranscriptPut = z.infer<typeof transcriptPutSchema>
 export type TtsPut = z.infer<typeof ttsPutSchema>

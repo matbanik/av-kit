@@ -61,6 +61,8 @@ const CAPTURE_KEYS = [
   "text_font_size",
   "text_bg_color",
   "pixelate_block_size",
+  // LOCK_LEAF (Session 71b, MEU-143): the persisted tool lock.
+  "tool_lock",
 ] as const;
 const CAPTURE_DEFAULTS = {
   inbox_dir: "~/Pictures/av-kit",
@@ -79,6 +81,7 @@ const CAPTURE_DEFAULTS = {
   text_font_size: 16,
   text_bg_color: "",
   pixelate_block_size: 10,
+  tool_lock: true,
 };
 const M7 = ["Workflow:", "Prerequisite:", "Returns:", "Errors:"] as const;
 const SHOT_OUT_FIELDS = [
@@ -1729,7 +1732,7 @@ describe("MEU-102 avkit_capture multi-line text", () => {
       text_bg_color: "string",
       pixelate_block_size: "number",
     };
-    for (const key of CAPTURE_KEYS.slice(7)) {
+    for (const key of CAPTURE_KEYS.slice(7, 16)) {
       expect(capture[key], key).toEqual({ type: types[key], default: CAPTURE_DEFAULTS[key] });
     }
     const set = (extra: Record<string, unknown>) =>
@@ -1740,6 +1743,21 @@ describe("MEU-102 avkit_capture multi-line text", () => {
     expect(set({ arrow_stroke: true })).toBe(false);
     expect(set({ arrow_color: 5 })).toBe(false);
     expect(set({ arrow_colour: "#12ABCD" })).toBe(false);
+    const actions = ACTION_INDEX.filter((row) => row.tool === "avkit_settings").map((row) => row.action);
+    expect(actions).toEqual(["get", "set"]);
+  });
+
+  it("AC-143.5 SETTINGS_SCHEMA and the set schema carry the strict tool_lock leaf", () => {
+    const capture = SETTINGS_SCHEMA.namespaces.capture;
+    const keys = Object.keys(capture);
+    expect(keys[keys.indexOf("pixelate_block_size") + 1]).toBe("tool_lock");
+    expect(capture.tool_lock).toEqual({ type: "boolean", default: true });
+    const set = (extra: Record<string, unknown>) =>
+      settingsSchema.safeParse({ action: "set", namespace: "capture", ...extra }).success;
+    expect(set({ tool_lock: false })).toBe(true);
+    expect(set({ tool_lock: true })).toBe(true);
+    expect(set({ tool_lock: "false" })).toBe(false);
+    expect(set({ tool_lock: 0 })).toBe(false);
     const actions = ACTION_INDEX.filter((row) => row.tool === "avkit_settings").map((row) => row.action);
     expect(actions).toEqual(["get", "set"]);
   });

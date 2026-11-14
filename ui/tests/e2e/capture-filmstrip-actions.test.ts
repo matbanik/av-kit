@@ -117,7 +117,7 @@ async function installSeam(
           return json({ ffmpeg: { available: true, version: '7.1.2' }, yt_dlp: { available: true } })
         }
         if (url.includes('/settings/capture')) {
-          return json({ inbox_dir: '~/Pictures/av-kit', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true })
+          return json({ inbox_dir: '~/Pictures/av-kit', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true, tool_lock: false })
         }
         if (url.includes('/captures/requests')) {
           return json({ items: [] })

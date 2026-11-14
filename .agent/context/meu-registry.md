@@ -196,7 +196,7 @@
 | MEU-134 | `capture-video-frames` | 9.40 | [Phase 9 §Video frames](../../docs/build-plan/09-screenshot-capture.md#video-frames) | avkit_capture frames and POST /captures/frames grab frames at given times or evenly spaced from a local video as new inbox shots (CaptureSource.Video). | ✅ approved |
 | MEU-135 | `capture-video-sheet` | 9.41 | [Phase 9 §Video sheet](../../docs/build-plan/09-screenshot-capture.md#video-sheet) | avkit_capture sheet and POST /captures/sheet write one labelled grid image of a video span, sized for the vision token budget, as a new shot. | ✅ approved |
 | MEU-136 | `capture-export-copy` | 9.42 | [Phase 9 §Export copy](../../docs/build-plan/09-screenshot-capture.md#export-copy) | avkit_capture export and POST /captures/{id}/export write a resized png, jpeg or webp copy of a shot as a new shot, with no metadata. | ✅ approved |
-| MEU-143 | `gui-capture-tool-flow` | 9.31a | [Phase 9 §Style and tool flow](../../docs/build-plan/09-screenshot-capture.md#style-and-tool-flow) | Lock is on by default and persisted with a one-shot preference, letter shortcuts pick tools, and Shift, Alt and Shift+arrow modify drawing and nudging. | ⬜ pending |
+| MEU-143 | `gui-capture-tool-flow` | 9.31a | [Phase 9 §Style and tool flow](../../docs/build-plan/09-screenshot-capture.md#style-and-tool-flow) | Lock is on by default and persisted with a one-shot preference, letter shortcuts pick tools, and Shift, Alt and Shift+arrow modify drawing and nudging. | ✅ approved |
 
 
 ## Queue card UI (P2)

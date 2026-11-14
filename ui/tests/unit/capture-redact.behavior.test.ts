@@ -40,7 +40,7 @@ type Mark = Record<string, unknown> & { type: string }
 type FetchCall = { url: string; method: string; body?: unknown }
 type Groups = readonly string[]
 
-const SMART_HINT = 'Smart eraser: Covers an area with the surrounding colour'
+const SMART_HINT = 'Smart eraser (E): Covers an area with the surrounding colour'
 const REDACT_ID = 'capture-tool-redact'
 const SOLID_ID = 'capture-redact-solid'
 const PIXELATE_ID = 'capture-redact-pixelate'
@@ -148,6 +148,7 @@ describe('MEU-103 capture redact mark', () => {
       hotkey: 'F2',
       copy_to_clipboard: false,
       close_to_tray: true,
+      tool_lock: false,
     })
     mockApi()
     URL.createObjectURL = vi.fn(() => 'blob:capture-shot')

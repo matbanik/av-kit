@@ -248,6 +248,7 @@ describe('MEU-132 capture image import page', () => {
       hotkey: 'F2',
       copy_to_clipboard: false,
       close_to_tray: true,
+      tool_lock: false,
     })
     showFilesDialog = vi.fn(async () => [] as string[])
     getPathForFile = vi.fn((file: File) => paths.get(file) ?? '')

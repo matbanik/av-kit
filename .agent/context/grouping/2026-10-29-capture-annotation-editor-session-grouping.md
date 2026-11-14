@@ -84,7 +84,7 @@ All prerequisites outside the batch (MEU-60, 81, 82, 87, 91, 97) are approved.
 
 - Domain text semantics, Segoe metrics and bake fixtures. G-3 first; if `\n` already bakes as lines, it is partly a parity fix and may move ahead of Session 45.
 
-### Session 47 — `capture-style-tool-flow` (MEU-105) · P3
+### Session 47 — `capture-style-tool-flow` (MEU-105) · P2
 
 - Toolbar, preferences and registry letters. Split flag: candidate (six behaviours).
 
@@ -123,7 +123,7 @@ Run `/create-plan` once per session, in order. Session 43 is planned now (Mat's 
 | 45 | `capture-copy-image` | MEU-104 | P2 | executed (Session 69) | `docs/execution/plans/2026-11-13-capture-copy-image/` |
 | 46 | `capture-text-multiline` | MEU-102 | P3 | executed (Session 70) | `docs/execution/plans/2026-11-13-capture-text-multiline/` |
 | 47 | `capture-style-tool-flow` (style half; MEU-143 split out by D-713) | MEU-105 | P3 | executed (Session 71) | `docs/execution/plans/2026-11-13-capture-style-tool-flow/` |
-| 47b | `capture-tool-flow` | MEU-143 | P3 | pending | — |
+| 47b | `capture-tool-flow` | MEU-143 | P2 | executed (Session 71b) | `docs/execution/plans/2026-11-14-capture-tool-flow/` |
 | 48 | `capture-shapes-steps` | MEU-106, MEU-107 | P3 | pending | — |
 
 ---

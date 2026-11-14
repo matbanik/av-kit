@@ -85,6 +85,8 @@ const BASE_SETTINGS: Record<string, unknown> = {
   flatten_backup: true,
   backup_dir: '',
   annotated_format: 'png',
+  // MEU-143 (D-744): the lock is off, so a draw returns to Select and a style commit sets the tool's style.
+  tool_lock: false,
 }
 
 const ARROW_A: Annotation = { type: 'arrow', color: '#E0AF68', stroke_width: 3, from: [20, 20], to: [80, 20] }

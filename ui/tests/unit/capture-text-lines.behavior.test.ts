@@ -193,6 +193,7 @@ describe('MEU-102 multi-line text marks', () => {
       flatten_backup: true,
       backup_dir: '',
       annotated_format: 'png',
+      tool_lock: false,
     }
     queryClient.setQueryData(['settings', 'capture'], captureSettings)
     URL.createObjectURL = vi.fn(() => 'blob:capture-shot')

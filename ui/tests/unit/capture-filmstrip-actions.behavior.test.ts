@@ -155,6 +155,7 @@ describe('MEU-88 capture filmstrip thumbnail menu', () => {
       hotkey: 'F2',
       copy_to_clipboard: false,
       close_to_tray: true,
+      tool_lock: false,
     })
     URL.createObjectURL = vi.fn(() => 'blob:capture-shot')
     URL.revokeObjectURL = vi.fn()
@@ -164,7 +165,7 @@ describe('MEU-88 capture filmstrip thumbnail menu', () => {
       calls.push({ url, method })
       const path = url.split('?')[0] ?? url
       if (path.includes('/settings/capture')) {
-        return jsonResponse({ inbox_dir: 'C:/Pictures/av-kit', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true })
+        return jsonResponse({ inbox_dir: 'C:/Pictures/av-kit', hotkey: 'F2', copy_to_clipboard: false, close_to_tray: true, tool_lock: false })
       }
       if (path.includes('/captures/requests')) {
         return jsonResponse({ items: [] })

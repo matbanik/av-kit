@@ -3757,10 +3757,10 @@ meus:
     anchor: style-and-tool-flow
     text: Phase 9 §Style and tool flow
   description: Lock is on by default and persisted with a one-shot preference, letter shortcuts pick tools, and Shift, Alt and Shift+arrow modify drawing and nudging.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-87, MEU-99, MEU-100, MEU-105
   dependency_parse_status: parsed
@@ -3769,8 +3769,8 @@ meus:
   - MEU-99
   - MEU-100
   - MEU-105
-  execution_plan: null
-  updated: '2026-11-13'
+  execution_plan: docs/execution/plans/2026-11-14-capture-tool-flow/
+  updated: '2026-11-14'
   closed_reason: null
   note: Registered 2026-11-13 by splitting MEU-105 (D-713, USER_EXPLICIT 2026-11-13 "A"); it holds the Lock and Letters rows and the rest of the Modifiers row of 09 §Style and tool flow.
 summary_bands:
