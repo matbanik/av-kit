@@ -20,7 +20,7 @@ The overlay is add-only: no inherited global binding is overwritten and no class
 2. PROFILE B3 has no second machine reviewer configured. No Gemini, headless Claude or cheaper checklist class can substitute.
 3. Stop for **Mat**, PROFILE B4's named human reviewer, when the configured reviewer is unavailable, unauthenticated, ineligible or rate-limited. Record the actual decision and exact target/revision. The implementor never writes its own approved verdict.
 
-Egress prohibitions in PROFILE C/E take precedence: do not send data or prepare an external-provider submission when egress is forbidden. Review authorization is not commit/push authorization. Machine continuation never satisfies a human gate. The review ledger owns round counting (plan 3, execution 6), continuation grants and stop readouts; a new loop must not evade a stop.
+Egress prohibitions in PROFILE C/E take precedence: do not send data or prepare an external-provider submission when egress is forbidden. Review authorization is not commit/push authorization. Machine continuation never satisfies a human gate. The review ledger owns round counting (caps from `.agent/review-limits.json`: plan 3, execution 6; token budgets off), continuation grants and stop readouts; a new loop must not evade a stop.
 
 ## Resolver contract
 

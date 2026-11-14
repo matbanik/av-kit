@@ -3,7 +3,14 @@ project: "{YYYY-MM-DD}-{project-slug}"
 source: "docs/execution/plans/{YYYY-MM-DD}-{project-slug}/implementation-plan.md"
 meus: ["{MEU-ID-1}", "{MEU-ID-2}"]
 status: "in_progress"
-template_version: "2.2"
+template_version: "2.3"
+# review_limits:            # optional (v2.3): equal in plan and task; absent = .agent/review-limits.json
+#   schema: review-limits/1
+#   plan_rounds: 3          # integer >= 1, at most rounds.plan
+#   execution_rounds: 6     # integer >= 1, at most rounds.execution
+#   plan_tokens: off        # integer >= 1 or off; a number tightens off
+#   execution_tokens: off
+#   basis: tightened        # repo (every value equal) | tightened (none looser)
 ---
 
 # Task — {Project Title}
@@ -74,6 +81,8 @@ capability; otherwise change it to `compact_continue` before execution.
 > stopping** (the only valid pauses are the four outcomes in `AGENTS.md` §Execution Contract:
 > DONE, review cap, reviewer unavailable, human decision; compaction continues). Do
 > NOT report completion or ask the user to approve between phases.
+>
+> **Review limits (v2.3).** `{configured-cap}` in H1-7a and H1-7b is the execution loop's round cap as the ledger holds it: copy it from `rtk proxy uv run python tools/review_ledger.py state --loop-id exec-{YYYY-MM-DD}-{project-slug}` (its base budget plus every `continue` grant).
 >
 > **The phase-divider rows below are NOT stop points.** They mark *ordering* (H2 must record the
 > review, so it follows H1), not *turn boundaries*. The boundary between any two phases is the most

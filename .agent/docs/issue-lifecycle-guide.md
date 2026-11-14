@@ -311,7 +311,7 @@ The reviewer:
 - Produces a verdict: `approved` or `changes_required`
 
 If `changes_required`, the agent applies corrections and re-submits.
-This loop continues until approved or a 6-round cap is reached.
+This loop continues until approved or the execution loop's round cap (`review_limits` or `.agent/review-limits.json`; default 6) is reached.
 
 ### Phase E — Issue Closure
 

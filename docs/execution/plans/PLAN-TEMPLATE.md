@@ -4,7 +4,14 @@ date: "{YYYY-MM-DD}"
 source: "docs/build-plan/{section-reference}"
 meus: ["{MEU-ID-1}", "{MEU-ID-2}"]
 status: "draft"
-template_version: "2.2"
+template_version: "2.3"
+# review_limits:            # optional (v2.3): equal in plan and task; absent = .agent/review-limits.json
+#   schema: review-limits/1
+#   plan_rounds: 3          # integer >= 1, at most rounds.plan
+#   execution_rounds: 6     # integer >= 1, at most rounds.execution
+#   plan_tokens: off        # integer >= 1 or off; a number tightens off
+#   execution_tokens: off
+#   basis: tightened        # repo (every value equal) | tightened (none looser)
 ---
 
 # Implementation Plan: {Project Title}

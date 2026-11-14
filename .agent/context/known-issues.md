@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 133** — Active: 41 | Mitigated: 1 | Resolved: 89
+**Total: 134** — Active: 42 | Mitigated: 1 | Resolved: 89
 
 ## Active Issues
 
@@ -50,6 +50,7 @@
 | 🟢 | `TTS-STATUS-PILL-BELOW-AA-CONTRAST` | The TTS job status pill puts its label below 4.5:1 contrast in both the… | ui | ⬜ open | 2026-11-08 |
 | 🟢 | `MCP-AUDIT-BASELINE-PENDING-CROP` | The committed MCP audit baseline has no avkit_capture.crop entry | mcp-server | ⬜ open | 2026-11-08 |
 | 🟢 | `MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL` | Claude Code doesn't show a model the per-action text in _meta.action_de… | mcp-server | ⬜ open | 2026-11-10 |
+| 🟢 | `CLI-DISPATCH-PLACEHOLDER-FIXTURE` | Two Test-CliDispatch.ps1 fixture tests fail because instantiation repla… | agent | ⬜ open | 2026-11-14 |
 
 ## Mitigated / Workaround
 

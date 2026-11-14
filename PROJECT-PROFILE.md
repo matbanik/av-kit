@@ -34,7 +34,7 @@
 | Auth mode (B2) | **Assume API key (metered)** until proven subscription — warn before every dispatch |
 | Reviewer rung 2 / 3 (B3) | none configured |
 | Human reviewer + escalation (B4) | Mat. If Codex is unavailable or rate-limited → stop and wait for Mat. **Never self-review.** |
-| Round caps (B5) | plan: 3 · execution: 6 |
+| Round caps (B5) | plan: 3 · execution: 6 · token budgets: off (.agent/review-limits.json) |
 
 ---
 

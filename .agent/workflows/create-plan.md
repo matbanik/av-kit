@@ -190,6 +190,16 @@ Write both files to `docs/execution/plans/{YYYY-MM-DD}-{project-slug}/`:
 - `implementation-plan.md` — start from [`docs/execution/plans/PLAN-TEMPLATE.md`](file:///P:/av-kit/docs/execution/plans/PLAN-TEMPLATE.md) (v2.0)
 - `task.md` — start from [`docs/execution/plans/TASK-TEMPLATE.md`](file:///P:/av-kit/docs/execution/plans/TASK-TEMPLATE.md) (v2.1 — H1 pre-review / review barrier / H2 post-review closeout)
 
+**Review limits.** The review loops' limits come from `.agent/review-limits.json` (`rounds.plan` 3,
+`rounds.execution` 6, `token_budgets` off); when the file is absent, `tools/review_ledger.py` uses its
+constants. A plan that keeps those limits writes no block. A plan that tightens them uncomments the
+templates' `review_limits` block and writes the same values into the frontmatter of both
+`implementation-plan.md` and `task.md`: each round value an integer of at least 1, each token value an
+integer of at least 1 or `off`, and `basis` either `repo` (every value equal) or `tightened` (none
+looser). `review_ledger.py begin` reads the block from `--ac-file`, refuses a `basis` the values
+contradict, and refuses a `loosened` block, because this repo has no path that verifies one. More
+rounds come only from a named human's `review_ledger.py continue` within the loop.
+
 > [!CAUTION]
 > **Template Pre-Flight (mandatory before writing):** (use your harness's `read_tool` — `Read`/`view_file`/etc., per `.agent/docs/harness-profiles.md`)
 > 1. Read → `docs/execution/plans/PLAN-TEMPLATE.md`
@@ -427,14 +437,14 @@ When the reviewer returns `approved`:
 #### 5d. Round Cap — HARD STOP
 
 > [!CAUTION]
-> **Plan review round cap: 3 rounds.** If the review loop reaches 3 rounds
-> without approval, HARD STOP with a TL;DR summary.
+> **Plan review round cap: the plan loop's round budget** (`review_limits.plan_rounds`, else `rounds.plan` in `.agent/review-limits.json`; default 3; `review_ledger.py state` prints it).
+> If the review loop reaches that cap without approval, HARD STOP with a TL;DR summary.
 
 At the round cap:
 
 1. Present TL;DR:
    ```
-   ⛔ Plan review reached 3 rounds without approval.
+   ⛔ Plan review reached its round cap ({N} rounds; review_limits or .agent/review-limits.json) without approval.
 
    ## TL;DR
    - Round 1: {N} findings ({severity breakdown})
@@ -515,7 +525,7 @@ At the round cap:
 > **The review dispatch loop is ATOMIC.** Do not pause between rounds unless:
 > 1. Rate limit hit (all *cross-vendor* reviewer rungs; a same-vendor rung is not one)
 > 2. Reviewer asks a human-decision-required question
-> 3. Round cap reached (3 rounds)
+> 3. Round cap reached (the plan loop's, from `review_limits` or `.agent/review-limits.json`; default 3)
 >
 > Invalid pauses: "presenting progress", "checking in", "offering to continue"
 
@@ -583,12 +593,12 @@ After all MEU TDD cycles and handoffs are complete, **continue immediately** wit
 > [!IMPORTANT]
 > **Symmetry with Step 5.** Just as Step 5 auto-dispatches *plan* review, Step 6 auto-dispatches *execution* review. A standalone `/create-plan` run is self-contained: it does not delegate execution review to `/execution-session`, so the dispatch MUST happen here or it never happens. (This step was historically missing from `/create-plan` — its absence is the root cause of "execution finished but Codex review never auto-started.")
 
-Follow `.agent/skills/cli-dispatch/SKILL.md` to dispatch `/execution-critical-review` — the protocol, reviewer priority, correction loop, round cap (6), and edge cases are identical to **`execution-session.md` §4c**. In brief:
+Follow `.agent/skills/cli-dispatch/SKILL.md` to dispatch `/execution-critical-review` — the protocol, reviewer priority, correction loop, round cap (the execution loop's, from `review_limits` or `.agent/review-limits.json`; default 6), and edge cases are identical to **`execution-session.md` §4c**. In brief:
 
 1. Detect billing mode + compute routing signals; dispatch via the independent-reviewer chain (configured vendor-distinct reviewer → Mat (PROFILE B; no second machine rung); canonical in [`.agent/docs/model-routing.md`](../docs/model-routing.md)).
 2. Write the verdict to the canonical `.agent/context/handoffs/{plan-folder-name}-implementation-critical-review.md` (rolling file).
 3. **If `changes_required`:** apply code/test corrections via `/execution-corrections`, re-run the MEU gate, re-dispatch. **If `approved`:** continue to the remaining deliverables.
-4. **Round cap: 6 rounds** → HARD STOP with a TL;DR in the Decision-Brief form of the §5 round-cap block (recommendation first, alternatives compared against it); resume on the user's "continue review loop".
+4. **Round cap: the execution loop's round budget** (`review_limits.execution_rounds`, else `rounds.execution` in `.agent/review-limits.json`; default 6, plus any `continue` grant; `review_ledger.py state --loop-id exec-<slug>` prints it) → HARD STOP with a TL;DR in the Decision-Brief form of the §5 round-cap block (recommendation first, alternatives compared against it); resume on the user's "continue review loop".
 5. Do NOT auto-commit after approval — present proposed commit messages with no AI attribution trailers or generated-by statements, then wait for explicit human direction.
 
 > The Step 6 execution-review loop is an **atomic non-stop region** (same as the Step 5 plan-review loop): the only valid exits are (1) `approved`, (2) all reviewer rungs rate-limited, (3) reviewer asks a human-decision-required question, (4) round cap reached.

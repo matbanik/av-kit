@@ -40,8 +40,10 @@ Use this workflow when validating a completed MEU. Codex is the **validation age
    rtk proxy uv run python tools/review_ledger.py begin `
      --loop-id $LOOP_ID `
      --review-mode execution `
-     --producer "<the agent that wrote the code>"
+     --producer "<the agent that wrote the code>" `
+     --ac-file docs/execution/plans/{YYYY-MM-DD}-{project-slug}/implementation-plan.md
    ```
+   Round and token limits come from `.agent/review-limits.json` (the ledger's constants when it is absent), then from a `review_limits` block in the `--ac-file` frontmatter; `begin` prints their source.
    `--producer` is what makes the self-review prohibition above enforceable rather than
    advisory: `record` refuses a verdict whose author equals the producer.
 

@@ -52,7 +52,7 @@ flowchart TD
         E1["Submit to External Reviewer<br/>(avkit_independent_reviewer) (/plan-critical-review)"]
         E2{"Approved?"}
         E3["/plan-corrections<br/>(fix findings)"]
-        E4["Re-submit<br/>(≤3 rounds)"]
+        E4["Re-submit<br/>(≤ plan round cap,<br/>.agent/review-limits.json)"]
         E1 --> E2
         E2 -->|No| E3 --> E4 --> E1
         E2 -->|Yes| E5["Plan Approved ✅"]
@@ -71,7 +71,7 @@ flowchart TD
         G1["Submit to External Reviewer<br/>(avkit_independent_reviewer) (/execution-critical-review)"]
         G2{"Approved?"}
         G3["/execution-corrections<br/>(fix findings)"]
-        G4["Re-submit<br/>(≤6 rounds)"]
+        G4["Re-submit<br/>(≤ execution round cap,<br/>.agent/review-limits.json)"]
         G1 --> G2
         G2 -->|No| G3 --> G4 --> G1
         G2 -->|Yes| G5["Implementation Approved ✅"]
@@ -275,7 +275,7 @@ docs/build-plan/
 2. **External reviewer** runs against checklist (PR-1 through PR-10) under the workflow's declared Threat Model (accidents, not forgeries)
 3. **If findings:** agent applies `/plan-corrections` → [plan-corrections.md](https://local/av-kit/blob/main/.agent/workflows/plan-corrections.md)
 4. **Re-submit** for review
-5. **Loop until approved** (max 3 rounds before T2 escalation)
+5. **Loop until approved** (up to the plan loop's round cap before T2 escalation: `review_limits.plan_rounds`, else `rounds.plan` in `.agent/review-limits.json`; default 3)
 
 ### Governance Rules (Resolved 2026-06-04)
 
@@ -284,7 +284,7 @@ docs/build-plan/
 
 | Rule | Value | Source |
 |------|-------|--------|
-| Plan convergence cap | 3 non-approved rounds → T2 escalation | Human-approved + `avkit_independent_reviewer` advisory |
+| Plan convergence cap | the plan round cap of non-approved rounds (`review_limits` or `.agent/review-limits.json`; default 3) → T2 escalation | Human-approved + `avkit_independent_reviewer` advisory |
 | First review depth | Always `xhigh` reasoning effort | Human-approved + `avkit_independent_reviewer` advisory |
 | Follow-up depth | <200 LOC `medium`, 200-400 `high`, >400 `xhigh` | Human-approved + `avkit_independent_reviewer` advisory |
 | Governance files | Always `xhigh` regardless of LOC | Human-approved + `avkit_independent_reviewer` advisory |
@@ -369,15 +369,15 @@ When the configured reviewer is unavailable, ineligible or rate-limited, preserv
 2. **External reviewer** runs implementation against FIC acceptance criteria
 3. **If findings:** agent applies `/execution-corrections`
 4. **Re-submit** for review
-5. **Loop until approved** (max 6 rounds before T2 escalation)
+5. **Loop until approved** (up to the execution loop's round cap before T2 escalation: `review_limits.execution_rounds`, else `rounds.execution` in `.agent/review-limits.json`; default 6)
 
 ### Convergence Governance
 
 | Rule | Value |
 |------|-------|
-| Implementation convergence cap | 6 non-approved rounds → T2 escalation |
+| Implementation convergence cap | the execution round cap of non-approved rounds (`review_limits` or `.agent/review-limits.json`; default 6) → T2 escalation |
 | Approval on final round | Valid |
-| 7th autonomous round | Requires Advisor approval |
+| A round past the execution round cap (`.agent/review-limits.json`) | Requires Advisor approval |
 | Early escalation | Same high-severity finding survives 2 fix attempts |
 
 ### Key Files
@@ -917,9 +917,9 @@ Examples of non-standard projects:
 2. 📋 BUILD PLAN  → docs/build-plan/       → Human authors
 3. 📦 MEU SETUP   → meu-registry.md        → Agent proposes, human reviews
 4. 📝 PLAN        → docs/execution/plans/  → Agent writes → auto-dispatched to review
-5. 🔍 PLAN REVIEW → External Reviewer (`avkit_independent_reviewer`) → ≤3 rounds, agent loops; exec gated by plan_to_exec_gate (🔴 human when `human`; auto when `reviewer-auto`)
+5. 🔍 PLAN REVIEW → External Reviewer (`avkit_independent_reviewer`) → up to the plan round cap (.agent/review-limits.json), agent loops; exec gated by plan_to_exec_gate (🔴 human when `human`; auto when `reviewer-auto`)
 6. ⚙️ IMPLEMENT   → packages/, tests/      → Agent TDD, autonomous
-7. 🔍 IMPL REVIEW → External Reviewer (`avkit_independent_reviewer`) → ≤6 rounds, agent loops
+7. 🔍 IMPL REVIEW → External Reviewer (`avkit_independent_reviewer`) → up to the execution round cap (.agent/review-limits.json), agent loops
 8. 📝 CLOSEOUT    → reflections/, handoffs/ → Agent, autonomous
 9. 💾 SUMMARIZE  → EXECUTION_TLDR.md       → Agent generates, 🔴 HUMAN REVIEWS
    💾 COMMIT     → git                    → 🔴 HUMAN DECIDES

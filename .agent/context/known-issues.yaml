@@ -4925,3 +4925,16 @@ issues:
             sources: []
           reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the register and from /session-grouping. Two-way.'
           human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
+  - id: CLI-DISPATCH-PLACEHOLDER-FIXTURE
+    title: Two Test-CliDispatch.ps1 fixture tests fail because instantiation replaced their placeholder path
+    severity: low
+    component: agent
+    status: open
+    discovered: '2026-11-14'
+    root_cause: The upstream fixture (P:/agentic-framework core/.agent/skills/cli-dispatch/tests/Test-CliDispatch.ps1:619) builds a receipts path that holds the literal PROJECT_NAME template token in double curly braces, so the wrapper's guard (:162, which matches two opening curly braces) refuses it. Instantiation replaced the token with av-kit in av-kit's copy (:565), so the guard sees a real path and accepts it; the second arm then finds %TEMP%/av-kit left behind. The guard works and the fixture is wrong.
+    blast_radius: 'Test-CliDispatch.ps1 always reports 31 total, 29 PASS, 2 FAIL: ''placeholder receipts dir refused'' and ''refusal created no placeholder dir''. Any gate that runs the dispatch tests must allow exactly this pair (the 2026-11-14 review-limits plan''s dispatch-check.py does, D-739); a new FAIL still fails. The dispatch wrapper''s behaviour is unaffected.'
+    category: TECH-DEBT
+    priority: P4
+    related: []
+    meu_links: []
+    notes: 'Registered at closeout of docs/execution/plans/2026-11-14-review-limits-no-token-budget/ under D-739 (Mat, 2026-11-14 "proceed as recommended"). The baseline receipt C:/Temp/av-kit/rl/rl-base-dispatch.txt shows the pair failing before that change. Fix in its own session: give the fixture a path that still holds the token after instantiation, and clean the leftover %TEMP%/av-kit/receipts/dispatch-tests.'
