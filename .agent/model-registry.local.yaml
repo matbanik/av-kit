@@ -50,3 +50,11 @@ classes:
       not_a_reviewer: true
     bindings:
       claude-code-agents: {slug: claude-haiku-5-5, effort: low}
+  avkit_peer_reviewer:
+    contract:
+      capabilities: [deep_reasoning, agentic_exec]
+      effort_default: high
+      not_a_reviewer: true
+      forbid: [claude-fable-5-2]
+    bindings:
+      claude-code-agents: {slug: claude-opus-5-5, effort: high}

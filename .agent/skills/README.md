@@ -37,6 +37,7 @@ applies_to: [paths or concerns this skill covers]
 | `mcp-tool-audit/SKILL.md` | `/mcp-audit`, `mcp-server/scripts/audit/` | Live stdio audit of every MCP action against an isolated backend: observable-state checks, refusal oracle, baseline delta, cleanup, report |
 | `subagent-delegation/SKILL.md` | workflows, `task.md` execution | `fresh_worker` gate + builder/verifier dispatch |
 | `cli-dispatch/SKILL.md` | external reviewer / CLI agents | Route tasks to Codex/Claude/Gemini/OpenCode |
+| `expert-pass/SKILL.md` | a set of decision briefs, HDP §5a | The packet for one fresh-context expert pass; the reviewer reads only |
 | `completion-preflight/SKILL.md` | end of turn / closeout | Re-read `task.md` before claiming done |
 | `pre-handoff-review/SKILL.md` | pre-review | Self-check patterns before independent review |
 | `terminal-preflight/SKILL.md` | any shell command | Redirect-to-file / no-pipe P0 checklist |

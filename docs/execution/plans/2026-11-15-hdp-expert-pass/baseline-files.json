@@ -1,0 +1,12 @@
+{
+ ".agent/docs/human-decision-protocol.md": "e6b2a40bed004c993f15b51e41ed972b07fae4f6e9b91ac728b690dbcb385a27",
+ ".agent/docs/model-routing.md": "34efa3c839e7953042cffa147792ce36f686d01c5c72b516e718a5b5f4d97dbb",
+ ".agent/docs/model-delegation.md": "8ed02ae8a57a451fa6315c12d822b916fce1389fa0af25944ca6aeda3d083ba4",
+ ".agent/docs/commands.md": "019ffaa1b6ef83b85af2981094073dc197dd3802ba0d1cef1ccaa571259adcca",
+ ".agent/skills/README.md": "7dd7d20cf4c7e8a10ad9551be7cccfe9d04c3dfc5dc6e48aff4b4d56f998f005",
+ ".agent/skills/cli-dispatch/SKILL.md": "255cada1a7fdae24a143388ed91ffa63bdc5d3e3deb23aaf9b60b4670a3b4bb7",
+ ".agent/workflows/cli-dispatch.md": "583485697752d629534f51c15094a2a3e0f47e0ec577e323e23da87a46a41f97",
+ ".agent/model-registry.local.yaml": "1a97a7cfec05531d3e0d9e6cb5b70298c89a449b0bf629ff36c96e16c78c019c",
+ ".agent/model-registry.local.json": "f9c022667c7e6aaf45bddf2ccda03aa6e22ba0c27ac96998a95de541c150ace5",
+ "docs/execution/plans/2026-09-26-framework-update-adoption/routing-census.md": "08db9ce1af5c31838c16e5b596496a5111368d13b5880935b6172971f431b184"
+}

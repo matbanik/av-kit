@@ -73,9 +73,10 @@ Only the five avkit classes are adopted. Optional upstream routes are explicitly
 | `.agent/model-registry.local.json:32` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |           "slug": "claude-opus-5" |
 | `.agent/model-registry.local.json:36` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |           "slug": "cursor-grok-4.6" |
 | `.agent/model-registry.local.json:58` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |           "slug": "gpt-6.1-sol" |
-| `.agent/model-registry.local.json:78` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |           "slug": "claude-haiku-5-5" |
-| `.agent/model-registry.local.json:94` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |           "slug": "claude-sonnet-5-5" |
-| `.agent/model-registry.local.json:98` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |           "slug": "composer-2.5-fast" |
+| `.agent/model-registry.local.json:78` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |           "slug": "claude-opus-5-5" |
+| `.agent/model-registry.local.json:97` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |           "slug": "claude-haiku-5-5" |
+| `.agent/model-registry.local.json:113` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |           "slug": "claude-sonnet-5-5" |
+| `.agent/model-registry.local.json:117` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |           "slug": "composer-2.5-fast" |
 | `.agent/model-registry.local.yaml:9` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |       cursor-task: {slug: cursor-grok-4.6, effort: xhigh} |
 | `.agent/model-registry.local.yaml:10` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |       claude-p: {slug: claude-opus-5, effort: high} |
 | `.agent/model-registry.local.yaml:20` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |       cursor-task: {slug: cursor-grok-4.6, effort: xhigh} |
@@ -84,6 +85,7 @@ Only the five avkit classes are adopted. Optional upstream routes are explicitly
 | `.agent/model-registry.local.yaml:32` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |       claude-code-agents: {slug: claude-sonnet-5-5, effort: medium} |
 | `.agent/model-registry.local.yaml:43` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |         slug: gpt-6.1-sol |
 | `.agent/model-registry.local.yaml:52` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |       claude-code-agents: {slug: claude-haiku-5-5, effort: low} |
+| `.agent/model-registry.local.yaml:60` | binding | Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority. |       claude-code-agents: {slug: claude-opus-5-5, effort: high} |
 | `.agent/skills/cli-dispatch/SKILL.md:10` | operational | Class-based routing, explicit configured-provider boundary, schema syntax or non-model fallback; no snapshot selects a provider. | Only avkit_coordinator, avkit_builder, avkit_verifier, avkit_router and avkit_independent_reviewer are adopted local classes. Generic examples for image_generator, creative_prose, architecture_single_shot, checklist_validator, surface_orchestrator or isolated_worker describe optional upstream capabilities; they are not configured dispatch routes here. Do not execute them or choose global bindings without a separate explicit user request and a source-backed plan. Resolve every adopted caller with project P:/av-kit and a supported harness; fail before provider invocation on a resolution error. PROFILE B3 has no alternate reviewer and Mat is the fallback. Actual author identity governs vendor diversity. |
 | `.agent/skills/cli-dispatch/SKILL.md:176` | operational | Class-based routing, explicit configured-provider boundary, schema syntax or non-model fallback; no snapshot selects a provider. | - Subagents do NOT guarantee token savings (they often consume more tokens due to independent context loading). They are useful primarily for keeping noisy sub-tasks out of the coordinator's main context. |
 | `.agent/skills/cli-dispatch/SKILL.md:286` | operational | Class-based routing, explicit configured-provider boundary, schema syntax or non-model fallback; no snapshot selects a provider. |   --producer builder-agent          # this agent may never author a verdict in this loop |
@@ -1116,20 +1118,27 @@ Only the five avkit classes are adopted. Optional upstream routes are explicitly
     {
       "path": ".agent/model-registry.local.json",
       "line": 78,
+      "text_sha256": "53b2ac7e120ec7c408f2d39da6f2fed179c03c5bae29b26b71eeb69ab76dc586",
+      "classification": "binding",
+      "reason": "Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority."
+    },
+    {
+      "path": ".agent/model-registry.local.json",
+      "line": 97,
       "text_sha256": "198b41c6946181707377a9657e7ea1d8a8991f6cbc41ffdd93be32e34fdbc10a",
       "classification": "binding",
       "reason": "Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority."
     },
     {
       "path": ".agent/model-registry.local.json",
-      "line": 94,
+      "line": 113,
       "text_sha256": "e4d4833099bb7f583730eba2fda6081397ec86b7c1b243a1232adab768e316db",
       "classification": "binding",
       "reason": "Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority."
     },
     {
       "path": ".agent/model-registry.local.json",
-      "line": 98,
+      "line": 117,
       "text_sha256": "7b3d1eab9fa5373916d6a240c53e674cd4e50dca64390a50376421870bf5292a",
       "classification": "binding",
       "reason": "Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority."
@@ -1187,6 +1196,13 @@ Only the five avkit classes are adopted. Optional upstream routes are explicitly
       "path": ".agent/model-registry.local.yaml",
       "line": 52,
       "text_sha256": "55944a7f50ea13684a4bb50c21c1b1a82cef52a1ab741e66d8be3ab38ce5163b",
+      "classification": "binding",
+      "reason": "Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority."
+    },
+    {
+      "path": ".agent/model-registry.local.yaml",
+      "line": 60,
+      "text_sha256": "6fef92aea84bd893bf4a8bb4665ae51aa4246fc573de306654ea7a1ab2921ea2",
       "classification": "binding",
       "reason": "Approved AVKIT_CLASS_MAP catalog binding or compiled mirror; sole model identity authority."
     },

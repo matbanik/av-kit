@@ -48,6 +48,10 @@ The `avkit_coordinator` class holds planning, correctness-critical reasoning, an
   human-approval gate — those stay inline on the `avkit_coordinator` or on the external reviewer chain.
 - **Open decisions.** The coordinator owns each question to the human. A subagent that finds an
   open decision returns it with its facts and a recommendation, and does not ask the human.
+- **Peer reviewer.** The HDP §5a expert pass and other second opinions go to the Claude Code
+  agent `av-kit-peer-reviewer` (class `avkit_peer_reviewer`) in a fresh context. Its answer is
+  advice: it never writes a verdict file, never approves, and never stands in for
+  `avkit_independent_reviewer`.
 
 ## Why
 

@@ -105,6 +105,7 @@ $env:ELECTRON_RUN_AS_NODE=$null; npm --prefix ui run test:e2e
 | Issue Triage | `.agent/skills/issue-triage/SKILL.md` | Record, query, verify, and manage known issues via the YAML SSOT (`known-issues.yaml`). Use when discovering bugs or reviewing issue status. |
 | Subagent Delegation | `.agent/skills/subagent-delegation/SKILL.md` | In-harness subagent detection + delegation gate (Cursor `.cursor/agents/`, Claude Code `.claude/agents/`). Resolves `fresh_worker`, routes eligible `task.md` rows to `av-kit-builder`/`av-kit-verifier`, and enforces the never-delegate categories. |
 | CLI Dispatch | `.agent/skills/cli-dispatch/SKILL.md` | External CLI routing: Codex wrapper, Claude `-p`, agy `-p`. Independent review stays on the Codex chain. |
+| Expert Pass | `.agent/skills/expert-pass/SKILL.md` | The packet for one expert pass on a set of briefs (HDP §5a). The reviewer reads only, and asks the three questions. |
 | Deep Research Prompting | `.agent/skills/deep-research-prompting/SKILL.md` | Portal-ready deep research prompt procedure: Pomera MCP preflight hard gate, provider capability recon query bank (Tavily/Exa routing), 14-day capability snapshots, D1/D2/D3 prompt templates, triangulation synthesis. Driven by `/inspiration-research`. |
 
 ## MCP Servers

@@ -71,6 +71,25 @@
         "vendor_distinct_from": "author"
       }
     },
+    "avkit_peer_reviewer": {
+      "bindings": {
+        "claude-code-agents": {
+          "effort": "high",
+          "slug": "claude-opus-5-5"
+        }
+      },
+      "contract": {
+        "capabilities": [
+          "deep_reasoning",
+          "agentic_exec"
+        ],
+        "effort_default": "high",
+        "forbid": [
+          "claude-fable-5-2"
+        ],
+        "not_a_reviewer": true
+      }
+    },
     "avkit_router": {
       "bindings": {
         "claude-code-agents": {

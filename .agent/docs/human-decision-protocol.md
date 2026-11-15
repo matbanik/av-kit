@@ -173,7 +173,7 @@ Everything else is the agent's to decide under §4, logged as `autonomous` with
 - The list is a floor on top of every existing human-only gate; gates the list does not name
   stay in force (for example the model-routing rules, `model-routing.md`).
 - M-3 covers edits to this list and to this protocol: they are human-approved, never
-  autonomous.
+  autonomous, except a ruling that the human hands to the agent under §6.
 - Nothing is exempt: `hdp` still escalates every question that fails the obviousness test, M
   hit or not.
 - An M hit names every matching item (`mandatory: [M-3, M-11]`), and the brief states each.
@@ -224,6 +224,34 @@ Rules:
   message where a hard gate applies (`GUARDRAILS.md` SIGN 3).
 
 ---
+
+## 5a. Expert pass — one review of a set of briefs
+
+Before the human sees a set of briefs at a planned stop, the author gets one expert pass on the
+set, in a fresh context. A reference to this step says "HDP §5a".
+
+1. Send the set to the advisory peer reviewer (`avkit_peer_reviewer`) in a fresh context. Give
+   the domain, the stage in three lines and the paths of the briefs and of the files that they
+   cite. The packet template is `.agent/skills/expert-pass/SKILL.md`.
+2. For each recommendation the reviewer answers three questions. Does it add work that the
+   present stage does not need? Can it be done as written, at the present size? Can it be undone?
+3. The reviewer checks that each named thing exists, and names a cheaper option when the brief
+   lists none.
+4. The result for each brief is one of four: holds, cut down, changed or widened, each with its
+   evidence. "Holds" is a valid result.
+5. The author checks each finding against the files. Then the author adopts it, or does not
+   adopt it and gives the evidence.
+6. One line goes above the set: `Expert pass (fresh context): <n> briefs. Holds: <ids>.
+   Changed: <ids>. Not adopted: <ids>.` A brief gets its own line only in two cases: `Expert
+   pass: changed from <X>: <reason>.` when the pass changed it, and `Expert pass: <result>, not
+   adopted: <reason>.` when the author did not adopt the finding.
+
+The pass is advice. It makes no ruling, writes no verdict file and adds no tool, hook, schema or
+record field. It runs once for each set, in one round. `Expert pass: inline.` is for one
+question during other work. `Expert pass: inline, not independent.` is for a run that cannot
+start a fresh context. `Expert pass: not run: the human said to skip it.` is the only skip. A
+request for a human action (M-10) gets no pass. The step names a role, and no model or effort.
+There is no floor and no skip rule by set size.
 
 ## 6. Recording — every decision leaves a trail
 
@@ -292,6 +320,14 @@ not at closeout.
 
 A decision resolved autonomously in planning and later overturned by the human is recorded, not
 deleted: append the ruling with `human_message_reference` and keep the original reasoning.
+
+A ruling that the human hands to the agent for one brief set is the agent's ruling. Record it
+with `resolution: autonomous` and the agent's own basis tag, never `Human-approved`, and keep the
+entry's `mandatory:` list. The reasoning starts with `Handed to the agent: USER_EXPLICIT <date>
+'<quote>'.`, and that quote meets the gate. An acceptance criterion that rests on the ruling
+carries the same tag. The hand-over covers one set only, and only an item with no M hit or with
+M-3, M-5, M-6 or M-8; every other item of §4a stays the human's. One line from the human
+overturns it.
 
 ---
 
