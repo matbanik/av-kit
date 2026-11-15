@@ -1,0 +1,10 @@
+?? .agent/context/handoffs/2026-11-14-tts-fp16-phase-guard-plan-critical-review.md  sha256=52b321bf434c7ffd4ecb6ab3e7a28713f9ee46259f5a1461f51eca7952fad577
+?? docs/execution/plans/2026-11-14-tts-fp16-phase-guard/baseline.ps1  sha256=28b4356829ffa79885eb24d3c28d265c24f1383988d520432d19ab1092330cc5
+?? docs/execution/plans/2026-11-14-tts-fp16-phase-guard/baseline.sha  sha256=6e9466e3bfba16c769a92e63516f0e5e4aa3b549046cf712d5cabb63c4d791ad
+?? docs/execution/plans/2026-11-14-tts-fp16-phase-guard/fresh-inputs.py  sha256=0072cd61a843cac6fa57becba6028bea1a98433fa90e45ebf3d275aea55b824d
+?? docs/execution/plans/2026-11-14-tts-fp16-phase-guard/identity.py  sha256=019a098669aacd59faa21f73879cf6c214695fbc92ae22523839d60bb71ec42f
+?? docs/execution/plans/2026-11-14-tts-fp16-phase-guard/implementation-plan.md  sha256=ce133438ce78ad239b6ee8992183836f5b949965bc80a34e139c59fc70a42faf
+?? docs/execution/plans/2026-11-14-tts-fp16-phase-guard/issue-resolve.py  sha256=b6e4c4cbc1991112e5409f8aaae24a9ed081a0999a4578a5943c7846654875b6
+?? docs/execution/plans/2026-11-14-tts-fp16-phase-guard/phase-guard.py  sha256=ed999c618176fc660f47b0da50bc3e6405583d1d57a622bd84157b3631a5de15
+?? docs/execution/plans/2026-11-14-tts-fp16-phase-guard/session-gate.ps1  sha256=a19debaea74f019c6855336405da535d437cdc215f4debc2893c3cb120a5989a
+?? docs/execution/plans/2026-11-14-tts-fp16-phase-guard/task.md  sha256=441d92172ef895498202e2e4723ae3c3ece7d13dcc920484692586cfc1db441e

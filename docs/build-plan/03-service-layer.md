@@ -697,6 +697,8 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Outcome | What ships, a patched graph or nothing, comes back to Mat with the spike's counts. | Human-approved: D-336 |
 | Tests | The packaged `--phase sentences` smoke on the patched FP16 graph, 149 jobs, each WAV with its full payload (AC-121.8). | Local Canon |
 
+> **Delivered (Session 73).** MEU-127, plan `docs/execution/plans/2026-11-14-tts-fp16-phase-guard/`. FRESH_INPUTS downloaded the seven spike inputs at the app's pins, and each equals Session 52's cached copy; INSTALLED_READ found the installed FP16 file equal to it by hash. RUN_COPIES built one onedir and copied it per run. DENOM_COUNT: in the 12 failing jobs, 14 slots of `/decoder/decoder/generator/Div` divide 0 by 0, all in bin 10, and each gives a NaN phase; the 137 passing jobs have none. PATCH_COPY wrote PHASE_GUARD (`IsNaN` and `Where` after the `Div`, a NaN quotient becomes +0) into a copy. GRAPH_COMPARE: the guard changes exactly the 12 failing jobs and leaves 137 bit-identical. SENTENCE_SMOKE on the packaged build, 149 jobs: original FP16 fails the same 12 as Session 52, guarded FP16 passes 149 of 149 with each WAV's full payload, and INT8 passes 149 of 149. WAV_IDENTITY: the control's 137 WAVs are byte-identical in the guarded run. LISTEN_FOLDER held the 12 guarded FP16 and INT8 pairs, and OUTCOME_BRIEF put them to Mat. AC-127.1 to AC-127.12. D-797 (Mat, 2026-11-15, USER_EXPLICIT "Ship guarded (Recommended)"): the guarded graph ships, through a plan amendment with its own Red and review; until it lands, the FP16 stays rule holds and `TTS-ONNX-FP16-NONFINITE-AUDIO` stays open. Nothing was posted upstream.
+
 <a id="download-failure-reason-residual"></a>
 
 ## Download failure reason (residual)
