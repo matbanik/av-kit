@@ -16,8 +16,8 @@ import * as ids from '../e2e/test-ids'
 
 // Session 71 (MEU-105): the style model, the read-back, SELECT_NO_STYLE's table half and STYLE_HELP.
 
-const STYLE_TOOLS: StyleTool[] = ['arrow', 'box', 'highlight', 'text', 'pixelate']
-const TOOLS: CaptureTool[] = ['select', 'arrow', 'box', 'highlight', 'text', 'redact', 'eraser', 'crop']
+const STYLE_TOOLS: StyleTool[] = ['arrow', 'box', 'highlight', 'text', 'pixelate', 'step']
+const TOOLS: CaptureTool[] = ['select', 'arrow', 'box', 'highlight', 'text', 'step', 'redact', 'eraser', 'crop']
 const MODES: RedactMode[] = ['solid', 'pixelate']
 
 const DEFAULTS: ToolStyles = {
@@ -26,6 +26,7 @@ const DEFAULTS: ToolStyles = {
   highlight: { color: '#E0AF68' },
   text: { color: '#E0AF68', fontSize: 16, textBg: '' },
   pixelate: { blockSize: 10 },
+  step: { color: '#E0AF68', stepSize: 32 },
 }
 
 const LEAVES = {
@@ -34,12 +35,14 @@ const LEAVES = {
   highlight: { color: 'highlight_color' },
   text: { color: 'text_color', fontSize: 'text_font_size', textBg: 'text_bg_color' },
   pixelate: { blockSize: 'pixelate_block_size' },
+  step: { color: 'step_color', stepSize: 'step_size' },
 }
 
 /** The STYLE_MODEL table for armed tools: [tool, mode, style tool]. */
 const FOR_TOOL: Array<[CaptureTool, RedactMode, StyleTool | null]> = TOOLS.flatMap((tool) =>
   MODES.map((mode): [CaptureTool, RedactMode, StyleTool | null] => {
-    if (tool === 'arrow' || tool === 'box' || tool === 'highlight' || tool === 'text') {
+    // Session 72 row 3 (STEP_STYLE, D-775): step styles itself.
+    if (tool === 'arrow' || tool === 'box' || tool === 'highlight' || tool === 'text' || tool === 'step') {
       return [tool, mode, tool]
     }
     if (tool === 'redact') {
@@ -57,6 +60,7 @@ const MARKS: Record<Annotation['type'], Annotation> = {
   pixelate: { type: 'pixelate', x: 1, y: 1, width: 4, height: 4, block_size: 10 },
   eraser: { type: 'eraser', x: 1, y: 1, width: 4, height: 4 },
   redact: { type: 'redact', x: 1, y: 1, width: 4, height: 4, color: '#000000' },
+  step: { type: 'step', x: 1, y: 1, number: 1, color: '#E0AF68', size: 32 },
 }
 
 const OF_MARK: Record<Annotation['type'], StyleTool | null> = {
@@ -67,6 +71,7 @@ const OF_MARK: Record<Annotation['type'], StyleTool | null> = {
   pixelate: 'pixelate',
   eraser: null,
   redact: null,
+  step: 'step',
 }
 
 /** Every leaf valid and none at its default, so a fallback shows as exactly one changed field. */
@@ -87,6 +92,8 @@ const FULL: Record<string, unknown> = {
   text_font_size: 24,
   text_bg_color: '#56789A',
   pixelate_block_size: 20,
+  step_color: '#6789AB',
+  step_size: 48,
 }
 
 const FULL_STYLES: ToolStyles = {
@@ -95,6 +102,7 @@ const FULL_STYLES: ToolStyles = {
   highlight: { color: '#345678' },
   text: { color: '#456789', fontSize: 24, textBg: '#56789A' },
   pixelate: { blockSize: 20 },
+  step: { color: '#6789AB', stepSize: 48 },
 }
 
 /** FULL_STYLES with one field replaced. */
@@ -133,9 +141,16 @@ describe('MEU-105 capture tool style model', () => {
     expect(absent).toBeUndefined()
     expect(ids.CAPTURE_BLOCK_SIZE_SCRUB).toBe('capture-block-size-scrub')
     const tool: StyleTool = 'pixelate'
-    const fields: Required<ToolStyle> = { color: '#E0AF68', stroke: 3, fontSize: 16, textBg: '', blockSize: 10 }
+    const fields: Required<ToolStyle> = {
+      color: '#E0AF68',
+      stroke: 3,
+      fontSize: 16,
+      textBg: '',
+      blockSize: 10,
+      stepSize: 32,
+    }
     expect(tool).toBe('pixelate')
-    expect(Object.keys(fields).sort()).toEqual(['blockSize', 'color', 'fontSize', 'stroke', 'textBg'])
+    expect(Object.keys(fields).sort()).toEqual(['blockSize', 'color', 'fontSize', 'stepSize', 'stroke', 'textBg'])
     expect(Object.keys(style.TOOL_STYLE_DEFAULTS).sort()).toEqual([...STYLE_TOOLS].sort())
     expect(Object.keys(style.TOOL_STYLE_LEAVES).sort()).toEqual([...STYLE_TOOLS].sort())
     expect(style.TOOL_STYLE_DEFAULTS).toEqual(DEFAULTS)

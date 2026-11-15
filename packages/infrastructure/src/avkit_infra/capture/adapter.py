@@ -9,6 +9,7 @@ import sys
 import warnings
 from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import NamedTuple
 
 import numpy as np
 import structlog
@@ -28,6 +29,7 @@ from avkit_core.domain.capture import (
     AnnotatedFormat,
     Annotation,
     ArrowAnnotation,
+    ArrowHead,
     BBox,
     EraserAnnotation,
     HighlightAnnotation,
@@ -35,6 +37,7 @@ from avkit_core.domain.capture import (
     PixelateAnnotation,
     RectAnnotation,
     RedactAnnotation,
+    StepAnnotation,
     TextAnnotation,
     ViewFrame,
 )
@@ -66,6 +69,8 @@ ARROW_SHAFT_OVERLAP_PX = 1
 SUPERSAMPLE = 4
 # The tile pad past stroke/2: the LANCZOS halo (3 px at 4x) plus 1, so the spread is never cut.
 ARROW_TILE_PAD_PX = 4
+# STEP_BAKE (MEU-107, D-773): above this WCAG relative luminance a badge's number is black.
+STEP_TEXT_LUMINANCE = 0.179
 FONT_CANDIDATES = ("segoeui.ttf", "arial.ttf")
 # TEXT_LINE_GAP (MEU-102): px between a text mark's lines; Pillow's default, made explicit.
 TEXT_LINE_GAP = 4
@@ -142,6 +147,76 @@ def arrow_shaft_end(
     if length <= back:
         return None
     return (x2 - dx / length * back, y2 - dy / length * back)
+
+
+def arrow_shaft_span(
+    from_xy: tuple[int, int],
+    to_xy: tuple[int, int],
+    stroke: int,
+    head: ArrowHead,
+) -> tuple[tuple[float, float], tuple[float, float]] | None:
+    """HEAD_BAKE (MEU-106, D-767): the shaft's ends for an arrow's ``head``, or ``None``.
+
+    ``"none"`` gives ``(from_xy, to_xy)``; ``"end"`` gives ``(from_xy, arrow_shaft_end(...))``,
+    today's span; ``"both"`` pulls each end back by the head's back-off and gives ``None`` when
+    the arrow is no longer than two back-offs, so only the two heads are drawn.
+    """
+    x1, y1 = from_xy
+    x2, y2 = to_xy
+    start = (float(x1), float(y1))
+    if head == "none":
+        return (start, (float(x2), float(y2)))
+    if head == "end":
+        end = arrow_shaft_end(from_xy, to_xy, stroke)
+        return None if end is None else (start, end)
+    dx, dy = float(x2 - x1), float(y2 - y1)
+    length = math.hypot(dx, dy)
+    if length == 0:
+        return (start, start)
+    back = max(ARROWHEAD_MIN_PX, stroke * ARROWHEAD_LENGTH_FACTOR) * math.cos(
+        ARROWHEAD_ANGLE_RAD
+    ) - ARROW_SHAFT_OVERLAP_PX
+    if length <= 2 * back:
+        return None
+    ux, uy = dx / length, dy / length
+    return ((x1 + ux * back, y1 + uy * back), (x2 - ux * back, y2 - uy * back))
+
+
+class StepLayout(NamedTuple):
+    """STEP_BAKE (MEU-107): a badge's radius, its number's font size and the text baseline."""
+
+    radius: float
+    font_px: int
+    baseline: int
+
+
+def step_badge_layout(x: int, y: int, number: int, size: int) -> StepLayout:
+    """STEP_BAKE (MEU-107, D-773): the badge's radius, font px and the number's baseline.
+
+    One or two digits use half the badge as the font; three use four tenths. The baseline sits
+    0.355 font px below the centre (integer arithmetic, so the preview mirrors it exactly).
+    """
+    font_px = (size + 1) // 2 if number < 100 else (size * 4 + 5) // 10
+    return StepLayout(size / 2, font_px, y + (font_px * 355 + 500) // 1000)
+
+
+def _linear_channel(value: int) -> float:
+    channel = value / 255
+    return channel / 12.92 if channel <= 0.04045 else ((channel + 0.055) / 1.055) ** 2.4
+
+
+def step_text_color(color: str) -> str:
+    """STEP_BAKE (MEU-107, D-773): black on a light badge, white on a dark one.
+
+    Black when the colour's WCAG relative luminance is above 0.179, else white.
+    """
+    red, green, blue = _color_rgb(color)
+    luminance = (
+        0.2126 * _linear_channel(red)
+        + 0.7152 * _linear_channel(green)
+        + 0.0722 * _linear_channel(blue)
+    )
+    return "#000000" if luminance > STEP_TEXT_LUMINANCE else "#FFFFFF"
 
 
 def text_plate_box(x: int, y: int, text: str, font_size: int) -> tuple[int, int, int, int]:
@@ -808,7 +883,48 @@ class CaptureAdapter:
             return self._apply_rect(canvas, annotation)
         if isinstance(annotation, TextAnnotation):
             return self._apply_text(canvas, annotation)
+        if isinstance(annotation, StepAnnotation):
+            return self._apply_step(canvas, annotation)
         raise ValidationError(f"unsupported annotation type: {type(annotation)!r}")
+
+    def _apply_step(self, canvas: Image.Image, annotation: StepAnnotation) -> Image.Image:
+        """STEP_BAKE (MEU-107, D-773): a disc in the step's colour with its number on it.
+
+        The disc goes through the BAKE_AA tile mask at SUPERSAMPLE; the number is drawn with
+        ``_load_font(font_px)``, anchor ``"ms"`` at ``x`` on the layout's baseline, in
+        ``step_text_color``.
+        """
+        overlay = canvas.convert("RGBA")
+        layout = step_badge_layout(annotation.x, annotation.y, annotation.number, annotation.size)
+        radius = layout.radius
+        pad = ARROW_TILE_PAD_PX
+        left = max(0, math.floor(annotation.x - radius - pad))
+        top = max(0, math.floor(annotation.y - radius - pad))
+        right = min(overlay.width, math.ceil(annotation.x + radius + pad) + 1)
+        bottom = min(overlay.height, math.ceil(annotation.y + radius + pad) + 1)
+        if right > left and bottom > top:
+            tile_size = (right - left, bottom - top)
+            mask = Image.new("L", (tile_size[0] * SUPERSAMPLE, tile_size[1] * SUPERSAMPLE), 0)
+            centre = (SUPERSAMPLE - 1) / 2  # PIXEL_CENTRE: the middle of each pixel's block
+            cx = SUPERSAMPLE * (annotation.x - left) + centre
+            cy = SUPERSAMPLE * (annotation.y - top) + centre
+            big_radius = SUPERSAMPLE * radius
+            ImageDraw.Draw(mask).ellipse(
+                [cx - big_radius, cy - big_radius, cx + big_radius, cy + big_radius], fill=255
+            )
+            coverage = mask.resize(tile_size, Image.Resampling.LANCZOS)
+            box = (left, top, right, bottom)
+            tile = overlay.crop(box)
+            solid = Image.new("RGBA", tile_size, (*_color_rgb(annotation.color), 255))
+            overlay.paste(Image.composite(solid, tile, coverage), (left, top))
+        ImageDraw.Draw(overlay).text(
+            (annotation.x, layout.baseline),
+            str(annotation.number),
+            fill=_color_rgb(step_text_color(annotation.color)),
+            font=_load_font(layout.font_px),
+            anchor="ms",
+        )
+        return overlay
 
     def _apply_highlight(self, canvas: Image.Image, annotation: HighlightAnnotation) -> Image.Image:
         overlay = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
@@ -831,11 +947,24 @@ class CaptureAdapter:
         x1, y1 = annotation.from_xy
         x2, y2 = annotation.to_xy
         start = (float(x1), float(y1))
-        end = arrow_shaft_end(annotation.from_xy, annotation.to_xy, annotation.stroke_width)
-        head: tuple[tuple[float, float], ...] = ()
-        if math.hypot(float(x2 - x1), float(y2 - y1)) != 0:
-            head = arrowhead_vertices(annotation.from_xy, annotation.to_xy, annotation.stroke_width)
-        points = [start, *([end] if end is not None else []), *head]
+        # HEAD_BAKE (D-767): the shaft over arrow_shaft_span, a head at `to` for "end" and
+        # "both", and one at `from` for "both". An "end" arrow makes today's draw calls.
+        span = arrow_shaft_span(
+            annotation.from_xy, annotation.to_xy, annotation.stroke_width, annotation.head
+        )
+        heads: list[tuple[tuple[float, float], ...]] = []
+        if math.hypot(float(x2 - x1), float(y2 - y1)) != 0 and annotation.head != "none":
+            heads.append(
+                arrowhead_vertices(annotation.from_xy, annotation.to_xy, annotation.stroke_width)
+            )
+            if annotation.head == "both":
+                heads.append(
+                    arrowhead_vertices(
+                        annotation.to_xy, annotation.from_xy, annotation.stroke_width
+                    )
+                )
+        shaft = list(span) if span is not None else [start]
+        points = [*shaft, *(vertex for head in heads for vertex in head)]
         pad = stroke / 2 + ARROW_TILE_PAD_PX
         left = max(0, math.floor(min(p[0] for p in points) - pad))
         top = max(0, math.floor(min(p[1] for p in points) - pad))
@@ -854,9 +983,9 @@ class CaptureAdapter:
                 SUPERSAMPLE * (point[1] - top) + centre,
             )
 
-        if end is not None:
-            draw.line([big(start), big(end)], fill=255, width=SUPERSAMPLE * stroke)
-        if head:
+        if span is not None:
+            draw.line([big(span[0]), big(span[1])], fill=255, width=SUPERSAMPLE * stroke)
+        for head in heads:
             draw.polygon([big(vertex) for vertex in head], fill=255)
         coverage = mask.resize(tile_size, Image.Resampling.LANCZOS)
         box = (left, top, right, bottom)
@@ -873,7 +1002,12 @@ class CaptureAdapter:
         y1 = annotation.y
         x2 = annotation.x + annotation.width
         y2 = annotation.y + annotation.height
-        draw.rectangle([x1, y1, x2, y2], outline=color, width=max(1, annotation.stroke_width))
+        width = max(1, annotation.stroke_width)
+        if annotation.shape == "ellipse":
+            # ELLIPSE_BAKE (D-769): the same box and width, unaliased as the rectangle is.
+            draw.ellipse([x1, y1, x2, y2], outline=color, width=width)
+        else:
+            draw.rectangle([x1, y1, x2, y2], outline=color, width=width)
         return overlay
 
     def _apply_text(self, canvas: Image.Image, annotation: TextAnnotation) -> Image.Image:

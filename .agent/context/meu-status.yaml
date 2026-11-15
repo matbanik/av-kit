@@ -2778,10 +2778,10 @@ meus:
     anchor: line-and-ellipse
     text: Phase 9 §Line and ellipse
   description: Line as an arrow with no head and Ellipse as a rect shape, with 45 degree snap and Ctrl+D duplicate.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-100, MEU-105, MEU-143
   dependency_parse_status: parsed
@@ -2789,8 +2789,8 @@ meus:
   - MEU-100
   - MEU-105
   - MEU-143
-  execution_plan: null
-  updated: '2026-10-29'
+  execution_plan: docs/execution/plans/2026-11-14-capture-shapes-steps/
+  updated: '2026-11-14'
   closed_reason: null
   note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
 - row_key: MEU-107
@@ -2804,17 +2804,17 @@ meus:
     anchor: step-mark
     text: Phase 9 §Step mark
   description: A new numbered step mark for how-to screenshots, drawn, moved and baked like the other marks.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-105
   dependency_parse_status: parsed
   depends_on:
   - MEU-105
-  execution_plan: null
-  updated: '2026-10-29'
+  execution_plan: docs/execution/plans/2026-11-14-capture-shapes-steps/
+  updated: '2026-11-14'
   closed_reason: null
   note: Registered 2026-10-29 from the Human-approved capture annotation synthesis (_inspiration/capture-annotation-tools/synthesis.md, USER_EXPLICIT 2026-10-29).
 - row_key: MEU-108

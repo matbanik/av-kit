@@ -89,13 +89,17 @@
 | `capture:tool_text` | Text tool (T) | no | local canvas | specified | 09 |
 | `capture:tool_redact` | Redact tool (X) (Solid / Pixelate) | no | local canvas | specified | 09 |
 | `capture:tool_eraser` | Smart eraser tool (E) | no | local canvas | specified | 09 |
+| `capture:tool_step` | Step tool | no | local canvas | specified | 09 |
 | `capture:tool_crop` | Crop (C) | no | local canvas | specified | 09 |
 | `capture:tool_lock` | Keep tool after drawing (tool lock); on by default; off returns to Select after each mark | no | `PUT /settings/capture` (`capture.tool_lock`) | specified | 09 |
 | `capture:style_mark` | Color, Stroke, Size, Bg and Block size with a mark selected restyle only that mark | no | local canvas | specified | 09 |
-| `capture:style_tool` | Color, Stroke, Size, Bg and Block size with no mark selected set the armed tool's own saved style | no | `PUT /settings/capture` | specified | 09 |
+| `capture:style_tool` | Color, Stroke, Size, Bg and Block size with no mark selected set the armed tool's own saved style; the Step tool saves its colour and size | no | `PUT /settings/capture` (`step_color`, `step_size` for the Step tool) | specified | 09 |
+| `capture:arrow_head` | Arrow head: End, None or Both | no | local canvas | specified | 09 |
+| `capture:box_shape` | Box shape: Rectangle or Ellipse | no | local canvas | specified | 09 |
 | `capture:draw_modifiers` | Shift draws a square, keeps a box's shape or snaps an arrow to 45°; Alt draws from the centre; Shift+arrow nudges 10 px | no | local canvas | specified | 09 |
 | `capture:undo` | Undo overlay; Ctrl+Z on the image | no | local | specified | 09 |
 | `capture:redo` | Redo overlay; Ctrl+Y or Ctrl+Shift+Z on the image | no | local | specified | 09 |
+| `capture:duplicate` | Duplicate mark (Ctrl+D) | no | local canvas | specified | 09 |
 | `capture:zoom_in` | Zoom in (button / Ctrl+= / wheel) | no | local view | specified | 09 |
 | `capture:zoom_out` | Zoom out (button / Ctrl+- / wheel) | no | local view | specified | 09 |
 | `capture:zoom_fit` | Fit to view (button / Ctrl+0) | no | local view | specified | 09 |

@@ -14,6 +14,7 @@ import { logRenderer } from '../../lib/renderer-log'
 import { usePublishCommandState } from '../../registry/command-state'
 import { ariaKeyshortcuts } from '../../registry/shortcuts'
 import {
+  CAPTURE_EVENTS,
   cropCapture,
   deleteCapture,
   deleteCaptures,
@@ -92,6 +93,8 @@ import {
   type TextCorner,
 } from './capture-transform'
 import { PIXELATE_BLOCK_DEFAULT, PIXELATE_BLOCK_MAX, PIXELATE_BLOCK_MIN } from './capture-region-pass'
+import { duplicateMark, type ArrowHead, type BoxShape } from './capture-shapes'
+import { nextStepNumber, STEP_NUMBER_MAX } from './capture-step'
 import { ACTION_BUTTONS } from './capture-toolbar'
 import { ToolbarIconButton } from './ToolbarIconButton'
 import { useCaptureCatalog, type CaptureListItem, sortFilmstrip } from './useCaptureCatalog'
@@ -121,6 +124,11 @@ const CROP_SMALL_REASON = `Too small to crop: each side needs ${CROP_MIN_PX} px`
 const CROP_SWAP_REASON = 'Too small to swap this ratio'
 const CROP_BUSY_MESSAGE = 'Cropping…'
 const CROP_NUDGE_SHIFT_PX = 10
+// STEP_PLACE, DUPLICATE (MEU-107, D-774): no step past 999 is placed or copied.
+const STEP_STOP_STATUS = `Step numbers stop at ${STEP_NUMBER_MAX}`
+const STEP_SIZE_MIN = 12
+const STEP_SIZE_MAX = 200
+const STEP_SIZE_DEFAULT = 32
 // IMPORT_BUTTON (MEU-132): the button's title while nothing blocks it.
 const IMPORT_TITLE = 'Import image files. You can also drop them here or paste with Ctrl+V.'
 
@@ -157,10 +165,10 @@ function insideBox(box: CropBox, point: { x: number; y: number }): boolean {
 /**
  * SIZE_BURST (MEU-85): the field text and marks before one Stroke, Size or Block size scrub; `index` is the live
  * mark, if any. BLOCK_SCRUB (MEU-105): with no mark, `styleTool` is the tool whose style the commit saves and
- * `value` the last step.
+ * `value` the last step. STEP_STYLE (MEU-107): `step` is the Step size field.
  */
 type SizeBurst = {
-  field: 'stroke' | 'font' | 'block'
+  field: 'stroke' | 'font' | 'block' | 'step'
   startText: string
   origin: Annotation[] | null
   index: number | null
@@ -197,6 +205,31 @@ function parseBlockSize(raw: string): number | null {
   return parsed !== null && parsed >= PIXELATE_BLOCK_MIN && parsed <= PIXELATE_BLOCK_MAX ? parsed : null
 }
 
+/** STEP_STYLE: a step size in range, else null (the field holds the text and applies nothing). */
+function parseStepSize(raw: string): number | null {
+  const parsed = parsePositiveInt(raw)
+  return parsed !== null && parsed >= STEP_SIZE_MIN && parsed <= STEP_SIZE_MAX ? parsed : null
+}
+
+/** STEP_PLACE: an image coordinate rounded and clamped to `[0, extent - 1]`. */
+function clampPixel(value: number, extent: number): number {
+  return Math.min(Math.max(Math.round(value), 0), Math.max(extent - 1, 0))
+}
+
+/** SHAPE_OPTIONS, DEFAULT_OMIT (MEU-106, D-768): `mark` with `head` set, the key left out at End. */
+function withHead(mark: Extract<Annotation, { type: 'arrow' }>, head: ArrowHead): Annotation {
+  const { head: previous, ...rest } = mark
+  void previous
+  return head === 'end' ? rest : { ...rest, head }
+}
+
+/** SHAPE_OPTIONS, DEFAULT_OMIT (MEU-106, D-768): `mark` with `shape` set, the key left out at Rectangle. */
+function withShape(mark: Extract<Annotation, { type: 'rect' }>, shape: BoxShape): Annotation {
+  const { shape: previous, ...rest } = mark
+  void previous
+  return shape === 'rect' ? rest : { ...rest, shape }
+}
+
 const COLOR_FOCUS_IDS = new Set([
   'capture-color',
   'capture-color-well',
@@ -206,6 +239,7 @@ const COLOR_FOCUS_IDS = new Set([
   'capture-text-bg-clear',
   'capture-stroke',
   'capture-block-size',
+  'capture-step-size',
   'capture-named-color',
 ])
 
@@ -330,8 +364,10 @@ function createDrawnMark(
   end: { x: number; y: number },
   style: ToolStyle,
   redactMode: RedactMode,
+  head: ArrowHead = 'end',
+  shape: BoxShape = 'rect',
 ): Annotation | null {
-  if (tool === 'select' || tool === 'text' || tool === 'crop') {
+  if (tool === 'select' || tool === 'text' || tool === 'crop' || tool === 'step') {
     return null
   }
   const color = style.color ?? DEFAULT_TOOL_COLOR
@@ -346,6 +382,8 @@ function createDrawnMark(
       stroke_width: strokeWidth,
       from: [start.x, start.y],
       to: [end.x, end.y],
+      // DEFAULT_OMIT (D-768): the key only when the pick isn't End.
+      ...(head === 'end' ? {} : { head }),
     }
   }
   const x = Math.min(start.x, end.x)
@@ -364,6 +402,8 @@ function createDrawnMark(
       height,
       color,
       stroke_width: strokeWidth,
+      // DEFAULT_OMIT (D-768): the key only when the pick isn't Rectangle.
+      ...(shape === 'rect' ? {} : { shape }),
     }
   }
   if (tool === 'redact') {
@@ -422,6 +462,11 @@ export function CapturePage() {
   const [blockSize, setBlockSize] = useState(String(PIXELATE_BLOCK_DEFAULT))
   // REDACT_MODE (D-680): what the Redact tool draws; Solid on mount, never persisted.
   const [redactMode, setRedactMode] = useState<RedactMode>('solid')
+  // SHAPE_OPTIONS (MEU-106, D-771): what the Arrow and Box tools draw; the defaults on mount, never persisted.
+  const [headPick, setHeadPick] = useState<ArrowHead>('end')
+  const [shapePick, setShapePick] = useState<BoxShape>('rect')
+  // STEP_STYLE (MEU-107): the Step size field's text.
+  const [stepSize, setStepSize] = useState(String(STEP_SIZE_DEFAULT))
   const [viewVariant, setViewVariant] = useState<CaptureViewVariant>('original')
   const [annotations, setAnnotations] = useState<Annotation[]>([])
   const [past, setPast] = useState<Annotation[][]>([])
@@ -474,7 +519,7 @@ export function CapturePage() {
   const sizeBurstRef = useRef<SizeBurst | null>(null)
   const colorBurstRef = useRef<ColorBurst | null>(null)
   // SCRUB_BASE: tells the Stroke, Size or Block size field that the page closed its burst.
-  const [sizeEpoch, setSizeEpoch] = useState({ stroke: 0, font: 0, block: 0 })
+  const [sizeEpoch, setSizeEpoch] = useState({ stroke: 0, font: 0, block: 0, step: 0 })
   // STYLE_DISPLAY: the style tool of the armed tool and Redact mode, or null.
   const styleTool = styleToolFor(tool, redactMode)
   // CROP_STATE (D-510): pointer and key events read the ref in the same task; updateCrop sets both.
@@ -525,6 +570,9 @@ export function CapturePage() {
     }
     if (style.blockSize !== undefined) {
       setBlockSize(String(style.blockSize))
+    }
+    if (style.stepSize !== undefined) {
+      setStepSize(String(style.stepSize))
     }
   }, [selectedIndex, styleTool, styles])
   // STYLE_STORE: a failed style PUT shows its status once per failure.
@@ -588,6 +636,9 @@ export function CapturePage() {
     'capture:tool_redact': lettersOpen,
     'capture:tool_eraser': lettersOpen,
     'capture:tool_crop': lettersOpen && cropDisabledReason === undefined,
+    // DUPLICATE (D-777): a shot open, the crop closed, no text draft, no confirm and a mark selected.
+    'capture:duplicate':
+      selectedId !== null && cropLive === null && textDraft === null && confirm === null && selectedIndex !== null,
   })
 
   // CROP_CANCEL (D-509): another shot, a shot that left the catalog or a view other than Original closes it.
@@ -1186,9 +1237,114 @@ export function CapturePage() {
       setTextBg(mark.bg_color ? displayHex(mark.bg_color) : '')
       return
     }
+    if (mark.type === 'step') {
+      setStepSize(String(mark.size))
+      return
+    }
     if (mark.type === 'arrow' || mark.type === 'rect') {
       setStroke(String(mark.stroke_width))
     }
+  }
+
+  /**
+   * STEP_PLACE (MEU-107, D-774): one step at the press point, rounded and clamped, numbered one past the
+   * largest step; one undo step, then the lock-aware selection. Past 999 nothing is placed.
+   */
+  function placeStep(point: { x: number; y: number }, imageW: number, imageH: number): void {
+    const list = annotationsRef.current
+    const number = nextStepNumber(list)
+    if (number > STEP_NUMBER_MAX) {
+      setNotice({ shotId: selectedId, text: STEP_STOP_STATUS })
+      return
+    }
+    const mark: Annotation = {
+      type: 'step',
+      x: clampPixel(point.x, imageW),
+      y: clampPixel(point.y, imageH),
+      number,
+      color: styles.step.color ?? DEFAULT_TOOL_COLOR,
+      size: styles.step.stepSize ?? STEP_SIZE_DEFAULT,
+    }
+    const next = [...list, mark]
+    applyHistory(next)
+    commitSelection(next.length - 1, next, toolLocked ? 'step' : 'select')
+  }
+
+  /**
+   * DUPLICATE (MEU-106, MEU-107, D-777): Ctrl+D copies the selected mark beside itself as one undo step and
+   * selects the copy; a step copy takes the next number, and past 999 nothing is copied. A field, a modal or a
+   * live gesture keeps the chord inert.
+   */
+  function duplicateSelected(): void {
+    if (
+      !historyOwnsFocus() ||
+      gestureRef.current !== null ||
+      selectedIndex === null ||
+      selectedId === null ||
+      cropRef.current !== null ||
+      textDraft !== null
+    ) {
+      return
+    }
+    finishNudge()
+    const list = annotationsRef.current
+    const mark = list[selectedIndex]
+    if (mark === undefined) {
+      return
+    }
+    let copy = duplicateMark(mark, FIELD_STEP_SHIFT, selected?.width ?? 0, selected?.height ?? 0)
+    if (copy.type === 'step') {
+      const number = nextStepNumber(list)
+      if (number > STEP_NUMBER_MAX) {
+        setNotice({ shotId: selectedId, text: STEP_STOP_STATUS })
+        return
+      }
+      copy = { ...copy, number }
+    }
+    const next = [...list, copy]
+    applyHistory(next)
+    commitSelection(next.length - 1, next, tool)
+  }
+
+  useEffect(() => {
+    const onDuplicate = () => {
+      duplicateSelected()
+    }
+    window.addEventListener(CAPTURE_EVENTS.duplicate, onDuplicate)
+    return () => {
+      window.removeEventListener(CAPTURE_EVENTS.duplicate, onDuplicate)
+    }
+  })
+
+  /**
+   * SHAPE_OPTIONS (MEU-106, D-771): with an arrow selected a Head pick changes it as one undo step; with
+   * nothing selected it sets what the Arrow tool draws next. No pick is saved.
+   */
+  function changeArrowHead(next: ArrowHead): void {
+    finishSize()
+    const mark = selectedIndex === null ? undefined : annotationsRef.current[selectedIndex]
+    if (selectedIndex === null || mark === undefined) {
+      setHeadPick(next)
+      return
+    }
+    if (mark.type !== 'arrow' || (mark.head ?? 'end') === next) {
+      return
+    }
+    applyHistory(replaceAt(annotationsRef.current, selectedIndex, withHead(mark, next)))
+  }
+
+  /** SHAPE_OPTIONS (MEU-106, D-771): the Shape control, as changeArrowHead for a rect. */
+  function changeBoxShape(next: BoxShape): void {
+    finishSize()
+    const mark = selectedIndex === null ? undefined : annotationsRef.current[selectedIndex]
+    if (selectedIndex === null || mark === undefined) {
+      setShapePick(next)
+      return
+    }
+    if (mark.type !== 'rect' || (mark.shape ?? 'rect') === next) {
+      return
+    }
+    applyHistory(replaceAt(annotationsRef.current, selectedIndex, withShape(mark, next)))
   }
 
   /** The Select branch's gesture on a hit mark, shared with ARMED_EDIT; the armed tool is left as it is. */
@@ -1324,6 +1480,11 @@ export function CapturePage() {
         setTextDraft({ x: event.image.x, y: event.image.y, value: '' })
         return
       }
+      if (tool === 'step') {
+        // STEP_PLACE: the press places the step; a drag after it places nothing more.
+        placeStep(event.image, imageW, imageH)
+        return
+      }
       if (tool === 'select') {
         const hit = hitTestMarks({
           cssX: event.cssX,
@@ -1372,7 +1533,7 @@ export function CapturePage() {
       }
       if (gesture.kind === 'drawing') {
         const points = drawPoints({ x: gesture.startImageX, y: gesture.startImageY }, current, event, imageW, imageH)
-        const next = createDrawnMark(tool, points.start, points.end, styleTool === null ? {} : styles[styleTool], redactMode)
+        const next = createDrawnMark(tool, points.start, points.end, styleTool === null ? {} : styles[styleTool], redactMode, headPick, shapePick)
         if (next === null) {
           return
         }
@@ -1442,7 +1603,7 @@ export function CapturePage() {
     if (event.phase === 'move') {
       if (gesture.kind === 'drawing') {
         const points = drawPoints({ x: gesture.startImageX, y: gesture.startImageY }, current, event, imageW, imageH)
-        setPreview(createDrawnMark(tool, points.start, points.end, styleTool === null ? {} : styles[styleTool], redactMode))
+        setPreview(createDrawnMark(tool, points.start, points.end, styleTool === null ? {} : styles[styleTool], redactMode, headPick, shapePick))
         return
       }
       const moved = Math.hypot(event.cssX - gesture.startCssX, event.cssY - gesture.startCssY)
@@ -1517,6 +1678,25 @@ export function CapturePage() {
     applyHistory(replaceAt(annotationsRef.current, selectedIndex, { ...mark, block_size: parsed }))
   }
 
+  /** STEP_STYLE (MEU-107): as changeBlockSize; a valid size applied to a selected step is one undo step. */
+  function changeStepSize(value: string): void {
+    finishSize()
+    setStepSize(value)
+    const parsed = parseStepSize(value)
+    if (parsed === null) {
+      return
+    }
+    if (selectedIndex === null) {
+      saveSizeStyle(styleTool, 'step', parsed)
+      return
+    }
+    const mark = annotationsRef.current[selectedIndex]
+    if (mark === undefined || mark.type !== 'step' || mark.size === parsed) {
+      return
+    }
+    applyHistory(replaceAt(annotationsRef.current, selectedIndex, { ...mark, size: parsed }))
+  }
+
   /**
    * MODE_SWAP (D-680): with a redaction selected, the other mode replaces it in place on the same box as one
    * undo step (Solid gives #000000, Pixelate the current block size); with nothing selected the pick only sets
@@ -1564,12 +1744,19 @@ export function CapturePage() {
     if (tool === null) {
       return
     }
-    const key = field === 'stroke' ? 'stroke' : field === 'font' ? 'fontSize' : 'blockSize'
+    const key = field === 'stroke' ? 'stroke' : field === 'font' ? 'fontSize' : field === 'block' ? 'blockSize' : 'stepSize'
     const current = styles[tool][key]
     if (current === undefined || current === value) {
       return
     }
-    const patch: ToolStyle = key === 'stroke' ? { stroke: value } : key === 'fontSize' ? { fontSize: value } : { blockSize: value }
+    const patch: ToolStyle =
+      key === 'stroke'
+        ? { stroke: value }
+        : key === 'fontSize'
+          ? { fontSize: value }
+          : key === 'blockSize'
+            ? { blockSize: value }
+            : { stepSize: value }
     saveToolStyle(tool, patch)
   }
 
@@ -1753,10 +1940,12 @@ export function CapturePage() {
           ? mark.type === 'arrow' || mark.type === 'rect'
           : field === 'font'
             ? mark.type === 'text'
-            : mark.type === 'pixelate')
+            : field === 'block'
+              ? mark.type === 'pixelate'
+              : mark.type === 'step')
       burst = {
         field,
-        startText: field === 'stroke' ? stroke : field === 'font' ? fontSize : blockSize,
+        startText: field === 'stroke' ? stroke : field === 'font' ? fontSize : field === 'block' ? blockSize : stepSize,
         origin: applies ? annotationsRef.current : null,
         index: applies ? selectedIndex : null,
         styleTool: applies || selectedIndex !== null ? null : styleTool,
@@ -1772,8 +1961,10 @@ export function CapturePage() {
       setStroke(String(value))
     } else if (field === 'font') {
       setFontSize(String(value))
-    } else {
+    } else if (field === 'block') {
       setBlockSize(String(value))
+    } else {
+      setStepSize(String(value))
     }
     if (burst.index === null) {
       return
@@ -1786,6 +1977,8 @@ export function CapturePage() {
       next = { ...mark, font_size: value }
     } else if (field === 'block' && mark !== undefined && mark.type === 'pixelate') {
       next = { ...mark, block_size: value }
+    } else if (field === 'step' && mark !== undefined && mark.type === 'step') {
+      next = { ...mark, size: value }
     }
     if (next === null) {
       return
@@ -1833,8 +2026,10 @@ export function CapturePage() {
       setStroke(burst.startText)
     } else if (burst.field === 'font') {
       setFontSize(burst.startText)
-    } else {
+    } else if (burst.field === 'block') {
       setBlockSize(burst.startText)
+    } else {
+      setStepSize(burst.startText)
     }
     if (burst.origin === null) {
       return
@@ -2698,6 +2893,18 @@ export function CapturePage() {
           onBlockSizeCommit={finishSize}
           onBlockSizeCancel={cancelSize}
           blockSizeEpoch={sizeEpoch.block}
+          arrowHead={selectedMark?.type === 'arrow' ? (selectedMark.head ?? 'end') : headPick}
+          boxShape={selectedMark?.type === 'rect' ? (selectedMark.shape ?? 'rect') : shapePick}
+          onArrowHead={changeArrowHead}
+          onBoxShape={changeBoxShape}
+          stepSize={stepSize}
+          onStepSize={changeStepSize}
+          onStepSizePreview={(value) => {
+            previewSize('step', value)
+          }}
+          onStepSizeCommit={finishSize}
+          onStepSizeCancel={cancelSize}
+          stepSizeEpoch={sizeEpoch.step}
           onViewVariant={setViewVariant}
           onUndo={undo}
           onRedo={redo}

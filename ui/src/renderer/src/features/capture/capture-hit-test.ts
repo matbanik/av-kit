@@ -1,6 +1,6 @@
 import type { Annotation } from './capture-annotate'
 import { clampImagePoint, type ImagePoint } from './capture-fit-map'
-import { arrowheadVertices } from './capture-arrow-head'
+import { arrowheadVertices, type ArrowheadVertices } from './capture-arrow-head'
 import { textBackgroundBox } from './capture-text-metrics'
 import { boxHandlePoints, hitResizeHandle, isBoxMark, textPlateHandlePoints, type HandleId } from './capture-transform'
 
@@ -102,17 +102,52 @@ function inPaddedRect(
   return px >= x - pad && py >= y - pad && px <= x + w + pad && py <= y + h + pad
 }
 
+function hitHead(verts: ArrowheadVertices, input: HitTestInput): boolean {
+  const a = imageToCss(verts.tip[0], verts.tip[1], input.scale, input.ox, input.oy)
+  const b = imageToCss(verts.left[0], verts.left[1], input.scale, input.ox, input.oy)
+  const c = imageToCss(verts.right[0], verts.right[1], input.scale, input.ox, input.oy)
+  return pointInTriangle(input.cssX, input.cssY, a.x, a.y, b.x, b.y, c.x, c.y)
+}
+
 function hitArrowBody(mark: Extract<Annotation, { type: 'arrow' }>, input: HitTestInput): boolean {
   const from = imageToCss(mark.from[0], mark.from[1], input.scale, input.ox, input.oy)
   const to = imageToCss(mark.to[0], mark.to[1], input.scale, input.ox, input.oy)
   if (distToSegment(input.cssX, input.cssY, from.x, from.y, to.x, to.y) <= HIT_RADIUS_CSS) {
     return true
   }
-  const verts = arrowheadVertices(mark.from, mark.to, mark.stroke_width)
-  const a = imageToCss(verts.tip[0], verts.tip[1], input.scale, input.ox, input.oy)
-  const b = imageToCss(verts.left[0], verts.left[1], input.scale, input.ox, input.oy)
-  const c = imageToCss(verts.right[0], verts.right[1], input.scale, input.ox, input.oy)
-  return pointInTriangle(input.cssX, input.cssY, a.x, a.y, b.x, b.y, c.x, c.y)
+  // HEAD_HIT (MEU-106, D-767): one head triangle per drawn head.
+  const head = mark.head ?? 'end'
+  if (head === 'none') {
+    return false
+  }
+  if (hitHead(arrowheadVertices(mark.from, mark.to, mark.stroke_width), input)) {
+    return true
+  }
+  return head === 'both' && hitHead(arrowheadVertices(mark.to, mark.from, mark.stroke_width), input)
+}
+
+/**
+ * ELLIPSE_HIT (MEU-106, D-769): the least CSS distance from the press to the box's ellipse,
+ * sampled as a closed polyline with chords of about 2 CSS px at most.
+ */
+function distToEllipseOutline(px: number, py: number, x: number, y: number, w: number, h: number): number {
+  const a = w / 2
+  const b = h / 2
+  const cx = x + a
+  const cy = y + b
+  const n = Math.max(64, Math.ceil(Math.PI * Math.max(a, b)))
+  let best = Number.POSITIVE_INFINITY
+  let prevX = cx + a
+  let prevY = cy
+  for (let k = 1; k <= n; k += 1) {
+    const t = (2 * Math.PI * k) / n
+    const nextX = cx + a * Math.cos(t)
+    const nextY = cy + b * Math.sin(t)
+    best = Math.min(best, distToSegment(px, py, prevX, prevY, nextX, nextY))
+    prevX = nextX
+    prevY = nextY
+  }
+  return best
 }
 
 export function bodyHandleImagePoint(mark: Annotation): ImagePoint {
@@ -125,6 +160,10 @@ export function bodyHandleImagePoint(mark: Annotation): ImagePoint {
   if (mark.type === 'text') {
     const plate = textBackgroundBox({ x: mark.x, y: mark.y, text: mark.text, font_size: mark.font_size })
     return { x: plate.x + plate.width / 2, y: plate.y + plate.height / 2 }
+  }
+  if (mark.type === 'step') {
+    // STEP_EDIT (MEU-107): a step's handle is its centre.
+    return { x: mark.x, y: mark.y }
   }
   return { x: mark.x + mark.width / 2, y: mark.y + mark.height / 2 }
 }
@@ -165,6 +204,11 @@ function hitBody(mark: Annotation, input: HitTestInput): boolean {
     const box = textHitBoxCss(mark, input)
     return inPaddedRect(input.cssX, input.cssY, box.x, box.y, box.w, box.h, HIT_PADDING_CSS)
   }
+  if (mark.type === 'step') {
+    // STEP_HIT (MEU-107, D-774): within the badge's radius plus HIT_PADDING_CSS.
+    const centre = imageToCss(mark.x, mark.y, input.scale, input.ox, input.oy)
+    return dist(input.cssX, input.cssY, centre.x, centre.y) <= (mark.size / 2) * input.scale + HIT_PADDING_CSS
+  }
   const origin = imageToCss(mark.x, mark.y, input.scale, input.ox, input.oy)
   const w = mark.width * input.scale
   const h = mark.height * input.scale
@@ -172,7 +216,11 @@ function hitBody(mark: Annotation, input: HitTestInput): boolean {
   if (mark.type === 'highlight' || mark.type === 'pixelate' || mark.type === 'eraser' || mark.type === 'redact') {
     return inPaddedRect(input.cssX, input.cssY, origin.x, origin.y, w, h, HIT_PADDING_CSS)
   }
-  return distToRectOutline(input.cssX, input.cssY, origin.x, origin.y, w, h) <= Math.max(HIT_RADIUS_CSS, HIT_PADDING_CSS)
+  const reach = Math.max(HIT_RADIUS_CSS, HIT_PADDING_CSS)
+  if (mark.type === 'rect' && mark.shape === 'ellipse' && Math.min(w, h) / 2 >= 1) {
+    return distToEllipseOutline(input.cssX, input.cssY, origin.x, origin.y, w, h) <= reach
+  }
+  return distToRectOutline(input.cssX, input.cssY, origin.x, origin.y, w, h) <= reach
 }
 
 function selectedHandle(input: HitTestInput): HitResult | null {
@@ -311,25 +359,45 @@ export function moveEndpoint(
   return { ...mark, from, to }
 }
 
-export function markLabel(mark: Annotation, index: number): string {
+function markKind(mark: Annotation): string {
   if (mark.type === 'arrow') {
-    return `Arrow ${index + 1}`
+    // MARK_LABELS (MEU-106, D-778): an arrow with no head is a line.
+    return mark.head === 'none' ? 'Line' : 'Arrow'
   }
   if (mark.type === 'rect') {
-    return `Box ${index + 1}`
+    return mark.shape === 'ellipse' ? 'Ellipse' : 'Box'
   }
   if (mark.type === 'highlight') {
-    return `Highlight ${index + 1}`
+    return 'Highlight'
   }
   if (mark.type === 'pixelate') {
-    return `Pixelate ${index + 1}`
+    return 'Pixelate'
   }
   if (mark.type === 'redact') {
-    return `Redact ${index + 1}`
+    return 'Redact'
   }
   // SMART_ERASER (D-683): the chip names the Smart eraser; the JSON type stays eraser.
   if (mark.type === 'eraser') {
-    return `Smart eraser ${index + 1}`
+    return 'Smart eraser'
   }
-  return `Text ${index + 1}`
+  if (mark.type === 'step') {
+    return 'Step'
+  }
+  return 'Text'
+}
+
+/**
+ * MARK_LABELS (MEU-106, MEU-107, D-778): a mark's chip name. A step reads its own number. Given
+ * the list, `n` counts the marks of that kind up to `index`; without it, `n` is `index + 1`.
+ */
+export function markLabel(mark: Annotation, index: number, marks?: readonly Annotation[]): string {
+  const kind = markKind(mark)
+  if (mark.type === 'step') {
+    return `${kind} ${mark.number}`
+  }
+  if (marks === undefined) {
+    return `${kind} ${index + 1}`
+  }
+  const count = marks.slice(0, index + 1).filter((other) => markKind(other) === kind).length
+  return `${kind} ${Math.max(1, count)}`
 }

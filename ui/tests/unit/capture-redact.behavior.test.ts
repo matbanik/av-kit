@@ -242,17 +242,27 @@ describe('MEU-103 capture redact mark', () => {
   const chip = (name: string) => within(screen.getByTestId('capture-mark-list')).queryByRole('button', { name })
 
   // ── AC-103.14 REDACT_TOOL ─────────────────────────────────────────────────────────────────────────
-  it('AC-103.14 the tool row holds Redact in the Pixelate slot, between Text and Smart eraser; 8 tools', async () => {
+  it('AC-103.14 the tool row holds Redact in the Pixelate slot, between Step and Smart eraser; 9 tools', async () => {
     const buttons = toolbar.TOOLBAR_BUTTONS as Record<string, { icon: unknown; name: string }>
     expect(Object.keys(buttons)).toContain(REDACT_ID)
     expect(Object.keys(buttons)).not.toContain('capture-tool-pixelate')
     expect(buttons[REDACT_ID]?.name).toBe('Redact')
     expect(buttons[REDACT_ID]?.icon).toBe(EyeOff)
     const keys = Object.keys(buttons).filter((key) => key.startsWith('capture-tool-'))
-    expect(keys.slice(4, 7)).toEqual(['capture-tool-text', REDACT_ID, 'capture-tool-eraser'])
+    expect(keys.slice(5, 8)).toEqual(['capture-tool-step', REDACT_ID, 'capture-tool-eraser'])
     const ids = toolbar.TOOL_BUTTON_IDS as Record<string, string>
     expect(ids.redact).toBe(REDACT_ID)
-    expect(Object.keys(ids)).toEqual(['select', 'arrow', 'box', 'highlight', 'text', 'redact', 'eraser', 'crop'])
+    expect(Object.keys(ids)).toEqual([
+      'select',
+      'arrow',
+      'box',
+      'highlight',
+      'text',
+      'step',
+      'redact',
+      'eraser',
+      'crop',
+    ])
     await openSurface()
     const row = screen.getByTestId('capture-chrome-tools')
     const order = Array.from(row.querySelectorAll('button[data-testid^="capture-tool-"]')).map((button) =>
@@ -260,7 +270,7 @@ describe('MEU-103 capture redact mark', () => {
     )
     const at = order.indexOf(REDACT_ID)
     expect(at, 'the Redact button is rendered').toBeGreaterThan(0)
-    expect(order.slice(at - 1, at + 2)).toEqual(['capture-tool-text', REDACT_ID, 'capture-tool-eraser'])
+    expect(order.slice(at - 1, at + 2)).toEqual(['capture-tool-step', REDACT_ID, 'capture-tool-eraser'])
     expect(order).not.toContain('capture-tool-pixelate')
     expect(within(row).getAllByRole('button', { name: 'Redact' })).toHaveLength(1)
   })

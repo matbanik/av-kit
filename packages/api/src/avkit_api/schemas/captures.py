@@ -17,6 +17,8 @@ from avkit_core.domain.capture import (
     REGION_MAX_EDGE_MAX,
     REGION_MAX_EDGE_MIN,
     TEXT_MAX_CHARS,
+    ArrowHead,
+    BoxShape,
     normalize_text_newlines,
 )
 from avkit_core.services.capture import EXPORT_MAX_EDGE_MAX
@@ -86,6 +88,8 @@ class ArrowAnnotationIn(ApiModel):
     stroke_width: int
     from_xy: tuple[int, int] = Field(alias="from")
     to_xy: tuple[int, int] = Field(alias="to")
+    # HEAD_FIELD, DEFAULT_OMIT (MEU-106, D-767, D-768): a response leaves out the default "end".
+    head: ArrowHead = Field(default="end", exclude_if=lambda head: head == "end")
 
 
 class RectAnnotationIn(ApiModel):
@@ -98,6 +102,8 @@ class RectAnnotationIn(ApiModel):
     height: int
     color: str = Field(pattern=COLOR_PATTERN)
     stroke_width: int
+    # SHAPE_FIELD, DEFAULT_OMIT (MEU-106, D-769, D-768): a response leaves out the default "rect".
+    shape: BoxShape = Field(default="rect", exclude_if=lambda shape: shape == "rect")
 
 
 class HighlightAnnotationIn(ApiModel):
@@ -164,6 +170,20 @@ class RedactAnnotationIn(ApiModel):
     color: StrictStr = Field(default="#000000", pattern=COLOR_PATTERN)
 
 
+class StepAnnotationIn(ApiModel):
+    """Step badge (STEP_API, MEU-107, D-772): a numbered badge centred on (x, y).
+
+    Every field is required.
+    """
+
+    type: Literal["step"]
+    x: Annotated[StrictInt, Field(ge=0)]
+    y: Annotated[StrictInt, Field(ge=0)]
+    number: Annotated[StrictInt, Field(ge=1, le=999)]
+    color: Annotated[StrictStr, Field(pattern=COLOR_PATTERN)]
+    size: Annotated[StrictInt, Field(ge=12, le=200)]
+
+
 AnnotationIn = Annotated[
     ArrowAnnotationIn
     | RectAnnotationIn
@@ -171,7 +191,8 @@ AnnotationIn = Annotated[
     | TextAnnotationIn
     | PixelateAnnotationIn
     | EraserAnnotationIn
-    | RedactAnnotationIn,
+    | RedactAnnotationIn
+    | StepAnnotationIn,
     Field(discriminator="type"),
 ]
 

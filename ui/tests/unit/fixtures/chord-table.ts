@@ -13,6 +13,7 @@ export const CHORD_TABLE: ReadonlyArray<readonly [string, string, string | undef
   ['transcript:add', 'Ctrl+L', '/transcript'],
   ['convert:browse', 'Ctrl+O', '/convert'],
   ['capture:save', 'Ctrl+S', '/capture'],
+  ['capture:duplicate', 'Ctrl+D', '/capture'],
   ['page:primary', 'Ctrl+Enter', undefined],
   ['console:toggle', 'Ctrl+J', undefined],
   ['help:toggle', 'F1', undefined],

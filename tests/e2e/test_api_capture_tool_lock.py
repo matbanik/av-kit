@@ -78,15 +78,20 @@ def test_ac_143_4_openapi_equals_committed() -> None:
 
 
 def test_ac_143_4_openapi_adds_only_tool_lock() -> None:
-    base = (PLAN / "baseline.sha").read_text(encoding="utf-8").strip()
-    shown = subprocess.run(
-        ["git", "show", f"{base}:openapi.committed.json"],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        check=True,
-    )
-    old = json.loads(shown.stdout)
-    new = json.loads((REPO_ROOT / "openapi.committed.json").read_bytes())
+    def snapshot(plan: Path) -> dict:
+        sha = (plan / "baseline.sha").read_text(encoding="utf-8").strip()
+        shown = subprocess.run(
+            ["git", "show", f"{sha}:openapi.committed.json"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            check=True,
+        )
+        return json.loads(shown.stdout)
+
+    old = snapshot(PLAN)
+    # Session 72: MEU-143's delta is read at the commit that landed it (Session 72's base);
+    # the later additions are pinned by that session's openapi-delta check (AC-106.5).
+    new = snapshot(REPO_ROOT / "docs/execution/plans/2026-11-14-capture-shapes-steps")
     put_old = old["components"]["schemas"]["SettingsPutIn"]["properties"]
     put_new = new["components"]["schemas"]["SettingsPutIn"]["properties"]
     assert sorted(set(put_new) - set(put_old)) == ["tool_lock"]

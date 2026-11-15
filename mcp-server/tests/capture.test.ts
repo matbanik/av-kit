@@ -63,6 +63,9 @@ const CAPTURE_KEYS = [
   "pixelate_block_size",
   // LOCK_LEAF (Session 71b, MEU-143): the persisted tool lock.
   "tool_lock",
+  // STEP_STYLE (Session 72, MEU-107): the Step tool's colour and badge size.
+  "step_color",
+  "step_size",
 ] as const;
 const CAPTURE_DEFAULTS = {
   inbox_dir: "~/Pictures/av-kit",
@@ -82,6 +85,8 @@ const CAPTURE_DEFAULTS = {
   text_bg_color: "",
   pixelate_block_size: 10,
   tool_lock: true,
+  step_color: "#E0AF68",
+  step_size: 32,
 };
 const M7 = ["Workflow:", "Prerequisite:", "Returns:", "Errors:"] as const;
 const SHOT_OUT_FIELDS = [
@@ -1760,5 +1765,127 @@ describe("MEU-102 avkit_capture multi-line text", () => {
     expect(set({ tool_lock: 0 })).toBe(false);
     const actions = ACTION_INDEX.filter((row) => row.tool === "avkit_settings").map((row) => row.action);
     expect(actions).toEqual(["get", "set"]);
+  });
+});
+
+describe("MEU-106 avkit_capture head and shape", () => {
+  it("AC-106.6 annotate accepts head and shape and refuses values outside the Literal", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const arrow = { type: "arrow", from: [4, 6], to: [40, 30], color: "red", stroke_width: 3 };
+    const rect = { type: "rect", x: 4, y: 6, width: 20, height: 10, color: "red", stroke_width: 2 };
+    const parses = (mark: Record<string, unknown>): boolean =>
+      captureSchema.safeParse({ action: "annotate", id: "s1", annotations: [mark] }).success;
+    for (const head of ["end", "none", "both"]) {
+      expect(parses({ ...arrow, head }), head).toBe(true);
+    }
+    expect(parses({ ...rect, shape: "rect" })).toBe(true);
+    expect(parses({ ...rect, shape: "ellipse" })).toBe(true);
+    expect(parses(arrow)).toBe(true);
+    expect(parses(rect)).toBe(true);
+    for (const bad of [{ ...arrow, head: "End" }, { ...arrow, head: null }, { ...rect, shape: "circle" }, { ...rect, shape: 1 }]) {
+      expect(parses(bad), JSON.stringify(bad)).toBe(false);
+    }
+  });
+});
+
+describe("MEU-107 avkit_capture step", () => {
+  it("AC-107.7 annotate accepts a step and refuses each value of the input matrix", async () => {
+    const { captureSchema } = await import("../src/toolsets/capture.js");
+    const step = { type: "step", x: 12, y: 9, number: 3, color: "#E0AF68", size: 24 };
+    const parses = (mark: Record<string, unknown>): boolean =>
+      captureSchema.safeParse({ action: "annotate", id: "s1", annotations: [mark] }).success;
+    expect(parses(step)).toBe(true);
+    expect(parses({ ...step, number: 1, size: 12 })).toBe(true);
+    expect(parses({ ...step, number: 999, size: 200, color: "blue" })).toBe(true);
+    const { size: _size, ...missing } = step;
+    const bad: Record<string, Record<string, unknown>> = {
+      "x -1": { ...step, x: -1 },
+      "x true": { ...step, x: true },
+      "x 1.5": { ...step, x: 1.5 },
+      "number 0": { ...step, number: 0 },
+      "number 1000": { ...step, number: 1000 },
+      "size 11": { ...step, size: 11 },
+      "size 201": { ...step, size: 201 },
+      "color empty": { ...step, color: "" },
+      "color bell": { ...step, color: "\u0007" },
+      "color surrogate": { ...step, color: "\uD800" },
+      "extra label": { ...step, label: "one" },
+      "missing size": missing,
+    };
+    for (const [name, mark] of Object.entries(bad)) {
+      expect(parses(mark), name).toBe(false);
+    }
+  });
+
+  it("AC-107.26 SETTINGS_SCHEMA and the set schema carry step_color and step_size", () => {
+    const capture = SETTINGS_SCHEMA.namespaces.capture;
+    const keys = Object.keys(capture);
+    expect(keys.slice(keys.indexOf("tool_lock") + 1)).toEqual(["step_color", "step_size"]);
+    expect(capture.step_color).toEqual({ type: "string", default: "#E0AF68" });
+    expect(capture.step_size).toEqual({ type: "number", default: 32 });
+    const set = (extra: Record<string, unknown>) =>
+      settingsSchema.safeParse({ action: "set", namespace: "capture", ...extra }).success;
+    expect(set({ step_size: 48 })).toBe(true);
+    expect(set({ step_color: "#123456" })).toBe(true);
+    expect(set({ step_size: 48.5 })).toBe(false);
+    expect(set({ step_size: "48" })).toBe(false);
+  });
+});
+
+// Session 72 traces (Session 55 RULE-3), MCP half: the Python half
+// (tests/e2e/test_api_capture_shapes.py and test_api_capture_step.py) posts this same body through the
+// API to the sidecar and the bake.
+async function traceAnnotate(annotations: Record<string, unknown>[]): Promise<{ url: string; method?: string; body: unknown }[]> {
+  const { captureSchema } = await import("../src/toolsets/capture.js");
+  const body = { action: "annotate", id: "s1", annotations };
+  expect(captureSchema.safeParse(body).success).toBe(true);
+  const appData = tempAppData();
+  temps.push(appData);
+  const calls: { url: string; method?: string; body: unknown }[] = [];
+  const fetchImpl = vi.fn(async (url: string, init?: RequestInit) => {
+    calls.push({
+      url: String(url),
+      method: init?.method,
+      body: init?.body === undefined ? undefined : JSON.parse(String(init.body)),
+    });
+    return okJson(SHOT_ITEM);
+  });
+  const result = await handleTool("avkit_capture", body, {
+    env: toolEnv(appData),
+    fetchImpl: fetchImpl as unknown as typeof fetch,
+  });
+  expect(result.isError).not.toBe(true);
+  return calls;
+}
+
+describe("Session 72 MCP traces", () => {
+  it("AC-106.29 MCP half: a head none arrow and an ellipse rect reach the annotate POST unchanged", async () => {
+    const line = { type: "arrow", from: [10, 30], to: [110, 30], color: "#FF0000", stroke_width: 3, head: "none" };
+    const ellipse = {
+      type: "rect",
+      x: 10,
+      y: 10,
+      width: 60,
+      height: 40,
+      color: "#FF0000",
+      stroke_width: 3,
+      shape: "ellipse",
+    };
+    const calls = await traceAnnotate([line, ellipse]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.method).toBe("POST");
+    expect(calls[0]?.url.endsWith("/captures/s1/annotate")).toBe(true);
+    expect(calls[0]?.body).toEqual({ annotations: [line, ellipse] });
+  });
+
+  it("AC-107.20 MCP half: a step reaches the annotate POST unchanged, its keys in order", async () => {
+    const step = { type: "step", x: 32, y: 24, number: 1, color: "#E0AF68", size: 32 };
+    const calls = await traceAnnotate([step]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]?.method).toBe("POST");
+    expect(calls[0]?.url.endsWith("/captures/s1/annotate")).toBe(true);
+    expect(calls[0]?.body).toEqual({ annotations: [step] });
+    const sent = (calls[0]?.body as { annotations: Record<string, unknown>[] }).annotations[0] ?? {};
+    expect(Object.keys(sent)).toEqual(Object.keys(step));
   });
 });

@@ -518,3 +518,15 @@ export const CAPTURE_TEXT_DRAFT_HINT = 'capture-text-draft-hint'
 
 // MEU-105 Capture style (additive IDs).
 export const CAPTURE_BLOCK_SIZE_SCRUB = 'capture-block-size-scrub'
+
+// MEU-106 and MEU-107 Capture shapes and steps (additive IDs).
+export const CAPTURE_TOOL_STEP = 'capture-tool-step'
+export const CAPTURE_STEP_SIZE = 'capture-step-size'
+export const CAPTURE_STEP_SIZE_SCRUB = 'capture-step-size-scrub'
+export const CAPTURE_ARROW_HEAD = 'capture-arrow-head'
+export const CAPTURE_ARROW_HEAD_END = 'capture-arrow-head-end'
+export const CAPTURE_ARROW_HEAD_NONE = 'capture-arrow-head-none'
+export const CAPTURE_ARROW_HEAD_BOTH = 'capture-arrow-head-both'
+export const CAPTURE_BOX_SHAPE = 'capture-box-shape'
+export const CAPTURE_BOX_SHAPE_RECT = 'capture-box-shape-rect'
+export const CAPTURE_BOX_SHAPE_ELLIPSE = 'capture-box-shape-ellipse'

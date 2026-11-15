@@ -11,6 +11,7 @@ import {
   Highlighter,
   Image as ImageIcon,
   Layers,
+  ListOrdered,
   Lock,
   Maximize,
   MousePointer2,
@@ -48,6 +49,8 @@ export const TOOLBAR_BUTTONS = {
   'capture-tool-box': { icon: Square, name: 'Box' },
   'capture-tool-highlight': { icon: Highlighter, name: 'Highlight' },
   'capture-tool-text': { icon: Type, name: 'Text' },
+  // STEP_TOOL (MEU-107, D-781): after Text, with no letter.
+  'capture-tool-step': { icon: ListOrdered, name: 'Step', hint: 'Places the next number' },
   // REDACT_TOOL (D-679): Redact takes the Pixelate button's slot; Pixelate is its second mode.
   'capture-tool-redact': { icon: EyeOff, name: 'Redact' },
   'capture-tool-eraser': { icon: Eraser, name: 'Smart eraser', hint: 'Covers an area with the surrounding colour' },
@@ -99,13 +102,17 @@ export const TOOL_BUTTON_IDS: Readonly<Record<CaptureTool, ToolbarButtonId>> = {
   box: 'capture-tool-box',
   highlight: 'capture-tool-highlight',
   text: 'capture-tool-text',
+  step: 'capture-tool-step',
   redact: 'capture-tool-redact',
   eraser: 'capture-tool-eraser',
   crop: 'capture-tool-crop',
 }
 
-/** LETTERS (MEU-143, D-750): each tool's one-letter shortcut. */
-export const TOOL_LETTERS: Readonly<Record<CaptureTool, string>> = {
+/** The tools that have a letter; Step has none (D-781). */
+export type LetterTool = Exclude<CaptureTool, 'step'>
+
+/** LETTERS (MEU-143, D-750): each lettered tool's one-letter shortcut. */
+export const TOOL_LETTERS: Readonly<Record<LetterTool, string>> = {
   select: 'V',
   arrow: 'A',
   box: 'R',
@@ -117,7 +124,7 @@ export const TOOL_LETTERS: Readonly<Record<CaptureTool, string>> = {
 }
 
 /** The option groups the contextual options row can show (OPTIONS_BY_TOOL, OPTIONS_BY_TOOL_V2). */
-export type OptionGroup = 'color' | 'stroke' | 'text' | 'block' | 'mode'
+export type OptionGroup = 'color' | 'stroke' | 'text' | 'block' | 'mode' | 'size'
 
 function assertNever(value: never): never {
   throw new Error(`Unhandled capture tool: ${String(value)}`)
@@ -133,6 +140,7 @@ function strokeApplies(tool: CaptureTool, selected: Annotation | null): boolean 
       return selected === null || selected.type === 'arrow' || selected.type === 'rect'
     case 'highlight':
     case 'text':
+    case 'step':
     case 'redact':
     case 'eraser':
     case 'crop':
@@ -175,6 +183,10 @@ export function optionGroups(
   }
   if (tool === 'text' || selected?.type === 'text') {
     return ['color', 'text']
+  }
+  // STEP_STYLE (MEU-107, D-775): a step has a colour and a size and no stroke.
+  if (tool === 'step' || selected?.type === 'step') {
+    return ['color', 'size']
   }
   return strokeApplies(tool, selected) ? ['color', 'stroke'] : ['color']
 }

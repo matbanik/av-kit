@@ -11,6 +11,8 @@ export const CAPTURE_EVENTS = {
   region: 'av-kit:capture:region',
   save: 'av-kit:capture:save',
   open_folder: 'av-kit:capture:open_folder',
+  // DUPLICATE (MEU-106, MEU-107): Ctrl+D asks the page to copy the selected mark.
+  duplicate: 'av-kit:capture:duplicate',
 } as const
 
 export const CAPTURE_PALETTE_IDS = [

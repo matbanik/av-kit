@@ -15,6 +15,7 @@
                   "pixelate": "#/components/schemas/PixelateAnnotationIn",
                   "rect": "#/components/schemas/RectAnnotationIn",
                   "redact": "#/components/schemas/RedactAnnotationIn",
+                  "step": "#/components/schemas/StepAnnotationIn",
                   "text": "#/components/schemas/TextAnnotationIn"
                 },
                 "propertyName": "type"
@@ -40,6 +41,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/RedactAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/StepAnnotationIn"
                 }
               ]
             },
@@ -90,6 +94,16 @@
             ],
             "title": "From",
             "type": "array"
+          },
+          "head": {
+            "default": "end",
+            "enum": [
+              "end",
+              "none",
+              "both"
+            ],
+            "title": "Head",
+            "type": "string"
           },
           "stroke_width": {
             "title": "Stroke Width",
@@ -1018,6 +1032,7 @@
                   "pixelate": "#/components/schemas/PixelateAnnotationIn",
                   "rect": "#/components/schemas/RectAnnotationIn",
                   "redact": "#/components/schemas/RedactAnnotationIn",
+                  "step": "#/components/schemas/StepAnnotationIn",
                   "text": "#/components/schemas/TextAnnotationIn"
                 },
                 "propertyName": "type"
@@ -1043,6 +1058,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/RedactAnnotationIn"
+                },
+                {
+                  "$ref": "#/components/schemas/StepAnnotationIn"
                 }
               ]
             },
@@ -2954,6 +2972,15 @@
             "title": "Height",
             "type": "integer"
           },
+          "shape": {
+            "default": "rect",
+            "enum": [
+              "rect",
+              "ellipse"
+            ],
+            "title": "Shape",
+            "type": "string"
+          },
           "stroke_width": {
             "title": "Stroke Width",
             "type": "integer"
@@ -3609,6 +3636,28 @@
             ],
             "title": "Speed"
           },
+          "step_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Color"
+          },
+          "step_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Size"
+          },
           "text_bg_color": {
             "anyOf": [
               {
@@ -3716,6 +3765,54 @@
           "value_ms"
         ],
         "title": "StartupMetricIn",
+        "type": "object"
+      },
+      "StepAnnotationIn": {
+        "additionalProperties": false,
+        "description": "Step badge (STEP_API, MEU-107, D-772): a numbered badge centred on (x, y).\n\nEvery field is required.",
+        "properties": {
+          "color": {
+            "pattern": "^#[0-9A-Fa-f]{6}$|^(black|blue|green|orange|red|white|yellow)$",
+            "title": "Color",
+            "type": "string"
+          },
+          "number": {
+            "maximum": 999.0,
+            "minimum": 1.0,
+            "title": "Number",
+            "type": "integer"
+          },
+          "size": {
+            "maximum": 200.0,
+            "minimum": 12.0,
+            "title": "Size",
+            "type": "integer"
+          },
+          "type": {
+            "const": "step",
+            "title": "Type",
+            "type": "string"
+          },
+          "x": {
+            "minimum": 0.0,
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "minimum": 0.0,
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "x",
+          "y",
+          "number",
+          "color",
+          "size"
+        ],
+        "title": "StepAnnotationIn",
         "type": "object"
       },
       "TTSGenerateIn": {

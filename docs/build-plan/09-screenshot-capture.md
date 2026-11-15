@@ -998,6 +998,8 @@ Planning notes added 2026-11-12, after the crop, video-stills and download sessi
 | Duplicate | Ctrl+D duplicates the selected mark with an offset, clamped, and selects the copy. Ctrl+D is not in RESERVED_CHORDS; it is a page-scoped registry entry, or reserved and page-handled if the registry refuses a Ctrl chord | Human-approved 2026-10-29 synthesis B-7; 2026-11-12 planning notes |
 | Crop | `head` rides `_clip_arrow` unchanged (a clipped `both` arrow keeps a head at the crop edge, as D-487 already does for `end`), tested once per `head` value. An ellipse takes MARK_CLIP_ELLIPSE: kept when its box lies inside the closed crop, otherwise dropped, never clipped (D-676 A; inheriting `_clip_rect`, which draws a smaller ellipse, was rejected) | Local Canon 2026-11-12 planning notes D-675; Human-approved D-676 A (crop grouping D-406) |
 
+> **Delivered (Session 72).** MEU-106 shipped the Line, Ellipse, Duplicate and Crop rows through HEAD_FIELD, SHAPE_FIELD, DEFAULT_OMIT, HEAD_BAKE, HEAD_PREVIEW, HEAD_HIT, ELLIPSE_BAKE, ELLIPSE_PREVIEW, ELLIPSE_HIT, ELLIPSE_CLIP, HEAD_CLIP, SHAPE_OPTIONS, DUPLICATE, SHAPES_HELP, SHAPES_ACTIONS_INDEX and SHAPES_SPEC, proved by AC-106.1 to AC-106.34. The Head and Shape controls sit in the options row; a mark with the default `head` or `shape` is written without the key, so older sidecars keep their bytes. Ctrl+D copies the selected mark with a clamped offset and selects the copy. Plan: [2026-11-14-capture-shapes-steps](../execution/plans/2026-11-14-capture-shapes-steps/implementation-plan.md).
+
 <a id="step-mark"></a>
 
 ### Step mark
@@ -1008,6 +1010,8 @@ Planning notes added 2026-11-12, after the crop, video-stills and download sessi
 |------|----------|--------|
 | Mark | A new `step {x, y, number, color, size}` type through every layer, so an agent reads the number directly; the badge text is centred in the preview and the bake alike | Human-approved 2026-10-29 synthesis C-8 |
 | Crop | `step` takes MARK_CLIP_TEXT's anchor rule: kept when `(x, y)` is in `[0, width) x [0, height)`, else dropped, never clipped; `clip_mark`'s `assert_never` fails the type check until the case exists | Local Canon 2026-11-12 planning notes D-675 (crop grouping D-406) |
+
+> **Delivered (Session 72).** MEU-107 shipped the Mark and Crop rows through STEP_TYPE, STEP_WIRE, STEP_CLAMP, STEP_CLIP, STEP_BAKE, STEP_CENTRE, STEP_PREVIEW, STEP_API, STEP_MCP, STEP_ZOD, STEP_TOOL, STEP_PLACE, STEP_STYLE, STEP_HIT and MARK_LABELS, proved by AC-107.1 to AC-107.30. A click with the Step tool places the next number, up to 999; its colour and size are saved in `capture.step_color` and `capture.step_size`. Plan: [2026-11-14-capture-shapes-steps](../execution/plans/2026-11-14-capture-shapes-steps/implementation-plan.md).
 
 ## Residuals registered 2026-11-08
 

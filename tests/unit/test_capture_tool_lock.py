@@ -59,7 +59,8 @@ def test_ac_143_2_tool_lock_row_follows_pixelate() -> None:
     from avkit_core.services.settings import SETTINGS_KEY_TABLE, SettingSpec
 
     keys = [key for ns, key in SETTINGS_KEY_TABLE if ns == "capture"]
-    assert keys[keys.index("pixelate_block_size") + 1 :] == ["tool_lock"]
+    # STEP_STYLE (Session 72, MEU-107): the step leaves follow tool_lock.
+    assert keys[keys.index("pixelate_block_size") + 1 :] == ["tool_lock", "step_color", "step_size"]
     assert SETTINGS_KEY_TABLE[("capture", "tool_lock")] == SettingSpec("boolean", True)
 
 

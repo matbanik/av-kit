@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { PIXELATE_BLOCK_MAX, PIXELATE_BLOCK_MIN } from './capture-region-pass'
+import { ARROW_HEADS, BOX_SHAPES } from './capture-shapes'
 
 export const ANNOTATE_PATH = '/captures/{id}/annotate'
 
@@ -16,6 +17,8 @@ const arrowSchema = z
     stroke_width: z.number().int().positive(),
     from: z.tuple([z.number().int(), z.number().int()]),
     to: z.tuple([z.number().int(), z.number().int()]),
+    // HEAD_FIELD (MEU-106, D-767): absent means 'end'.
+    head: z.enum(ARROW_HEADS).optional(),
   })
   .strict()
 
@@ -28,6 +31,8 @@ const rectSchema = z
     height: z.number().int(),
     color: colorSchema,
     stroke_width: z.number().int().positive(),
+    // SHAPE_FIELD (MEU-106, D-769): absent means 'rect'.
+    shape: z.enum(BOX_SHAPES).optional(),
   })
   .strict()
 
@@ -90,6 +95,18 @@ const redactSchema = z
   })
   .strict()
 
+/** STEP_ZOD (MEU-107, D-772): a numbered badge centred on (x, y); every field is required. */
+export const stepSchema = z
+  .object({
+    type: z.literal('step'),
+    x: z.number().int().nonnegative(),
+    y: z.number().int().nonnegative(),
+    number: z.number().int().min(1).max(999),
+    color: colorSchema,
+    size: z.number().int().min(12).max(200),
+  })
+  .strict()
+
 export const annotateInSchema = z
   .object({
     annotations: z.array(
@@ -101,6 +118,7 @@ export const annotateInSchema = z
         pixelateSchema,
         eraserSchema,
         redactSchema,
+        stepSchema,
       ]),
     ),
   })
@@ -111,6 +129,9 @@ export type Annotation = AnnotateBody['annotations'][number]
 
 /** REDACT_TYPE (D-679): a solid box over a region. */
 export type RedactAnnotation = Extract<Annotation, { type: 'redact' }>
+
+/** STEP_ZOD (MEU-107, D-772): a numbered badge. */
+export type StepAnnotation = Extract<Annotation, { type: 'step' }>
 
 /** REDACT_MODE (D-680): what the Redact tool draws. */
 export type RedactMode = 'solid' | 'pixelate'

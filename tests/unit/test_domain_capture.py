@@ -30,7 +30,17 @@ CAPTURE_SOURCE_MEMBERS = (
 )
 CAPTURE_REQUEST_STATUS_MEMBERS = ("Pending", "Completed", "Cancelled", "Expired")
 # TA-1 (Session 39, MEU-90, MEU-91): + Pixelate, Eraser.
-ANNOTATION_TYPE_MEMBERS = ("Arrow", "Rect", "Highlight", "Text", "Pixelate", "Eraser", "Redact")
+# Session 72 row 1 (MEU-107, D-772): + Step.
+ANNOTATION_TYPE_MEMBERS = (
+    "Arrow",
+    "Rect",
+    "Highlight",
+    "Text",
+    "Pixelate",
+    "Eraser",
+    "Redact",
+    "Step",
+)
 ANNOTATION_WIRE = {
     "Arrow": "arrow",
     "Rect": "rect",
@@ -39,6 +49,7 @@ ANNOTATION_WIRE = {
     "Pixelate": "pixelate",
     "Eraser": "eraser",
     "Redact": "redact",
+    "Step": "step",
 }
 # PIXELATE_BLOCK (Session 39): MIN, MAX, DEFAULT, restated so the oracle is independent.
 PIXELATE_BLOCK = (2, 100, 10)
@@ -875,6 +886,10 @@ def test_ac_130_6_every_mark_kind_has_a_rule(ac_id: str) -> None:
         capture.EraserAnnotation: _box_mark("eraser", 15, 25, 40, 30),
         # Session 68 (D-679): the redact joins the union and carries like a box.
         capture.RedactAnnotation: capture.RedactAnnotation(x=15, y=25, width=40, height=30),
+        # Session 72 (D-675): the step joins the union and carries by its anchor, as text does.
+        capture.StepAnnotation: capture.StepAnnotation(
+            x=15, y=25, number=1, color="#FF0000", size=32
+        ),
     }
     assert set(samples) == set(get_args(capture.Annotation))
     for kind, mark in samples.items():

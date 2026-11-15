@@ -2,7 +2,7 @@ import type { Annotation, RedactMode } from './capture-annotate'
 import type { CaptureTool } from './CaptureViewport'
 
 /** STYLE_MODEL (MEU-105, D-715): the tools that keep their own persisted style. */
-export type StyleTool = 'arrow' | 'box' | 'highlight' | 'text' | 'pixelate'
+export type StyleTool = 'arrow' | 'box' | 'highlight' | 'text' | 'pixelate' | 'step'
 
 /** One tool's style; a field the tool has no control for is absent. */
 export type ToolStyle = {
@@ -11,6 +11,7 @@ export type ToolStyle = {
   fontSize?: number
   textBg?: string
   blockSize?: number
+  stepSize?: number
 }
 
 export type ToolStyles = Readonly<Record<StyleTool, ToolStyle>>
@@ -22,6 +23,7 @@ export const TOOL_STYLE_DEFAULTS: ToolStyles = {
   highlight: { color: '#E0AF68' },
   text: { color: '#E0AF68', fontSize: 16, textBg: '' },
   pixelate: { blockSize: 10 },
+  step: { color: '#E0AF68', stepSize: 32 },
 }
 
 /** The `capture` settings leaf that stores each field of each tool's style. */
@@ -31,16 +33,18 @@ export const TOOL_STYLE_LEAVES: Readonly<Record<StyleTool, Readonly<Partial<Reco
   highlight: { color: 'highlight_color' },
   text: { color: 'text_color', fontSize: 'text_font_size', textBg: 'text_bg_color' },
   pixelate: { blockSize: 'pixelate_block_size' },
+  step: { color: 'step_color', stepSize: 'step_size' },
 }
 
 /** A colour leaf as stored: `#` and six hex digits, nothing more. */
 const COLOR_LEAF = /^#[0-9A-Fa-f]{6}$/
 
 /** The integer range of each number field, as the `capture` rows of SETTINGS_KEY_TABLE hold it. */
-const NUMBER_RANGE: Readonly<Record<'stroke' | 'fontSize' | 'blockSize', readonly [number, number]>> = {
+const NUMBER_RANGE: Readonly<Record<'stroke' | 'fontSize' | 'blockSize' | 'stepSize', readonly [number, number]>> = {
   stroke: [1, 100],
   fontSize: [1, 400],
   blockSize: [2, 100],
+  stepSize: [12, 200],
 }
 
 function unreachable(value: never): never {
@@ -54,6 +58,7 @@ export function styleToolFor(tool: CaptureTool, mode: RedactMode): StyleTool | n
     case 'box':
     case 'highlight':
     case 'text':
+    case 'step':
       return tool
     case 'redact':
       return mode === 'pixelate' ? 'pixelate' : null
@@ -80,6 +85,9 @@ export function styleToolOfMark(mark: Annotation): StyleTool | null {
     case 'redact':
     case 'eraser':
       return null
+    case 'step':
+      // STEP_STYLE (MEU-107, D-775): a step keeps its own colour and size.
+      return 'step'
     default:
       return unreachable(mark)
   }
@@ -122,5 +130,6 @@ export function readToolStyles(data: unknown): ToolStyles {
     highlight: read('highlight'),
     text: read('text'),
     pixelate: read('pixelate'),
+    step: read('step'),
   }
 }

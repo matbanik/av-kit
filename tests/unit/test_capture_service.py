@@ -37,6 +37,9 @@ CAPTURE_KEYS = (
     "pixelate_block_size",
     # LOCK_LEAF (Session 71b, MEU-143): the persisted tool lock.
     "tool_lock",
+    # STEP_STYLE (Session 72, MEU-107): the Step tool's colour and badge size.
+    "step_color",
+    "step_size",
 )
 CAPTURE_DEFAULTS = {
     "inbox_dir": "~/Pictures/av-kit",
@@ -56,6 +59,8 @@ CAPTURE_DEFAULTS = {
     "text_bg_color": "",
     "pixelate_block_size": 10,
     "tool_lock": True,
+    "step_color": "#E0AF68",
+    "step_size": 32,
 }
 
 
@@ -1227,14 +1232,15 @@ def test_ac_130_5_carry_is_a_fixed_point_of_the_clamp(ac_id: str, tmp_path: Path
         PixelateAnnotation,
         RectAnnotation,
         RedactAnnotation,
+        StepAnnotation,
         TextAnnotation,
         clip_mark,
     )
 
     service, _uow, _port, _inbox = _stack(tmp_path)
     rng = random.Random(130)
-    # Session 68 (AC-103.5): + redact.
-    kinds = ("arrow", "rect", "highlight", "text", "pixelate", "eraser", "redact")
+    # Session 68 (AC-103.5): + redact. Session 72 (MEU-107): + step.
+    kinds = ("arrow", "rect", "highlight", "text", "pixelate", "eraser", "redact", "step")
     counts: Counter[str] = Counter()
     by_kind: Counter[tuple[str, str]] = Counter()
     moved_by_clamp: list[tuple[int, str]] = []
@@ -1262,8 +1268,16 @@ def test_ac_130_5_carry_is_a_fixed_point_of_the_clamp(ac_id: str, tmp_path: Path
             mark = PixelateAnnotation(x=x, y=y, width=w, height=h, block_size=rng.randint(2, 100))
         elif kind == "eraser":
             mark = EraserAnnotation(x=x, y=y, width=w, height=h)
-        else:
+        elif kind == "redact":
             mark = RedactAnnotation(x=x, y=y, width=w, height=h, color="#FF0000")
+        else:
+            mark = StepAnnotation(
+                x=max(x, 0),
+                y=max(y, 0),
+                number=rng.randint(1, 999),
+                color="#FF0000",
+                size=rng.randint(12, 200),
+            )
         before = copy.deepcopy(mark)
         out, carry = clip_mark(mark, left, top, width, height)
         assert mark == before

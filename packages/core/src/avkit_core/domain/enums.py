@@ -255,6 +255,8 @@ class AnnotationType(StrEnum):
     Pixelate = "Pixelate"
     Eraser = "Eraser"
     Redact = "Redact"
+    # STEP_TYPE (MEU-107, D-772): appended after Redact.
+    Step = "Step"
 
     def to_wire(self) -> str:
         """Return the sidecar/API lowercase type token."""
@@ -266,6 +268,7 @@ class AnnotationType(StrEnum):
             AnnotationType.Pixelate: "pixelate",
             AnnotationType.Eraser: "eraser",
             AnnotationType.Redact: "redact",
+            AnnotationType.Step: "step",
         }
         return mapping[self]
 

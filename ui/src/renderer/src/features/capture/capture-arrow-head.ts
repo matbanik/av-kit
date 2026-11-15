@@ -1,3 +1,5 @@
+import type { ArrowHead } from './capture-shapes'
+
 // ARROW_HEAD (MEU-83, D-12): head = max(ARROWHEAD_MIN_PX, ARROWHEAD_LENGTH_FACTOR * stroke).
 export const ARROWHEAD_MIN_PX = 10
 export const ARROWHEAD_LENGTH_FACTOR = 5
@@ -41,6 +43,39 @@ export function arrowShaftEnd(
   const back = head * Math.cos(ARROWHEAD_ANGLE_RAD) - ARROW_SHAFT_OVERLAP_PX
   if (length <= back) return null
   return [to[0] - (dx / length) * back, to[1] - (dy / length) * back]
+}
+
+/**
+ * HEAD_PREVIEW (MEU-106, D-767): the TS mirror of the adapter's `arrow_shaft_span`.
+ * `none` gives `[from, to]`; `end` gives `[from, arrowShaftEnd(...)]`, today's span; `both` pulls
+ * each end back by the head's back-off, or gives null when the arrow is no longer than two.
+ */
+export function arrowShaftSpan(
+  from: [number, number],
+  to: [number, number],
+  strokeWidth: number,
+  head: ArrowHead,
+): [[number, number], [number, number]] | null {
+  const start: [number, number] = [from[0], from[1]]
+  if (head === 'none') return [start, [to[0], to[1]]]
+  if (head === 'end') {
+    const end = arrowShaftEnd(from, to, strokeWidth)
+    return end === null ? null : [start, end]
+  }
+  const dx = to[0] - from[0]
+  const dy = to[1] - from[1]
+  const length = Math.hypot(dx, dy)
+  if (length === 0) return [start, [from[0], from[1]]]
+  const back =
+    Math.max(ARROWHEAD_MIN_PX, ARROWHEAD_LENGTH_FACTOR * strokeWidth) * Math.cos(ARROWHEAD_ANGLE_RAD) -
+    ARROW_SHAFT_OVERLAP_PX
+  if (length <= 2 * back) return null
+  const ux = dx / length
+  const uy = dy / length
+  return [
+    [from[0] + ux * back, from[1] + uy * back],
+    [to[0] - ux * back, to[1] - uy * back],
+  ]
 }
 
 export function arrowHeadPoints(from: [number, number], to: [number, number], strokeWidth: number): string {

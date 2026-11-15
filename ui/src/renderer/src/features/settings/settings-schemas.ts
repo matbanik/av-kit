@@ -107,6 +107,9 @@ export const captureStylePutSchema = z
     text_font_size: z.number().int().min(1).max(400),
     text_bg_color: z.string().regex(CAPTURE_COLOR_OR_EMPTY),
     pixelate_block_size: z.number().int().min(2).max(100),
+    // STEP_STYLE (MEU-107, D-775): the Step tool's colour and badge size.
+    step_color: z.string().regex(CAPTURE_COLOR),
+    step_size: z.number().int().min(12).max(200),
   })
   .partial()
   .strict()

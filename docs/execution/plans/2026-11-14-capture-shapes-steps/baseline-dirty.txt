@@ -1,0 +1,11 @@
+?? .agent/context/handoffs/2026-11-14-capture-shapes-steps-plan-critical-review.md	ab58da19e7e02adfd78becf110be77220a19b555df59efcacd19604e71b02f6d
+?? docs/execution/plans/2026-11-14-capture-shapes-steps/assert-never-probe.py	2e434af83779261a6ea5b3475a70e9498e4f0fb918ef89855d7b37565c56b147
+?? docs/execution/plans/2026-11-14-capture-shapes-steps/baseline.ps1	ba789ede5d16501f43919a9fae4a599f6d03c734a3f715bacc42ae3e7ac9ab25
+?? docs/execution/plans/2026-11-14-capture-shapes-steps/baseline.sha	a7e64b6777fca36097c3cbd1cd380b02de17e0c51bb428b5d46bdaa004f7a84c
+?? docs/execution/plans/2026-11-14-capture-shapes-steps/id-length.py	88e8f51ad436d84c16b437849e39068e30681c2cd58d1f0bf8a53afd9b986158
+?? docs/execution/plans/2026-11-14-capture-shapes-steps/identity.py	2cb4c15bff56896ae2706552efbec9c53e65f530a5a189fcce6bbe9f09794d0f
+?? docs/execution/plans/2026-11-14-capture-shapes-steps/implementation-plan.md	2934cf46983750f8466ca5aec7d0883838fbd6a85942b0a1b8196e78dd2037d5
+?? docs/execution/plans/2026-11-14-capture-shapes-steps/openapi-delta.py	7c1f25d6b8de86976fe4087d87397521577133ecb632e38d7da6ed31e6c24ff9
+?? docs/execution/plans/2026-11-14-capture-shapes-steps/red-check.py	4466d0439ca7e78df87aaac5f5b3bb6ed51baa9347c6245be2ca090ef1349abe
+?? docs/execution/plans/2026-11-14-capture-shapes-steps/session-gate.ps1	e781529208a868637121a5dfc9d596752a593adae9e2c59b296ac999f3c7b836
+?? docs/execution/plans/2026-11-14-capture-shapes-steps/task.md	9f639961e293b0dfbebf0a4cc26a246f4e149e96a505d37325477a980b83e0c6

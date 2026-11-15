@@ -4,8 +4,10 @@ import { Button } from '../../components/ui/Button'
 import { SegmentedControl } from '../../components/ui/SegmentedControl'
 import type { Annotation, RedactMode } from './capture-annotate'
 import type { CropBox } from './capture-crop'
-import { arrowHeadPoints, arrowShaftEnd } from './capture-arrow-head'
-import { contrastText, hexForNamedColor, NAMED_COLOR_HEX, normalizeHex } from './capture-color'
+import { arrowHeadPoints, arrowShaftSpan } from './capture-arrow-head'
+import { contrastText, displayHex, hexForNamedColor, NAMED_COLOR_HEX, normalizeHex } from './capture-color'
+import { shapeOption, type ArrowHead, type BoxShape } from './capture-shapes'
+import { stepBadgeLayout, stepTextColor } from './capture-step'
 import {
   clampImagePoint,
   mapImageToPointerWithView,
@@ -82,7 +84,16 @@ function cropCursorClass(cursor: CropCursor | null): string {
   return RESIZE_CURSOR_CLASS[cursorForHandle(cursor)]
 }
 
-export type CaptureTool = 'select' | 'arrow' | 'box' | 'highlight' | 'text' | 'redact' | 'eraser' | 'crop'
+export type CaptureTool =
+  | 'select'
+  | 'arrow'
+  | 'box'
+  | 'highlight'
+  | 'text'
+  | 'step'
+  | 'redact'
+  | 'eraser'
+  | 'crop'
 export type CaptureViewVariant = 'original' | 'annotated'
 
 export type TextDraft = {
@@ -180,6 +191,18 @@ type CaptureViewportProps = {
   onBlockSizeCommit?: () => void
   onBlockSizeCancel?: () => void
   blockSizeEpoch?: number
+  /** SHAPE_OPTIONS (MEU-106): the checked Head and Shape, a selected mark's own when one is selected. */
+  arrowHead?: ArrowHead
+  boxShape?: BoxShape
+  onArrowHead?: (head: ArrowHead) => void
+  onBoxShape?: (shape: BoxShape) => void
+  /** STEP_STYLE (MEU-107): the Step size field's text, its scrub steps and its commit or cancel. */
+  stepSize?: string
+  onStepSize?: (size: string) => void
+  onStepSizePreview?: (value: number) => void
+  onStepSizeCommit?: () => void
+  onStepSizeCancel?: () => void
+  stepSizeEpoch?: number
   onRedactMode?: (mode: RedactMode) => void
   onViewVariant?: (variant: CaptureViewVariant) => void
   onUndo: () => void
@@ -217,38 +240,83 @@ const REDACT_MODE_OPTIONS = [
   { id: 'capture-redact-pixelate', testId: 'capture-redact-pixelate', value: 'pixelate', label: 'Pixelate' },
 ] as const
 
+/** SHAPE_OPTIONS (MEU-106, D-771): the Arrow tool's heads, End first. */
+const ARROW_HEAD_OPTIONS = [
+  { id: 'capture-arrow-head-end', testId: 'capture-arrow-head-end', value: 'end', label: 'End' },
+  { id: 'capture-arrow-head-none', testId: 'capture-arrow-head-none', value: 'none', label: 'None' },
+  { id: 'capture-arrow-head-both', testId: 'capture-arrow-head-both', value: 'both', label: 'Both' },
+] as const
+
+/** SHAPE_OPTIONS (MEU-106, D-771): the Box tool's outlines, Rectangle first. */
+const BOX_SHAPE_OPTIONS = [
+  { id: 'capture-box-shape-rect', testId: 'capture-box-shape-rect', value: 'rect', label: 'Rectangle' },
+  { id: 'capture-box-shape-ellipse', testId: 'capture-box-shape-ellipse', value: 'ellipse', label: 'Ellipse' },
+] as const
+
+/** STEP_STYLE: the Step size field's range and the default an invalid field scrubs from. */
+const STEP_SIZE_MIN = 12
+const STEP_SIZE_MAX = 200
+const STEP_SIZE_DEFAULT = 32
+
 function AnnotationMark({ ann }: { ann: Annotation }) {
   if (ann.type === 'arrow') {
+    // HEAD_PREVIEW (MEU-106, D-767): the line over arrowShaftSpan and one polygon per head.
     const length = Math.hypot(ann.to[0] - ann.from[0], ann.to[1] - ann.from[1])
-    const end = arrowShaftEnd(ann.from, ann.to, ann.stroke_width)
+    const head = ann.head ?? 'end'
+    const span = arrowShaftSpan(ann.from, ann.to, ann.stroke_width, head)
     return (
       <g
         data-testid="capture-annotation"
         data-annotation-type="arrow"
+        data-head={head}
         x1={ann.from[0]}
         y1={ann.from[1]}
         x2={ann.to[0]}
         y2={ann.to[1]}
         stroke={ann.color}
       >
-        {end !== null ? (
+        {span !== null ? (
           <line
-            x1={ann.from[0]}
-            y1={ann.from[1]}
-            x2={end[0]}
-            y2={end[1]}
+            x1={span[0][0]}
+            y1={span[0][1]}
+            x2={span[1][0]}
+            y2={span[1][1]}
             stroke={ann.color}
             strokeWidth={ann.stroke_width}
           />
         ) : null}
-        {length > 0 ? (
+        {length > 0 && head !== 'none' ? (
           <polygon
             points={arrowHeadPoints(ann.from, ann.to, ann.stroke_width)}
             fill={ann.color}
             stroke="none"
           />
         ) : null}
+        {length > 0 && head === 'both' ? (
+          <polygon
+            points={arrowHeadPoints(ann.to, ann.from, ann.stroke_width)}
+            fill={ann.color}
+            stroke="none"
+          />
+        ) : null}
       </g>
+    )
+  }
+  if (ann.type === 'rect' && ann.shape === 'ellipse') {
+    // ELLIPSE_PREVIEW (MEU-106, D-769): the ellipse inscribed in the box the <rect> draws.
+    return (
+      <ellipse
+        data-testid="capture-annotation"
+        data-annotation-type="rect"
+        data-shape="ellipse"
+        cx={ann.x + ann.width / 2}
+        cy={ann.y + ann.height / 2}
+        rx={ann.width / 2}
+        ry={ann.height / 2}
+        fill="none"
+        stroke={ann.color}
+        strokeWidth={ann.stroke_width}
+      />
     )
   }
   if (ann.type === 'rect') {
@@ -313,6 +381,25 @@ function AnnotationMark({ ann }: { ann: Annotation }) {
         strokeDasharray="4 3"
         vectorEffect="non-scaling-stroke"
       />
+    )
+  }
+  if (ann.type === 'step') {
+    // STEP_PREVIEW (MEU-107, D-773): the bake's layout, a disc and the number centred on x.
+    const layout = stepBadgeLayout(ann.x, ann.y, ann.number, ann.size)
+    return (
+      <g data-testid="capture-annotation" data-annotation-type="step">
+        <circle cx={ann.x} cy={ann.y} r={layout.radius} fill={displayHex(ann.color)} stroke="none" />
+        <text
+          x={ann.x}
+          y={layout.baseline}
+          fill={stepTextColor(ann.color)}
+          fontSize={layout.fontPx}
+          fontFamily={SVG_TEXT_FONT_FAMILY}
+          textAnchor="middle"
+        >
+          {ann.number}
+        </text>
+      </g>
     )
   }
   const plate = ann.bg_color
@@ -564,6 +651,16 @@ export function CaptureViewport({
   onBlockSizeCommit = () => undefined,
   onBlockSizeCancel = () => undefined,
   blockSizeEpoch = 0,
+  arrowHead = 'end',
+  boxShape = 'rect',
+  onArrowHead = () => undefined,
+  onBoxShape = () => undefined,
+  stepSize = String(STEP_SIZE_DEFAULT),
+  onStepSize = () => undefined,
+  onStepSizePreview = () => undefined,
+  onStepSizeCommit = () => undefined,
+  onStepSizeCancel = () => undefined,
+  stepSizeEpoch = 0,
   onRedactMode = () => undefined,
   onViewVariant = () => undefined,
   onUndo,
@@ -612,12 +709,14 @@ export function CaptureViewport({
   const showBodyHandle =
     showVectors && selected !== null && selected.type !== 'arrow' && textDraft?.editIndex !== selectedIndex
   const options = optionGroups(tool, selected, redactMode)
+  const shapeControl = shapeOption(tool, selected)
   // CROP_ENTRY: why the Crop button is disabled, if it is.
   const cropOff = hasSelection ? cropDisabledReason : NO_SHOT_HINT
   // SCRUB_BASE: an invalid field scrubs from the applicable selected mark, else the default.
   const strokeBase = selected !== null && (selected.type === 'arrow' || selected.type === 'rect') ? selected.stroke_width : 3
   const fontSizeBase = selected?.type === 'text' ? selected.font_size : 16
   const blockBase = selected?.type === 'pixelate' ? selected.block_size : PIXELATE_BLOCK_DEFAULT
+  const stepSizeBase = selected?.type === 'step' ? selected.size : STEP_SIZE_DEFAULT
   const scrubTarget = selectedIndex ?? '-'
   const imageBox = { w: imageWidth, h: imageHeight }
   const view = viewTransform(frame, imageBox, zoom)
@@ -1036,6 +1135,15 @@ export function CaptureViewport({
               onClick={() => onTool('text')}
             />
             <ToolbarIconButton
+              spec={TOOLBAR_BUTTONS['capture-tool-step']}
+              id="capture-tool-step"
+              variant={toolVariant(tool === 'step')}
+              pressed={tool === 'step'}
+              disabled={!hasSelection || cropReason !== undefined}
+              reason={cropReason ?? (hasSelection ? undefined : NO_SHOT_HINT)}
+              onClick={() => onTool('step')}
+            />
+            <ToolbarIconButton
               spec={TOOLBAR_BUTTONS['capture-tool-redact']}
               id="capture-tool-redact"
               variant={toolVariant(tool === 'redact')}
@@ -1268,6 +1376,54 @@ export function CaptureViewport({
               resetKey={`${strokeEpoch}:${scrubTarget}`}
             />
           ) : null}
+          {options.includes('size') ? (
+            <CaptureScrubField
+              key="capture-step-size"
+              id="capture-step-size"
+              label="Size"
+              ariaLabel="Step size"
+              inputClassName="w-14 shrink-0 text-sm text-fg"
+              value={stepSize}
+              fallback={stepSizeBase}
+              min={STEP_SIZE_MIN}
+              max={STEP_SIZE_MAX}
+              onChange={onStepSize}
+              onPreview={onStepSizePreview}
+              onCommit={onStepSizeCommit}
+              onCancel={onStepSizeCancel}
+              resetKey={`${stepSizeEpoch}:${scrubTarget}`}
+            />
+          ) : null}
+          {shapeControl === 'head' ? (
+            <SegmentedControl
+              key="capture-arrow-head"
+              name="capture-arrow-head"
+              label="Head"
+              testId="capture-arrow-head"
+              className="shrink-0"
+              size="sm"
+              value={arrowHead}
+              options={ARROW_HEAD_OPTIONS}
+              onValueChange={(value) => {
+                onArrowHead(value === 'none' ? 'none' : value === 'both' ? 'both' : 'end')
+              }}
+            />
+          ) : null}
+          {shapeControl === 'shape' ? (
+            <SegmentedControl
+              key="capture-box-shape"
+              name="capture-box-shape"
+              label="Shape"
+              testId="capture-box-shape"
+              className="shrink-0"
+              size="sm"
+              value={boxShape}
+              options={BOX_SHAPE_OPTIONS}
+              onValueChange={(value) => {
+                onBoxShape(value === 'ellipse' ? 'ellipse' : 'rect')
+              }}
+            />
+          ) : null}
           {options.includes('mode') ? (
             <SegmentedControl
               key="capture-redact-mode"
@@ -1314,7 +1470,7 @@ export function CaptureViewport({
               aria-pressed={index === selectedIndex}
               onClick={() => onSelectIndex(index)}
             >
-              {markLabel(ann, index)}
+              {markLabel(ann, index, annotations)}
             </Button>
           ))}
         </div>

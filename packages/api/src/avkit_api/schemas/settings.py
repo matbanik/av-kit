@@ -68,3 +68,6 @@ class SettingsPutIn(ApiModel):
     pixelate_block_size: StrictInt | None = None
     # LOCK_LEAF (Session 71b, MEU-143): a strict bool; the service refuses null.
     tool_lock: StrictBool | None = None
+    # STEP_STYLE (MEU-107, D-775): StrictInt refuses 48.0, true and "48" with a 422.
+    step_color: str | None = None
+    step_size: StrictInt | None = None

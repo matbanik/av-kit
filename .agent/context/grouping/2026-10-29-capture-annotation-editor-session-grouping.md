@@ -88,7 +88,7 @@ All prerequisites outside the batch (MEU-60, 81, 82, 87, 91, 97) are approved.
 
 - Toolbar, preferences and registry letters. Split flag: candidate (six behaviours).
 
-### Session 48 — `capture-shapes-steps` (MEU-106, MEU-107) · P3
+### Session 48 — `capture-shapes-steps` (MEU-106, MEU-107) · P2
 
 - Two model additions through every layer. Split flag: yes, candidate; MEU-107 can run as 48b.
 
@@ -124,7 +124,7 @@ Run `/create-plan` once per session, in order. Session 43 is planned now (Mat's 
 | 46 | `capture-text-multiline` | MEU-102 | P3 | executed (Session 70) | `docs/execution/plans/2026-11-13-capture-text-multiline/` |
 | 47 | `capture-style-tool-flow` (style half; MEU-143 split out by D-713) | MEU-105 | P3 | executed (Session 71) | `docs/execution/plans/2026-11-13-capture-style-tool-flow/` |
 | 47b | `capture-tool-flow` | MEU-143 | P2 | executed (Session 71b) | `docs/execution/plans/2026-11-14-capture-tool-flow/` |
-| 48 | `capture-shapes-steps` | MEU-106, MEU-107 | P3 | pending | — |
+| 48 | `capture-shapes-steps` | MEU-106, MEU-107 | P2 | executed (Session 72) | `docs/execution/plans/2026-11-14-capture-shapes-steps/` |
 
 ---
 

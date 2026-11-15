@@ -42,6 +42,7 @@ from avkit_core.domain.capture import (
     RectAnnotation,
     RedactAnnotation,
     RegionUnit,
+    StepAnnotation,
     TextAnnotation,
     ViewFrame,
     clip_mark,
@@ -359,6 +360,8 @@ def _annotation_from_wire(item: object) -> Annotation:
                 to_xy=_wire_point(item["to"], "to"),  # type: ignore[arg-type]
                 color=item["color"],
                 stroke_width=item["stroke_width"],
+                # DEFAULT_OMIT (D-768): a missing head is "end"; a present one is checked.
+                head=item.get("head", "end"),
             )
         if kind == AnnotationType.Rect.to_wire():
             return RectAnnotation(
@@ -368,6 +371,7 @@ def _annotation_from_wire(item: object) -> Annotation:
                 height=item["height"],
                 color=item["color"],
                 stroke_width=item["stroke_width"],
+                shape=item.get("shape", "rect"),
             )
         if kind == AnnotationType.Highlight.to_wire():
             return HighlightAnnotation(
@@ -414,6 +418,18 @@ def _annotation_from_wire(item: object) -> Annotation:
                 height=item["height"],
                 color=item["color"],
             )
+        if kind == AnnotationType.Step.to_wire():
+            # STEP_WIRE (MEU-107, D-772): exactly these keys, as the redact's are.
+            extra = sorted(set(item) - set(("type", "x", "y", "number", "color", "size")))
+            if extra:
+                raise AnnotationValidationError(f"unexpected step field(s): {extra}")
+            return StepAnnotation(
+                x=item["x"],
+                y=item["y"],
+                number=item["number"],
+                color=item["color"],
+                size=item["size"],
+            )
     except KeyError as exc:
         raise AnnotationValidationError(f"missing annotation field: {exc}") from exc
     raise AnnotationValidationError(f"unsupported annotation type: {kind!r}")
@@ -439,15 +455,19 @@ def _clamp_int(value: int, lo: int, hi: int) -> int:
 
 def _annotation_to_wire(annotation: Annotation) -> dict[str, object]:
     if isinstance(annotation, ArrowAnnotation):
-        return {
+        arrow: dict[str, object] = {
             "type": AnnotationType.Arrow.to_wire(),
             "from": [annotation.from_xy[0], annotation.from_xy[1]],
             "to": [annotation.to_xy[0], annotation.to_xy[1]],
             "color": annotation.color,
             "stroke_width": annotation.stroke_width,
         }
+        # DEFAULT_OMIT (D-768): the default "end" is not written, so old sidecars stay byte-equal.
+        if annotation.head != "end":
+            arrow["head"] = annotation.head
+        return arrow
     if isinstance(annotation, RectAnnotation):
-        return {
+        rect: dict[str, object] = {
             "type": AnnotationType.Rect.to_wire(),
             "x": annotation.x,
             "y": annotation.y,
@@ -456,6 +476,9 @@ def _annotation_to_wire(annotation: Annotation) -> dict[str, object]:
             "color": annotation.color,
             "stroke_width": annotation.stroke_width,
         }
+        if annotation.shape != "rect":
+            rect["shape"] = annotation.shape
+        return rect
     if isinstance(annotation, HighlightAnnotation):
         return {
             "type": AnnotationType.Highlight.to_wire(),
@@ -503,6 +526,15 @@ def _annotation_to_wire(annotation: Annotation) -> dict[str, object]:
             "width": annotation.width,
             "height": annotation.height,
             "color": annotation.color,
+        }
+    if isinstance(annotation, StepAnnotation):
+        return {
+            "type": AnnotationType.Step.to_wire(),
+            "x": annotation.x,
+            "y": annotation.y,
+            "number": annotation.number,
+            "color": annotation.color,
+            "size": annotation.size,
         }
     raise AnnotationValidationError(f"unsupported annotation type: {type(annotation)!r}")
 
@@ -2167,7 +2199,8 @@ class CaptureService:
                 x=_clamp_int(annotation.x, lo, width),
                 y=_clamp_int(annotation.y, lo, height),
             )
-        if isinstance(annotation, TextAnnotation):
+        # STEP_CLAMP (MEU-107, D-772): a step's centre clamps as a text mark's anchor does.
+        if isinstance(annotation, (TextAnnotation, StepAnnotation)):
             return replace(
                 annotation,
                 x=_clamp_int(annotation.x, lo, width),

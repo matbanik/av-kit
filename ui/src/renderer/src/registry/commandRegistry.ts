@@ -70,6 +70,9 @@ export const CAPTURE_TOOL_IDS = [
   'capture:tool_crop',
 ] as const
 
+/** DUPLICATE (MEU-106, MEU-107): the capture edit commands, chord-only. */
+export const CAPTURE_EDIT_IDS = ['capture:duplicate'] as const
+
 export const SETTINGS_PALETTE_IDS = ['settings:check_deps'] as const
 
 export const APPEARANCE_PALETTE_IDS = ['appearance:dark', 'appearance:light'] as const
@@ -88,6 +91,7 @@ export type CommandRegistryEntry = {
     | (typeof CONVERT_PALETTE_IDS)[number]
     | (typeof CAPTURE_PALETTE_IDS)[number]
     | (typeof CAPTURE_TOOL_IDS)[number]
+    | (typeof CAPTURE_EDIT_IDS)[number]
     | (typeof SETTINGS_PALETTE_IDS)[number]
     | (typeof APPEARANCE_PALETTE_IDS)[number]
     | (typeof HELP_PALETTE_IDS)[number]
@@ -567,6 +571,20 @@ const commands: CommandRegistryEntry[] = [
     shortcut: 'C',
     action: () => {
       pressEnabledButton('capture-tool-crop')
+    },
+  },
+  {
+    // DUPLICATE (MEU-106, MEU-107): the page copies the selected mark while it publishes the chord enabled.
+    id: 'capture:duplicate',
+    label: 'Duplicate mark',
+    category: 'capture',
+    page: '/capture',
+    stateful: true,
+    palette: false,
+    keywords: [],
+    shortcut: 'Ctrl+D',
+    action: () => {
+      window.dispatchEvent(new CustomEvent(CAPTURE_EVENTS.duplicate))
     },
   },
   {

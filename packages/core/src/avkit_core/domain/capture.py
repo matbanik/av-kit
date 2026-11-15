@@ -48,6 +48,18 @@ ANNOTATED_FORMATS: tuple[AnnotatedFormat, ...] = ("png", "jpeg", "webp")
 ANNOTATED_EXT: dict[str, str] = {"png": ".png", "jpeg": ".jpg", "webp": ".webp"}
 ANNOTATED_SUFFIXES: tuple[str, ...] = tuple(f".annotated{ext}" for ext in ANNOTATED_EXT.values())
 
+# HEAD_FIELD (MEU-106, D-767): where an arrow draws its heads.
+ArrowHead = Literal["end", "none", "both"]
+ARROW_HEADS: tuple[ArrowHead, ...] = ("end", "none", "both")
+# SHAPE_FIELD (MEU-106, D-769): the outline a box draws.
+BoxShape = Literal["rect", "ellipse"]
+BOX_SHAPES: tuple[BoxShape, ...] = ("rect", "ellipse")
+# STEP_TYPE (MEU-107, D-772): a step's number and badge size bounds.
+STEP_NUMBER_MIN = 1
+STEP_NUMBER_MAX = 999
+STEP_SIZE_MIN = 12
+STEP_SIZE_MAX = 200
+
 CAPTURE_REQUEST_TRANSITIONS: dict[CaptureRequestStatus, frozenset[CaptureRequestStatus]] = {
     CaptureRequestStatus.Pending: frozenset(
         {
@@ -288,6 +300,7 @@ class ArrowAnnotation:
     to_xy: tuple[int, int]
     color: str
     stroke_width: int
+    head: ArrowHead = "end"
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "from_xy", _require_point(self.from_xy, "from_xy"))
@@ -295,6 +308,9 @@ class ArrowAnnotation:
         object.__setattr__(self, "color", _require_color(self.color, "color"))
         if isinstance(self.stroke_width, bool) or not isinstance(self.stroke_width, int):
             raise AnnotationValidationError("stroke_width must be an int")
+        # HEAD_FIELD (D-767): the message names the field, never the value (Session 53 RULE-1).
+        if not isinstance(self.head, str) or self.head not in ARROW_HEADS:
+            raise AnnotationValidationError("arrow head must be end, none or both")
 
 
 @dataclass(frozen=True)
@@ -307,6 +323,7 @@ class RectAnnotation:
     height: int
     color: str
     stroke_width: int
+    shape: BoxShape = "rect"
 
     def __post_init__(self) -> None:
         _require_int(self.x, "x")
@@ -318,6 +335,9 @@ class RectAnnotation:
         object.__setattr__(self, "color", _require_color(self.color, "color"))
         if isinstance(self.stroke_width, bool) or not isinstance(self.stroke_width, int):
             raise AnnotationValidationError("stroke_width must be an int")
+        # SHAPE_FIELD (D-769): the message names the field, never the value.
+        if not isinstance(self.shape, str) or self.shape not in BOX_SHAPES:
+            raise AnnotationValidationError("box shape must be rect or ellipse")
 
 
 @dataclass(frozen=True)
@@ -444,11 +464,41 @@ class RedactAnnotation:
         object.__setattr__(self, "color", color)
 
 
+@dataclass(frozen=True)
+class StepAnnotation:
+    """STEP_TYPE (MEU-107, D-772): a numbered badge centred on (x, y), `size` pixels across."""
+
+    x: int
+    y: int
+    number: int
+    color: str
+    size: int
+
+    def __post_init__(self) -> None:
+        # Strict ints (no bool, no float) and bounds; no message names the value.
+        for field in ("x", "y"):
+            if _require_int(getattr(self, field), field) < 0:
+                raise AnnotationValidationError(f"{field} must be 0 or more")
+        if not STEP_NUMBER_MIN <= _require_int(self.number, "number") <= STEP_NUMBER_MAX:
+            raise AnnotationValidationError(
+                f"number must be in [{STEP_NUMBER_MIN}, {STEP_NUMBER_MAX}]"
+            )
+        try:
+            color = _require_color(self.color, "color")
+        except ValidationError as exc:
+            # A non-str or empty colour is an annotation error like any other bad colour.
+            raise AnnotationValidationError(str(exc)) from exc
+        object.__setattr__(self, "color", color)
+        if not STEP_SIZE_MIN <= _require_int(self.size, "size") <= STEP_SIZE_MAX:
+            raise AnnotationValidationError(f"size must be in [{STEP_SIZE_MIN}, {STEP_SIZE_MAX}]")
+
+
 Annotation = (
     ArrowAnnotation
     | RectAnnotation
     | HighlightAnnotation
     | TextAnnotation
+    | StepAnnotation
     | PixelateAnnotation
     | EraserAnnotation
     | RedactAnnotation
@@ -470,6 +520,8 @@ def clip_mark(
         case ArrowAnnotation():
             return _clip_arrow(mark, left, top, width, height)
         case RectAnnotation():
+            if mark.shape == "ellipse":
+                return _clip_ellipse(mark, left, top, width, height)
             return _clip_rect(mark, left, top, width, height)
         case HighlightAnnotation():
             return _clip_half_open(mark, left, top, width, height)
@@ -481,6 +533,8 @@ def clip_mark(
             return _clip_half_open(mark, left, top, width, height)
         case TextAnnotation():
             return _clip_text(mark, left, top, width, height)
+        case StepAnnotation():
+            return _clip_step(mark, left, top, width, height)
         case _:
             assert_never(mark)
 
@@ -532,6 +586,33 @@ def _clip_text(
     mark: TextAnnotation, left: int, top: int, width: int, height: int
 ) -> tuple[TextAnnotation | None, MarkCarry]:
     """MARK_CLIP_TEXT: kept when its anchor is in `[0, width) x [0, height)`; never clipped."""
+    x0, y0 = mark.x - left, mark.y - top
+    if 0 <= x0 < width and 0 <= y0 < height:
+        return replace(mark, x=x0, y=y0), "kept"
+    return None, "dropped"
+
+
+def _clip_ellipse(
+    mark: RectAnnotation, left: int, top: int, width: int, height: int
+) -> tuple[RectAnnotation | None, MarkCarry]:
+    """ELLIPSE_CLIP (MEU-106, D-676 A): an ellipse is never clipped.
+
+    It is kept and moved when its box `[x, x+w] x [y, y+h]` lies inside the closed crop
+    `[0, width] x [0, height]` (D-676), and dropped otherwise.
+    """
+    x0, y0 = mark.x - left, mark.y - top
+    if x0 >= 0 and y0 >= 0 and x0 + mark.width <= width and y0 + mark.height <= height:
+        return replace(mark, x=x0, y=y0), "kept"
+    return None, "dropped"
+
+
+def _clip_step(
+    mark: StepAnnotation, left: int, top: int, width: int, height: int
+) -> tuple[StepAnnotation | None, MarkCarry]:
+    """STEP_CLIP (MEU-107, D-675): kept when its centre is in `[0, width) x [0, height)`.
+
+    The text anchor's rule: a kept step moves into the crop's pixels; it is never clipped.
+    """
     x0, y0 = mark.x - left, mark.y - top
     if 0 <= x0 < width and 0 <= y0 < height:
         return replace(mark, x=x0, y=y0), "kept"
@@ -667,10 +748,14 @@ __all__ = (
     "ANNOTATED_EXT",
     "ANNOTATED_FORMATS",
     "ANNOTATED_SUFFIXES",
+    "ARROW_HEADS",
     "Annotation",
     "AnnotatedFormat",
     "ArrowAnnotation",
+    "ArrowHead",
     "BBox",
+    "BOX_SHAPES",
+    "BoxShape",
     "CAPTURE_MIN_EDGE_PX",
     "CAPTURE_REQUEST_TRANSITIONS",
     "CaptureRequest",
@@ -691,6 +776,11 @@ __all__ = (
     "RectAnnotation",
     "RedactAnnotation",
     "RegionUnit",
+    "STEP_NUMBER_MAX",
+    "STEP_NUMBER_MIN",
+    "STEP_SIZE_MAX",
+    "STEP_SIZE_MIN",
+    "StepAnnotation",
     "TextAnnotation",
     "ViewFrame",
     "clip_mark",

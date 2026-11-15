@@ -125,6 +125,11 @@ SETTINGS_KEY_TABLE: dict[tuple[str, str], SettingSpec] = {
     ),
     # LOCK_LEAF (Session 71b, MEU-143, D-744): the capture tool lock, on by default.
     ("capture", "tool_lock"): SettingSpec("boolean", True),
+    # STEP_STYLE (MEU-107, D-775): the Step tool's persisted colour and badge size.
+    ("capture", "step_color"): SettingSpec("string", "#E0AF68", pattern=COLOR_HEX),
+    ("capture", "step_size"): SettingSpec(
+        "number", 32, min_number=12, max_number=200, integer=True
+    ),
 }
 
 UoWFactory = Callable[[], UnitOfWork]

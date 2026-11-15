@@ -84,6 +84,9 @@ export const SETTINGS_SCHEMA: {
       pixelate_block_size: { type: "number", default: 10 },
       // LOCK_LEAF (Session 71b, MEU-143): the capture tool lock, on by default.
       tool_lock: { type: "boolean", default: true },
+      // STEP_STYLE (MEU-107, D-775): the Step tool's colour and badge size.
+      step_color: { type: "string", default: "#E0AF68" },
+      step_size: { type: "number", default: 32 },
     },
   },
 };
@@ -158,6 +161,9 @@ const settingsLeaves = {
   pixelate_block_size: z.number().int().optional(),
   // LOCK_LEAF (MEU-143): a strict boolean; "false" and 0 are refused.
   tool_lock: z.boolean().optional(),
+  // STEP_STYLE (MEU-107): an integer size; 48.5 and "48" are refused.
+  step_color: z.string().optional(),
+  step_size: z.number().int().optional(),
   rail: z.unknown().optional(),
   panel: z.unknown().optional(),
 };

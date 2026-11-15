@@ -51,6 +51,7 @@ const NO_SHOT_IDS = new Set([
   'capture-tool-box',
   'capture-tool-highlight',
   'capture-tool-text',
+  'capture-tool-step',
   'capture-tool-redact',
   'capture-tool-eraser',
   'capture-tool-crop',
@@ -79,6 +80,8 @@ const HINT_OVERRIDE: Record<string, string> = {
   'capture-tool-box': 'Box (R)',
   'capture-tool-highlight': 'Highlight (H)',
   'capture-tool-text': 'Text (T)',
+  // Session 72 row 1 (D-781): Step has no letter.
+  'capture-tool-step': 'Step: Places the next number',
   'capture-tool-redact': 'Redact (X)',
   'capture-tool-eraser': 'Smart eraser (E): Covers an area with the surrounding colour',
   'capture-tool-crop': 'Crop (C)',

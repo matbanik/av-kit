@@ -3551,3 +3551,138 @@ test('AC-143.29 Electron: Lock on at load, R arms Box, an Alt drag then V arms S
     .toEqual([{ tool_lock: false }])
   await app.close()
 })
+
+// ── MEU-106 and MEU-107 (Session 72, AC-106.28 and AC-107.24) ──────────────────────────────────────
+// A 400 x 200 shot (the seam serves a 1 x 1 PNG; the overlay maps by the shot's size) so two step
+// badges of the default size 32 sit apart. The body ledger records the save POST.
+const S72_W = 400
+const S72_H = 200
+
+/** The page point of image pixel (x, y) on the S72 shot at Fit. */
+async function s72Point(page: Page, x: number, y: number): Promise<{ x: number; y: number }> {
+  const surface = page.getByTestId('capture-draw-surface')
+  const box = await surface.boundingBox()
+  expect(box).toBeTruthy()
+  const scale = Math.min((box?.width ?? 1) / S72_W, (box?.height ?? 1) / S72_H)
+  const originX = (box?.x ?? 0) + ((box?.width ?? 0) - S72_W * scale) / 2
+  const originY = (box?.y ?? 0) + ((box?.height ?? 0) - S72_H * scale) / 2
+  return { x: originX + x * scale, y: originY + y * scale }
+}
+
+async function s72Drag(page: Page, from: [number, number], to: [number, number]): Promise<void> {
+  const a = await s72Point(page, from[0], from[1])
+  const b = await s72Point(page, to[0], to[1])
+  await page.mouse.move(a.x, a.y)
+  await page.mouse.down()
+  await page.mouse.move(b.x, b.y, { steps: 4 })
+  await page.mouse.up()
+}
+
+async function s72Press(page: Page, x: number, y: number): Promise<void> {
+  const at = await s72Point(page, x, y)
+  await page.mouse.click(at.x, at.y)
+}
+
+async function openS72Shot(page: Page, id: string, lockLeaf: Record<string, unknown>): Promise<void> {
+  await installSeam(page, [sampleShot(id, `${id}.png`, '2026-11-14T12:00:00Z', { width: S72_W, height: S72_H })], lockLeaf)
+  await installBodyLedger(page)
+  await expect(page.getByTestId('nav-capture')).toBeVisible()
+  await page.getByTestId('nav-capture').click()
+  await expect(page.getByTestId('capture-filmstrip-item').first()).toBeVisible()
+  await page.getByTestId('capture-filmstrip-item').first().click()
+  await expect(page.getByTestId('capture-draw-surface')).toHaveAttribute('data-overlay-ready', 'true')
+  expectBuiltRenderer(page)
+}
+
+test('AC-106.28 Electron: A then None draws a line, R then Ellipse draws an ellipse, Ctrl+D copies it, Save posts three marks', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await openS72Shot(page, 'e2e-shape-1', { tool_lock: false })
+  const surface = page.getByTestId('capture-draw-surface')
+  await expect(surface).toBeVisible()
+  await surface.focus()
+  await page.keyboard.press('a')
+  await expect(page.getByTestId('capture-tool-arrow')).toHaveAttribute('aria-pressed', 'true')
+  const none = page.getByTestId('capture-arrow-head-none')
+  await expect(none).toBeVisible()
+  await none.click()
+  await expect(none).toBeChecked()
+  await s72Drag(page, [40, 40], [200, 40])
+  await expect(page.locator('[data-annotation-type="arrow"]')).toHaveCount(1)
+  await expect(surface).toBeVisible()
+  await surface.focus()
+  await page.keyboard.press('r')
+  await expect(page.getByTestId('capture-tool-box')).toHaveAttribute('aria-pressed', 'true')
+  const ellipse = page.getByTestId('capture-box-shape-ellipse')
+  await expect(ellipse).toBeVisible()
+  await ellipse.click()
+  await expect(ellipse).toBeChecked()
+  await s72Drag(page, [60, 80], [200, 160])
+  const ellipses = page.locator('ellipse[data-annotation-type="rect"]')
+  await expect(ellipses).toHaveCount(1)
+  const chip = page.getByTestId('capture-mark-list').locator('button[aria-pressed]').nth(1)
+  await expect(chip).toBeVisible()
+  await chip.click()
+  await expect(chip).toHaveAttribute('aria-pressed', 'true')
+  await surface.focus()
+  await page.keyboard.press('Control+d')
+  await expect(ellipses).toHaveCount(2)
+  await expect(page.getByTestId('capture-mark-list').locator('button[aria-pressed]').nth(2)).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  const save = page.getByTestId('capture-save')
+  await expect(save).toBeVisible()
+  await save.click()
+  await expect.poll(async () => (await annotatePosts(page)).length).toBe(1)
+  const marks = (await annotatePosts(page))[0]?.annotations ?? []
+  expect(marks).toHaveLength(3)
+  expect(marks[0]).toMatchObject({ type: 'arrow', head: 'none' })
+  expect(marks[1]).toMatchObject({ type: 'rect', shape: 'ellipse' })
+  expect(marks[2]).toMatchObject({ type: 'rect', shape: 'ellipse' })
+  await app.close()
+})
+
+test('AC-107.24 Electron: Step places 1 and 2 under Lock, the badge text centres on its circle, Save posts both', async () => {
+  const app = await launchApp()
+  const page = await app.firstWindow()
+  await openS72Shot(page, 'e2e-step-1', { tool_lock: true })
+  const stepTool = page.getByTestId('capture-tool-step')
+  await expect(stepTool).toBeVisible()
+  await stepTool.click()
+  await expect(stepTool).toHaveAttribute('aria-pressed', 'true')
+  await s72Press(page, 100, 100)
+  await s72Press(page, 300, 100)
+  const badges = page.locator('[data-annotation-type="step"]')
+  await expect(badges).toHaveCount(2)
+  await expect(stepTool).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByTestId('capture-mark-list').locator('button[aria-pressed]').nth(1)).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  // STEP_CENTRE's preview check: the first badge's text box centre within max(2, size / 40) px of cx.
+  const centre = await page.evaluate(() => {
+    const groups = Array.from(document.querySelectorAll('[data-annotation-type="step"]'))
+    const first = groups.find((g) => g.querySelector('text')?.textContent === '1')
+    const circle = first?.querySelector('circle')
+    const text = first?.querySelector('text') as SVGTextElement | null | undefined
+    if (circle === null || circle === undefined || text === null || text === undefined) {
+      return null
+    }
+    const box = text.getBBox()
+    return { cx: Number(circle.getAttribute('cx')), r: Number(circle.getAttribute('r')), mid: box.x + box.width / 2 }
+  })
+  expect(centre).not.toBeNull()
+  const size = 2 * (centre?.r ?? 0)
+  expect(size).toBe(32)
+  expect(Math.abs((centre?.mid ?? Number.NaN) - (centre?.cx ?? 0))).toBeLessThanOrEqual(Math.max(2, size / 40))
+  const save = page.getByTestId('capture-save')
+  await expect(save).toBeVisible()
+  await save.click()
+  await expect.poll(async () => (await annotatePosts(page)).length).toBe(1)
+  const marks = (await annotatePosts(page))[0]?.annotations ?? []
+  expect(marks).toHaveLength(2)
+  expect(marks[0]).toMatchObject({ type: 'step', x: 100, y: 100, number: 1 })
+  expect(marks[1]).toMatchObject({ type: 'step', x: 300, y: 100, number: 2 })
+  await app.close()
+})

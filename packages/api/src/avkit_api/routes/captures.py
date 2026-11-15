@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, assert_never
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Response
 
@@ -47,6 +47,7 @@ from avkit_api.schemas.captures import (
     PixelateAnnotationIn,
     RectAnnotationIn,
     RedactAnnotationIn,
+    StepAnnotationIn,
     TextAnnotationIn,
 )
 from avkit_api.schemas.common import EmptyIn
@@ -59,6 +60,7 @@ from avkit_core.domain.capture import (
     PixelateAnnotation,
     RectAnnotation,
     RedactAnnotation,
+    StepAnnotation,
     TextAnnotation,
     ViewFrame,
 )
@@ -165,6 +167,7 @@ def _annotations_from_in(items: list[AnnotationIn]) -> list[Annotation]:
                     to_xy=item.to_xy,
                     color=item.color,
                     stroke_width=item.stroke_width,
+                    head=item.head,
                 )
             )
             continue
@@ -177,6 +180,7 @@ def _annotations_from_in(items: list[AnnotationIn]) -> list[Annotation]:
                     height=item.height,
                     color=item.color,
                     stroke_width=item.stroke_width,
+                    shape=item.shape,
                 )
             )
             continue
@@ -227,6 +231,15 @@ def _annotations_from_in(items: list[AnnotationIn]) -> list[Annotation]:
                 )
             )
             continue
+        if isinstance(item, StepAnnotationIn):
+            parsed.append(
+                StepAnnotation(
+                    x=item.x, y=item.y, number=item.number, color=item.color, size=item.size
+                )
+            )
+            continue
+        # STEP_API (MEU-107, D-772): pyright refuses a mark type with no branch above.
+        assert_never(item)
     return parsed
 
 

@@ -119,6 +119,8 @@ const arrowAnn = z
     to: z.tuple([z.number().int(), z.number().int()]),
     color: z.string().min(1),
     stroke_width: z.number().int(),
+    // HEAD_FIELD (MEU-106, D-767): absent means "end".
+    head: z.enum(["end", "none", "both"]).optional(),
   })
   .strict();
 
@@ -131,6 +133,8 @@ const rectAnn = z
     height: z.number().int(),
     color: z.string().min(1),
     stroke_width: z.number().int(),
+    // SHAPE_FIELD (MEU-106, D-769): absent means "rect".
+    shape: z.enum(["rect", "ellipse"]).optional(),
   })
   .strict();
 
@@ -191,6 +195,19 @@ const redactAnn = z
   })
   .strict();
 
+/** STEP_MCP (MEU-107, D-772): a numbered badge; every field is required and checked here. */
+const STEP_COLOR = /^#[0-9A-Fa-f]{6}$|^(red|orange|yellow|green|blue|white|black)$/;
+const stepAnn = z
+  .object({
+    type: z.literal("step"),
+    x: z.number().int().nonnegative(),
+    y: z.number().int().nonnegative(),
+    number: z.number().int().min(1).max(999),
+    color: z.string().regex(STEP_COLOR),
+    size: z.number().int().min(12).max(200),
+  })
+  .strict();
+
 const annotation = z.discriminatedUnion("type", [
   arrowAnn,
   rectAnn,
@@ -199,6 +216,7 @@ const annotation = z.discriminatedUnion("type", [
   pixelateAnn,
   eraserAnn,
   redactAnn,
+  stepAnn,
 ]);
 
 const captureFullscreen = withDesc(

@@ -22,11 +22,12 @@ const ui = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 const captureDir = resolve(ui, 'src/renderer/src/features/capture')
 
 // TA-2 (Session 39): + pixelate, eraser. MEU-131: + crop. Session 68 (D-679): redact takes pixelate's slot.
-const TOOLS: CaptureTool[] = ['select', 'arrow', 'box', 'highlight', 'text', 'redact', 'eraser', 'crop']
+// Session 72 row 1 (MEU-107, D-781): + step after text.
+const TOOLS: CaptureTool[] = ['select', 'arrow', 'box', 'highlight', 'text', 'step', 'redact', 'eraser', 'crop']
 const MODES = ['solid', 'pixelate'] as const
 
 const MARKS: Record<
-  'none' | 'arrow' | 'rect' | 'highlight' | 'text' | 'pixelate' | 'eraser' | 'redact',
+  'none' | 'arrow' | 'rect' | 'highlight' | 'text' | 'pixelate' | 'eraser' | 'redact' | 'step',
   Annotation | null
 > = {
   none: null,
@@ -37,6 +38,8 @@ const MARKS: Record<
   pixelate: { type: 'pixelate', x: 1, y: 1, width: 4, height: 4, block_size: 10 },
   eraser: { type: 'eraser', x: 1, y: 1, width: 4, height: 4 },
   redact: { type: 'redact', x: 1, y: 1, width: 4, height: 4, color: '#000000' },
+  // Session 72 row 3 (MEU-107, D-775): a step mark.
+  step: { type: 'step', x: 1, y: 1, number: 1, color: '#FF0000', size: 32 },
 }
 
 /** OPTIONS_BY_TOOL with MODE_GROUPS (Session 68 D-680), restated independently of the implementation. */
@@ -63,6 +66,8 @@ function expectedGroups(tool: CaptureTool, selected: Annotation | null, mode: Re
     return []
   }
   const text = tool === 'text' || selected?.type === 'text'
+  // STEP_STYLE (Session 72, D-775): the step rule follows the text rule.
+  if (!text && (tool === 'step' || selected?.type === 'step')) return ['color', 'size']
   const stroke =
     !text &&
     (tool === 'arrow' ||
@@ -172,7 +177,7 @@ describe('MEU-87 tool lock entry (TOOL_LOCK)', () => {
     expect(Object.values(TOOL_BUTTON_IDS)).not.toContain('capture-tool-lock')
   })
 
-  it('AC-87.1 negative: TOOL_BUTTON_IDS still lists exactly the eight tools (AC-65.1 holds)', () => {
+  it('AC-87.1 negative: TOOL_BUTTON_IDS still lists exactly the nine tools (AC-65.1 holds)', () => {
     expect(Object.keys(TOOL_BUTTON_IDS).sort()).toEqual([
       'arrow',
       'box',
@@ -181,6 +186,7 @@ describe('MEU-87 tool lock entry (TOOL_LOCK)', () => {
       'highlight',
       'redact',
       'select',
+      'step',
       'text',
     ])
   })

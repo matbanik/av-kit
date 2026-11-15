@@ -16,7 +16,7 @@ import * as styleStore from '../../src/renderer/src/features/capture/capture-sty
 import * as lock from '../../src/renderer/src/features/capture/capture-tool-lock'
 import * as toolbar from '../../src/renderer/src/features/capture/capture-toolbar'
 import type { BoxMark, HandleId } from '../../src/renderer/src/features/capture/capture-transform'
-import type { CaptureTool, SurfacePointer } from '../../src/renderer/src/features/capture/CaptureViewport'
+import type { SurfacePointer } from '../../src/renderer/src/features/capture/CaptureViewport'
 import * as lockHook from '../../src/renderer/src/features/capture/useCaptureToolLock'
 import * as settingsSchemas from '../../src/renderer/src/features/settings/settings-schemas'
 import * as editable from '../../src/renderer/src/lib/editable-target'
@@ -81,7 +81,7 @@ describe('MEU-143 tool lock, letters and modifiers (pure)', () => {
     expect(schema.safeParse({ tool_lock: 'false' }).success).toBe(false)
     expect(schema.safeParse({}).success).toBe(false)
 
-    const letters: Readonly<Record<CaptureTool, string>> = toolbar.TOOL_LETTERS
+    const letters: Readonly<Record<toolbar.LetterTool, string>> = toolbar.TOOL_LETTERS
     expect(Object.keys(letters)).toHaveLength(8)
     expect(registry.CAPTURE_TOOL_IDS).toHaveLength(8)
 
@@ -188,6 +188,7 @@ describe('MEU-143 tool lock, letters and modifiers (pure)', () => {
       'capture-tool-crop=capture:tool_crop',
     ])
     // Sessions 59 and 63: the Annotation tool group, then Lock, Crop, then History.
+    // Session 72 row 1 (D-781): the Step button follows Text in the group.
     const viewport = readFileSync(resolve(UI, 'src/renderer/src/features/capture/CaptureViewport.tsx'), 'utf8')
     const order = Array.from(viewport.matchAll(/\bid="(capture-(?:tool-[a-z]+|undo|redo))"/g), (match) => match[1])
     expect(order).toEqual([
@@ -196,6 +197,7 @@ describe('MEU-143 tool lock, letters and modifiers (pure)', () => {
       'capture-tool-box',
       'capture-tool-highlight',
       'capture-tool-text',
+      'capture-tool-step',
       'capture-tool-redact',
       'capture-tool-eraser',
       'capture-tool-lock',

@@ -10,7 +10,11 @@ const HELP_EDIT_SENTENCE =
 const HISTORY_HELP_SENTENCE =
   'Ctrl+Z undoes and Ctrl+Y or Ctrl+Shift+Z redoes while the image has focus; a text field keeps its own undo.'
 // Session 68 REDACT_HELP (D-686, DEP-3): the resize sentence names the redact mark.
-const RESIZE_HELP_SENTENCE = 'Drag a square handle on a selected box, highlight, redact, pixelate or eraser mark to resize it.'
+// Session 72 SHAPES_HELP: and the ellipse.
+const RESIZE_HELP_SENTENCE =
+  'Drag a square handle on a selected box, ellipse, highlight, redact, pixelate or eraser mark to resize it.'
+// Session 72 SHAPES_HELP: the Ctrl+D sentence follows the nudge sentence (AC-99.6's pin moves).
+const DUPLICATE_HELP_SENTENCE = 'Ctrl+D duplicates the selected mark 10 px down and right and selects the copy.'
 const TEXT_EDIT_HELP_SENTENCE =
   'Double-click a text mark, or press Enter with it selected, to edit its text; drag a corner of its plate to scale it.'
 
@@ -127,7 +131,8 @@ describe('MEU-91 help', () => {
 describe('MEU-99 help', () => {
   it('AC-99.6 HelpCard four-tools body follows the edit sentence with the history chord sentence and still ends with the range sentence', () => {
     const four = CAPTURE_HELP_SECTIONS.find((section) => section.id === 'four-tools')
-    expect(four?.body).toContain(`${HELP_EDIT_SENTENCE} ${HISTORY_HELP_SENTENCE}`)
+    // Session 72 departure: SHAPES_HELP puts the Ctrl+D sentence between the two.
+    expect(four?.body).toContain(`${HELP_EDIT_SENTENCE} ${DUPLICATE_HELP_SENTENCE} ${HISTORY_HELP_SENTENCE}`)
     expect(four?.body.endsWith(RANGE_HELP_SENTENCE)).toBe(true)
   })
 })
@@ -145,5 +150,37 @@ describe('MEU-101 help', () => {
     const four = CAPTURE_HELP_SECTIONS.find((section) => section.id === 'four-tools')
     expect(four?.body).toContain(`${RESIZE_HELP_SENTENCE} ${TEXT_EDIT_HELP_SENTENCE}`)
     expect(four?.body.endsWith(RANGE_HELP_SENTENCE)).toBe(true)
+  })
+})
+
+// Session 72 SHAPES_HELP (MEU-106, MEU-107).
+const SEVEN_TOOLS_START = 'Seven annotation tools: Arrow, Box, Highlight, Text and Step draw on the selected shot;'
+const REDACT_MODE_SENTENCE =
+  'Redact covers its box in Solid black by default; its Pixelate mode turns the box into blocks instead, and picking the other mode with a redaction selected swaps it.'
+const SHAPE_CONTROLS_SENTENCE =
+  'The Head control turns an arrow into a line or gives it a head at both ends, and the Shape control turns a box into an ellipse; with a mark selected, either one changes that mark.'
+const STEP_HELP_SENTENCE = 'Step places the next number at each click.'
+const ELLIPSE_MODIFIER_SENTENCE = 'Shift and Alt work the same on an ellipse, and Shift snaps a line to 45 degrees.'
+
+describe('MEU-106 help', () => {
+  it('AC-106.27 the Annotation tools body names seven tools and holds each SHAPES_HELP sentence in place', () => {
+    const body = CAPTURE_HELP_SECTIONS.find((section) => section.id === 'four-tools')?.body ?? ''
+    expect(body.startsWith(SEVEN_TOOLS_START)).toBe(true)
+    expect(body).not.toContain('Six annotation tools')
+    expect(body).toContain(`${REDACT_MODE_SENTENCE} ${SHAPE_CONTROLS_SENTENCE} ${STEP_HELP_SENTENCE}`)
+    expect(body).toContain(`${HELP_EDIT_SENTENCE} ${DUPLICATE_HELP_SENTENCE}`)
+    expect(body).toContain(`${HISTORY_HELP_SENTENCE} ${RESIZE_HELP_SENTENCE}`)
+    expect(body).not.toContain('selected box, highlight, redact')
+    expect(body).toContain(`${LOCK_HELP_TEXT} ${ELLIPSE_MODIFIER_SENTENCE}`)
+    // Every MEU-143 sentence stays, and the body still ends with the range sentence.
+    expect(body).toContain('Arrow keys nudge the selected mark (Shift+arrow by 10 px), or the arrow end')
+    expect(body.endsWith(RANGE_HELP_SENTENCE)).toBe(true)
+  })
+})
+
+describe('MEU-107 help', () => {
+  it('AC-107.25 the Annotation tools body holds the step sentence', () => {
+    const body = CAPTURE_HELP_SECTIONS.find((section) => section.id === 'four-tools')?.body ?? ''
+    expect(body).toContain(STEP_HELP_SENTENCE)
   })
 })
