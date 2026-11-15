@@ -3363,12 +3363,15 @@ issues:
     title: validate_closeout_artifacts --selftest fails when a .agent folder sits above the temp folder
     severity: low
     component: agent
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: 'project_root (tools/validate_closeout_artifacts.py:1736-1749) returns the nearest ancestor holding a .agent directory. The selftest builds temp plans under the temp folder, so a C:/Users/Mat/.agent folder, which appeared on 2026-11-04 outside the repository, becomes their root. Candidate fix: make the selftest hermetic, or require a real repo marker such as .agent/context.'
     blast_radius: 'Measured: 5 of 215 selftest arms fail under the default temp folder and 0 of 215 with TMP and TEMP outside the home folder (C:/Temp/av-kit/rc1/rows/selftest-closeout-1.txt, selftest-closeout-2-tmp-elsewhere.txt). tests/tooling fails on this machine under the default temp. Real runs on P:/av-kit plans and CI are unaffected. Plan 2026-11-03-release-rc1 ECN-2 runs its gate with temp elsewhere rather than excusing the test.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-15'
+      method: 'Session 84 task row 6: the validator selftest run under the user''s own temp folder (receipt cro-selftest-default-tmp.txt) and uv run pytest tests/tooling/ under the same temp folder (receipt cro-tooling.txt), both under C:/Temp/av-kit/cro'
+      result: 'cro-selftest-default-tmp.txt: RESULT: 231 arm(s), 0 failure(s) [96 must-OK arms, so the tool is not refusing everything]. cro-tooling.txt: 250 passed in 61.68s (0:01:01)'
+    resolution_path: 'Fixed in Session 84 on 2026-11-15 (plan docs/execution/plans/2026-11-15-closeout-record-once): project_root in tools/validate_closeout_artifacts.py now stops its ancestor search at the plan''s repository, where an ancestor with a .git entry (a folder or a worktree''s .git file) ends the walk, ported from agentic-framework ec3857a. A .agent folder in the home folder above the temp folder is no longer taken as a selftest plan''s root; the selftest''s fixture folders hold a .git entry, and three repo-boundary arms cover the walk'
     category: TECH-DEBT
     priority: P3
     meu_links: []
@@ -5251,3 +5254,18 @@ issues:
     related: []
     meu_links: []
     notes: 'Registered at closeout of docs/execution/plans/2026-11-14-review-limits-no-token-budget/ under D-739 (Mat, 2026-11-14 "proceed as recommended"). The baseline receipt C:/Temp/av-kit/rl/rl-base-dispatch.txt shows the pair failing before that change. Fix in its own session: give the fixture a path that still holds the token after instantiation, and clean the leftover %TEMP%/av-kit/receipts/dispatch-tests.'
+  - id: VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE
+    title: Real-ffmpeg frame grabs near a clip's last frame occasionally fail (frame grab failed at 00:00:02.999 / 00:00:03.200)
+    severity: low
+    component: core
+    status: open
+    discovered: '2026-11-15'
+    root_cause: 'hypothesis: CaptureService.frames_from_video (packages/core/src/avkit_core/services/capture.py _frames_body) raises ValidationError(_frame_failed_text) when the real ffmpeg grab near the end of a 3 s test clip returns no frame; it fails only sometimes and more often in a full run, so the tail seek or the grab timeout may be load-sensitive. Not reproduced on demand; unexplained.'
+    blast_radius: tests/integration/test_video_real_ffmpeg.py test_ac_134_10_counter_clip_frames_match_a_full_decode and test_ac_134_10_long_audio_past_the_last_frame. A miss fails a session gate's full py-tests step, so the gate has to be repeated. Whether the app's own frame grabs near a video's end can fail the same way is not known.
+    verification:
+      last_checked: '2026-11-15'
+    category: MONITORING
+    priority: P4
+    notes: 'SEEN 2026-11-15 (Session 84 closeout-record-once H1-2, no change reaches packages/ or the media adapter): the full suite failed test_ac_134_10_counter_clip_frames_match_a_full_decode at 00:00:02.999 in two gate runs (1 failed, 2846 passed, 189.72 s and 188.81 s; row 0''s baseline suite passed it). Isolation: the test alone passed 3/3; the test file alone failed once (the same test) and then passed 6/6; tests/integration/ failed once on test_ac_134_10_long_audio_past_the_last_frame at 00:00:03.200. Receipts under C:/Temp/av-kit/cro/: cro-gate-h1-run1.txt, cro-D6-py-tests-run1.txt, cro-gate-h1-run2.txt, cro-D6-py-tests-run2.txt, cro-h12-flake-probe-1.txt to -3.txt, cro-h12-flake-probe-file.txt, cro-h12-flake-probe-integration.txt and cro-h12-flake-probe-repeat.txt. Next step on a repeat: log the frame-grab ffmpeg stderr and the clip duration near the tail.'
+    meu_links: []
+    related: []

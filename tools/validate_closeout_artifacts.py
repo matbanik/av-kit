@@ -11,7 +11,9 @@ Five checks, selected by which arguments are supplied:
   --reflection F --reflection-template T --reflection-schema S
   --reflection F ... --decision-source P [--decision-source H] [--decision-issue ID ...]
                                             plus: every decision recorded in the plan,
-                                            handoff or issue has a Decisions Log row
+                                            handoff or issue is stated in full, and the
+                                            reflection's Decisions Log holds no template
+                                            example
 
 Exit codes, and the first line of output always names which:
 
@@ -382,7 +384,7 @@ def check_handoff_structure(text: str, path: str) -> list[str]:
     absent = [h for h in required if h not in text]
     if absent:
         raise Refuse(f"handoff {path} is missing required section(s): {', '.join(absent)}.")
-    # HDP-10: the section attests in a form the reconciliation reads, or not at all.
+    # HDP-10: the section attests in a form the closeout reads, or not at all.
     decisions = handoff_decision_log(text, path)
     rows = table_cells(text, "## Acceptance Criteria")
     if not rows:
@@ -749,11 +751,10 @@ def schema_required_fields(text: str, path: str) -> list[str]:
 # ------------------------------------------------------------ decisions log
 
 DECISION_STAGES = ("planning", "plan-review", "execution", "closeout", "triage", "grouping")
-DECISION_RESOLUTIONS = ("autonomous", "human")
-# The reflection's Decisions Log table, exactly as REFLECTION-TEMPLATE.md ships it.
-DECISIONS_LOG_HEADERS = [
+# A session grouping's §8 table has these columns (the stage is always `grouping`) and
+# may still be undecided, so `open` is a third resolution there.
+GROUPING_DECISION_HEADERS = [
     "ID",
-    "Stage",
     "Question",
     "Resolution",
     "Chosen",
@@ -761,9 +762,6 @@ DECISIONS_LOG_HEADERS = [
     "Reasoning (why this; why the alternatives lost)",
     "Human ref",
 ]
-# A session grouping's §8 table is the same row without Stage (the stage is always
-# `grouping`) and may still be undecided, so `open` is a third resolution there.
-GROUPING_DECISION_HEADERS = [h for h in DECISIONS_LOG_HEADERS if h != "Stage"]
 GROUPING_RESOLUTIONS = ("autonomous", "human", "open")
 # Any fenced block, whatever its language tag. YAML_FENCE above only sees ```yaml,
 # and a decision log that landed in a ```text fence has to be refused, not skipped.
@@ -857,6 +855,11 @@ def _strip_inline_comment(value: str) -> str:
 # `u` and `U` take 2, 4 and 8 hex digits. Anything else (`\q`) is not YAML (HDP-22).
 DQ_ESCAPES = '0abt\tnvfre "/\\N_LP'
 DQ_HEX_ESCAPES = {"x": 2, "u": 4, "U": 8}
+# What each DQ_ESCAPES character stands for, in the same order (YAML 1.2.2 §5.7), so a
+# double-quoted field is read as the text YAML gives it (D-831).
+DQ_ESCAPE_VALUES = dict(
+    zip(DQ_ESCAPES, '\0\a\b\t\t\n\v\f\r\x1b "/\\\x85\xa0' + chr(0x2028) + chr(0x2029))
+)
 
 
 def _scan_double_quoted(text: str, start: int, refuse) -> int:
@@ -1167,7 +1170,7 @@ def decision_log_keys(text: str, label: str) -> None:
     (``wrapper: {decision_log: [...]}``, HDP-28), inside a sequence item
     (``- decision_log:``, HDP-27) or as a second root key that YAML's last-wins rule
     would silently take over the first; every one of those drops a recorded decision
-    from the reconciliation, so each is refused by name. The lines come from
+    from the read, so each is refused by name. The lines come from
     ``yaml_key_lines``, so scalar text and comments are never keys; a flow
     collection is not walked but searched for the key, and any ``decision_log`` in
     one is refused, because the reader records a block sequence and nothing inside
@@ -1207,7 +1210,7 @@ def duplicate_mapping_key(text: str) -> tuple[str, int] | None:
     """``(key, line)`` of the first key written twice in one block mapping, else None.
 
     HDP-30: YAML keeps the last value of a repeated key, so ``id: D-1`` followed by
-    ``id: D-LOST`` in one record reconciles whichever the reader happened to take and
+    ``id: D-LOST`` in one record reads whichever the reader happened to take and
     silently drops the other. Mappings are told apart by column and by ``- `` markers
     (a new item at the same column is a new mapping), so the same key name in two
     records, in two nested mappings, in a comment or in scalar text is never a
@@ -1307,28 +1310,128 @@ def item_key(item: str, key: str) -> str | None:
     return _unquote(match.group("value"))
 
 
+_NON_TEXT_SCALAR = re.compile(
+    r"^(?:~|null|true|false|yes|no|on|off|[-+]?\d[\d_]*(?:\.\d*)?(?:[eE][-+]?\d+)?|[-+]?\.\d+)$",
+    re.IGNORECASE,
+)
+# One whole double- or single-quoted scalar, then optional blanks and an optional
+# `# comment` (YAML 1.2.2 §6.6: a comment starts at a `#` after white space, outside
+# a quoted scalar). Anything else that starts with a quote is not one scalar (D-831).
+_QUOTED_SCALAR = re.compile(
+    r"""^(?:"(?P<double>(?:[^"\\]|\\.)*)"|'(?P<single>(?:[^']|'')*)')[ \t]*(?:#.*)?$"""
+)
+
+
+def _quoted_scalar_text(raw: str) -> str | None:
+    """The text a quoted field value stands for, or None when it is not one quoted scalar.
+
+    av-kit's one deviation from upstream ``decision_field_text`` (D-831): upstream reads
+    the whole raw value with ``_unquote``, so ``"pending Mat" # awaiting reply`` keeps its
+    quotes and passes the pending test, and ``"" # later`` is two quote characters of
+    text. Here a trailing comment is dropped and a ``#`` inside the quotes stays text. A
+    single-quoted body is literal, with ``''`` read as ``'`` (YAML 1.2.2 §7.3.2); a
+    double-quoted body's escapes are decoded (§5.7), so ``"\\n"`` is blank and
+    ``"\\u0070ending"`` is pending. An escape YAML does not define gives None;
+    ``check_yaml_subset`` has already refused it, so this is a second line.
+    """
+    match = _QUOTED_SCALAR.match(raw)
+    if match is None:
+        return None
+    if match.group("single") is not None:
+        return match.group("single").replace("''", "'")
+    body = match.group("double")
+    out: list[str] = []
+    n = 0
+    while n < len(body):
+        if body[n] != "\\":
+            out.append(body[n])
+            n += 1
+            continue
+        escape = body[n + 1]
+        if escape in DQ_HEX_ESCAPES:
+            width = DQ_HEX_ESCAPES[escape]
+            digits = body[n + 2 : n + 2 + width]
+            if (
+                len(digits) != width
+                or any(d not in "0123456789abcdefABCDEF" for d in digits)
+                or int(digits, 16) > 0x10FFFF
+            ):
+                return None
+            out.append(chr(int(digits, 16)))
+            n += 2 + width
+            continue
+        if escape not in DQ_ESCAPE_VALUES:
+            return None
+        out.append(DQ_ESCAPE_VALUES[escape])
+        n += 2
+    return "".join(out)
+
+
+def decision_field_text(item: str, key: str) -> str | None:
+    """The text of ``key:`` in a sequence item, or None when it is blank or non-text.
+
+    Text is a quoted string, a plain scalar that YAML does not read as a number, a
+    boolean or null, or a block scalar (``|`` / ``>``) with a non-blank body. A
+    missing key, an empty value, a flow collection and a nested block are not text.
+    A quoted value is read by ``_quoted_scalar_text`` (D-831).
+    """
+    lines = item.splitlines()
+    first = next((line for line in lines if line.strip()), "")
+    column = len(first) - len(first.lstrip(" \t"))
+    for number, line in enumerate(lines):
+        match = re.match(rf"^[ \t]{{{column}}}{re.escape(key)}:(?P<value>.*)$", line)
+        if match is None:
+            continue
+        raw = match.group("value").strip()
+        deeper = []
+        for follow in lines[number + 1 :]:
+            if not follow.strip():
+                continue
+            if len(follow) - len(follow.lstrip(" \t")) <= column:
+                break
+            deeper.append(follow.strip())
+        if raw[:1] in ("|", ">"):
+            return " ".join(deeper) if deeper else None
+        if not raw or raw.startswith("#"):
+            return None
+        if raw[:1] in ("[", "{"):
+            return None
+        if raw[:1] in ('"', "'"):
+            value = _quoted_scalar_text(raw)
+            return value if value is not None and value.strip() else None
+        value = raw.split(" #", 1)[0].strip()
+        if not value or _NON_TEXT_SCALAR.match(value):
+            return None
+        return value
+    return None
+
+
 def refuse_repeated_ids(entries: list[tuple[str, str | None]], label: str) -> None:
     """Refuse a decision ID recorded twice in one source.
 
-    Reconciliation keys every decision by its ID. If one source repeats an ID, only one
-    of the two records can be matched against the reflection, and the other decision
-    could be left out of the Decisions Log without the check noticing. Across sources
-    one ID may appear more than once (for example a plan decision a handoff restates),
-    provided its stage agrees; ``decision_sources`` checks that.
+    Every decision has one record, and its ID names it (human-decision-protocol.md §6).
+    If one source repeats an ID, the two records give two rulings for one decision and
+    the stage check across sources reads only one of them. Across sources one ID may
+    appear more than once (for example a plan decision a handoff restates), provided
+    its stage agrees; ``decision_sources`` checks that.
     """
     seen: set[str] = set()
     for decision_id, _stage in entries:
         if decision_id in seen:
             raise Refuse(
                 f"{label} repeats decision ID {decision_id}; each decision needs its own "
-                f"ID, or the second record cannot be matched to a reflection row "
-                f"(human-decision-protocol.md §6)."
+                f"ID, so that its one record is the ruling and the stage check across "
+                f"sources reads it (human-decision-protocol.md §6)."
             )
         seen.add(decision_id)
 
 
 def decision_entries(items: list[str] | None, label: str) -> list[tuple[str, str | None]]:
     """``(id, stage)`` for every item of a ``decision_log:`` sequence.
+
+    Each entry must state its ``question``, ``chosen`` and ``reasoning`` as non-blank
+    text, and a ``chosen`` that starts with ``pending`` is refused: the ruling
+    belongs in the stage log before closeout (human-decision-protocol.md §6).
 
     A ``{template}`` slot anywhere in an item means the plan kept the example, and
     an example is not a decision -- refusing it is how an unfilled Decision Log is
@@ -1363,13 +1466,27 @@ def decision_entries(items: list[str] | None, label: str) -> list[tuple[str, str
         if not decision_id:
             raise Refuse(
                 f"{label} decision_log item {n} has no id; a decision that cannot be "
-                f"named cannot be reconciled with the reflection."
+                f"named cannot be read at closeout."
             )
         stage = item_key(item, "stage")
         if stage is not None and stage not in DECISION_STAGES:
             raise Refuse(
                 f"{label} decision_log entry {decision_id} names stage {stage!r}; the "
                 f"protocol stages are {', '.join(DECISION_STAGES)}."
+            )
+        for field in ("question", "chosen", "reasoning"):
+            if decision_field_text(item, field) is None:
+                raise Refuse(
+                    f"{label} decision_log entry {decision_id} has a blank or non-text "
+                    f"{field}; each stage-log entry states the question, the choice and "
+                    f"the reasoning (human-decision-protocol.md §6)."
+                )
+        if re.match(
+            r"pending\b", (decision_field_text(item, "chosen") or "").strip(), re.IGNORECASE
+        ):
+            raise Refuse(
+                f"{label} decision_log entry {decision_id} is still pending; record "
+                f"the ruling in `chosen` before closeout (human-decision-protocol.md §6)."
             )
         entries.append((decision_id, stage))
     refuse_repeated_ids(entries, f"{label} decision_log")
@@ -1381,7 +1498,7 @@ def fenced_decision_logs(text: str, label: str) -> list[tuple[str, str | None]]:
 
     A ``decision_log:`` root key inside a fence with any other language tag, or in
     prose outside every fence, is refused rather than skipped: the author meant to
-    record a decision and the record would otherwise vanish from reconciliation.
+    record a decision and the record would otherwise never be read.
     The key is discovered in every shape YAML can write it -- sequence item, flow
     map, quoted -- and ``decision_log_keys`` then decides whether that shape is a
     supported record (HDP-27); a ``~~~yaml`` fence is a fence like a ```yaml one
@@ -1422,7 +1539,7 @@ def handoff_decision_log(text: str, path: str) -> list[tuple[str, str | None]]:
 
     Anything else -- prose, a ```text fence, a ```yaml block without the key, two
     fences, an empty list -- is refused, so a handoff cannot attest "no decisions"
-    in words the reconciliation never reads (HDP-10). The template's instruction
+    in words the closeout never reads (HDP-10). The template's instruction
     comment and its closing horizontal rule are the section's frame and are ignored,
     so a filled copy of the shipped template validates (HDP-16); the block's YAML is
     checked against the bounded grammar before it is read (HDP-19).
@@ -1459,9 +1576,9 @@ def handoff_decision_log(text: str, path: str) -> list[tuple[str, str | None]]:
 def handoff_decisions(text: str, path: str) -> list[tuple[str, str | None]]:
     """Every decision a handoff records, read exactly as the structure gate reads it.
 
-    HDP-15: ``check_handoff_structure`` and the reconciliation must share ONE
-    interpretation of the handoff, or a record can pass the gate and vanish from
-    the reflection. The ``## Decision Log`` section is the only place a handoff
+    HDP-15: ``check_handoff_structure`` and the decision collector must share ONE
+    interpretation of the handoff, or a record can pass the gate and never be
+    read. The ``## Decision Log`` section is the only place a handoff
     records a decision; a ``decision_log:`` anywhere else in the file is refused.
     """
     entries = handoff_decision_log(text, path)
@@ -1502,17 +1619,44 @@ def issue_decision_log(text: str, name: str, issue: str) -> list[tuple[str, str 
             )
     raise Refuse(
         f"decision source {name} has no issue {issue}; --decision-issue must name an "
-        f"issue the file holds, or the reconciliation reads nothing and passes vacuously."
+        f"issue the file holds, or the check reads nothing and passes vacuously."
     )
+
+
+# A grouping cell that says nothing: blanks, markdown emphasis and at most one dash.
+GROUPING_BLANK_CELL = re.compile(r"^[\s`*_]*(?:[-–—][\s`*_]*)?$")
+
+
+def grouping_row_problems(cells: list[str]) -> list[str]:
+    """What a seven-cell grouping §8 row leaves unstated, in column order (D-829).
+
+    av-kit only: with the reflection's rows gone, nothing else reads what a grouping
+    row says. Question and Reasoning must not be blank; on an ``autonomous`` or
+    ``human`` row, Chosen must not be blank or start with ``pending``. An ``open``
+    row's Chosen is not read, and no YAML type rule applies, since a table has no
+    types. Each problem is ``blank {column} cell`` or ``still pending``.
+    """
+    resolution = cells[2].strip("`* ")
+    named = (("Question", cells[1]), ("Chosen", cells[3]), ("Reasoning", cells[5]))
+    problems = [
+        f"blank {column} cell"
+        for column, cell in named
+        if not (column == "Chosen" and resolution == "open") and GROUPING_BLANK_CELL.match(cell)
+    ]
+    if resolution != "open" and re.match(r"pending\b", cells[3].strip("`* "), re.IGNORECASE):
+        problems.append("still pending")
+    return problems
 
 
 def grouping_decisions(text: str, name: str) -> list[tuple[str, str | None]]:
     """Every D-row of a session grouping's ``## 8. Open Decisions`` table (HDP-13).
 
-    §8 is optional and may read ``None.``; otherwise it is the reflection's table
-    without the Stage column, and every row -- decided or still ``open`` -- must be
-    carried into the consuming session's reflection with stage ``grouping``. An
-    ad-hoc table is refused: rows that cannot be read cannot be carried forward.
+    §8 is optional and may read ``None.``; otherwise it is the canonical table (ID,
+    Question, Resolution, Chosen, Source tag, Reasoning and Human ref; the stage is
+    always ``grouping``), and every row -- decided or still ``open`` -- is read with
+    stage ``grouping``. Each row states its question and reasoning, and a ruled row
+    its choice (``grouping_row_problems``). An ad-hoc table is refused: rows that
+    cannot be read cannot be carried forward.
     The section is located in the file's structure: a ``## 8.`` inside a fence or a
     comment is an example that cannot stand in for it (HDP-25).
     """
@@ -1533,7 +1677,7 @@ def grouping_decisions(text: str, name: str) -> list[tuple[str, str | None]]:
         raise Refuse(
             f"{label} must be 'None.' or the canonical table "
             f"{' | '.join(GROUPING_DECISION_HEADERS)}; an ad-hoc table cannot be "
-            f"carried into the reflection."
+            f"carried forward."
         )
     entries: list[tuple[str, str | None]] = []
     for n, cells in enumerate(rows, 1):
@@ -1546,6 +1690,19 @@ def grouping_decisions(text: str, name: str) -> list[tuple[str, str | None]]:
             raise Refuse(
                 f"{label} row {decision_id} resolution {resolution!r} is not one of "
                 f"{', '.join(GROUPING_RESOLUTIONS)}."
+            )
+        problems = grouping_row_problems(cells)
+        if problems and problems[0] == "still pending":
+            raise Refuse(
+                f"{label} row {decision_id} is still pending; record the ruling in its "
+                f"Chosen cell before closeout, or set its Resolution to open "
+                f"(human-decision-protocol.md §6)."
+            )
+        if problems:
+            raise Refuse(
+                f"{label} row {decision_id} has a {problems[0]}; each grouping row "
+                f"states the question and the reasoning, and a ruled row its choice "
+                f"(human-decision-protocol.md §6)."
             )
         entries.append((decision_id, "grouping"))
     return entries
@@ -1570,7 +1727,7 @@ def decision_sources(paths: list[str], issues: Sequence[str]) -> dict[str, tuple
     the order given and each under its own label; a stage that disagrees anywhere is
     still refused (human-decision-protocol.md §6). A plan that declares a real ``grouping_source``
     binds that one file, resolved from the plan's project root: it must be among the
-    sources, or the grouping's decisions would be reconciled against nothing
+    sources, or the grouping's decisions would be read from nothing
     (HDP-18, HDP-21) -- and a quoted §8 example in the plan never lifts that
     obligation (HDP-25).
     """
@@ -1593,7 +1750,7 @@ def decision_sources(paths: list[str], issues: Sequence[str]) -> dict[str, tuple
                 f"plan {Path(plan_path).name} declares grouping_source {source!r} "
                 f"(resolved from the plan's project root as "
                 f"{resolve_declared_source(source, plan_path)}); pass that file as a "
-                f"--decision-source so its §8 decisions are reconciled, since another "
+                f"--decision-source so its §8 decisions are read, since another "
                 f"grouping or none at all cannot stand in for it (HDP-18)."
             )
     issue_read = False
@@ -1742,13 +1899,18 @@ def project_root(plan_path: str) -> Path:
 
     A plan declares ``.agent/context/grouping/{file}.md`` relative to its repository,
     so the root is the nearest ancestor of the plan file that holds a ``.agent``
-    directory; a plan with no such ancestor resolves beside itself. The working
-    directory never takes part, so the binding cannot move with ``cd``.
+    directory, searched no higher than the plan's repository: an ancestor with a
+    ``.git`` entry (a folder, or the file of a linked worktree or submodule) ends the
+    search, as git's own discovery does. A plan with no such ancestor inside its
+    repository resolves beside itself. The working directory never takes part, so
+    the binding cannot move with ``cd``.
     """
     plan = Path(plan_path).resolve()
     for ancestor in plan.parents:
         if (ancestor / ".agent").is_dir():
             return ancestor
+        if (ancestor / ".git").exists():
+            return plan.parent
     return plan.parent
 
 
@@ -1775,101 +1937,19 @@ def path_matches_declared(path: str, declared: str, plan_path: str) -> bool:
         return False
 
 
-def reflection_decision_rows(text: str, path: str) -> dict[str, str]:
-    """``id -> stage`` from the reflection's ``### Decisions Log``; ``{}`` for ``None.``.
+def check_decisions_log(sources: list[str], issues: Sequence[str]) -> str:
+    """Read the stage logs of a closeout; every entry must be stated in full.
 
-    The table is the canonical one from REFLECTION-TEMPLATE.md, whole: an ID and a
-    Stage alone enumerate a decision without disclosing it, so every cell must be
-    filled, the resolution must be ``autonomous`` or ``human``, and an ID appears
-    once (HDP-12).
-    """
-    match = re.search(
-        r"^### Decisions Log\n(?P<body>.*?)(?=^##+ |\Z)", text, re.MULTILINE | re.DOTALL
-    )
-    if match is None:
-        raise Refuse(
-            f"reflection {path} has no '### Decisions Log' section, so the decisions "
-            f"recorded elsewhere cannot be reconciled with what the human was shown."
-        )
-    body = match.group("body")
-    prose = re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL)
-    prose = "\n".join(line for line in prose.splitlines() if line.strip() != "---")
-    if prose.strip() == "None.":
-        return {}
-    header, rows = table_with_header(body, "")
-    if [h.strip().lower() for h in header] != [h.lower() for h in DECISIONS_LOG_HEADERS]:
-        raise Refuse(
-            f"reflection {path} Decisions Log must be 'None.' or the canonical template "
-            f"table {' | '.join(DECISIONS_LOG_HEADERS)}."
-        )
-    recorded: dict[str, str] = {}
-    for n, cells in enumerate(rows, 1):
-        if len(cells) != len(header) or PLACEHOLDER.search(" ".join(cells)):
-            raise Refuse(
-                f"reflection {path} Decisions Log row {n} is ragged or still carries a "
-                f"template placeholder."
-            )
-        row = {name: cell.strip("`* ") for name, cell in zip(DECISIONS_LOG_HEADERS, cells)}
-        decision_id = row["ID"] or f"#{n}"
-        for column, value in row.items():
-            if not value:
-                raise Refuse(
-                    f"reflection {path} Decisions Log row {decision_id} has a blank "
-                    f"{column} cell; a row that does not say what was decided, or why, "
-                    f"discloses nothing."
-                )
-        if decision_id in recorded:
-            raise Refuse(
-                f"reflection {path} Decisions Log row {decision_id} appears twice; one "
-                f"decision has one row."
-            )
-        if row["Stage"] not in DECISION_STAGES:
-            raise Refuse(
-                f"reflection {path} Decisions Log row {decision_id} names stage "
-                f"{row['Stage']!r}; the protocol stages are {', '.join(DECISION_STAGES)}."
-            )
-        if row["Resolution"] not in DECISION_RESOLUTIONS:
-            raise Refuse(
-                f"reflection {path} Decisions Log row {decision_id} resolution "
-                f"{row['Resolution']!r} is not one of {', '.join(DECISION_RESOLUTIONS)}."
-            )
-        recorded[decision_id] = row["Stage"]
-    return recorded
-
-
-def check_decisions_log(text: str, path: str, sources: list[str], issues: Sequence[str]) -> str:
-    """Every decision recorded in a source must have a reflection row (HDP-8).
-
-    The reflection's ``### Decisions Log`` is the only place the human reads the
-    decisions the agent did not stop for (human-decision-protocol.md §6). A
-    decision that lives in the plan, a handoff, a grouping's §8 or an issue's
-    enrichment but not here was made in silence, and ``None.`` is only true when
-    no source recorded one.
+    human-decision-protocol.md §6: each decision has one record, in the log of the
+    stage that made it (the plan, a handoff, a grouping's §8 or an issue's
+    enrichment). The reflection's ``### Decisions Log`` is a short list with links,
+    so it is not compared with the stage logs. Two logs that give one decision two
+    stages are refused, and so is an entry with a blank or non-text ``question``,
+    ``chosen`` or ``reasoning`` or a ``chosen`` that is still pending. Each
+    ``--decision-issue`` is read under its own label (D-828).
     """
     expected = decision_sources(sources, issues)
-    recorded = reflection_decision_rows(text, path)
-    if expected and not recorded:
-        listing = ", ".join(f"{d} ({s}, {src})" for d, (s, src) in expected.items())
-        raise Refuse(
-            f"reflection {path} Decisions Log says None. but {len(expected)} "
-            f"decision(s) are recorded elsewhere: {listing}. Autonomy that is not "
-            f"disclosed is silence."
-        )
-    for decision_id, (stage, source) in expected.items():
-        if decision_id not in recorded:
-            raise Refuse(
-                f"reflection {path} Decisions Log is missing decision {decision_id} "
-                f"({stage}, recorded in {source})."
-            )
-        if recorded[decision_id] != stage:
-            raise Refuse(
-                f"reflection {path} Decisions Log stage mismatch for {decision_id}: the "
-                f"row says {recorded[decision_id]!r}, {source} says {stage!r}."
-            )
-    return (
-        f"{len(expected)} recorded decision(s) reconciled against "
-        f"{len(recorded)} Decisions Log row(s)"
-    )
+    return f"{len(expected)} stage-log decision(s) read, each stated in full"
 
 
 def check_reflection(
@@ -1972,10 +2052,20 @@ def check_reflection(
     else:
         notes.append("no patterns raised, no design rules required")
 
-    # HDP-8: the Decisions Log heading being present says nothing about whether the
-    # decisions made in the plan, the handoffs or the closed issue reached it.
+    # The Decisions Log is a short list of reversible choices with links, or None.
+    # The template's example line left in place is not a list of choices.
+    log = re.search(
+        r"^### Decisions Log\n(?P<body>.*?)(?=^##+ |\Z)", text, re.MULTILINE | re.DOTALL
+    )
+    if log is not None and "_{" in log.group("body"):
+        raise Refuse(
+            f"reflection {path} Decisions Log still holds the template example; list the "
+            f"reversible choices with links, or write None. (human-decision-protocol.md §6)."
+        )
+    # human-decision-protocol.md §6: the stage logs hold the one record of each
+    # decision; read them so a blank, pending or non-text entry is refused.
     if decision_sources_paths:
-        notes.append(check_decisions_log(text, path, decision_sources_paths, decision_issues))
+        notes.append(check_decisions_log(decision_sources_paths, decision_issues))
     return notes
 
 
@@ -2043,8 +2133,8 @@ def run(args: argparse.Namespace) -> list[str]:
 
     if (args.decision_source or args.decision_issue) and not args.reflection:
         raise Usage(
-            "--decision-source/--decision-issue reconcile recorded decisions against a "
-            "reflection's Decisions Log; pass --reflection PATH."
+            "--decision-source/--decision-issue read the stage logs of a closeout and "
+            "check the reflection's Decisions Log; pass --reflection PATH."
         )
 
     if args.reflection:
@@ -2256,9 +2346,7 @@ _GOOD_REFLECTION_TEMPLATE = """# {YYYY-MM-DD} Meta-Reflection
 
 ### Decisions Log
 
-| ID | Stage | Question | Resolution | Chosen | Source tag | Reasoning (why this; why the alternatives lost) | Human ref |
-|----|-------|----------|------------|--------|------------|--------------------------------------------------|-----------|
-| D-1 | planning / plan-review / execution / closeout / triage / grouping | _{one line}_ | autonomous / human | _{option}_ | Local Canon / Research-backed / Human-approved | _{the deciding factor}_ | _{USER_EXPLICIT date + quote, or —}_ |
+- _{the choice in plain words}_ — [D-1](_{path to the stage log}_)
 
 ## Pattern Extraction
 
@@ -2287,7 +2375,7 @@ session:
 loaded: {}
 note: ""
 ```
-"""  # noqa: E501 -- mirrors the template table rows verbatim
+"""
 
 _GOOD_REFLECTION = """# 2026-09-02 Meta-Reflection
 
@@ -2376,6 +2464,9 @@ _DECISION_KNOWN_ISSUES = """issues:
     decision_log:
     - id: D-9
       stage: triage
+      question: "Other issue?"
+      chosen: "Keep"
+      reasoning: "two-way door"
 - id: CORE-DEMO
   status: resolved
   enrichment:
@@ -2385,6 +2476,7 @@ _DECISION_KNOWN_ISSUES = """issues:
       stage: triage
       question: "Scope the fix?"
       resolution: autonomous
+      chosen: "New MEU"
       reasoning: "grouping ruling"
 """
 
@@ -2398,6 +2490,9 @@ _DECISION_KNOWN_ISSUES_INDENTED = """issues:
       decision_log:
         - stage: triage
           id: D-9
+          question: "Other issue?"
+          chosen: "Keep"
+          reasoning: "two-way door"
   - status: resolved
     id: CORE-DEMO
     enrichment:
@@ -2407,6 +2502,7 @@ _DECISION_KNOWN_ISSUES_INDENTED = """issues:
           id: D-3
           question: "Scope the fix?"
           resolution: autonomous
+          chosen: "New MEU"
           reasoning: "grouping ruling"
 """
 
@@ -3620,19 +3716,6 @@ def selftest() -> int:
         ["--reflection", reflection, "--reflection-template", template, "--decision-source", plan],
     )
     arm(
-        "decision-missing-from-reflection-refused",
-        "1/REFUSE",
-        [
-            "--reflection",
-            reflection,
-            "--reflection-template",
-            template,
-            "--decision-source",
-            decided_plan,
-        ],
-        must_say="Decisions Log says None. but 1 decision(s)",
-    )
-    arm(
         "plan-repeated-id-across-fences-refused",
         "1/REFUSE",
         [
@@ -3651,48 +3734,6 @@ def selftest() -> int:
             ),
         ],
         must_say="repeats decision ID D-1",
-    )
-    arm(
-        "decision-issue-missing-from-reflection-refused",
-        "1/REFUSE",
-        [
-            "--reflection",
-            w(
-                "plan-only.md",
-                _GOOD_REFLECTION.replace(
-                    "### Decisions Log\n\nNone.\n",
-                    _DECISIONS_LOG_ROWS.replace(_DECISION_ROW_D3, ""),
-                ),
-            ),
-            "--reflection-template",
-            template,
-            "--decision-source",
-            decided_plan,
-            "--decision-source",
-            known_issues,
-            "--decision-issue",
-            "CORE-DEMO",
-        ],
-        must_say="missing decision D-3 (triage",
-    )
-    arm(
-        "decision-stage-mismatch-refused",
-        "1/REFUSE",
-        [
-            "--reflection",
-            w(
-                "wrong-stage.md",
-                _GOOD_REFLECTION.replace(
-                    "### Decisions Log\n\nNone.\n",
-                    _DECISIONS_LOG_ROWS.replace("| D-1 | planning |", "| D-1 | execution |"),
-                ),
-            ),
-            "--reflection-template",
-            template,
-            "--decision-source",
-            decided_plan,
-        ],
-        must_say="stage mismatch for D-1",
     )
     arm(
         "decision-placeholder-entry-refused",
@@ -3742,6 +3783,262 @@ def selftest() -> int:
             str(tmp / "absent-plan.md"),
         ],
         must_say="decision source not found",
+    )
+
+    # -- stage-log entries are stated in full; the reflection list holds no example --
+    arm(
+        "decision-pending-chosen-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            decided_reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "pending-plan.md",
+                _GOOD_PLAN
+                + _DECISION_PLAN_TAIL.replace(
+                    'chosen: "SQLite"', 'chosen: "pending the human ruling"'
+                ),
+            ),
+        ],
+        must_say="is still pending",
+    )
+    arm(
+        "decision-non-text-chosen-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            decided_reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "non-text-plan.md",
+                _GOOD_PLAN + _DECISION_PLAN_TAIL.replace('chosen: "SQLite"', "chosen: 3"),
+            ),
+        ],
+        must_say="blank or non-text chosen",
+    )
+    arm(
+        "decision-blank-reasoning-in-log-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            decided_reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "blank-reason-plan.md",
+                _GOOD_PLAN
+                + _DECISION_PLAN_TAIL.replace(
+                    'reasoning: "precedent converges; two-way door"', 'reasoning: ""'
+                ),
+            ),
+        ],
+        must_say="blank or non-text reasoning",
+    )
+    arm(
+        "decision-block-scalar-reasoning-ok",
+        "0/OK",
+        [
+            "--reflection",
+            decided_reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "block-reason-plan.md",
+                _GOOD_PLAN
+                + _DECISION_PLAN_TAIL.replace(
+                    'reasoning: "precedent converges; two-way door"',
+                    "reasoning: |\n      precedent converges; two-way door",
+                ),
+            ),
+        ],
+        must_say="1 stage-log decision(s) read",
+    )
+    arm(
+        "reflection-decisions-log-example-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            w(
+                "example-log-reflection.md",
+                _GOOD_REFLECTION.replace(
+                    "### Decisions Log\n\nNone.\n",
+                    "### Decisions Log\n\n"
+                    "- _{the choice in plain words}_ — [D-1](_{path to the stage log}_)\n",
+                ),
+            ),
+            "--reflection-template",
+            template,
+        ],
+        must_say="template example",
+    )
+    arm(
+        "reflection-decisions-log-link-list-ok",
+        "0/OK",
+        [
+            "--reflection",
+            w(
+                "link-log-reflection.md",
+                _GOOD_REFLECTION.replace(
+                    "### Decisions Log\n\nNone.\n",
+                    "### Decisions Log\n\n- Chose SQLite for the store — [D-1](plan.md)\n",
+                ),
+            ),
+            "--reflection-template",
+            template,
+        ],
+    )
+    # av-kit (D-831): a quoted value then a comment, and a hash inside the quotes.
+    arm(
+        "decision-commented-pending-chosen-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "commented-pending-plan.md",
+                _GOOD_PLAN
+                + _DECISION_PLAN_TAIL.replace(
+                    'chosen: "SQLite"', 'chosen: "pending Mat" # awaiting reply'
+                ),
+            ),
+        ],
+        must_say="is still pending",
+    )
+    arm(
+        "decision-commented-empty-chosen-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "commented-empty-plan.md",
+                _GOOD_PLAN
+                + _DECISION_PLAN_TAIL.replace('chosen: "SQLite"', 'chosen: "" # not recorded'),
+            ),
+        ],
+        must_say="blank or non-text chosen",
+    )
+    arm(
+        "decision-quoted-hash-text-ok",
+        "0/OK",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "quoted-hash-plan.md",
+                _GOOD_PLAN + _DECISION_PLAN_TAIL.replace('chosen: "SQLite"', 'chosen: "Keep # 3"'),
+            ),
+        ],
+        must_say="1 stage-log decision(s) read",
+    )
+    # av-kit (D-831, CRO-R1-1): a double-quoted value is read with its escapes decoded,
+    # so an escaped blank or pending value is refused and escaped text passes.
+    arm(
+        "decision-escaped-newline-reasoning-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "escaped-newline-plan.md",
+                _GOOD_PLAN
+                + _DECISION_PLAN_TAIL.replace(
+                    'reasoning: "precedent converges; two-way door"', 'reasoning: "\\n"'
+                ),
+            ),
+        ],
+        must_say="blank or non-text reasoning",
+    )
+    arm(
+        "decision-escaped-pending-chosen-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "escaped-pending-plan.md",
+                _GOOD_PLAN
+                + _DECISION_PLAN_TAIL.replace('chosen: "SQLite"', 'chosen: "\\u0070ending Mat"'),
+            ),
+        ],
+        must_say="is still pending",
+    )
+    arm(
+        "decision-escaped-blank-question-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "escaped-question-plan.md",
+                _GOOD_PLAN
+                + _DECISION_PLAN_TAIL.replace('question: "Which store?"', 'question: "\\t"'),
+            ),
+        ],
+        must_say="blank or non-text question",
+    )
+    arm(
+        "decision-escaped-blank-chosen-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "escaped-chosen-plan.md",
+                _GOOD_PLAN + _DECISION_PLAN_TAIL.replace('chosen: "SQLite"', 'chosen: "\\x20\\L"'),
+            ),
+        ],
+        must_say="blank or non-text chosen",
+    )
+    arm(
+        "decision-escaped-text-ok",
+        "0/OK",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            w(
+                "escaped-text-plan.md",
+                _GOOD_PLAN
+                + _DECISION_PLAN_TAIL.replace(
+                    'chosen: "SQLite"', 'chosen: "say \\"x\\" \\\\ \\x7Bid\\x7D"'
+                ).replace(
+                    'reasoning: "precedent converges; two-way door"',
+                    "reasoning: 'a \\n stays as written'",
+                ),
+            ),
+        ],
+        must_say="1 stage-log decision(s) read",
     )
 
     # -- HDP-10: a Decision Log is None. or one ```yaml fence, nowhere else ---------
@@ -3883,38 +4180,8 @@ def selftest() -> int:
         ],
     )
     arm(
-        "decision-issue-indented-4-missing-refused",
-        "1/REFUSE",
-        [
-            "--reflection",
-            w(
-                "plan-only-4.md",
-                _GOOD_REFLECTION.replace(
-                    "### Decisions Log\n\nNone.\n",
-                    _DECISIONS_LOG_ROWS.replace(_DECISION_ROW_D3, ""),
-                ),
-            ),
-            "--reflection-template",
-            template,
-            "--decision-source",
-            decided_plan,
-            "--decision-source",
-            w(
-                "known-issues-4.yaml",
-                "\n".join(
-                    ("  " + line if line.strip() else line)
-                    for line in _DECISION_KNOWN_ISSUES_INDENTED.splitlines()
-                ).replace("  issues:", "issues:", 1)
-                + "\n",
-            ),
-            "--decision-issue",
-            "CORE-DEMO",
-        ],
-        must_say="missing decision D-3 (triage",
-    )
-    arm(
-        "decision-stage-before-id-refused",
-        "1/REFUSE",
+        "decision-stage-before-id-read",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -3929,7 +4196,7 @@ def selftest() -> int:
                 ),
             ),
         ],
-        must_say="Decisions Log says None. but 1 decision(s)",
+        must_say="1 stage-log decision(s) read",
     )
     arm(
         "decision-item-without-id-refused",
@@ -4010,13 +4277,27 @@ def selftest() -> int:
             *issue_sources,
             *both_issues,
         ],
-        must_say="3 recorded decision(s)",
+        must_say="3 stage-log decision(s) read",
+    )
+    pending_issues = w(
+        "pending-known-issues.yaml",
+        _DECISION_KNOWN_ISSUES.replace('chosen: "Keep"', 'chosen: "pending Mat\'s ruling"', 1),
     )
     arm(
         "decision-issue-repeated-first-issue-read",
         "1/REFUSE",
-        ["--reflection", decided_reflection, *issue_sources, *both_issues],
-        must_say="missing decision D-9 (triage, recorded in issue OTHER-ISSUE)",
+        [
+            "--reflection",
+            decided_reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            decided_plan,
+            "--decision-source",
+            pending_issues,
+            *both_issues,
+        ],
+        must_say="issue OTHER-ISSUE decision_log entry D-9 is still pending",
     )
     arm(
         "decision-issue-same-id-twice-is-usage",
@@ -4051,77 +4332,6 @@ def selftest() -> int:
     def rows_reflection(name: str, rows: str) -> str:
         return w(name, _GOOD_REFLECTION.replace("### Decisions Log\n\nNone.\n", rows))
 
-    arm(
-        "decision-two-column-table-refused",
-        "1/REFUSE",
-        [
-            "--reflection",
-            rows_reflection(
-                "two-col.md",
-                "### Decisions Log\n\n| ID | Stage |\n|----|-------|\n| D-1 | planning |\n",
-            ),
-            "--reflection-template",
-            template,
-            "--decision-source",
-            decided_plan,
-        ],
-        must_say="canonical",
-    )
-    arm(
-        "decision-blank-reasoning-refused",
-        "1/REFUSE",
-        [
-            "--reflection",
-            rows_reflection(
-                "blank-reason.md",
-                _DECISIONS_LOG_ROWS.replace(
-                    "| docs/adr/001.md:10 precedent; two-way door |", "|  |"
-                ),
-            ),
-            "--reflection-template",
-            template,
-            "--decision-source",
-            decided_plan,
-        ],
-        must_say="blank",
-    )
-    arm(
-        "decision-invalid-resolution-refused",
-        "1/REFUSE",
-        [
-            "--reflection",
-            rows_reflection(
-                "bad-res.md",
-                _DECISIONS_LOG_ROWS.replace(
-                    "| Which store? | autonomous |", "| Which store? | maybe |"
-                ),
-            ),
-            "--reflection-template",
-            template,
-            "--decision-source",
-            decided_plan,
-        ],
-        must_say="resolution",
-    )
-    arm(
-        "decision-duplicate-id-refused",
-        "1/REFUSE",
-        [
-            "--reflection",
-            rows_reflection(
-                "dup.md",
-                _DECISIONS_LOG_ROWS.replace(
-                    _DECISION_ROW_D3, _DECISION_ROW_D3.replace("| D-3 |", "| D-1 |")
-                ),
-            ),
-            "--reflection-template",
-            template,
-            "--decision-source",
-            decided_plan,
-        ],
-        must_say="twice",
-    )
-
     # -- HDP-13: grouping §8 D-rows are carried into the consuming session ----------
     grouping = w("demo-session-grouping.md", _DECISION_GROUPING)
     arm(
@@ -4139,8 +4349,8 @@ def selftest() -> int:
         ],
     )
     arm(
-        "grouping-decision-missing-refused",
-        "1/REFUSE",
+        "grouping-decisions-read",
+        "0/OK",
         [
             "--reflection",
             decided_reflection,
@@ -4151,7 +4361,61 @@ def selftest() -> int:
             "--decision-source",
             grouping,
         ],
-        must_say="missing decision D-7 (grouping",
+        must_say="3 stage-log decision(s) read",
+    )
+    # av-kit (D-829): a ruled grouping row's Chosen cell is read; an open row's is not.
+    arm(
+        "grouping-blank-chosen-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            decided_plan,
+            "--decision-source",
+            w(
+                "blank-chosen-session-grouping.md",
+                _DECISION_GROUPING.replace("| autonomous | One |", "| autonomous | — |", 1),
+            ),
+        ],
+        must_say="has a blank Chosen cell",
+    )
+    arm(
+        "grouping-pending-chosen-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            decided_plan,
+            "--decision-source",
+            w(
+                "pending-chosen-session-grouping.md",
+                _DECISION_GROUPING.replace(
+                    "| autonomous | One |", "| autonomous | pending Mat |", 1
+                ),
+            ),
+        ],
+        must_say="is still pending",
+    )
+    arm(
+        "grouping-open-row-read",
+        "0/OK",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            decided_plan,
+            "--decision-source",
+            grouping,
+        ],
+        must_say="3 stage-log decision(s) read",
     )
     arm(
         "grouping-repeated-id-refused",
@@ -4222,8 +4486,8 @@ def selftest() -> int:
 
     d1_reflection = rows_reflection("d1-only.md", _DECISIONS_LOG_ROWS.replace(_DECISION_ROW_D3, ""))
     arm(
-        "decision-indented-fence-reconciled",
-        "1/REFUSE",
+        "decision-indented-fence-read",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -4232,11 +4496,11 @@ def selftest() -> int:
             "--decision-source",
             w("indented-fence-plan.md", _GOOD_PLAN + indented(_DECISION_PLAN_TAIL, fence_too=True)),
         ],
-        must_say="says None. but 1 decision",
+        must_say="1 stage-log decision(s) read",
     )
     arm(
-        "decision-indented-root-reconciled",
-        "1/REFUSE",
+        "decision-indented-root-read",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -4245,7 +4509,7 @@ def selftest() -> int:
             "--decision-source",
             w("indented-root-plan.md", _GOOD_PLAN + indented(_DECISION_PLAN_TAIL, fence_too=False)),
         ],
-        must_say="says None. but 1 decision",
+        must_say="1 stage-log decision(s) read",
     )
     arm(
         "decision-indented-fence-ok",
@@ -4304,8 +4568,8 @@ def selftest() -> int:
         must_say="1 decision(s) logged",
     )
     arm(
-        "handoff-indented-root-reconciled",
-        "1/REFUSE",
+        "handoff-indented-root-read",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -4314,7 +4578,7 @@ def selftest() -> int:
             "--decision-source",
             indented_root_handoff,
         ],
-        must_say="says None. but 1 decision",
+        must_say="1 stage-log decision(s) read",
     )
 
     # -- HDP-16: the shipped handoff template must validate once filled in --------
@@ -4419,7 +4683,7 @@ def selftest() -> int:
     # -- HDP-17: valid YAML comments and unsupported roots in known-issues ----------
     arm(
         "issues-inline-comment-read",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             d1_reflection,
@@ -4435,11 +4699,11 @@ def selftest() -> int:
             "--decision-issue",
             "CORE-DEMO",
         ],
-        must_say="missing decision D-3 (triage",
+        must_say="2 stage-log decision(s) read",
     )
     arm(
         "enrichment-inline-comment-read",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             d1_reflection,
@@ -4455,11 +4719,11 @@ def selftest() -> int:
             "--decision-issue",
             "CORE-DEMO",
         ],
-        must_say="missing decision D-3 (triage",
+        must_say="2 stage-log decision(s) read",
     )
     arm(
         "decision-log-inline-comment-read",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             d1_reflection,
@@ -4475,7 +4739,7 @@ def selftest() -> int:
             "--decision-issue",
             "CORE-DEMO",
         ],
-        must_say="missing decision D-3 (triage",
+        must_say="2 stage-log decision(s) read",
     )
     arm(
         "issues-nested-root-refused",
@@ -4501,7 +4765,7 @@ def selftest() -> int:
     unnamed_grouping = w("sessions.md", _DECISION_GROUPING)
     arm(
         "grouping-any-filename-read",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -4512,7 +4776,7 @@ def selftest() -> int:
             "--decision-source",
             unnamed_grouping,
         ],
-        must_say="D-7 (grouping",
+        must_say="2 stage-log decision(s) read",
     )
     declared_plan = w(
         "declared-plan.md",
@@ -4749,7 +5013,7 @@ def selftest() -> int:
     )
     arm(
         "grouping-declared-root-resolved-read",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -4760,7 +5024,7 @@ def selftest() -> int:
             "--decision-source",
             bound_actual,
         ],
-        must_say="D-7 (grouping",
+        must_say="2 stage-log decision(s) read",
     )
     arm(
         "grouping-declared-root-resolved-ok",
@@ -4777,6 +5041,7 @@ def selftest() -> int:
         ],
     )
     base = tmp / "basename"
+    (base / ".git").mkdir(parents=True)
     base_actual = grouping_at(base / "demo.md", _DECISION_GROUPING)
     base_decoy = grouping_at(base / "other" / "demo.md", empty_grouping)
     base_plan = grouping_at(
@@ -4802,7 +5067,7 @@ def selftest() -> int:
     )
     arm(
         "grouping-declared-basename-beside-plan-read",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -4813,7 +5078,67 @@ def selftest() -> int:
             "--decision-source",
             base_actual,
         ],
-        must_say="D-7 (grouping",
+        must_say="2 stage-log decision(s) read",
+    )
+    # A `.git` entry ends the root search: an outer `.agent` above the plan's
+    # repository (such as the home `~/.agent`) is never the plan's root.
+    nest = tmp / "repo-boundary"
+    (nest / ".agent").mkdir(parents=True)
+    nest_decoy = grouping_at(nest / "demo.md", empty_grouping)
+    nest_plan_text = _GOOD_PLAN.replace(
+        'date: "2026-09-01"\n', 'date: "2026-09-01"\ngrouping_source: "demo.md"\n', 1
+    )
+    (nest / "repo" / ".git").mkdir(parents=True)
+    nest_plan = grouping_at(nest / "repo" / "plan.md", nest_plan_text)
+    nest_actual = grouping_at(nest / "repo" / "demo.md", _DECISION_GROUPING)
+    arm(
+        "grouping-declared-repo-boundary-read",
+        "0/OK",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            nest_plan,
+            "--decision-source",
+            nest_actual,
+        ],
+        must_say="2 stage-log decision(s) read",
+    )
+    (nest / "gitfile-repo").mkdir(parents=True)
+    (nest / "gitfile-repo" / ".git").write_text("gitdir: ../elsewhere\n", encoding="utf-8")
+    gitfile_plan = grouping_at(nest / "gitfile-repo" / "plan.md", nest_plan_text)
+    gitfile_actual = grouping_at(nest / "gitfile-repo" / "demo.md", _DECISION_GROUPING)
+    arm(
+        "grouping-declared-repo-boundary-gitfile-read",
+        "0/OK",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            gitfile_plan,
+            "--decision-source",
+            gitfile_actual,
+        ],
+        must_say="2 stage-log decision(s) read",
+    )
+    arm(
+        "grouping-declared-repo-boundary-outer-decoy-refused",
+        "1/REFUSE",
+        [
+            "--reflection",
+            reflection,
+            "--reflection-template",
+            template,
+            "--decision-source",
+            nest_plan,
+            "--decision-source",
+            nest_decoy,
+        ],
+        must_say="declares grouping_source",
     )
 
     # -- HDP-22: the bounded grammar refuses malformed flow, escapes and mixed blocks --
@@ -4871,7 +5196,7 @@ def selftest() -> int:
     # -- HDP-23: a source is classified by its structure, never by its filename -------
     arm(
         "grouping-named-plan-read-as-plan",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -4880,7 +5205,7 @@ def selftest() -> int:
             "--decision-source",
             w("grouping-parser-plan.md", _GOOD_PLAN + _DECISION_PLAN_TAIL),
         ],
-        must_say="D-1 (planning",
+        must_say="1 stage-log decision(s) read",
     )
     grouping_named_handoff = w(
         "grouping-parser-handoff.md",
@@ -4895,7 +5220,7 @@ def selftest() -> int:
     )
     arm(
         "grouping-named-handoff-read-as-handoff",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -4904,7 +5229,7 @@ def selftest() -> int:
             "--decision-source",
             grouping_named_handoff,
         ],
-        must_say="D-2 (execution",
+        must_say="1 stage-log decision(s) read",
     )
     arm(
         "grouping-with-decision-log-refused",
@@ -4933,6 +5258,7 @@ def selftest() -> int:
         must_say="one kind of source",
     )
     declared_handoff_dir = tmp / "declared-handoff"
+    (declared_handoff_dir / ".git").mkdir(parents=True)
     arm(
         "grouping-declared-with-plan-source-refused",
         "1/REFUSE",
@@ -5084,6 +5410,7 @@ def selftest() -> int:
         "```markdown\n## 8. Open Decisions\n\nNone.\n\n## 9. Notes\n```\n"
     )
     fenced = tmp / "fenced-heading"
+    (fenced / ".git").mkdir(parents=True)
     fenced_heading_plan = grouping_at(
         fenced / "plan.md",
         _GOOD_PLAN.replace(
@@ -5106,8 +5433,8 @@ def selftest() -> int:
         must_say="declares grouping_source",
     )
     arm(
-        "grouping-fenced-heading-declared-unreconciled-refused",
-        "1/REFUSE",
+        "grouping-fenced-heading-declared-read",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -5118,7 +5445,7 @@ def selftest() -> int:
             "--decision-source",
             fenced_grouping,
         ],
-        must_say="D-7 (grouping",
+        must_say="2 stage-log decision(s) read",
     )
     arm(
         "grouping-fenced-heading-declared-reconciled-ok",
@@ -5138,7 +5465,7 @@ def selftest() -> int:
     )
     arm(
         "plan-fenced-heading-read-as-plan",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -5147,11 +5474,11 @@ def selftest() -> int:
             "--decision-source",
             w("fenced-heading-plan.md", _GOOD_PLAN + fenced_heading + _DECISION_PLAN_TAIL),
         ],
-        must_say="D-1 (planning",
+        must_say="1 stage-log decision(s) read",
     )
     arm(
         "plan-commented-heading-read-as-plan",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -5163,7 +5490,7 @@ def selftest() -> int:
                 _GOOD_PLAN + ("\n<!--\n## 8. Open Decisions\n\nNone.\n-->\n") + _DECISION_PLAN_TAIL,
             ),
         ],
-        must_say="D-1 (planning",
+        must_say="1 stage-log decision(s) read",
     )
     arm(
         "grouping-declaring-grouping-source-refused",
@@ -5183,7 +5510,7 @@ def selftest() -> int:
     )
     arm(
         "grouping-fenced-example-before-real-section-read",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -5200,7 +5527,7 @@ def selftest() -> int:
                 ),
             ),
         ],
-        must_say="D-7 (grouping",
+        must_say="2 stage-log decision(s) read",
     )
 
     # -- HDP-27: a decision_log key is a key wherever YAML puts it ----------------------
@@ -5237,7 +5564,7 @@ def selftest() -> int:
     )
     arm(
         "decision-quoted-root-key-read",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -5245,10 +5572,12 @@ def selftest() -> int:
             template,
             "--decision-source",
             fenced_plan(
-                "quoted-root-plan.md", '"decision_log":\n  - id: D-1\n    stage: planning\n'
+                "quoted-root-plan.md",
+                '"decision_log":\n  - id: D-1\n    stage: planning\n    question: "Q?"\n'
+                '    chosen: "A"\n    reasoning: "R"\n',
             ),
         ],
-        must_say="D-1 (planning",
+        must_say="1 stage-log decision(s) read",
     )
     arm(
         "decision-sequence-item-outside-fence-refused",
@@ -5357,7 +5686,7 @@ def selftest() -> int:
     tilde_example = "~~~markdown\n## 8. Open Decisions\n\nNone.\n\n## 9. Notes\n~~~\n"
     arm(
         "grouping-tilde-fenced-example-before-real-section-read",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -5371,9 +5700,10 @@ def selftest() -> int:
                 ),
             ),
         ],
-        must_say="D-7 (grouping",
+        must_say="2 stage-log decision(s) read",
     )
     tilde = tmp / "tilde-heading"
+    (tilde / ".git").mkdir(parents=True)
     tilde_plan = grouping_at(
         tilde / "plan.md",
         _GOOD_PLAN.replace(
@@ -5401,7 +5731,7 @@ def selftest() -> int:
     )
     arm(
         "plan-tilde-fenced-heading-read-as-plan",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -5413,11 +5743,11 @@ def selftest() -> int:
                 _GOOD_PLAN + "\n## Notes\n\n" + tilde_example + _DECISION_PLAN_TAIL,
             ),
         ],
-        must_say="D-1 (planning",
+        must_say="1 stage-log decision(s) read",
     )
     arm(
         "decision-tilde-yaml-fence-read",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -5430,7 +5760,7 @@ def selftest() -> int:
                 + _DECISION_PLAN_TAIL.replace("```yaml\n", "~~~yaml\n").replace("```\n", "~~~\n"),
             ),
         ],
-        must_say="says None. but 1 decision",
+        must_say="1 stage-log decision(s) read",
     )
     arm(
         "decision-tilde-text-fence-refused",
@@ -5531,7 +5861,7 @@ def selftest() -> int:
     # -- HDP-31: `plan_source: null` is no plan_source ---------------------------------
     arm(
         "grouping-plan-source-null-read-as-grouping",
-        "1/REFUSE",
+        "0/OK",
         [
             "--reflection",
             reflection,
@@ -5540,7 +5870,7 @@ def selftest() -> int:
             "--decision-source",
             w("plan-source-null-grouping.md", "---\nplan_source: null\n---\n" + _DECISION_GROUPING),
         ],
-        must_say="D-7 (grouping",
+        must_say="2 stage-log decision(s) read",
     )
     arm(
         "grouping-plan-source-null-reconciled-ok",
@@ -5624,8 +5954,8 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "plan / handoff markdown (fenced decision_log YAML), a session grouping (its "
             "## 8. Open Decisions table; the file a plan declares as grouping_source must "
-            "be supplied) or a YAML file whose decisions must each have a row in the "
-            "reflection's Decisions Log; repeatable"
+            "be supplied) or a YAML file; each decision_log entry or table row is read, "
+            "and each must be stated in full and not pending; repeatable"
         ),
     )
     p.add_argument(

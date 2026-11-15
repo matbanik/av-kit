@@ -1,0 +1,5 @@
+tools/validate_closeout_artifacts.py sha256 ed9cd0fbc350ca5b6cba30b725f874c98558b457a7e830cd5912113dc66efe37 crlf 5671 bare-lf 0
+tests/tooling/test_closeout_register_grammar.py sha256 c6cc13a5f26d93fee69ddcc167b399f87e29af2109eb6013ebff166a1d71161f crlf 267 bare-lf 0
+tests/tooling/test_framework_adoption.py sha256 170dab5f403562c5381a8c35d6f9c77d1c03e29092935f5182f26a9a241dd65e crlf 1072 bare-lf 0
+.agent/context/known-issues.yaml sha256 dbf960b23813d14877597dfc29a8737f3bf533569a2e2d96e6d2698ef1770d14 crlf 0 bare-lf 5253
+.agent/context/known-issues.md sha256 54a54cc43232935b11580737f8fb3890af15e9d6ce8caaae6f7cd7a10b5f2653 crlf 0 bare-lf 66

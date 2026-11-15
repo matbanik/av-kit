@@ -93,6 +93,8 @@ def test_ac_1_nested_sequences_pass_the_grammar_and_read(tmp_path):
                         "id": "D-1",
                         "stage": "planning",
                         "question": "Which writer?",
+                        "chosen": "model.save",
+                        "reasoning": "one writer for the register",
                         "precedents": ["tools/a.py:1 — one", "tools/b.py:2 — two"],
                         "research": {
                             "engine": "none",
@@ -103,6 +105,9 @@ def test_ac_1_nested_sequences_pass_the_grammar_and_read(tmp_path):
                     {
                         "id": "D-2",
                         "stage": "triage",
+                        "question": "Which matrix?",
+                        "chosen": "nested",
+                        "reasoning": "two-way door",
                         "matrix": [["alpha", "beta"], ["gamma"]],
                         "rows": [{"k": "v", "l": ["m"]}],
                     },
@@ -111,7 +116,17 @@ def test_ac_1_nested_sequences_pass_the_grammar_and_read(tmp_path):
         ),
         issue(
             "GRAMMAR-B",
-            enrichment={"decision_log": [{"id": "D-3", "stage": "triage", "chosen": "keep"}]},
+            enrichment={
+                "decision_log": [
+                    {
+                        "id": "D-3",
+                        "stage": "triage",
+                        "question": "Keep it?",
+                        "chosen": "keep",
+                        "reasoning": "two-way door",
+                    }
+                ]
+            },
         ),
     )
     text = saved(data, tmp_path / "known-issues.yaml")
@@ -143,7 +158,18 @@ def test_ac_2_edge_string_passes_the_grammar(tmp_path, value):
         issue(
             "GRAMMAR-A",
             notes=value,
-            enrichment={"decision_log": [{"id": "D-1", "stage": "planning", "reasoning": value}]},
+            enrichment={
+                "decision_log": [
+                    {
+                        "id": "D-1",
+                        "stage": "planning",
+                        "question": "Which edge?",
+                        "chosen": "Keep",
+                        "reasoning": "two-way door",
+                        "detail": value,
+                    }
+                ]
+            },
         )
     )
     text = saved(data, tmp_path / "known-issues.yaml")
@@ -201,7 +227,9 @@ DECISION_ROW_D9 = (
 )
 
 
-def run_check(tmp_path: Path, rows: str, *issues: str) -> subprocess.CompletedProcess[str]:
+def run_check(
+    tmp_path: Path, rows: str, *issues: str, known_issues: str = v._DECISION_KNOWN_ISSUES
+) -> subprocess.CompletedProcess[str]:
     """The reflection check over the selftest's plan and known-issues file, naming each issue."""
     reflection = tmp_path / "reflection.md"
     reflection.write_text(
@@ -211,8 +239,8 @@ def run_check(tmp_path: Path, rows: str, *issues: str) -> subprocess.CompletedPr
     template.write_text(v._GOOD_REFLECTION_TEMPLATE, encoding="utf-8")
     plan = tmp_path / "decided-plan.md"
     plan.write_text(v._GOOD_PLAN + v._DECISION_PLAN_TAIL, encoding="utf-8")
-    known_issues = tmp_path / "known-issues.yaml"
-    known_issues.write_text(v._DECISION_KNOWN_ISSUES, encoding="utf-8")
+    known_issues_path = tmp_path / "known-issues.yaml"
+    known_issues_path.write_text(known_issues, encoding="utf-8")
     flags = [arg for issue_id in issues for arg in ("--decision-issue", issue_id)]
     return subprocess.run(
         [
@@ -225,7 +253,7 @@ def run_check(tmp_path: Path, rows: str, *issues: str) -> subprocess.CompletedPr
             "--decision-source",
             str(plan),
             "--decision-source",
-            str(known_issues),
+            str(known_issues_path),
             *flags,
         ],
         capture_output=True,
@@ -237,10 +265,15 @@ def run_check(tmp_path: Path, rows: str, *issues: str) -> subprocess.CompletedPr
 
 
 def test_ac_4_every_named_issue_is_read(tmp_path):
-    result = run_check(tmp_path, v._DECISIONS_LOG_ROWS, "OTHER-ISSUE", "CORE-DEMO")
-    assert (result.returncode, "missing decision D-9" in result.stdout) == (1, True), (
-        result.stdout + result.stderr
+    pending = v._DECISION_KNOWN_ISSUES.replace(
+        'chosen: "Keep"', 'chosen: "pending Mat\'s ruling"', 1
     )
+    assert pending != v._DECISION_KNOWN_ISSUES
+    result = run_check(
+        tmp_path, v._DECISIONS_LOG_ROWS, "OTHER-ISSUE", "CORE-DEMO", known_issues=pending
+    )
+    named = "OTHER-ISSUE" in result.stdout and "still pending" in result.stdout
+    assert (result.returncode, named) == (1, True), result.stdout + result.stderr
 
 
 def test_ac_5_repeated_issue_is_usage(tmp_path):
@@ -262,6 +295,7 @@ def test_ac_7_every_decision_present_passes(tmp_path):
         tmp_path, v._DECISIONS_LOG_ROWS + DECISION_ROW_D9, "OTHER-ISSUE", "CORE-DEMO"
     )
     assert several.returncode == 0, several.stdout + several.stderr
+    assert "3 stage-log decision(s) read" in several.stdout
     single = run_check(tmp_path, v._DECISIONS_LOG_ROWS, "CORE-DEMO")
     assert single.returncode == 0, single.stdout + single.stderr
-    assert "2 recorded decision(s) reconciled" in single.stdout
+    assert "2 stage-log decision(s) read, each stated in full" in single.stdout

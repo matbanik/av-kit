@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 134** — Active: 42 | Mitigated: 1 | Resolved: 89
+**Total: 135** — Active: 42 | Mitigated: 1 | Resolved: 90
 
 ## Active Issues
 
@@ -35,7 +35,6 @@
 | 🟢 | `CONVERT-POSITIONS-NOT-RENUMBERED` | Convert's queue numbers aren't renumbered | core | ⬜ open | 2026-11-03 |
 | 🟢 | `CONVERT-CUT-TIME-RAW-MS` | A cut job's row shows its times in raw milliseconds | ui | ⬜ open | 2026-11-03 |
 | 🟢 | `DOWNLOADER-ADVANCED-PANEL-GAP` | An empty gap sits under Advanced on the Downloader page | ui | ⬜ open | 2026-11-03 |
-| 🟢 | `CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR` | validate_closeout_artifacts --selftest fails when a .agent folder sits… | agent | ⬜ open | 2026-11-04 |
 | 🟢 | `E2E-MAIN-PROCESS-ERRORS-UNWATCHED` | The E2E suite does not notice an uncaught exception in the main process | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `E2E-CLIPBOARD-PRIMER-EMPTY` | AC-88.12's clipboard primer read an empty clipboard for 5 s once | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `SETTINGS-DRAFT-STALE-BASELINE` | An unsaved capture settings edit freezes the other capture settings at… | ui | ⬜ open | 2026-11-04 |
@@ -51,6 +50,7 @@
 | 🟢 | `MCP-AUDIT-BASELINE-PENDING-CROP` | The committed MCP audit baseline has no avkit_capture.crop entry | mcp-server | ⬜ open | 2026-11-08 |
 | 🟢 | `MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL` | Claude Code doesn't show a model the per-action text in _meta.action_de… | mcp-server | ⬜ open | 2026-11-10 |
 | 🟢 | `CLI-DISPATCH-PLACEHOLDER-FIXTURE` | Two Test-CliDispatch.ps1 fixture tests fail because instantiation repla… | agent | ⬜ open | 2026-11-14 |
+| 🟢 | `VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE` | Real-ffmpeg frame grabs near a clip's last frame occasionally fail (fra… | core | ⬜ open | 2026-11-15 |
 
 ## Mitigated / Workaround
 
@@ -58,9 +58,9 @@
 |-----|-----|-------|-----------|--------|
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 
-## Resolved (89)
+## Resolved (90)
 
-89 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+90 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*
