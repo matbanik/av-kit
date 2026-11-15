@@ -145,13 +145,12 @@ The agent classifies every active issue using this taxonomy:
 For issues classified as `MEU-NEW`, `MEU-EXPAND`, or `ARCH-DECISION`, the agent runs
 `.agent/docs/human-decision-protocol.md` §2–§4 on every scoping question BEFORE anything is
 asked: precedent sweep (grouping §8 rulings, earlier `enrichment.decision_log` entries, plans,
-reflections, ADRs), web research via the harness `web_search_tool` ladder, then the obviousness
-test.
+reflections, ADRs), research (the harness `web_search_tool` ladder for the web), then the
+obviousness test.
 
 - **Obvious** (precedents converge, two-way door, no product fork, no governance number): the
   agent decides, records it under the issue's `enrichment.decision_log` with `decided_by: "agent"`
-  (`issue-triage.md` §3.5), and asks nothing. The human reads it afterwards in the session
-  reflection's `### Decisions Log`.
+  (`issue-triage.md` §3.5), and asks nothing.
 - **Not obvious**: the agent asks a **Decision Brief** — the recommendation first, with why, then
   the alternatives compared against it — never an open-ended "what do you think?" prompt and
   never a bare option list:
@@ -162,7 +161,7 @@ test.
 │                                                                  │
 │ Recommendation: expand MEU-308 (MCP data fidelity) — the         │
 │ 2026-05 grouping ruled that fidelity fixes ride the owning MEU;  │
-│ two-way door. Default if unanswered: the recommendation.         │
+│ two-way door.                                                    │
 │                                                                  │
 │  ○ Expand existing MEU-308 (recommended)                         │
 │  ○ Create new MEU in MCP Server phase   (+ own gate / − 2nd MEU) │
@@ -179,8 +178,8 @@ Relationships are surfaced the same way — recommendation first, alternative co
 - *"Workaround for Z has been in place 3 months — recommendation: keep it; the fix is a one-way schema change."*
 
 Only the non-obvious questions reach the human, so the count is whatever survives the
-obviousness test — often none. Every answer, and every autonomous decision, lands in
-`enrichment.decision_log` and in the reflection's `### Decisions Log`.
+obviousness test — often none. Each answer and each autonomous resolution is recorded once,
+in `enrichment.decision_log` (protocol §6).
 
 ### Step 5 — Agent Groups Issues into MEU Batches
 

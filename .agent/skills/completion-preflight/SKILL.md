@@ -160,7 +160,7 @@ Before writing ANY closeout artifact, confirm:
 
 After writing each closeout artifact, verify:
 
-- [ ] **Reflection quality gate**: File size > 2,000 bytes AND every template heading (incl. the Decisions Log — every autonomous decision with its reasoning, or "None.") has a substantive answer (not `_Answer here_` or single-sentence responses for complex questions). H2-2's `--decision-source` flags reconcile the Decisions Log against the plan's, each handoff's, the grouping's §8 and the closed issue's decision logs: a decision recorded there without a matching row here — or a row with a blank question, chosen option or reasoning — fails the gate
+- [ ] **Reflection quality gate**: File size > 2,000 bytes AND every template heading (incl. the Decisions Log — a short list of the reversible choices made without asking, each linked to its stage-log entry, or "None.") has a substantive answer (not `_Answer here_` or single-sentence responses for complex questions). H2-2's `--decision-source` flags read the plan's, each handoff's, the grouping's §8 and the closed issue's decision logs: an entry with a blank question, chosen option or reasoning fails the gate, and the Decisions Log fails only when the template's example line is left in place (`human-decision-protocol.md` §6)
 - [ ] **Handoff quality gate**: All 7 scored sections are populated with concrete evidence, not "pending" or "N/A" for blocking gates
 - [ ] **Metrics row verified**: the exact metrics-tail receipt shows a row with today's date and all columns populated
 

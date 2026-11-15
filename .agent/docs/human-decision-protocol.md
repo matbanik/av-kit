@@ -1,21 +1,22 @@
 # Human Decision Protocol
 
-> **Scope:** every place a workflow would hand a decision or question to the human — plan
-> Open Questions (`create-plan.md` §2B), reviewer human-decision items (§5b), the round-cap
-> TL;DR (§5d), reviewer questions with no local-canon answer (§5e), triage architecture
-> decisions (`issue-triage.md` Step 8), grouping §8 tables (`session-grouping.md`), execution-time
-> forks where an acceptance criterion proves unreachable as written, closeout, the open
-> decisions a next-session prompt carries (`execution-session.md` §6), and any question asked
-> mid-session. Every decision put to the human runs it; none is asked bare.
+> **Scope:** every question, choice or decision for the human, in any form: an AskUserQuestion
+> popup, a question in chat text, plan Open Questions (`create-plan.md` §2B), reviewer
+> human-decision items (§5b), the round-cap TL;DR (§5d), reviewer questions with no local-canon
+> answer (§5e), triage architecture decisions (`issue-triage.md` Step 8), grouping §8 tables
+> (`session-grouping.md`), execution-time forks where an acceptance criterion proves unreachable
+> as written, closeout, the open decisions a next-session prompt carries (`execution-session.md`
+> §6), research and side-quest sessions, any question asked mid-session, and
+> a subagent return that carries an open decision. None is asked bare.
 > **It never loosens a hard gate.** Commit/push/merge/deploy, destructive data operations, the
 > plan→execution transition under `plan_to_exec_gate: human`, and review round caps stay human
-> stops regardless of how obvious the answer looks (`AGENTS.md`, `GUARDRAILS.md` SIGN 1–3).
-> This protocol governs *what is presented* at a stop and *whether a question survives to one*
-> — not whether the gate exists.
+> stops however obvious the answer looks (`AGENTS.md` #authority-and-approval, `GUARDRAILS.md`
+> SIGN 1–3). Those set who can approve what. This protocol sets what the agent presents at a
+> stop and whether a question gets to one.
 
-**Rule in one line:** a decision reaches the human only after a precedent sweep and web research
-have been done, only if it is still genuinely theirs to make, and only as a Decision Brief that
-leads with a recommendation. Everything else is decided by the agent and written down.
+**Rule in one line:** decide before you ask. A decision gets to the human only after the
+precedent sweep (§2) and the research (§3), only when it is still the human's to make, and only
+as a brief that starts with a recommendation. The agent decides the rest and writes it down.
 
 ---
 
@@ -33,9 +34,11 @@ resulting briefs at the workflow's existing stop rather than inventing a new one
 Before any research, find where av-kit already made a decision of the same
 *class* (same kind of trade-off, not the same feature). Read what was decided, by whom, and
 whether it stuck.
+If a prior ruling settles the decision, apply it and cite it. Then no research is necessary.
 
 | Where prior decisions live | What to look for |
 |---|---|
+| `.agent/context/current-focus.md` | The current priority and the recent rulings of the user |
 | `.agent/context/grouping/*.md` §8 "Open Decisions for the Human" | D1..Dn tables with options, recommendation, and the user's ruling |
 | `docs/execution/plans/*/implementation-plan.md` "Decision Log" / "Open Questions" / "Protected Decisions" | Decision Options Tables, `Human-approved` and `Research-backed` outcomes |
 | `docs/execution/reflections/*.md` "Decisions Log" | Autonomous decisions and their reasoning; whether a later review overturned them |
@@ -68,10 +71,15 @@ options. A sweep with zero hits is a legitimate result and is recorded as such.
 
 ---
 
-## 3. Web research (any search beats none)
+## 3. Research
 
-Research every decision that survives the sweep. Resolve the search surface once per session in
-this order and record which rung you used (`harness-profiles.md` `web_search_tool`):
+Research each open fact that can change the recommendation, before you decide or ask. Use again
+a source that already settles the fact. A technical choice stays open until a source settles it.
+A local measurement counts as research: git history, a test run or a simulation often decides
+more than a web query.
+
+For a web search, resolve the search surface once per session in this order and record which
+rung you used (`harness-profiles.md` `web_search_tool`):
 
 1. **A registered research MCP** (e.g. Pomera `pomera_web_search` with engine `tavily` for
    grounded answers or `exa` for neural / semantic recall) — preferred when present
@@ -80,11 +88,11 @@ this order and record which rung you used (`harness-profiles.md` `web_search_too
    equivalent the harness exposes.
 3. **Codex `--search`** via `cli-dispatch/SKILL.md` `-UseSearch`, when the driver has no search
    tool but can dispatch.
-4. **None available** — say so in the brief (`research: unavailable — <reason>`), still present
-   the precedent sweep, and never present the question bare. Absence of a search tool is a
+4. **None available** — write `research: unavailable — <reason>` in the Refs line, still do the
+   precedent sweep, and never present the question bare. Absence of a search tool is a
    provenance stamp, not an exemption.
 
-Run 2–3 queries per decision, one per angle:
+When web research is needed, run 2–3 queries per decision, one per angle:
 
 | Angle | Query shape | Why |
 |---|---|---|
@@ -92,8 +100,8 @@ Run 2–3 queries per decision, one per angle:
 | **Standards / official docs** | "{standard, RFC, framework docs} {decision}" | A citable authority (counts as `Research-backed`) |
 | **Recent AI-era approaches** | "{decision} agent / LLM {current year}" or "novel approach {decision}" | Newer patterns the human may not know about |
 
-Cite the URL and the one-line takeaway per source. A vendor blog is evidence of practice; a
-standard or official doc is evidence of authority; a paper is evidence of a novel approach —
+Give each source with its URL and its one-line takeaway. A vendor blog is evidence of practice;
+a standard or official doc is evidence of authority; a paper is evidence of a novel approach —
 label which.
 
 ---
@@ -112,8 +120,8 @@ the agent's to make** — no stop, no question — when **all** of these hold:
 4. **Not a governance number:** it does not introduce a novel threshold, limit, budget, or
    policy value (those keep the `development-lifecycle.md` "Threshold sign-off" gate).
 
-When all four hold: decide, tag the criterion `Local Canon` or `Research-backed`, write the
-Decision Log entry (§6), and continue. Do not ask the human to confirm an obvious choice — that
+When all four hold: decide, tag the criterion `Local Canon` or `Research-backed`, record the
+decision as §6 tells you, and continue. Do not ask the human to confirm an obvious choice — that
 is the over-clarification the calibration literature measures as a cost, and it is exactly what
 this protocol exists to remove.
 
@@ -129,48 +137,99 @@ When any fails, the decision is human-gated. Classify it so the brief says why:
 
 ---
 
+## 4a. Mandatory-human criteria
+
+`hdp` is av-kit's only mode: check the M-list below **before** the §4 test. An M hit is
+human-gated whatever the obviousness test says, and it is logged with `mandatory: [M-n, …]`. A
+question with no M hit goes through the §4 test and is logged with `mandatory: none`.
+Implementation choices with one plausible answer, bookkeeping, and the carrying-out of approved
+rows are not decisions. An external dispatch that the approved plan already declares (a review
+packet, a research query) is not a new disclosure; `GUARDRAILS.md` EGRESS_PRECEDENCE decides
+whether it may run.
+
+| Id | Always human | Source |
+| :- | :- | :- |
+| M-1 | Push to any remote; a merge; tag; release; deploy. No parameter covers these. This restates `AGENTS.md` #authority-and-approval and §Commits; it narrows nothing and adds nothing. | `AGENTS.md` #authority-and-approval; `AGENTS.md` §Commits |
+| M-2 | Destructive data operations (`AGENTS.md` #authority-and-approval, unchanged: the rule has no disposable-data exemption and this list grants none); deletion of backups; secret or credential rotation; a change to who may read a secret. | `AGENTS.md` #authority-and-approval; this protocol's scope note |
+| M-3 | **New policy**: a new or changed threshold, cap, budget, round cap or retention window; any edit to `AGENTS.md`, `GUARDRAILS.md`, a hook, `.agent/review-limits.json`, the model registry (`.agent/model-registry.local.yaml`) or this protocol that changes what is allowed. av-kit has no `stop_gate.py` or `commit_gate.py`. A mechanical repair under existing policy (a broken path, a typo, a test that pins the current rule) is not an M-3 hit, and carrying out an approved plan row that makes an M-3 edit is not one either; deciding to make an edit the plan does not hold is. | §4 test 4 |
+| M-4 | One-way doors not already in the approved plan: a schema migration that drops or rewrites data, a public API or MCP tool shape, a published or external contract (the public repo's docs, an interface a third party consumes), licence or vendor lock-in, and **any** external spend that the approved plan did not declare (a declared budget authorizes spend up to it; nothing authorizes spend outside it). | §4 class table (`one-way-door`) |
+| M-5 | A user-visible product fork with no local canon **and** materially different plausible behaviours: palette, a surface split, a feature on or off, UX wording that changes meaning. A wording choice with one plausible reading is the agent's. | §4 class table (`product-preference`) |
+| M-6 | A source conflict that the Planning Contract order (local canon, then primary sources) does not settle, and any conflict with a prior `USER_EXPLICIT` ruling. | §4 class table (`source-conflict`) |
+| M-7 | A change to an existing test's assertion that no approved plan row specifically calls for (a row that names the test and the new assertion; a general "fix the tests" row is not one). The setup-and-fixture repair carve-out stays the agent's. | `AGENTS.md` §Testing & TDD Protocol |
+| M-8 | A change to an approved plan's *acceptance or scope*: a new or dropped MEU (or work unit) or acceptance criterion, a moved session order, a reviewer finding adopted as new scope. Bookkeeping rows (a receipt, a status flip, an evidence row) and ordinary review corrections inside the approved acceptance criteria are not scope changes and never stop. | `AGENTS.md` §Planning Contract |
+| M-9 | Review-loop exits that are already sanctioned stops: every round cap, the stagnation rule, every reviewer rung unavailable. The late-round materiality bar is the agent's judgement inside the loop, not a permission. | `AGENTS.md` §Execution Contract (review cap, reviewer unavailable) |
+| M-10 | A required **human action**: a credential, a purchase, a third-party answer, a physical action (a VM console, an installer). A transient failure the plan authorizes the agent to retry (a flaky network call, a busy file) is not an M-10 hit. | §4 class table (`externally-blocked`) |
+| M-11 | Waiving a **blocking** quality gate, test or review step: a skip, `xfail`, `--no-verify`, a waived external validation, a bypassed hook, a lowered floor that the gate enforces. Advisory floors (coverage, the security scans) stay advisory and are not M-11 hits. | `AGENTS.md` §Validation Pipeline, §Dual-Agent Workflow |
+| M-12 | A new external disclosure: a push to a public repository, an email or issue to a third party, a published artifact, a message to another organization's session. | `AGENTS.md` #authority-and-approval |
+| M-13 | Widening the agent's own permissions: a settings allow rule, a bypass flag, a sandbox or classifier exemption, a new MCP server, a new trusted remote. | the harness permission model (`harness-profiles.md`) |
+| M-14 | Headless start, resume or fork authority: who may start a scheduled run, resume a stopped one, or fork it, and with which grants. av-kit runs no headless sessions; starting one is this item. | `GUARDRAILS.md` SIGN 3 |
+
+Everything else is the agent's to decide under §4, logged as `autonomous` with
+`mandatory: none`. Five notes:
+
+- The list gates *new decisions*, never the carrying-out of rows the human already approved. A
+  plan row that edits `GUARDRAILS.md`, changes a test or rotates a credential was an M hit at
+  planning time and is executed as approved.
+- The list is a floor on top of every existing human-only gate; gates the list does not name
+  stay in force (for example the model-routing rules, `model-routing.md`).
+- M-3 covers edits to this list and to this protocol: they are human-approved, never
+  autonomous.
+- Nothing is exempt: `hdp` still escalates every question that fails the obviousness test, M
+  hit or not.
+- An M hit names every matching item (`mandatory: [M-3, M-11]`), and the brief states each.
+
+Outside the M-list and the failing tests, do not ask the human to confirm a choice the
+obviousness test already settled: that is the over-clarification cost of §4, and it is the one
+thing this section never adds.
+
+---
+
 ## 5. Decision Brief — how a human-gated decision is presented
 
-One brief per decision, recommendation first, in this order:
+**Two outcomes.** The agent decides and states the decision in one line, or asks with a brief.
+When the human must do something (M-10), the agent writes a short request: what, why, and what
+the agent does in the meantime. A human action is not a choice, so the request has no options.
+
+One brief per decision, in this form:
 
 ```markdown
-### D-{n}: {decision in one line}   [{class}] [{stage}]
+### D-n: <the question in plain words>
 
-**Recommendation:** {option} — {two or three sentences on why this is the right call here}.
+**I recommend A: <what happens, in plain words>.** <Why: the decisive fact or precedent. The
+concrete way that A can fail, and the undo cost.>
 
-**Why not the others**
-| Option | Pros (vs. recommendation) | Cons (vs. recommendation) | Sources |
-|---|---|---|---|
-| ✅ {recommended} | — | — | {precedent path:line}, {URL} |
-| ⚠️ {alternative A} | {what it does better} | {what it costs} | {URL} |
-| ❌ {alternative B, incl. "status quo / do nothing" when real} | … | … | … |
+- B: <what happens, and what it costs compared with A.>
+- C: keep things as they are: <what that costs>.
 
-**Precedent:** {what the project decided before on this class, or "none found"}.
-**Research:** {engine used}; {one-line takeaway per source}. {or "unavailable — reason"}
-**Reversibility / risk:** {one-way | two-way}; {what breaks if the choice is wrong}.
-**If you do not answer:** {what the agent will do — usually "carry the recommendation as a guarded task row" or "hold the row [B]"}.
+Refs: <precedent paths>, <sources>, <M-n>.
 ```
 
 Rules:
 
-- **Recommendation first, always.** A brief that opens with the options list, or ends with
-  "let me know which you prefer", is malformed.
-- **Pros and cons are relative.** Each alternative is compared against the recommendation and
-  against the other alternatives — not listed as free-standing attributes.
-- **Two to four options.** Include "do nothing / keep the status quo" whenever it is a real
-  choice; never pad with straw options.
+- **Plain words.** The question, the options and the recommendation use plain words about
+  outcomes. Internal ids (M-n, AC-n, MEU-n, SIGN n, EA-n) go only in the Refs line.
+- **Recommendation first.** A reply of "yes" accepts the recommendation. Add an option only
+  when it is a real choice. "Keep things as they are" stays an option unless the human ruled it
+  out in words you can quote. A table is optional: use it when the options are different on
+  more than one point.
 - **The reader decides from the brief alone.** No "I can research further if you want".
+- **Ask at plan time**, before the work, when the answer has the most value.
+- **Without an answer**, the agent waits on that item and works on independent rows. The brief
+  says what happens without an answer only when something else happens. A popup timeout is
+  never an answer (issue anthropics/claude-code#73125, `GUARDRAILS.md` SIGN 3).
 - **Batch at the existing stop.** Briefs are presented at the workflow's own human gate (plan
   `## Decision Log`, the §5d TL;DR, the triage Step 8 report, the grouping §8 table). Presenting
   them ends the turn per the harness `end_turn_signal`; do not poll or monitor for the reply.
 - **Advisory, not authorizing.** A recommendation never substitutes for the human's explicit
-  message where a hard gate applies (`GUARDRAILS.md` SIGN 3 (a)).
+  message where a hard gate applies (`GUARDRAILS.md` SIGN 3).
 
 ---
 
 ## 6. Recording — every decision leaves a trail
 
-Every decision, autonomous or human-gated, gets one Decision Log entry:
+Record each human ruling, and each consequential new choice or departure from precedent,
+once, in the log of the stage that made it. A decision that applies an existing ruling gets
+no new record. Each record is one Decision Log entry:
 
 ```yaml
 decision_log:
@@ -179,6 +238,7 @@ decision_log:
     question: "one line"
     resolution: autonomous | human
     class: two-way | one-way-door | product-preference | source-conflict | governance-value | externally-blocked
+    mandatory: [M-n, …] | none   # §4a; optional
     chosen: "option"
     source_tag: Local Canon | Research-backed | Human-approved
     precedents: ["path:line — what it decided"]
@@ -189,6 +249,9 @@ decision_log:
     human_message_reference: "USER_EXPLICIT YYYY-MM-DD '<quote>'"   # human-resolved only
 ```
 
+A brief written before any plan file exists uses `stage: planning` and lists its unruled items
+under `open_decisions:`. There is no other stage value and no class alias.
+
 Where it lives:
 
 | Stage | Location |
@@ -197,91 +260,47 @@ Where it lives:
 | Plan review / corrections | The rolling `-plan-critical-review.md` correction log, then folded into the plan's Decision Log |
 | Execution | The MEU handoff's `## Decision Log` — a fenced `decision_log:` YAML block with the same entry shape, or exactly `None.` (`meu-handoff.md`, `.agent/templates/HANDOFF-TEMPLATE.md`) — and the `[B]` row's `Decision:` line when a row is held |
 | Triage | The issue's `enrichment.decision_log` list in `known-issues.yaml` (`issue-triage.md` §3.5) — `enrichment` is the only per-issue field that survives `issue_triage.py triage` regenerating `triage-output.yaml`, so the log is never written to `triage-output.yaml` directly |
-| Grouping | The grouping file's `## 8. Open Decisions` canonical table (`session-grouping.md` row 8): each D-row a brief, Resolution `autonomous` / `human` / `open`. Every row is carried into the consuming session's reflection with stage `grouping` — an open grouping question that was never ruled or recorded is silence too |
-| Closeout | The reflection's `### Decisions Log` (under Execution Trace) — **every** autonomous decision of the session with its reasoning, so the human reads it after the fact and a later reviewer can contest it. This is the only place the human sees decisions the agent did not stop for; omitting it turns autonomy into silence. |
+| Grouping | The grouping file's `## 8. Open Decisions` canonical table (`session-grouping.md` row 8): each D-row a brief, Resolution `autonomous` / `human` / `open`. The closeout reads each row with stage `grouping`. |
+| Closeout | The reflection's `### Decisions Log` (under Execution Trace) is a short list. It holds the choices that the agent made without asking and that someone could want to reverse. Each entry is one line with a link to the full entry in the stage log. `None.` is valid. A human ruling, a grouping row or an applied ruling does not go on the list. |
 
-**Enforced, not advisory.** `tools/validate_closeout_artifacts.py --reflection … --decision-source
-{plan} --decision-source {handoff} [--decision-source {grouping-file}] [--decision-source
-known-issues.yaml --decision-issue ID ...]` (task row H2-2) reconciles the reflection's
-`### Decisions Log` with every decision recorded in the plan's `## Decision Log`, each handoff's
-`## Decision Log`, the grouping's `## 8. Open Decisions` table (a source is a grouping by that
-heading in its structure — a heading quoted inside a fence, ``` or `~~~` and each closed
-only by its own marker, or an HTML comment is an example, not a signal, and the section
-itself is located the same way — or by being the file the
-plan's frontmatter declares as `grouping_source` — a relative
-declaration resolves from the plan's project root, the nearest ancestor holding `.agent/`,
-never from the working directory and never by suffix — and a plan that declares a real one
-refuses to reconcile unless that very file is among the sources, whatever else the plan
-quotes; a handoff is known by its `plan_source` frontmatter — a YAML null such as
-`plan_source: null` or `~` is no value, exactly as `grouping_source: null` is no
-declaration — or `handoff` filename, a plan is anything else, and a grouping that also
-declares a `grouping_source`, carries a handoff's signals or records a `decision_log:` key
-in any shape YAML can write one is refused rather than routed by whichever check ran
-first), and the
-`enrichment.decision_log` of each closed issue — `--decision-issue` is repeated once per
-issue, each named issue must be in the file, and naming one twice is a usage error: every
-recorded ID needs a reflection row with the
-same stage, every row needs its question, chosen option and reasoning filled, an unfilled
-template example is refused, and `None.` passes only when no source recorded a decision. A
-`decision_log:` is read only from a fenced ```yaml or `~~~yaml` block, indented or not (a
-handoff's section is exactly `None.` or one such block, with the template's instruction
-comment and closing rule allowed around it); the key in prose or in any fence other than a
-```diff/```patch excerpt is refused rather than skipped, and it is found wherever YAML can
-put a key — at line start, under one or more `- ` sequence markers, inside a `{...}`/`[...]`
-flow collection, plain or quoted — so no shape reads as zero decisions: a quoted root key
-is read, a `decision_log:` nested under another key or inside a flow collection — with or
-without a root key beside it — written as a sequence item, or written as a second root key
-is refused rather than read as empty or last-wins (the words in a quoted scalar, a block
-scalar or a comment are text, not keys), a key written twice in one block mapping of a
-record is refused rather than read first-wins (duplicates inside a flow collection are
-outside this walk; the bounded grammar bounds their shape), a
-block outside the reader's bounded YAML grammar (one construct per line;
-quoted scalars with YAML's escapes and flow collections with paired brackets and no empty
-entry close on their line; one indentation level is a mapping or a sequence, never both;
-nothing indents under a scalar value) is refused rather than read, a grouping table in an
-ad-hoc shape is refused rather than ignored, and a `--decision-issue`
-the file does not hold — or a known-issues file whose `issues:` is not the root key — is
-refused rather than read as empty.
-A decision that was made and written nowhere cannot be caught by a validator — that is why the
-Decisions Log is written at the moment of deciding, not reconstructed at closeout.
+`tools/validate_closeout_artifacts.py --reflection … --decision-source {plan} --decision-source
+{handoff} [--decision-source {grouping-file}] [--decision-source known-issues.yaml --decision-issue
+ID]` (task row H2-2) reads these records, and its messages cite this section. Each plan, handoff
+and issue entry must state the question, the choice and the reasoning as text, and a `chosen` that
+still starts with `pending` is refused. A quoted value is read without its trailing `# comment`,
+and a `#` inside the quotes is text. A double-quoted value is read after its escapes are decoded,
+so `"\n"` is blank. Each grouping row must fill its Question and Reasoning cells, and a row ruled
+`autonomous` or `human` must give a Chosen that is filled and does not start with `pending`; an
+`open` row's Chosen is not read. Two logs must give one decision the same stage. The reflection's
+`### Decisions Log` is not compared with them: the check refuses only the template's example line
+left in place, and `None.` is valid. A `decision_log:` is read only from a fenced ```yaml or
+`~~~yaml` block, indented or not (a handoff's section is exactly `None.` or one such block, with
+the template's instruction comment and closing rule allowed around it); the key in prose or in any
+other fence except a ```diff/```patch excerpt is refused rather than skipped. A source is a
+grouping by its `## 8. Open Decisions` heading (a heading inside a fence or an HTML comment is an
+example), or by being the file the plan's frontmatter declares as `grouping_source`, and a plan
+that declares one is refused unless that file is among the sources. A relative declaration resolves
+from the plan's project root: the nearest ancestor that holds `.agent/`, and never past the
+repository root (the first ancestor with `.git`). A handoff is known by its `plan_source`
+frontmatter or `handoff` filename, and `plan_source: null` or `~` is no value; a plan is anything
+else. A block outside the reader's bounded YAML grammar, a `decision_log:` nested under another key
+or inside a flow collection, a key written twice in one mapping, and a grouping table in an ad-hoc
+shape are refused rather than read as empty. `--decision-issue` is repeated once per issue; a named
+issue the file does not hold is refused, and naming one twice is a usage error. A decision that was
+made and written nowhere cannot be caught by a validator, so record it at the moment of deciding,
+not at closeout.
 
 A decision resolved autonomously in planning and later overturned by the human is recorded, not
 deleted: append the ruling with `human_message_reference` and keep the original reasoning.
 
 ---
 
-## 7. Anti-patterns
+## 7. Basis
 
-- Bare questions ("Should X be A or B?") with no precedent sweep, research, or recommendation.
-- Asking the human to confirm a choice the obviousness test already settled.
-- Deciding an irreversible or product-shaping question autonomously because the research
-  "seemed clear".
-- Listing pros and cons as free-standing bullets that never compare the options.
-- Presenting a brief and then continuing to work on the assumption the human will agree
-  (post-and-wait: present, end the turn).
-- Skipping research because no search tool is configured instead of stamping `research:
-  unavailable`.
-- Omitting the reflection Decisions Log, so autonomous decisions leave no trail.
-
----
-
-## 8. Research basis
-
-- **Decision-memo practice** (recommendation first, 2–3 real alternatives including the status
-  quo, pros/cons per option): policy-memo guides from Harvard Kennedy School / Shorenstein and
-  Stanford; the same shape as MADR's *Considered Options → Pros and Cons → Decision Outcome*
-  (https://adr.github.io/madr/).
-- **Reversibility as the escalation axis:** Amazon's one-way / two-way door heuristic
-  (https://fs.blog/reversible-irreversible-decisions/; thoughtbot on applying it to engineering
-  decisions).
-- **Ask-vs-act calibration in coding agents:** "Ask or Assume? Uncertainty-Aware
-  Clarification-Seeking in Coding Agents" (arXiv 2603.26233) — calibrated agents conserve
-  questions on simple tasks and ask on genuinely underspecified ones; Calibrate-Then-Act
-  (arXiv 2602.16699); AgentAbstain (arXiv 2607.10059); ReDAct (arXiv 2604.07036); uncertainty
-  decomposition for clarification (arXiv 2606.19559); Hedwig dynamic autonomy under local
-  oversight (arXiv 2605.11495) — oversight tightens outside familiar territory and relaxes where
-  trust is earned, which is what the precedent sweep operationalises.
-- **HITL escalation triggers** (uncertainty, novelty, stakes): Galileo and Atlassian agent-design
-  guides; arXiv 2609.24242, 2605.14830.
 - **Local origin:** G24 (`emerging-standards.md` — a plan once listed bare open questions the
-  user had to research by hand) generalised to every workflow stage on 2026-09-29.
+  user had to research by hand), generalised to every workflow stage on 2026-09-29.
+- **Recommendation first:** MADR (https://adr.github.io/madr/). **Reversibility:** the one-way
+  and two-way door test (https://fs.blog/reversible-irreversible-decisions/).
+- **When to ask:** "Ask or Assume?" (arXiv 2603.26233): a calibrated agent asks less on clear
+  tasks and asks on underspecified ones. A check against earlier answers removed 13 % of the
+  questions (arXiv 2610.24411).

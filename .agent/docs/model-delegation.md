@@ -46,6 +46,8 @@ The `avkit_coordinator` class holds planning, correctness-critical reasoning, an
 - Keep the harness-resolved `avkit_coordinator` as the main-loop orchestrator; reserve frontier effort on the `avkit_independent_reviewer` chain for the correctness class.
 - **Never delegate** the correctness class, review verdict authorship, commit/push, or any
   human-approval gate — those stay inline on the `avkit_coordinator` or on the external reviewer chain.
+- **Open decisions.** The coordinator owns each question to the human. A subagent that finds an
+  open decision returns it with its facts and a recommendation, and does not ask the human.
 
 ## Why
 

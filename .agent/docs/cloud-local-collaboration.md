@@ -316,7 +316,7 @@ For each issue that needs the target:
    sets `verification.last_checked/method/result/evidence_file` itself and runs
    `issue_triage.py render`. Never hand-edit `known-issues.md`. A decision made
    during triage (defer, reclassify, widen) goes in the issue's
-   `enrichment.decision_log` (`human-decision-protocol.md` §Where it lives).
+   `enrichment.decision_log` (`human-decision-protocol.md` §6).
 4. CLOUD classifies, runs `bucket`, feeds `/session-grouping`. Not reproduced on
    the target → `candidate`/`DEFER`, not `MEU-NEW`.
 

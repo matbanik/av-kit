@@ -1,0 +1,77 @@
+[
+  {
+    "topic": "question-choice-reasoning"
+  },
+  {
+    "topic": "pending-refused"
+  },
+  {
+    "topic": "quoted-comment"
+  },
+  {
+    "topic": "dq-escapes"
+  },
+  {
+    "topic": "grouping-row-fields"
+  },
+  {
+    "topic": "grouping-ruled-chosen"
+  },
+  {
+    "topic": "same-stage"
+  },
+  {
+    "topic": "reflection-not-compared"
+  },
+  {
+    "topic": "template-example-refused"
+  },
+  {
+    "topic": "none-valid"
+  },
+  {
+    "topic": "fenced-yaml-only"
+  },
+  {
+    "topic": "handoff-section-shape"
+  },
+  {
+    "topic": "prose-key-refused"
+  },
+  {
+    "topic": "diff-patch-exemption"
+  },
+  {
+    "topic": "grouping-by-heading-or-declaration"
+  },
+  {
+    "topic": "grouping-source-required"
+  },
+  {
+    "topic": "repo-boundary-root"
+  },
+  {
+    "topic": "handoff-by-plan-source"
+  },
+  {
+    "topic": "null-plan-source"
+  },
+  {
+    "topic": "bounded-grammar"
+  },
+  {
+    "topic": "nested-key-refused"
+  },
+  {
+    "topic": "flow-collection-key"
+  },
+  {
+    "topic": "duplicate-key-refused"
+  },
+  {
+    "topic": "adhoc-grouping-refused"
+  },
+  {
+    "topic": "decision-issue-rules"
+  }
+]

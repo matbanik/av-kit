@@ -195,8 +195,8 @@ When every machine rung is rate-limited or unavailable, this loop does not fall 
   - **attended** — a human is in this chat: show the `STOP_READOUT` verbatim, then frame it as a
     Decision Brief per `.agent/docs/human-decision-protocol.md` §5 — the recommendation first
     (`continue` with the rounds the readout needs, stop the loop, or hand the blocking finding to
-    the human as its own decision), the alternatives compared against it, reversibility, and the
-    default if unanswered — **end the turn**, and wait for the human's sentence. The readout text
+    the human as its own decision), the alternatives compared against it, and its
+    reversibility — **end the turn**, and wait for the human's sentence. The readout text
     itself is never edited (`review_ledger.py` prints it; the brief is the agent's framing around
     it). Then record it — their words, never a paraphrase — and re-dispatch:
     `rtk proxy uv run python tools/review_ledger.py continue --loop-id <loop-id> --rounds 1 [--tokens N] [--relieve-mechanism SLUG] --said "<the human's sentence, 20+ non-ws chars>" --by <name> --at <ISO8601>`
@@ -281,7 +281,7 @@ Present the human with:
 1. Completion summary (MEUs done, tests passing, proposed commit messages)
 2. Link to the reflection file for review
 3. The next session's prompt, written to `C:/Temp/av-kit/session-{N+1}-prompt.md` (task row H2-6) in the shape of the prompt that started this session: the title line, read-first and driver lines, prerequisites with HEAD, scope with file:line citations to re-read, tests, Done means, closeout flags, calibration, the carried design rules (5c) and the constraints. The next session is the grouping's next in order, else the 5d outline's target.
-4. Every decision still open for the human, here and in that prompt, as a Decision Brief per `.agent/docs/human-decision-protocol.md`: recommendation first, the options with a do-nothing option, and what happens without an answer. A question the obviousness test settles is decided and logged, not asked.
+4. Every decision still open for the human, here and in that prompt, as a Decision Brief per `.agent/docs/human-decision-protocol.md`: recommendation first, and the options with a do-nothing option. A question the obviousness test settles is decided and logged, not asked.
 
 > [!NOTE]
 > **Prose is probabilistic; a hook is deterministic.** This gate and the Step 4c anti-stop rule *shift* the model's stop/continue choice but cannot guarantee it — the RLHF deference prior will sometimes win the sampling roll regardless of wording. The durable backstop is a **harness-level Stop hook** that blocks end-of-turn until `task.md` has no `[ ]`/`[/]` rows and the closeout artifacts exist on disk. That hook lives in the harness config (e.g. Antigravity's stop-hook, or Claude Code's `settings.json` hook — see `.agent/docs/harness-profiles.md` for your harness's mechanism), NOT in this workflow file — out of scope here, but the recommended complement. Guard it with a consecutive-block / `stop_hook_active` loop-breaker so a genuinely-blocked turn can still end.

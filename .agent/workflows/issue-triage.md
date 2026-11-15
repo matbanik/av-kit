@@ -152,15 +152,15 @@ Update the `meu_links` field in `known-issues.yaml` for issues with identified M
 
 For each issue in the enrichment-eligible categories, run `.agent/docs/human-decision-protocol.md`
 §2–§4 BEFORE anything is asked: precedent sweep (grouping §8 rulings, earlier
-`enrichment.decision_log` entries, plans, reflections, ADRs, `emerging-standards.md`), web
-research via the harness `web_search_tool` ladder, then the obviousness test.
+`enrichment.decision_log` entries, plans, reflections, ADRs, `emerging-standards.md`),
+research (the harness `web_search_tool` ladder for the web), then the obviousness test.
 
 - **Obvious** (precedent or sources converge, two-way door, no product fork, no governance
   number): decide it and do not ask. Record it under the issue's `enrichment.decision_log` in
   `known-issues.yaml` with `resolution: autonomous` and `decided_by: "agent"`.
-- **Not obvious**: present it as a Decision Brief (protocol §5) — recommendation first with why,
-  then the alternatives compared against it, sources, reversibility, and the default if
-  unanswered. The option list is ordered recommendation first.
+- **Not obvious**: present it as a Decision Brief in the protocol §5 form — the question in plain
+  words, the recommendation first with why and how it can fail, the other options compared with
+  it, and a Refs line. The option list is ordered recommendation first.
 
 **If your harness has a question-prompt tool** (e.g. Antigravity's `ask_question`
 modal), use it; otherwise ask the user directly in chat. Either way the question carries the
@@ -171,7 +171,7 @@ ask_question:
   question: |
     Issue {ID}: {title} — scoping.
     Recommendation: create new MEU in {build-plan-section} — {why: precedent path:line; research takeaway}.
-    Reversibility: two-way. Default if unanswered: the recommendation.
+    Reversibility: two-way.
     Alternatives vs. the recommendation: expand MEU-{ID} (+{pro} / −{con}); architecture decision first (+ / −); defer (+ / −).
   options:
     - "Create new MEU in {build-plan-section} (recommended)"
@@ -297,8 +297,7 @@ Present the triage results with:
    `.agent/docs/human-decision-protocol.md` §5 — precedent sweep and web research done,
    recommendation first with why, alternatives compared against it. Decisions that pass the
    protocol's obviousness test are decided here, recorded in the issue's `enrichment.decision_log`
-   in `known-issues.yaml` (§3.5; carried into the regenerated `triage-output.yaml`) and in the
-   session reflection's `### Decisions Log`, and not asked
+   in `known-issues.yaml` (§3.5; carried into the regenerated `triage-output.yaml`), and not asked
 5. Reference the generated `triage-output.yaml` path
 6. **END YOUR TURN.**
 

@@ -155,7 +155,7 @@ attributed to its provider(s).
 | Pomera preflight fails | **Stop and notify** (Step 0). Never a silent fallback. |
 | A provider's recon returns nothing usable | Write the snapshot with `confidence: contested` and `unknown` fields; say so in Step 6. Do not fabricate a model name. |
 | Sources disagree on the current model | Record both in the snapshot, mark `confidence: contested`, and have the prompt name both. |
-| Topic too broad | Narrow it per `human-decision-protocol.md` before Step 2 — recon is wasted on an unstable topic. Sweep precedents for how the topic was scoped before, then propose the narrowed scope as a Decision Brief (recommended scope first, alternatives compared against it). If the narrowing is obvious, take it and log the decision in the reflection's Decisions Log; only a genuine product fork is put to the human. |
+| Topic too broad | Narrow it per `human-decision-protocol.md` before Step 2 — recon is wasted on an unstable topic. Sweep precedents for how the topic was scoped before, then propose the narrowed scope as a Decision Brief (recommended scope first, alternatives compared against it). If the narrowing is obvious, take it and record the decision per the protocol §6; only a genuine product fork is put to the human. |
 | A portal mode was renamed/removed | Capture it in the snapshot's `## Delta Since` as REMOVED and point `## Portal Setup` at the closest current mode. |
 
 ## Exit Criteria

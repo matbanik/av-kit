@@ -1,0 +1,144 @@
+{
+ "AGENTS.md": {
+  "crlf": 126,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/docs/human-decision-protocol.md": {
+  "crlf": 287,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/docs/model-delegation.md": {
+  "crlf": 51,
+  "bare_lf": 1,
+  "bare_lf_lines": [
+   "> **Harness-conditional class resolution (Q1\u2013Q2, 2026-07-22):** the `avkit_coordinator` and `avkit_builder` classes resolve per harness \u2014 Cursor vs Claude Code bindings differ. Which snapshot each class binds to lives in the live registry home (see [`.agent/docs/model-routing.md`](model-routing.md)) and must be resolved, not restated here."
+  ]
+ },
+ ".agent/templates/PLAN-TEMPLATE.md": {
+  "crlf": 243,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ "docs/execution/plans/PLAN-TEMPLATE.md": {
+  "crlf": 243,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/templates/TASK-TEMPLATE.md": {
+  "crlf": 137,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ "docs/execution/plans/TASK-TEMPLATE.md": {
+  "crlf": 137,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/templates/HANDOFF-TEMPLATE.md": {
+  "crlf": 178,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/context/handoffs/TEMPLATE.md": {
+  "crlf": 178,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/templates/REFLECTION-TEMPLATE.md": {
+  "crlf": 188,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ "docs/execution/reflections/TEMPLATE.md": {
+  "crlf": 188,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/workflows/create-plan.md": {
+  "crlf": 681,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/workflows/execution-session.md": {
+  "crlf": 372,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/workflows/issue-triage.md": {
+  "crlf": 331,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/workflows/next-project.md": {
+  "crlf": 246,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/workflows/meu-handoff.md": {
+  "crlf": 127,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/workflows/delegated-plan-creation.md": {
+  "crlf": 410,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/workflows/session-grouping.md": {
+  "crlf": 122,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/workflows/inspiration-research.md": {
+  "crlf": 169,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/workflows/tdd-implementation.md": {
+  "crlf": 49,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/docs/issue-lifecycle-guide.md": {
+  "crlf": 579,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/docs/commands.md": {
+  "crlf": 222,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/docs/development-lifecycle.md": {
+  "crlf": 926,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/docs/emerging-standards.md": {
+  "crlf": 1278,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/docs/cloud-local-collaboration.md": {
+  "crlf": 382,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/skills/completion-preflight/SKILL.md": {
+  "crlf": 226,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ ".agent/skills/cli-dispatch/SKILL.md": {
+  "crlf": 482,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ },
+ "docs/execution/plans/2026-09-26-framework-update-adoption/rule-preservation.md": {
+  "crlf": 1411,
+  "bare_lf": 0,
+  "bare_lf_lines": []
+ }
+}

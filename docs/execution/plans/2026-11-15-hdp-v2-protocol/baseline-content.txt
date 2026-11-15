@@ -1,0 +1,9 @@
+HEAD 1e54433a797842f157e7af367ff5fec12f13f78b
+VALIDATOR tools/validate_closeout_artifacts.py sha256 94c7ac24ab354d7aad8235fa452cecf3b32ab809909127d57f7289342e8b99ed
+DIRTY .agent/context/handoffs/2026-11-15-framework-small-syncs-plan-critical-review.md sha256 f058582b8b6165600156ec01347eb4f3a60077f66dce06b00f6835afa9bb6bab
+DIRTY .agent/context/handoffs/2026-11-15-hdp-expert-pass-plan-critical-review.md sha256 c2f5d8cb442157e630333699bc3977fe91bfe9ec0d53a4ad92a64106a848fe46
+DIRTY docs/execution/plans/2026-11-15-framework-small-syncs/implementation-plan.md sha256 3df9a330fdaddff1eca8ae30943dffe1724238fccd90f26c86d4ee49099b7314
+DIRTY docs/execution/plans/2026-11-15-framework-small-syncs/task.md sha256 0fc4fb6c94e19ff86a22a30e5899ea757de64d8838337b752699b77cdf83f767
+DIRTY docs/execution/plans/2026-11-15-hdp-expert-pass/ep-check.py sha256 6c1064d76b231485a96fceeb5f0b4058c84f11a1b957c19655b55f034d56ac6f
+DIRTY docs/execution/plans/2026-11-15-hdp-expert-pass/implementation-plan.md sha256 39a56f79e0c3cd2ab25033428c91e706843b64c6848acf81ccc5e39c9b7808ce
+DIRTY docs/execution/plans/2026-11-15-hdp-expert-pass/task.md sha256 1046c01ce26ec6cdd3fde36e16f94b819e18f3c3ebf69a0b76cc37b952217ee0
