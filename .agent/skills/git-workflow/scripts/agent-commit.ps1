@@ -65,6 +65,44 @@ function Invoke-RtkGitExact {
     return (($output | ForEach-Object { [string]$_ }) -join "`n").Trim()
 }
 
+function Invoke-CommitIdentityCheck {
+    # Refuses an author or committer address other than the noreply address
+    # (tools/check_commit_identity.py). Any failure to run the check counts as a refusal.
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Repo,
+        [string]$Commit,
+        [string]$AuthorEmail,
+        [string]$CommitterEmail
+    )
+
+    $root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "../../../..")).Path
+    $arguments = @("run", "--no-sync", "--project", $root, "python", (Join-Path $root "tools/check_commit_identity.py"), "--repo", $Repo)
+    if ($Commit) { $arguments += @("--commit", $Commit) }
+    if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+        Write-Host "check_commit_identity: refused (uv is not on PATH)" -ForegroundColor Red
+        return 1
+    }
+    $previousAuthorEmail = $env:GIT_AUTHOR_EMAIL
+    $previousCommitterEmail = $env:GIT_COMMITTER_EMAIL
+    try {
+        if ($PSBoundParameters.ContainsKey("AuthorEmail")) { $env:GIT_AUTHOR_EMAIL = $AuthorEmail }
+        if ($PSBoundParameters.ContainsKey("CommitterEmail")) { $env:GIT_COMMITTER_EMAIL = $CommitterEmail }
+        $output = @(& uv @arguments)
+        $code = $LASTEXITCODE
+        foreach ($line in $output) { Write-Host "  $line" }
+        return $code
+    }
+    catch {
+        Write-Host "check_commit_identity: refused (the check could not run)" -ForegroundColor Red
+        return 1
+    }
+    finally {
+        $env:GIT_AUTHOR_EMAIL = $previousAuthorEmail
+        $env:GIT_COMMITTER_EMAIL = $previousCommitterEmail
+    }
+}
+
 function Invoke-ExactScopeCommit {
     $required = @{
         RepositoryPath = $RepositoryPath
@@ -128,6 +166,11 @@ function Invoke-ExactScopeCommit {
     $messageHash = (Get-FileHash -LiteralPath $messagePath -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($descriptor.message_sha256 -ne $messageHash) {
         throw "Message file hash does not match content descriptor"
+    }
+
+    $identityCode = Invoke-CommitIdentityCheck -Repo $repo -AuthorEmail ([string]$descriptor.author_email) -CommitterEmail ([string]$descriptor.author_email)
+    if ($identityCode -ne 0) {
+        throw "Exact-scope commit identity refused"
     }
 
     $signingEnabled = Invoke-RtkGitExact -Repo $repo -Arguments @("config", "--get", "commit.gpgsign")
@@ -201,6 +244,10 @@ function Invoke-ExactScopeCommit {
             throw "Signed commit parent/tree does not match approved content"
         }
         $null = Invoke-RtkGitExact -Repo $repo -Arguments @("verify-commit", $actualSha)
+        $identityCode = Invoke-CommitIdentityCheck -Repo $repo -Commit $actualSha
+        if ($identityCode -ne 0) {
+            throw "Exact-scope commit identity refused after the commit: $actualSha is left for the human"
+        }
     }
     finally {
         if ($null -eq $previousIndex) { Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue }
@@ -270,6 +317,12 @@ if ($gpgSign -eq "true" -and $gpgFormat -eq "ssh") {
 }
 else {
     Write-Host "  Signing: disabled (commits will be unsigned)" -ForegroundColor DarkYellow
+}
+
+$identityCode = Invoke-CommitIdentityCheck -Repo (Get-Location).Path
+if ($identityCode -ne 0) {
+    Write-Host "ERROR: commit identity refused (see the lines above)" -ForegroundColor Red
+    exit 1
 }
 
 # ── Step 2: Check remote URL ────────────────────────────────────────────
@@ -355,6 +408,12 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 Write-Host "  Committed successfully" -ForegroundColor Green
+$identityCode = Invoke-CommitIdentityCheck -Repo (Get-Location).Path -Commit HEAD
+if ($identityCode -ne 0) {
+    Write-Host "ERROR: the local commit carries a refused identity (see the lines above)." -ForegroundColor Red
+    Write-Host "Nothing was pushed. The commit is left for the human to amend or reset." -ForegroundColor Red
+    exit 1
+}
 
 # ── Step 6: Push ────────────────────────────────────────────────────────
 if (-not $NoPush) {

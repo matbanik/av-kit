@@ -1,0 +1,16 @@
+{
+  ".agent/skills/deep-research-prompting/SKILL.md": "783b83cbeb2ff63288bf341d7667e41e8b3d59b1f4f26ec6650bb4ebc02431f7",
+  ".agent/workflows/inspiration-research.md": "ee718cfee6eab6c8e8b6b6843bcf48fdc1325524d4c823a8d7b3fa75a6e12f6b",
+  ".agent/skills/git-workflow/SKILL.md": "450bc28d0a309cb3f375acf4f24ba012583fd8d36c6f790258c177dad0c1eb95",
+  ".agent/skills/git-workflow/scripts/agent-commit.ps1": "13f3cbcd488d198429df96a285fde679b25c350c62b3fdebb49d267656d75a0b",
+  ".agent/skills/deep-research-prompting/scripts/strip_embedded_images.py": "absent",
+  ".agent/skills/deep-research-prompting/templates/d1-chatgpt.md": "absent",
+  ".agent/skills/deep-research-prompting/templates/d2-gemini.md": "absent",
+  ".agent/skills/deep-research-prompting/templates/d3-claude.md": "absent",
+  ".agent/skills/deep-research-prompting/templates/skeleton.md": "absent",
+  ".agent/skills/deep-research-prompting/templates/snapshot.md": "absent",
+  ".agent/skills/deep-research-prompting/templates/domain-overlays/content-seo.md": "absent",
+  "tests/tooling/test_strip_embedded_images.py": "absent",
+  "tools/check_commit_identity.py": "absent",
+  "tests/tooling/test_check_commit_identity.py": "absent"
+}

@@ -81,10 +81,15 @@ actual SHA. It then resets only the committed scope entries in the caller's
 index; unrelated staged entries remain staged. It never pushes and must not be
 invoked before the packet's direct human approval has been validated.
 
+The descriptor's `author_email` is checked the same way
+(`tools/check_commit_identity.py`) before the signing check, and the new
+commit is checked again after `verify-commit`.
+
 ### What the Script Does (Do NOT Do These Manually)
 
 1. ✅ Validates SSH signing config (fails fast if GPG would hang)
 2. ✅ Checks remote URL format (warns on HTTPS)
+2b. ✅ Refuses an author or committer address other than the noreply address (`tools/check_commit_identity.py`), before staging and again before the push
 3. ✅ Legacy mode stages all changes (`git add -A`); exact-scope mode stages only the approved manifest in an isolated index
 4. ✅ Runs Ruff lint + unit tests (aborts on failure) — skip with `-SkipTests`
 4c. ✅ Regenerates `openapi.committed.json` if stale (prevents CI drift failures)
@@ -196,6 +201,7 @@ If you cannot use the script for any reason, copy this checklist and check off e
 ```
 Git Commit Progress:
 - [ ] Step 1: Check signing — `git config --global gpg.format` must be "ssh" (if gpgsign=true)
+- [ ] Step 1b: Identity — `uv run python tools/check_commit_identity.py` must print `ok`
 - [ ] Step 2: Check remote — `git remote get-url origin` (must be SSH, not HTTPS)
 - [ ] Step 3: Status — `git status --short`
 - [ ] Step 4: Stage — `git add -A`
