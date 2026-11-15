@@ -1249,6 +1249,35 @@ Three residual MEUs from the video stills design (`_inspiration/video-stills/des
 > - Gate: the H1-2 `session-gate.ps1` record in the Session 64 handoff.
 > - Plan `docs/execution/plans/2026-11-11-capture-export-copy/`.
 
+## Residuals registered 2026-11-15
+
+Two residual MEUs from the 2026-11-15 triage (grouping `.agent/context/grouping/2026-11-15-post-rc3-triage-residuals-session-grouping.md`, Session 75). Both change how the inbox scan reads a file through the adapter's `probe` (`capture/adapter.py`).
+
+<a id="scan-skips-unreadable-files"></a>
+
+### Scan skips unreadable files
+
+> **MEU-145.** From `CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST` (filed by Mat's D-507 at Session 59's closeout; triage D-802). `GET /captures` and MCP `list` run `CaptureService.scan_inbox` (`services/capture.py:466`), which probes every inbox-root file with a scan extension and catches nothing. `probe` turns `UnidentifiedImageError` and `OSError` into `InboxPathError(f"{path} is not an image")`, so a non-image named `.png` fails the whole list with a 422 whose message holds the path. A damaged PNG that makes Pillow raise `SyntaxError` fails it with a 500. Import, crop and the region view already refuse such a file with fixed, path-free messages.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| List | A file the probe can't read never fails the list: every readable shot still lists, through the API and MCP. Whether the file is skipped or listed with a flag is chosen at plan time. | Human-approved: D-507 (filed P2) |
+| No path | No API message, log line or Console field carries the file's path or Pillow's text. | Local Canon: Session 50 rule; [§Export copy](#export-copy) `NO_RAW_OUTPUT` |
+| Retry | A file that failed is tried again on the next scan, so a half-written screenshot lists once it is complete. | Local Canon |
+| Tests | Unit and API: a non-image named `.png` and a PNG with a damaged IDAT in the inbox root; the list answers 200 with every other shot and no path in any message. AC-130.21 no longer needs to restore the source before its follow-up list. | Local Canon |
+
+<a id="exif-orientation-on-scan"></a>
+
+### EXIF orientation on scan
+
+> **MEU-146.** From `CAPTURE-EXIF-SCANNED-ORIENTATION` (triage D-803). `probe` reads `image.size` without applying the EXIF orientation (`capture/adapter.py:253-263` at `2963efe`), and bake and the region view open the stored pixels the same way. So a JPEG or WebP tagged 5 to 8 that the scan or register mode records gets its stored width and height, while Chromium shows the turned frame. Import already writes an upright PNG (D-417); this covers the scan and register paths.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| One frame | For a scanned or registered file with an orientation tag, the recorded size, the marks, the bake and the region view all use the frame the GUI shows. | Local Canon: D-417 |
+| Route | Whether the scan writes an upright copy, rewrites the file, or keeps it and applies the tag wherever pixels are read is a plan-time Decision Brief, because the inbox holds the user's own files. | Local Canon |
+| Tests | Files tagged 1 to 8: a 400x300 file tagged 5 to 8 records 300x400; a mark drawn in the shown frame bakes in the same place; a region given in the shown frame is honoured. | Local Canon |
+
 ## Named deferrals (not this phase)
 
 | Feature | Why |
@@ -1315,6 +1344,8 @@ Three residual MEUs from the video stills design (`_inspiration/video-stills/des
 | MEU-135 | `capture-video-sheet` | [Video sheet](#video-sheet) | MEU-134 |
 | MEU-136 | `capture-export-copy` | [Export copy](#export-copy) | MEU-130 |
 | MEU-143 | `gui-capture-tool-flow` | [Style and tool flow](#style-and-tool-flow) | MEU-87, MEU-99, MEU-100, MEU-105 |
+| MEU-145 | `capture-scan-skip-unreadable` | [Scan skips unreadable files](#scan-skips-unreadable-files) | MEU-36, MEU-84, MEU-130 |
+| MEU-146 | `capture-exif-orientation` | [EXIF orientation on scan](#exif-orientation-on-scan) | MEU-35, MEU-36, MEU-128, MEU-129 |
 
 ---
 

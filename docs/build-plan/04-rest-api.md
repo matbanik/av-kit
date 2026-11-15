@@ -437,6 +437,18 @@ FastAPI autogen at `/openapi.json`. Title `av-kit`, version from package. Schema
 | Extractor failures | yt-dlp extract failures on download add raise `ExtractError` (a `DomainError`), which maps to 422 with its message in the envelope | Triage D-45; Session 33 plan D-15 |
 | Tests | Contract test: a route raising a bare exception returns 500 with `Access-Control-Allow-Origin` for an allowed origin and writes one log line; download add with a failing extractor returns the mapped error | Local Canon |
 
+<a id="ready-after-listen-residual"></a>
+
+## READY after listen (residual)
+
+> **MEU-153.** Registered 2026-11-15 from `BACKEND-READY-BEFORE-LISTEN` (triage D-810). `cli.py:218-232` binds the socket, prints `AVKIT_READY`, then calls `server.run`, and uvicorn starts listening only inside that call. A Node `fetch` sent on the ready line got `ECONNREFUSED` in 3 of 3 tries. The live MCP audit's runner now waits for the port (`mcp-server/scripts/audit/backend.ts`). The desktop app publishes the API on this line (`ui/src/main/python-manager.ts`); whether its first request can hit the gap was not measured.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Listen first | The socket is listening before `AVKIT_READY` is printed, so a request sent on the ready line is queued, not refused. | Local Canon: the issue's candidate fix (`sock.listen()` before the line) |
+| Line unchanged | The ready line's text and fields are unchanged, so MEU-24's and MEU-108's readers need no change. | Local Canon: MEU-24, MEU-108 |
+| Tests | A test that connects as soon as the ready line appears and gets a response, repeated; the packaged backend smoke still passes. | Local Canon |
+
 ---
 
 ## What this layer must not do

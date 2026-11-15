@@ -51,10 +51,14 @@
 | 3.18 | MEU-127 | `svc-tts-fp16-phase-guard` | [03 §TTS FP16 phase guard (residual)](03-service-layer.md#tts-fp16-phase-guard-residual) | MEU-121 |
 | 3.19 | MEU-137 | `svc-download-failure-reason` | [03 §Download failure reason (residual)](03-service-layer.md#download-failure-reason-residual) | MEU-10, MEU-15, MEU-46, MEU-115 |
 | 3.20 | MEU-142 | `svc-download-audio-extract` | [03 §Download audio extract (residual)](03-service-layer.md#download-audio-extract-residual) | MEU-8, MEU-10, MEU-78, MEU-137 |
+| 3.22 | MEU-147 | `svc-transcript-title-cleaning` | [03 §Transcript title cleaning (residual)](03-service-layer.md#transcript-title-cleaning-residual) | MEU-122 |
+| 3.23 | MEU-148 | `svc-console-home-short-form` | [03 §Console home short form (residual)](03-service-layer.md#console-home-short-form-residual) | MEU-119 |
+| 3.24 | MEU-150 | `svc-tts-output-names-progress` | [03 §TTS output names and progress (residual)](03-service-layer.md#tts-output-names-progress-residual) | MEU-12, MEU-22, MEU-77 |
 | 4.1 | MEU-14 | `api-app-auth` | [04 §App factory](04-rest-api.md#app-factory-and-lifespan) + Auth | MEU-10–13 |
 | 4.2 | MEU-15 | `api-downloads-health-settings` | [04 §Downloads](04-rest-api.md#routes--downloads) + Health + Settings | MEU-14 |
 | 4.3 | MEU-16 | `api-transcripts-tts-models` | [04 §Transcripts](04-rest-api.md#routes--transcripts) + TTS + Models | MEU-14 |
 | 4.4 | MEU-76 | `api-error-surface` | [04 §Unhandled errors (residual)](04-rest-api.md#unhandled-errors-residual) | MEU-14 |
+| 4.5 | MEU-153 | `api-ready-after-listen` | [04 §READY after listen (residual)](04-rest-api.md#ready-after-listen-residual) | MEU-24 |
 | 5.1 | MEU-17 | `mcp-runtime` | [05 §Runtime](05-mcp-server.md#runtime) | MEU-14 |
 | 5.2 | MEU-18 | `mcp-tools` | [05 §Compound tools](05-mcp-server.md#compound-tools) | MEU-17, MEU-15, MEU-16 |
 | 5.3 | MEU-68 | `mcp-live-audit` | [05 §MCP live audit (residual)](05-mcp-server.md#mcp-live-audit-residual) | MEU-18, MEU-62 |
@@ -77,6 +81,9 @@
 | 6.15 | MEU-120 | `gui-models-dir-probe` | [06 §Models folder probe (residual)](06-gui.md#models-folder-probe-residual) | MEU-23 |
 | 6.16 | MEU-124 | `download-received-quality` | [06 §Downloader received quality (residual)](06-gui.md#download-received-quality-residual) | MEU-10, MEU-20 |
 | 6.17 | MEU-126 | `gui-light-accent-contrast` | [06 §Light accent contrast (residual)](06-gui.md#light-accent-contrast-residual) | MEU-26 |
+| 6.18 | MEU-149 | `gui-tts-status-pill-contrast` | [06 §TTS status pill contrast (residual)](06-gui.md#tts-status-pill-contrast-residual) | MEU-22, MEU-126 |
+| 6.19 | MEU-151 | `gui-settings-draft-baseline` | [06 §Settings drafts keep edits (residual)](06-gui.md#settings-draft-baseline-residual) | MEU-33, MEU-39, MEU-112 |
+| 6.20 | MEU-154 | `gui-ready-line-buffer` | [06 §READY line buffering (residual)](06-gui.md#ready-line-buffer-residual) | MEU-108 |
 | 7.1 | MEU-24 | `dist-backend` | [07 §Backend packaging](07-distribution.md#backend-packaging-pyinstaller) | MEU-14, MEU-19 |
 | 7.2 | MEU-25 | `dist-installer` | [07 §Electron packaging](07-distribution.md#electron-packaging-electron-builder) | MEU-24, MEU-17 |
 | 7.3 | MEU-71 | `gui-mcp-setup-prompt` | [07 §MCP setup prompt (residual)](07-distribution.md#mcp-setup-prompt-residual) | MEU-23, MEU-25 |
@@ -96,6 +103,7 @@
 | 8.8 | MEU-112 | `convert-job-gpu-preference` | [08 §Encoder choice per job (residual)](08-video-conversion.md#job-encoder-choice-residual) | MEU-30, MEU-33 |
 | 8.9 | MEU-123 | `convert-extract-stream-index` | [08 §Extract stream index (residual)](08-video-conversion.md#extract-stream-index-residual) | MEU-29, MEU-30 |
 | 8.10 | MEU-133 | `convert-media-probe` | [08 §Media probe (residual)](08-video-conversion.md#media-probe-residual) | MEU-31, MEU-32 |
+| 8.11 | MEU-152 | `convert-queue-labels` | [08 §Convert queue labels (residual)](08-video-conversion.md#convert-queue-labels-residual) | MEU-30, MEU-33, MEU-112, MEU-123 |
 | 9.1 | MEU-34 | `domain-capture` | [09 §Domain](09-screenshot-capture.md#domain) | MEU-4 |
 | 9.2 | MEU-35 | `infra-capture` | [09 §Infrastructure](09-screenshot-capture.md#infrastructure) | MEU-34, MEU-5 |
 | 9.3 | MEU-36 | `svc-capture` | [09 §Service layer](09-screenshot-capture.md#service-layer) | MEU-35 |
@@ -139,6 +147,8 @@
 | 9.40 | MEU-134 | `capture-video-frames` | [09 §Video frames](09-screenshot-capture.md#video-frames) | MEU-133, MEU-129, MEU-130 |
 | 9.41 | MEU-135 | `capture-video-sheet` | [09 §Video sheet](09-screenshot-capture.md#video-sheet) | MEU-134 |
 | 9.42 | MEU-136 | `capture-export-copy` | [09 §Export copy](09-screenshot-capture.md#export-copy) | MEU-130 |
+| 9.43 | MEU-145 | `capture-scan-skip-unreadable` | [09 §Scan skips unreadable files](09-screenshot-capture.md#scan-skips-unreadable-files) | MEU-36, MEU-84, MEU-130 |
+| 9.44 | MEU-146 | `capture-exif-orientation` | [09 §EXIF orientation on scan](09-screenshot-capture.md#exif-orientation-on-scan) | MEU-35, MEU-36, MEU-128, MEU-129 |
 | 10.1 | MEU-41 | `canon-queue-cards` | [10 §Scope and non-goals](10-queue-card-ui.md#scope-and-non-goals) | MEU-39 |
 | 10.2 | MEU-42 | `svc-requeue-widening` | [10 §Re-queue contract](10-queue-card-ui.md#re-queue-contract) | MEU-41 |
 | 10.3 | MEU-43 | `gui-queue-primitives` | [10 §Status token table](10-queue-card-ui.md#status-token-table) | MEU-41 |

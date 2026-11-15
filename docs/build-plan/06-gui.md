@@ -1628,6 +1628,44 @@ The following features are explicitly **deferred** to a future phase:
 > - Human check: Mat looked at the Downloader, Convert and Settings pages in the light theme and answered "yes, approved  - everything looks good" (D-458).
 > - AC-126.1 to AC-126.8. Plan `docs/execution/plans/2026-11-08-light-accent-contrast/`.
 
+<a id="tts-status-pill-contrast-residual"></a>
+
+### TTS status pill contrast (residual)
+
+> **MEU-149.** Registered 2026-11-15 from `TTS-STATUS-PILL-BELOW-AA-CONTRAST` (triage D-806). `TTSPage.tsx:721` draws the job status as `text-xs text-fg` on a solid fill from `STATUS_COLORS` (`tts-controls.ts:14-21`). Worked out from the token values while planning Session 56, not measured in the running app: in dark, the default theme, Idle and Cancelled read 4.41:1 and Done 1.29:1; in light, only Idle and Cancelled reach 4.5:1. Labels are `text-xs`, so the 4.5:1 floor applies.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Floor | Every TTS status label reaches 4.5:1 against its fill in both themes. | Local Canon: [§Light accent contrast (residual)](#light-accent-contrast-residual) |
+| Look | How it gets there (a text colour per fill, a 10% status-hue fill with `text-fg` as the queue pills use, or new fills) is chosen at plan time, and Mat looks at both themes before it ships. | Local Canon: D-235 human check (MEU-126) |
+| Scope | The TTS page's pill only. Queue pills have their own tokens and floor ([10 §Status token table](10-queue-card-ui.md#status-token-table)). | Local Canon |
+| Tests | A contrast test that reads the status colours at test time and checks each pair at 4.5:1 in both themes, as `light-accent-contrast.test.ts` does. | Local Canon |
+
+<a id="settings-draft-baseline-residual"></a>
+
+### Settings drafts keep edits (residual)
+
+> **MEU-151.** Registered 2026-11-15 from `SETTINGS-DRAFT-STALE-BASELINE` and `CONVERT-ADVANCED-EDIT-REPLACED` (triage D-808). `useCaptureSettings.ts:83` copies the whole form into its draft on the first edit, so the form stops following a refetch and `save()` writes the copy back. In `ConvertPage.tsx` the settings effect replaces the preset, CQ, scale and audio unless `presetTouched` is set, and only `selectPreset` sets it: in jsdom a CQ of 31 went back to 25 when settings arrived late (RC1, plan D-208). `useConverterSettings` had the capture shape and was fixed under AC-112.9 (plan D-212).
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Draft | The capture settings draft holds only the fields the user changed. The others follow the latest saved values, and Save writes only the changed fields. | Local Canon: AC-112.9, plan D-212 |
+| Edit kept | A Convert field the user edited (preset, CQ, scale or audio) is not replaced when settings arrive or change. A field the user has not touched still follows them. | Local Canon: AC-112.9, plan D-212 |
+| Tests | Renderer: a refetch during an open capture edit keeps the other field's newer value through Save; a CQ, a scale and an audio edit each survive late settings and a change of the saved default preset. | Local Canon |
+
+<a id="ready-line-buffer-residual"></a>
+
+### READY line buffering (residual)
+
+> **MEU-154.** Registered 2026-11-15 from `GUI-READY-CHUNK-BOUNDARY` (triage D-810). `publishIfReady` and `confirmReadyAndPublish` (`python-manager.ts:106,138`) test each output chunk on its own, with no line buffering or deduplication, and a failed live query does not veto `AVKIT_READY` from the owned child's pipe, which the publisher treats as proof of ownership. Session 44's execution review reproduced all three on synthesized chunks; none has been seen in the real app. MEU-108 changed none of this ([§READY probe](#ready-probe-residual)). The backend end of the same line is [04 §READY after listen (residual)](04-rest-api.md#ready-after-listen-residual).
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Lines | The main process reads the backend's output as lines, so a ready line split across chunks is seen once, whole. | Local Canon: known issue `GUI-READY-CHUNK-BOUNDARY` |
+| Once | The API is published once per backend process; a repeated ready line is ignored. | Local Canon |
+| Veto | Whether a failed live query vetoes a ready line from the owned child's pipe is decided at plan time with its evidence. | Local Canon |
+| Tests | Unit with synthesized chunks: a line split in two, two lines in one chunk, a repeated line. | Local Canon |
+
 ## Validation Commands
 
 ```bash

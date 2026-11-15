@@ -742,6 +742,45 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 > - A cancel during the convert lets the job finish Done, and the convert writes no `ConversionJob` row (`CONVERT_CANCEL`, `NO_CONVERSION_ROW`, D-669). CI deselects the real-FFmpeg test (`CI_DESELECT`, D-670).
 > - Tests: AC-142.1 to AC-142.19. Plan `docs/execution/plans/2026-11-12-download-audio-extract/`.
 
+<a id="transcript-title-cleaning-residual"></a>
+
+## Transcript title cleaning (residual)
+
+> **MEU-147.** Registered 2026-11-15 from `TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS` (triage D-804; Mat's D-363 had put it in the debt queue, not as a rider). D-360 cleans and guards the listed titles and channel name (`VideoListing`, `domain/download.py:278,295`). Two older paths skip it. The channel name falls back to `info.title` (`services/transcript.py:169`), and `TranscriptJob.channel_name` has no guard. A `TranscriptResult.title` from the caption port is stored as given; the real adapter falls back to the video ID (`transcript/adapter.py:63-66`). Found by Session 53's execution review, round 2; not reproduced.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Clean | The `info.title` channel fallback and a caption port's `TranscriptResult.title` get the same cleaning and guard as the listed title and channel name, so a lone surrogate or a control character never fails job creation and never reaches the stored row. | Local Canon: D-360 (MEU-122); Session 53 execution review round 2 |
+| Fallback | A value that cleans to nothing takes the fallback MEU-122 already uses for that field. | Local Canon: [§Transcript source metadata](#transcript-source-metadata-residual) |
+| Tests | Unit: a lone surrogate and a control character in the `info.title` fallback and in a port-supplied title; the job is created and the stored values are clean. | Local Canon |
+
+<a id="console-home-short-form-residual"></a>
+
+## Console home short form (residual)
+
+> **MEU-148.** Registered 2026-11-15 from `CONSOLE-HOME-SCRUB-SHORT-FORM` on Mat's D-337 ruling (Session 52, 2026-11-07; triage D-805). `scrub_home` (`services/health.py:110`), which `console_field` runs first (HOME_SCRUB, D-335, MEU-119), matches the home folder only as `Path.home()` spells it. Windows can also name the folder by its 8.3 short form, which keeps the first letters of a long user name. Not reproduced on a real install.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Short form | `scrub_home` also replaces the home folder's 8.3 short form with `~`. The short form comes from `GetShortPathNameW`, read once and cached, on Windows only. Elsewhere, or when the call fails or returns the long form, only the long form is matched. | Human-approved: D-337 |
+| Row | The change is a plan row of its own with a Red. | Human-approved: D-337 |
+| Reach | `scrub_line` in `services/download.py:129` calls `scrub_home` and gains the short form with it. | Local Canon |
+| Tests | Unit with the short-form lookup faked: a short-form path in a Console field becomes `~`; a failed lookup keeps today's behaviour; the long form still scrubs (AC-119.10). | Local Canon |
+
+<a id="tts-output-names-progress-residual"></a>
+
+## TTS output names and progress (residual)
+
+> **MEU-150.** Registered 2026-11-15 from `TTS-AUDIO-RANDOM-FILE-NAMES` and `TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE` (triage D-807). Output is written to `<job id>.wav` and `<job id>.mp3` (`services/tts.py:327-328`), and the job ID is a uuid4 (`:242`). `segments_total` is `TTS_PROGRESS_RESOLUTION` (`:44,252`), a 1000-step progress scale, and `TTSPage.tsx:733` prints it as segments. Both were seen while staging README screenshots on 2026-11-03.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Name | A TTS output file's name says what the clip is, not a uuid. The scheme is a plan-time Decision Brief, because the user sees it in their folder. A name never overwrites an existing file; a taken name gets a suffix. | Local Canon: [§Download audio extract (residual)](#download-audio-extract-residual) (D-666) |
+| Safe | A name holds no path separator, control character or reserved Windows name, and stays inside the output folder. | Local Canon: 09 §Export copy `export_stem` (D-612) |
+| Job | The job ID and the API shape are unchanged; the job's output path names the new file. Existing output keeps its name. | Local Canon |
+| Progress label | The page stops calling the progress scale segments: it shows a percentage, or a real segment count if the service reports one. | Local Canon |
+| Tests | Unit: two jobs with the same text get different names, a taken name gets a suffix, and unsafe text gives a safe name; a renderer test for the progress label. | Local Canon |
+
 ## What this layer must not do
 
 | Forbidden | Why |

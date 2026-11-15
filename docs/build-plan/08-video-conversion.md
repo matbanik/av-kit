@@ -634,6 +634,19 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 > - `tests/integration/test_video_real_ffmpeg.py` probes generated clips with and without audio, a raw `.h264` stream, a `Ł` file name and a `Ł` title tag through the pinned `packaging/ffmpeg-win64/` binaries, and checks each clip's SHA-256 is unchanged. CI's Tests step deselects it (`.github/workflows/ci.yml:66`).
 > - AC-133.1 to AC-133.9. Plan `docs/execution/plans/2026-11-10-video-probe-frames/`.
 
+<a id="convert-queue-labels-residual"></a>
+
+## Convert queue labels (residual)
+
+> **MEU-152.** Registered 2026-11-15 from `CONVERT-CUT-TIME-RAW-MS`, `CONVERT-POSITIONS-NOT-RENUMBERED` and `CONVERT-CUT-ENCODER-LABEL` (triage D-809; D-380 had put the last at the end of the debt queue). `convertMetaSegments` prints `in_ms` and `out_ms` unformatted (`convert-controls.ts:203-204`). `queue_position` is set once at enqueue (`services/conversion.py:172,303`) and printed as stored (`ConvertPage.tsx:521`, `QueueCard.tsx:558`). `_dispatch` resolves and saves an encoder for every job kind, but a Cut never uses it: Fast Copy is `-c copy` and the re-encode is fixed at `libx265`. So on an NVIDIA machine a Cut row reads `hevc_nvenc`.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Cut times | A Cut row shows its in and out points as time codes, not milliseconds. | Local Canon: [§Media probe (residual)](#media-probe-residual) `timecode` |
+| Position | The number on a waiting card says where it stands in the queue now, after a job ahead finishes, is removed or is moved. The queue order itself is unchanged. | Local Canon |
+| Cut encoder | A Cut's stored encoder and its card say what the job runs: none for Fast Copy, `libx265` for a re-encode. | Local Canon: MEU-123 `EXTRACT_NO_ENCODER` |
+| Tests | Unit: positions after a finish, a remove and a move; a Cut's stored encoder for Fast Copy and for a re-encode with the GPU setting at NVIDIA; a renderer test for the time codes. | Local Canon |
+
 ---
 
 ## MEUs
@@ -650,6 +663,7 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 | MEU-112 | `convert-job-gpu-preference` | [§Encoder choice per job (residual)](#job-encoder-choice-residual) | MEU-30, MEU-33 |
 | MEU-123 | `convert-extract-stream-index` | [§Extract stream index (residual)](#extract-stream-index-residual) | MEU-29, MEU-30 |
 | MEU-133 | `convert-media-probe` | [§Media probe (residual)](#media-probe-residual) | MEU-31, MEU-32 |
+| MEU-152 | `convert-queue-labels` | [§Convert queue labels (residual)](#convert-queue-labels-residual) | MEU-30, MEU-33, MEU-112, MEU-123 |
 
 ---
 

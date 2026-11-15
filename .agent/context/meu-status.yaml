@@ -35,11 +35,12 @@ phases:
   - docs/build-plan/03-service-layer.md
   execution_plans:
   - docs/execution/plans/2026-08-19-p3-services/
-  last_updated: '2026-11-10'
+  last_updated: '2026-11-15'
   note: MEU-10–13 bound to p3-services — ready_for_review pending H1. MEU-62 residual (TTS runtime assets) registered 2026-09-30. MEU-73/74/75/77/78 residuals (TTS voice assets, language runtime, device
     fallback, async generate, ffmpeg resolver) registered 2026-10-09. MEU-75 delivered by Session 35 tts-voice-panel. MEU-98 residual (TTS sideload load) registered 2026-10-17. MEU-115/116 (transcript failure
     reason, block stop), MEU-117/119/121 (TTS build capability, load order, FP16 audio) and MEU-122 (transcript source metadata) residuals registered 2026-11-04. MEU-137/142 residuals (download failure
-    reason, download audio extract) registered 2026-11-10.
+    reason, download audio extract) registered 2026-11-10. MEU-147/148/150 residuals (transcript title cleaning, Console home short form, TTS output names and progress) registered 2026-11-15; matrix row
+    3.21 is held for Session 74's MEU-144.
 - id: '4'
   name: REST API
   band: P2
@@ -47,8 +48,8 @@ phases:
   - docs/build-plan/04-rest-api.md
   execution_plans:
   - docs/execution/plans/2026-08-19-p4-rest-api/
-  last_updated: '2026-10-09'
-  note: MEU-14–16 bound to p4-rest-api. MEU-76 residual (unhandled errors) registered 2026-10-09.
+  last_updated: '2026-11-15'
+  note: MEU-14–16 bound to p4-rest-api. MEU-76 residual (unhandled errors) registered 2026-10-09. MEU-153 residual (READY after listen) registered 2026-11-15.
 - id: '5'
   name: MCP server
   band: P2
@@ -73,10 +74,11 @@ phases:
   - docs/execution/plans/2026-08-20-p6-gui-tts-models/
   - docs/execution/plans/2026-08-21-p6-gui-settings-help/
   - docs/execution/plans/2026-09-20-p6-gui-login-item/
-  last_updated: '2026-11-04'
+  last_updated: '2026-11-15'
   note: MEU-19 p6-gui-shell; MEU-20 p6-gui-downloader; MEU-26 p6-gui-zorivest-chrome; MEU-21 p6-gui-transcript; MEU-22 p6-gui-tts-models; MEU-23 p6-gui-settings-help. MEU-61 bound to p6-gui-login-item (login-item
     residual). MEU-69 residual (header toggles) registered 2026-09-30. MEU-93–97 residuals (path fields, theme-reactive selects, shortcut binding, palette curation, common shortcuts) registered 2026-10-17.
-    MEU-108 residual (ready probe guard) registered 2026-11-03. MEU-118/120/124/126 residuals (TTS device options, models folder probe, received quality, light accent contrast) registered 2026-11-04.
+    MEU-108 residual (ready probe guard) registered 2026-11-03. MEU-118/120/124/126 residuals (TTS device options, models folder probe, received quality, light accent contrast) registered 2026-11-04. MEU-149/151/154
+    residuals (TTS status pill contrast, settings drafts, READY line buffering) registered 2026-11-15.
 - id: '7'
   name: Distribution
   band: P2
@@ -96,9 +98,9 @@ phases:
   - docs/execution/plans/2026-08-24-p8-conversion-engine/
   - docs/execution/plans/2026-08-26-p8-conversion-api-mcp/
   - docs/execution/plans/2026-08-26-p8-conversion-gui/
-  last_updated: '2026-11-09'
+  last_updated: '2026-11-15'
   note: MEU-28–30 bound to p8-conversion-engine. MEU-31–32 approved p8-conversion-api-mcp. MEU-33 bound to p8-conversion-gui. MEU-109 residual (output folder) registered 2026-11-03. MEU-123 residual (extract
-    stream index) registered 2026-11-04. MEU-133 residual (media probe) registered 2026-11-09.
+    stream index) registered 2026-11-04. MEU-133 residual (media probe) registered 2026-11-09. MEU-152 residual (Convert queue labels) registered 2026-11-15.
 - id: '9'
   name: Screenshot capture
   band: P2
@@ -111,13 +113,14 @@ phases:
   - docs/execution/plans/2026-08-27-p9-capture-native-picker/
   - docs/execution/plans/2026-09-19-p9-capture-annotate-arrow-text/
   - docs/execution/plans/2026-09-20-p9-capture-annotate-edit/
-  last_updated: '2026-11-09'
+  last_updated: '2026-11-15'
   note: MEU-34–36 bound to p9-capture-engine. MEU-37–38 bound to p9-capture-api-mcp. MEU-39 bound to p9-capture-gui. MEU-40 bound to p9-capture-native-picker. MEU-59 bound to p9-capture-annotate-arrow-text
     (arrow+text geometry residual). MEU-60 bound to p9-capture-annotate-edit (edit-until-Save residual). Session 8c / MEU-27 approved. MEU-65–67 residuals (toolbar icons, zoom, flatten-with-backup) registered
     2026-09-30. MEU-80–91 residuals (icon hints, action row, text baseline, arrow geometry, file sync, size scrub, swatches, tool lock, filmstrip menu/multi-select, pixelate, eraser) registered 2026-10-09.
     MEU-82–84 bound to capture-render-fidelity. MEU-85–87 bound to capture-editor-options. MEU-90–91 bound to capture-new-marks. MEU-99–107 residuals (canvas history chords, resize handles, text re-edit,
     multi-line text, redact, copy image, style and tool flow, line and ellipse, step mark) registered 2026-10-29. MEU-111 residual (image size limit over MCP) registered 2026-11-03. MEU-128–132 residuals
-    (region view, image import, crop to a new shot, crop tool, GUI image import) registered 2026-11-08. MEU-134–136 residuals (video frames, video sheet, export copy) registered 2026-11-09.
+    (region view, image import, crop to a new shot, crop tool, GUI image import) registered 2026-11-08. MEU-134–136 residuals (video frames, video sheet, export copy) registered 2026-11-09. MEU-145/146
+    residuals (scan skips unreadable files, EXIF orientation on scan) registered 2026-11-15.
 - id: '10'
   name: Queue card UI
   band: P2
@@ -3773,6 +3776,259 @@ meus:
   updated: '2026-11-14'
   closed_reason: null
   note: Registered 2026-11-13 by splitting MEU-105 (D-713, USER_EXPLICIT 2026-11-13 "A"); it holds the Lock and Letters rows and the rest of the Modifiers row of 09 §Style and tool flow.
+- row_key: MEU-145
+  id: MEU-145
+  slug: capture-scan-skip-unreadable
+  phase: '9'
+  band: P2
+  matrix_item: '9.43'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: scan-skips-unreadable-files
+    text: Phase 9 §Scan skips unreadable files
+  description: One inbox file the scan can't read no longer fails the capture list, and the skip is logged without its path.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-36, MEU-84, MEU-130
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-36
+  - MEU-84
+  - MEU-130
+  execution_plan: null
+  updated: '2026-11-15'
+  closed_reason: null
+  note: Registered 2026-11-15 from CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST (triage D-802; grouping D-814, D-815), Session 75.
+- row_key: MEU-146
+  id: MEU-146
+  slug: capture-exif-orientation
+  phase: '9'
+  band: P2
+  matrix_item: '9.44'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: exif-orientation-on-scan
+    text: Phase 9 §EXIF orientation on scan
+  description: A scanned or registered photo with an EXIF orientation tag is sized, marked, baked and region-viewed in the frame the GUI shows.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-35, MEU-36, MEU-128, MEU-129
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-35
+  - MEU-36
+  - MEU-128
+  - MEU-129
+  execution_plan: null
+  updated: '2026-11-15'
+  closed_reason: null
+  note: Registered 2026-11-15 from CAPTURE-EXIF-SCANNED-ORIENTATION (triage D-803; grouping D-814, D-815), Session 75.
+- row_key: MEU-147
+  id: MEU-147
+  slug: svc-transcript-title-cleaning
+  phase: '3'
+  band: P2
+  matrix_item: '3.22'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: transcript-title-cleaning-residual
+    text: Phase 3 §Transcript title cleaning (residual)
+  description: The info.title channel fallback and a caption port's title get D-360's cleaning and guard.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-122
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-122
+  execution_plan: null
+  updated: '2026-11-15'
+  closed_reason: null
+  note: Registered 2026-11-15 from TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS (triage D-804; grouping D-814, D-815), Session 77.
+- row_key: MEU-148
+  id: MEU-148
+  slug: svc-console-home-short-form
+  phase: '3'
+  band: P2
+  matrix_item: '3.23'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: console-home-short-form-residual
+    text: Phase 3 §Console home short form (residual)
+  description: The Console's home scrub also matches the home folder's 8.3 short form on Windows (D-337).
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-119
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-119
+  execution_plan: null
+  updated: '2026-11-15'
+  closed_reason: null
+  note: Registered 2026-11-15 from CONSOLE-HOME-SCRUB-SHORT-FORM (triage D-805; grouping D-814, D-815), Session 77.
+- row_key: MEU-149
+  id: MEU-149
+  slug: gui-tts-status-pill-contrast
+  phase: '6'
+  band: P2
+  matrix_item: '6.18'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: tts-status-pill-contrast-residual
+    text: Phase 6 §TTS status pill contrast (residual)
+  description: Every TTS status pill label reaches 4.5:1 against its fill in both themes.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-22, MEU-126
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-22
+  - MEU-126
+  execution_plan: null
+  updated: '2026-11-15'
+  closed_reason: null
+  note: Registered 2026-11-15 from TTS-STATUS-PILL-BELOW-AA-CONTRAST (triage D-806; grouping D-814, D-815), Session 80.
+- row_key: MEU-150
+  id: MEU-150
+  slug: svc-tts-output-names-progress
+  phase: '3'
+  band: P2
+  matrix_item: '3.24'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-output-names-progress-residual
+    text: Phase 3 §TTS output names and progress (residual)
+  description: TTS output files get readable names instead of the job uuid, and the page stops calling the progress scale segments.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-12, MEU-22, MEU-77
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-12
+  - MEU-22
+  - MEU-77
+  execution_plan: null
+  updated: '2026-11-15'
+  closed_reason: null
+  note: Registered 2026-11-15 from TTS-AUDIO-RANDOM-FILE-NAMES and TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE (triage D-807; grouping D-814, D-815), Session 80.
+- row_key: MEU-151
+  id: MEU-151
+  slug: gui-settings-draft-baseline
+  phase: '6'
+  band: P2
+  matrix_item: '6.19'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: settings-draft-baseline-residual
+    text: Phase 6 §Settings drafts keep edits (residual)
+  description: The capture settings draft and the Convert advanced fields keep the user's edits and follow everything else, as AC-112.9 did for the encoder.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-33, MEU-39, MEU-112
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-33
+  - MEU-39
+  - MEU-112
+  execution_plan: null
+  updated: '2026-11-15'
+  closed_reason: null
+  note: Registered 2026-11-15 from SETTINGS-DRAFT-STALE-BASELINE and CONVERT-ADVANCED-EDIT-REPLACED (triage D-808; grouping D-814, D-815), Session 81.
+- row_key: MEU-152
+  id: MEU-152
+  slug: convert-queue-labels
+  phase: '8'
+  band: P2
+  matrix_item: '8.11'
+  build_ref:
+    path: build-plan/08-video-conversion.md
+    anchor: convert-queue-labels-residual
+    text: Phase 8 §Convert queue labels (residual)
+  description: Convert queue cards show Cut times as time codes and current queue positions, and a Cut saves no GPU encoder.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-30, MEU-33, MEU-112, MEU-123
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-30
+  - MEU-33
+  - MEU-112
+  - MEU-123
+  execution_plan: null
+  updated: '2026-11-15'
+  closed_reason: null
+  note: Registered 2026-11-15 from CONVERT-CUT-TIME-RAW-MS, CONVERT-POSITIONS-NOT-RENUMBERED and CONVERT-CUT-ENCODER-LABEL (triage D-809; grouping D-814, D-815), Session 81.
+- row_key: MEU-153
+  id: MEU-153
+  slug: api-ready-after-listen
+  phase: '4'
+  band: P2
+  matrix_item: '4.5'
+  build_ref:
+    path: build-plan/04-rest-api.md
+    anchor: ready-after-listen-residual
+    text: Phase 4 §READY after listen (residual)
+  description: The backend listens before it prints AVKIT_READY, so a request sent on the ready line is queued, not refused.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-24
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-24
+  execution_plan: null
+  updated: '2026-11-15'
+  closed_reason: null
+  note: Registered 2026-11-15 from BACKEND-READY-BEFORE-LISTEN (triage D-810; grouping D-814, D-815), Session 82.
+- row_key: MEU-154
+  id: MEU-154
+  slug: gui-ready-line-buffer
+  phase: '6'
+  band: P2
+  matrix_item: '6.20'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: ready-line-buffer-residual
+    text: Phase 6 §READY line buffering (residual)
+  description: The main process reads backend output as lines, so a split or repeated ready line publishes the API once.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-108
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-108
+  execution_plan: null
+  updated: '2026-11-15'
+  closed_reason: null
+  note: Registered 2026-11-15 from GUI-READY-CHUNK-BOUNDARY (triage D-810; grouping D-814, D-815), Session 82.
 summary_bands:
 - key: P0
   label: P0
@@ -3782,7 +4038,8 @@ summary_bands:
   range: MEU-5–13 (Phases 2–3)
 - key: P2
   label: P2
-  range: MEU-14–143 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+  range: MEU-14–154 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
     triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127;
-    2026-11-08 capture crop residuals MEU-128–132; 2026-11-09 video stills residuals MEU-133–136; 2026-11-10 download reliability residuals MEU-137–142; 2026-11-13 capture style split MEU-143)
+    2026-11-08 capture crop residuals MEU-128–132; 2026-11-09 video stills residuals MEU-133–136; 2026-11-10 download reliability residuals MEU-137–142; 2026-11-13 capture style split MEU-143; 2026-11-15
+    post-rc.3 triage residuals MEU-145–154, with MEU-144 held for Session 74)
 narrative_sections: []

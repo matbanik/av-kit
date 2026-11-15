@@ -61,6 +61,9 @@
 | MEU-127 | `svc-tts-fp16-phase-guard` | 3.18 | [Phase 3 §TTS FP16 phase guard (residual)](../../docs/build-plan/03-service-layer.md#tts-fp16-phase-guard-residual) | A spike counts FP16's zero denominators at the decoder's phase Div and tries a guarded phase computation on a copy of the graph; what ships comes back to Mat. | ✅ approved |
 | MEU-137 | `svc-download-failure-reason` | 3.19 | [Phase 3 §Download failure reason (residual)](../../docs/build-plan/03-service-layer.md#download-failure-reason-residual) | A failed download stores one short av-kit message per cause, the Downloader card shows it, and the job logs started, done and failed lines with the message and yt-dlp's redacted line. | ✅ approved |
 | MEU-142 | `svc-download-audio-extract` | 3.20 | [Phase 3 §Download audio extract (residual)](../../docs/build-plan/03-service-layer.md#download-audio-extract-residual) | An MP3 audio download is converted to MP3 through MediaPort.convert after the download, in any cookie mode, with no ConversionJob row. | ✅ approved |
+| MEU-147 | `svc-transcript-title-cleaning` | 3.22 | [Phase 3 §Transcript title cleaning (residual)](../../docs/build-plan/03-service-layer.md#transcript-title-cleaning-residual) | The info.title channel fallback and a caption port's title get D-360's cleaning and guard. | ⬜ pending |
+| MEU-148 | `svc-console-home-short-form` | 3.23 | [Phase 3 §Console home short form (residual)](../../docs/build-plan/03-service-layer.md#console-home-short-form-residual) | The Console's home scrub also matches the home folder's 8.3 short form on Windows (D-337). | ⬜ pending |
+| MEU-150 | `svc-tts-output-names-progress` | 3.24 | [Phase 3 §TTS output names and progress (residual)](../../docs/build-plan/03-service-layer.md#tts-output-names-progress-residual) | TTS output files get readable names instead of the job uuid, and the page stops calling the progress scale segments. | ⬜ pending |
 
 
 ## REST API (P2)
@@ -73,6 +76,7 @@
 | MEU-15 | `api-downloads-health-settings` | 4.2 | [Phase 4 §Downloads + Health + Settings](../../docs/build-plan/04-rest-api.md#routes--downloads) | Download/SABR/cookies/apply-defaults routes plus settings and health/console/dependencies; 422/409 mapping | ✅ approved |
 | MEU-16 | `api-transcripts-tts-models` | 4.3 | [Phase 4 §Transcripts + TTS + Models](../../docs/build-plan/04-rest-api.md#routes--transcripts) | Transcript start/resume/retry/requeue/compile, TTS generate/prepare, models download-runtime; OpenAPI committed | ✅ approved |
 | MEU-76 | `api-error-surface` | 4.4 | [Phase 4 §Unhandled errors (residual)](../../docs/build-plan/04-rest-api.md#unhandled-errors-residual) | Unhandled exceptions are logged with request_id and returned as a CORS-safe internal_error envelope (no more 'Failed to fetch'); yt-dlp extract failures on download add map to a typed DomainError. | ✅ approved |
+| MEU-153 | `api-ready-after-listen` | 4.5 | [Phase 4 §READY after listen (residual)](../../docs/build-plan/04-rest-api.md#ready-after-listen-residual) | The backend listens before it prints AVKIT_READY, so a request sent on the ready line is queued, not refused. | ⬜ pending |
 
 
 ## MCP server (P2)
@@ -111,6 +115,9 @@
 | MEU-120 | `gui-models-dir-probe` | 6.15 | [Phase 6 §Models folder probe (residual)](../../docs/build-plan/06-gui.md#models-folder-probe-residual) | The first-run probe tests the backend's real models folder and stops creating an empty one; a contract test ties the two defaults together. | ✅ approved |
 | MEU-124 | `download-received-quality` | 6.16 | [Phase 6 §Downloader received quality (residual)](../../docs/build-plan/06-gui.md#download-received-quality-residual) | The file's real quality is stored in a new nullable field, and the row shows requested and received together only when they differ. | ✅ approved |
 | MEU-126 | `gui-light-accent-contrast` | 6.17 | [Phase 6 §Light accent contrast (residual)](../../docs/build-plan/06-gui.md#light-accent-contrast-residual) | The light theme's accent tokens move to the colours Mat ruled, so button labels reach AA contrast. | ✅ approved |
+| MEU-149 | `gui-tts-status-pill-contrast` | 6.18 | [Phase 6 §TTS status pill contrast (residual)](../../docs/build-plan/06-gui.md#tts-status-pill-contrast-residual) | Every TTS status pill label reaches 4.5:1 against its fill in both themes. | ⬜ pending |
+| MEU-151 | `gui-settings-draft-baseline` | 6.19 | [Phase 6 §Settings drafts keep edits (residual)](../../docs/build-plan/06-gui.md#settings-draft-baseline-residual) | The capture settings draft and the Convert advanced fields keep the user's edits and follow everything else, as AC-112.9 did for the encoder. | ⬜ pending |
+| MEU-154 | `gui-ready-line-buffer` | 6.20 | [Phase 6 §READY line buffering (residual)](../../docs/build-plan/06-gui.md#ready-line-buffer-residual) | The main process reads backend output as lines, so a split or repeated ready line publishes the API once. | ⬜ pending |
 
 
 ## Distribution (P2)
@@ -146,6 +153,7 @@
 | MEU-112 | `convert-job-gpu-preference` | 8.8 | [Phase 8 §Encoder choice per job (residual)](../../docs/build-plan/08-video-conversion.md#job-encoder-choice-residual) | The encoder chosen for one Compress job reaches FFmpeg, survives a re-queue or a restart, and an existing database upgrades in place. The setting still applies when a job sends nothing. | ✅ approved |
 | MEU-123 | `convert-extract-stream-index` | 8.9 | [Phase 8 §Extract stream index (residual)](../../docs/build-plan/08-video-conversion.md#extract-stream-index-residual) | stream_index is audio-relative everywhere, so extract picks the right extension and tracks; an Extract job saves no encoder. | ✅ approved |
 | MEU-133 | `convert-media-probe` | 8.10 | [Phase 8 §Media probe (residual)](../../docs/build-plan/08-video-conversion.md#media-probe-residual) | POST /conversions/probe and avkit_convert probe return a local video's duration, codecs, size, fps and streams through the existing MediaPort.probe. | ✅ approved |
+| MEU-152 | `convert-queue-labels` | 8.11 | [Phase 8 §Convert queue labels (residual)](../../docs/build-plan/08-video-conversion.md#convert-queue-labels-residual) | Convert queue cards show Cut times as time codes and current queue positions, and a Cut saves no GPU encoder. | ⬜ pending |
 
 
 ## Screenshot capture (P2)
@@ -197,6 +205,8 @@
 | MEU-135 | `capture-video-sheet` | 9.41 | [Phase 9 §Video sheet](../../docs/build-plan/09-screenshot-capture.md#video-sheet) | avkit_capture sheet and POST /captures/sheet write one labelled grid image of a video span, sized for the vision token budget, as a new shot. | ✅ approved |
 | MEU-136 | `capture-export-copy` | 9.42 | [Phase 9 §Export copy](../../docs/build-plan/09-screenshot-capture.md#export-copy) | avkit_capture export and POST /captures/{id}/export write a resized png, jpeg or webp copy of a shot as a new shot, with no metadata. | ✅ approved |
 | MEU-143 | `gui-capture-tool-flow` | 9.31a | [Phase 9 §Style and tool flow](../../docs/build-plan/09-screenshot-capture.md#style-and-tool-flow) | Lock is on by default and persisted with a one-shot preference, letter shortcuts pick tools, and Shift, Alt and Shift+arrow modify drawing and nudging. | ✅ approved |
+| MEU-145 | `capture-scan-skip-unreadable` | 9.43 | [Phase 9 §Scan skips unreadable files](../../docs/build-plan/09-screenshot-capture.md#scan-skips-unreadable-files) | One inbox file the scan can't read no longer fails the capture list, and the skip is logged without its path. | ⬜ pending |
+| MEU-146 | `capture-exif-orientation` | 9.44 | [Phase 9 §EXIF orientation on scan](../../docs/build-plan/09-screenshot-capture.md#exif-orientation-on-scan) | A scanned or registered photo with an EXIF orientation tag is sized, marked, baked and region-viewed in the frame the GUI shows. | ⬜ pending |
 
 
 ## Queue card UI (P2)
