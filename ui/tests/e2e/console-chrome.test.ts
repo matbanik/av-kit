@@ -82,7 +82,10 @@ test('C1-5 copy writes clipboard and log-to-file PUTs settings/app', async () =>
   const { app, page } = await firstWindow()
   const putBodies: string[] = []
   await page.context().route((url) => url.pathname.includes('/settings/app'), async (route) => {
-    putBodies.push(route.request().postData() ?? '')
+    // The Console also GETs /settings/app when it opens (its start level); count only PUTs.
+    if (route.request().method() === 'PUT') {
+      putBodies.push(route.request().postData() ?? '')
+    }
     await route.fulfill({ json: { log_to_file: true } })
   })
   await expect(page.getByTestId('header-console-btn')).toBeVisible()

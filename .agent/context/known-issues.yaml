@@ -5286,3 +5286,16 @@ issues:
     notes: 'SEEN 2026-11-15 (Session 84 closeout-record-once H1-2, no change reaches packages/ or the media adapter): the full suite failed test_ac_134_10_counter_clip_frames_match_a_full_decode at 00:00:02.999 in two gate runs (1 failed, 2846 passed, 189.72 s and 188.81 s; row 0''s baseline suite passed it). Isolation: the test alone passed 3/3; the test file alone failed once (the same test) and then passed 6/6; tests/integration/ failed once on test_ac_134_10_long_audio_past_the_last_frame at 00:00:03.200. Receipts under C:/Temp/av-kit/cro/: cro-gate-h1-run1.txt, cro-D6-py-tests-run1.txt, cro-gate-h1-run2.txt, cro-D6-py-tests-run2.txt, cro-h12-flake-probe-1.txt to -3.txt, cro-h12-flake-probe-file.txt, cro-h12-flake-probe-integration.txt and cro-h12-flake-probe-repeat.txt. Next step on a repeat: log the frame-grab ffmpeg stderr and the clip duration near the tail.'
     meu_links: []
     related: []
+  - id: E2E-CONSOLE-C15-COUNTS-GET
+    title: Console E2E C1-5 counts the Console's settings GET as a PUT
+    severity: low
+    component: ui
+    status: resolved
+    discovered: '2026-11-16'
+    root_cause: ui/tests/e2e/console-chrome.test.ts C1-5 routes every request whose path includes /settings/app and records each one as a PUT body. Since the rc.3 fixes (b216681, 2026-11-09, D-2) the Console reads /settings/app with a GET when it opens (AppShell.tsx loadStartLevel, ConsolePanel.tsx start-level effect), so the test records the GET's empty body as well as the log-to-file PUT and expect.poll(putBodies.length).toBe(1) receives 2.
+    blast_radius: C1-5 fails on every run (10 of 10 in Session 78's diagnostic, C:/Temp/av-kit/e2e-harness-hardening/ehh-diag-c15.txt), so a full Electron E2E run is never green. Recent session gates ran only part of the E2E suite, so nothing caught it until Session 78's row 0 base run (202 passed, 1 failed). The product is unaffected.
+    verification:
+      last_checked: '2026-11-16'
+      method: C1-5 alone with --repeat-each=10, then the full Electron E2E suite through npx playwright test in ui (C:/Temp/av-kit/c15-fix/c15-alone.txt, c15-full-e2e.txt, c15-full-e2e-r2.txt)
+      result: 'C1-5 10 passed; full suite run 1: 202 passed, 1 failed (AC-49.29, the open DOWNLOAD-QUEUE-DRAG-OVER-MISS flake; alone 10 of 10 in ac4929-alone.txt); full suite run 2: 203 passed, 0 failed'
+    resolution_path: 'Fixed on 2026-11-16 as a test-only change outside Session 78 (Mat chose the separate small fix at Session 78''s row-0 stop): C1-5''s route in ui/tests/e2e/console-chrome.test.ts records a body only for PUT requests and still fulfils the Console''s start-level GET with the stub, so the test stays hermetic. Its assertions and the product code are unchanged.'
