@@ -34,14 +34,15 @@ issues:
     title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
     severity: medium
     component: infrastructure
-    status: open
+    status: mitigated
     discovered: '2026-09-30'
     root_cause: tests/tooling/test_framework_adoption.py runs the live P:/.agent/tools/resolve_model.py with AGENT_MODEL_REGISTRY_HOME=P:/.agent (lines ~317-498, 800, 867). av-kit's tracked overlay .agent/model-registry.local.json pins validated_against to the global registry hash, so any edit to P:/.agent/model-registry.json made for another project (e.g. the 2026-09-29 zorivest gpt-6.1 bump) makes the resolver refuse the overlay (overlay_not_validated) and fails py-tests until the overlay is revalidated. Found by Session 26 WINDOWS_GATE attempt 6.
     blast_radius: 'Any av-kit Windows gate after a shared-registry change fails py-tests until av-kit''s overlay is revalidated; the product is unaffected. Session 26 revalidated the overlay (A17). It recurred in Session 30 (LOCAL_SEQUENCE attempt 3, registry b06d7cda… → ad9a09de…; revalidated under A-12, 2026-10-07), so severity is raised to medium. Durable fix: give these tests a fixture registry home (a snapshot of the resolver contract plus a registry) so the gate no longer depends on machine-level state, keeping one opt-in live check. RECURRED 2026-10-09 (third time): the Codex scoping-review dispatch for the 2026-10-09 grouping stopped before any provider call with overlay_not_validated (overlay records ad9a09de…, registry in use a7c95972…). Revalidating rewrites .agent/model-registry.local.json, which is in Session 30''s GATED_PATHS, so it waits for Session 30''s approval; the next av-kit WINDOWS_GATE will also fail py-tests until then.'
     verification:
-      last_checked: '2026-11-04'
-      method: tools/Invoke-CodexDispatch.ps1 with AGENT_MODEL_REGISTRY_HOME=P:/.agent (C:/Temp/av-kit/dispatch/scoping-run.txt)
-      result: 'overlay_not_validated: overlay ad9a09defd46… vs registry a7c95972c1e8…; no provider call, no ledger round used'
+      last_checked: '2026-11-15'
+      method: 'Session 76 row 2: the registry tests run under a hostile AGENT_MODEL_REGISTRY (C:/Temp/av-kit/tth/tth-reg-hostile.txt)'
+      result: 17 passed, 75 deselected in 3.62s
+    resolution_path: 'Mitigated in Session 76 on 2026-11-15 (plan docs/execution/plans/2026-11-15-tooling-test-hermeticity): the adoption tests are hermetic. They resolve against a tracked fixture registry home (tests/tooling/fixtures/registry-home) and a byte copy of the dispatch wrapper, so a machine registry bump no longer reds them. Residual, kept by design (D-912): a machine registry bump still reds tests/tooling/test_hdp_expert_pass.py::test_ac_10_compiled_registry_is_current_and_adds_only_the_peer_reviewer until the overlay is revalidated, because the wrapper refuses the same stale stamp.'
     category: TECH-DEBT
     priority: P2
     related: []
@@ -860,14 +861,15 @@ issues:
     title: Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the 2026-09-26 postimage
     severity: low
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-09-30'
     root_cause: 'tests/tooling/test_framework_adoption.py migrated_tree (:375-397) copies the CURRENT AGENTS.md/GUARDRAILS.md and the adoption-manifest files, but verify_adoption.py checks them against records frozen at d6cd5a3 (rule-preservation.md postimage_sha256 = CRLF bytes of d6cd5a3; manifest file list). Any later governance edit (f34e8a9 added the human-decision-protocol link) breaks 4 tests: static_oracles[none], governance_preservation_and_routing_inventory[history], registry_contract_generic_class_census x2 - first on the dangling backlink, then on the rule-map identity hash. Masked in the container because rtk/pwsh are absent (ENV_BOUND_PY). Found by Session 27 WINDOWS_GATE attempt 1; interim fix = A-2 record rebind.'
     blast_radius: Every governance edit to AGENTS.md/GUARDRAILS.md reds the Windows py-tests stage until the 2026-09-26 records are rebound; unrelated sessions pay for it (S27 attempt 1).
     verification:
-      last_checked: '2026-11-04'
-      method: Session 42 tts-sideload-load row 0 baseline at d30f62b, then the re-run at c34866b (walkthrough Baseline, plan ECN-1)
-      result: 'Seen again at d30f62b (the same four REFUSE: rule map identity mismatch: AGENTS.md failures). Mat chose to rebind the pin (D-132): counts."AGENTS.md".postimage_sha256 in 2026-09-26-framework-update-adoption/rule-preservation.md updated and committed alone as c34866b; test_framework_adoption.py then 91 passed. The next governance edit reds them again'
+      last_checked: '2026-11-15'
+      method: 'Session 76 row 4: the governance selection of tests/tooling/test_framework_adoption.py (C:/Temp/av-kit/tth/tth-gov-green.txt)'
+      result: 16 passed, 80 deselected in 27.87s
+    resolution_path: 'Fixed in Session 76 on 2026-11-15 (plan docs/execution/plans/2026-11-15-tooling-test-hermeticity): build_migrated_tree copies each new instruction backlink target and rebinds the copied rule map''s AGENTS.md and GUARDRAILS.md pins to the copied files, so the migrated-tree cases no longer red after a governance edit. One test, test_ac_14_tracked_rule_map_pin_matches_live_instructions, still reds after a governance edit by design (D-132), and its message gives the rebind command.'
     category: TECH-DEBT
     priority: P3
     related:
@@ -5247,10 +5249,15 @@ issues:
     title: Two Test-CliDispatch.ps1 fixture tests fail because instantiation replaced their placeholder path
     severity: low
     component: agent
-    status: open
+    status: resolved
     discovered: '2026-11-14'
     root_cause: The upstream fixture (P:/agentic-framework core/.agent/skills/cli-dispatch/tests/Test-CliDispatch.ps1:619) builds a receipts path that holds the literal PROJECT_NAME template token in double curly braces, so the wrapper's guard (:162, which matches two opening curly braces) refuses it. Instantiation replaced the token with av-kit in av-kit's copy (:565), so the guard sees a real path and accepts it; the second arm then finds %TEMP%/av-kit left behind. The guard works and the fixture is wrong.
     blast_radius: 'Test-CliDispatch.ps1 always reports 31 total, 29 PASS, 2 FAIL: ''placeholder receipts dir refused'' and ''refusal created no placeholder dir''. Any gate that runs the dispatch tests must allow exactly this pair (the 2026-11-14 review-limits plan''s dispatch-check.py does, D-739); a new FAIL still fails. The dispatch wrapper''s behaviour is unaffected.'
+    verification:
+      last_checked: '2026-11-15'
+      method: 'Session 76 row 6: .agent/skills/cli-dispatch/tests/Test-CliDispatch.ps1 with the user''s own TEMP, checked by dispatch-check.py --expect-clean (C:/Temp/av-kit/tth/tth-dispatch-clean.txt)'
+      result: 'dispatch receipt: Total 31 PASS 31 FAIL 0 SKIP 0; exit 0; FAIL names []'
+    resolution_path: 'Fixed in Session 76 on 2026-11-15 (plan docs/execution/plans/2026-11-15-tooling-test-hermeticity): arm 2 assembles the placeholder token at run time and roots it in a fresh folder under the real temp folder, so instantiation no longer rewrites it. The empty %TEMP%/av-kit/receipts/dispatch-tests folder the old arm left is left for Mat to remove (D-914).'
     category: TECH-DEBT
     priority: P4
     related: []

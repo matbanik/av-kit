@@ -1,0 +1,12 @@
+test_registry_contract_preserves_bindings[avkit_coordinator-cursor-task-cursor-grok-4.6-xhigh]
+test_registry_contract_preserves_bindings[avkit_coordinator-claude-p-claude-opus-5]
+test_registry_contract_preserves_bindings[avkit_builder-cursor-task-cursor-grok-4.6-xhigh]
+test_registry_contract_preserves_bindings[avkit_builder-claude-code-agents-sonnet]
+test_registry_contract_preserves_bindings[avkit_verifier-cursor-task-composer-2.5-fast]
+test_registry_contract_preserves_bindings[avkit_verifier-claude-code-agents-sonnet]
+test_registry_contract_preserves_bindings[avkit_router-claude-code-agents-haiku]
+test_registry_contract_vendor_independence[openai-1]
+test_registry_contract_vendor_independence[anthropic-0]
+test_registry_contract_unsupported_harness_refused
+test_review_pipeline_wrapper_refuses_before_provider[same-vendor]
+test_ac_2_fixture_registry_home_compiles

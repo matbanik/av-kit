@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -14,6 +15,8 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 PLAN = Path("docs/execution/plans/2026-09-26-framework-update-adoption")
+RULE_MAP = PLAN / "rule-preservation.md"
+INSTRUCTIONS = ("AGENTS.md", "GUARDRAILS.md")
 HELPER = ROOT / PLAN / "checks/verify_adoption.py"
 
 
@@ -87,6 +90,77 @@ def verify(root: Path, mode: str, *args: object):
         root / "manifest.json",
         *args,
     )
+
+
+MACHINE_TOOLS = Path("P:/.agent")
+TOOL_FILES = (
+    "tools/resolve_model.py",
+    "tools/ModelRegistry.psm1",
+    "schema/model-registry.v1.schema.json",
+)
+FIXTURE = ROOT / "tests/tooling/fixtures/registry-home/model-registry.json"
+OVERLAY = Path(".agent/model-registry.local.yaml")
+
+
+def build_registry_home(dest: Path) -> dict:
+    """A temp registry home: the machine resolver's code, the tracked fixture, a compiled overlay.
+
+    Only the tool files come from MACHINE_TOOLS. The registry is FIXTURE, strictly validated
+    here, and the project overlay is compiled against it in a temp project, so no test reads
+    or writes the machine registry or the tracked compiled overlay.
+    """
+    home = dest / "home"
+    for rel in TOOL_FILES:
+        assert (MACHINE_TOOLS / rel).is_file(), f"machine resolver file missing: {rel}"
+        (home / rel).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(MACHINE_TOOLS / rel, home / rel)
+    registry = home / "model-registry.json"
+    shutil.copyfile(FIXTURE, registry)
+    resolver = home / "tools/resolve_model.py"
+    env = {"AGENT_MODEL_REGISTRY": str(registry)}
+    checked = run(resolver, "validate", "--registry", registry, "--strict", env=env)
+    assert checked.returncode == 0, checked.stdout + checked.stderr
+    project = dest / "project"
+    overlay = project / OVERLAY
+    overlay.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(ROOT / OVERLAY, overlay)
+    compiled = run(resolver, "validate", "--overlay", overlay, "--write-compiled", env=env)
+    assert compiled.returncode == 0, compiled.stdout + compiled.stderr
+    return {"resolver": resolver, "project": project, "env": env}
+
+
+def test_ac_2_fixture_registry_home_compiles(tmp_path):
+    import yaml
+
+    assert FIXTURE.is_file(), "registry fixture missing: run make_fixture.py beside it"
+    home = build_registry_home(tmp_path)
+    compiled = home["project"] / ".agent/model-registry.local.json"
+    stamp = json.loads(compiled.read_text(encoding="utf-8"))["validated_against"]
+    assert stamp == sha(FIXTURE)
+    data = yaml.safe_load((ROOT / OVERLAY).read_text(encoding="utf-8"))
+    data["classes"]["avkit_coordinator"]["bindings"]["cursor-task"]["slug"] = "invented"
+    bad = tmp_path / "invented.yaml"
+    bad.write_text(yaml.safe_dump(data), encoding="utf-8")
+    result = run(home["resolver"], "validate", "--overlay", bad, env=home["env"])
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert "unknown_slug" in result.stderr, result.stdout + result.stderr
+
+
+@pytest.fixture(scope="module")
+def registry_home(tmp_path_factory):
+    return build_registry_home(tmp_path_factory.mktemp("registry-home"))
+
+
+def fixture_wrapper(dest: Path, project: Path) -> Path:
+    """A byte copy of the dispatch wrapper whose project root is the fixture project."""
+    data = (ROOT / "tools/Invoke-CodexDispatch.ps1").read_bytes()
+    needle = b"$dispatchProjectRoot = 'P:/av-kit'"
+    assert data.count(needle) == 1, "the wrapper's project-root line is not unique"
+    root_line = f"$dispatchProjectRoot = '{project.as_posix()}'".encode()
+    dest.mkdir(parents=True, exist_ok=True)
+    target = dest / "Invoke-CodexDispatch.ps1"
+    target.write_bytes(data.replace(needle, root_line))
+    return target
 
 
 @pytest.fixture
@@ -312,38 +386,38 @@ def test_validation_stages_stop_and_bind_inputs(tmp_path, fail_static):
         ("avkit_router", "claude-code-agents", "haiku"),
     ],
 )
-def test_registry_contract_preserves_bindings(class_name, harness, expected):
+def test_registry_contract_preserves_bindings(class_name, harness, expected, registry_home):
     result = run(
-        Path("P:/.agent/tools/resolve_model.py"),
+        registry_home["resolver"],
         "resolve",
         class_name,
         "--harness",
         harness,
         "--project",
-        ROOT,
+        registry_home["project"],
         "--format",
         "json",
-        env={"AGENT_MODEL_REGISTRY_HOME": "P:/.agent"},
+        env=registry_home["env"],
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert expected in result.stdout
 
 
 @pytest.mark.parametrize("author,expected", [("openai", 1), ("anthropic", 0)])
-def test_registry_contract_vendor_independence(author, expected):
+def test_registry_contract_vendor_independence(author, expected, registry_home):
     result = run(
-        Path("P:/.agent/tools/resolve_model.py"),
+        registry_home["resolver"],
         "resolve",
         "avkit_independent_reviewer",
         "--harness",
         "codex-cli",
         "--project",
-        ROOT,
+        registry_home["project"],
         "--author-vendor",
         author,
         "--format",
         "json",
-        env={"AGENT_MODEL_REGISTRY_HOME": "P:/.agent"},
+        env=registry_home["env"],
     )
     assert (result.returncode != 0) == bool(expected), result.stdout + result.stderr
     assert ("vendor_diversity_violation" if expected else "gpt-6.1-sol") in (
@@ -351,37 +425,44 @@ def test_registry_contract_vendor_independence(author, expected):
     )
 
 
-def test_registry_contract_unsupported_harness_refused():
+def test_registry_contract_unsupported_harness_refused(registry_home):
     result = run(
-        Path("P:/.agent/tools/resolve_model.py"),
+        registry_home["resolver"],
         "resolve",
         "avkit_coordinator",
         "--harness",
         "claude-code-agents",
         "--project",
-        ROOT,
+        registry_home["project"],
         "--format",
         "json",
-        env={"AGENT_MODEL_REGISTRY_HOME": "P:/.agent"},
+        env=registry_home["env"],
     )
     assert result.returncode != 0 and "unresolvable_on_harness" in result.stderr
 
 
-@pytest.fixture
-def migrated_tree(tmp_path):
+def build_migrated_tree(dest: Path, overrides: dict[str, bytes] | None = None) -> Path:
     """Copy actual adopted bytes; each negative case mutates its own isolated tree.
 
     The source repo holds a file at each source_path with its recorded digest, so
     the source checks pass on their own and each case reaches its static oracle.
+    An override (POSIX relative path -> bytes) stands in for that path's live bytes;
+    an override for a path outside the manifest is not copied.
     """
-    root = tmp_path / "root"
+    overrides = overrides or {}
+    root = dest / "root"
     data = json.loads((ROOT / PLAN / "adoption-manifest.json").read_text(encoding="utf-8"))
     for entry in data["files"] + data["protected_files"]:
         path = Path(entry["path"])
-        source, dest = ROOT / path, root / path
-        if source.is_file():
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, dest)
+        source, target = ROOT / path, root / path
+        if path.as_posix() in overrides:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(overrides[path.as_posix()])
+        elif source.is_file():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
+    copy_backlink_targets(root, overrides)
+    rebind_instruction_pins(root)
     sources: dict[str, bytes] = {}
     for entry in data["files"]:
         if entry.get("source_path"):
@@ -390,6 +471,88 @@ def migrated_tree(tmp_path):
     data["source_sha"] = commit_source(root, sources)
     write_json(root / "manifest.json", data)
     return root
+
+
+def instruction_links(text: str) -> list[str]:
+    """Relative link targets, by the verifier's own regex, skip rule and `#` split."""
+    links = []
+    for link in re.findall(r"\]\(([^)]+)\)", text):
+        if re.match(r"(?:https?:|#|mailto:)", link):
+            continue
+        links.append(link.split("#", 1)[0])
+    return links
+
+
+def copy_backlink_targets(root: Path, overrides: dict[str, bytes]) -> None:
+    """Copy in each instruction link target the tree lacks; one level, each file once.
+
+    A target that neither the overrides nor ROOT holds stays missing, so the verifier
+    still refuses a broken link.
+    """
+    for name in INSTRUCTIONS:
+        copied = root / name
+        if not copied.is_file():
+            continue
+        for link in instruction_links(copied.read_text(encoding="utf-8")):
+            rel = Path(link)
+            if not link or rel.is_absolute() or rel.drive or ".." in rel.parts:
+                continue  # the verifier refuses these itself
+            target = root / rel
+            if target.exists():
+                continue
+            if rel.as_posix() in overrides:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(overrides[rel.as_posix()])
+            elif (ROOT / rel).is_file():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(ROOT / rel, target)
+
+
+def rule_map_counts(path: Path) -> dict:
+    """The rule map's `counts`, from its one JSON block, by the verifier's regex."""
+    blocks = re.findall(r"```json\s*\n(.*?)\n```", path.read_text(encoding="utf-8"), re.S)
+    assert len(blocks) == 1, f"the rule map has {len(blocks)} JSON blocks: {path}"
+    return json.loads(blocks[0])["counts"]
+
+
+def rebind_instruction_pins(root: Path) -> None:
+    """Pin the copied rule map to the copied instruction files, bytewise (CRLF kept)."""
+    rule_map = root / RULE_MAP
+    counts = rule_map_counts(rule_map)
+    data = rule_map.read_bytes()
+    for name in INSTRUCTIONS:
+        old = counts[name]["postimage_sha256"].encode()
+        assert data.count(old) == 1, f"the rule map pin for {name} is not unique"
+        data = data.replace(old, sha(root / name).encode())
+    rule_map.write_bytes(data)
+
+
+def tracked_pin_mismatches(root: Path) -> list[str]:
+    """One message per instruction file whose rule-map pin no longer matches it."""
+    counts = rule_map_counts(root / RULE_MAP)
+    messages = []
+    for name in INSTRUCTIONS:
+        old, new = counts[name]["postimage_sha256"], sha(root / name)
+        if old == new:
+            continue
+        command = (
+            'uv run python -c "import pathlib; '
+            f"p=pathlib.Path('{RULE_MAP.as_posix()}'); b=p.read_bytes(); "
+            f"assert b.count(b'{old}')==1; "
+            f"p.write_bytes(b.replace(b'{old}', b'{new}'))\""
+        )
+        messages.append(
+            f"{name}: the rule map pins {old} but the file hashes to {new}. "
+            "Check that the rule map still covers the edited file's blocks first, "
+            "then commit the rebind alone (D-132, c34866b). "
+            f"Rebind: {command}"
+        )
+    return messages
+
+
+@pytest.fixture
+def migrated_tree(tmp_path):
+    return build_migrated_tree(tmp_path)
 
 
 @pytest.mark.parametrize("mutation", ["none", "youtube", "template", "backlink", "routing"])
@@ -439,6 +602,48 @@ def test_governance_preservation_and_routing_inventory(migrated_tree, mutation):
     assert result.returncode == (0 if mutation == "history" else 1), result.stdout + result.stderr
 
 
+def test_ac_6_pin_follows_the_copied_instructions(tmp_path):
+    agents = (ROOT / "AGENTS.md").read_bytes() + b"Fixture note appended after adoption.\r\n"
+    root = build_migrated_tree(tmp_path, {"AGENTS.md": agents})
+    result = verify(root, "static")
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_ac_7_backlink_closure_copies_new_targets(tmp_path):
+    link = b"[fixture policy](.agent/docs/fixture-new-policy.md)\r\n"
+    overrides = {
+        "AGENTS.md": (ROOT / "AGENTS.md").read_bytes() + link,
+        ".agent/docs/fixture-new-policy.md": b"# Fixture policy\r\n",
+    }
+    root = build_migrated_tree(tmp_path, overrides)
+    result = verify(root, "static")
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_ac_8_pin_oracle_still_refuses(tmp_path):
+    root = build_migrated_tree(tmp_path)
+    rule_map = root / PLAN / "rule-preservation.md"
+    data = rule_map.read_bytes()
+    pin = sha(root / "AGENTS.md").encode()
+    assert data.count(pin) == 1, "the copied rule map does not pin the copied AGENTS.md once"
+    rule_map.write_bytes(data.replace(pin, b"0" * 64))
+    result = verify(root, "static")
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "rule map identity mismatch" in result.stdout, result.stdout + result.stderr
+
+
+def test_ac_14_tracked_rule_map_pin_matches_live_instructions(tmp_path):
+    mismatches = tracked_pin_mismatches(ROOT)
+    assert mismatches == [], "\n".join(mismatches)
+    (tmp_path / RULE_MAP).parent.mkdir(parents=True)
+    shutil.copyfile(ROOT / RULE_MAP, tmp_path / RULE_MAP)
+    (tmp_path / "AGENTS.md").write_bytes((ROOT / "AGENTS.md").read_bytes() + b"\n")
+    shutil.copyfile(ROOT / "GUARDRAILS.md", tmp_path / "GUARDRAILS.md")
+    mismatches = tracked_pin_mismatches(tmp_path)
+    assert len(mismatches) == 1, mismatches
+    assert "AGENTS.md" in mismatches[0] and "p.write_bytes(" in mismatches[0], mismatches
+
+
 @pytest.mark.parametrize("mutation", ["missing", "wrong-target", "unapproved", "forged-status"])
 def test_review_pipeline_approval_rejects_uncorrelated_claims(baseline, mutation):
     root, _ = baseline
@@ -466,7 +671,7 @@ def test_review_pipeline_closeout_requires_real_completion(baseline):
 
 
 @pytest.mark.parametrize("fault", ["global-redefinition", "unknown-binding", "bad-explicit"])
-def test_registry_contract_bad_configuration_refused(tmp_path, fault):
+def test_registry_contract_bad_configuration_refused(tmp_path, fault, registry_home):
     import yaml
 
     overlay = ROOT / ".agent/model-registry.local.yaml"
@@ -478,25 +683,23 @@ def test_registry_contract_bad_configuration_refused(tmp_path, fault):
         data["classes"]["avkit_coordinator"]["bindings"]["cursor-task"]["slug"] = "invented"
     target = tmp_path / "overlay.yaml"
     target.write_text(yaml.safe_dump(data), encoding="utf-8")
-    env = {"AGENT_MODEL_REGISTRY_HOME": "P:/.agent"}
+    env = dict(registry_home["env"])
     if fault == "bad-explicit":
         env["AGENT_MODEL_REGISTRY"] = str(tmp_path / "absent.json")
         result = run(
-            Path("P:/.agent/tools/resolve_model.py"),
+            registry_home["resolver"],
             "resolve",
             "avkit_coordinator",
             "--harness",
             "cursor-task",
             "--project",
-            ROOT,
+            registry_home["project"],
             "--format",
             "json",
             env=env,
         )
     else:
-        result = run(
-            Path("P:/.agent/tools/resolve_model.py"), "validate", "--overlay", target, env=env
-        )
+        result = run(registry_home["resolver"], "validate", "--overlay", target, env=env)
     assert result.returncode != 0, result.stdout + result.stderr
 
 
@@ -793,11 +996,11 @@ def test_review_pipeline_complete_approval_tampering(tmp_path, fault):
 
 
 @pytest.mark.parametrize("fault", ["same-vendor", "unknown-class", "bad-registry"])
-def test_review_pipeline_wrapper_refuses_before_provider(tmp_path, fault):
+def test_review_pipeline_wrapper_refuses_before_provider(tmp_path, fault, registry_home):
     marker = tmp_path / "provider-called.txt"
     provider = tmp_path / "fake-provider.cmd"
     provider.write_text(f'@echo off\necho called > "{marker}"\nexit /b 88\n')
-    env = os.environ | {"RECEIPTS_DIR": "C:/Temp/av-kit", "AGENT_MODEL_REGISTRY_HOME": "P:/.agent"}
+    env = os.environ | {"RECEIPTS_DIR": "C:/Temp/av-kit"} | registry_home["env"]
     extra = []
     if fault == "unknown-class":
         extra = ["-ModelClass", "no_such_local_class"]
@@ -808,7 +1011,7 @@ def test_review_pipeline_wrapper_refuses_before_provider(tmp_path, fault):
             "pwsh",
             "-NoProfile",
             "-File",
-            str(ROOT / "tools/Invoke-CodexDispatch.ps1"),
+            str(fixture_wrapper(tmp_path / "wrapper", registry_home["project"])),
             "-NonReviewDispatch",
             "-AuthorVendor",
             "openai" if fault == "same-vendor" else "anthropic",

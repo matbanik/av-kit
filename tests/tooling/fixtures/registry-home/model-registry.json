@@ -1,0 +1,197 @@
+{
+  "bump_gate": "human",
+  "catalog": {
+    "claude-fable-5-2": {
+      "auth": [
+        "api"
+      ],
+      "capabilities": [
+        "agentic_exec"
+      ],
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "harness_ids": {
+        "claude-code-agents": "fable",
+        "claude-p": "claude-fable-5-2"
+      },
+      "price_band": "xhigh",
+      "vendor": "anthropic"
+    },
+    "claude-haiku-5-5": {
+      "auth": [
+        "api"
+      ],
+      "capabilities": [
+        "classification"
+      ],
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "harness_ids": {
+        "claude-code-agents": "haiku",
+        "claude-p": "claude-haiku-5-5"
+      },
+      "price_band": "low",
+      "vendor": "anthropic"
+    },
+    "claude-opus-5": {
+      "auth": [
+        "api"
+      ],
+      "capabilities": [
+        "agentic_exec",
+        "deep_reasoning",
+        "orchestration"
+      ],
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "max"
+      ],
+      "harness_ids": {
+        "claude-p": "claude-opus-5"
+      },
+      "price_band": "xhigh",
+      "vendor": "anthropic"
+    },
+    "claude-opus-5-5": {
+      "auth": [
+        "api"
+      ],
+      "capabilities": [
+        "agentic_exec",
+        "deep_reasoning"
+      ],
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "harness_ids": {
+        "claude-code-agents": "opus",
+        "claude-p": "claude-opus-5-5"
+      },
+      "price_band": "xhigh",
+      "vendor": "anthropic"
+    },
+    "claude-sonnet-5-5": {
+      "auth": [
+        "api"
+      ],
+      "capabilities": [
+        "agentic_exec",
+        "bulk_edit"
+      ],
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "harness_ids": {
+        "claude-code-agents": "sonnet",
+        "claude-p": "claude-sonnet-5-5"
+      },
+      "price_band": "medium",
+      "vendor": "anthropic"
+    },
+    "composer-2.5-fast": {
+      "auth": [
+        "api"
+      ],
+      "capabilities": [
+        "agentic_exec",
+        "bulk_edit"
+      ],
+      "harness_ids": {
+        "cursor-agent-cli": "composer-2.5-fast",
+        "cursor-task": "composer-2.5-fast"
+      },
+      "price_band": "low",
+      "vendor": "cursor"
+    },
+    "cursor-grok-4.6": {
+      "auth": [
+        "api"
+      ],
+      "capabilities": [
+        "agentic_exec",
+        "bulk_edit",
+        "deep_reasoning",
+        "orchestration"
+      ],
+      "efforts": [
+        "xhigh"
+      ],
+      "harness_ids": {
+        "cursor-agent-cli": {
+          "xhigh": "cursor-grok-4.6-xhigh"
+        },
+        "cursor-task": {
+          "xhigh": "cursor-grok-4.6-xhigh"
+        }
+      },
+      "price_band": "high",
+      "vendor": "xai"
+    },
+    "gpt-6.1-sol": {
+      "auth": [
+        "chatgpt-plan",
+        "api"
+      ],
+      "capabilities": [
+        "agentic_exec",
+        "code_review",
+        "read_only_sandbox"
+      ],
+      "efforts": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "harness_ids": {
+        "codex-cli": "gpt-6.1-sol"
+      },
+      "price_band": "medium",
+      "vendor": "openai"
+    }
+  },
+  "classes": {
+    "coordinator": {
+      "bindings": {
+        "cursor-task": {
+          "effort": "xhigh",
+          "slug": "cursor-grok-4.6"
+        }
+      },
+      "contract": {
+        "capabilities": [
+          "orchestration",
+          "deep_reasoning",
+          "agentic_exec"
+        ],
+        "effort_default": "high",
+        "forbid": [
+          "claude-fable-5-2"
+        ]
+      }
+    }
+  },
+  "schema_version": 1,
+  "updated": "2026-11-15"
+}

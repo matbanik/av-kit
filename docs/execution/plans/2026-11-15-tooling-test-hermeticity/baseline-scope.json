@@ -1,0 +1,8 @@
+{
+  "tests/tooling/test_framework_adoption.py": "170dab5f403562c5381a8c35d6f9c77d1c03e29092935f5182f26a9a241dd65e",
+  ".agent/skills/cli-dispatch/tests/Test-CliDispatch.ps1": "b57debec4da7f819ed7c7b63cdde694160fd69e7d27724570e3b4cc88544490a",
+  ".agent/context/known-issues.yaml": "e451e517aa142eb0d03d67c1dfdddd00aa91f07df4551f124098c0de0fdedce6",
+  ".agent/context/known-issues.md": "ee9de0ff479f10bfab44070f1b02721f320c16d9240988f2c0082d776ca53e61",
+  "tests/tooling/fixtures/registry-home/model-registry.json": "absent",
+  "tests/tooling/fixtures/registry-home/make_fixture.py": "absent"
+}

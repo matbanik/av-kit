@@ -1,0 +1,99 @@
+ M .agent/context/current-focus.md
+ M .agent/context/grouping/2026-11-15-post-rc3-triage-residuals-session-grouping.md
+ M .agent/context/known-issues.md
+ M .agent/context/known-issues.yaml
+ M .agent/context/meu-registry.md
+ M .agent/context/meu-status.yaml
+ M docs/BUILD_PLAN.md
+ M docs/build-plan/09-screenshot-capture.md
+ M docs/execution/metrics.md
+ M packages/api/src/avkit_api/routes/captures.py
+ M packages/core/src/avkit_core/ports/capture.py
+ M packages/core/src/avkit_core/services/capture.py
+ M packages/infrastructure/src/avkit_infra/capture/adapter.py
+ M tests/e2e/test_api_capture_crop.py
+ M tests/unit/test_capture_export_adapter.py
+ M tests/unit/test_capture_export_service.py
+ M tests/unit/test_capture_service.py
+ M ui/tests/e2e/capture-inbox.test.ts
+?? .agent/context/handoffs/2026-11-15-capture-inbox-probe-MEU-145-handoff.md
+?? .agent/context/handoffs/2026-11-15-capture-inbox-probe-MEU-146-handoff.md
+?? .agent/context/handoffs/2026-11-15-capture-inbox-probe-implementation-critical-review.md
+?? .agent/context/handoffs/2026-11-15-capture-inbox-probe-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-15-convert-settings-drafts-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-15-docs-path-hygiene-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-15-e2e-harness-hardening-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-15-ready-handshake-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-15-text-scrub-residuals-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-15-tooling-test-hermeticity-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-15-triage-tool-fixes-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-15-tts-page-polish-plan-critical-review.md
+?? docs/execution/plans/2026-11-15-capture-inbox-probe/baseline-dirty.txt
+?? docs/execution/plans/2026-11-15-capture-inbox-probe/baseline.ps1
+?? docs/execution/plans/2026-11-15-capture-inbox-probe/baseline.sha
+?? docs/execution/plans/2026-11-15-capture-inbox-probe/id-length.py
+?? docs/execution/plans/2026-11-15-capture-inbox-probe/identity.py
+?? docs/execution/plans/2026-11-15-capture-inbox-probe/implementation-plan.md
+?? docs/execution/plans/2026-11-15-capture-inbox-probe/issue-resolve.py
+?? docs/execution/plans/2026-11-15-capture-inbox-probe/red-check.py
+?? docs/execution/plans/2026-11-15-capture-inbox-probe/session-gate.ps1
+?? docs/execution/plans/2026-11-15-capture-inbox-probe/task.md
+?? docs/execution/plans/2026-11-15-convert-settings-drafts/implementation-plan.md
+?? docs/execution/plans/2026-11-15-convert-settings-drafts/task.md
+?? docs/execution/plans/2026-11-15-docs-path-hygiene/implementation-plan.md
+?? docs/execution/plans/2026-11-15-docs-path-hygiene/task.md
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/baseline.ps1
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/e2e-run.ps1
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/identity.py
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/implementation-plan.md
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/issue-resolve.py
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/mutation.py
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/owned-procs.ps1
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/red-check.py
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/scope-check.py
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/session-gate.ps1
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/site-check.py
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/task.md
+?? docs/execution/plans/2026-11-15-e2e-harness-hardening/untouched-check.py
+?? docs/execution/plans/2026-11-15-ready-handshake/gap-tally.py
+?? docs/execution/plans/2026-11-15-ready-handshake/implementation-plan.md
+?? docs/execution/plans/2026-11-15-ready-handshake/ready-gap-probe.mjs
+?? docs/execution/plans/2026-11-15-ready-handshake/task.md
+?? docs/execution/plans/2026-11-15-text-scrub-residuals/implementation-plan.md
+?? docs/execution/plans/2026-11-15-text-scrub-residuals/task.md
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/baseline.ps1
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/baseline.sha
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/dispatch-check.py
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/fixture-check.py
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/hermetic-check.py
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/identity.py
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/implementation-plan.md
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/issue-resolve.py
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/live-probe.py
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/red-check.py
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/scope-check.py
+?? docs/execution/plans/2026-11-15-tooling-test-hermeticity/task.md
+?? docs/execution/plans/2026-11-15-triage-tool-fixes/baseline.ps1
+?? docs/execution/plans/2026-11-15-triage-tool-fixes/doc-check.py
+?? docs/execution/plans/2026-11-15-triage-tool-fixes/identity.py
+?? docs/execution/plans/2026-11-15-triage-tool-fixes/implementation-plan.md
+?? docs/execution/plans/2026-11-15-triage-tool-fixes/issue-resolve.py
+?? docs/execution/plans/2026-11-15-triage-tool-fixes/live-smoke.py
+?? docs/execution/plans/2026-11-15-triage-tool-fixes/red-check.py
+?? docs/execution/plans/2026-11-15-triage-tool-fixes/task.md
+?? docs/execution/plans/2026-11-15-tts-page-polish/baseline.ps1
+?? docs/execution/plans/2026-11-15-tts-page-polish/dev-app-procs.py
+?? docs/execution/plans/2026-11-15-tts-page-polish/identity.py
+?? docs/execution/plans/2026-11-15-tts-page-polish/implementation-plan.md
+?? docs/execution/plans/2026-11-15-tts-page-polish/issue-resolve.py
+?? docs/execution/plans/2026-11-15-tts-page-polish/readonly-check.py
+?? docs/execution/plans/2026-11-15-tts-page-polish/red-check.py
+?? docs/execution/plans/2026-11-15-tts-page-polish/scope-check.py
+?? docs/execution/plans/2026-11-15-tts-page-polish/session-gate.ps1
+?? docs/execution/plans/2026-11-15-tts-page-polish/task.md
+?? docs/execution/reflections/2026-11-15-capture-inbox-probe-reflection.md
+?? tests/e2e/test_api_capture_orientation.py
+?? tests/e2e/test_api_capture_scan_unreadable.py
+?? tests/orientation_fixtures.py
+?? tests/unit/test_capture_orientation.py
+?? tests/unit/test_capture_scan_unreadable.py
