@@ -9,14 +9,34 @@ Skips resolved issues.
 
 from __future__ import annotations
 
+import re
 from datetime import date, timedelta
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from tools.issue_triage.model import DEFAULT_SSOT_PATH, load
 
 # Issues older than this threshold are flagged as stale
 STALE_THRESHOLD_DAYS = 30
+
+
+def _is_path_like(value: object) -> bool:
+    """Whether VALUE is one path-shaped token, not prose, a URL or an id (D-945)."""
+    if not isinstance(value, str):
+        return False
+    s = value.strip()
+    if not s or any(c.isspace() for c in s) or "://" in s:
+        return False
+    return "/" in s or "\\" in s or bool(PurePosixPath(s).suffix)
+
+
+def _strip_location(s: str) -> str:
+    """S without a trailing `:line` or `:line:col`; S itself when nothing else would remain.
+
+    A drive colon (`C:\\`, `C:/`) is never followed by digits up to the end, so it stays.
+    """
+    stripped = re.sub(r"(?::\d+){1,2}$", "", s)
+    return stripped or s
 
 
 def verify_issues(
@@ -161,84 +181,50 @@ def verify_deep(
     data: dict[str, Any],
     *,
     project_root: Path | None = None,
-    update_last_checked: bool = False,
 ) -> list[dict[str, Any]]:
-    """Deep verification of all non-resolved issues.
+    """Deep verification of all non-resolved issues; read-only, DATA is never changed.
 
-    Performs codebase-level checks beyond staleness:
-    - AC-1: File-existence check for resolution_path / notes references
-    - AC-2: (grep-for-fix is best-effort; skipped when root_cause empty)
-    - AC-3: Test-coverage check (issue ID in tests/)
-    - AC-5: All findings include structured evidence
-    - AC-6: Updates verification.last_checked when update_last_checked=True
+    Checks that a path-shaped ``resolution_path`` exists under the project root, a
+    trailing ``:line`` or ``:line:col`` ignored. A value that is not path-shaped (prose,
+    a URL, an id) is not checked.
 
     Returns a list of findings, each with:
       - issue_id: str
-      - type: "file_missing" | "no_test_coverage" | "fix_indicator_found"
+      - type: "file_missing"
       - message: str
-      - evidence_path: str | None
+      - evidence_path: str (the path checked, without its line and column)
     """
     findings: list[dict[str, Any]] = []
     root = project_root or Path.cwd()
-    today_str = date.today().isoformat()
 
     for issue in data.get("issues", []):
-        # Skip resolved, candidate, and dismissed issues (AC-6 / AC-3)
+        # Skip resolved, candidate, and dismissed issues
         if issue.get("status") in ("resolved", "candidate", "dismissed"):
             continue
 
         issue_id = issue.get("id", "unknown")
 
-        # AC-1: Check file references in resolution_path
+        # Check a path-shaped resolution_path only (D-945)
         resolution_path = issue.get("resolution_path")
-        if resolution_path and isinstance(resolution_path, str):
-            full_path = root / resolution_path
-            try:
-                exists = full_path.exists()
-            except (OSError, ValueError):
-                # Not a path at all (prose, newlines, >NAME_MAX): report, don't crash.
-                exists = False
-            if not exists:
-                findings.append(
-                    {
-                        "issue_id": issue_id,
-                        "type": "file_missing",
-                        "message": (
-                            f"Issue '{issue_id}' references file "
-                            f"'{resolution_path}' which does not exist"
-                        ),
-                        "evidence_path": str(full_path),
-                    }
-                )
-
-        # AC-3: Check test coverage (issue ID in tests/)
-        tests_dir = root / "tests"
-        if tests_dir.is_dir():
-            found_in_tests = False
-            for test_file in tests_dir.rglob("*.py"):
-                try:
-                    content = test_file.read_text(encoding="utf-8", errors="ignore")
-                    if issue_id in content:
-                        found_in_tests = True
-                        break
-                except OSError:
-                    continue
-            if not found_in_tests:
-                findings.append(
-                    {
-                        "issue_id": issue_id,
-                        "type": "no_test_coverage",
-                        "message": (
-                            f"Issue '{issue_id}' has no test references in tests/"
-                        ),
-                        "evidence_path": None,
-                    }
-                )
-
-        # AC-6: Update verification.last_checked
-        if update_last_checked:
-            if "verification" not in issue:
-                issue["verification"] = {}
-            issue["verification"]["last_checked"] = today_str
+        if not _is_path_like(resolution_path):
+            continue
+        full_path = root / _strip_location(resolution_path.strip())
+        try:
+            exists = full_path.exists()
+        except (OSError, ValueError):
+            # Not a usable path on this system: report, don't crash.
+            exists = False
+        if not exists:
+            findings.append(
+                {
+                    "issue_id": issue_id,
+                    "type": "file_missing",
+                    "message": (
+                        f"Issue '{issue_id}' references file "
+                        f"'{resolution_path}' which does not exist"
+                    ),
+                    "evidence_path": str(full_path),
+                }
+            )
 
     return findings

@@ -90,7 +90,7 @@ uv run python tools/issue_triage.py dismiss DISC-002
 
 > [!IMPORTANT]
 > **Use `issue_triage.py verify --deep` instead of manual grep.**
-> This runs file-existence checks, test-coverage scans, and updates `verification.last_checked`.
+> It checks that each path-shaped `resolution_path` still exists, and it only reads the register. When the triaging agent really re-checks an issue, it sets `verification.last_checked`, `method`, `result` and `evidence_file` together by hand in the YAML, then runs `render`.
 
 Run deep verification on all non-resolved issues:
 
@@ -100,8 +100,6 @@ rtk uv run python tools/issue_triage.py verify --deep *> C:/Temp/av-kit/verify-d
 
 Review the findings:
 - **`file_missing`**: Resolution path no longer exists — issue may be stale or file was renamed
-- **`no_test_coverage`**: No test references the issue ID — may need regression test
-- **`fix_indicator_found`**: Code matching the fix pattern was found — issue may be resolved
 
 For each finding, determine if the issue should be:
 1. **Archived** (if clearly resolved) — update status to `resolved` in YAML
@@ -268,7 +266,7 @@ rtk uv run python tools/issue_triage.py triage --output .agent/context/triage-ou
 ```
 
 The generated `triage-output.yaml` contains:
-- `archived`: resolved issues
+- `archived`: resolved and dismissed issues
 - `actionable`: open issues with actionable categories
 - `deferred`: issues marked for deferral
 - `proposed_batches`: output of the bucketing step

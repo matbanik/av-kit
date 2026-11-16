@@ -257,7 +257,7 @@ On Mat's word, run `/create-plan` once per session, in the §5 order. Nothing is
 | 76 | `tooling-test-hermeticity` | — | P2 | proposed | — |
 | 77 | `text-scrub-residuals` | MEU-147, MEU-148 | P3 | executed (Session 77) | `docs/execution/plans/2026-11-15-text-scrub-residuals/` |
 | 78 | `e2e-harness-hardening` | — | P3 | proposed | — |
-| 79 | `triage-tool-fixes` | — | P3 | proposed | — |
+| 79 | `triage-tool-fixes` | — | P3 | executed (Session 79) | `docs/execution/plans/2026-11-15-triage-tool-fixes/` |
 | 80 | `tts-page-polish` | MEU-149, MEU-150 | P3 | proposed | — |
 | 81 | `convert-settings-drafts` | MEU-151, MEU-152 | P4 | proposed | — |
 | 82 | `ready-handshake` | MEU-153, MEU-154 | P4 | proposed | — |

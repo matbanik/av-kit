@@ -288,7 +288,7 @@ item, toast), list each step with its pass criterion and the file to write.
 ## 7. Applying this to issue triage
 
 `/issue-triage` is a planning workflow, but its **verification** step has the same
-split. `issue_triage.py verify --deep` (file existence, test references) runs in
+split. `issue_triage.py verify --deep` (path-shaped file checks) runs in
 the cloud. *Reproducing* an issue does not always:
 
 | Issue class | Where it is verified | How the result comes back |

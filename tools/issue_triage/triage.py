@@ -26,7 +26,7 @@ def generate_triage_output(
     """Generate ephemeral triage-output.yaml.
 
     Sections:
-      - archived: resolved issues
+      - archived: resolved and dismissed issues
       - actionable: open issues with actionable categories
       - deferred: issues marked for deferral
       - proposed_batches: output of bucket_issues()
@@ -40,7 +40,7 @@ def generate_triage_output(
     for issue in data.get("issues", []):
         entry = _make_entry(issue)
 
-        if issue.get("status") == "resolved":
+        if issue.get("status") in ("resolved", "dismissed"):
             archived.append(entry)
         elif issue.get("category") in _DEFERRED_CATEGORIES:
             deferred.append(entry)

@@ -115,11 +115,8 @@ uv run python tools/issue_triage.py verify --deep
 ```
 
 This automatically:
-- ✅ Checks if referenced files still exist
-- ✅ Scans for test coverage (does any test reference this issue ID?)
-- ✅ Searches for fix indicators (has the code been patched?)
-- ✅ Flags stale issues (not verified in 30+ days)
-- ✅ Updates `verification.last_checked` timestamps
+- ✅ Checks that each path-shaped `resolution_path` still exists
+- ✅ Reads the register only; it never writes `verification.last_checked`
 
 Issues that appear resolved get flagged. The agent may auto-archive them
 or ask the human to confirm.
@@ -394,7 +391,7 @@ Issues are automatically checked for staleness:
 
 ```bash
 uv run python tools/issue_triage.py verify          # Flag issues not checked in 30+ days
-uv run python tools/issue_triage.py verify --deep    # Also check file existence, test coverage
+uv run python tools/issue_triage.py verify --deep    # Also check that path-shaped references exist
 ```
 
 ### Rendered Markdown View
@@ -458,7 +455,7 @@ dismissed          workaround → mitigated → resolved
 │       ▼                                                         │
 │  🤖 AUTOMATED DEEP VERIFICATION (Step 1)                        │
 │  └── verify --deep                                              │
-│      File checks, test coverage, fix indicators, staleness      │
+│      Path-shaped file checks; read-only                         │
 │       │                                                         │
 │       ▼                                                         │
 │  🤖 CLASSIFICATION (Steps 2-3)                                  │
@@ -546,7 +543,7 @@ bucketing, triage output, session grouping, TDD implementation, and code review.
 | *"Run issue triage"* or `/issue-triage` | Full pipeline: verify → classify → enrich → bucket → report |
 | *"How many open issues do we have?"* | Runs `issue_triage.py stats` |
 | *"What's broken in the API?"* | Runs `issue_triage.py list --component api --status open` |
-| *"Check if issues are stale"* | Runs `issue_triage.py verify --deep` |
+| *"Check if issues are stale"* | Runs `issue_triage.py verify` |
 
 ### After Triage Approval
 

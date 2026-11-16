@@ -2830,19 +2830,20 @@ issues:
     title: issue_triage.py bucket and --help crash with UnicodeEncodeError when output is redirected on Windows
     severity: low
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-10-17'
     root_cause: tools/issue_triage.py prints non-cp1252 characters (the bucket overlap marker U+26A0 at _cmd_bucket line 200; the --help text) and never reconfigures stdout, so when stdout is a file or pipe Python uses the console code page cp1252 and raises UnicodeEncodeError. The workflow's own receipt pattern (redirect to C:/Temp/av-kit) triggers it.
     blast_radius: '/issue-triage Step 5 exits 1 mid-listing as written; PYTHONIOENCODING=utf-8 works around it. Fix: sys.stdout.reconfigure(encoding=''utf-8'') at CLI entry plus a redirected-output test.'
+    resolution_path: 'Fixed in Session 79 on 2026-11-16 (plan docs/execution/plans/2026-11-15-triage-tool-fixes): UTF8_STREAMS. main reconfigures stdout and stderr to UTF-8 with errors=replace before it parses, so redirected output no longer depends on the console code page.'
     category: TECH-DEBT
     priority: P3
     related:
       - issue-triage-tooling
     meu_links: []
     verification:
-      last_checked: '2026-11-04'
-      method: rtk uv run python tools/issue_triage.py bucket > C:/Temp/av-kit/bucket-output.txt 2>&1
-      result: 'exit 1, UnicodeEncodeError: ''charmap'' codec can''t encode character ''⚠''; exit 0 with PYTHONIOENCODING=utf-8'
+      last_checked: '2026-11-16'
+      method: 'Session 79 task row 2 receipt C:/Temp/av-kit/triage-tool-fixes/ttf-enc-green.txt (plan 2026-11-15-triage-tool-fixes), after the row 1 Red receipt ttf-enc-red.txt that ttf-enc-red-check.txt accepted, and the row 10 live smoke C:/Temp/av-kit/triage-tool-fixes/ttf-live-smoke.txt: the CLI''s --help and bucket run as subprocesses with stdout redirected and PYTHONIOENCODING=cp1252, then the real CLI with cp1252 output'
+      result: '2 passed, 9 deselected (tests/unit/test_issue_triage.py -k ac_1 or ac_2) and live-smoke: pass. UTF8_STREAMS holds: main reconfigures stdout and stderr to UTF-8, so a redirected --help or bucket exits 0 with the arrow and the overlap marker as UTF-8 bytes'
     notes: 'Triage 2026-11-04: Reproduced again during this triage: a redirected --help raised UnicodeEncodeError; bucket needs PYTHONIOENCODING=utf-8 too.'
   - id: CAPTURE-E2E-LAUNCH-TEARDOWN-HANG
     title: capture-inbox Electron specs occasionally hang in launch or close under full-suite load (test and worker teardown timeouts)
@@ -4043,18 +4044,20 @@ issues:
     title: verify --deep and discover report noise, and verify stamps last_checked without checking
     severity: medium
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: Measured during the 2026-11-04 triage. tools/issue_triage/verify.py:192-208 treats prose in resolution_path as a file path, which gives file_missing findings. no_test_coverage fires on nearly every open issue. verify.py:238-242 stamps last_checked without checking anything, so a stale method and result sit beside a fresh date. discover scans _inspiration/external_code and the mcp-server bundle, and matches its own source (discover.py:25,299). tools/issue_triage/triage.py:43-48 archives only status resolved, so the dismissed TTS-VOICE-SELECT-LAYOUT-JUMP lands in triage-output.yaml's actionable list, beside every TECH-DEBT, MONITORING and BLOCKED issue.
     blast_radius: verify --deep gave 50 findings and none named a fixed issue; discover gave 14 candidates, all false. A triage has to re-read every anchor by hand, and a fresh last_checked reads as evidence it is not.
-    resolution_path: 'Proposed for triage, not approved: accept only path-shaped tokens, exclude vendored and bundled trees, drop or narrow no_test_coverage, and stamp last_checked only when a check ran.'
+    resolution_path: 'Fixed in Session 79 on 2026-11-16 (plan docs/execution/plans/2026-11-15-triage-tool-fixes): PATH_LIKE, PATH_LOCATION, PATH_CHECK, NO_COVERAGE_CHECK, DEEP_READ_ONLY, DISCOVER_ROOTS, DISCOVER_ANCHOR, DISCOVER_BINARY, DISCOVER_SELF and ARCHIVE_DISMISSED. verify --deep checks only path-shaped resolution_path values, drops no_test_coverage and never writes the register; discover skips vendored, bundled, binary and its own files whatever root it is given; triage archives dismissed issues.'
     category: TECH-DEBT
     priority: P3
     meu_links: []
     related:
       - issue-triage-tooling
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-16'
+      method: Session 79 task rows 4, 6 and 8 receipts C:/Temp/av-kit/triage-tool-fixes/ttf-verify-green.txt, ttf-discover-green.txt and ttf-triage-green.txt (plan 2026-11-15-triage-tool-fixes), after the rows 3, 5 and 7 Red receipts that their red-check receipts accepted, and the row 10 live smoke C:/Temp/av-kit/triage-tool-fixes/ttf-live-smoke.txt over the real register and the real tree, with the register hash taken before and after
+      result: '6 passed, 5 deselected; 10 passed, 1 deselected; 11 passed (tests/unit/test_issue_triage.py), and live-smoke: pass: verify --deep on the real register gives 0 findings and leaves its hash unchanged, discover gives 0 candidates from every root, and dismissed issues are archived'
     enrichment:
       questions_asked: []
       answers: []

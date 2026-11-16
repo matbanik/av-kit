@@ -1,0 +1,15 @@
+{
+  "tools/issue_triage.py": "2c771e67b09e1f70f2761d8deed9b1440e8baa023bded3ec6ea836c9fdb5fa44",
+  "tools/issue_triage/verify.py": "6597ca77218cc36b1be374d5405891448520dbe152e4228667a60fd90856fbb9",
+  "tools/issue_triage/discover.py": "b904efae81c1fc7aac46e782372c6ea3d263eaabb7e986f3de6c5082c30aadd6",
+  "tools/issue_triage/triage.py": "f50460919d0fa5b559beec97bbe78b5f3fc1935c2a95aaf62bb012b364a3d020",
+  ".agent/workflows/issue-triage.md": "124261975ec8d9ca7060e4cdde0b39d8137920d8daf4cc465f925b776551a6f8",
+  ".agent/skills/issue-triage/SKILL.md": "0f10f0afef7a569bbca3c97f279412331c191c9bea931e6fcb079a6cdf463379",
+  ".agent/docs/issue-lifecycle-guide.md": "b5f2fa10675a79a66f1c6bab77411c88a5147559ab47ac4221b909b56540ba1d",
+  ".agent/docs/commands.md": "3d4516e0516d72e712289fc63453522d5e4693d6b834565d8c5b50958b0c4a3f",
+  ".agent/docs/cloud-local-collaboration.md": "3f232a2417a3485d4edb9b602353c9a9fd291abce750bbe30b9d8072789cb487",
+  ".agent/context/known-issues.yaml": "458913892e2dc644e602518f4af45ee0ea9d08982673f32bb55f5d5b7952f050",
+  ".agent/context/known-issues.md": "e1a8c4ebbab5b9070dd2dd8fa18bf8bb928d9f8ccf291f20a79dc9fa082bb4ac",
+  ".agent/context/grouping/2026-11-15-post-rc3-triage-residuals-session-grouping.md": "c189ea2bb27445e3f255ab47bc7d6eee277d741b9432251f19ef8b7c0a0f1377",
+  "tests/unit/test_issue_triage.py": "absent"
+}

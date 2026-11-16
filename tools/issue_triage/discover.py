@@ -7,6 +7,7 @@ Pure Python — no external dependencies (pathlib + re).
 
 from __future__ import annotations
 
+import fnmatch
 import re
 from pathlib import Path
 from typing import Any
@@ -48,15 +49,45 @@ EXCLUDED_DIRS = frozenset(
         ".agent",
         ".hypothesis",
         ".kilo",
+        # .gitignore's slash-free generated trees (D-948)
+        "bin",
+        "Bin",
+        "obj",
+        "Obj",
+        "test-results",
+        "playwright-report",
+        "blob-report",
+        ".playwright",
+        "htmlcov",
     }
 )
 
-# Multi-segment directory exclusions (use forward-slash normalized paths)
+# Multi-segment directory exclusions: fnmatch patterns over the repository path, with
+# forward slashes; `*` matches across `/`. They mirror .gitignore's generated, fetched and
+# vendored trees (D-948).
 EXCLUDED_PATHS = frozenset(
     {
         "docs/execution",
+        "_inspiration/external_code",
+        "mcp-server/bundle",
+        "mcp-server/dist",
+        "ui/out",
+        "ui/out-e2e",
+        "ui/dist",
+        "packaging/build",
+        "packaging/dist",
+        "packaging/ffmpeg-win64",
+        "packaging/deno-win64",
+        "native/*/publish",
+        ".serena/cache",
     }
 )
+
+# This module, which names the markers it scans for; it is never a candidate (D-948)
+_SELF = Path(__file__).resolve()
+
+# A file whose first bytes hold a NUL byte is binary and is skipped (D-948)
+_BINARY_SNIFF_BYTES = 8000
 
 # Binary file extensions to skip
 BINARY_EXTENSIONS = frozenset(
@@ -189,15 +220,25 @@ def scan_todos(
     existing_ids = existing_issue_ids or set()
     findings: list[dict[str, Any]] = []
 
-    for file_path in _walk_source_files(root, root):
+    # Exclusions are matched against the repository path, whatever root is given (D-953).
+    anchor = _repo_root(root)
+    if _in_excluded_tree(root, anchor):
+        return findings
+
+    for file_path in _walk_source_files(root, anchor):
+        if file_path.resolve() == _SELF:
+            continue
         rel_path = file_path.relative_to(root)
         component = _infer_component(str(rel_path))
         comment_prefixes = _get_comment_prefixes(file_path.suffix.lower())
 
         try:
-            text = file_path.read_text(encoding="utf-8", errors="ignore")
+            raw = file_path.read_bytes()
         except OSError:
             continue
+        if b"\x00" in raw[:_BINARY_SNIFF_BYTES]:
+            continue
+        text = raw.decode("utf-8", errors="ignore")
 
         for line_num, line in enumerate(text.splitlines(), start=1):
             # Only scan comment lines — skip string literals and code
@@ -225,13 +266,38 @@ def scan_todos(
 # ─── Helpers ──────────────────────────────────────────────────────────────
 
 
-def _walk_source_files(directory: Path, scan_root: Path) -> list[Path]:
+def _repo_root(root: Path) -> Path:
+    """The first of ROOT (resolved) and its parents that holds a `.git` entry, else ROOT."""
+    start = root.resolve()
+    for candidate in (start, *start.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    return start
+
+
+def _excluded_path(rel: str) -> bool:
+    """Whether the repository path REL matches one EXCLUDED_PATHS pattern."""
+    return any(fnmatch.fnmatchcase(rel, pattern) for pattern in EXCLUDED_PATHS)
+
+
+def _in_excluded_tree(root: Path, anchor: Path) -> bool:
+    """Whether the scan ROOT itself lies in an excluded tree of the repository at ANCHOR."""
+    try:
+        parts = root.resolve().relative_to(anchor).parts
+    except ValueError:
+        return False
+    if any(part in EXCLUDED_DIRS for part in parts):
+        return True
+    return any(_excluded_path("/".join(parts[:n])) for n in range(1, len(parts) + 1))
+
+
+def _walk_source_files(directory: Path, anchor: Path) -> list[Path]:
     """Walk directory tree, excluding configured paths and binary files.
 
     Args:
         directory: Current directory being iterated.
-        scan_root: The original root of the scan (preserved across recursion
-            for multi-segment exclusion checks).
+        anchor: The repository root (`_repo_root`), preserved across recursion;
+            multi-segment exclusions match each directory's path relative to it.
     """
     results: list[Path] = []
 
@@ -243,14 +309,14 @@ def _walk_source_files(directory: Path, scan_root: Path) -> list[Path]:
             # Single-segment exclusion (name-only)
             if item.name in EXCLUDED_DIRS:
                 continue
-            # Multi-segment exclusion (relative to original scan root)
+            # Multi-segment exclusion (relative to the repository root)
             try:
-                rel = str(item.relative_to(scan_root)).replace("\\", "/")
+                rel = item.resolve().relative_to(anchor).as_posix()
             except ValueError:
                 rel = item.name
-            if rel in EXCLUDED_PATHS:
+            if _excluded_path(rel):
                 continue
-            results.extend(_walk_source_files(item, scan_root))
+            results.extend(_walk_source_files(item, anchor))
         elif item.is_file():
             if item.suffix.lower() in BINARY_EXTENSIONS:
                 continue

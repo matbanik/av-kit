@@ -23,6 +23,7 @@ Follows the meu_status.py CLI pattern (argparse + subcommands).
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sys
 from datetime import date
@@ -150,17 +151,16 @@ def _cmd_verify(args: argparse.Namespace) -> int:
     if getattr(args, "deep", False):
         from tools.issue_triage.verify import verify_deep
 
+        # Read-only: the register is never written (D-947).
         data = load(args.yaml)
-        findings = verify_deep(data, update_last_checked=True)
+        findings = verify_deep(data)
         if findings:
             print(f"[DEEP VERIFY] Found {len(findings)} finding(s):")
             for f in findings:
                 print(f"  [{f['type']:20s}] {f['issue_id']:25s} {f['message']}")
-            save(data, args.yaml)
             return 1
         else:
             print("[DEEP VERIFY] No findings. All issues verified.")
-            save(data, args.yaml)
             return 0
     return verify_all(args.yaml)
 
@@ -337,6 +337,10 @@ def _cmd_dismiss(args: argparse.Namespace) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint."""
+    # A redirected Windows console is cp1252; write UTF-8 so → and ⚠ never raise (D-944).
+    for stream in (sys.stdout, sys.stderr):
+        with contextlib.suppress(AttributeError, ValueError, OSError):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(
         prog="issue_triage",
         description="Manage the av-kit known-issues.yaml SSOT.",
@@ -395,7 +399,7 @@ def main(argv: list[str] | None = None) -> int:
     verify_parser.add_argument(
         "--deep",
         action="store_true",
-        help="Run deep codebase verification (file checks, test coverage)",
+        help="Check that path-shaped resolution_path values exist (read-only)",
     )
 
     # render

@@ -43,7 +43,7 @@ uv run python tools/issue_triage.py list --severity critical         # Filter by
 uv run python tools/issue_triage.py get <ISSUE-ID>                   # Single issue details
 uv run python tools/issue_triage.py add --id <ID> --title <T> --severity <S> --component <C>  # Record new
 uv run python tools/issue_triage.py verify                           # Flag stale (>30d)
-uv run python tools/issue_triage.py verify --deep                    # Deep verify: file checks, test coverage
+uv run python tools/issue_triage.py verify --deep                    # Deep verify: path-shaped file checks; read-only
 uv run python tools/issue_triage.py render                           # Regenerate markdown
 uv run python tools/issue_triage.py bucket                           # Group issues into proposed MEU batches
 uv run python tools/issue_triage.py triage                           # Generate triage-output.yaml

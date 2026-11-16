@@ -38,7 +38,7 @@ uv run python tools/issue_triage.py get ISSUE-ID                   # Single issu
 
 # Maintenance
 uv run python tools/issue_triage.py verify                         # Flag stale (>30d)
-uv run python tools/issue_triage.py verify --deep                  # Deep verify: file checks, test coverage, updates last_checked
+uv run python tools/issue_triage.py verify --deep                  # Deep verify: path-shaped file checks; read-only
 uv run python tools/issue_triage.py render                         # Regenerate markdown
 uv run python tools/issue_triage.py render --check                 # Check for drift only
 uv run python tools/issue_triage.py migrate [--dry-run]            # One-time MD→YAML migration (legacy adopters)
