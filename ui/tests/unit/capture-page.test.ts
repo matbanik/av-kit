@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
+import { chordOf } from './helpers/bound-hint'
+
 const here = dirname(fileURLToPath(import.meta.url))
 const repoRoot = resolve(here, '../../..')
 const captureDir = resolve(repoRoot, 'ui/src/renderer/src/features/capture')
@@ -630,11 +632,13 @@ describe('MEU-97 capture hints (AC-97.4)', () => {
     const saveAt = page.indexOf("spec={ACTION_BUTTONS['capture-save']}")
     expect(saveAt, 'capture-save button').toBeGreaterThan(-1)
     const save = page.slice(saveAt, page.indexOf('/>', saveAt))
-    expect(save, 'capture-save shortcut prop').toContain('shortcut=')
+    expect(save, 'capture-save shortcut prop').toContain(`shortcut="${chordOf('capture:save')}"`)
     const regionAt = page.indexOf('data-testid="capture-region"')
     expect(regionAt, 'capture-region button').toBeGreaterThan(-1)
-    const region = page.slice(regionAt, page.indexOf('Capture region', regionAt))
-    expect(region, 'capture-region aria-keyshortcuts').toContain('aria-keyshortcuts=')
-    expect(region, 'capture-region title').toContain('title=')
+    const region = page.slice(regionAt, page.indexOf('onClick=', regionAt))
+    expect(region, 'capture-region aria-keyshortcuts').toContain(
+      `aria-keyshortcuts={ariaKeyshortcuts('${chordOf('page:primary')}')}`,
+    )
+    expect(region, 'capture-region title').toContain(`title="Capture region (${chordOf('page:primary')})"`)
   })
 })

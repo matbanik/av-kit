@@ -1,14 +1,13 @@
-import { _electron, expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+
+import { launchElectron } from './electron-app'
 
 // Session 38 (MEU-88/89): the filmstrip thumbnail menu and range delete in the built app.
 // Its seam is stateful: a per-id DELETE ledger, per-id failures, and per-id image bytes, so the
 // Copy image oracle (SHOT_PIXELS) reads real decoded pixels back from the main-process clipboard.
-
-const here = dirname(fileURLToPath(import.meta.url))
 
 type CaptureItem = {
   id: string
@@ -52,11 +51,8 @@ function sampleShot(id: string, name: string, createdAt: string): CaptureItem {
 }
 
 async function launchApp(): Promise<ElectronApplication> {
-  return _electron.launch({
-    args: [resolve(here, '../../out/main/index.js')],
+  return launchElectron({
     env: {
-      ...process.env,
-      AVKIT_E2E: '1',
       AVKIT_APP_DATA: mkdtempSync(join(tmpdir(), 'avkit-e2e-filmstrip-')),
     },
   })

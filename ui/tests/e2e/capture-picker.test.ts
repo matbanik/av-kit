@@ -1,10 +1,12 @@
-import { _electron, expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { launchElectron } from './electron-app'
 
 /**
  * AC-40.18 — the real-Electron capture path.
@@ -167,11 +169,8 @@ async function launch(stubEnv: Record<string, string>): Promise<Harness> {
   mkdirSync(inbox, { recursive: true })
   const backend = await startBackend(inbox)
 
-  const app = await _electron.launch({
-    args: [resolve(here, '../../out/main/index.js')],
+  const app = await launchElectron({
     env: {
-      ...process.env,
-      AVKIT_E2E: '1',
       AVKIT_E2E_API_BASE: backend.base,
       AVKIT_APP_DATA: mkdtempSync(join(tmpdir(), 'avkit-e2e-picker-')),
       AVKIT_REGION_PICKER_PATH: STUB_EXE,

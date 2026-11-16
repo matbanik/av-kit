@@ -1,10 +1,9 @@
-import { _electron, expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
-const here = dirname(fileURLToPath(import.meta.url))
+import { launchElectron } from './electron-app'
 
 /**
  * MEU-46 rewrite (E2E_REWRITE_RULE).
@@ -153,11 +152,8 @@ function seededQueue(): DownloadItem[] {
 }
 
 async function launchApp() {
-  return _electron.launch({
-    args: [resolve(here, '../../out/main/index.js')],
+  return launchElectron({
     env: {
-      ...process.env,
-      AVKIT_E2E: '1',
       AVKIT_APP_DATA: mkdtempSync(join(tmpdir(), 'avkit-e2e-')),
     },
   })
@@ -1254,7 +1250,7 @@ async function dragOver(page: Page, id: string): Promise<void> {
       .waitFor({ state: 'attached' })
   } catch (error) {
     // Session 27 A-4: a timeout here used to leave no trace of the drag state (Playwright keeps
-    // no page snapshot for `_electron` windows), so the failure carries it.
+    // no page snapshot for Electron windows), so the failure carries it.
     const state = await page
       .evaluate(() => ({
         liveRegion: Array.from(document.querySelectorAll('[id^="DndLiveRegion"]')).map((node) => node.textContent),

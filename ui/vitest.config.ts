@@ -13,6 +13,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.test.{ts,tsx}', 'tests/unit/**/*.test.{ts,tsx}'],
+    globalSetup: ['./tests/unit/global-setup.ts'],
     setupFiles: ['@testing-library/jest-dom/vitest', './tests/unit/setup.ts'],
   },
 })

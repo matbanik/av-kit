@@ -1,0 +1,22 @@
+{
+  "backend-output-after-close.test.ts": 1,
+  "capture-filmstrip-actions.test.ts": 1,
+  "capture-import.test.ts": 1,
+  "capture-inbox.test.ts": 2,
+  "capture-picker.test.ts": 1,
+  "command-palette-nav.spec.ts": 1,
+  "console-chrome.test.ts": 1,
+  "console-panel.test.ts": 1,
+  "convert-queue.test.ts": 1,
+  "download-queue.test.ts": 1,
+  "help-search.spec.ts": 1,
+  "keyboard-shortcuts.test.ts": 1,
+  "launch.test.ts": 1,
+  "layout-primitives.test.ts": 1,
+  "mcp-setup-prompt.test.ts": 1,
+  "settings.test.ts": 1,
+  "startup-reveal.test.ts": 1,
+  "theme-probe.ts": 1,
+  "transcript-queue.test.ts": 1,
+  "tts-generate.test.ts": 1
+}

@@ -1,9 +1,10 @@
-import { _electron, expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
 import { mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+
+import { launchElectron } from './electron-app'
 
 /**
  * MEU-132 (Session 61) IMPORT_ELECTRON: AC-132.22 (a drop) and AC-132.23 (a paste) in the real app.
@@ -17,8 +18,6 @@ import { fileURLToPath } from 'node:url'
  * image first, and `finally` restores them only if this test wrote to it, then reads them back
  * and fails on any difference (S13). The formats before and after are printed for the receipt.
  */
-
-const here = dirname(fileURLToPath(import.meta.url))
 
 const NOT_AN_IMAGE = 'not an image av-kit can open (png, jpg, jpeg, webp)'
 const PASTED_NAME = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(_\d+)?\.png$/
@@ -166,11 +165,8 @@ async function launch(): Promise<Harness> {
   mkdirSync(inboxB, { recursive: true })
   const backend = await startBackend(inboxA)
 
-  const app = await _electron.launch({
-    args: [resolve(here, '../../out/main/index.js')],
+  const app = await launchElectron({
     env: {
-      ...process.env,
-      AVKIT_E2E: '1',
       AVKIT_E2E_API_BASE: backend.base,
       AVKIT_APP_DATA: mkdtempSync(join(tmpdir(), 'avkit-e2e-import-data-')),
     },

@@ -1,6 +1,6 @@
-import { _electron, expect, type Page } from '@playwright/test'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { expect, type Page } from '@playwright/test'
+
+import { launchElectron } from './electron-app'
 
 /**
  * THEME_PROBE (MEU-94, Session 40): a helper, not a test file. Defined once in
@@ -10,8 +10,6 @@ import { fileURLToPath } from 'node:url'
  * The probe never replaces `window.fetch`: each seam looks up `window.__avkitThemeProbe` at request
  * time, so the unspecified order of the two init scripts does not matter.
  */
-
-const here = dirname(fileURLToPath(import.meta.url))
 
 export type UiTheme = 'dark' | 'light'
 
@@ -228,11 +226,8 @@ export async function storedMirror(page: Page): Promise<string | null> {
 
 /** Launch with a caller-owned AVKIT_APP_DATA, so two launches share localStorage. */
 export async function launchWithAppData(dir: string) {
-  return _electron.launch({
-    args: [resolve(here, '../../out/main/index.js')],
+  return launchElectron({
     env: {
-      ...process.env,
-      AVKIT_E2E: '1',
       AVKIT_APP_DATA: dir,
     },
   })

@@ -21,6 +21,7 @@ import { CaptureViewport } from '../../src/renderer/src/features/capture/Capture
 import { fitScaleOrigin } from '../../src/renderer/src/features/capture/capture-fit-map'
 import { HANDLE_RADIUS_CSS } from '../../src/renderer/src/features/capture/capture-hit-test'
 import { WHEEL_RESET_MS } from '../../src/renderer/src/features/capture/capture-zoom'
+import { expectBoundHint } from './helpers/bound-hint'
 
 if (typeof PointerEvent === 'undefined') {
   class PointerEventPolyfill extends MouseEvent {
@@ -3443,6 +3444,17 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       expect(pressed('capture-tool-arrow')).toBe('true')
       expect(pressed('capture-tool-lock')).toBe('true')
     })
+  })
+
+  it('AC-97.4 HINTS rendered capture-save and capture-region carry the registry chords', async () => {
+    const surface = await openSelectedSurface()
+    await drag(surface, 25, 25, 150, 150)
+    expectBoundHint(
+      screen.getByTestId('capture-save'),
+      'capture:save',
+      focusedHint(toolbarFocusTarget('capture-save'), 'capture-save-hint') ?? '',
+    )
+    expectBoundHint(screen.getByTestId('capture-region'), 'page:primary')
   })
 })
 

@@ -1,9 +1,9 @@
-import { _electron, expect, test, type ElectronApplication, type Page } from '@playwright/test'
+import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
+import { launchElectron } from './electron-app'
 import {
   MCP_ADVANCED_SUMMARY,
   MCP_CLIENT_SELECT,
@@ -12,8 +12,6 @@ import {
   MCP_SCOPE_SELECT,
   MCP_SETUP_PROMPT,
 } from './test-ids'
-
-const here = dirname(fileURLToPath(import.meta.url))
 
 // CLIENT_SET: value and label, in order; the first four also have a project scope.
 const CLIENT_SET = [
@@ -29,9 +27,8 @@ const PROJECT_CLIENTS = ['claude-code', 'codex', 'cursor', 'vscode']
 
 async function launchApp(): Promise<{ app: ElectronApplication; appData: string }> {
   const appData = mkdtempSync(join(tmpdir(), 'avkit-e2e-mcp-prompt-'))
-  const app = await _electron.launch({
-    args: [resolve(here, '../../out/main/index.js')],
-    env: { ...process.env, AVKIT_E2E: '1', AVKIT_APP_DATA: appData },
+  const app = await launchElectron({
+    env: { AVKIT_APP_DATA: appData },
   })
   return { app, appData }
 }

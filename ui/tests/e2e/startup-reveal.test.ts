@@ -1,10 +1,9 @@
-import { _electron, expect, test, type ElectronApplication } from '@playwright/test'
+import { expect, test, type ElectronApplication } from '@playwright/test'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
-const here = dirname(fileURLToPath(import.meta.url))
+import { launchElectron } from './electron-app'
 
 /*
   Session 27 A-3 (STARTUP_RELOAD_RACE). Every e2e seam reloads right after
@@ -15,11 +14,8 @@ const here = dirname(fileURLToPath(import.meta.url))
   the rest of boot. The reload here is deliberately immediate.
 */
 async function launchAndReloadEarly(extraEnv: Record<string, string> = {}): Promise<ElectronApplication> {
-  const app = await _electron.launch({
-    args: [resolve(here, '../../out/main/index.js')],
+  const app = await launchElectron({
     env: {
-      ...process.env,
-      AVKIT_E2E: '1',
       AVKIT_APP_DATA: mkdtempSync(join(tmpdir(), 'avkit-e2e-reveal-')),
       ...extraEnv,
     },

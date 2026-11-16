@@ -1,8 +1,10 @@
-import { _electron, expect, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { existsSync, mkdtempSync, statSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { launchElectron } from './electron-app'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const ui = resolve(here, '../..')
@@ -15,11 +17,9 @@ test('AC-51.7 real Electron primitive harness exercises all five controls', asyn
   expect(statSync(main).mtimeMs).toBeGreaterThanOrEqual(statSync(resolve(ui, 'electron.vite.config.ts')).mtimeMs)
   expect(statSync(html).mtimeMs).toBeGreaterThanOrEqual(statSync(resolve(ui, 'src/renderer/src/primitive-harness.tsx')).mtimeMs)
 
-  const app = await _electron.launch({
-    args: [main],
+  const app = await launchElectron({
+    main,
     env: {
-      ...process.env,
-      AVKIT_E2E: '1',
       AVKIT_APP_DATA: mkdtempSync(join(tmpdir(), 'avkit-primitive-e2e-')),
     },
   })

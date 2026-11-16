@@ -1,9 +1,11 @@
-import { _electron, expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { launchElectron } from './electron-app'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
@@ -63,11 +65,8 @@ async function clickSampleImagePoint(page: Page, x: number, y: number): Promise<
 }
 
 async function launchApp() {
-  return _electron.launch({
-    args: [resolve(here, '../../out/main/index.js')],
+  return launchElectron({
     env: {
-      ...process.env,
-      AVKIT_E2E: '1',
       AVKIT_APP_DATA: mkdtempSync(join(tmpdir(), 'avkit-e2e-capture-')),
     },
   })
@@ -384,11 +383,8 @@ test('W9-6 capture:region palette delivers with zero POST /captures', async () =
 })
 
 test('W9-7 delayed backend does not unhandled-reject the capture request poll', async () => {
-  const app = await _electron.launch({
-    args: [resolve(here, '../../out/main/index.js')],
+  const app = await launchElectron({
     env: {
-      ...process.env,
-      AVKIT_E2E: '1',
       AVKIT_E2E_BACKEND_DELAY_MS: '800',
       AVKIT_APP_DATA: mkdtempSync(join(tmpdir(), 'avkit-e2e-capture-delay-')),
     },

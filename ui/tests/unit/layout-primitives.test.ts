@@ -229,7 +229,8 @@ describe('MEU-51 shared layout primitives', () => {
     expect(setup).toContain('AVKIT_E2E_OUT_DIR')
     expect(setup).toContain('out-e2e')
     expect(setup).toContain('primitive-harness.html')
-    expect(e2e).toContain('_electron.launch')
+    expect(e2e).toContain('launchElectron(')
+    expect(readFileSync(resolve(ui, 'tests/e2e/electron-app.ts'), 'utf8')).toContain('_electron.launch')
     expect(e2e).toContain('primitive-harness.html')
     expect(e2e).toContain('toBeVisible')
     // TA-1 (Session 25, class D): Transcript (MEU-55) and TTS (MEU-56) adopt the
