@@ -402,18 +402,81 @@ describe('MEU-22 TTS models', () => {
     expect(existsSync(mcpDir)).toBe(true)
   })
 
-  it('AC-22.24 STATUS_COLORS SPEED_PRESETS and no raw hex', async () => {
-    const { SPEED_PRESETS, STATUS_COLORS } = await import(
-      '../../src/renderer/src/features/tts/tts-controls'
-    )
-    expect(SPEED_PRESETS).toEqual([0.8, 1.0, 1.1])
-    expect(STATUS_COLORS.Generating).toMatch(/^bg-/)
-    expect(STATUS_COLORS.Generating).not.toMatch(/#/)
+  it('AC-22.24 SPEED_PRESETS, the status tones and no raw hex', async () => {
+    const controls = (await import('../../src/renderer/src/features/tts/tts-controls')) as unknown as Record<
+      string,
+      unknown
+    >
+    expect(controls.SPEED_PRESETS).toEqual([0.8, 1.0, 1.1])
+    expect(
+      Object.prototype.hasOwnProperty.call(controls, 'STATUS_COLORS'),
+      'the legacy status colour map is deleted',
+    ).toBe(false)
+    expect(typeof controls.TTS_STATUS_TONE).toBe('object')
+    for (const tone of Object.values(controls.TTS_STATUS_TONE as Record<string, unknown>)) {
+      expect(['neutral', 'info', 'success', 'warning', 'danger']).toContain(tone)
+    }
     const sources = ttsSources().join('\n')
+    expect(sources).not.toMatch(/\bSTATUS_COLORS\b/)
     expect(sources).not.toMatch(/className=\{?[`'"][^`'"]*#[0-9a-fA-F]{3,8}/)
     expect(sources).toMatch(/SelectInput/)
     const styles = readRequired(stylesPath)
     expect(styles.length).toBeGreaterThan(0)
+  })
+})
+
+describe('MEU-150 progress label', () => {
+  it('AC-150.1 progressLabel gives a floored percentage of the progress scale', async () => {
+    const controls = (await import('../../src/renderer/src/features/tts/tts-controls')) as unknown as Record<
+      string,
+      unknown
+    >
+    expect(typeof controls.progressLabel).toBe('function')
+    expect(typeof controls.progressFraction).toBe('function')
+    const label = controls.progressLabel as (done: number, total: number) => string
+    const fraction = controls.progressFraction as (done: number, total: number) => number
+    const labels: Array<[number, number, string]> = [
+      [0, 1000, '0%'],
+      [250, 1000, '25%'],
+      [999, 1000, '99%'],
+      [1000, 1000, '100%'],
+      [2, 8, '25%'],
+      [1, 3, '33%'],
+      [1200, 1000, '100%'],
+      [-5, 1000, '0%'],
+      [5, 0, '0%'],
+      [5, -1, '0%'],
+      [Number.NaN, 1000, '0%'],
+      [5, Number.POSITIVE_INFINITY, '0%'],
+    ]
+    expect(labels.map(([done, total]) => [done, total, label(done, total)])).toEqual(labels)
+    const fractions: Array<[number, number, number]> = [
+      [999, 1000, 0.99],
+      [250, 1000, 0.25],
+      [1200, 1000, 1],
+      [5, 0, 0],
+    ]
+    expect(fractions.map(([done, total]) => [done, total, fraction(done, total)])).toEqual(fractions)
+  })
+})
+
+describe('MEU-149 status pill tones', () => {
+  it('AC-149.1 TTS_STATUS_TONE maps every job status to a StatusChip tone', async () => {
+    const controls = (await import('../../src/renderer/src/features/tts/tts-controls')) as unknown as Record<
+      string,
+      unknown
+    >
+    expect(typeof controls.TTS_STATUS_TONE).toBe('object')
+    const tones = controls.TTS_STATUS_TONE as Record<string, unknown>
+    expect(Object.keys(tones)).toEqual([...(controls.JOB_STATUSES as readonly string[])])
+    expect(tones).toEqual({
+      Idle: 'neutral',
+      Pending: 'warning',
+      Generating: 'info',
+      Done: 'success',
+      Failed: 'danger',
+      Cancelled: 'neutral',
+    })
   })
 })
 

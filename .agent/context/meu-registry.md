@@ -63,7 +63,7 @@
 | MEU-142 | `svc-download-audio-extract` | 3.20 | [Phase 3 §Download audio extract (residual)](../../docs/build-plan/03-service-layer.md#download-audio-extract-residual) | An MP3 audio download is converted to MP3 through MediaPort.convert after the download, in any cookie mode, with no ConversionJob row. | ✅ approved |
 | MEU-147 | `svc-transcript-title-cleaning` | 3.22 | [Phase 3 §Transcript title cleaning (residual)](../../docs/build-plan/03-service-layer.md#transcript-title-cleaning-residual) | The info.title channel fallback and a caption port's title get D-360's cleaning and guard. | ✅ approved |
 | MEU-148 | `svc-console-home-short-form` | 3.23 | [Phase 3 §Console home short form (residual)](../../docs/build-plan/03-service-layer.md#console-home-short-form-residual) | The Console's home scrub also matches the home folder's 8.3 short form on Windows (D-337). | ✅ approved |
-| MEU-150 | `svc-tts-output-names-progress` | 3.24 | [Phase 3 §TTS output names and progress (residual)](../../docs/build-plan/03-service-layer.md#tts-output-names-progress-residual) | TTS output files get readable names instead of the job uuid, and the page stops calling the progress scale segments. | ⬜ pending |
+| MEU-150 | `svc-tts-output-names-progress` | 3.24 | [Phase 3 §TTS output names and progress (residual)](../../docs/build-plan/03-service-layer.md#tts-output-names-progress-residual) | TTS output files get readable names instead of the job uuid, and the page stops calling the progress scale segments. | ✅ approved |
 
 
 ## REST API (P2)
@@ -115,7 +115,7 @@
 | MEU-120 | `gui-models-dir-probe` | 6.15 | [Phase 6 §Models folder probe (residual)](../../docs/build-plan/06-gui.md#models-folder-probe-residual) | The first-run probe tests the backend's real models folder and stops creating an empty one; a contract test ties the two defaults together. | ✅ approved |
 | MEU-124 | `download-received-quality` | 6.16 | [Phase 6 §Downloader received quality (residual)](../../docs/build-plan/06-gui.md#download-received-quality-residual) | The file's real quality is stored in a new nullable field, and the row shows requested and received together only when they differ. | ✅ approved |
 | MEU-126 | `gui-light-accent-contrast` | 6.17 | [Phase 6 §Light accent contrast (residual)](../../docs/build-plan/06-gui.md#light-accent-contrast-residual) | The light theme's accent tokens move to the colours Mat ruled, so button labels reach AA contrast. | ✅ approved |
-| MEU-149 | `gui-tts-status-pill-contrast` | 6.18 | [Phase 6 §TTS status pill contrast (residual)](../../docs/build-plan/06-gui.md#tts-status-pill-contrast-residual) | Every TTS status pill label reaches 4.5:1 against its fill in both themes. | ⬜ pending |
+| MEU-149 | `gui-tts-status-pill-contrast` | 6.18 | [Phase 6 §TTS status pill contrast (residual)](../../docs/build-plan/06-gui.md#tts-status-pill-contrast-residual) | Every TTS status pill label reaches 4.5:1 against its fill in both themes. | ✅ approved |
 | MEU-151 | `gui-settings-draft-baseline` | 6.19 | [Phase 6 §Settings drafts keep edits (residual)](../../docs/build-plan/06-gui.md#settings-draft-baseline-residual) | The capture settings draft and the Convert advanced fields keep the user's edits and follow everything else, as AC-112.9 did for the encoder. | ⬜ pending |
 | MEU-154 | `gui-ready-line-buffer` | 6.20 | [Phase 6 §READY line buffering (residual)](../../docs/build-plan/06-gui.md#ready-line-buffer-residual) | The main process reads backend output as lines, so a split or repeated ready line publishes the API once. | ⬜ pending |
 

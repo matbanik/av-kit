@@ -795,6 +795,15 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Progress label | The page stops calling the progress scale segments: it shows a percentage, or a real segment count if the service reports one. | Local Canon |
 | Tests | Unit: two jobs with the same text get different names, a taken name gets a suffix, and unsafe text gives a safe name; a renderer test for the progress label. | Local Canon |
 
+> **Delivered (Session 80).**
+> - `NAME_SCHEME_KEPT` (D-955): output names already said what the clip is when this section was registered. rc.3 F5 (2026-11-09) shipped `output_stem(text, voice)` (`domain/tts.py:369`): the casefolded first three words, each kept to its letters and digits, joined by `-` (at most 60 characters, or `speech` when no word is left), then `-` and the voice. The WAV and MP3 share the stem. No Python product file changed.
+> - The guard tests in `tests/unit/test_tts_output_name.py` lock that scheme in. `NAME_SAFE_GUARD` (`:122`, D-958): text with reserved or control characters, `..\..\escape`, a device name, or a trailing dot or space gives a safe stem, and the file lands directly in the output folder. `:136`: text with no word writes `speech-am_eric.mp3`. `NAME_COLLISION_GUARD` (`:143`, D-957): a user's own `.mp3` or `.wav` of the same stem keeps its bytes, and the new file takes `-2` (`_free_paths`, `services/tts.py:84`). `LEGACY_OUTPUT_KEPT` (`:156`): a uuid-named file from before rc.3 keeps its name and bytes, and the job ID stays a uuid4.
+> - The section's opening note, which says output goes to `<job id>.wav` and `<job id>.mp3`, was already out of date when it was registered on 2026-11-15: it was copied from the issue's 2026-11-03 text, six days after F5 changed the names.
+> - `PROGRESS_PERCENT` (D-959, D-963): `progressLabel` (`tts-controls.ts:38`) prints the progress scale as a floored percentage from 0 to 100, and 0 when the total is 0 or less or a value is not finite. `progressFraction` (`:52`) gives the same number over 100. The run bar prints `progressLabel` in place of `Segments 250/1000` (`TTSPage.tsx:742`).
+> - `PROGRESS_ARIA` (D-959, D-963): the bar is labelled `Generation progress` and takes `progressFraction` as its value (`TTSPage.tsx:737-738`), so its `aria-valuenow` equals the label's number; at 999 of 1000 both say 99. `ProgressBar.tsx` and the test ids `segment-progress` and `segment-progress-bar` are unchanged.
+> - `API_SHAPE_UNCHANGED` (D-962): no route, schema or MCP tool changes.
+> - AC-150.1 to AC-150.9. Plan `docs/execution/plans/2026-11-15-tts-page-polish/`.
+
 ## What this layer must not do
 
 | Forbidden | Why |

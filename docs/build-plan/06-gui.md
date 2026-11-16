@@ -825,9 +825,9 @@ Poll `GET /transcripts` the same way as downloads: unwrap `items`, use `processo
 │  └────────────────────────────────────┴──────────────────────────────────────────────┘│
 │                                                                                      │
 │  ┌─ GENERATE ──────────────────────────────────────────────────────────────────────┐ │
-│  │  [🔊 Generate]  [⏹ Cancel]  ████████████████░░░░░░ 68%  ·  Segment 34/50     │ │
+│  │  [🔊 Generate]  [⏹ Cancel]  ████████████████░░░░░░ 68%  ·  Hello · abcdef01  │ │
 │  │                                                                                 │ │
-│  │  Last output: speech_output_2026-05-30.mp3    [📂 Open File] [📂 Open Folder]   │ │
+│  │  Last output: the-quick-brown-af_heart.mp3    [📂 Open File] [📂 Open Folder]   │ │
 │  └─────────────────────────────────────────────────────────────────────────────────┘ │
 │                                                                                      │
 └──────────────────────────────────────────────────────────────────────────────────────┘
@@ -1225,7 +1225,7 @@ Animated progress component:
 ```typescript
 interface ProgressBarProps {
   value: number;    // 0.0 – 1.0
-  label?: string;   // e.g. "45.2%" or "Segment 34/50"
+  label?: string;   // e.g. "45.2%" or "Item 34/50"
   variant?: 'default' | 'success' | 'error';
 }
 ```
@@ -1640,6 +1640,13 @@ The following features are explicitly **deferred** to a future phase:
 | Look | How it gets there (a text colour per fill, a 10% status-hue fill with `text-fg` as the queue pills use, or new fills) is chosen at plan time, and Mat looks at both themes before it ships. | Local Canon: D-235 human check (MEU-126) |
 | Scope | The TTS page's pill only. Queue pills have their own tokens and floor ([10 §Status token table](10-queue-card-ui.md#status-token-table)). | Local Canon |
 | Tests | A contrast test that reads the status colours at test time and checks each pair at 4.5:1 in both themes, as `light-accent-contrast.test.ts` does. | Local Canon |
+
+> **Delivered (Session 80).**
+> - `PILL_CHIP_TONES` (D-956): the pill is the page's `StatusChip` (`TTSPage.tsx:725`), a 10% status-hue fill with `text-fg`. `TTS_STATUS_TONE` (`tts-controls.ts:63`) maps Idle and Cancelled to `neutral`, Pending to `warning`, Generating to `info`, Done to `success` and Failed to `danger`, as the queue header's `toneFor` does. A blank status shows `Idle` (`TTSPage.tsx:130`), because `StatusChip` throws on a blank label; an unknown status takes `neutral`.
+> - `PILL_CONTRAST_TEST` (D-960): `ui/tests/unit/tts-pill-contrast.test.ts` renders the chip for each status, reads its fill, alpha and label tokens from `styles.css` at test time, and checks 36 pairs (6 statuses, 3 backdrops, 2 themes) at 4.5:1 with the `TINT_MODEL` and `CONTRAST_FLOOR` of [§Light accent contrast (residual)](#light-accent-contrast-residual). The worst pair is dark Generating, `text-fg` on the 10% `--color-accent-cyan` tint over `--color-bg-elevated`, at 6.86:1; the light pairs run from 11.39 to 13.50. A calibration case measures the old dark Generating pill at 1.30:1.
+> - `STATUS_COLORS_RETIRED`: `STATUS_COLORS` is gone from `tts-controls.ts`, and AC-43.2's census of legacy status maps is `transcript-controls.ts` alone. `StatusChip.tsx`, `ProgressBar.tsx`, `status-tokens.ts` and `styles.css` are unchanged (`QUEUE_TOKENS_UNCHANGED`).
+> - Human check: asked to look at the pill in the running dev app in both themes, with the light tint faint by design, Mat answered "approved" (D-806, `human-check.md`).
+> - AC-149.1 to AC-149.8. Plan `docs/execution/plans/2026-11-15-tts-page-polish/`.
 
 <a id="settings-draft-baseline-residual"></a>
 

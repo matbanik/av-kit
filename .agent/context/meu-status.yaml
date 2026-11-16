@@ -3888,18 +3888,18 @@ meus:
     anchor: tts-status-pill-contrast-residual
     text: Phase 6 §TTS status pill contrast (residual)
   description: Every TTS status pill label reaches 4.5:1 against its fill in both themes.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-22, MEU-126
   dependency_parse_status: parsed
   depends_on:
   - MEU-22
   - MEU-126
-  execution_plan: null
-  updated: '2026-11-15'
+  execution_plan: docs/execution/plans/2026-11-15-tts-page-polish/
+  updated: '2026-11-16'
   closed_reason: null
   note: Registered 2026-11-15 from TTS-STATUS-PILL-BELOW-AA-CONTRAST (triage D-806; grouping D-814, D-815), Session 80.
 - row_key: MEU-150
@@ -3913,10 +3913,10 @@ meus:
     anchor: tts-output-names-progress-residual
     text: Phase 3 §TTS output names and progress (residual)
   description: TTS output files get readable names instead of the job uuid, and the page stops calling the progress scale segments.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-12, MEU-22, MEU-77
   dependency_parse_status: parsed
@@ -3924,8 +3924,8 @@ meus:
   - MEU-12
   - MEU-22
   - MEU-77
-  execution_plan: null
-  updated: '2026-11-15'
+  execution_plan: docs/execution/plans/2026-11-15-tts-page-polish/
+  updated: '2026-11-16'
   closed_reason: null
   note: Registered 2026-11-15 from TTS-AUDIO-RANDOM-FILE-NAMES and TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE (triage D-807; grouping D-814, D-815), Session 80.
 - row_key: MEU-151

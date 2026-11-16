@@ -1,0 +1,11 @@
+{
+  "packages/core/src/avkit_core/domain/tts.py": "6c7f9511cb483a223cec005ab00d59a449deafe263527351dfa77058fd2d2c90",
+  "packages/core/src/avkit_core/services/tts.py": "1ecec754c329786d201c6c54364956d7b70d30ee242ca8ce9b6f3646404da746",
+  "ui/src/renderer/src/components/ui/StatusChip.tsx": "f73bbcfceadca3317d2e773de23ae0b63e941fbca6e761f31c212b50554204e0",
+  "ui/src/renderer/src/components/ui/ProgressBar.tsx": "8ca3f50db74e0db014bf23f9f74bb0a086bbf1717bacc8cf9ef110ab0c6a89bd",
+  "ui/src/renderer/src/lib/queue/status-tokens.ts": "0c0783b18c68c03f5c34966e7ae5231e8dda4af973d4be2454c525c22172a6a1",
+  "ui/src/renderer/src/styles.css": "3f7bf3bf7554afb24c9851a8f08c0b1f5c38ae5ed68c126ea613580f8d847f26",
+  "ui/tests/e2e/test-ids.ts": "6afca516760c04594ac1cf0d85204b9f3e4b4aee614844f34f696bbcea562615",
+  "ui/tests/e2e/tts-generate.test.ts": "bc631644ad9646480b635809748ce26e0bd7da9f3e30d377f5b669f49ab6ad20",
+  "openapi.committed.json": "7076d0bc7bc4841b87c1ad1fd0374e66a4fb15500bf1e4064dc8456847953a0f"
+}

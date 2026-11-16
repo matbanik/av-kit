@@ -3204,12 +3204,15 @@ issues:
     title: The TTS progress label reads 'Segments 0/1000' whatever the text's length
     severity: low
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: segments_total is TTS_PROGRESS_RESOLUTION (packages/core/src/avkit_core/services/tts.py:44,252), a 1000-step progress scale rather than a segment count, and ui/src/renderer/src/features/tts/TTSPage.tsx:733 prints it as segments.
     blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Cosmetic; the progress bar itself is right.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-16'
+      method: 'Session 80 row 2: AC-150.1 to AC-150.3 and the changed AC-56.5 in tts-page.test.ts, tts-page.behavior.test.ts and tts-run-bar.test.ts through npm --prefix ui run test (C:/Temp/av-kit/tts-page-polish/tpp-150-green.txt)'
+      result: Test Files  3 passed (3); Tests  65 passed (65)
+    resolution_path: 'Fixed in Session 80 on 2026-11-16 (plan docs/execution/plans/2026-11-15-tts-page-polish): the TTS run bar prints the progress scale as a floored percentage through progressLabel (for example 25% instead of Segments 250/1000), and the bar is labelled Generation progress with progressFraction as its value, so its aria-valuenow equals the label''s number (D-959, D-963). The API names segments_done and segments_total are kept (D-962).'
     category: TECH-DEBT
     priority: P4
     meu_links:
@@ -3237,12 +3240,15 @@ issues:
     title: Generated audio files have random ID names
     severity: low
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: Output is written to <job id>.wav and <job id>.mp3 (packages/core/src/avkit_core/services/tts.py:327-328), and the job ID is a uuid4 (:242).
     blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Finding a clip in the output folder later means opening each one.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-16'
+      method: 'Session 80 row 1: the output-name guards AC-150.4 to AC-150.7 in tests/unit/test_tts_output_name.py through uv run pytest (C:/Temp/av-kit/tts-page-polish/tpp-150-guards.txt)'
+      result: 23 passed in 1.32s
+    resolution_path: 'Fixed in Session 80 on 2026-11-16 (plan docs/execution/plans/2026-11-15-tts-page-polish): the names were already fixed by rc.3 F5 on 2026-11-09, which writes each output as the first three words of the text and the voice (output_stem), with -2, -3 when the name is taken. This session added the guard tests that lock that in (D-961): unsafe text gives a safe name inside the output folder, text with no word gives speech, a user''s own file is never overwritten, and a uuid-named file from before rc.3 keeps its name while the job ID stays a uuid4. No Python product file changed (D-955).'
     category: TECH-DEBT
     priority: P4
     meu_links:
@@ -4769,14 +4775,15 @@ issues:
     title: The TTS job status pill puts its label below 4.5:1 contrast in both themes
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-08'
     root_cause: 'Worked out from the token values while planning Session 56, not measured in the running app. ui/src/renderer/src/features/tts/TTSPage.tsx:721 draws the job status as text-xs text-fg on a solid fill from STATUS_COLORS (ui/src/renderer/src/features/tts/tts-controls.ts:14-21). Dark, the default theme, puts #f8f8f2 on Idle and Cancelled at 4.41:1, Failed 2.95, Pending 1.60, Generating 1.30 and Done 1.29. Light puts #1e293b on Idle and Cancelled at 5.71, Done 4.44, Generating 3.97, Failed 3.03 and Pending 2.00. Session 56 (MEU-126) darkens the light accent to #155e75, which moves light Generating from 3.97 to 2.01; white on #155e75 would be 7.27. Labels are text-xs, so the 4.5:1 floor applies (C:/Temp/av-kit/s56-plan-tts-pill-dark.txt).'
     blast_radius: The TTS page's status pill only, in both themes; every status but light Idle and Cancelled is below 4.5:1. Nothing breaks and nobody has reported it. The transcript feature's STATUS_COLORS (ui/src/renderer/src/features/transcript/transcript-controls.ts:41) is exported but not rendered. Queue pills have their own tokens and floor (docs/build-plan/10-queue-card-ui.md:122).
     verification:
-      last_checked: '2026-11-08'
-      method: WCAG 2.2 ratio of text-fg over each STATUS_COLORS fill, from the tokens in styles.css
-      result: 10 of 12 theme and status pairs below 4.5:1
+      last_checked: '2026-11-16'
+      method: 'Session 80 row 4: AC-149.1, AC-149.4, AC-149.5 and the changed AC-22.24 and AC-43.2 through npm --prefix ui run test (C:/Temp/av-kit/tts-page-polish/tpp-149-green.txt), with the pair ratios in that test''s model (C:/Temp/av-kit/tts-page-polish/tpp-149-worst-pair.txt); row 5: Mat''s look at both themes in the running dev app (docs/execution/plans/2026-11-15-tts-page-polish/human-check.md)'
+      result: 'Test Files  6 passed (6); Tests  104 passed (104); the 36 theme, status and backdrop pairs all reach 4.5:1, the lowest 6.86:1; human-check.md: decision: approve, Mat''s words ''approved'''
+    resolution_path: 'Fixed in Session 80 on 2026-11-16 (plan docs/execution/plans/2026-11-15-tts-page-polish): the TTS status pill is the page''s StatusChip, a 10% status-hue tint with text-fg, toned through TTS_STATUS_TONE (D-956), and a blank status shows Idle. STATUS_COLORS is retired. tts-pill-contrast.test.ts reads the theme tokens at test time and checks every pill at 4.5:1 in both themes (D-960). Mat looked at both themes and approved it (D-806).'
     category: TECH-DEBT
     priority: P3
     related:

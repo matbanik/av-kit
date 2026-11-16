@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 139** — Active: 32 | Mitigated: 2 | Resolved: 103
+**Total: 139** — Active: 29 | Mitigated: 2 | Resolved: 106
 
 ## Active Issues
 
@@ -21,8 +21,6 @@
 | 🟢 | `CAPTURE-E2E-LAUNCH-TEARDOWN-HANG` | capture-inbox Electron specs occasionally hang in launch or close under… | ui | ⬜ open | 2026-10-25 |
 | 🟢 | `BACKEND-READY-BEFORE-LISTEN` | The backend prints AVKIT_READY before its socket listens, so an immedia… | api | ⬜ open | 2026-11-03 |
 | 🟢 | `TRANSCRIPT-ADD-CHANNEL-422` | Adding a channel returned 422 after about 8 minutes of enumeration | core | ⬜ open | 2026-11-03 |
-| 🟢 | `TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE` | The TTS progress label reads 'Segments 0/1000' whatever the text's leng… | core | ⬜ open | 2026-11-03 |
-| 🟢 | `TTS-AUDIO-RANDOM-FILE-NAMES` | Generated audio files have random ID names | core | ⬜ open | 2026-11-03 |
 | 🟢 | `CONVERT-POSITIONS-NOT-RENUMBERED` | Convert's queue numbers aren't renumbered | core | ⬜ open | 2026-11-03 |
 | 🟢 | `CONVERT-CUT-TIME-RAW-MS` | A cut job's row shows its times in raw milliseconds | ui | ⬜ open | 2026-11-03 |
 | 🟢 | `DOWNLOADER-ADVANCED-PANEL-GAP` | An empty gap sits under Advanced on the Downloader page | ui | ⬜ open | 2026-11-03 |
@@ -34,7 +32,6 @@
 | 🟢 | `TRACKED-FILES-HOLD-HOME-PATH` | Tracked files name the maintainer's Windows home folder in full, user n… | agent | ⬜ open | 2026-11-07 |
 | 🟢 | `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` | The transcript queue E2E's seam reload failed once with ERR_ABORTED und… | ui | ⬜ open | 2026-11-07 |
 | 🟢 | `CONVERT-CUT-ENCODER-LABEL` | A cut is labelled with an encoder it does not use | core | ⬜ open | 2026-11-07 |
-| 🟢 | `TTS-STATUS-PILL-BELOW-AA-CONTRAST` | The TTS job status pill puts its label below 4.5:1 contrast in both the… | ui | ⬜ open | 2026-11-08 |
 | 🟢 | `MCP-AUDIT-BASELINE-PENDING-CROP` | The committed MCP audit baseline has no avkit_capture.crop entry | mcp-server | ⬜ open | 2026-11-08 |
 | 🟢 | `MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL` | Claude Code doesn't show a model the per-action text in _meta.action_de… | mcp-server | ⬜ open | 2026-11-10 |
 | 🟢 | `VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE` | Real-ffmpeg frame grabs near a clip's last frame occasionally fail (fra… | core | ⬜ open | 2026-11-15 |
@@ -49,9 +46,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (103)
+## Resolved (106)
 
-103 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+106 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

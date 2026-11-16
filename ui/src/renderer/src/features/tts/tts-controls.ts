@@ -1,3 +1,5 @@
+import type { StatusChipTone } from '../../components/ui/StatusChip'
+
 export const JOB_STATUSES = [
   'Idle',
   'Pending',
@@ -11,13 +13,60 @@ export type JobStatus = (typeof JOB_STATUSES)[number]
 
 export const SPEED_PRESETS = [0.8, 1.0, 1.1] as const
 
-export const STATUS_COLORS: Record<JobStatus, string> = {
-  Idle: 'bg-neutral',
-  Pending: 'bg-status-pending',
-  Generating: 'bg-accent',
-  Done: 'bg-accent-green',
-  Failed: 'bg-error',
-  Cancelled: 'bg-neutral',
+/**
+ * The share of a job done, as a whole percentage floored into 0 to 100.
+ *
+ * A job's `segments_done` and `segments_total` are a progress scale
+ * (`TTS_PROGRESS_RESOLUTION` steps in the service), not a segment count, so the run bar
+ * shows this percentage and never `done/total`. The floor never shows 100% while the job
+ * still runs. A total of 0 or less, or a value that is not finite, gives 0.
+ */
+function progressPercent(done: number, total: number): number {
+  if (!Number.isFinite(done) || !Number.isFinite(total) || total <= 0) {
+    return 0
+  }
+  return Math.min(100, Math.max(0, Math.floor((100 * done) / total)))
+}
+
+/**
+ * `PROGRESS_PERCENT`: the run bar's progress label.
+ *
+ * @param done - The job's `segments_done`, a step on the progress scale.
+ * @param total - The job's `segments_total`, the scale's length.
+ * @returns The floored percentage with a `%` sign, such as `25%`.
+ */
+export function progressLabel(done: number, total: number): string {
+  return `${String(progressPercent(done, total))}%`
+}
+
+/**
+ * `PROGRESS_ARIA`: the run bar's value, the label's percentage over 100.
+ *
+ * `ProgressBar` rounds its value times 100 for `aria-valuenow`; a floored value rounds to
+ * itself, so a screen reader hears the number the label shows (D-963).
+ *
+ * @param done - The job's `segments_done`.
+ * @param total - The job's `segments_total`.
+ * @returns A fraction from 0 to 1.
+ */
+export function progressFraction(done: number, total: number): number {
+  return progressPercent(done, total) / 100
+}
+
+/**
+ * `PILL_CHIP_TONES`: the run bar's status pill tone for each job status.
+ *
+ * The pill is a `StatusChip`, a 10% status-hue fill with `text-fg` that reads at 4.5:1 in
+ * both themes. The tones follow the queue header's `toneFor`: done is success, failed
+ * danger, running info, waiting warning, anything else neutral.
+ */
+export const TTS_STATUS_TONE: Record<JobStatus, StatusChipTone> = {
+  Idle: 'neutral',
+  Pending: 'warning',
+  Generating: 'info',
+  Done: 'success',
+  Failed: 'danger',
+  Cancelled: 'neutral',
 }
 
 const BLOCKED_GENERATE = new Set(['Generating', 'Pending'])

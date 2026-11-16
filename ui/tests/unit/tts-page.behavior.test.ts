@@ -432,7 +432,8 @@ describe('MEU-56 TTS page composition', () => {
     const progress = byTestId('segment-progress-bar')
     expect(progress.getAttribute('role')).toBe('progressbar')
     expect(progress.getAttribute('aria-valuenow')).toBe('25')
-    expect(byTestId('segment-progress').textContent).toContain('Segments 2/8')
+    expect(byTestId('segment-progress').textContent).toContain('25%')
+    expect(byTestId('segment-progress').textContent).not.toContain('Segments')
     expect(within(host).queryByTestId('last-output')).toBeNull()
     job = { ...(job as Job), status: 'Done', segments_done: 8, output_path: 'D:/audio/hello.mp3' }
     await act(async () => {
@@ -446,6 +447,89 @@ describe('MEU-56 TTS page composition', () => {
     await vi.waitFor(() => {
       expect(ipc).toContain('openPath:D:/audio/hello.mp3')
     })
+  })
+
+  /** Generate from the page, then wait for the run bar's progress slot. */
+  async function startGenerating(): Promise<void> {
+    await user.type(byTestId('text-input'), 'Hello world')
+    await user.click(byTestId('generate-btn'))
+    await vi.waitFor(() => {
+      expect(within(host).queryByTestId('segment-progress')).not.toBeNull()
+    })
+  }
+
+  /** Swap the polled job's fields and let the page refetch it. */
+  async function setJob(fields: Partial<Job>): Promise<void> {
+    job = { ...(job as Job), ...fields }
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: ['tts', 'job'] })
+    })
+  }
+
+  it('AC-150.2 the run bar shows progress as a percentage, never as segments', async () => {
+    await renderPage()
+    await startGenerating()
+    // 0 of 1000 first: its 0% differs from the generate fixture's 2 of 8, so the wait sees the refetch.
+    await setJob({ segments_done: 0, segments_total: 1000 })
+    await vi.waitFor(() => {
+      const text = byTestId('segment-progress').textContent ?? ''
+      expect(text).toContain('0%')
+      expect(text).not.toContain('25%')
+    })
+    await setJob({ segments_done: 250, segments_total: 1000 })
+    await vi.waitFor(() => {
+      const text = byTestId('segment-progress').textContent ?? ''
+      expect(text).toContain('25%')
+      expect(text).toContain(' · Hello')
+      expect(text).toContain(' · abcdef01')
+      expect(text).not.toContain('Segments')
+      expect(text).not.toContain('/1000')
+    })
+  })
+
+  it('AC-150.3 the progress bar is labelled Generation progress', async () => {
+    await renderPage()
+    await startGenerating()
+    const bar = byTestId('segment-progress-bar')
+    expect(bar.getAttribute('role')).toBe('progressbar')
+    expect(bar.getAttribute('aria-label')).toBe('Generation progress')
+    expect(host.querySelector('[aria-label="Segment progress"]')).toBeNull()
+    await setJob({ segments_done: 999, segments_total: 1000 })
+    await vi.waitFor(() => {
+      expect(byTestId('segment-progress').textContent ?? '').toContain('99%')
+      expect(byTestId('segment-progress-bar').getAttribute('aria-valuenow')).toBe('99')
+    })
+  })
+
+  it("AC-149.4 the run bar's status pill is a StatusChip with the status tone", async () => {
+    // Class tokens are compared whole, never by substring: `bg-accent-cyan/10` holds `bg-accent`.
+    const solid = ['bg-neutral', 'bg-status-pending', 'bg-accent', 'bg-accent-green', 'bg-error']
+    const expectPill = (label: string, tone: string, fill: string): void => {
+      const pill = within(host).queryByTestId('tts-status-pill')
+      expect(pill, 'the status pill').not.toBeNull()
+      const classes = (pill as HTMLElement).className.split(/\s+/).filter((name) => name !== '')
+      expect(pill?.textContent).toBe(label)
+      expect(pill?.getAttribute('data-tone')).toBe(tone)
+      expect(classes).toContain(fill)
+      expect(classes).toContain('text-fg')
+      expect(classes.filter((name) => solid.includes(name))).toEqual([])
+    }
+    await renderPage()
+    expectPill('Idle', 'neutral', 'bg-neutral/10')
+    await startGenerating()
+    await vi.waitFor(() => {
+      expectPill('Generating', 'info', 'bg-accent-cyan/10')
+    })
+    await setJob({ status: 'Done', segments_done: 1000, segments_total: 1000, output_path: 'D:/audio/hello.mp3' })
+    await vi.waitFor(() => {
+      expectPill('Done', 'success', 'bg-status-filled/10')
+    })
+    // A blank status from the API shows Idle; it never reaches StatusChip's blank-label throw.
+    await setJob({ status: '' })
+    await vi.waitFor(() => {
+      expectPill('Idle', 'neutral', 'bg-neutral/10')
+    })
+    expect(within(host).queryByTestId('tts-page')).not.toBeNull()
   })
 
   it('AC-56.5 an error replaces the slot content', async () => {

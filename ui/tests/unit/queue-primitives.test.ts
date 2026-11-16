@@ -395,17 +395,15 @@ describe('MEU-43 queue primitives', () => {
     // every obligated page's feature dir, so the downloader map retires with
     // the page (AC-46.12), and AC-41.5 now pins the AgeRestricted token on the
     // shared status-tokens instead. Transcript and TTS sit outside Phase 10.
+    // MEU-149 moves the TTS pill onto StatusChip, so only the transcript controls
+    // module keeps the legacy map.
     const legacy = walk(UI_ROOT)
       .filter((file) => /\bSTATUS_COLORS\b/.test(read(file)))
       .map(rel)
       .sort()
     // TA-2 (Session 25, class C): MEU-55 moves the transcript page onto the shared
     // StatusBadge, so only its controls module still exports the legacy map.
-    expect(legacy).toEqual([
-      'ui/src/renderer/src/features/transcript/transcript-controls.ts',
-      'ui/src/renderer/src/features/tts/TTSPage.tsx',
-      'ui/src/renderer/src/features/tts/tts-controls.ts',
-    ])
+    expect(legacy).toEqual(['ui/src/renderer/src/features/transcript/transcript-controls.ts'])
     const newSurface = [...walk(UI_QUEUE_LIB_DIR), ...walk(UI_PRIMITIVES_DIR), ...walk(UI_QUEUE_COMPONENTS_DIR)]
     for (const file of newSurface) {
       if (rel(file).endsWith('lib/queue/status-tokens.ts')) {

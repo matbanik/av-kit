@@ -1,0 +1,18 @@
+{
+  "ui/src/renderer/src/features/tts/tts-controls.ts": "e7db480767c7e437919dcd3e1710f59348dd3a7779be25e5139d7ab2a7ea73c9",
+  "ui/src/renderer/src/features/tts/TTSPage.tsx": "f4b3b8c67e59fd1d1fbb7d368efbce8948bde685ed7979331ba3f4bcb2e20179",
+  "ui/tests/unit/tts-page.test.ts": "7a6665ac2fbaea3b42365fbec2924c4ea4fe66845fa73a952b82f96741e04848",
+  "ui/tests/unit/tts-page.behavior.test.ts": "60d7feda9792a1a7658027adf62900740a29c3a6e577176ac4fd1cd9e13ead46",
+  "ui/tests/unit/queue-primitives.test.ts": "000d036971f339e1f04ae6e1ca12df08bf018c4121d66b550ee296662fee3f8d",
+  "tests/unit/test_tts_output_name.py": "0dff0d402895795b6acba7d0135c694aa4daf8ba5f8d82c1bf7a73a56b780f59",
+  "docs/build-plan/03-service-layer.md": "f81ffffd08a9e1719539085d6ce6dcb5a05e0f1a5c199e958e3ed00589b07bc5",
+  "docs/build-plan/06-gui.md": "3a0a804f865b8cec75a26e202e3de2f84a09d1d57b0f620fb6ace07863da15a0",
+  ".agent/context/known-issues.yaml": "fd3735e8d22021ac0a097b1504e0f036a87cec3ebe356e78ab62516e9b196dfc",
+  ".agent/context/known-issues.md": "1b1ac022f2b4a020981d042eea9a1e7cf3f113645bc8c68d6aef965eeedff472",
+  ".agent/context/meu-status.yaml": "4eb080cc826058fd0bcac2832c6d06f1ee929f32a32880f31a8289e00c72ec04",
+  ".agent/context/meu-registry.md": "9732f6b4e101acbee2b3d0744fa1c8539eb2c6212b7602ccbb7006303c810cd1",
+  "docs/BUILD_PLAN.md": "2bce7d30020b55076623c601c70682397a86dcab0e0fab738fda50c0f3634a9f",
+  ".agent/context/grouping/2026-11-15-post-rc3-triage-residuals-session-grouping.md": "f1d8948b4d92827d3f94fe899d44ee258abc134d71d75ac1c9c38290fc13e45e",
+  "ui/tests/unit/tts-pill-contrast.test.ts": "absent",
+  "docs/execution/plans/2026-11-15-tts-page-polish/human-check.md": "absent"
+}

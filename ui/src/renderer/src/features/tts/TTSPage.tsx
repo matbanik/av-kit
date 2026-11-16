@@ -40,9 +40,12 @@ import {
   generateEnabled,
   modelStateSuffix,
   openOutputEnabled,
+  progressFraction,
+  progressLabel,
   resolveModelAction,
   SPEED_PRESETS,
-  STATUS_COLORS,
+  TTS_STATUS_TONE,
+  type JobStatus,
   type ModelAction,
 } from './tts-controls'
 import { DEVICE_FLOOR } from './tts-devices'
@@ -123,7 +126,8 @@ export function TTSPage() {
 
   const jobQuery = useTtsJob(jobId)
   const job = jobQuery.data
-  const status = job?.status ?? 'Idle'
+  // `||`, not `??`: a blank status from the API shows Idle, because StatusChip throws on a blank label.
+  const status = job?.status || 'Idle'
   const isLoaded = statusQuery.data?.is_loaded === true
   const stats = useMemo(() => textStats(text, speed), [text, speed])
   // PAGE_STATE: the Preview and Generate buttons' own enabled expressions.
@@ -718,9 +722,7 @@ export function TTSPage() {
         >
           Cancel
         </Button>
-        <span className={`rounded px-2 py-1 text-xs text-fg ${STATUS_COLORS[status as keyof typeof STATUS_COLORS] ?? 'bg-neutral'}`}>
-          {status}
-        </span>
+        <StatusChip testId="tts-status-pill" label={status} tone={TTS_STATUS_TONE[status as JobStatus] ?? 'neutral'} />
         <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm">
           {slot === 'error' ? (
             <p data-testid="error-banner" role="alert" className="text-error">
@@ -732,12 +734,12 @@ export function TTSPage() {
               <span className="w-32 shrink-0">
                 <ProgressBar
                   testId="segment-progress-bar"
-                  value={segmentsTotal > 0 ? segmentsDone / segmentsTotal : 0}
-                  ariaLabel="Segment progress"
+                  value={progressFraction(segmentsDone, segmentsTotal)}
+                  ariaLabel="Generation progress"
                 />
               </span>
               <span className="min-w-0 truncate tabular-nums text-fg-muted">
-                Segments {job?.segments_done ?? 0}/{job?.segments_total ?? 0}
+                {progressLabel(job?.segments_done ?? 0, job?.segments_total ?? 0)}
                 {job?.text_preview ? ` · ${job.text_preview}` : ''}
                 {job?.text_hash ? ` · ${job.text_hash.slice(0, 8)}` : ''}
               </span>
