@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 135** — Active: 37 | Mitigated: 2 | Resolved: 94
+**Total: 135** — Active: 35 | Mitigated: 2 | Resolved: 96
 
 ## Active Issues
 
@@ -37,10 +37,8 @@
 | 🟢 | `CONVERT-ADVANCED-EDIT-REPLACED` | An Advanced edit on Convert snaps back when settings load late or the d… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `GUI-READY-CHUNK-BOUNDARY` | A READY line split across output chunks can be missed, and two READY ch… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `INSTALL-FOLDER-NAME-MISMATCH` | The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build pla… | ui | ⬜ open | 2026-11-04 |
-| 🟢 | `CONSOLE-HOME-SCRUB-SHORT-FORM` | The Console's home-folder scrub misses the 8.3 short form of the home f… | core | ⬜ open | 2026-11-07 |
 | 🟢 | `TRACKED-FILES-HOLD-HOME-PATH` | Tracked files name the maintainer's Windows home folder in full, user n… | agent | ⬜ open | 2026-11-07 |
 | 🟢 | `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` | The transcript queue E2E's seam reload failed once with ERR_ABORTED und… | ui | ⬜ open | 2026-11-07 |
-| 🟢 | `TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS` | Two older title paths into transcript storage skip the lone-surrogate c… | core | ⬜ open | 2026-11-07 |
 | 🟢 | `CONVERT-CUT-ENCODER-LABEL` | A cut is labelled with an encoder it does not use | core | ⬜ open | 2026-11-07 |
 | 🟢 | `TTS-STATUS-PILL-BELOW-AA-CONTRAST` | The TTS job status pill puts its label below 4.5:1 contrast in both the… | ui | ⬜ open | 2026-11-08 |
 | 🟢 | `MCP-AUDIT-BASELINE-PENDING-CROP` | The committed MCP audit baseline has no avkit_capture.crop entry | mcp-server | ⬜ open | 2026-11-08 |
@@ -54,9 +52,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (94)
+## Resolved (96)
 
-94 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+96 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

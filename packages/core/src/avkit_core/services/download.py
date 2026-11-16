@@ -107,22 +107,25 @@ def _mark_splits(text: str) -> str:
 def _scrub_split_home(marked: str) -> str:
     """`marked` with the home folder as "~", matched as `scrub_home` matches but across marks.
 
-    `health.home_folder` is read through the module at each call, so a test's patch reaches it.
+    Each form of `health.home_forms()` is matched in turn, the long form first, then on Windows
+    its 8.3 short form (`SHORT_FORM_SPLIT`, D-925). `health.home_forms` is read through the
+    module at each call, so a test's patch reaches it.
     """
-    home = health.home_folder().rstrip("\\/")
-    if not _HOME_SEPARATORS.search(home):
-        return marked
 
     def spread(part: str) -> str:
         return _SPLIT_GAP.join(re.escape(char) for char in part)
 
     separator = "(?:" + r"\\" + _SPLIT_GAP + r"\\" + r"|\\|/)"
-    body = (_SPLIT_GAP + separator + _SPLIT_GAP).join(
-        spread(part) for part in _HOME_SEPARATORS.split(home)
-    )
-    pattern = r"(?<![\w\\/.~-])" + body + r"(?=[\t\x00]*[\\/'\"]|[\t\x00 ]*$)"
     flags = re.IGNORECASE if health.HOME_IGNORES_CASE else 0
-    return re.sub(pattern, "~", marked, flags=flags)
+    for home in health.home_forms():
+        if not _HOME_SEPARATORS.search(home):
+            continue
+        body = (_SPLIT_GAP + separator + _SPLIT_GAP).join(
+            spread(part) for part in _HOME_SEPARATORS.split(home)
+        )
+        pattern = r"(?<![\w\\/.~-])" + body + r"(?=[\t\x00]*[\\/'\"]|[\t\x00 ]*$)"
+        marked = re.sub(pattern, "~", marked, flags=flags)
+    return marked
 
 
 def _scrub(text: str) -> str:
@@ -374,9 +377,7 @@ class DownloadService:
                     log.warning("skip duplicate video_id")
                     continue
                 existing.add(video_id)
-                archived = (
-                    archive_on and uow.archive.get(ARCHIVE_EXTRACTOR, video_id) is not None
-                )
+                archived = archive_on and uow.archive.get(ARCHIVE_EXTRACTOR, video_id) is not None
                 status = DownloadStatus.Skipped if archived else DownloadStatus.Pending
                 if (
                     not archived
@@ -583,9 +584,7 @@ class DownloadService:
                     if job.status is DownloadStatus.QualityBlocked
                     else job.transition(DownloadStatus.QualityBlocked)
                 )
-                uow.downloads.save(
-                    DownloadJob(**{**blocked.__dict__, "updated_at": _now()})
-                )
+                uow.downloads.save(DownloadJob(**{**blocked.__dict__, "updated_at": _now()}))
             uow.commit()
 
     def apply_defaults_to_pending(self) -> int:
@@ -688,9 +687,7 @@ class DownloadService:
     def _next_pending(self) -> DownloadJob | None:
         with self._uow_factory() as uow:
             pending = [
-                job
-                for job in uow.downloads.list_ordered()
-                if job.status is DownloadStatus.Pending
+                job for job in uow.downloads.list_ordered() if job.status is DownloadStatus.Pending
             ]
         return pending[0] if pending else None
 
@@ -870,9 +867,7 @@ class DownloadService:
         try:
             path.unlink(missing_ok=True)
         except OSError as exc:
-            log.warning(
-                kept_event, job_id=job.id, video_id=job.video_id, error=type(exc).__name__
-            )
+            log.warning(kept_event, job_id=job.id, video_id=job.video_id, error=type(exc).__name__)
 
     def _finish(self, job_id: str, status: DownloadStatus, error: str | None = None) -> None:
         with self._uow_factory() as uow:

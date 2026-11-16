@@ -1,0 +1,16 @@
+{
+  ".agent/context/grouping/2026-11-15-post-rc3-triage-residuals-session-grouping.md": "lf",
+  ".agent/context/known-issues.md": "lf",
+  ".agent/context/known-issues.yaml": "lf",
+  ".agent/context/meu-registry.md": "lf",
+  ".agent/context/meu-status.yaml": "lf",
+  "docs/BUILD_PLAN.md": "lf",
+  "docs/build-plan/03-service-layer.md": "crlf",
+  "packages/core/src/avkit_core/domain/download.py": "crlf",
+  "packages/core/src/avkit_core/services/download.py": "crlf",
+  "packages/core/src/avkit_core/services/health.py": "crlf",
+  "packages/core/src/avkit_core/services/transcript.py": "lf",
+  "packages/infrastructure/src/avkit_infra/youtube/adapter.py": "crlf",
+  "tests/unit/test_console_home_short_form.py": "absent-new-lf",
+  "tests/unit/test_transcript_title_cleaning.py": "absent-new-lf"
+}

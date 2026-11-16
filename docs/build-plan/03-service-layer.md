@@ -754,6 +754,13 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Fallback | A value that cleans to nothing takes the fallback MEU-122 already uses for that field. | Local Canon: [§Transcript source metadata](#transcript-source-metadata-residual) |
 | Tests | Unit: a lone surrogate and a control character in the `info.title` fallback and in a port-supplied title; the job is created and the stored values are clean. | Local Canon |
 
+> **Delivered (Session 77).**
+> - D-360's cleaner moved unchanged to the domain as `clean_text` (`domain/download.py:321`), beside `_require_text_clean`; the YouTube adapter imports it and its own copy is gone (`youtube/adapter.py:28`, `:224`, `:718`, `:722`; `TEXT_CLEAN_SHARED`, D-922).
+> - `add_channel` names the job `listing.channel_name or clean_text(info.title) or channel_id`, where `channel_id` is the extract's playlist or video ID; the folder keeps the extract title's slug (`services/transcript.py:173`; `CHANNEL_FALLBACK_CLEAN`, D-923).
+> - A fetch stores `current.title or clean_text(result.title) or result.video_id` (`services/transcript.py:639`; `RESULT_TITLE_CLEAN`).
+> - The transcript domain types gain no refusal guard: the service cleans at its two entry points, so the values it builds pass `_require_text_clean` (`CLEAN_AT_ENTRY`, D-924).
+> - AC-147.1 to AC-147.6. Plan `docs/execution/plans/2026-11-15-text-scrub-residuals/`.
+
 <a id="console-home-short-form-residual"></a>
 
 ## Console home short form (residual)
@@ -766,6 +773,13 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Row | The change is a plan row of its own with a Red. | Human-approved: D-337 |
 | Reach | `scrub_line` in `services/download.py:129` calls `scrub_home` and gains the short form with it. | Local Canon |
 | Tests | Unit with the short-form lookup faked: a short-form path in a Console field becomes `~`; a failed lookup keeps today's behaviour; the long form still scrubs (AC-119.10). | Local Canon |
+
+> **Delivered (Session 77).**
+> - `SHORT_FORM_LOOKUP` (`services/health.py:68`) is true on Windows only and is read at call time (D-337, D-926).
+> - `_short_path_api` (`:118`) loads `GetShortPathNameW` through `ctypes` on Windows and returns None elsewhere or when it cannot load. `short_path_name` (`:137`) makes a size query, fills a buffer of that size and returns the short form only when it fits; any failure gives `""` (`SHORT_PATH_API`, `SHORT_PATH_NAME`, D-927).
+> - `home_forms` (`:161`) returns the long form, then the short form when it is non-empty and differs in casefold; the lookup runs at most once per home value per process, cached in `_SHORT_FORMS` (`:114`) under a lock (`SHORT_FORM_CACHE`, D-926).
+> - `scrub_home` (`:183`) and the split-aware `_scrub_split_home` (`services/download.py:107`), which `scrub_line` (`:135`) runs, match each form in turn, the long form first (`SHORT_FORM_SCRUB`, `SHORT_FORM_SPLIT`, D-925).
+> - AC-148.1 to AC-148.9; the empty-lookup mutant fails AC-148.8. Plan `docs/execution/plans/2026-11-15-text-scrub-residuals/`.
 
 <a id="tts-output-names-progress-residual"></a>
 

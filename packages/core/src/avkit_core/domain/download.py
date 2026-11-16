@@ -315,6 +315,26 @@ class PlaylistInfo:
             raise ValidationError("video_ids must be a list of non-empty str")
 
 
+_UNCLEAN_CATEGORIES = frozenset({"Cc", "Cs"})
+
+
+def clean_text(value: object) -> str | None:
+    """`TEXT_CLEAN`: drop non-whitespace controls and lone surrogates, then collapse whitespace.
+
+    A lone surrogate cannot be stored or written as UTF-8 (D-360), so it is dropped like a control.
+    The YouTube adapter and the transcript service share this one cleaner
+    (`TEXT_CLEAN_SHARED`, D-922).
+    """
+    if not isinstance(value, str):
+        return None
+    kept = "".join(
+        char
+        for char in value
+        if char.isspace() or unicodedata.category(char) not in _UNCLEAN_CATEGORIES
+    )
+    return " ".join(kept.split()) or None
+
+
 def _require_text_clean(value: object, field: str) -> None:
     """`TEXT_CLEAN`: None, or non-empty single-spaced text with no controls or lone surrogates.
 

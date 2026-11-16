@@ -3840,16 +3840,16 @@ meus:
     anchor: transcript-title-cleaning-residual
     text: Phase 3 §Transcript title cleaning (residual)
   description: The info.title channel fallback and a caption port's title get D-360's cleaning and guard.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-122
   dependency_parse_status: parsed
   depends_on:
   - MEU-122
-  execution_plan: null
+  execution_plan: docs/execution/plans/2026-11-15-text-scrub-residuals/
   updated: '2026-11-15'
   closed_reason: null
   note: Registered 2026-11-15 from TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS (triage D-804; grouping D-814, D-815), Session 77.
@@ -3864,16 +3864,16 @@ meus:
     anchor: console-home-short-form-residual
     text: Phase 3 §Console home short form (residual)
   description: The Console's home scrub also matches the home folder's 8.3 short form on Windows (D-337).
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-119
   dependency_parse_status: parsed
   depends_on:
   - MEU-119
-  execution_plan: null
+  execution_plan: docs/execution/plans/2026-11-15-text-scrub-residuals/
   updated: '2026-11-15'
   closed_reason: null
   note: Registered 2026-11-15 from CONSOLE-HOME-SCRUB-SHORT-FORM (triage D-805; grouping D-814, D-815), Session 77.

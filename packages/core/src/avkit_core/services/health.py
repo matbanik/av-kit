@@ -64,6 +64,8 @@ CONSOLE_FIELDS: tuple[str, ...] = (
 FIELD_LIMIT = 300
 #: Whether the home folder matches in any case; Windows paths ignore case (D-335).
 HOME_IGNORES_CASE = sys.platform == "win32"
+#: Whether the home folder's 8.3 short form is looked up and matched too; Windows only (D-337).
+SHORT_FORM_LOOKUP = sys.platform == "win32"
 #: Lines at these levels always go to console.log, whatever app.log_to_file holds (D-247).
 PERSIST_LEVELS: tuple[str, ...] = ("ERROR", "CRITICAL")
 #: An event with this key true also always goes to console.log. The key is never shown.
@@ -107,20 +109,95 @@ def home_folder() -> str:
         return ""
 
 
+#: Each home folder's short form, "" when it has none or the lookup failed, keyed by the long
+#: form, so the lookup runs at most once per home value per process (`SHORT_FORM_CACHE`).
+_SHORT_FORMS: dict[str, str] = {}
+_SHORT_FORMS_LOCK = threading.Lock()
+
+
+def _short_path_api() -> Callable[..., int] | None:
+    """The native `GetShortPathNameW` callable, or None off Windows or when it cannot load.
+
+    It does no lookup itself; it is the seam beneath `short_path_name` (`SHORT_PATH_API`, D-927).
+    """
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        try:
+            api = ctypes.WinDLL("kernel32", use_last_error=True).GetShortPathNameW
+        except (OSError, AttributeError):
+            return None
+        api.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+        api.restype = wintypes.DWORD
+        return api
+    return None
+
+
+def short_path_name(path: str) -> str:
+    """`path`'s 8.3 short form from Windows, or "" when it has none or the lookup fails.
+
+    A size query, a buffer of that size, then a fill that must fit (`SHORT_PATH_NAME`, D-337,
+    D-927). The path must exist; a missing one gives "".
+    """
+    api = _short_path_api()
+    if api is None:
+        return ""
+    import ctypes
+
+    try:
+        size = api(path, None, 0)
+        if not size:
+            return ""
+        buffer = ctypes.create_unicode_buffer(size)
+        written = api(path, buffer, size)
+    except (OSError, ValueError):
+        return ""
+    if not 0 < written < size:
+        return ""
+    return buffer.value
+
+
+def home_forms() -> tuple[str, ...]:
+    """The home folder without trailing separators, then its short form when it has one.
+
+    The short form is kept when it is non-empty and differs from the long form in casefold. It
+    is looked up only when `SHORT_FORM_LOOKUP` is true, at most once per home value per
+    process, and the result, "" included, is kept in `_SHORT_FORMS` (`SHORT_FORM_CACHE`,
+    D-337, D-926). An empty home gives ().
+    """
+    home = home_folder().rstrip("\\/")
+    if not home:
+        return ()
+    if not SHORT_FORM_LOOKUP:
+        return (home,)
+    with _SHORT_FORMS_LOCK:
+        if home not in _SHORT_FORMS:
+            _SHORT_FORMS[home] = short_path_name(home)
+        short = _SHORT_FORMS[home]
+    if short and short.casefold() != home.casefold():
+        return (home, short)
+    return (home,)
+
+
 def scrub_home(text: str) -> str:
     """`text` with the home folder as "~" where it starts a path (`HOME_SCRUB`, D-335).
 
-    Its parts match joined by `\\`, `/` or a doubled `\\\\` (an `OSError` quotes its path that
-    way). A match follows no word character, separator, `.`, `~` or `-`, and is followed by
-    a separator, a quote or the end, so a longer user name or a nested path is kept. A home
-    folder with no separator, such as a bare drive, changes nothing.
+    Each form of `home_forms()` is matched in turn, the long form first, then on Windows its
+    8.3 short form (`SHORT_FORM_SCRUB`, D-337). Its parts match joined by `\\`, `/` or a
+    doubled `\\\\` (an `OSError` quotes its path that way). A match follows no word character,
+    separator, `.`, `~` or `-`, and is followed by a separator, a quote or the end, so a longer
+    user name or a nested path is kept. A form with no separator, such as a bare drive,
+    changes nothing.
     """
-    home = home_folder().rstrip("\\/")
-    if not _SEPARATORS.search(home):
-        return text
-    parts = [re.escape(part) for part in _SEPARATORS.split(home)]
-    pattern = r"(?<![\w\\/.~-])" + r"(?:\\\\|\\|/)".join(parts) + r"(?=[\\/'\"]|$)"
-    return re.sub(pattern, "~", text, flags=re.IGNORECASE if HOME_IGNORES_CASE else 0)
+    flags = re.IGNORECASE if HOME_IGNORES_CASE else 0
+    for home in home_forms():
+        if not _SEPARATORS.search(home):
+            continue
+        parts = [re.escape(part) for part in _SEPARATORS.split(home)]
+        pattern = r"(?<![\w\\/.~-])" + r"(?:\\\\|\\|/)".join(parts) + r"(?=[\\/'\"]|$)"
+        text = re.sub(pattern, "~", text, flags=flags)
+    return text
 
 
 def console_field(value: object) -> str:

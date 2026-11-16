@@ -5,7 +5,6 @@ from __future__ import annotations
 import math
 import re
 import time
-import unicodedata
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -26,6 +25,7 @@ from avkit_core.domain.download import (
     SABRStatus,
     VideoInfo,
     VideoListing,
+    clean_text,
 )
 from avkit_core.domain.enums import (
     AudioFormat,
@@ -73,9 +73,7 @@ AUDIO_FORMAT_SELECTORS: dict[AudioFormat, str] = {
     AudioFormat.StandardMp3: "bestaudio/best[height<=480]/best",
     AudioFormat.HighM4a: "bestaudio[ext=m4a]/bestaudio/best[height<=720]/best",
 }
-COOKIE_AUDIO_SELECTOR = (
-    "bestaudio[protocol=m3u8_native]/bestaudio[protocol=m3u8]/bestaudio/worst"
-)
+COOKIE_AUDIO_SELECTOR = "bestaudio[protocol=m3u8_native]/bestaudio[protocol=m3u8]/bestaudio/worst"
 COOKIE_EXTRACTOR_ARGS: dict[str, dict[str, object]] = {
     "youtube": {
         "player_client": ["tv", "web_safari", "web"],
@@ -187,24 +185,6 @@ def _unique_preserve_ids(entries: object) -> list[str]:
     return ids
 
 
-_UNCLEAN_CATEGORIES = frozenset({"Cc", "Cs"})
-
-
-def _clean_text(value: object) -> str | None:
-    """`TEXT_CLEAN`: drop non-whitespace controls and lone surrogates, then collapse whitespace.
-
-    A lone surrogate cannot be stored or written as UTF-8 (D-360), so it is dropped like a control.
-    """
-    if not isinstance(value, str):
-        return None
-    kept = "".join(
-        char
-        for char in value
-        if char.isspace() or unicodedata.category(char) not in _UNCLEAN_CATEGORIES
-    )
-    return " ".join(kept.split()) or None
-
-
 def _flat_entries(entries: object) -> list[object]:
     """`FLAT_TABS` (D-358): each channel tab's entries in place of the tab, one level deep."""
     if not isinstance(entries, list):
@@ -241,7 +221,7 @@ def _listed_videos(entries: object) -> tuple[ListedVideo, ...]:
         if not isinstance(raw, str) or raw == "" or raw in seen:
             continue
         seen.add(raw)
-        videos.append(ListedVideo(raw, _clean_text(entry.get("title"))))
+        videos.append(ListedVideo(raw, clean_text(entry.get("title"))))
     return tuple(videos)
 
 
@@ -540,10 +520,7 @@ class YouTubeAdapter:
         total_ok, total = _finite_int(total_raw, missing=None)
         if not total_ok:
             return
-        if (
-            self._last_progress is not None
-            and now - self._last_progress < PROGRESS_MIN_INTERVAL_S
-        ):
+        if self._last_progress is not None and now - self._last_progress < PROGRESS_MIN_INTERVAL_S:
             return
         self._last_progress = now
         if self._on_progress is None:
@@ -738,11 +715,11 @@ class YouTubeAdapter:
         if self._playlist_end > 0:
             opts["playlistend"] = self._playlist_end
         info, _logger = self._run_extract(channel_url, opts, download=False)
-        channel = _clean_text(info.get("channel")) or _clean_text(info.get("uploader"))
+        channel = clean_text(info.get("channel")) or clean_text(info.get("uploader"))
         if _is_playlist(info, True):
             return VideoListing(_listed_videos(info.get("entries")), channel)
         video = _video_from_info(info)
-        listed = ListedVideo(video.video_id, _clean_text(info.get("title")))
+        listed = ListedVideo(video.video_id, clean_text(info.get("title")))
         return VideoListing((listed,), channel)
 
     def download(self, url: str, options: DownloadOptions) -> DownloadResult:

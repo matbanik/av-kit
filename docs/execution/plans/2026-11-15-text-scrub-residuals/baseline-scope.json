@@ -1,0 +1,16 @@
+{
+  "packages/core/src/avkit_core/domain/download.py": "dfeda372be539fddb41313778a295d4b75d845b3421ba682bf5da3b58f247351",
+  "packages/infrastructure/src/avkit_infra/youtube/adapter.py": "d00954476d68ef5b800f0925fa153f6237abd28745b9d6d440f131e185bc77d5",
+  "packages/core/src/avkit_core/services/transcript.py": "9577d770b0505a2e9e16be7d3a24e8f58acdf9e299e49ecb64c1ad74aac3a922",
+  "packages/core/src/avkit_core/services/health.py": "f70654b7689d94ac5ffaa6166b6695275a5f3eace86d59061818eb8bd588f5c1",
+  "packages/core/src/avkit_core/services/download.py": "137e350ea0bd6a64a0dc34244a9f5304e484e3ac307b4621d32f86dea58aa45d",
+  "tests/unit/test_transcript_title_cleaning.py": "absent",
+  "tests/unit/test_console_home_short_form.py": "absent",
+  "docs/build-plan/03-service-layer.md": "75011454ae176572e0a44ad92e18a1ecb9f86f8138b8fa1e50a94e68b71ec282",
+  ".agent/context/known-issues.yaml": "5f1afd78bd0a1d51523cdfcc33af97d28bb197fdc9388f9ef51f0f41578117f9",
+  ".agent/context/known-issues.md": "4141d35160cc674aa8a3af2fed40fa06731357b6dcf524348624bd4d8cecd488",
+  ".agent/context/meu-status.yaml": "9d516592a30277667cfe9f3ffd4b8057cf03306bed0a5696c8aef2730ed41d50",
+  ".agent/context/meu-registry.md": "5d3b93211cdee4bbcede63937fbd519e05d3b41c81fd1b805923dc79a0d0a274",
+  "docs/BUILD_PLAN.md": "e089eae6e8833f96cdbae8d5d7e8768f936a9221edeacb659e18ad8ab03ca256",
+  ".agent/context/grouping/2026-11-15-post-rc3-triage-residuals-session-grouping.md": "b09f6fc5e74524fe8cbf2c85637a1ad4392b34c6694262de0b40ba609e2a37ba"
+}

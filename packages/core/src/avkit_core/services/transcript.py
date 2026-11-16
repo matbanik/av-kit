@@ -16,7 +16,7 @@ from uuid import uuid4
 
 import structlog
 
-from avkit_core.domain.download import ListedVideo, PlaylistInfo, VideoInfo
+from avkit_core.domain.download import ListedVideo, PlaylistInfo, VideoInfo, clean_text
 from avkit_core.domain.enums import QueueProcessorState, TranscriptItemStatus, TranscriptStatus
 from avkit_core.domain.errors import (
     ConflictError,
@@ -168,9 +168,9 @@ class TranscriptService:
             channel_id = info.video_id
         else:
             raise ValidationError("extract_info returned an unknown type")
-        _ = channel_id
-        # The folder keeps the extract title's slug (SLUG_SOURCE); the name is the channel's.
-        name = listing.channel_name or info.title
+        # The folder keeps the extract title's slug (SLUG_SOURCE); the name is the channel's,
+        # else the extract title cleaned, else the extract's ID (CHANNEL_FALLBACK_CLEAN, D-923).
+        name = listing.channel_name or clean_text(info.title) or channel_id
         root = Path(str(self._settings.get("transcript", "output_dir"))).expanduser()
         output_dir = root / slugify(folder)
         self._filesystem.ensure_channel_dirs(output_dir)
@@ -634,8 +634,9 @@ class TranscriptService:
         if job is None:
             return False
         path = job.output_dir / "raw" / f"{result.video_id}.md"
-        # The listed title wins; the result's title, the ID, is the fallback (TITLE_KEPT).
-        title = current.title or result.title
+        # The listed title wins (TITLE_KEPT); else the result's title cleaned, else the ID
+        # (RESULT_TITLE_CLEAN).
+        title = current.title or clean_text(result.title) or result.video_id
         self._filesystem.write_text_atomic(path, _raw_markdown(job, result, title))
         if self._stop or self._pause:
             return False

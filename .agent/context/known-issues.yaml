@@ -4385,12 +4385,15 @@ issues:
     title: The Console's home-folder scrub misses the 8.3 short form of the home folder
     severity: low
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-07'
     root_cause: scrub_home (packages/core/src/avkit_core/services/health.py:104-117), which console_field runs before its other rules (HOME_SCRUB, D-335, MEU-119), matches the home folder only as Path.home() spells it. Windows can also name the same folder by its 8.3 short form, which keeps the first letters of a long user name, so a path that arrives in that form, such as a tts.models_directory saved that way, reaches the Console and console.log with that part of the user name.
     blast_radius: Found by Session 52's own review of D-335, recorded at 03-service-layer.md's HOME_SCRUB note and briefed as D-337 (docs/execution/plans/2026-11-06-tts-load-fp16/closeout-decisions.md). Not reproduced on a real install. The long form is scrubbed (AC-119.10); exposure needs a path in short form and a user name long enough to have one. Mat ruled on 2026-11-07 that scrub_home also matches the short form (GetShortPathNameW, cached, Windows only), in a row of its own with a Red, in a later plan.
     verification:
-      last_checked: '2026-11-07'
+      last_checked: '2026-11-15'
+      method: 'Session 77 task row 4 receipts C:/Temp/av-kit/text-scrub-residuals/tsr-148-green.txt, tsr-148-ac119.txt, tsr-148-callers.txt and tsr-148-mutant.txt (plan 2026-11-15-text-scrub-residuals, MEU-148), after the row 3 Red receipt that tsr-148-red-check.txt accepted: the real native lookup, the cached short form with synthetic fixtures, the failed lookup, the split-aware scrub, the real short_path_name over fake native callables, and the empty-lookup mutant'
+      result: '18 passed (tests/unit/test_console_home_short_form.py, no skip), 10 passed, 108 deselected (test_services.py -k ac_119_10) and 84 passed (the scrub callers); the empty-lookup mutant gives 2 failed, which tsr-148-mutant-check.txt accepted. AC-148.1 to AC-148.9 hold: on Windows the home folder''s 8.3 short form becomes ~ in a Console field, read once and cached, and a failed lookup keeps the long-form-only result'
+    resolution_path: 'Fixed in Session 77 on 2026-11-15 (plan docs/execution/plans/2026-11-15-text-scrub-residuals/, MEU-148): SHORT_FORM_LOOKUP, SHORT_PATH_API, SHORT_PATH_NAME, SHORT_FORM_CACHE, SHORT_FORM_SCRUB and SHORT_FORM_SPLIT. scrub_home and the split-aware scrub match the long form, then on Windows its short form from GetShortPathNameW.'
     category: TECH-DEBT
     priority: P3
     related:
@@ -4519,13 +4522,15 @@ issues:
     title: Two older title paths into transcript storage skip the lone-surrogate cleaning
     severity: low
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-07'
     root_cause: 'D-360 cleans and guards the listed titles and channel name (VideoListing, packages/core/src/avkit_core/domain/download.py:278,295). Two older paths skip it: the channel name falls back to info.title (packages/core/src/avkit_core/services/transcript.py:169), and TranscriptJob.channel_name has no such guard; and a TranscriptResult.title supplied by the caption port is stored as given. The real caption adapter falls back to the video id when no title is given (packages/infrastructure/src/avkit_infra/transcript/adapter.py:63-66).'
     blast_radius: Read from the code, noted by Session 53's execution review round 2 (.agent/context/handoffs/2026-11-07-transcript-metadata-implementation-critical-review.md:168). A lone surrogate in an extract title, on a channel whose flat listing has no channel name, would fail job creation as Session 53's F1 did. The path predates MEU-122, which made it rarer, since the listed channel name now comes first. Not reproduced.
-    resolution_path: 'Debt queue, before Session 57 if wanted: reuse D-360''s cleaner at both points, with one real-storage regression (Session 53 RULE-1).'
+    resolution_path: 'Fixed in Session 77 on 2026-11-15 (plan docs/execution/plans/2026-11-15-text-scrub-residuals/, MEU-147): TEXT_CLEAN_SHARED, CHANNEL_FALLBACK_CLEAN, RESULT_TITLE_CLEAN and CLEAN_AT_ENTRY. D-360''s cleaner is now domain clean_text, shared by the YouTube adapter and both transcript fallbacks.'
     verification:
-      last_checked: '2026-11-07'
+      last_checked: '2026-11-15'
+      method: 'Session 77 task row 2 receipts C:/Temp/av-kit/text-scrub-residuals/tsr-147-green.txt and tsr-147-adapter.txt (plan 2026-11-15-text-scrub-residuals, MEU-147), after the row 1 Red receipt that tsr-147-red-check.txt accepted: the shared cleaner, the channel-name fallback for a playlist and a video, the result-title fallback, real SQLite storage, and the MEU-122 tests unchanged'
+      result: '35 passed (tests/unit/test_transcript_title_cleaning.py and tests/unit/test_transcript_metadata.py) and 6 passed, 31 deselected (tests/integration/test_youtube_adapter.py -k ac_122). AC-147.1 to AC-147.6 hold: a lone surrogate or a control character in the extract title or a port title is dropped, the job is created, and a value that cleans to nothing takes the ID'
     category: TECH-DEBT
     priority: P3
     related: []
