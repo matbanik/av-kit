@@ -3787,10 +3787,10 @@ meus:
     anchor: scan-skips-unreadable-files
     text: Phase 9 §Scan skips unreadable files
   description: One inbox file the scan can't read no longer fails the capture list, and the skip is logged without its path.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-36, MEU-84, MEU-130
   dependency_parse_status: parsed
@@ -3798,7 +3798,7 @@ meus:
   - MEU-36
   - MEU-84
   - MEU-130
-  execution_plan: null
+  execution_plan: docs/execution/plans/2026-11-15-capture-inbox-probe/
   updated: '2026-11-15'
   closed_reason: null
   note: Registered 2026-11-15 from CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST (triage D-802; grouping D-814, D-815), Session 75.
@@ -3813,10 +3813,10 @@ meus:
     anchor: exif-orientation-on-scan
     text: Phase 9 §EXIF orientation on scan
   description: A scanned or registered photo with an EXIF orientation tag is sized, marked, baked and region-viewed in the frame the GUI shows.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-35, MEU-36, MEU-128, MEU-129
   dependency_parse_status: parsed
@@ -3825,7 +3825,7 @@ meus:
   - MEU-36
   - MEU-128
   - MEU-129
-  execution_plan: null
+  execution_plan: docs/execution/plans/2026-11-15-capture-inbox-probe/
   updated: '2026-11-15'
   closed_reason: null
   note: Registered 2026-11-15 from CAPTURE-EXIF-SCANNED-ORIENTATION (triage D-803; grouping D-814, D-815), Session 75.

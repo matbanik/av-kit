@@ -253,7 +253,7 @@ On Mat's word, run `/create-plan` once per session, in the §5 order. Nothing is
 
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
-| 75 | `capture-inbox-probe` | MEU-145, MEU-146 | P2 | proposed | — |
+| 75 | `capture-inbox-probe` | MEU-145, MEU-146 | P2 | executed (Session 75) | `docs/execution/plans/2026-11-15-capture-inbox-probe/` |
 | 76 | `tooling-test-hermeticity` | — | P2 | proposed | — |
 | 77 | `text-scrub-residuals` | MEU-147, MEU-148 | P3 | proposed | — |
 | 78 | `e2e-harness-hardening` | — | P3 | proposed | — |

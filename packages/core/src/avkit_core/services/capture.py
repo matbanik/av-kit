@@ -92,6 +92,9 @@ UoWFactory = Callable[[], UnitOfWork]
 _T = TypeVar("_T")
 Clock = Callable[[], datetime]
 log = structlog.get_logger(module="capture")
+# SKIP_LOG (MEU-145, D-902) and STALE_BAKE (MEU-146, D-909): count-only log events.
+SCAN_SKIPPED_EVENT = "capture.scan_skipped"
+STALE_BAKE_FAILED_EVENT = "capture.stale_bake_failed"
 
 SCAN_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp")
 # IMPORT_ACCEPT (MEU-129, D-425, Human-approved): the largest file mode=import reads.
@@ -326,6 +329,53 @@ def _annotated_siblings(original: Path) -> list[Path]:
 
 def _sidecar_for(original: Path) -> Path:
     return original.with_name(f"{original.stem}{SIDECAR_SUFFIX}")
+
+
+def _write_sidecar(path: Path, marks: Sequence[Annotation], orientation: int) -> None:
+    """BAKE_MARKER (D-909): the sidecar, with `baked_orientation` only when it is not 1."""
+    document: dict[str, object] = {
+        "version": SIDECAR_VERSION,
+        "annotations": [_annotation_to_wire(item) for item in marks],
+    }
+    if orientation != 1:
+        document["baked_orientation"] = orientation
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+
+def _rebake_names(live: Path) -> tuple[Path, Path]:
+    """STAGED_REBAKE (D-910): the `.rebake-new` and `.rebake-prior` names beside `live`."""
+    return (
+        live.with_name(f".{live.name}.rebake-new"),
+        live.with_name(f".{live.name}.rebake-prior"),
+    )
+
+
+def _discard_rebake(path: Path) -> bool:
+    """STAGED_REBAKE (D-910): unlink a `.rebake-` file if present; False on a failure."""
+    try:
+        os.unlink(path)
+    except FileNotFoundError:
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _annotated_format_of(copy: Path) -> AnnotatedFormat | None:
+    """STAGED_REBAKE (D-910): the copy's format from its `.annotated<ext>` name, or None."""
+    name = copy.name.lower()
+    for output_format in ANNOTATED_FORMATS:
+        if name.endswith(f".annotated{ANNOTATED_EXT[output_format]}"):
+            return output_format
+    return None
+
+
+@dataclass(frozen=True)
+class RecoverResult:
+    """STAGED_REBAKE (D-910) recovery: were the live files put back, and did any I/O fail."""
+
+    restored_all: bool
+    io_failed: bool
 
 
 def parse_sidecar_document(payload: object) -> list[object]:
@@ -593,10 +643,15 @@ class CaptureService:
         self._clock = clock if clock is not None else (lambda: datetime.now(UTC))
         self._frames = frames
         self._monotonic = monotonic if monotonic is not None else time.monotonic
+        # SKIP_LOG (D-902): the resolved paths the last scan skipped, in memory only.
+        self._scan_skipped: frozenset[str] = frozenset()
+        # STALE_BAKE (D-909): the shots whose restage or recovery failed last scan.
+        self._stale_bake_failed: frozenset[str] = frozenset()
 
     def scan_inbox(self) -> list[CaptureShot]:
         """Upsert inbox images, drop rows whose original vanished, and clear stale derived paths."""
         inbox = self._inbox()
+        skipped: set[str] = set()
         with CAPTURE_FILE_LOCK, self._uow_factory() as uow:
             if inbox.is_dir():
                 for child in inbox.iterdir():
@@ -606,8 +661,15 @@ class CaptureService:
                         continue
                     if child.name.lower().endswith(ANNOTATED_SUFFIXES):
                         continue
-                    resolved = child.resolve()
-                    probe = self._annotate.probe(resolved)
+                    # SCAN_SKIP, KEEP_ROW (D-900, D-901): a file that cannot be resolved
+                    # or read is skipped; its row, if any, is left exactly as it was.
+                    resolved = child
+                    try:
+                        resolved = child.resolve()
+                        probe = self._annotate.probe(resolved)
+                    except (InboxPathError, OSError):
+                        skipped.add(str(resolved))
+                        continue
                     now = self._now()
                     existing = uow.capture_shots.get_by_path(resolved)
                     if existing is None:
@@ -626,7 +688,11 @@ class CaptureService:
                                 updated_at=now,
                             )
                         )
-                    elif existing.file_size != probe.file_size:
+                    elif existing.file_size != probe.file_size or (
+                        existing.width,
+                        existing.height,
+                    ) != (probe.width, probe.height):
+                        # DIMS_REFRESH (D-906): a size that changed is refreshed too.
                         uow.capture_shots.save(
                             replace(
                                 existing,
@@ -636,9 +702,17 @@ class CaptureService:
                                 updated_at=now,
                             )
                         )
+            failed: set[str] = set()
             for shot in list(uow.capture_shots.list()):
                 if not shot.original_path.is_file():
                     uow.capture_shots.delete(shot.id)
+                    continue
+                # STAGED_REBAKE (D-910): repair a stopped or failed restage first; a shot
+                # whose files are not all back keeps its links and is not rebaked.
+                recovered = self._recover_restage(shot)
+                if recovered.io_failed:
+                    failed.add(str(shot.original_path))
+                if not recovered.restored_all:
                     continue
                 # RECONCILE (MEU-84, D-15): clear each derived path whose file is gone, per
                 # field, and save only when one changed.
@@ -657,7 +731,133 @@ class CaptureService:
                             updated_at=self._now(),
                         )
                     )
+                elif (
+                    annotated is not None
+                    and sidecar is not None
+                    and str(shot.original_path) not in skipped
+                ):
+                    # STALE_BAKE (D-909): a copy baked in another frame is rebaked.
+                    try:
+                        self._stale_rebake(uow, shot, annotated, sidecar)
+                    except Exception:
+                        failed.add(str(shot.original_path))
+            self._log_scan_skipped(frozenset(skipped))
+            self._log_stale_bake_failed(frozenset(failed))
             return list(uow.capture_shots.list())
+
+    def _log_scan_skipped(self, skipped: frozenset[str]) -> None:
+        """SKIP_LOG (D-902): one count-only warning when the skipped set is new."""
+        if skipped and skipped != self._scan_skipped:
+            log.warning(SCAN_SKIPPED_EVENT, count=len(skipped))
+        self._scan_skipped = skipped
+
+    def _log_stale_bake_failed(self, failed: frozenset[str]) -> None:
+        """STALE_BAKE (D-909): one count-only warning when the failure set is new."""
+        if failed and failed != self._stale_bake_failed:
+            log.warning(STALE_BAKE_FAILED_EVENT, count=len(failed))
+        self._stale_bake_failed = failed
+
+    @staticmethod
+    def _recover_restage(shot: CaptureShot) -> RecoverResult:
+        """STAGED_REBAKE (D-910) recovery: repair what a stopped or failed restage left.
+
+        A missing live file gets its `.rebake-prior` back; a leftover `.rebake-new`, and a
+        prior beside a live file, are discarded. Catches every `OSError`; never raises.
+        """
+        restored_all = True
+        io_failed = False
+        for live in (shot.annotated_path, shot.sidecar_path):
+            if live is None:
+                continue
+            new, prior = _rebake_names(live)
+            try:
+                if not live.is_file() and prior.is_file():
+                    try:
+                        os.replace(prior, live)
+                    except OSError:
+                        restored_all = False
+                        io_failed = True
+                        continue
+                if new.exists() and not _discard_rebake(new):
+                    io_failed = True
+                if prior.exists() and live.is_file() and not _discard_rebake(prior):
+                    io_failed = True
+            except OSError:
+                restored_all = False
+                io_failed = True
+        return RecoverResult(restored_all=restored_all, io_failed=io_failed)
+
+    def _stale_rebake(
+        self, uow: UnitOfWork, shot: CaptureShot, annotated: Path, sidecar: Path
+    ) -> None:
+        """STALE_BAKE (D-909): rebake a copy whose sidecar key is not the shown orientation.
+
+        A malformed sidecar is left alone. A failure raises from `_restage_annotated`, with
+        the copy, the sidecar and the row as they were.
+        """
+        try:
+            payload = json.loads(sidecar.read_text(encoding="utf-8"))
+            if not isinstance(payload, dict):
+                return
+            baked = payload.get("baked_orientation", 1)
+            marks = annotations_from_sidecar(payload)
+        except (OSError, ValueError, AnnotationValidationError, ValidationError):
+            return
+        if not isinstance(baked, int) or isinstance(baked, bool):
+            return
+        shown = self._annotate.shown_tag(shot.original_path)
+        if baked == shown:
+            return
+        clamped = [self._clamp_annotation(item, shot.width, shot.height) for item in marks]
+        self._restage_annotated(shot.original_path, annotated, sidecar, clamped, payload, shown)
+        uow.capture_shots.save(replace(shot, updated_at=self._now()))
+
+    def _restage_annotated(
+        self,
+        original: Path,
+        annotated: Path,
+        sidecar: Path,
+        marks: Sequence[Annotation],
+        payload: dict[str, object],
+        shown: int,
+    ) -> None:
+        """STAGED_REBAKE (D-910): bake beside the copy, then swap both files in by rename.
+
+        Scan only; `_rebake_annotated` is not used, so no sibling is deleted. The format
+        comes from the copy's own name. On a failure the steps that ran are undone in
+        reverse, the `.rebake-new` files are discarded and the first error is raised.
+        """
+        output_format = _annotated_format_of(annotated)
+        if output_format is None:
+            raise ValidationError("the annotated copy has no known format")
+        new_img, prior_img = _rebake_names(annotated)
+        new_side, prior_side = _rebake_names(sidecar)
+        document = {key: value for key, value in payload.items() if key != "baked_orientation"}
+        if shown != 1:
+            document["baked_orientation"] = shown
+        done: list[tuple[Path, Path]] = []
+        try:
+            self._annotate.bake(original, marks, new_img, output_format)
+            new_side.write_text(json.dumps(document), encoding="utf-8")
+            for source, target in (
+                (annotated, prior_img),
+                (new_img, annotated),
+                (sidecar, prior_side),
+                (new_side, sidecar),
+            ):
+                os.replace(source, target)
+                done.append((source, target))
+        except Exception:
+            for source, target in reversed(done):
+                # A failed undo leaves the file under its `.rebake-` name for recovery.
+                with contextlib.suppress(OSError):
+                    os.replace(target, source)
+            _discard_rebake(new_img)
+            _discard_rebake(new_side)
+            raise
+        # A failed discard leaves the prior for the next scan's recovery.
+        _discard_rebake(prior_img)
+        _discard_rebake(prior_side)
 
     def list_shots(self) -> list[CaptureShot]:
         """Expire stale requests, scan the inbox, return newest first."""
@@ -751,7 +951,11 @@ class CaptureService:
             existing = uow.capture_shots.get_by_path(resolved)
             if existing is None:
                 return self._upsert_shot(uow, resolved, probe, now, CaptureSource.Import)
-            if existing.file_size == probe.file_size:
+            # DIMS_REFRESH (D-906): a size that changed is refreshed as well.
+            if existing.file_size == probe.file_size and (existing.width, existing.height) == (
+                probe.width,
+                probe.height,
+            ):
                 return existing
             updated = replace(
                 existing,
@@ -1500,19 +1704,13 @@ class CaptureService:
             clamped = [
                 self._clamp_annotation(item, shot.width, shot.height) for item in annotations
             ]
+            # BAKE_MARKER (D-909): the frame the marks are baked in goes in the sidecar.
+            orientation = self._annotate.shown_tag(shot.original_path)
             self._annotate.bake(shot.original_path, clamped, annotated_path, output_format)
             for sibling in siblings:
                 if sibling != annotated_path:
                     self._unlink_if_file(sibling)
-            sidecar_path.write_text(
-                json.dumps(
-                    {
-                        "version": SIDECAR_VERSION,
-                        "annotations": [_annotation_to_wire(item) for item in clamped],
-                    }
-                ),
-                encoding="utf-8",
-            )
+            _write_sidecar(sidecar_path, clamped, orientation)
             updated = replace(
                 shot,
                 annotated_path=annotated_path,
@@ -1539,8 +1737,15 @@ class CaptureService:
             return self._annotate.render(shot.original_path, clamped)
 
     def read_image(self, shot_id: str, variant: str) -> bytes:
-        """Return original or annotated file bytes."""
-        return self._variant_path(self.get_shot(shot_id), variant).read_bytes()
+        """Return original or annotated file bytes.
+
+        READ_SHOWN (D-905): the original is read through the port, so a tagged JPEG, MPO
+        or PNG comes back upright; a bake is untagged, so the copy is read as stored.
+        """
+        path = self._variant_path(self.get_shot(shot_id), variant)
+        if variant == "original":
+            return self._annotate.read_shown(path)
+        return path.read_bytes()
 
     def read_image_view(
         self,
@@ -2116,7 +2321,9 @@ class CaptureService:
             # later, so the inbox scanner can reach the file first and insert the row
             # as CaptureSource.Scan; returning that row unchanged would leave every
             # captured shot indistinguishable from a file the user dropped in by hand.
-            if existing.file_size == probe.file_size and existing.source == source:
+            # DIMS_REFRESH (D-906): a size that changed is refreshed as well.
+            same_size = (existing.width, existing.height) == (probe.width, probe.height)
+            if existing.file_size == probe.file_size and existing.source == source and same_size:
                 return existing
             updated = replace(
                 existing,

@@ -1,5 +1,5 @@
 import { _electron, expect, test, type Page } from '@playwright/test'
-import { spawn, type ChildProcess } from 'node:child_process'
+import { spawn, spawnSync, type ChildProcess } from 'node:child_process'
 import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -3685,4 +3685,59 @@ test('AC-107.24 Electron: Step places 1 and 2 under Lock, the badge text centres
   expect(marks[0]).toMatchObject({ type: 'step', x: 100, y: 100, number: 1 })
   expect(marks[1]).toMatchObject({ type: 'step', x: 300, y: 100, number: 2 })
   await app.close()
+})
+
+/**
+ * AC-146.19 (MEU-146, D-904, WEBP_PIN): what Chromium in this Electron turns. The fixtures come from
+ * `tests/orientation_fixtures.py`, whose report is checked first, so a fixture that lost its tag fails
+ * here instead of passing. A failure in the sizes means SHOWN_ORIENTATION_FORMATS or the EXIF-block rule
+ * is wrong (the plan's S14).
+ */
+test('AC-146.19 Electron: Chromium turns a tag-6 JPEG, MPO and PNG, and no WebP or Pillow-only tag', async () => {
+  const repoRoot = resolve(here, '../../..')
+  const outDir = mkdtempSync(join(tmpdir(), 'avkit-e2e-orientation-'))
+  const built = spawnSync('uv', ['run', '--no-sync', 'python', '-m', 'tests.orientation_fixtures', outDir], {
+    cwd: repoRoot,
+    encoding: 'utf-8',
+  })
+  expect(built.status, built.stderr).toBe(0)
+  const report = JSON.parse(built.stdout) as Record<
+    string,
+    { getexif_tag: number | null; vp8x_flags?: number | null; exif_chunk?: boolean }
+  >
+  const shown: Record<string, string> = {
+    'o6.jpg': '30x40',
+    'o6.png': '30x40',
+    'o6.mpo.jpg': '30x40',
+    'o6.webp': '40x30',
+    'o6-after-idat.png': '40x30',
+    'o6-prefixed.png': '40x30',
+    'o6-raw-profile.png': '40x30',
+    'o6-xmp.jpg': '40x30',
+  }
+  const names = Object.keys(shown)
+  expect(Object.keys(report).sort()).toEqual([...names].sort())
+  for (const name of names) {
+    expect(report[name]?.getexif_tag, name).toBe(6)
+  }
+  expect(report['o6.webp']?.vp8x_flags).toBe(0x08)
+  expect(report['o6.webp']?.exif_chunk).toBe(true)
+  const app = await launchApp()
+  const sizes: Record<string, string> = {}
+  try {
+    const page = await app.firstWindow()
+    for (const name of names) {
+      const mime = name.endsWith('.png') ? 'image/png' : name.endsWith('.webp') ? 'image/webp' : 'image/jpeg'
+      const url = `data:${mime};base64,${readFileSync(join(outDir, name)).toString('base64')}`
+      sizes[name] = await page.evaluate(async (src) => {
+        const img = new Image()
+        img.src = src
+        await img.decode()
+        return `${img.naturalWidth}x${img.naturalHeight}`
+      }, url)
+    }
+  } finally {
+    await app.close()
+  }
+  expect(sizes).toEqual(shown)
 })

@@ -131,6 +131,14 @@ class FakeCapturePort:
             file_size=output_path.stat().st_size,
         )
 
+    def read_shown(self, path: Path) -> bytes:
+        # READ_SHOWN (Session 75, D-905): the fake shows the stored bytes.
+        return path.read_bytes()
+
+    def shown_tag(self, path: Path) -> int:
+        # SHOWN_TAG (Session 75, D-909): the fake's files carry no orientation.
+        return 1
+
 
 def _stack(tmp_path: Path, clock: object | None = None):
     from tests.unit.test_services import FakeUnitOfWork, SharedFakeFactory

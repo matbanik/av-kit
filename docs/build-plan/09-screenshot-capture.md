@@ -1266,6 +1266,16 @@ Two residual MEUs from the 2026-11-15 triage (grouping `.agent/context/grouping/
 | Retry | A file that failed is tried again on the next scan, so a half-written screenshot lists once it is complete. | Local Canon |
 | Tests | Unit and API: a non-image named `.png` and a PNG with a damaged IDAT in the inbox root; the list answers 200 with every other shot and no path in any message. AC-130.21 no longer needs to restore the source before its follow-up list. | Local Canon |
 
+> **Delivered (Session 75).**
+> - The scan is `CaptureService.scan_inbox` (`services/capture.py:651`; `:597` at the session's start, and the residual's `:466` predates later sessions). It wraps each file's `resolve()` and `probe` in one `try`/`except (InboxPathError, OSError)` (`:664-672`), so a file it can't read is skipped and every readable shot still lists, through the API and MCP (`SCAN_SKIP`, D-900).
+> - A skipped file's row, if any, is left exactly as it was, and the next scan tries the file again (`KEEP_ROW`, D-901).
+> - `probe` (`capture/adapter.py:534`) raises `InboxPathError` with the fixed text `no file at that path` or `the image could not be opened`, whatever Pillow raised; `bake` (`:704`) and `render` (`:725`) give the same fixed text and write nothing. `UnidentifiedImageError` is no longer imported (`PROBE_FIXED`, D-902).
+> - `capture.scan_skipped` (`SCAN_SKIPPED_EVENT`, `services/capture.py:96`) is logged once with only `count`, when the skipped set changes; a clean scan resets it (`:748-752`, `SKIP_LOG`, D-902). No message, log line or body carries a path.
+> - AC-130.21 no longer restores its source before the follow-up list.
+> - AC-145.1 to AC-145.15.
+> - Gate: the H1-2 `session-gate.ps1` record in the Session 75 MEU-145 handoff.
+> - Plan `docs/execution/plans/2026-11-15-capture-inbox-probe/`.
+
 <a id="exif-orientation-on-scan"></a>
 
 ### EXIF orientation on scan
@@ -1277,6 +1287,18 @@ Two residual MEUs from the 2026-11-15 triage (grouping `.agent/context/grouping/
 | One frame | For a scanned or registered file with an orientation tag, the recorded size, the marks, the bake and the region view all use the frame the GUI shows. | Local Canon: D-417 |
 | Route | Whether the scan writes an upright copy, rewrites the file, or keeps it and applies the tag wherever pixels are read is a plan-time Decision Brief, because the inbox holds the user's own files. | Local Canon |
 | Tests | Files tagged 1 to 8: a 400x300 file tagged 5 to 8 records 300x400; a mark drawn in the shown frame bakes in the same place; a region given in the shown frame is honoured. | Local Canon |
+
+> **Delivered (Session 75).**
+> - The tag is applied wherever pixels are read; the inbox file is never rewritten (D-903). `adapter.py:253-263` at `2963efe` is now `probe` at `:461` at the session's start and `:534` after it.
+> - Chromium turns a tagged JPEG and PNG, and never a WebP, so the residual's "JPEG or WebP" is corrected by D-904: `SHOWN_ORIENTATION_FORMATS` is JPEG, MPO and PNG (`capture/adapter.py:84`), and `shown_orientation` (`:444`) reads the tag only from the EXIF block before load, never `getexif()` (`SHOWN_FORMATS`). The Electron suite pins this (AC-146.19).
+> - `_open_shown` (`:479`) opens and turns the pixels by a fixed transpose map (`SHOWN_OPEN`). `view`, `crop`, `bake`, `render` and `export` read pixels only through it, so marks, the bake, the region view, crop and export use the shown frame (`CROP_EXPORT_FRAME`, D-907). `probe` swaps width and height for tags 5 to 8 without a pixel transpose (`PROBE_SWAP`).
+> - A whole view at scale 1 returns the file's own bytes only for tag 1; a tagged JPEG, MPO or PNG is encoded upright with its colour profile (`VIEW_SHOWN`, `ICC_KEEP`, D-905, D-1000). The port gains `shown_tag` and `read_shown` (`ports/capture.py:101`, `:105`); `read_image("original")` answers `read_shown` (`services/capture.py:1747`), so the plain download of a tagged file is upright too (D-905).
+> - A recorded size that changed is refreshed by the scan, `register_shot` and `import_image` (`DIMS_REFRESH`, D-906, `services/capture.py:691-704`).
+> - The sidecar records `baked_orientation` when it is not 1 (`_write_sidecar`, `:334`, `BAKE_MARKER`). A copy baked in another frame is rebaked by the scan through a staged restage that loses nothing on failure, and logs `capture.stale_bake_failed` with only `count` (`STALE_BAKE`, `STAGED_REBAKE`, `:734-743`, `:790`, `:815`, D-909, D-910).
+> - A region in the shown frame is honoured and enlarged by D-409 as any region is (D-1001).
+> - AC-146.1 to AC-146.28.
+> - Gate: the H1-2 `session-gate.ps1` record in the Session 75 MEU-146 handoff.
+> - Plan `docs/execution/plans/2026-11-15-capture-inbox-probe/`.
 
 ## Named deferrals (not this phase)
 

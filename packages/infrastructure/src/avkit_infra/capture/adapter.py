@@ -9,7 +9,7 @@ import sys
 import warnings
 from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import NamedTuple
+from typing import IO, NamedTuple
 
 import numpy as np
 import structlog
@@ -20,7 +20,6 @@ from PIL import (
     ImageFont,
     ImageOps,
     ImageStat,
-    UnidentifiedImageError,
 )
 
 from avkit_core.domain.capture import (
@@ -81,6 +80,8 @@ IMPORT_OPEN_MESSAGE = "not an image av-kit can open (png, jpg, jpeg, webp)"
 IMPORT_PIXEL_MESSAGE = "image is larger than the 89478485-pixel limit"
 EXIF_ORIENTATION_TAG = 0x0112
 _UPRIGHT_MODES = frozenset({"RGB", "RGBA", "L", "LA"})
+# SHOWN_FORMATS (MEU-146, D-904): the formats whose EXIF orientation Chromium applies.
+SHOWN_ORIENTATION_FORMATS = frozenset({"JPEG", "MPO", "PNG"})
 # CROP_PIXELS (MEU-130, D-482): the modes a PNG stores, which a crop keeps; any other mode
 # becomes RGBA or RGB. A CMYK, YCbCr or LAB source converts through its profile to sRGB
 # (D-506 A), because PNG can't hold those colour spaces or their profiles.
@@ -365,20 +366,28 @@ def apply_region_pass(canvas: Image.Image, annotations: Sequence[Annotation]) ->
     return canvas
 
 
-def _encode_view(image: Image.Image, suffix: str) -> bytes:
-    """VIEW_FORMAT: encode a view as the source file's format (PNG keeps the mode)."""
+def _encode_view(image: Image.Image, suffix: str, icc: bytes | None = None) -> bytes:
+    """VIEW_FORMAT: encode a view as the source file's format (PNG keeps the mode).
+
+    ICC_KEEP (D-905): `icc`, when set, is written as the output's colour profile.
+    """
     buffer = io.BytesIO()
+    params: dict[str, object] = {"icc_profile": icc} if icc else {}
     if suffix in (".jpg", ".jpeg"):
-        image.convert("RGB").save(buffer, format="JPEG", quality=LOSSY_QUALITY)
+        image.convert("RGB").save(buffer, format="JPEG", quality=LOSSY_QUALITY, **params)
     elif suffix == ".webp":
         has_alpha = image.mode in ("RGBA", "LA")
         image.convert("RGBA" if has_alpha else "RGB").save(
-            buffer, format="WEBP", quality=LOSSY_QUALITY
+            buffer, format="WEBP", quality=LOSSY_QUALITY, **params
         )
     else:
         if image.mode not in ("RGBA", "RGB", "L", "LA"):
-            image = image.convert("RGBA" if "A" in image.getbands() else "RGB")
-        image.save(buffer, format="PNG")
+            # F1 (D-1002): a palette image's tRNS alpha is kept, as `view` converts it.
+            has_alpha = "A" in image.getbands() or (
+                image.mode == "P" and "transparency" in image.info
+            )
+            image = image.convert("RGBA" if has_alpha else "RGB")
+        image.save(buffer, format="PNG", **params)
     return buffer.getvalue()
 
 
@@ -422,6 +431,74 @@ def _depth_to_l(image: Image.Image) -> Image.Image:
     return Image.fromarray(levels)
 
 
+# SHOWN_OPEN (D-903): the transpose that shows each EXIF orientation upright.
+_SHOWN_TRANSPOSE = {
+    2: Image.Transpose.FLIP_LEFT_RIGHT,
+    3: Image.Transpose.ROTATE_180,
+    4: Image.Transpose.FLIP_TOP_BOTTOM,
+    5: Image.Transpose.TRANSPOSE,
+    6: Image.Transpose.ROTATE_270,
+    7: Image.Transpose.TRANSVERSE,
+    8: Image.Transpose.ROTATE_90,
+}
+_EXIF_PREFIX = b"Exif\x00\x00"
+_TIFF_HEADS = (b"II*\x00", b"MM\x00*")
+
+
+def shown_orientation(image: Image.Image) -> int:
+    """SHOWN_FORMATS (D-904): the orientation the app shows `image` in; never raises.
+
+    Call it right after open, before `load()`. It reads only the EXIF block in
+    `image.info["exif"]`, never `getexif()`, which also reads XMP, a PNG raw-profile
+    text chunk and an `eXIf` chunk after `IDAT`; Chromium reads none of those. One
+    leading `Exif` block prefix is stripped and the rest must be a TIFF header. Only
+    `SHOWN_ORIENTATION_FORMATS` count, and only a value from 2 to 8; anything else is 1.
+    """
+    try:
+        if image.format not in SHOWN_ORIENTATION_FORMATS:
+            return 1
+        block = image.info.get("exif")
+        if not isinstance(block, bytes):
+            return 1
+        body = block[len(_EXIF_PREFIX) :] if block.startswith(_EXIF_PREFIX) else block
+        if not body.startswith(_TIFF_HEADS):
+            return 1
+        exif = Image.Exif()
+        exif.load(body)
+        value = exif.get(EXIF_ORIENTATION_TAG)
+    except Exception:
+        return 1
+    if isinstance(value, int) and not isinstance(value, bool) and 2 <= value <= 8:
+        return value
+    return 1
+
+
+def _turn(image: Image.Image, tag: int) -> Image.Image:
+    """The upright frame for `tag`, carrying no EXIF block (and so no orientation)."""
+    turned = image.transpose(_SHOWN_TRANSPOSE[tag])
+    turned.info.pop("exif", None)
+    return turned
+
+
+def _open_shown(source: Path | IO[bytes]) -> tuple[Image.Image, int]:
+    """SHOWN_OPEN (D-903): open and load `source`, upright; return it and the tag applied.
+
+    The tag is read before `load()` (SHOWN_FORMATS) and applied with the fixed map, not
+    `ImageOps.exif_transpose`, whose reader is `getexif()`. Any failure is the one fixed,
+    path-free refusal (D-421).
+    """
+    try:
+        with Image.open(source) as opened:
+            tag = shown_orientation(opened)
+            opened.load()
+            image = opened.copy()
+        if tag != 1:
+            image = _turn(image, tag)
+    except Exception as exc:
+        raise InboxPathError("the image could not be opened") from exc
+    return image, tag
+
+
 class CaptureAdapter:
     """Windows mss grabber and Pillow annotator."""
 
@@ -459,39 +536,71 @@ class CaptureAdapter:
         path.mkdir(parents=True, exist_ok=True)
 
     def probe(self, path: Path) -> ImageProbe:
-        """Open an image with Pillow and return pixel size plus byte length."""
+        """Open an image with Pillow and return pixel size plus byte length.
+
+        PROBE_FIXED (D-902, D-421): both refusals are fixed and name no path. Pillow
+        raises SyntaxError, ValueError and others for a damaged file, so any open, load
+        or stat failure is the second one.
+        """
         if not path.is_file():
-            raise InboxPathError(f"{path} is not a file")
+            raise InboxPathError("no file at that path")
         try:
             with Image.open(path) as image:
+                tag = shown_orientation(image)
                 image.load()
                 width, height = image.size
-        except (UnidentifiedImageError, OSError) as exc:
-            raise InboxPathError(f"{path} is not an image") from exc
-        return ImageProbe(width=width, height=height, file_size=path.stat().st_size)
+            file_size = path.stat().st_size
+        except Exception as exc:
+            raise InboxPathError("the image could not be opened") from exc
+        if tag >= 5:
+            # PROBE_SWAP (D-903): tags 5 to 8 show the frame on its side; no pixel turn.
+            width, height = height, width
+        return ImageProbe(width=width, height=height, file_size=file_size)
+
+    def shown_tag(self, path: Path) -> int:
+        """SHOWN_TAG (D-909): the orientation the app shows `path` in; 1 on any failure."""
+        try:
+            with Image.open(path) as image:
+                return shown_orientation(image)
+        except Exception:
+            return 1
+
+    def read_shown(self, path: Path) -> bytes:
+        """READ_SHOWN (D-905): the file's bytes as the app shows them.
+
+        An untagged file, or one that fails to decode, is returned as stored. A tagged
+        JPEG, MPO or PNG is returned upright in the file's own format, with no orientation
+        and its ICC profile kept (ICC_KEEP). An `OSError` from the read propagates.
+        """
+        data = path.read_bytes()
+        try:
+            with Image.open(io.BytesIO(data)) as opened:
+                tag = shown_orientation(opened)
+                if tag == 1:
+                    return data
+                opened.load()
+                image = opened.copy()
+            icc = image.info.get("icc_profile")
+            return _encode_view(_turn(image, tag), path.suffix.lower(), icc=icc)
+        except Exception:
+            return data
 
     def view(self, path: Path, frame: ViewFrame) -> bytes:
         """Return `frame` of the image in the file's own format, in memory (MEU-128, D-410).
 
         Writes no file. Errors name no path: the open failure and the size check are
-        Console-visible API messages.
+        Console-visible API messages. VIEW_SHOWN (D-905): the frame is the shown one
+        (SHOWN_OPEN), so a tagged JPEG, MPO or PNG is cut and encoded upright.
         """
-        try:
-            with Image.open(path) as opened:
-                opened.load()
-                image = opened.copy()
-        except Exception as exc:
-            # Pillow raises SyntaxError, ValueError and others for a damaged file, and an
-            # OSError's text holds the path; each becomes the one fixed refusal (D-421).
-            raise InboxPathError("the image could not be opened") from exc
+        image, tag = _open_shown(path)
         if image.size != (frame.source_width, frame.source_height):
             raise ConflictError(
                 "the image file changed since the captures were listed; list them again and retry"
             )
         whole = (frame.x, frame.y, frame.width, frame.height) == (0, 0, *image.size)
         returned = (frame.returned_width, frame.returned_height)
-        # RETURN_UNCHANGED: the whole image at scale 1 is the file itself.
-        if whole and returned == image.size:
+        # RETURN_UNCHANGED: the whole untagged image at scale 1 is the file itself.
+        if whole and returned == image.size and tag == 1:
             try:
                 return path.read_bytes()
             except OSError as exc:
@@ -505,7 +614,9 @@ class CaptureAdapter:
             image = image.crop(box)
         if image.size != returned:
             image = image.resize(returned, Image.Resampling.LANCZOS)
-        return _encode_view(image, path.suffix.lower())
+        # ICC_KEEP (D-905): a turned view keeps the source's profile.
+        icc = image.info.get("icc_profile") if tag != 1 else None
+        return _encode_view(image, path.suffix.lower(), icc=icc)
 
     def inspect_import(self, data: bytes) -> int:
         """IMPORT_ACCEPT: decode `data` in full and return its EXIF orientation (1 with no tag).
@@ -556,21 +667,15 @@ class CaptureAdapter:
         """CROP_PIXELS: cut `box` from the original's pixels into a PNG at `out` (MEU-130).
 
         `box` is `(left, top, width, height)` inside the image, as `resolve_region` returns it.
-        No resampling and no `exif_transpose`: the crop is the stored frame's pixels. The mode
+        No resampling. CROP_EXPORT_FRAME (D-907): the box and `source_size` are in the shown
+        frame (SHOWN_OPEN), and the output carries no orientation. The mode
         is kept when PNG stores it; the ICC profile is kept; EXIF, XMP and text are dropped.
         A CMYK, YCbCr or LAB source converts through its profile to sRGB and carries the
         sRGB profile; with no profile, or one that builds no transform, it converts plainly
         and carries none (D-506 A).
         The only refusals are the two fixed, path-free ones (D-481, D-482, D-476).
         """
-        try:
-            with Image.open(source) as opened:
-                opened.load()
-                image = opened.copy()
-        except Exception as exc:
-            # Pillow raises SyntaxError, ValueError and others for a damaged file, and an
-            # OSError's text holds the path; each becomes the one fixed refusal (D-421).
-            raise InboxPathError("the image could not be opened") from exc
+        image, _tag = _open_shown(source)
         if image.size != source_size:
             raise ConflictError(
                 "the image file changed since the captures were listed; list them again and retry"
@@ -611,10 +716,11 @@ class CaptureAdapter:
         if output_format not in ANNOTATED_FORMATS:
             raise ValidationError(f"output_format must be one of {', '.join(ANNOTATED_FORMATS)}")
         try:
-            with Image.open(original_path) as opened:
-                canvas = opened.convert("RGBA")
-        except (UnidentifiedImageError, OSError) as exc:
-            raise InboxPathError(f"{original_path} is not an image") from exc
+            # SHOWN_OPEN (D-903): the marks are drawn in the shown frame.
+            canvas = _open_shown(original_path)[0].convert("RGBA")
+        except Exception as exc:
+            # PROBE_FIXED (D-902, D-421): one fixed, path-free refusal; nothing is written.
+            raise InboxPathError("the image could not be opened") from exc
         canvas = self._bake_canvas(canvas, annotations)
         if output_format == "png":
             return self._write_png(canvas.convert("RGB"), output_path)
@@ -626,10 +732,9 @@ class CaptureAdapter:
         The same canvas and the same PNG encode as `bake(..., "png")`; nothing is written.
         """
         try:
-            with Image.open(original_path) as opened:
-                canvas = opened.convert("RGBA")
-        except (UnidentifiedImageError, OSError) as exc:
-            # No path in the message: it reaches the renderer's status line.
+            canvas = _open_shown(original_path)[0].convert("RGBA")
+        except Exception as exc:
+            # No path in the message: it reaches the renderer's status line (D-902, D-421).
             raise InboxPathError("the image could not be opened") from exc
         canvas = self._bake_canvas(canvas, annotations)
         return _encode_view(canvas.convert("RGB"), ".png")
@@ -689,17 +794,16 @@ class CaptureAdapter:
         """EXPORT_ENCODE (MEU-136): write `source` as `fmt` at `size`, keeping only its profile.
 
         Resized with LANCZOS only when `size` differs. JPEG drops alpha and any key before a
-        resize, so a transparent pixel shows its stored colour. No `exif_transpose`: the
-        export is the stored frame (D-613). The only refusals are the two fixed, path-free
-        ones; a save failure is a fixed `OSError` (D-614, D-619).
+        resize, so a transparent pixel shows its stored colour. CROP_EXPORT_FRAME (D-907):
+        the export is the shown frame (SHOWN_OPEN) and carries no orientation; `source_size`
+        is in that frame. The only refusals are the two fixed, path-free ones; a save
+        failure is a fixed `OSError` (D-614, D-619).
         """
         try:
             with source.open("rb") as handle:
                 header = handle.read(_PNG_HEADER_LEN)
                 handle.seek(0)
-                with Image.open(handle) as opened:
-                    opened.load()
-                    image = opened.copy()
+                image, _tag = _open_shown(handle)
         except Exception as exc:
             # Pillow and the file system raise many types, and an OSError's text holds the
             # path; each becomes the one fixed refusal (D-421).

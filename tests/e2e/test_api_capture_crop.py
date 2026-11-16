@@ -768,7 +768,6 @@ def test_ac_130_21_damaged_source_is_422(ac_id: str, tmp_path: Path) -> None:
     with _stack(tmp_path, inbox) as (client, _services):
         shot_id = _shot_id(client, "shot.png")
         before_items = client.get(PREFIX, headers=AUTH).json()["items"]
-        intact = source.read_bytes()
         _damage_idat_in_place(source)
         before = _names(inbox)
         response = _crop(client, shot_id, {"x": 0, "y": 0, "width": 20, "height": 20})
@@ -776,9 +775,6 @@ def test_ac_130_21_damaged_source_is_422(ac_id: str, tmp_path: Path) -> None:
         assert _error(response) == ("InboxPathError", "the image could not be opened")
         _no_path_in(response.text, source, inbox, tmp_path)
         assert _names(inbox) == before
-        # The list scans every inbox file, and the scan's probe doesn't read a damaged PNG,
-        # so the source gets its bytes back before the list checks that no row was added.
-        source.write_bytes(intact)
         listed = client.get(PREFIX, headers=AUTH)
         assert listed.status_code == 200
         assert [item["id"] for item in listed.json()["items"]] == [

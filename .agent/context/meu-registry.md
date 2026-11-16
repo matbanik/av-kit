@@ -205,8 +205,8 @@
 | MEU-135 | `capture-video-sheet` | 9.41 | [Phase 9 §Video sheet](../../docs/build-plan/09-screenshot-capture.md#video-sheet) | avkit_capture sheet and POST /captures/sheet write one labelled grid image of a video span, sized for the vision token budget, as a new shot. | ✅ approved |
 | MEU-136 | `capture-export-copy` | 9.42 | [Phase 9 §Export copy](../../docs/build-plan/09-screenshot-capture.md#export-copy) | avkit_capture export and POST /captures/{id}/export write a resized png, jpeg or webp copy of a shot as a new shot, with no metadata. | ✅ approved |
 | MEU-143 | `gui-capture-tool-flow` | 9.31a | [Phase 9 §Style and tool flow](../../docs/build-plan/09-screenshot-capture.md#style-and-tool-flow) | Lock is on by default and persisted with a one-shot preference, letter shortcuts pick tools, and Shift, Alt and Shift+arrow modify drawing and nudging. | ✅ approved |
-| MEU-145 | `capture-scan-skip-unreadable` | 9.43 | [Phase 9 §Scan skips unreadable files](../../docs/build-plan/09-screenshot-capture.md#scan-skips-unreadable-files) | One inbox file the scan can't read no longer fails the capture list, and the skip is logged without its path. | ⬜ pending |
-| MEU-146 | `capture-exif-orientation` | 9.44 | [Phase 9 §EXIF orientation on scan](../../docs/build-plan/09-screenshot-capture.md#exif-orientation-on-scan) | A scanned or registered photo with an EXIF orientation tag is sized, marked, baked and region-viewed in the frame the GUI shows. | ⬜ pending |
+| MEU-145 | `capture-scan-skip-unreadable` | 9.43 | [Phase 9 §Scan skips unreadable files](../../docs/build-plan/09-screenshot-capture.md#scan-skips-unreadable-files) | One inbox file the scan can't read no longer fails the capture list, and the skip is logged without its path. | ✅ approved |
+| MEU-146 | `capture-exif-orientation` | 9.44 | [Phase 9 §EXIF orientation on scan](../../docs/build-plan/09-screenshot-capture.md#exif-orientation-on-scan) | A scanned or registered photo with an EXIF orientation tag is sized, marked, baked and region-viewed in the frame the GUI shows. | ✅ approved |
 
 
 ## Queue card UI (P2)

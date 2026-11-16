@@ -669,12 +669,11 @@ def test_ac_136_6_save_failure_names_no_path(
 @pytest.mark.parametrize("fmt", FORMATS)
 @_ac("AC-136.7")
 @pytest.mark.unit
-def test_ac_136_7_exif_orientation_is_not_applied(ac_id: str, fmt: str, tmp_path: Path) -> None:
-    """Characterises the known issue CAPTURE-EXIF-SCANNED-ORIENTATION (D-613).
+def test_ac_136_7_exif_orientation_is_applied(ac_id: str, fmt: str, tmp_path: Path) -> None:
+    """The fix for the known issue CAPTURE-EXIF-SCANNED-ORIENTATION (D-907 over D-613).
 
-    A JPEG tagged orientation 6 exports in its stored frame, as crop does: no `exif_transpose`,
-    and the tag is dropped with the rest of the EXIF. This records the behaviour; it fixes
-    nothing.
+    A JPEG tagged orientation 6 exports in its shown frame, as crop does: turned upright,
+    and the tag is dropped with the rest of the EXIF (CROP_EXPORT_FRAME, D-907).
     """
     assert ac_id == "AC-136.7"
     image = Image.new("RGB", (400, 300), (20, 20, 200))
@@ -687,12 +686,12 @@ def test_ac_136_7_exif_orientation_is_not_applied(ac_id: str, fmt: str, tmp_path
     assert planted.exif.get(0x0112) == 6
     assert planted.image.size == (400, 300)
     out = tmp_path / f"turned-export{SUFFIX[fmt]}"
-    _done(_export(source, out, fmt=fmt))
+    _done(_export(source, out, fmt=fmt, source_size=(300, 400)))
     got = _read(out)
-    assert got.image.size == (400, 300)
-    red = got.rgba((10, 10))[:3]
+    assert got.image.size == (300, 400)
+    red = got.rgba((290, 10))[:3]
     assert red[0] > 180 and red[1] < 70 and red[2] < 70, red
-    blue = got.rgba((390, 290))[:3]
+    blue = got.rgba((10, 390))[:3]
     assert blue[2] > 150 and blue[0] < 70, blue
     assert 0x0112 not in got.exif
     assert "exif" not in got.info

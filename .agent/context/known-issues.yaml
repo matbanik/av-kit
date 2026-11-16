@@ -4806,14 +4806,15 @@ issues:
     title: A scanned JPEG or WebP with EXIF orientation 5 to 8 is sized and marked sideways
     severity: medium
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-08'
     root_cause: 'The capture adapter''s probe reads image.size after Image.open without applying the EXIF orientation (packages/infrastructure/src/avkit_infra/capture/adapter.py:253-263 at 2963efe), and bake and the region view open the stored pixels the same way. A JPEG or WebP that the inbox scan registers with orientation 5, 6, 7 or 8 is therefore recorded at its stored width and height, while Chromium, which honours the tag, shows the turned frame. Plan-time probe on Pillow 13.0.0: a 400x300 file tagged 5 to 8 probes 400x300, and ImageOps.exif_transpose gives 300x400 (C:/Temp/av-kit/s58-plan-exif-probe.txt).'
     blast_radius: Read from the probe; the GUI was not run. Only files that reach the inbox by the scan or by register mode with a turning tag (phone and camera photos, mostly). For those, the row's width and height are swapped against what the GUI shows, marks drawn in the GUI land in the stored frame, and a region asked in the shown frame is clamped or refused. Screenshots carry no tag. MEU-129's import mode avoids it by writing an upright PNG (D-417), so this issue covers the scan and register paths only.
     verification:
-      last_checked: '2026-11-08'
-      method: Pillow probe of orientations 1 to 8 against the adapter's probe
-      result: 'orientations 5 to 8 differ: probe 400x300, exif_transpose 300x400'
+      last_checked: '2026-11-15'
+      method: Session 75 row 4 receipts C:/Temp/av-kit/capture-inbox-probe/s75-146-green.txt (AC-146.1 to AC-146.28 Python cases), s75-146-sweep.txt, s75-146-types.txt and s75-146-eol.txt; AC-146.19 in the Electron suite (s75-red-e2e.txt, '1 passed')
+      result: 's75-146-green.txt: ''80 passed, 5 warnings in 5.18s''; s75-146-sweep.txt: ''1016 passed, 1923 deselected, 21 warnings''. A 400x300 JPEG or PNG tagged 5 to 8 records 300x400; marks bake, regions, crop and export use the shown frame; WebP is never turned, as Chromium does not turn it'
+    resolution_path: 'Fixed in Session 75 on 2026-11-15 (plan docs/execution/plans/2026-11-15-capture-inbox-probe, MEU-146): SHOWN_FORMATS, SHOWN_OPEN, PROBE_SWAP, SHOWN_TAG, READ_SHOWN, VIEW_SHOWN, ICC_KEEP, BAKE_MARKER, STALE_BAKE, STAGED_REBAKE, DIMS_REFRESH, CROP_EXPORT_FRAME and WEBP_PIN. The tag is applied wherever pixels are read and the inbox file is never rewritten (D-903); only JPEG, MPO and PNG are turned, from the EXIF block (D-904); a tagged file''s plain download is upright (D-905); old annotated copies are rebaked by the scan without loss (D-909, D-910).'
     category: TECH-DEBT
     priority: P3
     related: []
@@ -4904,14 +4905,15 @@ issues:
     title: One inbox-root file the scan can't open breaks the capture list
     severity: medium
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-09'
     root_cause: GET /captures and MCP capture list run CaptureService.scan_inbox (packages/core/src/avkit_core/services/capture.py:466), which calls the adapter's probe on every inbox-root file with a scan extension (:411) and catches nothing. probe (packages/infrastructure/src/avkit_infra/capture/adapter.py:316 at f15626c) turns UnidentifiedImageError and OSError into InboxPathError(f"{path} is not an image"), so a non-image named .png fails the whole list with a 422 whose message holds the file's path. Pillow raises SyntaxError for some damaged PNG chunks, which probe doesn't catch, so that file fails the list with a 500.
     blast_radius: 'Found in Session 59''s row 5: AC-130.21''s test damages a PNG''s IDAT and must put the source''s bytes back before its follow-up list, because the scan''s probe can''t read it; the GUI was not run. Any one such file in the inbox root (a half-written or damaged screenshot, a renamed non-image) hides every shot from the Capture page and the MCP list until it is removed, and the 422 puts a path in an API message the Console can show. Import, crop and the region view refuse such a file with fixed, path-free messages already.'
     verification:
-      last_checked: '2026-11-09'
-      method: A read of scan_inbox and the adapter's probe at f15626c, and AC-130.21's restore step in tests/e2e/test_api_capture_crop.py
-      result: probe catches only UnidentifiedImageError and OSError and raises InboxPathError with the path in its text; scan_inbox catches nothing, so one such file fails the list
+      last_checked: '2026-11-15'
+      method: Session 75 row 3 receipts C:/Temp/av-kit/capture-inbox-probe/s75-145-green.txt (AC-145.1 to AC-145.15, with AC-130.21's restore removed), s75-145-types.txt and s75-145-eol.txt
+      result: 's75-145-green.txt: ''120 passed in 10.50s''. A non-image .png, a damaged-IDAT PNG and a truncated PNG are skipped by the scan; GET /captures answers 200 with every readable shot and no path in any message, log line or body; a skipped file''s row is kept and the file lists once readable'
+    resolution_path: 'Fixed in Session 75 on 2026-11-15 (plan docs/execution/plans/2026-11-15-capture-inbox-probe, MEU-145): SCAN_SKIP, KEEP_ROW, PROBE_FIXED and SKIP_LOG. scan_inbox skips a file whose resolve or probe raises InboxPathError or OSError and leaves its row as it was (D-900, D-901); probe, bake and render give fixed, path-free messages for any failure, and one capture.scan_skipped warning carries only the count (D-902).'
     category: MEU-NEW
     priority: P2
     related:

@@ -98,6 +98,14 @@ class ImageAnnotatePort(Protocol):
         """
         ...
 
+    def shown_tag(self, path: Path) -> int:
+        """SHOWN_TAG (D-909): the EXIF orientation the app shows `path` in; 1 on failure."""
+        ...
+
+    def read_shown(self, path: Path) -> bytes:
+        """READ_SHOWN (D-905): the file's bytes, turned upright when it carries a tag."""
+        ...
+
 
 # FRAME_PORT (MEU-134): how `grab_frame` seeks. "output" decodes from the start, for a raw
 # stream with no duration (NO_DURATION).

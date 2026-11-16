@@ -422,8 +422,9 @@ def get_capture_image(
     capture: Any = Depends(get_capture_service),
 ) -> Response:
     """Return original or annotated image bytes."""
-    # MEU-128 (D-411): with none of x, y, width, height, unit and max_edge, the file's bytes
-    # are returned unchanged; the five X-Capture-* headers give the frame either way. The
+    # With none of x, y, width, height, unit and max_edge, an untagged file's bytes are
+    # returned unchanged (D-410) and a tagged JPEG, MPO or PNG is returned upright (D-905);
+    # the five X-Capture-* headers give the shown frame either way (D-411). The
     # region fields have no ge or le: the domain's messages are the contract.
     shot = capture.get_shot(id)
     if all(value is None for value in (x, y, width, height, unit, max_edge)):
