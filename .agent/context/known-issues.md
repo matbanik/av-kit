@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 140** — Active: 24 | Mitigated: 2 | Resolved: 112
+**Total: 142** — Active: 26 | Mitigated: 2 | Resolved: 112
 
 ## Active Issues
 
@@ -13,6 +13,7 @@
 | 🟡 | `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` | Non-English voices via the real espeak-ng CLI were never run end to end… | infrastructure | ⬜ open | 2026-10-15 |
 | 🟡 | `YOUTUBE-CAPTIONS-IP-BLOCK` | YouTube is blocking caption requests from the maintainer's IP | infrastructure | ⬜ open | 2026-11-03 |
 | 🟡 | `FFMPEG-LIBDVDCSS-BUNDLED` | The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses… | infrastructure | ⬜ open | 2026-11-04 |
+| 🟡 | `QUEUE-PAUSE-NO-FEEDBACK` | Convert and Downloader Pause gives no feedback while the current job ru… | ui | ⬜ open | 2026-11-16 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
 | 🟢 | `DOWNLOAD-QUEUE-DRAG-OVER-MISS` | Download-queue drag-over (A16 committed-over wait) occasionally misses… | ui | ⬜ open | 2026-10-01 |
 | 🟢 | `CAPTURE-ZOOM-PAN-ORIGIN-FLAKE` | Capture viewport AC-66.14 middle-button pan origin occasionally off und… | ui | ⬜ open | 2026-10-17 |
@@ -33,6 +34,7 @@
 | 🟢 | `UI-DEV-ELECTRON-RUN-AS-NODE-SILENT` | npm run dev opens no window when ELECTRON_RUN_AS_NODE is set in the IDE… | ui | ⬜ open | 2026-09-03 |
 | 🟢 | `E2E-MAIN-PROCESS-REJECTIONS-UNWATCHED` | E2E does not watch unhandled promise rejections in the Electron main pr… | ui | ⬜ open | 2026-11-15 |
 | 🟢 | `CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE` | Convert Ctrl+O delivery lost before the lazy page mounts | ui | ⬜ open | 2026-11-16 |
+| 🟢 | `PY-SUITE-5S-WAIT-FLAKE-UNDER-LOAD` | Full Python suite: tests with 5-second worker waits fail when the host… | infrastructure | ⬜ open | 2026-11-16 |
 
 ## Mitigated / Workaround
 

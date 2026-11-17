@@ -221,6 +221,20 @@ None of the batch shares a file with Session 74, which touches the TTS model ass
 - **Token estimate:** calibrate against Session 49b.
 - **Split flag:** no.
 
+### Session 88 — `queue-pause-feedback` (one new MEU, registered at plan time) · P4
+
+Added 2026-11-17, after Session 81's commit. Sessions 84 to 87 belong to the HDP v2 and framework sync grouping, so this one takes the next free number.
+
+- **Layer / files:** `ui/src/renderer/src/components/queue/QueueToolbar.tsx` (the Pause label and a pending state), the Convert and Downloader pages that host it (`ConvertPage.tsx`, `DownloaderPage.tsx`), and a new Electron E2E file. The services keep pausing between jobs (`conversion.py:496`, `download.py:659`).
+- **Covers:** `QUEUE-PAUSE-NO-FEEDBACK`.
+- **Why:** in Session 81's row-5 check, Mat pressed Pause during a Convert job and nothing seemed to happen; he had to Cancel the job to stop it. Pause takes effect only when the current job ends.
+- **Mat's ruling (2026-11-16):** "Say what it does" and "Small session after 83". The button reads "Pause after this job". After a click it shows "Pausing…", and the status says the queue stops when the current job ends. Cancel stays the way to stop at once.
+- **Scope to settle at plan time:** whether the Transcript page, which shares the toolbar and pauses between videos (`transcript.py:407`), keeps "Pause" or takes the same wording; and the MEU id (the next free one is MEU-155 unless Sessions 82 and 83 take more).
+- **Gate:** Codex plan and execution reviews. The behavior is proved with Electron E2E tests in the session gate, not with manual checks (Mat, 2026-11-16: "why are you giving me e2e tests manually! This should be done with framework and scripts! It delays the development!").
+- **Cloud/local:** local (Electron).
+- **Token estimate:** calibrate against Session 80 `tts-page-polish`.
+- **Split flag:** no.
+
 ---
 
 ## 4. Plan-creation pathway
@@ -262,6 +276,7 @@ On Mat's word, run `/create-plan` once per session, in the §5 order. Nothing is
 | 81 | `convert-settings-drafts` | MEU-151, MEU-152 | P4 | executed (Session 81) | `docs/execution/plans/2026-11-15-convert-settings-drafts/` |
 | 82 | `ready-handshake` | MEU-153, MEU-154 | P4 | proposed | — |
 | 83 | `docs-path-hygiene` | — | P4 | proposed | — |
+| 88 | `queue-pause-feedback` | one new MEU (at plan time) | P4 | proposed | — |
 
 The Band column is the session's queue priority. Every MEU is registered in band P2, as the earlier triage residuals were; a session band below P2 orders the queue and changes no register field.
 
