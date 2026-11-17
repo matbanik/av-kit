@@ -258,6 +258,10 @@ export function DownloaderPage() {
   const label = processorLabel(processorState)
   const pausePending = usePausePending('download', queue.data?.processor)
   const ctx = { items, selectedId, processorState }
+  // CONFIRM_CANCEL_GATE (MEU-156): the confirm listener reads the current ctx.
+  const ctxRef = useRef(ctx)
+  ctxRef.current = ctx
+  const cancelEnabled = controlEnabled('cancel', ctx)
 
   useEffect(() => {
     if (
@@ -303,13 +307,22 @@ export function DownloaderPage() {
   // CONFIRM_ROUTE: the palette's clear and cancel open this page's confirm.
   useEffect(() => {
     const onConfirmRequest = (event: Event) => {
-      setConfirm({ kind: (event as CustomEvent<DownloadConfirmRequest>).detail.kind })
+      const kind = (event as CustomEvent<DownloadConfirmRequest>).detail.kind
+      // CONFIRM_CANCEL_GATE: no cancel confirm while no job runs.
+      if (kind === 'cancel' && !controlEnabled('cancel', ctxRef.current)) return
+      setConfirm({ kind })
     }
     window.addEventListener(DOWNLOAD_CONFIRM_EVENT, onConfirmRequest)
     return () => {
       window.removeEventListener(DOWNLOAD_CONFIRM_EVENT, onConfirmRequest)
     }
   }, [])
+
+  // CONFIRM_CANCEL_CLOSE (MEU-156): an open cancel confirm closes once no job runs
+  // (Paused or Idle); a confirm of any other kind stays open.
+  useEffect(() => {
+    if (confirm?.kind === 'cancel' && !cancelEnabled) setConfirm(null)
+  }, [confirm, cancelEnabled])
 
   useEffect(() => {
     if (!qualities.includes(quality)) {

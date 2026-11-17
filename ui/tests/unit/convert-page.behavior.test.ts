@@ -749,6 +749,142 @@ describe('MEU-33 convert GUI runtime (exec r1 F1–F4)', () => {
     expect(screen.getByTestId('convert-page-save').className).not.toMatch(/btn-save-dirty/)
     expect(converterPuts()).toHaveLength(0)
   })
+
+  // MEU-157 (Session 89): a Ctrl+O made before the lazy page mounts is held and
+  // taken on mount (BROWSE_HOLD, BROWSE_TAKE_ON_MOUNT); one made on the mounted
+  // page is delivered at once and not held (BROWSE_ACK). The app renders in
+  // StrictMode (main.tsx), so AC-157.6 and AC-157.14 do too. Each test drains
+  // any hold and restores the hash, so no request reaches a later render.
+  async function browseFrames(): Promise<void> {
+    await act(async () => {
+      await new Promise<void>((done) => {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            done()
+          })
+        })
+      })
+    })
+  }
+
+  async function renderConvertStrict(): Promise<() => void> {
+    const { StrictMode } = await import('react')
+    let unmount: () => void = () => undefined
+    await act(async () => {
+      unmount = render(
+        createElement(
+          StrictMode,
+          null,
+          createElement(QueryClientProvider, { client: queryClient }, createElement(ConvertPage, null)),
+        ),
+      ).unmount
+    })
+    await vi.waitFor(() => {
+      expect(screen.queryByTestId('convert-page')).not.toBeNull()
+    })
+    return unmount
+  }
+
+  function drainBrowse(hash: string): void {
+    if (typeof convertCommands.takeHeldBrowse === 'function') {
+      convertCommands.takeHeldBrowse()
+    }
+    window.location.hash = hash
+  }
+
+  it('AC-157.6 a Ctrl+O made before the page mounts opens one picker on mount, in StrictMode', async () => {
+    const hash = window.location.hash
+    try {
+      window.location.hash = '#/convert'
+      convertCommands.deliverPaletteBrowse()
+      await browseFrames()
+      const unmount = await renderConvertStrict()
+      await vi.waitFor(() => {
+        expect(dialogFilters, 'the mount opens the held request').toHaveLength(1)
+      })
+      await browseFrames()
+      expect(dialogFilters, 'one picker for one Ctrl+O').toHaveLength(1)
+      await act(async () => {
+        unmount()
+      })
+      await renderConvertStrict()
+      await browseFrames()
+      expect(dialogFilters, 'a second mount opens nothing').toHaveLength(1)
+    } finally {
+      drainBrowse(hash)
+    }
+  })
+
+  it('AC-157.7 a Ctrl+O on the mounted page opens one picker at once and holds nothing', async () => {
+    expect(typeof convertCommands.takeHeldBrowse, 'takeHeldBrowse is exported from convert-commands').toBe(
+      'function',
+    )
+    const hash = window.location.hash
+    try {
+      window.location.hash = '#/convert'
+      await renderConvert()
+      convertCommands.deliverPaletteBrowse()
+      await browseFrames()
+      expect(dialogFilters, 'the mounted page opens the picker at once').toHaveLength(1)
+      expect(convertCommands.takeHeldBrowse(), 'a delivered request is not held').toBe(false)
+    } finally {
+      drainBrowse(hash)
+    }
+  })
+
+  it('AC-157.14 presses whose frames straddle the mount open one picker, and a later press opens its own', async () => {
+    expect(typeof convertCommands.takeHeldBrowse, 'takeHeldBrowse is exported from convert-commands').toBe(
+      'function',
+    )
+    const hash = window.location.hash
+    const frames: FrameRequestCallback[] = []
+    const spy = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      frames.push(callback)
+      return frames.length
+    })
+    /** Runs the callbacks queued before this frame; new ones wait for the next. */
+    const frame = async (): Promise<void> => {
+      await act(async () => {
+        for (const callback of frames.splice(0)) {
+          callback(performance.now())
+        }
+      })
+    }
+    try {
+      // History A: press, frame, press, frame, mount, two frames.
+      window.location.hash = '#/convert'
+      convertCommands.deliverPaletteBrowse()
+      await frame()
+      convertCommands.deliverPaletteBrowse()
+      await frame()
+      const unmount = await renderConvertStrict()
+      await frame()
+      await frame()
+      expect(dialogFilters, 'History A: two presses before the mount open one picker').toHaveLength(1)
+      expect(convertCommands.takeHeldBrowse(), 'History A: nothing is left held').toBe(false)
+      convertCommands.deliverPaletteBrowse()
+      await frame()
+      await frame()
+      expect(dialogFilters, 'History A: a press after the mount opens its own picker').toHaveLength(2)
+
+      // History B: press, frame, press, mount between the first press's frames, two frames.
+      await act(async () => {
+        unmount()
+      })
+      dialogFilters.length = 0
+      window.location.hash = '#/convert'
+      convertCommands.deliverPaletteBrowse()
+      await frame()
+      convertCommands.deliverPaletteBrowse()
+      await renderConvertStrict()
+      await frame()
+      await frame()
+      expect(dialogFilters, 'History B: presses straddling the mount open one picker').toHaveLength(1)
+    } finally {
+      spy.mockRestore()
+      drainBrowse(hash)
+    }
+  })
 })
 
 // ---------------------------------------------------------------------------
@@ -1338,6 +1474,140 @@ describe('MEU-45 ConvertPage queue surface', () => {
       expect(toggle).toBeDisabled()
       expect(screen.getByTestId('convert-processor')).toHaveTextContent('Queue stops when the current job ends')
     })
+  })
+
+  // MEU-156 (Session 89): Cancel acts only while a job runs (CANCEL_WHEN_RUNNING,
+  // CONFIRM_CANCEL_GATE, CONFIRM_CANCEL_CLOSE). The services report no in-flight
+  // job while Paused, so AC-156.5 wraps this describe's list stub in the test
+  // itself (PAUSED_FIXTURE); the shared fixture above is not edited.
+  async function twoFrames(): Promise<void> {
+    await act(async () => {
+      await new Promise<void>((done) => {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            done()
+          })
+        })
+      })
+    })
+  }
+
+  async function setProcessor(state: 'Processing' | 'Paused'): Promise<void> {
+    const { QUERY_KEY } = await import('../../src/renderer/src/features/converter/useConversionQueue')
+    processorState = state
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+    })
+    await vi.waitFor(() => {
+      expect(screen.getByTestId('convert-processor').textContent ?? '').toContain(
+        state === 'Paused' ? 'Queue Paused' : 'Processing',
+      )
+    })
+  }
+
+  function cardCancels(): HTMLElement[] {
+    return screen
+      .queryAllByTestId('queue-card-primary-action')
+      .filter((el) => /Cancel/.test(el.getAttribute('aria-label') ?? el.textContent ?? ''))
+  }
+
+  it('AC-156.5 the palette and the card offer Cancel only while a job runs', async () => {
+    const state = await loadCommandState()
+    const base = globalThis.fetch
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        const href = String(url)
+        const method = (init?.method ?? 'GET').toUpperCase()
+        if (processorState === 'Paused' && /\/conversions\/?(\?.*)?$/.test(href) && method === 'GET') {
+          fetches.push({ url: href, method })
+          return jsonResponse({ items: queueItems(), processor: { state: 'Paused', current_job_id: null } })
+        }
+        return base(url, init)
+      }),
+    )
+    await renderQueue()
+    await setProcessor('Paused')
+    await vi.waitFor(() => {
+      expect(state.getCommandState('/convert')['convert:resume'], 'convert:resume while Paused').toBe(true)
+    })
+    expect(state.getCommandState('/convert')['convert:cancel'], 'convert:cancel while Paused').toBe(false)
+    expect(cardCancels(), 'no card offers Cancel while Paused').toHaveLength(0)
+
+    await setProcessor('Processing')
+    await vi.waitFor(() => {
+      expect(state.getCommandState('/convert')['convert:cancel'], 'convert:cancel while a job runs').toBe(true)
+    })
+    expect(cardCancels(), 'the running card offers Cancel').toHaveLength(1)
+  })
+
+  it('AC-156.6 the palette cancel opens no confirm while Paused, and clear still does', async () => {
+    const name = String((convertCommands as unknown as Record<string, unknown>).CONVERT_CONFIRM_EVENT)
+    processorState = 'Paused'
+    await renderQueue()
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'cancel' } }))
+    })
+    await twoFrames()
+    expect(screen.queryByTestId('confirm-modal'), 'no cancel confirm while Paused').toBeNull()
+    expect(requests('/conversions/cancel', 'POST')).toHaveLength(0)
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'clear' } }))
+    })
+    const clear = screen.queryByTestId('confirm-modal')
+    expect(clear, 'the clear confirm opens while Paused').not.toBeNull()
+    await click(inside(clear as HTMLElement, 'confirm-modal-cancel'))
+    expect(screen.queryByTestId('confirm-modal')).toBeNull()
+
+    await setProcessor('Processing')
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'cancel' } }))
+    })
+    expect(screen.queryByTestId('confirm-modal'), 'the cancel confirm opens while a job runs').not.toBeNull()
+  })
+
+  it('AC-156.7 an open cancel confirm closes when the queue turns Paused or Idle, and a clear confirm stays', async () => {
+    const name = String((convertCommands as unknown as Record<string, unknown>).CONVERT_CONFIRM_EVENT)
+    await renderQueue()
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'cancel' } }))
+    })
+    expect(screen.queryByTestId('confirm-modal'), 'the cancel confirm opens while a job runs').not.toBeNull()
+    await setProcessor('Paused')
+    await vi.waitFor(() => {
+      expect(screen.queryByTestId('confirm-modal'), 'the cancel confirm closes at Paused').toBeNull()
+    })
+    expect(requests('/conversions/cancel', 'POST')).toHaveLength(0)
+
+    await setProcessor('Processing')
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'cancel' } }))
+    })
+    expect(screen.queryByTestId('confirm-modal'), 'the cancel confirm opens again').not.toBeNull()
+    processorState = 'Idle'
+    const { QUERY_KEY } = await import('../../src/renderer/src/features/converter/useConversionQueue')
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+    })
+    await vi.waitFor(() => {
+      expect(screen.queryByTestId('confirm-modal'), 'the cancel confirm closes at Idle').toBeNull()
+    })
+    expect(requests('/conversions/cancel', 'POST')).toHaveLength(0)
+
+    await setProcessor('Processing')
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'clear' } }))
+    })
+    expect(screen.queryByTestId('confirm-modal'), 'the clear confirm opens').not.toBeNull()
+    await setProcessor('Paused')
+    const kept = screen.queryByTestId('confirm-modal')
+    expect(kept, 'the clear confirm stays open at Paused').not.toBeNull()
+    expect(inside(kept as HTMLElement, 'confirm-modal-confirm')?.textContent?.trim()).toBe('Clear all')
+    await click(inside(kept as HTMLElement, 'confirm-modal-cancel'))
+    expect(screen.queryByTestId('confirm-modal')).toBeNull()
   })
 
   it('AC-52.3/.5 keeps Idle without a live chip and preserves header, bulk, scroller order', async () => {

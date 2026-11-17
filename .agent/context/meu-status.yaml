@@ -4067,10 +4067,10 @@ meus:
     anchor: queue-cancel-paused-residual
     text: Phase 10 §Cancel while paused (residual)
   description: Cancel is disabled on the Convert and Downloader pages while the queue is Paused, since no job runs to cancel; it stays enabled while a job runs, and no service or API changes.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-45, MEU-46, MEU-155
   dependency_parse_status: parsed
@@ -4078,7 +4078,7 @@ meus:
   - MEU-45
   - MEU-46
   - MEU-155
-  execution_plan: null
+  execution_plan: docs/execution/plans/2026-11-17-queue-convert-fixes/
   updated: '2026-11-17'
   closed_reason: null
   note: Registered 2026-11-17 from QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT (triage D-1100, Mat's ruling; grouping D-1103), Session 89.
@@ -4093,16 +4093,16 @@ meus:
     anchor: convert-browse-after-mount-residual
     text: Phase 6 §Convert browse waits for the page (residual)
   description: A Ctrl+O browse request made before the lazy Convert page listens is held and delivered once when it mounts, so the file picker always opens; AC-97.7 waits for the page.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-97
   dependency_parse_status: parsed
   depends_on:
   - MEU-97
-  execution_plan: null
+  execution_plan: docs/execution/plans/2026-11-17-queue-convert-fixes/
   updated: '2026-11-17'
   closed_reason: null
   note: Registered 2026-11-17 from CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE (triage D-1101; grouping D-1103), Session 89.

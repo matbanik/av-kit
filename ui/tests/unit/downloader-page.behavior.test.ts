@@ -1111,6 +1111,141 @@ describe('MEU-46 DownloaderPage queue surface', () => {
     })
   })
 
+  // MEU-156 (Session 89): Cancel acts only while a job runs (CANCEL_WHEN_RUNNING,
+  // CONFIRM_CANCEL_GATE, CONFIRM_CANCEL_CLOSE). The services report no in-flight
+  // job while Paused, so AC-156.8 wraps this describe's list stub in the test
+  // itself (PAUSED_FIXTURE); the shared fixture above is not edited.
+  async function twoFrames(): Promise<void> {
+    await act(async () => {
+      await new Promise<void>((done) => {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(() => {
+            done()
+          })
+        })
+      })
+    })
+  }
+
+  async function setProcessor(state: 'Processing' | 'Paused'): Promise<void> {
+    processorState = state
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+    })
+    await vi.waitFor(() => {
+      expect(within(host).getByTestId('processor-indicator').textContent ?? '').toContain(
+        state === 'Paused' ? 'Queue Paused' : 'Processing',
+      )
+    })
+  }
+
+  function cardCancels(): HTMLElement[] {
+    return within(host)
+      .queryAllByTestId('queue-card-primary-action')
+      .filter((el) => /Cancel/.test(el.getAttribute('aria-label') ?? el.textContent ?? ''))
+  }
+
+  it('AC-156.8 the palette and the card offer Cancel only while a job runs', async () => {
+    const state = await loadCommandState()
+    const base = globalThis.fetch
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input)
+        const method = (init?.method ?? 'GET').toUpperCase()
+        if (processorState === 'Paused' && /\/downloads\/?$/.test(new URL(url).pathname) && method === 'GET') {
+          fetches.push({ url, method })
+          return new Response(
+            JSON.stringify({ items: rows, processor: { state: 'Paused', current_job_id: null } }),
+            { status: 200 },
+          )
+        }
+        return base(input, init)
+      }),
+    )
+    await renderQueue()
+    await setProcessor('Paused')
+    await vi.waitFor(() => {
+      expect(state.getCommandState('/')['download:resume'], 'download:resume while Paused').toBe(true)
+    })
+    expect(state.getCommandState('/')['download:cancel'], 'download:cancel while Paused').toBe(false)
+    expect(cardCancels(), 'no card offers Cancel while Paused').toHaveLength(0)
+
+    await setProcessor('Processing')
+    await vi.waitFor(() => {
+      expect(state.getCommandState('/')['download:cancel'], 'download:cancel while a job runs').toBe(true)
+    })
+    expect(cardCancels(), 'the running card offers Cancel').toHaveLength(1)
+  })
+
+  it('AC-156.9 the palette cancel opens no confirm while Paused, and clear still does', async () => {
+    const name = String((downloadCommands as unknown as Record<string, unknown>).DOWNLOAD_CONFIRM_EVENT)
+    processorState = 'Paused'
+    await renderQueue()
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'cancel' } }))
+    })
+    await twoFrames()
+    expect(screen.queryByTestId('confirm-modal'), 'no cancel confirm while Paused').toBeNull()
+    expect(requests('/downloads/cancel', 'POST')).toHaveLength(0)
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'clear' } }))
+    })
+    const clear = screen.queryByTestId('confirm-modal')
+    expect(clear, 'the clear confirm opens while Paused').not.toBeNull()
+    await click(inside(clear as HTMLElement, 'confirm-modal-cancel'))
+    expect(screen.queryByTestId('confirm-modal')).toBeNull()
+
+    await setProcessor('Processing')
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'cancel' } }))
+    })
+    expect(screen.queryByTestId('confirm-modal'), 'the cancel confirm opens while a job runs').not.toBeNull()
+  })
+
+  it('AC-156.10 an open cancel confirm closes when the queue turns Paused or Idle, and a clear confirm stays', async () => {
+    const name = String((downloadCommands as unknown as Record<string, unknown>).DOWNLOAD_CONFIRM_EVENT)
+    await renderQueue()
+
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'cancel' } }))
+    })
+    expect(screen.queryByTestId('confirm-modal'), 'the cancel confirm opens while a job runs').not.toBeNull()
+    await setProcessor('Paused')
+    await vi.waitFor(() => {
+      expect(screen.queryByTestId('confirm-modal'), 'the cancel confirm closes at Paused').toBeNull()
+    })
+    expect(requests('/downloads/cancel', 'POST')).toHaveLength(0)
+
+    await setProcessor('Processing')
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'cancel' } }))
+    })
+    expect(screen.queryByTestId('confirm-modal'), 'the cancel confirm opens again').not.toBeNull()
+    processorState = 'Idle'
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+    })
+    await vi.waitFor(() => {
+      expect(screen.queryByTestId('confirm-modal'), 'the cancel confirm closes at Idle').toBeNull()
+    })
+    expect(requests('/downloads/cancel', 'POST')).toHaveLength(0)
+
+    await setProcessor('Processing')
+    await act(async () => {
+      window.dispatchEvent(new CustomEvent(name, { detail: { kind: 'clear' } }))
+    })
+    expect(screen.queryByTestId('confirm-modal'), 'the clear confirm opens').not.toBeNull()
+    await setProcessor('Paused')
+    const kept = screen.queryByTestId('confirm-modal')
+    expect(kept, 'the clear confirm stays open at Paused').not.toBeNull()
+    expect(inside(kept as HTMLElement, 'confirm-modal-confirm')?.textContent?.trim()).toBe('Clear all')
+    await click(inside(kept as HTMLElement, 'confirm-modal-cancel'))
+    expect(screen.queryByTestId('confirm-modal')).toBeNull()
+  })
+
   it('AC-52.3/.5 keeps Idle without a live chip and preserves header, bulk, scroller order', async () => {
     processorState = 'Idle'
     await renderQueue()

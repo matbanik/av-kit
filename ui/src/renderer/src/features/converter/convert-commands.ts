@@ -345,10 +345,58 @@ export function deliverPaletteClear(): void {
   requestConfirm('clear')
 }
 
+/**
+ * BROWSE_HOLD (MEU-157, D-1108): the one outstanding Browse request, as a token made at
+ * press time. A press while a request is outstanding joins it and schedules nothing, and the
+ * request's one run acts only while its token is current. A run that no page receives on
+ * Convert holds the request until the page takes it on mount (`takeHeldBrowse`).
+ */
+let browseRequest: { held: boolean } | null = null
+
+function clearBrowseRequest(): void {
+  browseRequest = null
+  window.removeEventListener('hashchange', dropBrowseOffConvert)
+}
+
+/** BROWSE_DROP: a request, waiting or held, never outlives a visit to Convert. */
+function dropBrowseOffConvert(): void {
+  if (!isConvertHome()) {
+    clearBrowseRequest()
+  }
+}
+
 export function deliverPaletteBrowse(): void {
+  if (browseRequest !== null) {
+    return
+  }
+  const token = { held: false }
+  browseRequest = token
+  // Added before navigateShell, whose synchronous hashchange finds the hash on /convert.
+  window.addEventListener('hashchange', dropBrowseOffConvert)
   navigateAndDeliver(() => {
-    window.dispatchEvent(new CustomEvent(CONVERT_BROWSE_EVENT))
+    if (browseRequest !== token) {
+      return
+    }
+    // BROWSE_ACK: a listening page calls preventDefault, so dispatchEvent returns false.
+    const unreceived = window.dispatchEvent(new CustomEvent(CONVERT_BROWSE_EVENT, { cancelable: true }))
+    if (unreceived && isConvertHome()) {
+      token.held = true
+    } else {
+      clearBrowseRequest()
+    }
   })
+}
+
+/**
+ * BROWSE_TAKE_ON_MOUNT: whether a Browse request is outstanding, held or still waiting for its
+ * frames; it is cleared, so a waiting run then finds its token gone and does nothing.
+ */
+export function takeHeldBrowse(): boolean {
+  if (browseRequest === null) {
+    return false
+  }
+  clearBrowseRequest()
+  return true
 }
 
 function rethrow(error: unknown): void {

@@ -84,7 +84,7 @@ export function controlEnabled(control: QueueControl, ctx: ControlContext): bool
     case 'resume':
       return ctx.processorState === 'Paused'
     case 'cancel':
-      return ctx.processorState === 'Processing' || ctx.processorState === 'Paused'
+      return ctx.processorState === 'Processing'
     case 'up':
     case 'top':
       return selected > 0

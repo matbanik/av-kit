@@ -5365,10 +5365,17 @@ issues:
     title: Convert Ctrl+O delivery lost before the lazy page mounts
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-16'
     root_cause: ConvertPage is a lazy route (ui/src/renderer/src/router.tsx:50). Ctrl+O runs convert:browse, whose navigateAndDeliver (ui/src/renderer/src/features/converter/convert-commands.ts:102) navigates to /convert when needed and dispatches CONVERT_BROWSE_EVENT after two animation frames; the listener is added only when ConvertPage mounts (ui/src/renderer/src/features/converter/ConvertPage.tsx:497). When the lazy page mounts after those two frames, the event is dropped and no file picker opens. E2E AC-97.7 (ui/tests/e2e/convert-queue.test.ts:1568) presses Ctrl+O right after clicking nav-convert, so it fails at times at :1579 (convert-staged-remove count 0, expected 1).
     blast_radius: 'Intermittent E2E failure, older than Session 78: AC-97.7 alone failed 2 of 20 on the Session 78 tree (C:/Temp/av-kit/e2e-harness-hardening/ehh-probe-ac977.txt) and 3 of 20 with the row-0 BASE spec on the same build (C:/Temp/av-kit/e2e-harness-hardening/ehh-probe-ac977-base.txt). It failed the Session 78 H1-2 gate once; D-1032 allowed one whole-gate repeat. Users: a Ctrl+O pressed in the first frames after a switch to Convert may open no picker; pressing again works. Fix in its own session: hold the browse request until the ConvertPage listener is mounted, and make the spec wait for the Convert page before Ctrl+O.'
+    verification:
+      last_checked: '2026-11-17'
+      method: 'Session 89 task rows 2, 4 and 5 (plan docs/execution/plans/2026-11-17-queue-convert-fixes): row 2 receipt C:/Temp/av-kit/queue-convert-fixes/qc-156-green.txt (the MEU-156 Vitest files and the AC-156.13 pin files, after the Red receipt that red-check.py accepted), row 4 receipt qc-157-green.txt (the MEU-157 Vitest files and the AC-157.13 pin files, after its accepted Red receipts), and row 5 receipts qc-row5-e2e-r1.txt to qc-row5-e2e-r3.txt (queue-cancel-paused.test.ts in real Electron on the real backend, three runs), qc-row5-browse-r20.txt (convert-browse-mount.test.ts, --repeat-each 20), qc-row5-ac977-r20.txt (AC-97.7, --repeat-each 20), qc-row5-e2e-convert-queue.txt, qc-row5-e2e-download-queue.txt, qc-row5-e2e-pause-feedback.txt and the count check qc-row5-repeat.txt.'
+      result: |-
+        Row 2: 'Test Files  11 passed (11)' and 'Tests  216 passed (216)'. Row 4: 'Test Files  9 passed (9)' and 'Tests  148 passed (148)'. Row 5: queue-cancel-paused '2 passed (33.7s)', '2 passed (34.8s)', '2 passed (38.9s)'; convert-browse-mount '80 passed (10.1m)'; AC-97.7 '20 passed (55.3s)'; convert-queue '23 passed (51.2s)', download-queue '26 passed (29.3s)' and queue-pause-feedback '4 passed (1.9m)'. Count check: [rtk] /!\ No hook installed ΓÇö run `rtk init -g` for automatic token savings
+        cancel runs passing: [True, True, True] race spec ok counts (of 20): {'AC-157.8': 20, 'AC-157.9': 20, 'AC-157.10': 20, 'AC-157.11': 20} AC-97.7 ok count (of 20): 20 queue suites clean: [True, True, True] CR in the new Electron file: False. A Ctrl+O pressed while the Convert page's chunk loads (held back 1 500 ms) opens one picker once the page mounts, two presses open one, a press on the mounted page opens one at once, and a request held while the page loads is dropped on leaving Convert.
+    resolution_path: 'Fixed in Session 89 on 2026-11-17 (plan docs/execution/plans/2026-11-17-queue-convert-fixes): BROWSE_HOLD, BROWSE_DROP, BROWSE_ACK and BROWSE_TAKE_ON_MOUNT (D-1108). convert-commands.ts keeps one outstanding Browse request as a token; a request no page receives on Convert is held, leaving Convert drops it, and ConvertPage takes it on mount through takeHeldBrowse and opens one picker. AC-97.7 keeps its steps, pressing Ctrl+O right after the switch, and passed 20 of 20; a race spec (convert-browse-mount.test.ts) that delays the page''s chunk proves the hold and passed 20 of 20 for each test. The race spec replaces D-1101''s ''waits for the page'' (D-1110). F1 has the same gap on Convert and Capture and is registered separately as HELP-F1-BEFORE-LAZY-MOUNT-LOST (D-1109).'
     category: MEU-NEW
     priority: P3
     meu_links:
@@ -5432,10 +5439,17 @@ issues:
     title: Cancel stays enabled while a queue is Paused, but nothing acts on it
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-17'
     root_cause: cancel_processing only sets the cancel flag (packages/core/src/avkit_core/services/conversion.py:277-278, download.py:456-460) and no worker runs while the queue is Paused, so the state stays Paused until the next start clears the flags (conversion.py:254-264); the toolbars enable Cancel while Paused (ui/src/renderer/src/features/converter/convert-controls.ts:69-109, ui/src/renderer/src/features/downloader/download-controls.ts:77-78). Found in the Session 88 plan expert pass; not fixed there (M-5, M-8).
     blast_radius: 'Convert and Downloader queues while Paused: a Cancel click is accepted and changes nothing; the queue stays Paused.'
+    verification:
+      last_checked: '2026-11-17'
+      method: 'Session 89 task rows 2, 4 and 5 (plan docs/execution/plans/2026-11-17-queue-convert-fixes): row 2 receipt C:/Temp/av-kit/queue-convert-fixes/qc-156-green.txt (the MEU-156 Vitest files and the AC-156.13 pin files, after the Red receipt that red-check.py accepted), row 4 receipt qc-157-green.txt (the MEU-157 Vitest files and the AC-157.13 pin files, after its accepted Red receipts), and row 5 receipts qc-row5-e2e-r1.txt to qc-row5-e2e-r3.txt (queue-cancel-paused.test.ts in real Electron on the real backend, three runs), qc-row5-browse-r20.txt (convert-browse-mount.test.ts, --repeat-each 20), qc-row5-ac977-r20.txt (AC-97.7, --repeat-each 20), qc-row5-e2e-convert-queue.txt, qc-row5-e2e-download-queue.txt, qc-row5-e2e-pause-feedback.txt and the count check qc-row5-repeat.txt.'
+      result: |-
+        Row 2: 'Test Files  11 passed (11)' and 'Tests  216 passed (216)'. Row 4: 'Test Files  9 passed (9)' and 'Tests  148 passed (148)'. Row 5: queue-cancel-paused '2 passed (33.7s)', '2 passed (34.8s)', '2 passed (38.9s)'; convert-browse-mount '80 passed (10.1m)'; AC-97.7 '20 passed (55.3s)'; convert-queue '23 passed (51.2s)', download-queue '26 passed (29.3s)' and queue-pause-feedback '4 passed (1.9m)'. Count check: [rtk] /!\ No hook installed ΓÇö run `rtk init -g` for automatic token savings
+        cancel runs passing: [True, True, True] race spec ok counts (of 20): {'AC-157.8': 20, 'AC-157.9': 20, 'AC-157.10': 20, 'AC-157.11': 20} AC-97.7 ok count (of 20): 20 queue suites clean: [True, True, True] CR in the new Electron file: False. Cancel is disabled while a Convert or Downloader queue is Paused: no card offers it, the palette does not list it, and a cancel confirm request opens no confirm; it is offered again once a job runs.
+    resolution_path: 'Fixed in Session 89 on 2026-11-17 (plan docs/execution/plans/2026-11-17-queue-convert-fixes): CANCEL_WHEN_RUNNING, CONFIRM_CANCEL_GATE and CONFIRM_CANCEL_CLOSE. controlEnabled(''cancel'') is true only at Processing on the Convert and Downloader pages (convert-controls.ts, download-controls.ts), so the toolbar, the card and the palette''s cancel follow it and the cancel commands send no request while Paused; a cancel confirm request opens nothing while no job runs, and an open cancel confirm closes once the queue is Paused or Idle. The services, API routes, OpenAPI document and MCP tools are unchanged and cancel keeps its meaning (D-1100). The Transcript page''s Stop is kept: it already acts while Paused, because stop_processing applies the stop at once when no worker runs (D-1107).'
     category: MEU-NEW
     priority: P4
     meu_links:
@@ -5462,3 +5476,11 @@ issues:
             sources: []
           reasoning: No job runs while the queue is Paused, so there is nothing to cancel; a disabled button says so and matches what the services already do. Cancel to Idle changes a service and the API meaning of cancel. Leaving it keeps a button that does nothing. Two-way.
           human_message_reference: USER_EXPLICIT 2026-11-17 'QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT - recommendation accepted, proceed'
+  - id: HELP-F1-BEFORE-LAZY-MOUNT-LOST
+    title: F1 on Convert or Capture can be lost while the page is still loading
+    severity: low
+    component: ui
+    status: open
+    discovered: '2026-11-17'
+    root_cause: On a help route F1 dispatches the local help toggle at once (ui/src/renderer/src/components/layout/AppShell.tsx:203-215, ui/src/renderer/src/features/settings/settings-commands.ts:14), and the lazy Convert and Capture pages add the HelpCard listener only when they mount (ui/src/renderer/src/components/help/HelpCard.tsx:69), so an F1 pressed while their chunk loads is lost; all six routes are help routes (AppShell.tsx:206), so F1 always takes this immediate path. Found in the Session 89 plan (D-1109); not fixed there (M-8).
+    blast_radius: 'Convert and Capture on their first visit: an F1 in the moment before the page appears does not toggle the help panel; a second F1 works.'

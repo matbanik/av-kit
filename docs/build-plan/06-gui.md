@@ -1697,7 +1697,15 @@ The following features are explicitly **deferred** to a future phase:
 | Held | A browse request made before the Convert page listens is held and delivered once when the page mounts; a request made after it mounts is delivered at once. | Local Canon: [§Common shortcuts](#common-shortcuts-residual) Ctrl+O row, triage D-1101 |
 | Once | One Ctrl+O opens at most one picker; a held request that the page never receives is dropped when the user leaves Convert. | Local Canon |
 | Other chords | The same delivery is checked at plan time for the other chords that navigate to a lazy page before acting. | Local Canon |
-| Tests | Unit: a request before mount is delivered once on mount, and one after mount at once; Electron: AC-97.7 waits for the Convert page before Ctrl+O and passes 20 of 20 runs. | Local Canon: Session 78 probes |
+| Tests | Unit: a request before mount is delivered once on mount, and one after mount at once; Electron: a race spec presses Ctrl+O while the Convert page is still loading (its chunk delayed) and opens one picker, and AC-97.7 keeps pressing Ctrl+O right after the switch; both pass 20 of 20 runs. | Local Canon: Session 78 probes |
+
+> **Delivered (Session 89).**
+> - `deliverPaletteBrowse` keeps one outstanding Browse request as a token made at press time; a second press joins it, and the request's run acts only while its token is current (`features/converter/convert-commands.ts:348-388`, `BROWSE_HOLD`, D-1108). A run that no page receives on Convert holds the request; one the page receives is not held, because the page's listener calls `preventDefault` (`BROWSE_ACK`). AC-157.1, AC-157.2, AC-157.5.
+> - A request, waiting or held, is dropped when the user leaves Convert (`:361-366`, `BROWSE_DROP`). AC-157.3, AC-157.4.
+> - The page adds its listener and then takes an outstanding request on mount, opening one picker; under StrictMode's second effect run nothing is left to take (`ConvertPage.tsx:505-521`, `takeHeldBrowse` at `convert-commands.ts:394-400`, `BROWSE_TAKE_ON_MOUNT`). AC-157.6, AC-157.7, AC-157.14.
+> - Electron E2E (`ui/tests/e2e/convert-browse-mount.test.ts`) holds the ConvertPage chunk back by 1 500 ms with a `file` protocol handler and counts pickers: one or two Ctrl+O while the page loads open one picker, a Ctrl+O on the mounted page opens one, and a request held while the page loads is dropped on leaving Convert; each passed 20 of 20 runs. AC-97.7 is unchanged and passed 20 of 20; the race spec replaces D-1101's "waits for the page" (D-1110). AC-157.8 to AC-157.13.
+> - Other chords: F1 on Convert or Capture has the same gap and is registered, not fixed (`HELP-F1-BEFORE-LAZY-MOUNT-LOST`, D-1109).
+> - AC-157.1 to AC-157.14. Plan `docs/execution/plans/2026-11-17-queue-convert-fixes/`.
 
 ## Validation Commands
 

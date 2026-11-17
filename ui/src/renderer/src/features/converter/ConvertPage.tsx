@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { HelpCard } from '../../components/help/HelpCard'
 import { BulkActionBar } from '../../components/queue/BulkActionBar'
@@ -60,6 +60,7 @@ import {
   resumeConversion,
   setConvertFormSnapshot,
   startConversion,
+  takeHeldBrowse,
   type ConvertConfirmRequest,
   type ReorderDirection,
 } from './convert-commands'
@@ -243,6 +244,10 @@ export function ConvertPage() {
   const pausePending = usePausePending('convert', queue.data?.processor)
   const ffmpegAvailable = depsQuery.data?.ffmpeg?.available === true
   const ctx = { items, selectedId, processorState, ffmpegAvailable }
+  // CONFIRM_CANCEL_GATE (MEU-156): the confirm listener reads the current ctx.
+  const ctxRef = useRef(ctx)
+  ctxRef.current = ctx
+  const cancelEnabled = controlEnabled('cancel', ctx)
   const chip = gpuChipLabel({
     ffmpegAvailable: depsQuery.data?.ffmpeg?.available,
     gpu: gpuQuery.data,
@@ -262,13 +267,22 @@ export function ConvertPage() {
   // CONFIRM_ROUTE: the palette's clear and cancel open this page's confirm.
   useEffect(() => {
     const onConfirmRequest = (event: Event) => {
-      setConfirm({ kind: (event as CustomEvent<ConvertConfirmRequest>).detail.kind })
+      const kind = (event as CustomEvent<ConvertConfirmRequest>).detail.kind
+      // CONFIRM_CANCEL_GATE: no cancel confirm while no job runs.
+      if (kind === 'cancel' && !controlEnabled('cancel', ctxRef.current)) return
+      setConfirm({ kind })
     }
     window.addEventListener(CONVERT_CONFIRM_EVENT, onConfirmRequest)
     return () => {
       window.removeEventListener(CONVERT_CONFIRM_EVENT, onConfirmRequest)
     }
   }, [])
+
+  // CONFIRM_CANCEL_CLOSE (MEU-156): an open cancel confirm closes once no job runs
+  // (Paused or Idle); a confirm of any other kind stays open.
+  useEffect(() => {
+    if (confirm?.kind === 'cancel' && !cancelEnabled) setConfirm(null)
+  }, [confirm, cancelEnabled])
 
   useEffect(() => {
     if (kind !== 'compress') {
@@ -488,11 +502,21 @@ export function ConvertPage() {
       })
   }, [])
 
-  // CONVERT_BROWSE: the palette's Browse files opens the same picker.
+  // CONVERT_BROWSE: the palette's Browse files opens the same picker. BROWSE_ACK (MEU-157):
+  // the listener marks a delivered request received, so it is never held.
+  // BROWSE_TAKE_ON_MOUNT: a request made while the page loaded opens one picker on mount;
+  // under StrictMode's second effect run nothing is left to take.
   useEffect(() => {
-    window.addEventListener(CONVERT_BROWSE_EVENT, browseForFiles)
+    const onBrowse = (event: Event): void => {
+      event.preventDefault()
+      browseForFiles()
+    }
+    window.addEventListener(CONVERT_BROWSE_EVENT, onBrowse)
+    if (takeHeldBrowse()) {
+      browseForFiles()
+    }
     return () => {
-      window.removeEventListener(CONVERT_BROWSE_EVENT, browseForFiles)
+      window.removeEventListener(CONVERT_BROWSE_EVENT, onBrowse)
     }
   }, [browseForFiles])
 

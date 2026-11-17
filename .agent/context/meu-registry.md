@@ -118,7 +118,7 @@
 | MEU-149 | `gui-tts-status-pill-contrast` | 6.18 | [Phase 6 §TTS status pill contrast (residual)](../../docs/build-plan/06-gui.md#tts-status-pill-contrast-residual) | Every TTS status pill label reaches 4.5:1 against its fill in both themes. | ✅ approved |
 | MEU-151 | `gui-settings-draft-baseline` | 6.19 | [Phase 6 §Settings drafts keep edits (residual)](../../docs/build-plan/06-gui.md#settings-draft-baseline-residual) | The capture settings draft and the Convert advanced fields keep the user's edits and follow everything else, as AC-112.9 did for the encoder. | ✅ approved |
 | MEU-154 | `gui-ready-line-buffer` | 6.20 | [Phase 6 §READY line buffering (residual)](../../docs/build-plan/06-gui.md#ready-line-buffer-residual) | The main process reads backend output as lines, so a split or repeated ready line publishes the API once. | ✅ approved |
-| MEU-157 | `gui-convert-browse-after-mount` | 6.21 | [Phase 6 §Convert browse waits for the page (residual)](../../docs/build-plan/06-gui.md#convert-browse-after-mount-residual) | A Ctrl+O browse request made before the lazy Convert page listens is held and delivered once when it mounts, so the file picker always opens; AC-97.7 waits for the page. | ⬜ pending |
+| MEU-157 | `gui-convert-browse-after-mount` | 6.21 | [Phase 6 §Convert browse waits for the page (residual)](../../docs/build-plan/06-gui.md#convert-browse-after-mount-residual) | A Ctrl+O browse request made before the lazy Convert page listens is held and delivered once when it mounts, so the file picker always opens; AC-97.7 waits for the page. | ✅ approved |
 
 
 ## Distribution (P2)
@@ -226,7 +226,7 @@
 | MEU-48 | `gui-queue-convergence` | 10.8 | [Phase 10 §Supersession of 06-gui.md](../../docs/build-plan/10-queue-card-ui.md#supersession-of-06-guimd) | Transcript ChannelCard onto the shared primitives (fixes the G33 width-percent violation); TTS gets the shared ProgressBar | 🚫 closed |
 | MEU-49 | `gui-queue-dnd` | 10.9 | [Phase 10 §Reorder model](../../docs/build-plan/10-queue-card-ui.md#reorder-model) | dnd-kit drag reorder inside QueueList with ARIA live-region announcements; keyboard reorder retained as the equal path. Lands before Phase 11 so Transcript (MEU-55) inherits reorder by adopting QueueList. | ✅ approved |
 | MEU-155 | `gui-queue-pause-feedback` | 10.10 | [Phase 10 §Queue pause feedback (residual)](../../docs/build-plan/10-queue-card-ui.md#queue-pause-feedback-residual) | The Convert and Downloader toolbar Pause reads Pause after this job; after a click it shows Pausing… and the processor status says the queue stops when the current job ends, until the queue pauses. Cancel still stops the running job at once; Convert and Downloader keep pausing between jobs, and Transcript's waits end on pause or stop. | ✅ approved |
-| MEU-156 | `gui-queue-cancel-paused` | 10.11 | [Phase 10 §Cancel while paused (residual)](../../docs/build-plan/10-queue-card-ui.md#queue-cancel-paused-residual) | Cancel is disabled on the Convert and Downloader pages while the queue is Paused, since no job runs to cancel; it stays enabled while a job runs, and no service or API changes. | ⬜ pending |
+| MEU-156 | `gui-queue-cancel-paused` | 10.11 | [Phase 10 §Cancel while paused (residual)](../../docs/build-plan/10-queue-card-ui.md#queue-cancel-paused-residual) | Cancel is disabled on the Convert and Downloader pages while the queue is Paused, since no job runs to cancel; it stays enabled while a job runs, and no service or API changes. | ✅ approved |
 
 
 ## Page layout (P2)

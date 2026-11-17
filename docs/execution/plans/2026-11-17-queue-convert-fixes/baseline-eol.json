@@ -1,0 +1,368 @@
+{
+  "ui/src/renderer/src/features/converter/convert-controls.ts": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 255,
+    "bare_lf": 8,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/downloader/download-controls.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 183,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/converter/convert-commands.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 577,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/converter/ConvertPage.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1006,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/downloader/DownloaderPage.tsx": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 752,
+    "bare_lf": 222,
+    "bom": false
+  },
+  "ui/tests/unit/convert-page.behavior.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 2692,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/downloader-page.behavior.test.ts": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 2096,
+    "bare_lf": 488,
+    "bom": false
+  },
+  "ui/tests/unit/convert-page.test.ts": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 731,
+    "bare_lf": 29,
+    "bom": false
+  },
+  "ui/tests/unit/downloader-page.test.ts": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 540,
+    "bare_lf": 15,
+    "bom": false
+  },
+  "docs/build-plan/06-gui.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1709,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/build-plan/10-queue-card-ui.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 372,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4122,
+    "bom": false
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 252,
+    "bom": false
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 5464,
+    "bom": false
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 47,
+    "bom": false
+  },
+  ".agent/context/grouping/2026-11-17-post-session-88-triage-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 151,
+    "bom": false
+  },
+  "ui/tests/unit/queue-cancel-paused.test.tsx": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/convert-browse-hold.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/convert-browse-mount.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/queue-cancel-paused.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/s89-chunk-delay-probe.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/src/renderer/src/features/downloader/download-commands.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 518,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/transcript/transcript-controls.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 125,
+    "bom": false
+  },
+  "ui/src/renderer/src/registry/commandRegistry.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 680,
+    "bom": false
+  },
+  "ui/src/renderer/src/registry/shortcuts.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 282,
+    "bom": false
+  },
+  "ui/src/renderer/src/router.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 79,
+    "bom": false
+  },
+  "ui/src/renderer/src/components/queue/QueueCard.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 647,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/components/queue/QueueList.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 427,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/components/layout/AppShell.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 341,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/settings/settings-commands.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 30,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/components/help/HelpCard.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 133,
+    "bom": false
+  },
+  "ui/tests/unit/palette-curation.test.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 498,
+    "bom": false
+  },
+  "ui/tests/unit/queue-pause-feedback.test.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 757,
+    "bom": false
+  },
+  "ui/tests/unit/shortcuts.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 395,
+    "bom": false
+  },
+  "ui/tests/unit/common-shortcuts.test.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 123,
+    "bom": false
+  },
+  "ui/tests/unit/gui-actions-audit.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 533,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/fixtures/chord-table.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 20,
+    "bom": false
+  },
+  "ui/tests/e2e/convert-queue.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 1584,
+    "bom": false
+  },
+  "ui/tests/e2e/download-queue.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 1695,
+    "bom": false
+  },
+  "ui/tests/e2e/queue-pause-feedback.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 713,
+    "bom": false
+  },
+  "ui/tests/e2e/electron-app.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 96,
+    "bom": false
+  },
+  "ui/src/main/ipc.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 499,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/main/preload.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 94,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 97,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 203,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-convert-fixes/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 589,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-convert-fixes/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 101,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-convert-fixes/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1191,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-convert-fixes/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 396,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-convert-fixes/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 319,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-convert-fixes/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 243,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-convert-fixes/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 341,
+    "bom": false
+  }
+}

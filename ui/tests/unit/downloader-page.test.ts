@@ -290,7 +290,7 @@ describe('MEU-20 downloader', () => {
     ).toBe(true)
     expect(
       controlEnabled('cancel', { items: pending, selectedId: 'a', processorState: 'Paused' }),
-    ).toBe(true)
+    ).toBe(false)
     expect(
       controlEnabled('clear-all', { items: [], selectedId: null, processorState: 'Idle' }),
     ).toBe(false)

@@ -426,7 +426,7 @@ describe('MEU-33 convert gui', () => {
     expect(controlEnabled('pause', { ...ctx, processorState: 'Processing' })).toBe(true)
     expect(controlEnabled('resume', { ...ctx, processorState: 'Paused' })).toBe(true)
     expect(controlEnabled('cancel', { ...ctx, processorState: 'Processing' })).toBe(true)
-    expect(controlEnabled('cancel', { ...ctx, processorState: 'Paused' })).toBe(true)
+    expect(controlEnabled('cancel', { ...ctx, processorState: 'Paused' })).toBe(false)
     expect(controlEnabled('clear-all', { ...ctx, items: [] })).toBe(false)
     expect(controlEnabled('reset', { ...ctx, items: failed })).toBe(true)
     expect(controlEnabled('remove', ctx)).toBe(true)

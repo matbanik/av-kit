@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 143** — Active: 22 | Mitigated: 2 | Resolved: 117
+**Total: 144** — Active: 21 | Mitigated: 2 | Resolved: 119
 
 ## Active Issues
 
@@ -28,9 +28,8 @@
 | 🟢 | `VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE` | Real-ffmpeg frame grabs near a clip's last frame occasionally fail (fra… | core | ⬜ open | 2026-11-15 |
 | 🟢 | `UI-DEV-ELECTRON-RUN-AS-NODE-SILENT` | npm run dev opens no window when ELECTRON_RUN_AS_NODE is set in the IDE… | ui | ⬜ open | 2026-09-03 |
 | 🟢 | `E2E-MAIN-PROCESS-REJECTIONS-UNWATCHED` | E2E does not watch unhandled promise rejections in the Electron main pr… | ui | ⬜ open | 2026-11-15 |
-| 🟢 | `CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE` | Convert Ctrl+O delivery lost before the lazy page mounts | ui | ⬜ open | 2026-11-16 |
 | 🟢 | `PY-SUITE-5S-WAIT-FLAKE-UNDER-LOAD` | Full Python suite: tests with 5-second worker waits fail when the host… | infrastructure | ⬜ open | 2026-11-16 |
-| 🟢 | `QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT` | Cancel stays enabled while a queue is Paused, but nothing acts on it | ui | ⬜ open | 2026-11-17 |
+| 🟢 | `HELP-F1-BEFORE-LAZY-MOUNT-LOST` | F1 on Convert or Capture can be lost while the page is still loading | ui | ⬜ open | 2026-11-17 |
 
 ## Mitigated / Workaround
 
@@ -39,9 +38,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (117)
+## Resolved (119)
 
-117 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+119 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*
