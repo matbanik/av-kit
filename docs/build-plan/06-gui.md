@@ -957,7 +957,7 @@ Lazy route `/capture`, rail item below Convert, `Ctrl+5`. Inbox path + hotkey + 
 │                                                                                      │
 │  ┌─ DOWNLOAD SETTINGS ──────────────────────────────────────────────────────────────┐│
 │  │                                                                                  ││
-│  │  Download Path        [C:\Users\Mat\Downloads\av-kit         ] [Browse...]       ││
+│  │  Download Path        [~/Downloads/av-kit                    ] [Browse...]       ││
 │  │  Default Quality      [1080p ▼]  [Apply to pending]                              ││
 │  │  FFmpeg path          [                                      ] [Browse...]       ││
 │  │  Default Audio Format [default ▼]   (9 options per §6 of downloader logic)       ││
@@ -972,7 +972,7 @@ Lazy route `/capture`, rail item below Convert, `Ctrl+5`. Inbox path + hotkey + 
 │                                                                                      │
 │  ┌─ TRANSCRIPT SETTINGS ────────────────────────────────────────────────────────────┐│
 │  │                                                                                  ││
-│  │  Output Directory     [C:\Users\Mat\Documents\Transcripts    ] [Browse...]       ││
+│  │  Output Directory     [~/Documents/Transcripts               ] [Browse...]       ││
 │  │  Requests per Hour    [300    ]                                                  ││
 │  │  Delay Between (sec)  [6      ]                                                  ││
 │  │  Max Retries          [3      ]                                                  ││

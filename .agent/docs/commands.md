@@ -209,6 +209,7 @@ Each row below defines argv, scope and stage. Common fields: cwd `P:/av-kit` (np
 | openapi | full | `uv run python tools/export_openapi.py --check openapi.committed.json` | API contract/export changes; inspect declared output diff |
 | state-render | full | `uv run python tools/meu_status.py render --check` | SSOT/generated state consistency |
 | task-contract | static | `uv run python tools/lint_task_contract.py --allowed-builder-classes avkit_builder,avkit_coordinator,avkit_verifier --task TASK` | Replace TASK with actual plan task path before execution |
+| home-path | static | `uv run python tools/check_home_path.py` | Every session: tracked and untracked (not ignored) files outside .agent/fleet/hub; allow-list tools/home_path_allowlist.txt (D-817); exit 0 ok, 1 an instance or a stale entry, 2 usage; maintainer host only, CI's home differs |
 
 No MCP lint script exists; do not invent one. Coverage remains advisory. Runtime display/dependency failures need actual errors and durable follow-up; no blanket sandbox exemption. Clear ELECTRON_RUN_AS_NODE before every Electron launch, including dev and packaged acceptance.
 

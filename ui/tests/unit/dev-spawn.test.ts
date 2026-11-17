@@ -5,7 +5,7 @@ describe('AC-19.22 DEV_SPAWN', () => {
   it('owns the resolved Python image, never uv.exe', async () => {
     const { assertOwnedIdentity, buildDevSpawnArgv, buildPackagedSpawnArgv, resolvePythonImage } =
       await import('../../src/main/python-manager')
-    const pythonImage = 'C:/Users/Mat/.local/share/uv/python/cpython.exe'
+    const pythonImage = 'C:/Users/avkit/.local/share/uv/python/cpython.exe'
     const resolved = await resolvePythonImage(async (cmd: string[]) => {
       expect(cmd[0]).toBe('uv')
       expect(cmd.slice(1)).toEqual(['run', 'python', '-c', 'import sys; print(sys.executable)'])
@@ -73,8 +73,8 @@ describe('AC-19.22 DEV_SPAWN', () => {
       readyText: 'engine.created module=database',
       ownedPid: 111,
       descriptorPid: 111,
-      liveImage: 'C:/Users/Mat/.local/share/uv/python/cpython.exe',
-      oursExe: 'C:/Users/Mat/.local/share/uv/python/cpython.exe',
+      liveImage: 'C:/Users/avkit/.local/share/uv/python/cpython.exe',
+      oursExe: 'C:/Users/avkit/.local/share/uv/python/cpython.exe',
       token: 'gui-nonce',
       publish,
     })
@@ -85,8 +85,8 @@ describe('AC-19.22 DEV_SPAWN', () => {
       readyText: 'AVKIT_READY port=0 instance=abc',
       ownedPid: 111,
       descriptorPid: 111,
-      liveImage: 'C:/Users/Mat/.local/share/uv/python/cpython.exe',
-      oursExe: 'C:/Users/Mat/.local/share/uv/python/cpython.exe',
+      liveImage: 'C:/Users/avkit/.local/share/uv/python/cpython.exe',
+      oursExe: 'C:/Users/avkit/.local/share/uv/python/cpython.exe',
       token: 'gui-nonce',
       publish,
     })

@@ -1,0 +1,15 @@
+{
+  ".agent/skills/git-workflow/SKILL.md": "d0798381b755eed4a72560d93c1180ddcdbf37cd881ddc4cc097f70c5ada09be",
+  "_inspiration/capture-crop/design.md": "e9b7043395633c349994fc30953fbf594d9c0357facb90e78b9764f401dd2c63",
+  "docs/build-plan/06-gui.md": "7a5595234bf5a3bbddf1c90644e4f31fed51a040aa3fe6262f9d56049660b698",
+  "docs/build-plan/07-distribution.md": "39397e257c8a5e3f39e873ea6568ba4742abb6539dd0e9651c97344b0f5fb018",
+  "README.md": "e32d679d931c60042c5a5bb53f3219de954967e384e80aef08bd70fd0fab2207",
+  "ui/tests/unit/capture-interactive.test.ts": "7eebd3b12fac7b2375ee0a993a11484fd8a2903b5b3d3d86dad9081195ad1e1f",
+  "ui/tests/unit/dev-spawn.test.ts": "d44f3d6ae996b3452978a9494daa2d8bd5cc1aa26da5d40249e84cc60a9da6b3",
+  ".agent/context/known-issues.yaml": "66f97171c1b616bbf806b06eac74d4a4a89b32397bf85c880ef35f16f2c8f942",
+  ".agent/docs/commands.md": "dc30a320177de472b50bae346d8247e75c0f56cf9d59e8ccd8119159713f71fa",
+  ".agent/context/known-issues.md": "2095a98f1f6102ae74d5ed95ef77ca2d51ef7fd123ce64f4be5772ba11614910",
+  "tools/check_home_path.py": "absent",
+  "tools/home_path_allowlist.txt": "absent",
+  "tests/tooling/test_check_home_path.py": "absent"
+}

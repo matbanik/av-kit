@@ -3390,7 +3390,7 @@ issues:
     component: agent
     status: resolved
     discovered: '2026-11-04'
-    root_cause: 'project_root (tools/validate_closeout_artifacts.py:1736-1749) returns the nearest ancestor holding a .agent directory. The selftest builds temp plans under the temp folder, so a C:/Users/Mat/.agent folder, which appeared on 2026-11-04 outside the repository, becomes their root. Candidate fix: make the selftest hermetic, or require a real repo marker such as .agent/context.'
+    root_cause: 'project_root (tools/validate_closeout_artifacts.py:1736-1749) returns the nearest ancestor holding a .agent directory. The selftest builds temp plans under the temp folder, so a ~/.agent folder, which appeared on 2026-11-04 outside the repository, becomes their root. Candidate fix: make the selftest hermetic, or require a real repo marker such as .agent/context.'
     blast_radius: 'Measured: 5 of 215 selftest arms fail under the default temp folder and 0 of 215 with TMP and TEMP outside the home folder (C:/Temp/av-kit/rc1/rows/selftest-closeout-1.txt, selftest-closeout-2-tmp-elsewhere.txt). tests/tooling fails on this machine under the default temp. Real runs on P:/av-kit plans and CI are unaffected. Plan 2026-11-03-release-rc1 ECN-2 runs its gate with temp elsewhere rather than excusing the test.'
     verification:
       last_checked: '2026-11-15'
@@ -3401,7 +3401,7 @@ issues:
     priority: P3
     meu_links: []
     related: []
-    notes: 'Triage 2026-11-04: Stays live on this machine: C:/Users/Mat/.agent exists, so the self-test''s ancestor walk can find it.'
+    notes: 'Triage 2026-11-04: Stays live on this machine: ~/.agent exists, so the self-test''s ancestor walk can find it.'
   - id: MAIN-LOG-AFTER-WINDOW-DESTROYED
     title: Backend output after the window is destroyed stops the main process behind a JavaScript error dialog
     severity: medium
@@ -4158,11 +4158,11 @@ issues:
     title: The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build plan and the round-trip script say Programs\av-kit
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: 'electron-builder names a per-user one-click install folder after the package, not the product: ui/node_modules/app-builder-lib/out/targets/nsis/NsisTarget.js:270 calls getWindowsInstallationDirName(appInfo, !oneClick || isPerMachine), and out/targets/targetUtil.js:40-42 returns productFilename only when that argument is true, otherwise sanitizedName. ui/electron-builder.yml sets neither oneClick nor perMachine, so the folder takes ui/package.json:2 ''name: av-kit-ui'' and not ''productName: av-kit'' at ui/electron-builder.yml:2. docs/build-plan/07-distribution.md:40 and docs/execution/plans/2026-11-03-release-rc1/install-roundtrip.ps1:33 assume Programs\av-kit. That script installs with /D=$target at :137, so it never saw the default folder.'
     blast_radius: 'Measured on the published v0.1.0-rc.1 on the maintainer''s test PC on 2026-11-04: the app runs from %LOCALAPPDATA%\Programs\av-kit-ui, and Programs\av-kit does not exist. Nothing breaks. The notes named the wrong folder until they were corrected on 2026-11-04 (d287c55). The round-trip script''s precondition at :108 checks a folder the installer never uses, so a real leftover install would not stop it.'
-    resolution_path: 'Proposed for triage, not approved: correct 07-distribution.md:40 and the script''s default to the real folder, which needs no build. Renaming the package would give Programs\av-kit but needs a new build, and it would probably also move %APPDATA%\av-kit-ui and the updater folder, so check that first.'
+    resolution_path: 'Fixed in Session 83 on 2026-11-17 (plan docs/execution/plans/2026-11-15-docs-path-hygiene): docs/build-plan/07-distribution.md:40 and the hand-written MCP config in README.md (lines 174-175) now name %LOCALAPPDATA%/Programs/av-kit-ui, the folder the installer makes; the install layout in 07-distribution.md loses its resources/extra/ level, so the backend, ffmpeg and the MCP server sit directly under resources/ as the installer puts them (D-996). The rc.2 round-trip script (docs/execution/plans/2026-11-08-release-rc2/install-roundtrip.ps1) already used Programs/av-kit-ui; the two older round-trip scripts are finished sessions'' evidence and stay as they are (D-990). The package is not renamed (D-811).'
     category: TECH-DEBT
     priority: P4
     related:
@@ -4172,7 +4172,9 @@ issues:
       - MEU-25
     notes: Filed by the release session on 2026-11-04, after the triage session's intake, so triage-output.yaml does not carry it.
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-17'
+      method: 'Session 83 task row 5: edit-check.py --group docs compared docs/build-plan/07-distribution.md and README.md (with the other three docs) to the bytes row 0 copied, line by line, line endings included (receipt dph-docs-check.txt under C:/Temp/av-kit/dph)'
+      result: 'dph-docs-check.txt: edit-check docs: ok files=5'
     enrichment:
       questions_asked: []
       answers: []
@@ -4460,12 +4462,15 @@ issues:
     title: Tracked files name the maintainer's Windows home folder in full, user name included
     severity: low
     component: agent
-    status: open
+    status: resolved
     discovered: '2026-11-07'
     root_cause: 'Handoffs, critical reviews, session digests, plan files (mcp-audit-summary.json, baseline and gate comments, a models snapshot), two lines of docs/build-plan/06-gui.md, the git-workflow skill, this register and two UI unit tests write the home folder as the full Windows path rather than as ~. Nothing checks a tracked file for it: the Console scrub (D-335) covers runtime output only.'
     blast_radius: 'Measured on 2026-11-07 with git grep over the tracked tree, outside .agent/fleet/hub: 56 files, 119 lines. Session 52 adds three lines in two new files, a plan review kept byte for byte and the models snapshot. The repository is public and the old history keeps every earlier instance, so a fix limits new exposure only. Mat ruled on 2026-11-07 that Session 52''s files are committed as they are and the next triage takes this up.'
     verification:
-      last_checked: '2026-11-07'
+      last_checked: '2026-11-17'
+      method: 'Session 83 task row 9: uv run python tools/check_home_path.py over every tracked and untracked (not ignored) file with the allow-list in place (receipt dph-repo-green.txt), then the same check with an empty allow-list, whose found files inventory.py --expect-evidence compared to the 60 evidence files (receipt dph-repo-empty-check.txt), both under C:/Temp/av-kit/dph'
+      result: 'dph-repo-green.txt: check_home_path: ok files=2484 allowlisted=60 nul=31. dph-repo-empty-check.txt: empty-list run found files=60 pairs=118 EVIDENCE_SET=60; inventory: ok'
+    resolution_path: 'Fixed in Session 83 on 2026-11-17 (plan docs/execution/plans/2026-11-15-docs-path-hygiene), applying D-817 A: tools/check_home_path.py refuses any tracked or untracked (not ignored) file that holds the home folder''s full path, in UTF-8, UTF-16 and UTF-32 and in its usual spellings, and prints path:line only; tools/home_path_allowlist.txt lists the 60 evidence files of the 2026-11-15 count by name, each bound to a digest of its content (D-997), so evidence stays byte for byte and any change to a listed file fails the check; the home-path row in .agent/docs/commands.md makes it a gate step of every session. The six live files are fixed: .agent/skills/git-workflow/SKILL.md, _inspiration/capture-crop/design.md, docs/build-plan/06-gui.md, ui/tests/unit/capture-interactive.test.ts, ui/tests/unit/dev-spawn.test.ts and .agent/context/known-issues.yaml (CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR root_cause and notes now write ~). The check is not in CI or agent-commit.ps1, because another machine''s home folder differs.'
     category: TECH-DEBT
     priority: P4
     related:

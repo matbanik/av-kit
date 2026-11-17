@@ -11,7 +11,7 @@ import {
 } from '../../src/main/capture-register'
 import { resetNotifyUserDeps } from '../../src/main/notify-user'
 
-const INBOX_PATH = 'C:/Users/Mat/Pictures/av-kit/2026-08-27_12-00-00.png'
+const INBOX_PATH = 'C:/Users/avkit/Pictures/av-kit/2026-08-27_12-00-00.png'
 const REQ = 'req-1'
 
 type Notice = { title: string; body: string; path?: string }

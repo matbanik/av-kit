@@ -171,8 +171,8 @@ Settings → MCP prompt there.
 {
   "mcpServers": {
     "avkit": {
-      "command": "C:\\Users\\YOU\\AppData\\Local\\Programs\\av-kit\\av-kit.exe",
-      "args": ["C:\\Users\\YOU\\AppData\\Local\\Programs\\av-kit\\resources\\mcp-server\\index.mjs"],
+      "command": "C:\\Users\\YOU\\AppData\\Local\\Programs\\av-kit-ui\\av-kit.exe",
+      "args": ["C:\\Users\\YOU\\AppData\\Local\\Programs\\av-kit-ui\\resources\\mcp-server\\index.mjs"],
       "env": { "ELECTRON_RUN_AS_NODE": "1" }
     }
   }

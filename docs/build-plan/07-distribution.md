@@ -37,16 +37,15 @@ Disk target: **&lt; 500MB installed, without models** ([APPLICATION_PURPOSE.md �
 ## On-disk layout after install
 
 ```
-{install}/                         # e.g. %LOCALAPPDATA%/Programs/av-kit
+{install}/                         # e.g. %LOCALAPPDATA%/Programs/av-kit-ui
 ├── av-kit.exe                     # Electron
 ├── resources/
-│   ├── extra/
-│   │   ├── avkit-backend/         # PyInstaller onedir (preferred over onefile)
-│   │   │   └── avkit-backend.exe
-│   │   ├── ffmpeg/
-│   │   │   ├── ffmpeg.exe
-│   │   │   └── ffprobe.exe
-│   │   └── mcp-server/            # compiled JS (Phase 5 dist/)
+│   ├── avkit-backend/             # PyInstaller onedir (preferred over onefile)
+│   │   └── avkit-backend.exe
+│   ├── ffmpeg/
+│   │   ├── ffmpeg.exe
+│   │   └── ffprobe.exe
+│   ├── mcp-server/                # compiled JS (Phase 5 dist/)
 │   └── app.asar
 └── ...
 

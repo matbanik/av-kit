@@ -1,0 +1,67 @@
+# Evidence files that hold the home folder's full path, kept byte for byte (D-817).
+# Each entry is "<sha256>  <path>": the SHA-256, lowercase hex, of the file's bytes with
+# each CRLF read as LF (D-997). tools/check_home_path.py exempts a listed file only while
+# its digest matches, so any change to a listed file fails the check.
+# A new entry, or a new digest for an entry, loosens the check and needs an HDP decision.
+# A file that no longer holds the path is a stale entry; remove it with
+# `uv run python tools/check_home_path.py --prune`.
+888d612d2d0032d27d469ee540e87c0ca99c2262f250c7a74c2085a430a71d5b  .agent/context/handoffs/2026-09-11-p10-queue-card-dnd-cursor-takeover-handoff.md
+6da4d509034f06d2b0d657b16d86f184e24d895d81152e96edd257a28d1b2395  .agent/context/handoffs/2026-09-26-framework-update-adoption-implementation-critical-review.md
+7630397ceede76520576afd10fd8f5b3afcdcd3225fbe3db7436349a99c33827  .agent/context/handoffs/2026-10-01-mcp-live-audit-implementation-critical-review.md
+6b3a0dd68f59d71e148071da659b925dbb789c2c67fdb87ebe87e2f8c62a670b  .agent/context/handoffs/2026-10-14-backend-robustness-plan-critical-review.md
+f35a8216f4bc5f8304f2cc1485c23f70772038b710b6db5cbe46da578b0d0795  .agent/context/handoffs/2026-10-14-capture-chrome-implementation-critical-review.md
+06bffd601ac8f84bb8d6c0ac87e6cef5e26ae1254806d0403da8c410441c3411  .agent/context/handoffs/2026-10-14-capture-render-fidelity-plan-critical-review.md
+a41f2ff6c600c0ae8bd70db872807542f6e14e64bbd7349b9879f8f3ea108d61  .agent/context/handoffs/2026-10-16-capture-editor-options-implementation-critical-review.md
+871de67d066288381e160eb095fd68a549081ecb92d1ed41c971b229de6fc3d6  .agent/context/handoffs/2026-10-16-capture-editor-options-plan-critical-review.md
+aaad9924c7d41bd0bf0084e01220b0eec88b5cd3cea8de004692aba8d85815f2  .agent/context/handoffs/2026-10-16-capture-new-marks-plan-critical-review.md
+739037e5035b8be4660dc5898f80a0e77664665a2b268f0236733b2bf45fe1cf  .agent/context/handoffs/2026-10-16-tts-voice-panel-plan-critical-review.md
+30f72ffc990fe4d377a0e7eeba5042cf22cbde332cf7176351975a5c6a573cbe  .agent/context/handoffs/2026-10-29-capture-editor-repair-plan-critical-review.md
+84336d1960691dfcddddd15ff6ad7e35712415a19677d887312a558f54c484c4  .agent/context/handoffs/2026-11-03-release-rc1-plan-critical-review.md
+680c8c7aa34f78ed21ec6ecf5b8fc07e055d1dd76ac26969ced3c00557f9ea80  .agent/context/handoffs/2026-11-05-closeout-register-grammar-handoff.md
+7ebb7411411119ddcde5cb536cbcb7a7c87f8bdda931d4b2eab75b54ae06745c  .agent/context/handoffs/2026-11-05-closeout-register-grammar-implementation-critical-review.md
+ca27b211f7fff1db20458ea0aebc629d3b35ec7f1390e535058a13718ca6c675  .agent/context/handoffs/2026-11-06-tts-load-fp16-plan-critical-review.md
+560b1e6b7349aa8e8461c7063952b82ef6c5ab735c688f1aa312789a58e5109a  .agent/context/handoffs/2026-11-14-review-limits-no-token-budget-handoff.md
+eabc3117fa908277d13e4a9c1bf383348986d317836f30ba74bdc68c60d7d834  .agent/context/sessions/01a0df0e-64fb-78f0-aa8f-9312137058b3/digest.md
+7e6830dc05bd861102b2a3cec36616c7395852e826b42cb1a6d7440a80387e4b  .agent/context/sessions/0d9061a3-6961-4102-90b6-b67494b14797/digest.md
+dfd6211bbb04021f7c192cafec57917fa4125f94999e043346bbedea912828cf  .agent/context/sessions/20228bc8-dd31-44e5-b8fc-bbc747e3ebeb/digest.md
+84de3663ab28de8601adb0a61c6457e702ba8592691425ca2161d05d02c6e53d  .agent/context/sessions/26373dbe-ee91-47de-9ea1-1980e7c95c8f/digest.md
+53b2d87975c5ca4f47189bed1cff423e4a040f166d3e548bcbd75c4fc14d9835  .agent/context/sessions/32a1f22e-5e94-451c-9adf-db4d00cf5a2a/digest.md
+f01e5a8ab32d9253dbeea7a68e2edeea7181dc31645783e01ad0eea386939ded  .agent/context/sessions/4c0aac1b-a021-4148-becb-d0949b028bb6/digest.md
+8bf3d7779a8c824019c6fc913e6a1dffcf9010dbed3171660c9de4b4214938fd  .agent/context/sessions/59ecbb17-5de9-491e-8b5f-620ab3950f32/digest.md
+c1d60819502fec27bc348ebe8f51bfc2b0f4ee2f6c64ccc3d25b22ca0124c3be  .agent/context/sessions/64d28ec9-61b4-4f5f-a398-3342c15cdbf9/digest.md
+ce7dc7617a7807f3a1b0a946e37a8ee994f0cd9d4a1a8f148c2b9744578a7801  .agent/context/sessions/7f638658-c16d-42f7-8be0-c2be4cf846c9/digest.md
+fdd6cb0859b6f8788d4939c68cc1c460349519a37d5b04bf8b07c9d9e3fcbdea  .agent/context/sessions/9ab1e630-a1ca-428a-b086-7eff37b74e48/digest.md
+5fc172a50edd9a666f358a99a1a644cc215317d051af8f70c67e53a2f71af509  .agent/context/sessions/c9d87b77-55a0-495a-a121-fc14406fac81/digest.md
+a9ea0508a9b13b083118d1a52e2ba8a5e38d646a5abcbdf50814dd49253b1d11  .agent/context/sessions/d2be867f-0d35-422e-b139-55d6ed0d88f2/digest.md
+6d6370339c810937df4c4d2be24da67984b3f462ab81a26d7f3a632bd424e0a5  .agent/context/sessions/da191231-5f00-4b2d-8c07-19973b2686aa/digest.md
+5bfe5d5cb0608e40630ff3eb2eb119f2fc44b69b70b0b2a82a6574f3f9e6699a  .agent/context/sessions/ec6a34c1-9bc9-42a8-9541-3b35164e7e61/digest.md
+bc888ad30511d9b081dac3d0be236d33a9bda151536abd09e04d97aafe78a5ad  docs/execution/plans/2026-09-03-p10-queue-card-dnd/session-22-compaction-summary.md
+b83c69a26df67ccd97177bd7043c651fc48bcb6e33bb6082a76018376da1227e  docs/execution/plans/2026-09-26-p11-queue-pages/validation-state.json
+26c3a3d6da9c49b1eb137073de7bf6454ce7cfb8808eacbb560ee8c969fb1235  docs/execution/plans/2026-10-01-mcp-live-audit/mcp-audit-summary.json
+6ebc96334bac698010820efe4862440af510d861519e15c477481ae4f86b5269  docs/execution/plans/2026-10-02-capture-flatten-backup/mcp-audit-summary.json
+5e353cf99458484eead3b2a22d35f3e9ec96a4ee15bed181b5ad6b085a7eb422  docs/execution/plans/2026-10-14-backend-robustness/implementation-plan.md
+fbcbdff14b8ad9e5cd399a583e4a69de9dd95f3b9a1fbfb03c37ae22428c978f  docs/execution/plans/2026-10-14-backend-robustness/mcp-audit-summary.json
+4a18914f9c05301f6ed5f2d2e6a91707cb8ac3631820ec68a305c6f095a209ff  docs/execution/plans/2026-10-14-backend-robustness/task.md
+2d63691ca569a48e03f821c81e844bc6a720a710d92689b88711e32bd451105a  docs/execution/plans/2026-10-14-backend-robustness/walkthrough.md
+baa75fbef60f923309ba6342966b5fa3ba18ade38ac54e62a64f3536e276cc15  docs/execution/plans/2026-10-14-capture-filmstrip-actions/implementation-plan.md
+95c3d5339137c8901214fa8f1975ca6a4166e335096c3108472b4e6d88a0212d  docs/execution/plans/2026-10-14-capture-filmstrip-actions/task.md
+e844d6861331c3369e3ea2683e74dd50b52555fdf23a1769524651a10d047ba6  docs/execution/plans/2026-10-14-tts-engine-runtime/walkthrough.md
+bcaaff95699bd6f7519d816f7f30767cf2b386a8b76f3e929fd2dbacba1a7618  docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md
+67079d4cecff45ecf7bfb9bc5654d17a4522e0b1065d3ef11f0bef24d850b777  docs/execution/plans/2026-11-04-rc2-fetch-uninstall/baseline.ps1
+87950bc79013461736cb446f56874841c9e401a6fadd5c9e2dbd5df819644e77  docs/execution/plans/2026-11-04-rc2-fetch-uninstall/implementation-plan.md
+bd554e30b47b40350e37e499862f204836afcd5f45dfd269dd9d9914d1a269e3  docs/execution/plans/2026-11-04-rc2-fetch-uninstall/session-gate.ps1
+338fa5b21e982258d01496d68e8b5acebe305215df76081595d8a4fc027f9dc1  docs/execution/plans/2026-11-04-rc2-ffmpeg-uninstall/implementation-plan.md
+d8bcdc6e8e08e9ce8fb1608e841b8b0abb918712584d3e37bd0bdabd3c64e5b7  docs/execution/plans/2026-11-05-closeout-register-grammar/baseline.ps1
+e59ed1bd5dc815a0b03b171101a22ca7b5d3eb0ea7ab750e164bac7947618c4b  docs/execution/plans/2026-11-05-closeout-register-grammar/session-gate.ps1
+ebc2bca5cf9ce31656eefe9c62d96312a95a1f2bd6e9580e4aa36dac36f5337a  docs/execution/plans/2026-11-05-transcript-failure-reason/baseline.ps1
+fdef6847fce4017e85dd3fdf3651c9312eb8078ba11e4d164017dc62b980c392  docs/execution/plans/2026-11-05-transcript-failure-reason/real-log-before.json
+0e951726dd95a9d2f81dffef5b41f6de65d19b8a7e4af70ef5b48543fcfb3c1c  docs/execution/plans/2026-11-05-transcript-failure-reason/session-gate.ps1
+9eaf67b5e4153a9ddb4ce0633cfa1c988d3bb985a4f8684f706bd8379597becb  docs/execution/plans/2026-11-06-tts-build-capability/baseline.ps1
+12bc9fd32de461f14c4979e660ff5267f469909f9d7dc072e45c77ece78d551f  docs/execution/plans/2026-11-06-tts-build-capability/models-before.json
+864d8c9d265d6097c7ff8450aacb94aa4d8e8f34501cc4ae9cefa8abdc5c1c94  docs/execution/plans/2026-11-06-tts-build-capability/session-gate.ps1
+12bc9fd32de461f14c4979e660ff5267f469909f9d7dc072e45c77ece78d551f  docs/execution/plans/2026-11-06-tts-load-fp16/models-before.json
+9cab54e4c66201b13b53c0e082d9e0460b9f798528f25c261c9cd099bcc89bba  docs/execution/plans/2026-11-07-convert-extract-index/session-gate.ps1
+24990a5048ce78c33fa48bfb52530465f8626036d02413b02305e1e4dc2a4387  docs/execution/plans/2026-11-07-transcript-metadata/session-gate.ps1
+acf3d4505a26d02f7ce9e4285a3a2e944cf9155af75c34de372b618071d3f114  docs/execution/plans/2026-11-08-download-received-quality/session-gate.ps1
+109042717e0399e8aa2c3f86674388afdc3e7a428b87fbef62f09be952eee768  docs/execution/plans/2026-11-08-light-accent-contrast/session-gate.ps1
+9b1f8a29fd59a8c2f32218f462d059af49bcbd28463a012320af46c1a4e9a32c  docs/execution/plans/2026-11-14-review-limits-no-token-budget/baseline.ps1

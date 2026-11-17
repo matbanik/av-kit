@@ -150,7 +150,7 @@ commit is checked again after `verify-commit`.
 ## Provenance
 
 - Conversation ID: `{conversation-id}`
-- Transcript: `C:\Users\Mat\.gemini\antigravity-ide\brain\{conversation-id}\.system_generated\logs\transcript.jsonl`
+- Transcript: `~\.gemini\antigravity-ide\brain\{conversation-id}\.system_generated\logs\transcript.jsonl`
 ```
 
 **Rules:**

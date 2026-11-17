@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 142** — Active: 24 | Mitigated: 2 | Resolved: 114
+**Total: 142** — Active: 22 | Mitigated: 2 | Resolved: 116
 
 ## Active Issues
 
@@ -23,8 +23,6 @@
 | 🟢 | `TRANSCRIPT-ADD-CHANNEL-422` | Adding a channel returned 422 after about 8 minutes of enumeration | core | ⬜ open | 2026-11-03 |
 | 🟢 | `DOWNLOADER-ADVANCED-PANEL-GAP` | An empty gap sits under Advanced on the Downloader page | ui | ⬜ open | 2026-11-03 |
 | 🟢 | `E2E-CLIPBOARD-PRIMER-EMPTY` | AC-88.12's clipboard primer read an empty clipboard for 5 s once | ui | ⬜ open | 2026-11-04 |
-| 🟢 | `INSTALL-FOLDER-NAME-MISMATCH` | The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build pla… | ui | ⬜ open | 2026-11-04 |
-| 🟢 | `TRACKED-FILES-HOLD-HOME-PATH` | Tracked files name the maintainer's Windows home folder in full, user n… | agent | ⬜ open | 2026-11-07 |
 | 🟢 | `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` | The transcript queue E2E's seam reload failed once with ERR_ABORTED und… | ui | ⬜ open | 2026-11-07 |
 | 🟢 | `MCP-AUDIT-BASELINE-PENDING-CROP` | The committed MCP audit baseline has no avkit_capture.crop entry | mcp-server | ⬜ open | 2026-11-08 |
 | 🟢 | `MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL` | Claude Code doesn't show a model the per-action text in _meta.action_de… | mcp-server | ⬜ open | 2026-11-10 |
@@ -41,9 +39,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (114)
+## Resolved (116)
 
-114 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+116 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

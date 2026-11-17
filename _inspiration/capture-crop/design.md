@@ -202,7 +202,7 @@ POST /captures/{id}/crop
 
 ```http
 POST /captures
-{"mode": "import", "path": "C:/Users/Mat/Desktop/2026-11-07_13-16-09.png"}
+{"mode": "import", "path": "C:/Users/YOU/Desktop/2026-11-07_13-16-09.png"}
 201 { "item": { …new shot, source "Import"… } }
 ```
 
