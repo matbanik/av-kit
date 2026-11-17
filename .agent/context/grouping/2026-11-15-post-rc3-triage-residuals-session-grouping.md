@@ -268,14 +268,14 @@ On Mat's word, run `/create-plan` once per session, in the §5 order. Nothing is
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
 | 75 | `capture-inbox-probe` | MEU-145, MEU-146 | P2 | executed (Session 75) | `docs/execution/plans/2026-11-15-capture-inbox-probe/` |
-| 76 | `tooling-test-hermeticity` | — | P2 | proposed | — |
+| 76 | `tooling-test-hermeticity` | — | P2 | executed (Session 76) | `docs/execution/plans/2026-11-15-tooling-test-hermeticity/` |
 | 77 | `text-scrub-residuals` | MEU-147, MEU-148 | P3 | executed (Session 77) | `docs/execution/plans/2026-11-15-text-scrub-residuals/` |
 | 78 | `e2e-harness-hardening` | — | P3 | executed (Session 78) | `docs/execution/plans/2026-11-15-e2e-harness-hardening/` |
 | 79 | `triage-tool-fixes` | — | P3 | executed (Session 79) | `docs/execution/plans/2026-11-15-triage-tool-fixes/` |
 | 80 | `tts-page-polish` | MEU-149, MEU-150 | P3 | executed (Session 80) | `docs/execution/plans/2026-11-15-tts-page-polish/` |
 | 81 | `convert-settings-drafts` | MEU-151, MEU-152 | P4 | executed (Session 81) | `docs/execution/plans/2026-11-15-convert-settings-drafts/` |
 | 82 | `ready-handshake` | MEU-153, MEU-154 | P4 | executed (Session 82) | `docs/execution/plans/2026-11-15-ready-handshake/` |
-| 83 | `docs-path-hygiene` | — | P4 | proposed | — |
+| 83 | `docs-path-hygiene` | — | P4 | executed (Session 83) | `docs/execution/plans/2026-11-15-docs-path-hygiene/` |
 | 88 | `queue-pause-feedback` | MEU-155 | P4 | executed (Session 88) | `docs/execution/plans/2026-11-17-queue-pause-feedback/` |
 
 The Band column is the session's queue priority. Every MEU is registered in band P2, as the earlier triage residuals were; a session band below P2 orders the queue and changes no register field.

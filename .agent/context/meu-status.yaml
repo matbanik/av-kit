@@ -4056,6 +4056,56 @@ meus:
   updated: '2026-11-17'
   closed_reason: null
   note: Registered 2026-11-17 from QUEUE-PAUSE-NO-FEEDBACK (grouping §3 Session 88, Mat's 2026-11-16 ruling), Session 88.
+- row_key: MEU-156
+  id: MEU-156
+  slug: gui-queue-cancel-paused
+  phase: '10'
+  band: P2
+  matrix_item: '10.11'
+  build_ref:
+    path: build-plan/10-queue-card-ui.md
+    anchor: queue-cancel-paused-residual
+    text: Phase 10 §Cancel while paused (residual)
+  description: Cancel is disabled on the Convert and Downloader pages while the queue is Paused, since no job runs to cancel; it stays enabled while a job runs, and no service or API changes.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-45, MEU-46, MEU-155
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-45
+  - MEU-46
+  - MEU-155
+  execution_plan: null
+  updated: '2026-11-17'
+  closed_reason: null
+  note: Registered 2026-11-17 from QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT (triage D-1100, Mat's ruling; grouping D-1103), Session 89.
+- row_key: MEU-157
+  id: MEU-157
+  slug: gui-convert-browse-after-mount
+  phase: '6'
+  band: P2
+  matrix_item: '6.21'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: convert-browse-after-mount-residual
+    text: Phase 6 §Convert browse waits for the page (residual)
+  description: A Ctrl+O browse request made before the lazy Convert page listens is held and delivered once when it mounts, so the file picker always opens; AC-97.7 waits for the page.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-97
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-97
+  execution_plan: null
+  updated: '2026-11-17'
+  closed_reason: null
+  note: Registered 2026-11-17 from CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE (triage D-1101; grouping D-1103), Session 89.
 summary_bands:
 - key: P0
   label: P0
@@ -4065,8 +4115,8 @@ summary_bands:
   range: MEU-5–13 (Phases 2–3)
 - key: P2
   label: P2
-  range: MEU-14–155 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+  range: MEU-14–157 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
     triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127;
     2026-11-08 capture crop residuals MEU-128–132; 2026-11-09 video stills residuals MEU-133–136; 2026-11-10 download reliability residuals MEU-137–142; 2026-11-13 capture style split MEU-143; 2026-11-15
-    post-rc.3 triage residuals MEU-145–154, with MEU-144 held for Session 74; 2026-11-17 queue pause feedback MEU-155)
+    post-rc.3 triage residuals MEU-145–154, with MEU-144 held for Session 74; 2026-11-17 queue pause feedback MEU-155; 2026-11-17 triage residuals MEU-156–157)
 narrative_sections: []

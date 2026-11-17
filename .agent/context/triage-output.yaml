@@ -1,5 +1,13 @@
 # Auto-generated. Do not edit. Regenerate with `issue_triage.py triage`
 archived:
+- id: E2E-ELECTRON-LAUNCH-FLAG
+  title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
 - id: TTS-MODEL-MANAGE-AFFORDANCE
   title: TTS 'Manage' disclosure hides model selection; Get/Load/Unload should follow a selected model's state
   severity: medium
@@ -551,6 +559,14 @@ archived:
       reasoning: 'Recommended in the triage brief: keeps the shipped app free of GPL code (09:734-742) and follows D-22 (nothing bundled). Bundling conflicts with the licence; English-only drops seven languages;
         status quo fails jobs. Loading a user-installed GPL library in-process is a legal grey area, flagged to the user (not legal advice).'
       human_message_reference: USER_EXPLICIT 2026-10-09 'All recommendations accpeted as proposed'
+- id: TOOLING-ADOPTION-FIXTURE-LIVE-GOVERNANCE
+  title: Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the 2026-09-26 postimage
+  severity: low
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
 - id: GUI-STARTUP-RELOAD-HIDDEN-WINDOW
   title: A reload during startup leaves the main window hidden and skips the rest of boot
   severity: medium
@@ -558,6 +574,14 @@ archived:
   status: resolved
   category: null
   priority: null
+  enrichment: null
+- id: UI-ELECTRON-LAZY-INSTALL-RACE
+  title: Electron 42 binary installs lazily on first require; parallel Vitest workers race the extraction after npm ci
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
   enrichment: null
 - id: SETTINGS-TTS-ASSET-ROW-STALE
   title: Settings Dependencies TTS asset rows stay 'Downloading' after the download finishes until the page is revisited
@@ -1366,6 +1390,14 @@ archived:
       reasoning: 'Recommended in the triage brief: opens what the user sees. Prefer-annotated ignores the toggle; original-only keeps the reported gap until Apply to image. Research not run: the choice
         concerns av-kit''s own two views.'
       human_message_reference: USER_EXPLICIT 2026-10-09 'All recommendations accpeted as proposed'
+- id: TTS-VOICE-SELECT-LAYOUT-JUMP
+  title: TTS voice selection made the page layout jump (2026-09-30 report; recheck after MEU-64's voice combobox)
+  severity: low
+  component: ui
+  status: dismissed
+  category: null
+  priority: null
+  enrichment: null
 - id: TTS-MODEL-FLOW-GAPS
   title: 'Loading the PyTorch model on ''cuda'' fails with ''Failed to fetch'': the Device list offers cuda without CUDA torch, and the load error is an unlogged 500 with no CORS header'
   severity: medium
@@ -1869,6 +1901,14 @@ archived:
         - Browser convention — Ctrl+L focuses the address bar
       reasoning: Covers each page's most-used action with conventional keys; minimal leaves console/help/Browse unbound; a remappable keymap is a large feature that can follow.
       human_message_reference: AskUserQuestion 2026-10-17 'Core set (Recommended)'
+- id: TOOLING-TRIAGE-CLI-CP1252
+  title: issue_triage.py bucket and --help crash with UnicodeEncodeError when output is redirected on Windows
+  severity: low
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
 - id: PACKAGING-MCP-SNIPPET-TOKEN-STALE
   title: test_mcp_snippet_keys (AC-25.7) still requires AVKIT_API_TOKEN in mcp.json.example, which Session 31b made token-free
   severity: low
@@ -1877,6 +1917,42 @@ archived:
   category: TECH-DEBT
   priority: P3
   enrichment: null
+- id: CAPTURE-HINT-TEST-PRESENCE-ONLY
+  title: Capture's AC-97.4 hint test checks that the shortcut props exist, not their chord values
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: BACKEND-READY-BEFORE-LISTEN
+  title: The backend prints AVKIT_READY before its socket listens, so an immediate request is refused
+  severity: low
+  component: api
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-810
+      stage: triage
+      question: Register the two READY handshake defects?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Two MEUs in Session 82: MEU-153 api-ready-after-listen (04, matrix 4.5) and MEU-154 gui-ready-line-buffer (06, matrix 6.20). Whether a failed live query vetoes a ready line from the owned
+        child''s pipe is a plan-time decision with evidence.'
+      source_tag: Local Canon
+      precedents:
+      - MEU-24 AVKIT_READY
+      - MEU-108 READY probe guard
+      - mcp-server/scripts/audit/backend.ts waits for the port
+      research:
+        engine: none
+        sources: []
+      reasoning: 'The two ends of one line: the backend prints it, the main process reads it. Separate MEUs because each has its own layer and test. Two-way.'
 - id: MCP-IMAGE-OVER-STDIO-LIMIT
   title: avkit_capture image over about 7.86 MB drops the MCP connection
   severity: high
@@ -2004,6 +2080,112 @@ archived:
         sources: []
       reasoning: Two lists of what a build can do would drift, as the models folder did. Whatever D-217 rules, this stands. Two-way.
     decided_by: agent
+- id: TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE
+  title: The TTS progress label reads 'Segments 0/1000' whatever the text's length
+  severity: low
+  component: core
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-807
+      stage: triage
+      question: Register the TTS file names and the segments label?
+      resolution: autonomous
+      class: two-way
+      chosen: One MEU, MEU-150 svc-tts-output-names-progress (03, matrix 3.24), in Session 80 with MEU-149 (same page). The name scheme is a plan-time Decision Brief, because the user sees it in their folder.
+      source_tag: Local Canon
+      precedents:
+      - '03 §Download audio extract (residual): a new name never overwrites, then -2, -3 (D-666)'
+      research:
+        engine: none
+        sources: []
+      reasoning: Both were seen together while staging README screenshots and both sit in services/tts.py and TTSPage.tsx. Two-way.
+- id: TTS-AUDIO-RANDOM-FILE-NAMES
+  title: Generated audio files have random ID names
+  severity: low
+  component: core
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-807
+      stage: triage
+      question: Register the TTS file names and the segments label?
+      resolution: autonomous
+      class: two-way
+      chosen: One MEU, MEU-150 svc-tts-output-names-progress (03, matrix 3.24), in Session 80 with MEU-149 (same page). The name scheme is a plan-time Decision Brief, because the user sees it in their folder.
+      source_tag: Local Canon
+      precedents:
+      - '03 §Download audio extract (residual): a new name never overwrites, then -2, -3 (D-666)'
+      research:
+        engine: none
+        sources: []
+      reasoning: Both were seen together while staging README screenshots and both sit in services/tts.py and TTSPage.tsx. Two-way.
+- id: CONVERT-POSITIONS-NOT-RENUMBERED
+  title: Convert's queue numbers aren't renumbered
+  severity: low
+  component: core
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-809
+      stage: triage
+      question: Register the three Convert queue label defects?
+      resolution: autonomous
+      class: two-way
+      chosen: One MEU, MEU-152 convert-queue-labels (08, matrix 8.11), in Session 81 with MEU-151, which edits ConvertPage.tsx too. CONVERT-CUT-ENCODER-LABEL comes out of the debt queue's tail (D-380) because
+        this MEU edits _dispatch's neighbourhood and the Convert card.
+      source_tag: Local Canon
+      precedents:
+      - 'D-380: CONVERT-CUT-ENCODER-LABEL P4, last in the debt queue'
+      - MEU-123 EXTRACT_NO_ENCODER
+      - 'D-242: a rider joins only a session that works in the same file'
+      research:
+        engine: none
+        sources: []
+      reasoning: All three are what a Convert queue card says; D-242 allows the encoder label to join because the session works in the same files. Two-way.
+- id: CONVERT-CUT-TIME-RAW-MS
+  title: A cut job's row shows its times in raw milliseconds
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-809
+      stage: triage
+      question: Register the three Convert queue label defects?
+      resolution: autonomous
+      class: two-way
+      chosen: One MEU, MEU-152 convert-queue-labels (08, matrix 8.11), in Session 81 with MEU-151, which edits ConvertPage.tsx too. CONVERT-CUT-ENCODER-LABEL comes out of the debt queue's tail (D-380) because
+        this MEU edits _dispatch's neighbourhood and the Convert card.
+      source_tag: Local Canon
+      precedents:
+      - 'D-380: CONVERT-CUT-ENCODER-LABEL P4, last in the debt queue'
+      - MEU-123 EXTRACT_NO_ENCODER
+      - 'D-242: a rider joins only a session that works in the same file'
+      research:
+        engine: none
+        sources: []
+      reasoning: All three are what a Convert queue card says; D-242 allows the encoder label to join because the session works in the same files. Two-way.
 - id: CONVERT-EXTRACT-ENCODER-LABEL
   title: An audio extract is labelled with a video encoder
   severity: low
@@ -2011,6 +2193,14 @@ archived:
   status: resolved
   category: TECH-DEBT
   priority: P4
+  enrichment: null
+- id: CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
+  title: validate_closeout_artifacts --selftest fails when a .agent folder sits above the temp folder
+  severity: low
+  component: agent
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
   enrichment: null
 - id: MAIN-LOG-AFTER-WINDOW-DESTROYED
   title: Backend output after the window is destroyed stops the main process behind a JavaScript error dialog
@@ -2020,6 +2210,88 @@ archived:
   category: null
   priority: null
   enrichment: null
+- id: E2E-MAIN-PROCESS-ERRORS-UNWATCHED
+  title: The E2E suite does not notice an uncaught exception in the main process
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-231
+      stage: triage
+      question: RC1 is out, so what happens to the four issues deferred for it?
+      resolution: autonomous
+      class: two-way
+      chosen: E2E-MAIN-PROCESS-ERRORS-UNWATCHED to TECH-DEBT P3. SETTINGS-DRAFT-STALE-BASELINE and CONVERT-ADVANCED-EDIT-REPLACED to TECH-DEBT P4. E2E-CLIPBOARD-PRIMER-EMPTY to MONITORING P4, because its
+        cause is not established and it was seen once.
+      source_tag: Local Canon
+      precedents:
+      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md — D-208, filed low and listed in the notes for RC1
+      - .agent/context/current-focus.md Next steps 2
+      - .agent/context/known-issues.yaml CONVERT-JOB-GPU-PREFERENCE-IGNORED — D-212 precedent, AC-112.9
+      research:
+        engine: none
+        sources: []
+      reasoning: The DEFER was an RC1-era call and current-focus Next steps 2 lists them next. They lead the debt queue but stay below the new user-facing issues, which rank higher on the matrix. Two-way.
+    decided_by: agent
+- id: SETTINGS-DRAFT-STALE-BASELINE
+  title: An unsaved capture settings edit freezes the other capture settings at their old values
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-808
+      stage: triage
+      question: Register the two settings-draft defects?
+      resolution: autonomous
+      class: two-way
+      chosen: 'One MEU, MEU-151 gui-settings-draft-baseline (06, matrix 6.19), in Session 81: the capture draft and the Convert advanced fields both lose to a settings refetch, the shape AC-112.9 fixed
+        for the encoder.'
+      source_tag: Local Canon
+      precedents:
+      - AC-112.9, plan D-212 (useConverterSettings)
+      - 'plan D-208: CONVERT-ADVANCED-EDIT-REPLACED not fixed in RC1, listed in the notes'
+      research:
+        engine: none
+        sources: []
+      reasoning: One renderer pattern, one fix shape, one test style. Two-way.
+- id: CONVERT-ADVANCED-EDIT-REPLACED
+  title: An Advanced edit on Convert snaps back when settings load late or the default preset changes
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-808
+      stage: triage
+      question: Register the two settings-draft defects?
+      resolution: autonomous
+      class: two-way
+      chosen: 'One MEU, MEU-151 gui-settings-draft-baseline (06, matrix 6.19), in Session 81: the capture draft and the Convert advanced fields both lose to a settings refetch, the shape AC-112.9 fixed
+        for the encoder.'
+      source_tag: Local Canon
+      precedents:
+      - AC-112.9, plan D-212 (useConverterSettings)
+      - 'plan D-208: CONVERT-ADVANCED-EDIT-REPLACED not fixed in RC1, listed in the notes'
+      research:
+        engine: none
+        sources: []
+      reasoning: One renderer pattern, one fix shape, one test style. Two-way.
 - id: CONVERT-JOB-GPU-PREFERENCE-IGNORED
   title: A per-job encoder choice is ignored; only the saved setting counts
   severity: medium
@@ -2028,6 +2300,34 @@ archived:
   category: null
   priority: null
   enrichment: null
+- id: GUI-READY-CHUNK-BOUNDARY
+  title: A READY line split across output chunks can be missed, and two READY chunks publish twice
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-810
+      stage: triage
+      question: Register the two READY handshake defects?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Two MEUs in Session 82: MEU-153 api-ready-after-listen (04, matrix 4.5) and MEU-154 gui-ready-line-buffer (06, matrix 6.20). Whether a failed live query vetoes a ready line from the owned
+        child''s pipe is a plan-time decision with evidence.'
+      source_tag: Local Canon
+      precedents:
+      - MEU-24 AVKIT_READY
+      - MEU-108 READY probe guard
+      - mcp-server/scripts/audit/backend.ts waits for the port
+      research:
+        engine: none
+        sources: []
+      reasoning: 'The two ends of one line: the backend prints it, the main process reads it. Separate MEUs because each has its own layer and test. Two-way.'
 - id: TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME
   title: The installed app offers the PyTorch voice model and downloads 327 MB, but can never load it
   severity: high
@@ -2283,6 +2583,34 @@ archived:
         sources: []
       reasoning: No user data is involved and av-kit has no updater that reads the copy (no electron-updater in ui/package.json). Two-way.
     decided_by: agent
+- id: TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS
+  title: verify --deep and discover report noise, and verify stamps last_checked without checking
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-812
+      stage: triage
+      question: What did the 2026-11-15 scans add?
+      resolution: autonomous
+      class: two-way
+      chosen: Nothing to the register. verify --deep gave 51 findings (no_test_coverage, and file_missing from prose) and none named a fixed issue; discover gave 14 candidates from _inspiration, the MCP
+        bundle and discover.py itself, none persisted. verify's last_checked stamps were reverted (the file restored byte for byte), because nothing was checked.
+      source_tag: Local Canon
+      precedents:
+      - C:/Temp/av-kit/verify-deep.txt
+      - C:/Temp/av-kit/discover-scan.txt
+      - the 2026-11-04 triage measured the same noise
+      research:
+        engine: none
+        sources: []
+      reasoning: Second triage in a row where the scans add no signal; Session 79 takes the fix. Two-way.
 - id: LIGHT-ACCENT-BELOW-AA-CONTRAST
   title: The light theme's accent colour puts button labels below 4.5:1 contrast
   severity: low
@@ -2313,6 +2641,87 @@ archived:
         sources: []
       reasoning: White labels go from 3.68:1 to 7.27:1 and secondary labels from 2.98:1 to 5.63:1 on the page background, and pills and buttons share one cyan. It changes how the whole light theme looks,
         so it is Mat's to rule. Two-way. See the Step 8 brief.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+- id: INSTALL-FOLDER-NAME-MISMATCH
+  title: The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build plan and the round-trip script say Programs\av-kit
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-811
+      stage: triage
+      question: Fix the install folder name in the docs or in the build?
+      resolution: autonomous
+      class: two-way
+      chosen: 'The docs: 07-distribution.md and the release round-trip script name Programs\av-kit-ui, in Session 83. The package name stays.'
+      source_tag: Local Canon
+      precedents:
+      - 'Measured on v0.1.0-rc.1, 2026-11-04: the app runs from Programs\av-kit-ui'
+      - d287c55 corrected the release notes the same way
+      research:
+        engine: none
+        sources: []
+      reasoning: Renaming the package changes the install folder for existing users, needs a build and an uninstall round trip, and may move the app data folder. Correcting the docs matches what three released
+        candidates already do. Two-way.
+- id: TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD
+  title: Nothing downloads the PyTorch runtime, so the PyTorch model can't run in an installed app, and Settings has no row for it
+  severity: medium
+  component: infrastructure
+  status: dismissed
+  category: CLOSE
+  priority: null
+  enrichment:
+    questions_asked:
+    - 'D-236: Does the installed app get a download for the PyTorch runtime and what it needs?'
+    - 'D-237: Does ''all other dependencies'' include espeak: the GPL library that the kokoro package imports, and the eSpeak NG program?'
+    answers:
+    - 'D-236: superseded by D-217'
+    - 'D-237: no to both'
+    decided_by: human
+    decision_log:
+    - id: D-236
+      stage: triage
+      question: Does the installed app get a download for the PyTorch runtime and what it needs?
+      resolution: human
+      class: product-preference
+      chosen: Superseded by D-217 on 2026-11-04, not built. Mat first asked for the download to be filed, then chose to keep PyTorch out of installed builds
+      source_tag: Human-approved
+      precedents:
+      - 'TTS-GENERATE-FAILED-SILENT D-22 — Mat approved on 2026-09-30: managed downloads shown as Settings > Dependencies rows with a Get action, nothing bundled in the installer'
+      - docs/build-plan/07-distribution.md:30,227 — the plan already names an optional PyTorch extra, never built
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat''s request, made after asking why the PyTorch model''s download does not bring PyTorch with it. It records the direction and the filing, not an approved plan. The steps in resolution_path
+        remain proposals. Mat''s later message: ''OK we will go with pythorch remove as you originally suggested''.'
+      human_message_reference: USER_EXPLICIT 2026-11-04 'also make the download avilable in settings will all other dependencies that needs to be also filed as an issue and be part of the triage'
+    - id: D-237
+      stage: triage
+      question: 'Does ''all other dependencies'' include espeak: the GPL library that the kokoro package imports, and the eSpeak NG program?'
+      resolution: human
+      class: source-conflict
+      chosen: No to both. espeak is never downloaded or bundled, and the eSpeak NG row stays install guidance. With no runtime download, the KModel import workaround is not built
+      source_tag: Human-approved
+      precedents:
+      - 'docs/build-plan/03-service-layer.md:453 — D-61, Mat approved on 2026-10-09: espeak-ng (GPL-3.0) is never shipped in the installer or the backend bundle'
+      - 'docs/build-plan/03-service-layer.md:449 — D-71: eSpeak NG runs as a user-installed CLI subprocess'
+      - 'docs/execution/plans/2026-10-14-tts-engine-runtime/review-prompt-exec.md:41 — D-96, human: the guidance is the URL as text plus Copy link'
+      - packaging/THIRD_PARTY_NOTICES.md:7-8 — av-kit calls espeak-ng as a subprocess and never loads its library
+      research:
+        engine: exa
+        sources:
+        - https://gplv3.fsf.org/wiki/index.php/FAQ_Update — 'If modules are designed to run linked together in a shared address space, that almost surely means combining them into one program'; pipes, sockets
+          and command-line arguments normally mean separate programs. This is the FSF's view, which it says judges ultimately decide
+      reasoning: Taken literally, Mat's 'all other dependencies' includes what kokoro declares, and that pulls espeakng_loader (espeak-ng.dll, 18.8 MB unpacked, 9.4 MB wheel) and phonemizer-fork (GPLv3+
+        in its metadata) into the backend process of an MIT app (pyproject.toml:5). That conflicts with D-61's reasoning and the shipped notices, so it is Mat's to rule. The recommendation avoids the question
+        because KModel loaded without those packages in the 2026-11-04 test, though only in the dev venv and without generating speech, and the bare-parent import is not a kokoro API, so it is tied to the
+        kokoro pin. This is not legal advice. See the brief.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
 - id: CLOSEOUT-CHECK-REFUSES-REGISTER
   title: The closeout check refuses known-issues.yaml as the triage tool writes it, and --decision-issue keeps only the last value
@@ -2381,6 +2790,40 @@ archived:
   category: TECH-DEBT
   priority: P3
   enrichment: null
+- id: CONSOLE-HOME-SCRUB-SHORT-FORM
+  title: The Console's home-folder scrub misses the 8.3 short form of the home folder
+  severity: low
+  component: core
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-805
+      stage: triage
+      question: Where does Mat's short-form scrub ruling land?
+      resolution: autonomous
+      class: two-way
+      chosen: MEU-148 svc-console-home-short-form (03, matrix 3.23), a row of its own with a Red, in Session 77.
+      source_tag: Human-approved
+      precedents:
+      - 'D-337 (Mat, 2026-11-07): scrub_home also matches the short form (GetShortPathNameW, cached, Windows only), in a row of its own with a Red, in a later plan'
+      - D-335, MEU-119 HOME_SCRUB, AC-119.10
+      research:
+        engine: none
+        sources: []
+      reasoning: Carries out a ruling already made; only its home and session are chosen here. Two-way.
+- id: TRACKED-FILES-HOLD-HOME-PATH
+  title: Tracked files name the maintainer's Windows home folder in full, user name included
+  severity: low
+  component: agent
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
 - id: DOWNLOAD-BARE-CHANNEL-LISTS-TABS
   title: A bare channel URL in the download queue queues the channel's tabs, not its videos
   severity: medium
@@ -2411,6 +2854,112 @@ archived:
         - https://ytdlp.online/youtube-channel-downloader — each upload lives in exactly one tab
       reasoning: Session 55 already works in the file that queues the videos, so the rider meets D-242. Downloads and transcripts then read a bare channel the same way in rc.2. Two-way.
       human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
+- id: TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS
+  title: Two older title paths into transcript storage skip the lone-surrogate cleaning
+  severity: low
+  component: core
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-363
+      stage: execution
+      question: Where do the two uncleaned transcript title paths go?
+      resolution: human
+      class: governance-value
+      chosen: File it, P3, in current-focus's debt queue, not as a rider
+      source_tag: Human-approved
+      precedents:
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, a rider needs a session already in the file
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:67,69 — debt-queue rows that land before Session 57 if wanted
+      research:
+        engine: web_search
+        sources:
+        - https://bugs.python.org/issue18814 — a lone surrogate fails encode('utf-8'); fix it at the source
+        - https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html — validate after parsing, before storage
+      reasoning: No remaining session is in those files, so a rider would add a second service to Session 55. The debt queue keeps it inside this grouping. Two-way.
+      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
+    - id: D-804
+      stage: triage
+      question: The title fallbacks sat in the debt queue (D-363). Register them now?
+      resolution: autonomous
+      class: two-way
+      chosen: 'MEU-147 svc-transcript-title-cleaning (03, matrix 3.22), in Session 77 with MEU-148: both clean text before it is stored or shown.'
+      source_tag: Human-approved
+      precedents:
+      - 'D-363 (Mat): debt queue, not a rider, because no session worked in services/transcript.py'
+      - 'D-360 (MEU-122): the cleaning and guard the fallbacks skip'
+      research:
+        engine: none
+        sources: []
+      reasoning: A session of its own keeps D-363's 'not a rider'. It moves the item from the queue into a plan, which is what the queue was for. Two-way.
+- id: CONVERT-CUT-ENCODER-LABEL
+  title: A cut is labelled with an encoder it does not use
+  severity: low
+  component: core
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-373
+      stage: planning
+      question: A Cut job also saves an encoder it never uses. Register it, fix it in MEU-123, or leave it?
+      resolution: human
+      class: product-preference
+      chosen: File it, with no Cut change in MEU-123
+      source_tag: Human-approved
+      precedents:
+      - docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md — the D-373 brief and Mat's ruling
+      - packages/infrastructure/src/avkit_infra/media/adapter.py:590-604 — Cut uses -c copy or libx265
+      - docs/execution/reflections/2026-11-06-tts-load-fp16-reflection.md:128,135 — D-337 and D-344 filed neighbours for a later plan
+      research:
+        engine: tavily
+        sources:
+        - https://www.ffmpeg.org/doxygen/2.4/ffmpeg_8h_source.html — an output stream has separate stream_copy and encoding_needed flags, so a copied stream runs no encoder
+        - https://ossrs.io/lts/en-us/docs/v7/doc/ffmpeg — copy passes the stream through without encoding it
+      reasoning: Filing keeps MEU-123 to the two issues it closes. The widen option changes a stored value neither issue names and would have sent the plan to a recheck. Two-way.
+      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'' (briefs: docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md)'
+    - id: D-380
+      stage: planning
+      question: Where does CONVERT-CUT-ENCODER-LABEL go in the session grouping?
+      resolution: autonomous
+      class: two-way
+      chosen: P4, last in current-focus's debt queue, not a rider; it needs a build, so it lands before Session 57 if wanted
+      source_tag: Local Canon
+      precedents:
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, a rider needs a session already in the file
+      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:82 — D-363, a fix whose files no remaining session works in goes to the debt queue
+      - CONVERT-EXTRACT-ENCODER-LABEL — the Extract half of the same label defect, filed P4
+      research:
+        engine: none
+        sources: []
+      reasoning: Sessions 55 to 57 work in downloads, the light theme and the release; none edits services/conversion.py or the media adapter, so a rider would chain unrelated work into a session (D-250's
+        test). The debt queue keeps it visible for a build before rc.2. It is P4, as the Extract half was. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-07 'All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'
+    - id: D-809
+      stage: triage
+      question: Register the three Convert queue label defects?
+      resolution: autonomous
+      class: two-way
+      chosen: One MEU, MEU-152 convert-queue-labels (08, matrix 8.11), in Session 81 with MEU-151, which edits ConvertPage.tsx too. CONVERT-CUT-ENCODER-LABEL comes out of the debt queue's tail (D-380) because
+        this MEU edits _dispatch's neighbourhood and the Convert card.
+      source_tag: Local Canon
+      precedents:
+      - 'D-380: CONVERT-CUT-ENCODER-LABEL P4, last in the debt queue'
+      - MEU-123 EXTRACT_NO_ENCODER
+      - 'D-242: a rider joins only a session that works in the same file'
+      research:
+        engine: none
+        sources: []
+      reasoning: All three are what a Convert queue card says; D-242 allows the encoder label to join because the session works in the same files. Two-way.
 - id: CONSOLE-STARTUP-DB-PATH
   title: The backend's first log line shows the database path, user name included, in the Console
   severity: low
@@ -2494,6 +3043,142 @@ archived:
       reasoning: The add path already holds each item's id, and transcripts build the watch URL the same way. Fixing at add leaves a single-video add's URL and the dispatch code unchanged; fixing at dispatch
         would also mend rows already queued but would ignore every URL typed. Doing nothing would ship a rider whose rows fail. Two-way.
       human_message_reference: USER_EXPLICIT 2026-11-08 'Per-video URL at add (Recommended)' (answer to the F1 brief; options in implementation-plan.md §User Review Required)
+- id: TTS-STATUS-PILL-BELOW-AA-CONTRAST
+  title: The TTS job status pill puts its label below 4.5:1 contrast in both themes
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked:
+    - 'D-455: Session 56 makes light Generating''s TTS pill 2.01:1. Widen the session to fix it, or keep the ruled scope and file the pill?'
+    answers:
+    - 'D-455: B, keep the scope and file the whole pill as its own issue'
+    decided_by: human
+    decision_log:
+    - id: D-455
+      stage: planning
+      question: Session 56's ruled light accent moves the TTS Generating pill's label from 3.97:1 to 2.01:1, and the pill already fails 4.5:1 for most statuses in both themes. Widen the session or keep
+        its scope?
+      resolution: human
+      class: product-preference
+      chosen: 'B: keep MEU-126 to the two ruled light tokens and file the whole TTS status pill as an open TECH-DEBT issue'
+      source_tag: Human-approved
+      precedents:
+      - ui/src/renderer/src/features/tts/TTSPage.tsx:721 — text-xs text-fg on the STATUS_COLORS fill
+      - C:/Temp/av-kit/s56-plan-tts-pill-dark.txt — both themes' ratios
+      - docs/execution/plans/2026-11-08-light-accent-contrast/implementation-plan.md — the D-455 brief and its options
+      research:
+        engine: none
+        sources: []
+      reasoning: The pill fails in the default dark theme for five of six statuses before this session, so fixing Generating alone leaves the pill failing, and fixing it whole changes the TTS page in both
+        themes, outside D-235's two tokens. Filing keeps the ruled scope and records the probe. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-08 'all recommendations accpeted, proceed'
+    - id: D-806
+      stage: triage
+      question: Register the TTS status pill contrast?
+      resolution: autonomous
+      class: two-way
+      chosen: MEU-149 gui-tts-status-pill-contrast (06, matrix 6.18), in Session 80. The look is chosen at plan time and Mat sees both themes before it ships, as with MEU-126.
+      source_tag: Local Canon
+      precedents:
+      - D-235 human check (MEU-126, light accent contrast)
+      - 06 §Light accent contrast (residual) contrast test
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Worked out from token values: most statuses fall below 4.5:1 in both themes. A visual change needs Mat''s eye, so only the floor is fixed here. Two-way.'
+- id: CAPTURE-EXIF-SCANNED-ORIENTATION
+  title: A scanned JPEG or WebP with EXIF orientation 5 to 8 is sized and marked sideways
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-424
+      stage: planning
+      question: The import design turns EXIF-oriented images upright, but scanned and registered files keep their stored frame. Fix the scan path in Session 58, file it, or leave it?
+      resolution: autonomous
+      class: two-way
+      chosen: File it as an open TECH-DEBT issue linked to MEU-129 and fix only the import path in Session 58
+      source_tag: Local Canon
+      precedents:
+      - packages/infrastructure/src/avkit_infra/capture/adapter.py:253-263 — probe reads the stored size
+      - docs/execution/plans/2026-11-08-capture-region-import/implementation-plan.md — D-417 upright PNG
+      - AGENTS.md — out-of-scope findings go to the known-issues register
+      research:
+        engine: none
+        sources: []
+      reasoning: Changing the scan path rewrites the frame of rows already stored, which the MEU-128 and MEU-129 ACs do not cover. Leaving it unrecorded hides a defect the plan found. Filing keeps the session's
+        scope and records the probe. Two-way.
+    - id: D-803
+      stage: triage
+      question: Register the EXIF orientation gap, and where?
+      resolution: autonomous
+      class: two-way
+      chosen: MEU-146 capture-exif-orientation (09, matrix 9.44), in Session 75 after MEU-145. Whether the scan writes an upright copy, rewrites the file, or applies the tag wherever pixels are read is
+        a plan-time Decision Brief, because the inbox holds the user's own files.
+      source_tag: Local Canon
+      precedents:
+      - 'D-417: import writes an upright PNG'
+      - 'C:/Temp/av-kit/s58-plan-exif-probe.txt: a 400x300 file tagged 5 to 8 probes 400x300; exif_transpose gives 300x400'
+      research:
+        engine: none
+        sources: []
+      reasoning: Same probe and the same scan path as MEU-145, so one session reuses the context. The route touches user files, so it is not decided here. Two-way.
+- id: CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST
+  title: One inbox-root file the scan can't open breaks the capture list
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-507
+      stage: closeout
+      question: 'Session 59 found a pre-existing scan defect outside the crop: one inbox-root file the scan can''t open breaks GET /captures, with a 422 naming its path or a 500. File it, or leave it as
+        the handoff''s observation?'
+      resolution: human
+      class: two-way
+      chosen: 'File it, as recommended: CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST, P2, open, linked to MEU-130, in Session 59''s commit. Mat''s words (2026-11-10): ''File it (Recommended)'''
+      source_tag: Human-approved
+      precedents:
+      - packages/core/src/avkit_core/services/capture.py:411 — scan_inbox calls probe on each scan-extension file with no catch
+      - packages/infrastructure/src/avkit_infra/capture/adapter.py:316 — probe raises InboxPathError naming the path, mapped to 422
+      - .agent/context/handoffs/2026-11-08-capture-crop-copy-MEU-130-handoff.md — row 5's observation, not fixed
+      research:
+        engine: none
+        sources: []
+      reasoning: Session 50's rule says a raw value that reaches an API message is fixed or raised, never left as a residual, and the defect predates this session and lies outside MEU-130's scope. Filing
+        records the probe and its two failure shapes for a plan of its own. Leaving it as a handoff observation hides it from the register. Two-way.
+      human_message_reference: File it (Recommended)
+    - id: D-802
+      stage: triage
+      question: Which MEU covers the scan that fails the whole list on one unreadable file?
+      resolution: autonomous
+      class: two-way
+      chosen: MEU-145 capture-scan-skip-unreadable (09, matrix 9.43, P2), with MEU-146 in Session 75 because both change how the scan uses the adapter's probe. The fix route (skip, or list the file flagged)
+        is the plan's.
+      source_tag: Local Canon
+      precedents:
+      - 'D-507 (Mat, Session 59 closeout): ''File it'', P2, open'
+      - 'Session 50 rule: no raw path in an API message, log line or Console field'
+      - 09 §Export copy NO_RAW_OUTPUT
+      research:
+        engine: none
+        sources: []
+      reasoning: One file hides every shot from the page and MCP, and the 422 carries a path. The bucket command paired this with TTS-ONNX-FP16-NONFINITE-AUDIO only because both are P2 MEU-NEW; they share
+        no file, so that pairing was dropped. Two-way.
 - id: DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT
   title: Downloads pin three YouTube clients and fail when only another client works
   severity: high
@@ -2662,20 +3347,44 @@ archived:
       reasoning: 'Mat asked for the report''s findings to be filed and grouped. The priority follows the matrix: none blocks other planned work. Leaving them in an untracked proposal hides them from the
         register and from /session-grouping. Two-way.'
       human_message_reference: USER_EXPLICIT 2026-11-10 'follow the process, file them and add to session grouping'
-actionable:
-- id: E2E-ELECTRON-LAUNCH-FLAG
-  title: ELECTRON_RUN_AS_NODE in the IDE terminal breaks every Electron launch - E2E and npm run dev
+- id: CLI-DISPATCH-PLACEHOLDER-FIXTURE
+  title: Two Test-CliDispatch.ps1 fixture tests fail because instantiation replaced their placeholder path
+  severity: low
+  component: agent
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: E2E-CONSOLE-C15-COUNTS-GET
+  title: Console E2E C1-5 counts the Console's settings GET as a PUT
   severity: low
   component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P3
+  status: resolved
+  category: null
+  priority: null
   enrichment: null
+- id: CONVERT-OUTPUT-NAME-REUSED
+  title: 'Convert: a second Add of the same file gets the output name of a job that has not finished'
+  severity: medium
+  component: core
+  status: resolved
+  category: null
+  priority: null
+  enrichment: null
+- id: QUEUE-PAUSE-NO-FEEDBACK
+  title: Convert and Downloader Pause gives no feedback while the current job runs
+  severity: medium
+  component: ui
+  status: resolved
+  category: null
+  priority: null
+  enrichment: null
+actionable:
 - id: TOOLING-SHARED-REGISTRY-COUPLING
   title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
   severity: medium
   component: infrastructure
-  status: open
+  status: mitigated
   category: TECH-DEBT
   priority: P2
   enrichment:
@@ -2697,22 +3406,6 @@ actionable:
         engine: none
         sources: []
       reasoning: Three recurrences in three weeks, each blocking a gate or a dispatch for reasons outside av-kit. Two-way.
-- id: TOOLING-ADOPTION-FIXTURE-LIVE-GOVERNANCE
-  title: Framework-adoption verifier tests pin the live AGENTS/GUARDRAILS to the 2026-09-26 postimage
-  severity: low
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
-- id: UI-ELECTRON-LAZY-INSTALL-RACE
-  title: Electron 42 binary installs lazily on first require; parallel Vitest workers race the extraction after npm ci
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
 - id: DOWNLOAD-QUEUE-DRAG-OVER-MISS
   title: Download-queue drag-over (A16 committed-over wait) occasionally misses on Windows
   severity: low
@@ -2736,14 +3429,6 @@ actionable:
   status: open
   category: TECH-DEBT
   priority: P3
-  enrichment: null
-- id: TTS-VOICE-SELECT-LAYOUT-JUMP
-  title: TTS voice selection made the page layout jump (2026-09-30 report; recheck after MEU-64's voice combobox)
-  severity: low
-  component: ui
-  status: dismissed
-  category: null
-  priority: null
   enrichment: null
 - id: TTS-ESPEAK-LIVE-PATH-UNVERIFIED
   title: Non-English voices via the real espeak-ng CLI were never run end to end (AC-74.11)
@@ -2770,14 +3455,6 @@ actionable:
         sources: []
       reasoning: D-100 already made this a local evidence stage. Two-way.
     decided_by: agent
-- id: TOOLING-TRIAGE-CLI-CP1252
-  title: issue_triage.py bucket and --help crash with UnicodeEncodeError when output is redirected on Windows
-  severity: low
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
 - id: CAPTURE-E2E-LAUNCH-TEARDOWN-HANG
   title: capture-inbox Electron specs occasionally hang in launch or close under full-suite load (test and worker teardown timeouts)
   severity: low
@@ -2786,42 +3463,6 @@ actionable:
   category: MONITORING
   priority: P4
   enrichment: null
-- id: CAPTURE-HINT-TEST-PRESENCE-ONLY
-  title: Capture's AC-97.4 hint test checks that the shortcut props exist, not their chord values
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
-- id: BACKEND-READY-BEFORE-LISTEN
-  title: The backend prints AVKIT_READY before its socket listens, so an immediate request is refused
-  severity: low
-  component: api
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-810
-      stage: triage
-      question: Register the two READY handshake defects?
-      resolution: autonomous
-      class: two-way
-      chosen: 'Two MEUs in Session 82: MEU-153 api-ready-after-listen (04, matrix 4.5) and MEU-154 gui-ready-line-buffer (06, matrix 6.20). Whether a failed live query vetoes a ready line from the owned
-        child''s pipe is a plan-time decision with evidence.'
-      source_tag: Local Canon
-      precedents:
-      - MEU-24 AVKIT_READY
-      - MEU-108 READY probe guard
-      - mcp-server/scripts/audit/backend.ts waits for the port
-      research:
-        engine: none
-        sources: []
-      reasoning: 'The two ends of one line: the backend prints it, the main process reads it. Separate MEUs because each has its own layer and test. Two-way.'
 - id: TRANSCRIPT-ADD-CHANNEL-422
   title: Adding a channel returned 422 after about 8 minutes of enumeration
   severity: low
@@ -2830,112 +3471,6 @@ actionable:
   category: MONITORING
   priority: P4
   enrichment: null
-- id: TTS-SEGMENTS-LABEL-IS-PROGRESS-SCALE
-  title: The TTS progress label reads 'Segments 0/1000' whatever the text's length
-  severity: low
-  component: core
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-807
-      stage: triage
-      question: Register the TTS file names and the segments label?
-      resolution: autonomous
-      class: two-way
-      chosen: One MEU, MEU-150 svc-tts-output-names-progress (03, matrix 3.24), in Session 80 with MEU-149 (same page). The name scheme is a plan-time Decision Brief, because the user sees it in their folder.
-      source_tag: Local Canon
-      precedents:
-      - '03 §Download audio extract (residual): a new name never overwrites, then -2, -3 (D-666)'
-      research:
-        engine: none
-        sources: []
-      reasoning: Both were seen together while staging README screenshots and both sit in services/tts.py and TTSPage.tsx. Two-way.
-- id: TTS-AUDIO-RANDOM-FILE-NAMES
-  title: Generated audio files have random ID names
-  severity: low
-  component: core
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-807
-      stage: triage
-      question: Register the TTS file names and the segments label?
-      resolution: autonomous
-      class: two-way
-      chosen: One MEU, MEU-150 svc-tts-output-names-progress (03, matrix 3.24), in Session 80 with MEU-149 (same page). The name scheme is a plan-time Decision Brief, because the user sees it in their folder.
-      source_tag: Local Canon
-      precedents:
-      - '03 §Download audio extract (residual): a new name never overwrites, then -2, -3 (D-666)'
-      research:
-        engine: none
-        sources: []
-      reasoning: Both were seen together while staging README screenshots and both sit in services/tts.py and TTSPage.tsx. Two-way.
-- id: CONVERT-POSITIONS-NOT-RENUMBERED
-  title: Convert's queue numbers aren't renumbered
-  severity: low
-  component: core
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-809
-      stage: triage
-      question: Register the three Convert queue label defects?
-      resolution: autonomous
-      class: two-way
-      chosen: One MEU, MEU-152 convert-queue-labels (08, matrix 8.11), in Session 81 with MEU-151, which edits ConvertPage.tsx too. CONVERT-CUT-ENCODER-LABEL comes out of the debt queue's tail (D-380) because
-        this MEU edits _dispatch's neighbourhood and the Convert card.
-      source_tag: Local Canon
-      precedents:
-      - 'D-380: CONVERT-CUT-ENCODER-LABEL P4, last in the debt queue'
-      - MEU-123 EXTRACT_NO_ENCODER
-      - 'D-242: a rider joins only a session that works in the same file'
-      research:
-        engine: none
-        sources: []
-      reasoning: All three are what a Convert queue card says; D-242 allows the encoder label to join because the session works in the same files. Two-way.
-- id: CONVERT-CUT-TIME-RAW-MS
-  title: A cut job's row shows its times in raw milliseconds
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-809
-      stage: triage
-      question: Register the three Convert queue label defects?
-      resolution: autonomous
-      class: two-way
-      chosen: One MEU, MEU-152 convert-queue-labels (08, matrix 8.11), in Session 81 with MEU-151, which edits ConvertPage.tsx too. CONVERT-CUT-ENCODER-LABEL comes out of the debt queue's tail (D-380) because
-        this MEU edits _dispatch's neighbourhood and the Convert card.
-      source_tag: Local Canon
-      precedents:
-      - 'D-380: CONVERT-CUT-ENCODER-LABEL P4, last in the debt queue'
-      - MEU-123 EXTRACT_NO_ENCODER
-      - 'D-242: a rider joins only a session that works in the same file'
-      research:
-        engine: none
-        sources: []
-      reasoning: All three are what a Convert queue card says; D-242 allows the encoder label to join because the session works in the same files. Two-way.
 - id: DOWNLOADER-ADVANCED-PANEL-GAP
   title: An empty gap sits under Advanced on the Downloader page
   severity: low
@@ -2944,42 +3479,6 @@ actionable:
   category: TECH-DEBT
   priority: P4
   enrichment: null
-- id: CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
-  title: validate_closeout_artifacts --selftest fails when a .agent folder sits above the temp folder
-  severity: low
-  component: agent
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
-- id: E2E-MAIN-PROCESS-ERRORS-UNWATCHED
-  title: The E2E suite does not notice an uncaught exception in the main process
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-231
-      stage: triage
-      question: RC1 is out, so what happens to the four issues deferred for it?
-      resolution: autonomous
-      class: two-way
-      chosen: E2E-MAIN-PROCESS-ERRORS-UNWATCHED to TECH-DEBT P3. SETTINGS-DRAFT-STALE-BASELINE and CONVERT-ADVANCED-EDIT-REPLACED to TECH-DEBT P4. E2E-CLIPBOARD-PRIMER-EMPTY to MONITORING P4, because its
-        cause is not established and it was seen once.
-      source_tag: Local Canon
-      precedents:
-      - docs/execution/plans/2026-11-03-release-rc1/implementation-plan.md — D-208, filed low and listed in the notes for RC1
-      - .agent/context/current-focus.md Next steps 2
-      - .agent/context/known-issues.yaml CONVERT-JOB-GPU-PREFERENCE-IGNORED — D-212 precedent, AC-112.9
-      research:
-        engine: none
-        sources: []
-      reasoning: The DEFER was an RC1-era call and current-focus Next steps 2 lists them next. They lead the debt queue but stay below the new user-facing issues, which rank higher on the matrix. Two-way.
-    decided_by: agent
 - id: E2E-CLIPBOARD-PRIMER-EMPTY
   title: AC-88.12's clipboard primer read an empty clipboard for 5 s once
   severity: low
@@ -2988,143 +3487,6 @@ actionable:
   category: MONITORING
   priority: P4
   enrichment: null
-- id: SETTINGS-DRAFT-STALE-BASELINE
-  title: An unsaved capture settings edit freezes the other capture settings at their old values
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-808
-      stage: triage
-      question: Register the two settings-draft defects?
-      resolution: autonomous
-      class: two-way
-      chosen: 'One MEU, MEU-151 gui-settings-draft-baseline (06, matrix 6.19), in Session 81: the capture draft and the Convert advanced fields both lose to a settings refetch, the shape AC-112.9 fixed
-        for the encoder.'
-      source_tag: Local Canon
-      precedents:
-      - AC-112.9, plan D-212 (useConverterSettings)
-      - 'plan D-208: CONVERT-ADVANCED-EDIT-REPLACED not fixed in RC1, listed in the notes'
-      research:
-        engine: none
-        sources: []
-      reasoning: One renderer pattern, one fix shape, one test style. Two-way.
-- id: CONVERT-ADVANCED-EDIT-REPLACED
-  title: An Advanced edit on Convert snaps back when settings load late or the default preset changes
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-808
-      stage: triage
-      question: Register the two settings-draft defects?
-      resolution: autonomous
-      class: two-way
-      chosen: 'One MEU, MEU-151 gui-settings-draft-baseline (06, matrix 6.19), in Session 81: the capture draft and the Convert advanced fields both lose to a settings refetch, the shape AC-112.9 fixed
-        for the encoder.'
-      source_tag: Local Canon
-      precedents:
-      - AC-112.9, plan D-212 (useConverterSettings)
-      - 'plan D-208: CONVERT-ADVANCED-EDIT-REPLACED not fixed in RC1, listed in the notes'
-      research:
-        engine: none
-        sources: []
-      reasoning: One renderer pattern, one fix shape, one test style. Two-way.
-- id: GUI-READY-CHUNK-BOUNDARY
-  title: A READY line split across output chunks can be missed, and two READY chunks publish twice
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-810
-      stage: triage
-      question: Register the two READY handshake defects?
-      resolution: autonomous
-      class: two-way
-      chosen: 'Two MEUs in Session 82: MEU-153 api-ready-after-listen (04, matrix 4.5) and MEU-154 gui-ready-line-buffer (06, matrix 6.20). Whether a failed live query vetoes a ready line from the owned
-        child''s pipe is a plan-time decision with evidence.'
-      source_tag: Local Canon
-      precedents:
-      - MEU-24 AVKIT_READY
-      - MEU-108 READY probe guard
-      - mcp-server/scripts/audit/backend.ts waits for the port
-      research:
-        engine: none
-        sources: []
-      reasoning: 'The two ends of one line: the backend prints it, the main process reads it. Separate MEUs because each has its own layer and test. Two-way.'
-- id: TOOLING-TRIAGE-SCANNER-FALSE-FINDINGS
-  title: verify --deep and discover report noise, and verify stamps last_checked without checking
-  severity: medium
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-812
-      stage: triage
-      question: What did the 2026-11-15 scans add?
-      resolution: autonomous
-      class: two-way
-      chosen: Nothing to the register. verify --deep gave 51 findings (no_test_coverage, and file_missing from prose) and none named a fixed issue; discover gave 14 candidates from _inspiration, the MCP
-        bundle and discover.py itself, none persisted. verify's last_checked stamps were reverted (the file restored byte for byte), because nothing was checked.
-      source_tag: Local Canon
-      precedents:
-      - C:/Temp/av-kit/verify-deep.txt
-      - C:/Temp/av-kit/discover-scan.txt
-      - the 2026-11-04 triage measured the same noise
-      research:
-        engine: none
-        sources: []
-      reasoning: Second triage in a row where the scans add no signal; Session 79 takes the fix. Two-way.
-- id: INSTALL-FOLDER-NAME-MISMATCH
-  title: The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build plan and the round-trip script say Programs\av-kit
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-811
-      stage: triage
-      question: Fix the install folder name in the docs or in the build?
-      resolution: autonomous
-      class: two-way
-      chosen: 'The docs: 07-distribution.md and the release round-trip script name Programs\av-kit-ui, in Session 83. The package name stays.'
-      source_tag: Local Canon
-      precedents:
-      - 'Measured on v0.1.0-rc.1, 2026-11-04: the app runs from Programs\av-kit-ui'
-      - d287c55 corrected the release notes the same way
-      research:
-        engine: none
-        sources: []
-      reasoning: Renaming the package changes the install folder for existing users, needs a build and an uninstall round trip, and may move the app data folder. Correcting the docs matches what three released
-        candidates already do. Two-way.
 - id: TTS-ONNX-FP16-NONFINITE-AUDIO
   title: ONNX FP16 fails on some ordinary sentences with 'generated audio must be finite', and a fresh install preselects it
   severity: high
@@ -3171,40 +3533,6 @@ actionable:
         engine: none
         sources: []
       reasoning: Registering it here would decide a check the Session 74 prompt leaves to Mat. Holding the number keeps that prompt's IDs true. Two-way.
-- id: CONSOLE-HOME-SCRUB-SHORT-FORM
-  title: The Console's home-folder scrub misses the 8.3 short form of the home folder
-  severity: low
-  component: core
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-805
-      stage: triage
-      question: Where does Mat's short-form scrub ruling land?
-      resolution: autonomous
-      class: two-way
-      chosen: MEU-148 svc-console-home-short-form (03, matrix 3.23), a row of its own with a Red, in Session 77.
-      source_tag: Human-approved
-      precedents:
-      - 'D-337 (Mat, 2026-11-07): scrub_home also matches the short form (GetShortPathNameW, cached, Windows only), in a row of its own with a Red, in a later plan'
-      - D-335, MEU-119 HOME_SCRUB, AC-119.10
-      research:
-        engine: none
-        sources: []
-      reasoning: Carries out a ruling already made; only its home and session are chosen here. Two-way.
-- id: TRACKED-FILES-HOLD-HOME-PATH
-  title: Tracked files name the maintainer's Windows home folder in full, user name included
-  severity: low
-  component: agent
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment: null
 - id: E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE
   title: The transcript queue E2E's seam reload failed once with ERR_ABORTED under load
   severity: low
@@ -3234,201 +3562,6 @@ actionable:
         - https://endform.dev/blog/quarantine-flaky-playwright-tests — a pass on retry is not a fix; track it with an owner
       reasoning: One failure can't show that a fix works, and no remaining session edits the test file. Session 57's gate runs it anyway, so a named watch item there costs one plan line. Two-way.
       human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
-- id: TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS
-  title: Two older title paths into transcript storage skip the lone-surrogate cleaning
-  severity: low
-  component: core
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-363
-      stage: execution
-      question: Where do the two uncleaned transcript title paths go?
-      resolution: human
-      class: governance-value
-      chosen: File it, P3, in current-focus's debt queue, not as a rider
-      source_tag: Human-approved
-      precedents:
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, a rider needs a session already in the file
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:67,69 — debt-queue rows that land before Session 57 if wanted
-      research:
-        engine: web_search
-        sources:
-        - https://bugs.python.org/issue18814 — a lone surrogate fails encode('utf-8'); fix it at the source
-        - https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html — validate after parsing, before storage
-      reasoning: No remaining session is in those files, so a rider would add a second service to Session 55. The debt queue keeps it inside this grouping. Two-way.
-      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
-    - id: D-804
-      stage: triage
-      question: The title fallbacks sat in the debt queue (D-363). Register them now?
-      resolution: autonomous
-      class: two-way
-      chosen: 'MEU-147 svc-transcript-title-cleaning (03, matrix 3.22), in Session 77 with MEU-148: both clean text before it is stored or shown.'
-      source_tag: Human-approved
-      precedents:
-      - 'D-363 (Mat): debt queue, not a rider, because no session worked in services/transcript.py'
-      - 'D-360 (MEU-122): the cleaning and guard the fallbacks skip'
-      research:
-        engine: none
-        sources: []
-      reasoning: A session of its own keeps D-363's 'not a rider'. It moves the item from the queue into a plan, which is what the queue was for. Two-way.
-- id: CONVERT-CUT-ENCODER-LABEL
-  title: A cut is labelled with an encoder it does not use
-  severity: low
-  component: core
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-373
-      stage: planning
-      question: A Cut job also saves an encoder it never uses. Register it, fix it in MEU-123, or leave it?
-      resolution: human
-      class: product-preference
-      chosen: File it, with no Cut change in MEU-123
-      source_tag: Human-approved
-      precedents:
-      - docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md — the D-373 brief and Mat's ruling
-      - packages/infrastructure/src/avkit_infra/media/adapter.py:590-604 — Cut uses -c copy or libx265
-      - docs/execution/reflections/2026-11-06-tts-load-fp16-reflection.md:128,135 — D-337 and D-344 filed neighbours for a later plan
-      research:
-        engine: tavily
-        sources:
-        - https://www.ffmpeg.org/doxygen/2.4/ffmpeg_8h_source.html — an output stream has separate stream_copy and encoding_needed flags, so a copied stream runs no encoder
-        - https://ossrs.io/lts/en-us/docs/v7/doc/ffmpeg — copy passes the stream through without encoding it
-      reasoning: Filing keeps MEU-123 to the two issues it closes. The widen option changes a stored value neither issue names and would have sent the plan to a recheck. Two-way.
-      human_message_reference: 'USER_EXPLICIT 2026-11-07 ''All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'' (briefs: docs/execution/plans/2026-11-07-convert-extract-index/human-gate-decision.md)'
-    - id: D-380
-      stage: planning
-      question: Where does CONVERT-CUT-ENCODER-LABEL go in the session grouping?
-      resolution: autonomous
-      class: two-way
-      chosen: P4, last in current-focus's debt queue, not a rider; it needs a build, so it lands before Session 57 if wanted
-      source_tag: Local Canon
-      precedents:
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:281 — D-242, a rider needs a session already in the file
-      - .agent/context/grouping/2026-11-04-rc2-triage-residuals-session-grouping.md:82 — D-363, a fix whose files no remaining session works in goes to the debt queue
-      - CONVERT-EXTRACT-ENCODER-LABEL — the Extract half of the same label defect, filed P4
-      research:
-        engine: none
-        sources: []
-      reasoning: Sessions 55 to 57 work in downloads, the light theme and the release; none edits services/conversion.py or the media adapter, so a rider would chain unrelated work into a session (D-250's
-        test). The debt queue keeps it visible for a build before rc.2. It is P4, as the Extract half was. Two-way.
-      human_message_reference: USER_EXPLICIT 2026-11-07 'All recommendations accepted. But also file, and assign into session groupings So next sessions, can handle the new issues.'
-    - id: D-809
-      stage: triage
-      question: Register the three Convert queue label defects?
-      resolution: autonomous
-      class: two-way
-      chosen: One MEU, MEU-152 convert-queue-labels (08, matrix 8.11), in Session 81 with MEU-151, which edits ConvertPage.tsx too. CONVERT-CUT-ENCODER-LABEL comes out of the debt queue's tail (D-380) because
-        this MEU edits _dispatch's neighbourhood and the Convert card.
-      source_tag: Local Canon
-      precedents:
-      - 'D-380: CONVERT-CUT-ENCODER-LABEL P4, last in the debt queue'
-      - MEU-123 EXTRACT_NO_ENCODER
-      - 'D-242: a rider joins only a session that works in the same file'
-      research:
-        engine: none
-        sources: []
-      reasoning: All three are what a Convert queue card says; D-242 allows the encoder label to join because the session works in the same files. Two-way.
-- id: TTS-STATUS-PILL-BELOW-AA-CONTRAST
-  title: The TTS job status pill puts its label below 4.5:1 contrast in both themes
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked:
-    - 'D-455: Session 56 makes light Generating''s TTS pill 2.01:1. Widen the session to fix it, or keep the ruled scope and file the pill?'
-    answers:
-    - 'D-455: B, keep the scope and file the whole pill as its own issue'
-    decided_by: human
-    decision_log:
-    - id: D-455
-      stage: planning
-      question: Session 56's ruled light accent moves the TTS Generating pill's label from 3.97:1 to 2.01:1, and the pill already fails 4.5:1 for most statuses in both themes. Widen the session or keep
-        its scope?
-      resolution: human
-      class: product-preference
-      chosen: 'B: keep MEU-126 to the two ruled light tokens and file the whole TTS status pill as an open TECH-DEBT issue'
-      source_tag: Human-approved
-      precedents:
-      - ui/src/renderer/src/features/tts/TTSPage.tsx:721 — text-xs text-fg on the STATUS_COLORS fill
-      - C:/Temp/av-kit/s56-plan-tts-pill-dark.txt — both themes' ratios
-      - docs/execution/plans/2026-11-08-light-accent-contrast/implementation-plan.md — the D-455 brief and its options
-      research:
-        engine: none
-        sources: []
-      reasoning: The pill fails in the default dark theme for five of six statuses before this session, so fixing Generating alone leaves the pill failing, and fixing it whole changes the TTS page in both
-        themes, outside D-235's two tokens. Filing keeps the ruled scope and records the probe. Two-way.
-      human_message_reference: USER_EXPLICIT 2026-11-08 'all recommendations accpeted, proceed'
-    - id: D-806
-      stage: triage
-      question: Register the TTS status pill contrast?
-      resolution: autonomous
-      class: two-way
-      chosen: MEU-149 gui-tts-status-pill-contrast (06, matrix 6.18), in Session 80. The look is chosen at plan time and Mat sees both themes before it ships, as with MEU-126.
-      source_tag: Local Canon
-      precedents:
-      - D-235 human check (MEU-126, light accent contrast)
-      - 06 §Light accent contrast (residual) contrast test
-      research:
-        engine: none
-        sources: []
-      reasoning: 'Worked out from token values: most statuses fall below 4.5:1 in both themes. A visual change needs Mat''s eye, so only the floor is fixed here. Two-way.'
-- id: CAPTURE-EXIF-SCANNED-ORIENTATION
-  title: A scanned JPEG or WebP with EXIF orientation 5 to 8 is sized and marked sideways
-  severity: medium
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: agent
-    decision_log:
-    - id: D-424
-      stage: planning
-      question: The import design turns EXIF-oriented images upright, but scanned and registered files keep their stored frame. Fix the scan path in Session 58, file it, or leave it?
-      resolution: autonomous
-      class: two-way
-      chosen: File it as an open TECH-DEBT issue linked to MEU-129 and fix only the import path in Session 58
-      source_tag: Local Canon
-      precedents:
-      - packages/infrastructure/src/avkit_infra/capture/adapter.py:253-263 — probe reads the stored size
-      - docs/execution/plans/2026-11-08-capture-region-import/implementation-plan.md — D-417 upright PNG
-      - AGENTS.md — out-of-scope findings go to the known-issues register
-      research:
-        engine: none
-        sources: []
-      reasoning: Changing the scan path rewrites the frame of rows already stored, which the MEU-128 and MEU-129 ACs do not cover. Leaving it unrecorded hides a defect the plan found. Filing keeps the session's
-        scope and records the probe. Two-way.
-    - id: D-803
-      stage: triage
-      question: Register the EXIF orientation gap, and where?
-      resolution: autonomous
-      class: two-way
-      chosen: MEU-146 capture-exif-orientation (09, matrix 9.44), in Session 75 after MEU-145. Whether the scan writes an upright copy, rewrites the file, or applies the tag wherever pixels are read is
-        a plan-time Decision Brief, because the inbox holds the user's own files.
-      source_tag: Local Canon
-      precedents:
-      - 'D-417: import writes an upright PNG'
-      - 'C:/Temp/av-kit/s58-plan-exif-probe.txt: a 400x300 file tagged 5 to 8 probes 400x300; exif_transpose gives 300x400'
-      research:
-        engine: none
-        sources: []
-      reasoning: Same probe and the same scan path as MEU-145, so one session reuses the context. The route touches user files, so it is not decided here. Two-way.
 - id: MCP-AUDIT-BASELINE-PENDING-CROP
   title: The committed MCP audit baseline has no avkit_capture.crop entry
   severity: low
@@ -3463,61 +3596,94 @@ actionable:
       reasoning: The baseline is a governed snapshot that only an authoritative run updates, and that run is blocked while the caption block holds. Naming the one gap in the test and here keeps main green
         and tells the next release audit what to accept. Two-way.
       human_message_reference: '**Mat''s ruling (2026-11-09):** option A, as recommended: `BASELINE_PENDING` in the test, plus a filed issue. Mat''s words: "D-499 A".'
-- id: CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST
-  title: One inbox-root file the scan can't open breaks the capture list
-  severity: medium
-  component: infrastructure
-  status: open
-  category: MEU-NEW
-  priority: P2
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-507
-      stage: closeout
-      question: 'Session 59 found a pre-existing scan defect outside the crop: one inbox-root file the scan can''t open breaks GET /captures, with a 422 naming its path or a 500. File it, or leave it as
-        the handoff''s observation?'
-      resolution: human
-      class: two-way
-      chosen: 'File it, as recommended: CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST, P2, open, linked to MEU-130, in Session 59''s commit. Mat''s words (2026-11-10): ''File it (Recommended)'''
-      source_tag: Human-approved
-      precedents:
-      - packages/core/src/avkit_core/services/capture.py:411 — scan_inbox calls probe on each scan-extension file with no catch
-      - packages/infrastructure/src/avkit_infra/capture/adapter.py:316 — probe raises InboxPathError naming the path, mapped to 422
-      - .agent/context/handoffs/2026-11-08-capture-crop-copy-MEU-130-handoff.md — row 5's observation, not fixed
-      research:
-        engine: none
-        sources: []
-      reasoning: Session 50's rule says a raw value that reaches an API message is fixed or raised, never left as a residual, and the defect predates this session and lies outside MEU-130's scope. Filing
-        records the probe and its two failure shapes for a plan of its own. Leaving it as a handoff observation hides it from the register. Two-way.
-      human_message_reference: File it (Recommended)
-    - id: D-802
-      stage: triage
-      question: Which MEU covers the scan that fails the whole list on one unreadable file?
-      resolution: autonomous
-      class: two-way
-      chosen: MEU-145 capture-scan-skip-unreadable (09, matrix 9.43, P2), with MEU-146 in Session 75 because both change how the scan uses the adapter's probe. The fix route (skip, or list the file flagged)
-        is the plan's.
-      source_tag: Local Canon
-      precedents:
-      - 'D-507 (Mat, Session 59 closeout): ''File it'', P2, open'
-      - 'Session 50 rule: no raw path in an API message, log line or Console field'
-      - 09 §Export copy NO_RAW_OUTPUT
-      research:
-        engine: none
-        sources: []
-      reasoning: One file hides every shot from the page and MCP, and the 422 carries a path. The bucket command paired this with TTS-ONNX-FP16-NONFINITE-AUDIO only because both are P2 MEU-NEW; they share
-        no file, so that pairing was dropped. Two-way.
-- id: CLI-DISPATCH-PLACEHOLDER-FIXTURE
-  title: Two Test-CliDispatch.ps1 fixture tests fail because instantiation replaced their placeholder path
+- id: VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE
+  title: Real-ffmpeg frame grabs near a clip's last frame occasionally fail (frame grab failed at 00:00:02.999 / 00:00:03.200)
   severity: low
-  component: agent
+  component: core
+  status: open
+  category: MONITORING
+  priority: P4
+  enrichment: null
+- id: UI-DEV-ELECTRON-RUN-AS-NODE-SILENT
+  title: npm run dev opens no window when ELECTRON_RUN_AS_NODE is set in the IDE terminal
+  severity: low
+  component: ui
   status: open
   category: TECH-DEBT
   priority: P4
   enrichment: null
+- id: E2E-MAIN-PROCESS-REJECTIONS-UNWATCHED
+  title: E2E does not watch unhandled promise rejections in the Electron main process
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE
+  title: Convert Ctrl+O delivery lost before the lazy page mounts
+  severity: low
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    decided_by: agent
+    decision_log:
+    - id: D-1101
+      stage: triage
+      question: Which MEU covers Ctrl+O lost before the lazy Convert page mounts, and at what priority?
+      resolution: autonomous
+      class: two-way
+      chosen: 'MEU-157 gui-convert-browse-after-mount (06, matrix 6.21, P3): the browse request is held until the Convert page listener is mounted, and AC-97.7 waits for the page before Ctrl+O. The holding
+        mechanism is the plan''s.'
+      source_tag: Local Canon
+      precedents:
+      - '06 Common shortcuts (residual): Ctrl+O Browse files (Convert), Mat 2026-10-17 triage D-89'
+      - 'Session 78 D-1032: one whole-gate repeat allowed for AC-97.7'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'A user-facing chord (MEU-97) sometimes does nothing, and the same race fails session gates (2 and 3 of 20 runs), so it is low severity that blocks other work: P3 by the triage matrix.
+        Fixing only the spec lost: it hides the user-facing miss. Two-way.'
+- id: PY-SUITE-5S-WAIT-FLAKE-UNDER-LOAD
+  title: 'Full Python suite: tests with 5-second worker waits fail when the host is loaded'
+  severity: low
+  component: infrastructure
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT
+  title: Cancel stays enabled while a queue is Paused, but nothing acts on it
+  severity: low
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked:
+    - What should Cancel do while a Convert or Downloader queue is Paused?
+    answers:
+    - Disable Cancel while the queue is Paused
+    decided_by: human
+    decision_log:
+    - id: D-1100
+      stage: triage
+      question: What should Cancel do while a Convert or Downloader queue is Paused?
+      resolution: human
+      class: product-preference
+      chosen: Disable Cancel while the queue is Paused (MEU-156 gui-queue-cancel-paused, 10 matrix 10.11, P4). Making Cancel move a Paused queue to Idle and leaving it as it is both lost.
+      source_tag: Human-approved
+      precedents:
+      - 'Session 88 next-session prompt: recommendation disable Cancel while Paused, the alternative Cancel to Idle, and do nothing'
+      - '10 Queue pause feedback (residual) Cancel row: Cancel stops the running job at once'
+      research:
+        engine: none
+        sources: []
+      reasoning: No job runs while the queue is Paused, so there is nothing to cancel; a disabled button says so and matches what the services already do. Cancel to Idle changes a service and the API meaning
+        of cancel. Leaving it keeps a button that does nothing. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-17 'QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT - recommendation accepted, proceed'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -3720,60 +3886,6 @@ deferred:
         list of every FFmpeg dependency and no change. Whether naming it changes legal exposure was not assessed; this is not legal advice.
       human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
     decided_by: human
-- id: TTS-PYTORCH-RUNTIME-SETTINGS-DOWNLOAD
-  title: Nothing downloads the PyTorch runtime, so the PyTorch model can't run in an installed app, and Settings has no row for it
-  severity: medium
-  component: infrastructure
-  status: dismissed
-  category: CLOSE
-  priority: null
-  enrichment:
-    questions_asked:
-    - 'D-236: Does the installed app get a download for the PyTorch runtime and what it needs?'
-    - 'D-237: Does ''all other dependencies'' include espeak: the GPL library that the kokoro package imports, and the eSpeak NG program?'
-    answers:
-    - 'D-236: superseded by D-217'
-    - 'D-237: no to both'
-    decided_by: human
-    decision_log:
-    - id: D-236
-      stage: triage
-      question: Does the installed app get a download for the PyTorch runtime and what it needs?
-      resolution: human
-      class: product-preference
-      chosen: Superseded by D-217 on 2026-11-04, not built. Mat first asked for the download to be filed, then chose to keep PyTorch out of installed builds
-      source_tag: Human-approved
-      precedents:
-      - 'TTS-GENERATE-FAILED-SILENT D-22 — Mat approved on 2026-09-30: managed downloads shown as Settings > Dependencies rows with a Get action, nothing bundled in the installer'
-      - docs/build-plan/07-distribution.md:30,227 — the plan already names an optional PyTorch extra, never built
-      research:
-        engine: none
-        sources: []
-      reasoning: 'Mat''s request, made after asking why the PyTorch model''s download does not bring PyTorch with it. It records the direction and the filing, not an approved plan. The steps in resolution_path
-        remain proposals. Mat''s later message: ''OK we will go with pythorch remove as you originally suggested''.'
-      human_message_reference: USER_EXPLICIT 2026-11-04 'also make the download avilable in settings will all other dependencies that needs to be also filed as an issue and be part of the triage'
-    - id: D-237
-      stage: triage
-      question: 'Does ''all other dependencies'' include espeak: the GPL library that the kokoro package imports, and the eSpeak NG program?'
-      resolution: human
-      class: source-conflict
-      chosen: No to both. espeak is never downloaded or bundled, and the eSpeak NG row stays install guidance. With no runtime download, the KModel import workaround is not built
-      source_tag: Human-approved
-      precedents:
-      - 'docs/build-plan/03-service-layer.md:453 — D-61, Mat approved on 2026-10-09: espeak-ng (GPL-3.0) is never shipped in the installer or the backend bundle'
-      - 'docs/build-plan/03-service-layer.md:449 — D-71: eSpeak NG runs as a user-installed CLI subprocess'
-      - 'docs/execution/plans/2026-10-14-tts-engine-runtime/review-prompt-exec.md:41 — D-96, human: the guidance is the URL as text plus Copy link'
-      - packaging/THIRD_PARTY_NOTICES.md:7-8 — av-kit calls espeak-ng as a subprocess and never loads its library
-      research:
-        engine: exa
-        sources:
-        - https://gplv3.fsf.org/wiki/index.php/FAQ_Update — 'If modules are designed to run linked together in a shared address space, that almost surely means combining them into one program'; pipes, sockets
-          and command-line arguments normally mean separate programs. This is the FSF's view, which it says judges ultimately decide
-      reasoning: Taken literally, Mat's 'all other dependencies' includes what kokoro declares, and that pulls espeakng_loader (espeak-ng.dll, 18.8 MB unpacked, 9.4 MB wheel) and phonemizer-fork (GPLv3+
-        in its metadata) into the backend process of an MIT app (pyproject.toml:5). That conflicts with D-61's reasoning and the shipped notices, so it is Mat's to rule. The recommendation avoids the question
-        because KModel loaded without those packages in the 2026-11-04 test, though only in the dev venv and without generating speech, and the bare-parent import is not a kokoro API, so it is tied to the
-        kokoro pin. This is not legal advice. See the brief.
-      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
 - id: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL
   title: Claude Code doesn't show a model the per-action text in _meta.action_descriptions
   severity: low
@@ -3804,11 +3916,18 @@ deferred:
         records the probe and the D-521 run's feedback for a plan of its own. Doing nothing leaves it in a plan note the register doesn't show. Two-way.
       human_message_reference: 'A: Register it (Recommended)'
 proposed_batches:
-- slug: infrastructure-tts-onnx-fp16-nonfinite-audio-capture-scan-unprobeable-file-breaks-list
+- slug: infrastructure-tts-onnx-fp16-nonfinite-audio
   issues:
   - TTS-ONNX-FP16-NONFINITE-AUDIO
-  - CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST
   component: infrastructure
   priority_band: P2
+  complexity: S
+  has_duplicates: false
+- slug: ui-convert-ctrl-o-before-mount-flake-queue-cancel-while-paused-no-effect
+  issues:
+  - CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE
+  - QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT
+  component: ui
+  priority_band: P3
   complexity: M
   has_duplicates: false

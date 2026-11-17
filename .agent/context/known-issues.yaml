@@ -5307,7 +5307,7 @@ issues:
       last_checked: '2026-11-15'
       method: 'Session 76 row 6: .agent/skills/cli-dispatch/tests/Test-CliDispatch.ps1 with the user''s own TEMP, checked by dispatch-check.py --expect-clean (C:/Temp/av-kit/tth/tth-dispatch-clean.txt)'
       result: 'dispatch receipt: Total 31 PASS 31 FAIL 0 SKIP 0; exit 0; FAIL names []'
-    resolution_path: 'Fixed in Session 76 on 2026-11-15 (plan docs/execution/plans/2026-11-15-tooling-test-hermeticity): arm 2 assembles the placeholder token at run time and roots it in a fresh folder under the real temp folder, so instantiation no longer rewrites it. The empty %TEMP%/av-kit/receipts/dispatch-tests folder the old arm left is left for Mat to remove (D-914).'
+    resolution_path: 'Fixed in Session 76 on 2026-11-15 (plan docs/execution/plans/2026-11-15-tooling-test-hermeticity): arm 2 assembles the placeholder token at run time and roots it in a fresh folder under the real temp folder, so instantiation no longer rewrites it. Mat removed the empty %TEMP%/av-kit/receipts folder the old arm left (D-914 B, 2026-11-17). The same fix went upstream as agentic-framework 1aabe2d, pushed 2026-11-17 after a Codex review (D-913 B, Mat 2026-11-17: "I authourize this session to edit that repo, commit and push on it as well").'
     category: TECH-DEBT
     priority: P4
     related: []
@@ -5349,6 +5349,8 @@ issues:
     discovered: '2026-09-03'
     root_cause: VS Code and Cursor terminals set ELECTRON_RUN_AS_NODE=1, so electron-vite dev starts electron.exe as plain Node and no window opens, with no error. Moved from E2E-ELECTRON-LAUNCH-FLAG on 2026-11-15 (Session 78, D-939); the E2E launch helper drops the variable, the dev command does not.
     blast_radius: 'Developer machines only: npm --prefix ui run dev from an IDE terminal. Workaround: clear the variable first ($env:ELECTRON_RUN_AS_NODE=$null) or use a terminal opened outside the IDE.'
+    category: TECH-DEBT
+    priority: P4
   - id: E2E-MAIN-PROCESS-REJECTIONS-UNWATCHED
     title: E2E does not watch unhandled promise rejections in the Electron main process
     severity: low
@@ -5357,6 +5359,8 @@ issues:
     discovered: '2026-11-15'
     root_cause: Electron 42.11.18 keeps unhandled promise rejections in the main process as warnings, not in the Node default throw mode (plan-time probe, Session 78 D-935). A rejection prints UnhandledPromiseRejectionWarning to stderr and the app keeps running, so the uncaughtException watch that Session 78 added never sees it.
     blast_radius: 'A main-process promise rejection in an E2E run fails no test. Next step: the watch could also append unhandledRejection events to the same per-launch log that the helper reads at close. W9-7 in capture-inbox.test.ts already reads stderr for the one path that needs it.'
+    category: TECH-DEBT
+    priority: P4
   - id: CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE
     title: Convert Ctrl+O delivery lost before the lazy page mounts
     severity: low
@@ -5365,6 +5369,27 @@ issues:
     discovered: '2026-11-16'
     root_cause: ConvertPage is a lazy route (ui/src/renderer/src/router.tsx:50). Ctrl+O runs convert:browse, whose navigateAndDeliver (ui/src/renderer/src/features/converter/convert-commands.ts:102) navigates to /convert when needed and dispatches CONVERT_BROWSE_EVENT after two animation frames; the listener is added only when ConvertPage mounts (ui/src/renderer/src/features/converter/ConvertPage.tsx:497). When the lazy page mounts after those two frames, the event is dropped and no file picker opens. E2E AC-97.7 (ui/tests/e2e/convert-queue.test.ts:1568) presses Ctrl+O right after clicking nav-convert, so it fails at times at :1579 (convert-staged-remove count 0, expected 1).
     blast_radius: 'Intermittent E2E failure, older than Session 78: AC-97.7 alone failed 2 of 20 on the Session 78 tree (C:/Temp/av-kit/e2e-harness-hardening/ehh-probe-ac977.txt) and 3 of 20 with the row-0 BASE spec on the same build (C:/Temp/av-kit/e2e-harness-hardening/ehh-probe-ac977-base.txt). It failed the Session 78 H1-2 gate once; D-1032 allowed one whole-gate repeat. Users: a Ctrl+O pressed in the first frames after a switch to Convert may open no picker; pressing again works. Fix in its own session: hold the browse request until the ConvertPage listener is mounted, and make the spec wait for the Convert page before Ctrl+O.'
+    category: MEU-NEW
+    priority: P3
+    meu_links:
+      - MEU-157
+    enrichment:
+      decided_by: agent
+      decision_log:
+        - id: D-1101
+          stage: triage
+          question: Which MEU covers Ctrl+O lost before the lazy Convert page mounts, and at what priority?
+          resolution: autonomous
+          class: two-way
+          chosen: 'MEU-157 gui-convert-browse-after-mount (06, matrix 6.21, P3): the browse request is held until the Convert page listener is mounted, and AC-97.7 waits for the page before Ctrl+O. The holding mechanism is the plan''s.'
+          source_tag: Local Canon
+          precedents:
+            - '06 Common shortcuts (residual): Ctrl+O Browse files (Convert), Mat 2026-10-17 triage D-89'
+            - 'Session 78 D-1032: one whole-gate repeat allowed for AC-97.7'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'A user-facing chord (MEU-97) sometimes does nothing, and the same race fails session gates (2 and 3 of 20 runs), so it is low severity that blocks other work: P3 by the triage matrix. Fixing only the spec lost: it hides the user-facing miss. Two-way.'
   - id: CONVERT-OUTPUT-NAME-REUSED
     title: 'Convert: a second Add of the same file gets the output name of a job that has not finished'
     severity: medium
@@ -5401,6 +5426,8 @@ issues:
     discovered: '2026-11-16'
     root_cause: 'Some integration tests wait a fixed 5 seconds for a background worker. In Session 81''s gate, two of them each failed once while other sessions loaded the host (full py-tests took 676 s and 911 s, against 457 s unloaded): tests/integration/test_youtube_adapter.py::test_ac_122_8_surrogate_title_survives_real_storage (service._thread.join(timeout=5), then expected Done and got Processing at :940), and tests/integration/test_tts_assets.py::test_ac_62_16_model_overshoot_is_clipped_not_failed (wait_idle gives up after 5 s at :177; expected Idle and got Downloading at :260). Each passed alone, and the full gate passed once the load fell to 10% (Session 81 D-1068, runs 3 to 5).'
     blast_radius: 'Session gates on a shared host: a full-suite run can fail on code the session never touched, and a rerun costs about 15 minutes. No product effect.'
+    category: TECH-DEBT
+    priority: P3
   - id: QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT
     title: Cancel stays enabled while a queue is Paused, but nothing acts on it
     severity: low
@@ -5409,3 +5436,29 @@ issues:
     discovered: '2026-11-17'
     root_cause: cancel_processing only sets the cancel flag (packages/core/src/avkit_core/services/conversion.py:277-278, download.py:456-460) and no worker runs while the queue is Paused, so the state stays Paused until the next start clears the flags (conversion.py:254-264); the toolbars enable Cancel while Paused (ui/src/renderer/src/features/converter/convert-controls.ts:69-109, ui/src/renderer/src/features/downloader/download-controls.ts:77-78). Found in the Session 88 plan expert pass; not fixed there (M-5, M-8).
     blast_radius: 'Convert and Downloader queues while Paused: a Cancel click is accepted and changes nothing; the queue stays Paused.'
+    category: MEU-NEW
+    priority: P4
+    meu_links:
+      - MEU-156
+    enrichment:
+      questions_asked:
+        - What should Cancel do while a Convert or Downloader queue is Paused?
+      answers:
+        - Disable Cancel while the queue is Paused
+      decided_by: human
+      decision_log:
+        - id: D-1100
+          stage: triage
+          question: What should Cancel do while a Convert or Downloader queue is Paused?
+          resolution: human
+          class: product-preference
+          chosen: Disable Cancel while the queue is Paused (MEU-156 gui-queue-cancel-paused, 10 matrix 10.11, P4). Making Cancel move a Paused queue to Idle and leaving it as it is both lost.
+          source_tag: Human-approved
+          precedents:
+            - 'Session 88 next-session prompt: recommendation disable Cancel while Paused, the alternative Cancel to Idle, and do nothing'
+            - '10 Queue pause feedback (residual) Cancel row: Cancel stops the running job at once'
+          research:
+            engine: none
+            sources: []
+          reasoning: No job runs while the queue is Paused, so there is nothing to cancel; a disabled button says so and matches what the services already do. Cancel to Idle changes a service and the API meaning of cancel. Leaving it keeps a button that does nothing. Two-way.
+          human_message_reference: USER_EXPLICIT 2026-11-17 'QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT - recommendation accepted, proceed'

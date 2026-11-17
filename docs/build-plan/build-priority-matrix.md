@@ -84,6 +84,7 @@
 | 6.18 | MEU-149 | `gui-tts-status-pill-contrast` | [06 §TTS status pill contrast (residual)](06-gui.md#tts-status-pill-contrast-residual) | MEU-22, MEU-126 |
 | 6.19 | MEU-151 | `gui-settings-draft-baseline` | [06 §Settings drafts keep edits (residual)](06-gui.md#settings-draft-baseline-residual) | MEU-33, MEU-39, MEU-112 |
 | 6.20 | MEU-154 | `gui-ready-line-buffer` | [06 §READY line buffering (residual)](06-gui.md#ready-line-buffer-residual) | MEU-108 |
+| 6.21 | MEU-157 | `gui-convert-browse-after-mount` | [06 §Convert browse waits for the page (residual)](06-gui.md#convert-browse-after-mount-residual) | MEU-97 |
 | 7.1 | MEU-24 | `dist-backend` | [07 §Backend packaging](07-distribution.md#backend-packaging-pyinstaller) | MEU-14, MEU-19 |
 | 7.2 | MEU-25 | `dist-installer` | [07 §Electron packaging](07-distribution.md#electron-packaging-electron-builder) | MEU-24, MEU-17 |
 | 7.3 | MEU-71 | `gui-mcp-setup-prompt` | [07 §MCP setup prompt (residual)](07-distribution.md#mcp-setup-prompt-residual) | MEU-23, MEU-25 |
@@ -159,6 +160,7 @@
 | 10.8 | MEU-48 | `gui-queue-convergence` | [10 §Supersession of 06-gui.md](10-queue-card-ui.md#supersession-of-06-guimd) | MEU-47 |
 | 10.9 | MEU-49 | `gui-queue-dnd` | [10 §Reorder model](10-queue-card-ui.md#reorder-model) | MEU-47 |
 | 10.10 | MEU-155 | `gui-queue-pause-feedback` | [10 §Queue pause feedback (residual)](10-queue-card-ui.md#queue-pause-feedback-residual) | MEU-45, MEU-46 |
+| 10.11 | MEU-156 | `gui-queue-cancel-paused` | [10 §Cancel while paused (residual)](10-queue-card-ui.md#queue-cancel-paused-residual) | MEU-45, MEU-46, MEU-155 |
 | 11.1 | MEU-50 | `canon-page-layout` | [11 §Scope and non-goals](11-page-layout.md#scope-and-non-goals) | MEU-49 |
 | 11.2 | MEU-51 | `gui-layout-primitives` | [11 §Shared layout primitives](11-page-layout.md#shared-layout-primitives) | MEU-50 |
 | 11.3 | MEU-52 | `gui-queue-header-row` | [11 §Queue header row](11-page-layout.md#queue-header-row) | MEU-51 |

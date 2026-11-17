@@ -356,3 +356,17 @@ wiring, Settings, and the Transcript and TTS page specs — remain authoritative
 > - Transcript keeps its own toolbar and its `Pause` label (D-1090 C). Its delay, batch-rest and retry waits now end within a second of a pause or stop (`packages/core/src/avkit_core/services/transcript.py:108-110`, `:282`; 03 §Waits end on pause or stop). AC-155.13, AC-155.16 to AC-155.18.
 > - Electron E2E on the real backend (`ui/tests/e2e/queue-pause-feedback.test.ts`): `Pausing…` while a real Convert job runs, the queue `Paused` after it with job 2 waiting, Cancel during `Pausing…`, the Downloader pending state at 700 × 650, and Clear finished staying put. AC-155.10 to AC-155.12, AC-155.15.
 > - Out of scope: Cancel while Paused changes nothing (`QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT`, registered open). AC-155.1 to AC-155.22. Plan `docs/execution/plans/2026-11-17-queue-pause-feedback/`.
+
+<a id="queue-cancel-paused-residual"></a>
+
+## Cancel while paused (residual)
+
+> **MEU-156.** Registered 2026-11-17 from `QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT` (triage D-1100). While a Convert or Downloader queue is Paused no job runs, so `cancel_processing` only sets a flag that nothing reads (`services/conversion.py:277-278`, `services/download.py:456-460`) and the queue stays Paused until the next Start. Both pages still enable Cancel then (`controlEnabled` `'cancel'` in `features/converter/convert-controls.ts` and `features/downloader/download-controls.ts`). Mat's ruling (2026-11-17): disable Cancel while Paused.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Paused | While the processor reports `Paused`, Cancel is disabled on the Convert and Downloader pages, and the palette's cancel follows the same rule | Human-approved 2026-11-17 (D-1100) |
+| Running | Cancel stays enabled while a job runs, `Pausing…` included ([§Queue pause feedback](#queue-pause-feedback-residual)) | Human-approved 2026-11-16 |
+| Services | No service, API route, OpenAPI document or MCP tool changes; cancel keeps its meaning | Human-approved 2026-11-17 (D-1100) |
+| Transcript | Whether the Transcript page's Stop has the same gap is checked at plan time with its evidence | Local Canon |
+| Tests | Unit: the cancel rule for Processing, Paused and Idle on both pages; Electron E2E on the real backend: Cancel disabled on a Paused queue and enabled again once a job runs | Mat, 2026-11-16 ("This should be done with framework and scripts!") |

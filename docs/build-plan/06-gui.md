@@ -1686,6 +1686,19 @@ The following features are explicitly **deferred** to a future phase:
 > - Veto (D-977): a failed or foreign live query still does not hold back a usable ready line from the owned child's pipe, as before (`python-manager.ts:110-115`, `READY_NO_VETO`; AC-154.4).
 > - AC-154.1 to AC-154.9. Plan `docs/execution/plans/2026-11-15-ready-handshake/`.
 
+<a id="convert-browse-after-mount-residual"></a>
+
+### Convert browse waits for the page (residual)
+
+> **MEU-157.** Registered 2026-11-17 from `CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE` (triage D-1101). `ConvertPage` is a lazy route (`router.tsx:50`). Ctrl+O runs `convert:browse`, whose `navigateAndDeliver` (`features/converter/convert-commands.ts:102`) navigates to `/convert` and dispatches `CONVERT_BROWSE_EVENT` after two animation frames, but the page adds its listener only when it mounts (`ConvertPage.tsx:497`). A page that mounts later drops the request, so no file picker opens. E2E AC-97.7 (`ui/tests/e2e/convert-queue.test.ts:1568`) failed 2 of 20 and 3 of 20 runs for this reason (Session 78).
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Held | A browse request made before the Convert page listens is held and delivered once when the page mounts; a request made after it mounts is delivered at once. | Local Canon: [§Common shortcuts](#common-shortcuts-residual) Ctrl+O row, triage D-1101 |
+| Once | One Ctrl+O opens at most one picker; a held request that the page never receives is dropped when the user leaves Convert. | Local Canon |
+| Other chords | The same delivery is checked at plan time for the other chords that navigate to a lazy page before acting. | Local Canon |
+| Tests | Unit: a request before mount is delivered once on mount, and one after mount at once; Electron: AC-97.7 waits for the Convert page before Ctrl+O and passes 20 of 20 runs. | Local Canon: Session 78 probes |
+
 ## Validation Commands
 
 ```bash
