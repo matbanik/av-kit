@@ -1,0 +1,17 @@
+{
+  "packages/api/src/avkit_api/cli.py": "bd61d648ba2ee9dddcead4f635197b1a09ac20d81d2ffac60db46634e0a900da",
+  "tests/unit/test_backend_cli.py": "d5929c88514781a31b675a2b1eac7ce91524424b64a31d359185f4731688f7aa",
+  "tests/integration/test_backend_spawn.py": "cdd428db2224c6dbdfb39c31291f33f187fd009509309e367cd039f1ce747c21",
+  "ui/src/main/python-manager.ts": "ad55c3fecb9cc50a3463590f1ad01878723b780c39205ace27c16295611bf6e0",
+  "ui/src/main/index.ts": "f05fe07dbc76ea43dbed089e51ab464bc95a04543878fcd475c627e2f3840241",
+  "docs/build-plan/04-rest-api.md": "a46a3f44a74a5b634238dd154a5d69ef08c8c896d2dd54d4a7497fab915085bf",
+  "docs/build-plan/06-gui.md": "b3f36881b25c355bf3fbefcc1ad04426e091713827280f88d843576728ddc63b",
+  ".agent/context/known-issues.yaml": "2e400806dab9d7a17a5ac83af042357868106078d90af6e1e81c10fb110e0d49",
+  ".agent/context/known-issues.md": "35123cd9014c4612ba6a45c92d04e707c0797f0c6b7cad1932c00f1a6f708700",
+  ".agent/context/meu-status.yaml": "13cf75df36525850bc8a38a6439c07ea0f21ad2fed6d4c5b8312cd6c0adf714c",
+  ".agent/context/meu-registry.md": "f2e3983f3f50cdba5a32897500e44dc7cb9d97097bd8e3e557a730a907be975d",
+  "docs/BUILD_PLAN.md": "bccfb6b4fca47d3f3e3b383df3b99b127ff3b1440333205bef1c284e8d03f6a1",
+  ".agent/context/grouping/2026-11-15-post-rc3-triage-residuals-session-grouping.md": "8f1cbf9d7a1a2a45cf8a45f7707d80475237057c5bc4f57d59d3010c60e957ef",
+  "ui/tests/unit/ready-line-buffer.test.ts": "absent",
+  "ui/tests/unit/ready-line-pipe.test.ts": "absent"
+}

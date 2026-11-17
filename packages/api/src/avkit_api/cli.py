@@ -1,4 +1,4 @@
-"""Runtime CLI: bind localhost, write the descriptor, print READY_LINE."""
+"""Bind 127.0.0.1, listen, write the descriptor, print READY_LINE, then serve."""
 
 from __future__ import annotations
 
@@ -198,7 +198,7 @@ def write_descriptor(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Bind 127.0.0.1, write the descriptor, print READY_LINE, then serve."""
+    """Bind 127.0.0.1, listen, write the descriptor, print READY_LINE, then serve."""
     args = parse_args(argv)
     args.app_data.mkdir(parents=True, exist_ok=True)
     services, dispose = build_services(app_data=args.app_data)
@@ -216,6 +216,8 @@ def main(argv: list[str] | None = None) -> int:
         access_log=False,
     )
     sock = config.bind_socket()
+    # Listen before the descriptor and the ready line (07-distribution.md:73).
+    sock.listen(config.backlog)
     bound_port = int(sock.getsockname()[1])
     write_descriptor(
         app_data=args.app_data,

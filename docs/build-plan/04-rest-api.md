@@ -449,6 +449,12 @@ FastAPI autogen at `/openapi.json`. Title `av-kit`, version from package. Schema
 | Line unchanged | The ready line's text and fields are unchanged, so MEU-24's and MEU-108's readers need no change. | Local Canon: MEU-24, MEU-108 |
 | Tests | A test that connects as soon as the ready line appears and gets a response, repeated; the packaged backend smoke still passes. | Local Canon |
 
+> **Delivered (Session 82).**
+> - `main()` calls `sock.listen(config.backlog)` straight after `config.bind_socket()`, before it writes the runtime descriptor and prints `AVKIT_READY` (`cli.py:219-220`, `LISTEN_FIRST`, D-978); both docstrings now say listen. At the descriptor write and at the print the socket reads `SO_ACCEPTCONN` 1 (AC-153.1). The ready line's text, its port and `flush=True` are unchanged (`READY_TEXT_KEPT`, AC-153.2).
+> - A connect sent as soon as the ready line appears is accepted in 5 of 5 spawns, and each health request returns 200 (AC-153.3, D-982). A scratch PyInstaller build of this tree, outside `packaging/dist`, passes `tools/smoke_packaged_runtime.py` with none of `torch`, `kokoro`, `phonemizer` or `espeakng_loader` bundled (AC-153.4, D-983).
+> - The measurement (D-981, AC-153.5), a Node `fetch` sent on the ready line. Before the fix: the dev backend refused 4 of 5 (1 got 200) and the packaged backend refused 5 of 5; a fetch sent after a CIM process query, the check the desktop app makes first, got 200 in 5 of 5 (`rh-gap-before-tally.txt`). After the fix: the dev backend answered 200 in 10 of 10 (`rh-gap-dev-after-tally.txt`) and the scratch packaged build in 5 of 5 (`rh-gap-packaged-after-tally.txt`), with no error.
+> - AC-153.1 to AC-153.5. Plan `docs/execution/plans/2026-11-15-ready-handshake/`.
+
 ---
 
 ## What this layer must not do

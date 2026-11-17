@@ -2912,12 +2912,15 @@ issues:
     title: The backend prints AVKIT_READY before its socket listens, so an immediate request is refused
     severity: low
     component: api
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: packages/api/src/avkit_api/cli.py:218-232 binds the socket, prints AVKIT_READY, then calls server.run, and uvicorn only starts listening inside that call. Node fetch sent on the ready line got ECONNREFUSED in 3 of 3 tries with the updated dependencies and 2 of 3 with the old ones.
     blast_radius: 'Measured: the live MCP audit (mcp-audit) stopped with exit 4 before any action ran; its runner now waits for the port (mcp-server/scripts/audit/backend.ts). Not measured: whether the desktop app''s first request can hit the same gap (ui/src/main/python-manager.ts publishes the API on this line). Candidate fix: call sock.listen() before printing the line, so early requests queue instead of being refused.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-17'
+      method: 'Session 82 row 3 Green: tests/unit/test_backend_cli.py and tests/integration/test_backend_spawn.py through pytest, with AC-153.1 to AC-153.3 (C:/Temp/av-kit/ready-handshake/rh-153-green.txt), and 10 Node fetch runs on the ready line against the dev backend (C:/Temp/av-kit/ready-handshake/rh-gap-dev-after-tally.txt); row 4: a scratch PyInstaller build of this tree, tools/smoke_packaged_runtime.py on it and 5 fetch runs on its exe (C:/Temp/av-kit/ready-handshake/rh-smoke-runtime.txt, C:/Temp/av-kit/ready-handshake/rh-gap-packaged-after-tally.txt). Before the fix, row 1 (C:/Temp/av-kit/ready-handshake/rh-gap-before-tally.txt).'
+      result: 'row 3: 11 passed in 12.10s; dev-fetch-after runs 10, http 200 10, refused 0, errors 0; row 4: PASS: smoke-runtime source=bundled version=2.9.8 solver=True; packaged-after runs 5, http 200 5, refused 0, errors 0. Row 1 before: dev-fetch-before refused 4 of 5, packaged-before refused 5 of 5, dev-cim-before http 200 5 of 5.'
+    resolution_path: 'Fixed in Session 82 on 2026-11-17 (plan docs/execution/plans/2026-11-15-ready-handshake): main() calls sock.listen(config.backlog) straight after config.bind_socket(), before it writes the runtime descriptor and prints AVKIT_READY, so a request sent on the ready line is queued instead of refused (LISTEN_FIRST, D-978). The ready line''s text is unchanged (READY_TEXT_KEPT).'
     category: TECH-DEBT
     priority: P4
     meu_links:
@@ -3563,12 +3566,15 @@ issues:
     title: A READY line split across output chunks can be missed, and two READY chunks publish twice
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: publishIfReady and confirmReadyAndPublish (ui/src/main/python-manager.ts:106,138) test each output chunk on its own, with no stream buffering or deduplication. A failed live query also does not veto READY from the owned child's pipe, which the publisher treats as ownership proof. MEU-108 changed none of this.
     blast_radius: 'Measured: never seen in the real app. The Session 44 execution review''s probe reproduced all three on synthesized chunks, on both HEAD and the current module, and raised them as unchanged behaviour, not a regression. Not measured: whether a real backend ever splits the line.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-17'
+      method: 'Session 82 row 6 Green: ui/tests/unit/ready-line-buffer.test.ts (AC-154.1 to AC-154.7), ui/tests/unit/ready-line-pipe.test.ts (AC-154.8, a real child process through spawnOwned) and the MEU-108 pin ui/tests/unit/ready-probe-guard.test.ts through vitest (C:/Temp/av-kit/ready-handshake/rh-154-green.txt), then the AC-108.7 Electron test ui/tests/e2e/backend-output-after-close.test.ts after npm run build (C:/Temp/av-kit/ready-handshake/rh-154-e2e.txt)'
+      result: 'row 6: Test Files  3 passed (3); Tests  17 passed (17); e2e: 1 passed (754ms)'
+    resolution_path: 'Fixed in Session 82 on 2026-11-17 (plan docs/execution/plans/2026-11-15-ready-handshake): createReadyLineReader reads the owned child''s stdout as whole lines, strips one trailing CR, drops a line longer than READY_LINE_MAX_LENGTH, and publishes once per backend start, then ignores later output (READY_LINES, READY_ONCE, READY_BOUND, D-979). index.ts feeds it from stdout only; the Console log is unchanged (READY_STDOUT_ONLY, LOG_PER_CHUNK, D-980). A failed or foreign live query still does not veto a ready line from the owned child''s pipe (READY_NO_VETO, D-977).'
     category: TECH-DEBT
     priority: P4
     meu_links:

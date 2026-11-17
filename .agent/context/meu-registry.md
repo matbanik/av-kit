@@ -76,7 +76,7 @@
 | MEU-15 | `api-downloads-health-settings` | 4.2 | [Phase 4 §Downloads + Health + Settings](../../docs/build-plan/04-rest-api.md#routes--downloads) | Download/SABR/cookies/apply-defaults routes plus settings and health/console/dependencies; 422/409 mapping | ✅ approved |
 | MEU-16 | `api-transcripts-tts-models` | 4.3 | [Phase 4 §Transcripts + TTS + Models](../../docs/build-plan/04-rest-api.md#routes--transcripts) | Transcript start/resume/retry/requeue/compile, TTS generate/prepare, models download-runtime; OpenAPI committed | ✅ approved |
 | MEU-76 | `api-error-surface` | 4.4 | [Phase 4 §Unhandled errors (residual)](../../docs/build-plan/04-rest-api.md#unhandled-errors-residual) | Unhandled exceptions are logged with request_id and returned as a CORS-safe internal_error envelope (no more 'Failed to fetch'); yt-dlp extract failures on download add map to a typed DomainError. | ✅ approved |
-| MEU-153 | `api-ready-after-listen` | 4.5 | [Phase 4 §READY after listen (residual)](../../docs/build-plan/04-rest-api.md#ready-after-listen-residual) | The backend listens before it prints AVKIT_READY, so a request sent on the ready line is queued, not refused. | ⬜ pending |
+| MEU-153 | `api-ready-after-listen` | 4.5 | [Phase 4 §READY after listen (residual)](../../docs/build-plan/04-rest-api.md#ready-after-listen-residual) | The backend listens before it prints AVKIT_READY, so a request sent on the ready line is queued, not refused. | ✅ approved |
 
 
 ## MCP server (P2)
@@ -117,7 +117,7 @@
 | MEU-126 | `gui-light-accent-contrast` | 6.17 | [Phase 6 §Light accent contrast (residual)](../../docs/build-plan/06-gui.md#light-accent-contrast-residual) | The light theme's accent tokens move to the colours Mat ruled, so button labels reach AA contrast. | ✅ approved |
 | MEU-149 | `gui-tts-status-pill-contrast` | 6.18 | [Phase 6 §TTS status pill contrast (residual)](../../docs/build-plan/06-gui.md#tts-status-pill-contrast-residual) | Every TTS status pill label reaches 4.5:1 against its fill in both themes. | ✅ approved |
 | MEU-151 | `gui-settings-draft-baseline` | 6.19 | [Phase 6 §Settings drafts keep edits (residual)](../../docs/build-plan/06-gui.md#settings-draft-baseline-residual) | The capture settings draft and the Convert advanced fields keep the user's edits and follow everything else, as AC-112.9 did for the encoder. | ✅ approved |
-| MEU-154 | `gui-ready-line-buffer` | 6.20 | [Phase 6 §READY line buffering (residual)](../../docs/build-plan/06-gui.md#ready-line-buffer-residual) | The main process reads backend output as lines, so a split or repeated ready line publishes the API once. | ⬜ pending |
+| MEU-154 | `gui-ready-line-buffer` | 6.20 | [Phase 6 §READY line buffering (residual)](../../docs/build-plan/06-gui.md#ready-line-buffer-residual) | The main process reads backend output as lines, so a split or repeated ready line publishes the API once. | ✅ approved |
 
 
 ## Distribution (P2)

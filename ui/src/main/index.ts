@@ -32,6 +32,7 @@ import {
 import {
   buildDevSpawnArgv,
   buildPackagedSpawnArgv,
+  createReadyLineReader,
   forwardConsoleLines,
   packagedBackendPath,
   publishIfReady,
@@ -275,11 +276,14 @@ export async function boot(): Promise<void> {
       const item = appendStdoutLog(line)
       forwardConsoleLines(mainWindow, [item])
     }
+  }
+  // The ready line is read whole from stdout only, and publishes once (D-979).
+  const readyReader = createReadyLineReader((line) => {
     if (ownedPid === null) {
-      return
+      return false
     }
-    const published = publishIfReady({
-      chunkText: text,
+    return publishIfReady({
+      chunkText: line,
       ownedPid,
       readDescriptorPid: () => readDescriptorPid(appData),
       queryLive: queryLiveProcess,
@@ -287,12 +291,15 @@ export async function boot(): Promise<void> {
       token: guiNonce,
       publish: publishBackendReady,
     })
-    if (published) {
+  })
+  const onReadyOutput = (chunk: Buffer) => {
+    if (readyReader.push(chunk.toString('utf8'))) {
       const note = appendStdoutLog(`INFO backend published for port in AVKIT_READY`)
       forwardConsoleLines(mainWindow, [note])
     }
   }
   child.stdout?.on('data', onChildOutput)
+  child.stdout?.on('data', onReadyOutput)
   child.stderr?.on('data', onChildOutput)
   child.on('exit', () => {
     void shutdownOwned('child-exit', {

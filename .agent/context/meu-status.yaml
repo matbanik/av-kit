@@ -3992,17 +3992,17 @@ meus:
     anchor: ready-after-listen-residual
     text: Phase 4 §READY after listen (residual)
   description: The backend listens before it prints AVKIT_READY, so a request sent on the ready line is queued, not refused.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-24
   dependency_parse_status: parsed
   depends_on:
   - MEU-24
-  execution_plan: null
-  updated: '2026-11-15'
+  execution_plan: docs/execution/plans/2026-11-15-ready-handshake/
+  updated: '2026-11-17'
   closed_reason: null
   note: Registered 2026-11-15 from BACKEND-READY-BEFORE-LISTEN (triage D-810; grouping D-814, D-815), Session 82.
 - row_key: MEU-154
@@ -4016,17 +4016,17 @@ meus:
     anchor: ready-line-buffer-residual
     text: Phase 6 §READY line buffering (residual)
   description: The main process reads backend output as lines, so a split or repeated ready line publishes the API once.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-108
   dependency_parse_status: parsed
   depends_on:
   - MEU-108
-  execution_plan: null
-  updated: '2026-11-15'
+  execution_plan: docs/execution/plans/2026-11-15-ready-handshake/
+  updated: '2026-11-17'
   closed_reason: null
   note: Registered 2026-11-15 from GUI-READY-CHUNK-BOUNDARY (triage D-810; grouping D-814, D-815), Session 82.
 summary_bands:

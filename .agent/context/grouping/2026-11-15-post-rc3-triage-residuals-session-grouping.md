@@ -274,7 +274,7 @@ On Mat's word, run `/create-plan` once per session, in the §5 order. Nothing is
 | 79 | `triage-tool-fixes` | — | P3 | executed (Session 79) | `docs/execution/plans/2026-11-15-triage-tool-fixes/` |
 | 80 | `tts-page-polish` | MEU-149, MEU-150 | P3 | executed (Session 80) | `docs/execution/plans/2026-11-15-tts-page-polish/` |
 | 81 | `convert-settings-drafts` | MEU-151, MEU-152 | P4 | executed (Session 81) | `docs/execution/plans/2026-11-15-convert-settings-drafts/` |
-| 82 | `ready-handshake` | MEU-153, MEU-154 | P4 | proposed | — |
+| 82 | `ready-handshake` | MEU-153, MEU-154 | P4 | executed (Session 82) | `docs/execution/plans/2026-11-15-ready-handshake/` |
 | 83 | `docs-path-hygiene` | — | P4 | proposed | — |
 | 88 | `queue-pause-feedback` | one new MEU (at plan time) | P4 | proposed | — |
 

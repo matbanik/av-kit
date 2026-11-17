@@ -1680,6 +1680,12 @@ The following features are explicitly **deferred** to a future phase:
 | Veto | Whether a failed live query vetoes a ready line from the owned child's pipe is decided at plan time with its evidence. | Local Canon |
 | Tests | Unit with synthesized chunks: a line split in two, two lines in one chunk, a repeated line. | Local Canon |
 
+> **Delivered (Session 82).**
+> - `createReadyLineReader` reads the owned child's stdout as whole lines: it keeps the text after the last newline, strips one trailing CR and hands each line to `publishIfReady` until one publishes, then latches and ignores later output (`python-manager.ts:174-222`, `READY_LINES`, `READY_ONCE`, D-979). A line longer than `READY_LINE_MAX_LENGTH` (4 096 UTF-16 code units) is dropped whole (`READY_BOUND`). AC-154.1 to AC-154.3, AC-154.5 and AC-154.6; AC-154.8 drives it through a real pipe whose ready line arrives in two chunks (D-984).
+> - `index.ts` feeds the reader from `child.stdout` only, and `onChildOutput` still logs each chunk of both streams without publishing (`index.ts:270-303`, `READY_STDOUT_ONLY`, `LOG_PER_CHUNK`, D-980; AC-154.7). The MEU-108 pins pass unchanged (AC-154.9).
+> - Veto (D-977): a failed or foreign live query still does not hold back a usable ready line from the owned child's pipe, as before (`python-manager.ts:110-115`, `READY_NO_VETO`; AC-154.4).
+> - AC-154.1 to AC-154.9. Plan `docs/execution/plans/2026-11-15-ready-handshake/`.
+
 ## Validation Commands
 
 ```bash

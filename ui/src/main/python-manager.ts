@@ -112,6 +112,7 @@ export function confirmReadyAndPublish(input: {
   // AVKIT_READY). Pre-spawn live-identity (orphan reap/refuse) stays separate.
   // Do not withhold publish when CIM image/pid strings disagree — that is the
   // Windows delivery failure that left Add on "backend not ready".
+  // D-977 (Session 82): no veto, as before; AC-154.4 pins it for the line reader below.
   void assertOwnedIdentity({
     ownedPid: input.ownedPid,
     descriptorPid: input.descriptorPid ?? -1,
@@ -167,6 +168,57 @@ export function publishIfReady(input: {
     token: input.token,
     publish: input.publish,
   })
+}
+
+/** The longest ready line the reader keeps, in UTF-16 code units (`.length`, as capture-picker.ts:69). */
+export const READY_LINE_MAX_LENGTH = 4_096
+
+/**
+ * Reads the owned child's stdout as lines for the ready handshake (D-979). It keeps the text after
+ * the last newline, strips one trailing CR, skips empty lines and hands each whole line to
+ * `publishLine` until one returns true; from then on it is latched and ignores all output. A line
+ * longer than READY_LINE_MAX_LENGTH never reaches `publishLine`: a carry past the bound is dropped
+ * and marked, and the rest of that line is dropped when its newline arrives.
+ */
+export function createReadyLineReader(publishLine: (line: string) => boolean): {
+  push(chunkText: string): boolean
+  readonly state: { pendingLength: number; discarded: boolean; published: boolean }
+} {
+  let pending = ''
+  let discarded = false
+  let published = false
+  return {
+    push(chunkText: string): boolean {
+      if (published) {
+        return false
+      }
+      const parts = (pending + chunkText).split('\n')
+      pending = parts.pop() ?? ''
+      for (const part of parts) {
+        if (discarded) {
+          discarded = false
+          continue
+        }
+        const line = part.endsWith('\r') ? part.slice(0, -1) : part
+        if (line.length === 0 || line.length > READY_LINE_MAX_LENGTH) {
+          continue
+        }
+        if (publishLine(line)) {
+          published = true
+          pending = ''
+          return true
+        }
+      }
+      if (pending.length > READY_LINE_MAX_LENGTH) {
+        pending = ''
+        discarded = true
+      }
+      return false
+    },
+    get state() {
+      return { pendingLength: pending.length, discarded, published }
+    },
+  }
 }
 
 export async function waitPidExit(

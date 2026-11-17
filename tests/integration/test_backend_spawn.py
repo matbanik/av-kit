@@ -129,3 +129,41 @@ def test_ac_19_4_dual_bearer_on_spawned_app(tmp_path: Path) -> None:
         except subprocess.TimeoutExpired:
             proc.kill()
             proc.wait(timeout=5)
+
+
+def _health_status(base: str) -> int | None:
+    request = urllib.request.Request(f"{base}/health")
+    try:
+        with urllib.request.urlopen(request, timeout=10) as response:
+            return int(response.status)
+    except urllib.error.HTTPError as exc:
+        return int(exc.code)
+    except OSError:
+        return None
+
+
+def test_ac_153_3_connect_on_ready_line_is_accepted_five_spawns(tmp_path: Path) -> None:
+    """MEU-153 LISTEN_FIRST: a connect sent as the ready line appears is accepted, 5 of 5."""
+    import socket
+
+    connected: list[bool] = []
+    statuses: list[int | None] = []
+    for i in range(5):
+        proc = _spawn(tmp_path / f"run-{i}", f"gui-nonce-ready-{i}", f"mcp-token-ready-{i}")
+        try:
+            port = int(_wait_ready(proc).group(1))
+            try:
+                with socket.create_connection(("127.0.0.1", port), timeout=0.25):
+                    connected.append(True)
+            except OSError:
+                connected.append(False)
+            statuses.append(_health_status(f"http://127.0.0.1:{port}/api/v1"))
+        finally:
+            proc.terminate()
+            try:
+                proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=5)
+    assert all(connected), connected
+    assert statuses == [200] * 5
