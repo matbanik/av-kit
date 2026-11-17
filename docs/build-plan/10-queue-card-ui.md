@@ -330,3 +330,29 @@ shared `--color-accent-red`; no `--color-age-restricted` token is created.
 
 Sections of 06-gui.md that are **not** superseded — page shells, routing, discovery and IPC, API
 wiring, Settings, and the Transcript and TTS page specs — remain authoritative.
+
+---
+
+<a id="queue-pause-feedback-residual"></a>
+
+## Queue pause feedback (residual)
+
+> **MEU-155.** Registered 2026-11-17 from `QUEUE-PAUSE-NO-FEEDBACK`. Pause is queue-level and takes effect between jobs (§Toolbar reduction), so a click during a long Convert or Downloader job looked like nothing happened. Mat's ruling (2026-11-16): "Say what it does".
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Label | The toolbar toggle reads `Pause after this job` on the Convert and Downloader pages; `Resume` is unchanged | Human-approved 2026-11-16 ("Say what it does") |
+| Pending | After a pause request succeeds while a job runs, the toggle reads `Pausing…` and is disabled until the queue reports `Paused` or `Idle`, or a different job starts; a job that fails still ends `Paused`. The toggle keeps one width in every state, so Clear finished does not move. The palette's pause shares the same request and sends no second one | Human-approved 2026-11-16; Session 88 D-1091, D-1092 |
+| Status | While pending, the processor status reads `Queue stops when the current job ends` in place of the processor label | Human-approved 2026-11-16 |
+| Cancel | Cancel stays enabled and stops the running job at once; it also ends the pending state | Human-approved 2026-11-16 |
+| Between jobs | The Convert and Downloader services keep pausing between jobs; no API route, OpenAPI document or MCP tool changes | Human-approved 2026-11-16; §Toolbar reduction (queue-level only, no per-item pause) |
+| Transcript | The Transcript page keeps its own toolbar and its `Pause` label; its waits between videos, between batches and before a retry end within a second of a pause or stop | Session 88 D-1090; 11 TR1, TR2; 03 §Rate cap |
+| Tests | Electron E2E: the label, `Pausing…` while a real Convert job runs, the queue paused after that job, Cancel during `Pausing…`, the Downloader pending state and Clear finished staying put; pytest: Transcript's waits end on pause or stop | Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
+> **Delivered (Session 88).**
+> - The toggle reads `Pause after this job` (`ui/src/renderer/src/components/queue/QueueToolbar.tsx:51`). While a requested pause waits for the running job it reads `Pausing…` (`:59`, `:229`) and is disabled (`:219`), and it keeps `min-w-[12rem] justify-center` in every state (`:62`). Under amendment A1 (D-1098, Mat's ruling) the toolbar's root carries `ml-auto` (`TOOLBAR_END`, `:203`), so it sits at the right end of the header and Clear finished keeps its x whatever the status text says; when space runs out it drops to the next line at the right edge. The slot fixture's toggle class and label, and the toolbar root's class, changed to match (D-1095, D-1098). AC-155.1, AC-155.2, AC-155.9, AC-155.15.
+> - `ui/src/renderer/src/lib/queue/pause-request.ts` keeps one pause mark per queue in the shared query cache, never collected, and decides when it is pending (`PAUSE_MARK`, `PAUSE_PENDING_RULE`, `PAUSE_PENDING_HOOK`; D-1091, D-1097). After the pause POST each command module reads the list and marks the job running then; Start, Resume and Cancel clear the mark (`features/converter/convert-commands.ts:166`, `:258-291`; `features/downloader/download-commands.ts:136`, `:183-216`). A failed read sets no mark, and a mark set between jobs binds to the next job within 15 s. AC-155.3 to AC-155.6, AC-155.14, AC-155.19, AC-155.22.
+> - While a pause is pending the processor status reads `Queue stops when the current job ends`, and the palette's pause is disabled, so it sends no second request (`features/converter/ConvertPage.tsx:243`, `:562`, `:872`; `features/downloader/DownloaderPage.tsx:259`, `:545`, `:843`; D-1092). The Downloader help says what Pause and Cancel do (`features/downloader/downloader-help-content.ts:27`, D-1093). AC-155.7, AC-155.8, AC-155.13, AC-155.20, AC-155.21.
+> - Transcript keeps its own toolbar and its `Pause` label (D-1090 C). Its delay, batch-rest and retry waits now end within a second of a pause or stop (`packages/core/src/avkit_core/services/transcript.py:108-110`, `:282`; 03 §Waits end on pause or stop). AC-155.13, AC-155.16 to AC-155.18.
+> - Electron E2E on the real backend (`ui/tests/e2e/queue-pause-feedback.test.ts`): `Pausing…` while a real Convert job runs, the queue `Paused` after it with job 2 waiting, Cancel during `Pausing…`, the Downloader pending state at 700 × 650, and Clear finished staying put. AC-155.10 to AC-155.12, AC-155.15.
+> - Out of scope: Cancel while Paused changes nothing (`QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT`, registered open). AC-155.1 to AC-155.22. Plan `docs/execution/plans/2026-11-17-queue-pause-feedback/`.

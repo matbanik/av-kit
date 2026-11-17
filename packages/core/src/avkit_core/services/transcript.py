@@ -104,7 +104,10 @@ class TranscriptService:
         self._captions = captions
         self._filesystem = filesystem
         self._settings = settings
-        self._sleep = sleep or time.sleep
+        # TRANSCRIPT_WAKE (D-1090): set by a pause or stop so a wait ends at once.
+        self._wake = threading.Event()
+        # An injected `sleep` is used as it is; the default wait ends on a pause or stop.
+        self._sleep = sleep or self._wait
         self._clock = clock or time.monotonic
         self._request_starts: deque[float] = deque()
         self._runtime = QueueRuntime(
@@ -220,6 +223,7 @@ class TranscriptService:
                 raise ConflictError("start_processing requires Idle or Paused")
             self._pause = False
             self._stop = False
+            self._wake.clear()
             self._pick_processing = False
             self._runtime = QueueRuntime(
                 queue_name="transcripts",
@@ -230,6 +234,7 @@ class TranscriptService:
 
     def pause_processing(self) -> None:
         self._pause = True
+        self._wake.set()
 
     def resume_processing(self) -> None:
         # One critical section with the worker's exits (D-306): either the worker sees
@@ -258,6 +263,7 @@ class TranscriptService:
                     uow.commit()
             self._pause = False
             self._stop = False
+            self._wake.clear()
             self._pick_processing = True
             self._runtime = QueueRuntime(
                 queue_name="transcripts",
@@ -269,8 +275,33 @@ class TranscriptService:
     def stop_processing(self) -> None:
         with self._lock:
             self._stop = True
+            self._wake.set()
             if not self._worker_active:
                 self._apply_stop()
+
+    def _wait(self, seconds: float) -> None:
+        """Wait up to `seconds`, ending at once on a pause or stop (TRANSCRIPT_WAKE, D-1090).
+
+        This is `_sleep` unless a `sleep` was injected, so the delay, batch-rest, retry,
+        per-parent and rate-cap waits all end within a moment of `pause_processing` or
+        `stop_processing`; the check after each wait then pauses or stops the run.
+        """
+        if seconds <= 0:
+            time.sleep(0)
+            return
+        deadline = time.monotonic() + seconds
+        while True:
+            if self._pause or self._stop:
+                return
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                return
+            if self._wake.wait(remaining):
+                # A wake left from an earlier pause or stop: clear it and wait out the rest.
+                # The flag is set before the event, so the check above sees a new one.
+                with self._lock:
+                    if not (self._pause or self._stop):
+                        self._wake.clear()
 
     def _ensure_worker(self) -> None:
         """Start a worker unless one is active. The caller holds `_lock`."""

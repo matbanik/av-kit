@@ -17,6 +17,7 @@ import {
   acquireQueueReorder,
   type ReorderQueueKey,
 } from '../../lib/queue/reorder-single-flight'
+import { PAUSE_PENDING_STATUS, usePausePending } from '../../lib/queue/pause-request'
 import { CLEAR_FINISHED_STATUSES } from '../../lib/queue/run-bulk'
 import { useQueueBulk } from '../../lib/queue/use-queue-bulk'
 import { recordShellIpc } from '../../lib/queue/shell-ipc-ledger'
@@ -255,6 +256,7 @@ export function DownloaderPage() {
     refetch: async () => queue.refetch(),
   })
   const label = processorLabel(processorState)
+  const pausePending = usePausePending('download', queue.data?.processor)
   const ctx = { items, selectedId, processorState }
 
   useEffect(() => {
@@ -540,7 +542,7 @@ export function DownloaderPage() {
   // PAGE_STATE: the same expressions the queue toolbar and cancel control use.
   usePublishCommandState('/', {
     'download:start': controlEnabled('start', ctx) && !busy,
-    'download:pause': !paused && controlEnabled('pause', ctx) && !busy,
+    'download:pause': !paused && controlEnabled('pause', ctx) && !busy && !pausePending,
     'download:resume': paused && controlEnabled('resume', ctx) && !busy,
     'download:cancel': controlEnabled('cancel', ctx) && !busy,
     'download:clear': controlEnabled('clear-all', ctx) && !busy,
@@ -838,10 +840,11 @@ export function DownloaderPage() {
           counts={summary}
           summaryTestId="queue-summary"
           processorTestId="processor-indicator"
-          processorLabel={label}
+          processorLabel={pausePending ? PAUSE_PENDING_STATUS : label}
           toolbar={{
             label: 'Download queue actions',
             processorState,
+            pausePending,
             canStart: controlEnabled('start', ctx) && !busy,
             canPauseResume: (paused ? controlEnabled('resume', ctx) : controlEnabled('pause', ctx)) && !busy,
             canClearFinished: hasFinished && !busy,

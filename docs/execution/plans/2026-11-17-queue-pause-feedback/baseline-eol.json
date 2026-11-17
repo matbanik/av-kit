@@ -1,0 +1,376 @@
+{
+  "ui/src/renderer/src/components/queue/QueueToolbar.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 265,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/converter/convert-commands.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 540,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/downloader/download-commands.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 481,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/converter/ConvertPage.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1003,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/downloader/DownloaderPage.tsx": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 750,
+    "bare_lf": 221,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/downloader/downloader-help-content.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 29,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/fixtures/queue-slot-baseline.json": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 6,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/convert-page.behavior.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 2592,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/downloader-page.behavior.test.ts": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 2096,
+    "bare_lf": 399,
+    "bom": false
+  },
+  "packages/core/src/avkit_core/services/transcript.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 820,
+    "bom": false
+  },
+  "docs/build-plan/03-service-layer.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 872,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/build-plan/10-queue-card-ui.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 332,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/build-plan/build-priority-matrix.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 190,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4045,
+    "bom": false
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 249,
+    "bom": false
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 5396,
+    "bom": false
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 47,
+    "bom": false
+  },
+  ".agent/context/grouping/2026-11-15-post-rc3-triage-residuals-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 344,
+    "bom": false
+  },
+  "ui/src/renderer/src/lib/queue/pause-request.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/queue-pause-feedback.test.tsx": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/queue-pause-feedback.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tests/unit/test_transcript_pause_wake.py": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/src/renderer/src/components/queue/QueueHeaderRow.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 137,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/converter/convert-controls.ts": {
+    "kind": "MIXED",
+    "expected": null,
+    "crlf": 255,
+    "bare_lf": 8,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/downloader/download-controls.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 183,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/transcript/TranscriptToolbar.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 71,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/registry/commandRegistry.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 680,
+    "bom": false
+  },
+  "ui/tests/unit/queue-card-slots.test.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 223,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/queue-toolbar.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 258,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/queue-header-row.test.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 128,
+    "bom": false
+  },
+  "ui/tests/unit/convert-page.test.ts": {
+    "kind": "MIXED",
+    "expected": null,
+    "crlf": 731,
+    "bare_lf": 29,
+    "bom": false
+  },
+  "ui/tests/unit/downloader-page.test.ts": {
+    "kind": "MIXED",
+    "expected": null,
+    "crlf": 540,
+    "bare_lf": 15,
+    "bom": false
+  },
+  "ui/tests/unit/help-card.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 140,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/layout-canon.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 176,
+    "bom": false
+  },
+  "ui/tests/unit/queue-canon.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 289,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/e2e/convert-queue.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 1584,
+    "bom": false
+  },
+  "ui/tests/e2e/download-queue.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 1695,
+    "bom": false
+  },
+  "ui/tests/e2e/convert-queue-labels.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 562,
+    "bom": false
+  },
+  "ui/tests/e2e/electron-app.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 96,
+    "bom": false
+  },
+  "packages/core/src/avkit_core/services/conversion.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 693,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "packages/core/src/avkit_core/services/download.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 910,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "packages/core/src/avkit_core/services/settings.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 285,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "tests/unit/test_services.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 3484,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 96,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 197,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-pause-feedback/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 585,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-pause-feedback/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 100,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-pause-feedback/register-meu-155.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 328,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-pause-feedback/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1107,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-pause-feedback/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 389,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-pause-feedback/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 319,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-pause-feedback/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 241,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-queue-pause-feedback/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 330,
+    "bom": false
+  }
+}

@@ -1022,6 +1022,95 @@ describe('MEU-46 DownloaderPage queue surface', () => {
     await vi.waitFor(() => expect(requests('/downloads/pause', 'POST')).toHaveLength(1))
   })
 
+  it('AC-155.8 a Pause click shows Pausing… and the stop status until the queue reports Paused', async () => {
+    const state = await loadCommandState()
+    await renderQueue()
+    const header = within(within(host).getByTestId('download-queue-region')).getByTestId('queue-header-row')
+    await user.click(within(header).getByTestId('queue-toolbar-pause'))
+    await vi.waitFor(() => expect(requests('/downloads/pause', 'POST')).toHaveLength(1))
+
+    await vi.waitFor(() => {
+      const toggle = within(header).getByTestId('queue-toolbar-pause')
+      expect(toggle).toHaveTextContent('Pausing…')
+      expect(toggle).toBeDisabled()
+    })
+    expect(within(header).getByTestId('processor-indicator')).toHaveTextContent(
+      'Queue stops when the current job ends',
+    )
+    await vi.waitFor(() => {
+      const commands = state.getCommandState('/')
+      expect(commands['download:pause'], 'download:pause while the pause is pending').toBe(false)
+      expect(commands['download:cancel'], 'download:cancel while the pause is pending').toBe(true)
+    })
+    await act(async () => {
+      within(header).getByTestId('queue-toolbar-pause').click()
+      await new Promise((done) => setTimeout(done, 50))
+    })
+    expect(requests('/downloads/pause', 'POST'), 'a second click sends nothing').toHaveLength(1)
+
+    processorState = 'Paused'
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+    })
+    await vi.waitFor(() => {
+      expect(within(header).getByTestId('queue-toolbar-resume')).toHaveTextContent('Resume')
+      expect(within(header).getByTestId('processor-indicator')).toHaveTextContent('Queue Paused')
+    })
+  })
+
+  it('AC-155.21 a remount after the list is removed shows Pausing… again once the list reads the same job', async () => {
+    const pqModules = import.meta.glob('../../src/renderer/src/lib/queue/pause-request.ts', { eager: true })
+    const pq = (Object.values(pqModules)[0] ?? {}) as Record<string, unknown>
+    expect(typeof pq.readPauseRequest, 'pause-request.ts exports readPauseRequest').toBe('function')
+    const readPauseRequest = pq.readPauseRequest as (kind: 'convert' | 'download') => unknown
+
+    const first = await renderQueue()
+    await user.click(within(host).getByTestId('queue-toolbar-pause'))
+    await vi.waitFor(() => {
+      expect(within(host).getByTestId('queue-toolbar-pause')).toHaveTextContent('Pausing…')
+    })
+    first.unmount()
+    queryClient.removeQueries({ queryKey: QUERY_KEY })
+
+    // Remount with the first list read held.
+    const base = globalThis.fetch
+    let held = false
+    let release: () => void = () => undefined
+    const gate = new Promise<void>((done) => {
+      release = done
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const method = (init?.method ?? 'GET').toUpperCase()
+        if (!held && /\/downloads\/?$/.test(new URL(String(input)).pathname) && method === 'GET') {
+          held = true
+          await gate
+        }
+        return base(input, init)
+      }),
+    )
+    await act(async () => {
+      host = render(createElement(QueryClientProvider, { client: queryClient }, createElement(DownloaderPage))).container
+    })
+    await vi.waitFor(() => expect(held, 'the first list read is held').toBe(true))
+    expect(within(host).queryByTestId('queue-toolbar-pause')?.textContent ?? '').not.toContain('Pausing')
+    expect(within(host).queryByTestId('processor-indicator')?.textContent ?? '').not.toContain(
+      'Queue stops when the current job ends',
+    )
+    expect(readPauseRequest('download'), 'the mark waits for the list').toStrictEqual({ jobId: 'dl-2' })
+
+    await act(async () => {
+      release()
+    })
+    await vi.waitFor(() => {
+      const toggle = within(host).getByTestId('queue-toolbar-pause')
+      expect(toggle).toHaveTextContent('Pausing…')
+      expect(toggle).toBeDisabled()
+      expect(within(host).getByTestId('processor-indicator')).toHaveTextContent('Queue stops when the current job ends')
+    })
+  })
+
   it('AC-52.3/.5 keeps Idle without a live chip and preserves header, bulk, scroller order', async () => {
     processorState = 'Idle'
     await renderQueue()

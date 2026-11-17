@@ -5382,10 +5382,17 @@ issues:
     title: Convert and Downloader Pause gives no feedback while the current job runs
     severity: medium
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-16'
     root_cause: 'Pause is queue-level and takes effect only between jobs: conversion.py and download.py set _pause, and their _worker loops read it only before picking the next job (conversion.py:496, download.py:659), so the running job finishes first. The shared QueueToolbar (TOOLBAR_CONTROL_LABELS.pause = ''Pause'', QueueToolbar.tsx:51) shows the same button on the Convert, Downloader and Transcript pages, with no pending state, so a click during a long job seems to do nothing; Mat had to Cancel the job to stop it (2026-11-16, Session 81 row 5). Transcript checks between videos (transcript.py:407), so its pause lands sooner. Mat''s ruling (2026-11-16, HDP options ''Say what it does'' and ''Small session after 83''): label the button ''Pause after this job''; after a click show ''Pausing…'' and a status that the queue stops when the current job ends; keep Cancel as the way to stop at once; plan it as a small session after Session 83, proved with Codex reviews and Electron E2E tests.'
     blast_radius: 'Every Convert and Downloader user who presses Pause during a job: the button gives no sign it worked, and the job runs to the end. No data is lost; Cancel still stops a job at once.'
+    verification:
+      last_checked: '2026-11-17'
+      method: 'Session 88 task rows 3, 3b and 4 (plan docs/execution/plans/2026-11-17-queue-pause-feedback, MEU-155): row 3 receipt C:/Temp/av-kit/queue-pause-feedback/qp-155-green.txt (the MEU-155 Vitest files and the AC-155.9 pin files, after the Red receipt that red-check.py accepted; rerun after amendment A1), row 3b receipt qp-155-green-py.txt (test_transcript_pause_wake.py and test_services.py), and row 4 receipts qp-row4-e2e-r1.txt, qp-row4-e2e-r2.txt and qp-row4-e2e-r3.txt (queue-pause-feedback.test.ts in real Electron on the real backend, three runs) with qp-row4-e2e-convert-queue.txt and qp-row4-e2e-download-queue.txt.'
+      result: 'Row 3: ''Test Files  14 passed (14)'' and ''Tests  227 passed (227)''. Row 3b: ''123 passed in 13.43s''. Row 4: ''4 passed (1.0m)'', ''4 passed (1.1m)'' and ''4 passed (56.1s)'', then convert-queue ''23 passed (22.9s)'' and download-queue ''26 passed (30.2s)''. The Convert and Downloader toggle reads ''Pause after this job'', shows ''Pausing…'' and is disabled while a requested pause waits for the running job, the status reads ''Queue stops when the current job ends'', Cancel still stops at once, and Clear finished keeps its x (1044.3 px) in all three toggle states on both pages.'
+    resolution_path: 'Fixed in Session 88 on 2026-11-17 (plan docs/execution/plans/2026-11-17-queue-pause-feedback): PAUSE_LABEL, PAUSE_PENDING_TOGGLE, TOGGLE_WIDTH, TOOLBAR_END (amendment A1, D-1098), PAUSE_MARK, PAUSE_PENDING_RULE, PAUSE_PENDING_HOOK, PAUSE_PENDING_STATUS, HELP_PAUSE and TRANSCRIPT_WAKE. The Convert and Downloader toolbars label the toggle ''Pause after this job''; after the pause request it reads ''Pausing…'' and is disabled until the running job ends, the processor status reads ''Queue stops when the current job ends'', the palette''s pause is disabled meanwhile, and the Downloader help says what Pause and Cancel do. The pending state lives in the renderer (pause-request.ts), so a pause from MCP, another client or before a reload shows no ''Pausing…'' (D-1091, D-1097). Transcript keeps ''Pause'' and now pauses within a second (D-1090 C): its delay, batch-rest and retry waits end on a pause or stop. Correction to the issue text: Transcript checks a pause before each video at transcript.py:491 (at HEAD ba6d8ef; not :407), then waits up to 6 s, 300 s or 30 s, and it has its own TranscriptToolbar, not the shared QueueToolbar. Cancel while Paused is registered separately as QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT.'
+    meu_links:
+      - MEU-155
   - id: PY-SUITE-5S-WAIT-FLAKE-UNDER-LOAD
     title: 'Full Python suite: tests with 5-second worker waits fail when the host is loaded'
     severity: low
@@ -5394,3 +5401,11 @@ issues:
     discovered: '2026-11-16'
     root_cause: 'Some integration tests wait a fixed 5 seconds for a background worker. In Session 81''s gate, two of them each failed once while other sessions loaded the host (full py-tests took 676 s and 911 s, against 457 s unloaded): tests/integration/test_youtube_adapter.py::test_ac_122_8_surrogate_title_survives_real_storage (service._thread.join(timeout=5), then expected Done and got Processing at :940), and tests/integration/test_tts_assets.py::test_ac_62_16_model_overshoot_is_clipped_not_failed (wait_idle gives up after 5 s at :177; expected Idle and got Downloading at :260). Each passed alone, and the full gate passed once the load fell to 10% (Session 81 D-1068, runs 3 to 5).'
     blast_radius: 'Session gates on a shared host: a full-suite run can fail on code the session never touched, and a rerun costs about 15 minutes. No product effect.'
+  - id: QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT
+    title: Cancel stays enabled while a queue is Paused, but nothing acts on it
+    severity: low
+    component: ui
+    status: open
+    discovered: '2026-11-17'
+    root_cause: cancel_processing only sets the cancel flag (packages/core/src/avkit_core/services/conversion.py:277-278, download.py:456-460) and no worker runs while the queue is Paused, so the state stays Paused until the next start clears the flags (conversion.py:254-264); the toolbars enable Cancel while Paused (ui/src/renderer/src/features/converter/convert-controls.ts:69-109, ui/src/renderer/src/features/downloader/download-controls.ts:77-78). Found in the Session 88 plan expert pass; not fixed there (M-5, M-8).
+    blast_radius: 'Convert and Downloader queues while Paused: a Cancel click is accepted and changes nothing; the queue stays Paused.'

@@ -1,5 +1,11 @@
 import { ApiError, apiFetch } from '../../lib/api'
 import { queryClient } from '../../lib/query-client'
+import {
+  clearPauseRequest,
+  isPausePending,
+  markPauseRequested,
+  readPauseRequest,
+} from '../../lib/queue/pause-request'
 import { navigateShell } from '../../lib/shell-nav'
 import {
   createConversionBody,
@@ -129,6 +135,7 @@ async function queueContext(): Promise<{
   processorState: ProcessorState
   selectedId: string | null
   ffmpegAvailable: boolean
+  currentJobId: string | null
 }> {
   const cached = queryClient.getQueryData(QUERY_KEY)
   const envelope = cached
@@ -142,11 +149,34 @@ async function queueContext(): Promise<{
     processorState: envelope.processor.state,
     selectedId: envelope.items[0]?.id ?? null,
     ffmpegAvailable: formSnapshot.ffmpegAvailable,
+    currentJobId: envelope.processor.current_job_id ?? null,
   }
 }
 
 async function invalidateConversions(): Promise<void> {
   await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+}
+
+/**
+ * PAUSE_MARK_SET (D-1091, D-1092): after the pause POST, read the list and mark
+ * the job running now. The two cancels drop an older poll that would answer
+ * after this read. A failed read sets no mark and invalidates the list; Pause
+ * stays usable because the backend's pause only sets a flag.
+ */
+async function markPauseFromList(): Promise<void> {
+  await queryClient.cancelQueries({ queryKey: QUERY_KEY })
+  let envelope: ReturnType<typeof parseListEnvelope>
+  try {
+    envelope = parseListEnvelope(await apiFetch<unknown>('/conversions'))
+  } catch {
+    await invalidateConversions()
+    return
+  }
+  await queryClient.cancelQueries({ queryKey: QUERY_KEY })
+  queryClient.setQueryData(QUERY_KEY, envelope)
+  if (envelope.processor.state === 'Processing') {
+    markPauseRequested('convert', envelope.processor.current_job_id ?? null)
+  }
 }
 
 export async function postConversionCreate(
@@ -225,6 +255,7 @@ export async function startConversion(): Promise<void> {
     return
   }
   await apiFetch('/conversions/start', { method: 'POST' })
+  clearPauseRequest('convert')
   await invalidateConversions()
 }
 
@@ -233,8 +264,12 @@ export async function pauseConversion(): Promise<void> {
   if (!controlEnabled('pause', ctx)) {
     return
   }
+  const processor = { state: ctx.processorState, current_job_id: ctx.currentJobId }
+  if (isPausePending(readPauseRequest('convert'), processor)) {
+    return
+  }
   await apiFetch('/conversions/pause', { method: 'POST' })
-  await invalidateConversions()
+  await markPauseFromList()
 }
 
 export async function resumeConversion(): Promise<void> {
@@ -243,6 +278,7 @@ export async function resumeConversion(): Promise<void> {
     return
   }
   await apiFetch('/conversions/resume', { method: 'POST' })
+  clearPauseRequest('convert')
   await invalidateConversions()
 }
 
@@ -252,6 +288,7 @@ export async function cancelConversion(): Promise<void> {
     return
   }
   await apiFetch('/conversions/cancel', { method: 'POST' })
+  clearPauseRequest('convert')
   await invalidateConversions()
 }
 

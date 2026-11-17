@@ -24,6 +24,6 @@ export const DOWNLOADER_HELP_SECTIONS: HelpSection[] = [
   {
     id: 'pause',
     title: 'Pause vs cancel',
-    body: 'Pause keeps queue order intact and lets you resume later. Cancel removes active work but does not delete finished files.',
+    body: 'Pause after this job lets the current download finish, then stops the queue with its order intact; Resume continues later. Cancel stops the current download at once and does not delete finished files.',
   },
 ]

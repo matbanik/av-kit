@@ -255,6 +255,8 @@ for job in list_jobs() ordered by queue_position:
 
 **Rate cap (MEU-116).** Before each `get_transcript` call, retries included, the service reads `transcript.requests_per_hour`. `0` turns the cap off. Otherwise it drops request starts at or before `now − RATE_WINDOW` (3600 s, on the injected `clock`, default `time.monotonic`). While the count is at or above the cap it sleeps `min(1.0, oldest + RATE_WINDOW − now)`, then re-checks stop and pause and reads the cap again, so a stop or pause ends the wait within a second and a changed cap applies at once. With the defaults and no retries the cap delays nothing.
 
+**Waits end on pause or stop (Session 88).** The delay, batch-rest and retry waits, like the rate-cap wait, end within a second of a pause or stop, and the next check then pauses or stops the run. Without an injected `sleep`, `_sleep` is `_wait`: it waits on a `threading.Event` that `pause_processing` and `stop_processing` set after their flag and that `start_processing` and `resume_processing` clear under `_lock`. An injected `sleep` is used as it is, so tests record whole durations. No route, schema, MCP tool or setting changes (D-1090).
+
 **Boot recovery:** API lifespan sets any parent still `Processing` → `Pending` (crash). `Paused` stays `Paused` until `resume`.
 
 **One item**

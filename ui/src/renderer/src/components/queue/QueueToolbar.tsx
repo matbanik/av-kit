@@ -48,12 +48,18 @@ import {
  */
 export const TOOLBAR_CONTROL_LABELS = {
   start: 'Start',
-  pause: 'Pause',
+  pause: 'Pause after this job',
   resume: 'Resume',
   'clear-finished': 'Clear finished',
   'queue-overflow': 'More',
   'clear-all': 'Clear all…',
 } as const
+
+/** PAUSE_PENDING_TOGGLE: the toggle's text while a requested pause waits for the current job. */
+export const PAUSE_PENDING_LABEL = 'Pausing…'
+
+/** TOGGLE_WIDTH: one toggle width for every label, so Clear finished never slides under the cursor. */
+export const PAUSE_TOGGLE_WIDTH_CLASSES = 'min-w-[12rem] justify-center'
 
 /** The processor state name the toggle reflects, as the API reported it. */
 export type ProcessorStateName = string
@@ -73,6 +79,8 @@ export type QueueToolbarProps = {
   canStart?: boolean
   /** Whether the Pause/Resume toggle is usable right now. Defaults to enabled. */
   canPauseResume?: boolean
+  /** A requested pause waits for the current job: the toggle reads Pausing… and is disabled. */
+  pausePending?: boolean
   /** Whether Clear finished is usable right now. Defaults to enabled. */
   canClearFinished?: boolean
   /** Whether Clear all is usable right now. Defaults to enabled. */
@@ -123,6 +131,7 @@ export function QueueToolbar({
   onClearAll,
   canStart = true,
   canPauseResume = true,
+  pausePending = false,
   canClearFinished = true,
   canClearAll = true,
   label = 'Queue actions',
@@ -189,7 +198,9 @@ export function QueueToolbar({
   }
 
   return (
-    <div className="relative inline-flex self-start" ref={containerRef}>
+    // TOOLBAR_END (D-1098, amendment A1): the toolbar sits at the right end of its line, so the chips
+    // beside it cannot move it; when space runs out it drops to the next line at the right edge.
+    <div className="relative inline-flex self-start ml-auto" ref={containerRef}>
       <div className={groupClasses} data-testid="queue-toolbar" role="toolbar" aria-label={label}>
         <button
           type="button"
@@ -203,9 +214,9 @@ export function QueueToolbar({
         </button>
         <button
           type="button"
-          className={controlClasses}
+          className={`${controlClasses} ${PAUSE_TOGGLE_WIDTH_CLASSES}`}
           data-testid={paused ? 'queue-toolbar-resume' : 'queue-toolbar-pause'}
-          disabled={!canPauseResume}
+          disabled={!canPauseResume || (pausePending && !paused)}
           onClick={onPauseResume}
         >
           {paused ? (
@@ -213,7 +224,11 @@ export function QueueToolbar({
           ) : (
             <Pause className={iconClasses} aria-hidden="true" />
           )}
-          {paused ? TOOLBAR_CONTROL_LABELS.resume : TOOLBAR_CONTROL_LABELS.pause}
+          {paused
+            ? TOOLBAR_CONTROL_LABELS.resume
+            : pausePending
+              ? PAUSE_PENDING_LABEL
+              : TOOLBAR_CONTROL_LABELS.pause}
         </button>
         <button
           type="button"

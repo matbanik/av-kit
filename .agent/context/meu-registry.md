@@ -224,6 +224,7 @@
 | MEU-47 | `gui-queue-bulk` | 10.7 | [Phase 10 §Selection and bulk model](../../docs/build-plan/10-queue-card-ui.md#selection-and-bulk-model) | Selection model (Set<id>), sticky BulkActionBar, shift-click range, Ctrl/Cmd-A, client-side bulk fan-out, Clear finished, G35 partial-result toasts | ✅ approved |
 | MEU-48 | `gui-queue-convergence` | 10.8 | [Phase 10 §Supersession of 06-gui.md](../../docs/build-plan/10-queue-card-ui.md#supersession-of-06-guimd) | Transcript ChannelCard onto the shared primitives (fixes the G33 width-percent violation); TTS gets the shared ProgressBar | 🚫 closed |
 | MEU-49 | `gui-queue-dnd` | 10.9 | [Phase 10 §Reorder model](../../docs/build-plan/10-queue-card-ui.md#reorder-model) | dnd-kit drag reorder inside QueueList with ARIA live-region announcements; keyboard reorder retained as the equal path. Lands before Phase 11 so Transcript (MEU-55) inherits reorder by adopting QueueList. | ✅ approved |
+| MEU-155 | `gui-queue-pause-feedback` | 10.10 | [Phase 10 §Queue pause feedback (residual)](../../docs/build-plan/10-queue-card-ui.md#queue-pause-feedback-residual) | The Convert and Downloader toolbar Pause reads Pause after this job; after a click it shows Pausing… and the processor status says the queue stops when the current job ends, until the queue pauses. Cancel still stops the running job at once; Convert and Downloader keep pausing between jobs, and Transcript's waits end on pause or stop. | ✅ approved |
 
 
 ## Page layout (P2)

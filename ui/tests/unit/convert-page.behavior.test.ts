@@ -1240,6 +1240,106 @@ describe('MEU-45 ConvertPage queue surface', () => {
     await vi.waitFor(() => expect(requests('/conversions/pause', 'POST')).toHaveLength(1))
   })
 
+  it('AC-155.7 a Pause click shows Pausing… and the stop status until the queue reports Paused', async () => {
+    const state = await loadCommandState()
+    const { QUERY_KEY } = await import('../../src/renderer/src/features/converter/useConversionQueue')
+    await renderQueue()
+    const header = within(screen.getByTestId('convert-queue-region')).getByTestId('queue-header-row')
+    await user.click(within(header).getByTestId('queue-toolbar-pause'))
+    await vi.waitFor(() => expect(requests('/conversions/pause', 'POST')).toHaveLength(1))
+
+    await vi.waitFor(() => {
+      const toggle = within(header).getByTestId('queue-toolbar-pause')
+      expect(toggle).toHaveTextContent('Pausing…')
+      expect(toggle).toBeDisabled()
+    })
+    expect(within(header).getByTestId('convert-processor')).toHaveTextContent(
+      'Queue stops when the current job ends',
+    )
+    await vi.waitFor(() => {
+      const commands = state.getCommandState('/convert')
+      expect(commands['convert:pause'], 'convert:pause while the pause is pending').toBe(false)
+      expect(commands['convert:cancel'], 'convert:cancel while the pause is pending').toBe(true)
+    })
+    fireEvent.click(within(header).getByTestId('queue-toolbar-pause'))
+    await act(async () => {
+      await new Promise((done) => setTimeout(done, 50))
+    })
+    expect(requests('/conversions/pause', 'POST'), 'a second click sends nothing').toHaveLength(1)
+
+    processorState = 'Paused'
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+    })
+    await vi.waitFor(() => {
+      expect(within(header).getByTestId('queue-toolbar-resume')).toHaveTextContent('Resume')
+      expect(within(header).getByTestId('convert-processor')).toHaveTextContent('Queue Paused')
+    })
+  })
+
+  it('AC-155.20 a remount after the list is removed shows Pausing… again once the list reads the same job', async () => {
+    const pqModules = import.meta.glob('../../src/renderer/src/lib/queue/pause-request.ts', { eager: true })
+    const pq = (Object.values(pqModules)[0] ?? {}) as Record<string, unknown>
+    expect(typeof pq.readPauseRequest, 'pause-request.ts exports readPauseRequest').toBe('function')
+    const readPauseRequest = pq.readPauseRequest as (kind: 'convert' | 'download') => unknown
+    const { QUERY_KEY } = await import('../../src/renderer/src/features/converter/useConversionQueue')
+    const page = () =>
+      createElement(QueryClientProvider, { client: queryClient }, createElement(ConvertPage, null))
+
+    let first: ReturnType<typeof render> | undefined
+    await act(async () => {
+      first = render(page())
+    })
+    await vi.waitFor(() => {
+      expect(screen.queryAllByTestId('convert-queue-row')).toHaveLength(RENDERED_IDS.length)
+    })
+    await user.click(screen.getByTestId('queue-toolbar-pause'))
+    await vi.waitFor(() => {
+      expect(screen.getByTestId('queue-toolbar-pause')).toHaveTextContent('Pausing…')
+    })
+    first?.unmount()
+    queryClient.removeQueries({ queryKey: QUERY_KEY })
+
+    // Remount with the first list read held.
+    const base = globalThis.fetch
+    let held = false
+    let release: () => void = () => undefined
+    const gate = new Promise<void>((done) => {
+      release = done
+    })
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        const href = String(url)
+        const method = (init?.method ?? 'GET').toUpperCase()
+        if (!held && /\/conversions\/?(\?.*)?$/.test(href) && method === 'GET') {
+          held = true
+          await gate
+        }
+        return base(url, init)
+      }),
+    )
+    await act(async () => {
+      render(page())
+    })
+    await vi.waitFor(() => expect(held, 'the first list read is held').toBe(true))
+    expect(screen.queryByTestId('queue-toolbar-pause')?.textContent ?? '').not.toContain('Pausing')
+    expect(screen.queryByTestId('convert-processor')?.textContent ?? '').not.toContain(
+      'Queue stops when the current job ends',
+    )
+    expect(readPauseRequest('convert'), 'the mark waits for the list').toStrictEqual({ jobId: 'job-2' })
+
+    await act(async () => {
+      release()
+    })
+    await vi.waitFor(() => {
+      const toggle = screen.getByTestId('queue-toolbar-pause')
+      expect(toggle).toHaveTextContent('Pausing…')
+      expect(toggle).toBeDisabled()
+      expect(screen.getByTestId('convert-processor')).toHaveTextContent('Queue stops when the current job ends')
+    })
+  })
+
   it('AC-52.3/.5 keeps Idle without a live chip and preserves header, bulk, scroller order', async () => {
     processorState = 'Idle'
     await renderQueue()

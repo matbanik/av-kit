@@ -2,6 +2,12 @@ import { z } from 'zod'
 
 import { ApiError, apiFetch } from '../../lib/api'
 import { queryClient } from '../../lib/query-client'
+import {
+  clearPauseRequest,
+  isPausePending,
+  markPauseRequested,
+  readPauseRequest,
+} from '../../lib/queue/pause-request'
 import { navigateShell } from '../../lib/shell-nav'
 import {
   buildReorderBody,
@@ -100,6 +106,7 @@ async function queueContext(): Promise<{
   items: QueueItemLike[]
   processorState: ProcessorState
   selectedId: string | null
+  currentJobId: string | null
 }> {
   const cached = queryClient.getQueryData(QUERY_KEY)
   const envelope = cached
@@ -112,11 +119,34 @@ async function queueContext(): Promise<{
     items: envelope.items,
     processorState: envelope.processor.state,
     selectedId: envelope.items[0]?.id ?? null,
+    currentJobId: envelope.processor.current_job_id ?? null,
   }
 }
 
 async function invalidateDownloads(): Promise<void> {
   await queryClient.invalidateQueries({ queryKey: QUERY_KEY })
+}
+
+/**
+ * PAUSE_MARK_SET (D-1091, D-1092): after the pause POST, read the list and mark
+ * the job running now. The two cancels drop an older poll that would answer
+ * after this read. A failed read sets no mark and invalidates the list; Pause
+ * stays usable because the backend's pause only sets a flag.
+ */
+async function markPauseFromList(): Promise<void> {
+  await queryClient.cancelQueries({ queryKey: QUERY_KEY })
+  let envelope: ReturnType<typeof parseListEnvelope>
+  try {
+    envelope = parseListEnvelope(await apiFetch<unknown>('/downloads'))
+  } catch {
+    await invalidateDownloads()
+    return
+  }
+  await queryClient.cancelQueries({ queryKey: QUERY_KEY })
+  queryClient.setQueryData(QUERY_KEY, envelope)
+  if (envelope.processor.state === 'Processing') {
+    markPauseRequested('download', envelope.processor.current_job_id ?? null)
+  }
 }
 
 async function invalidateDownloadsAndSabr(): Promise<void> {
@@ -150,6 +180,7 @@ export async function startDownload(): Promise<void> {
     return
   }
   await apiFetch('/downloads/start', { method: 'POST' })
+  clearPauseRequest('download')
   await invalidateDownloads()
 }
 
@@ -158,8 +189,12 @@ export async function pauseDownload(): Promise<void> {
   if (!controlEnabled('pause', ctx)) {
     return
   }
+  const processor = { state: ctx.processorState, current_job_id: ctx.currentJobId }
+  if (isPausePending(readPauseRequest('download'), processor)) {
+    return
+  }
   await apiFetch('/downloads/pause', { method: 'POST' })
-  await invalidateDownloads()
+  await markPauseFromList()
 }
 
 export async function resumeDownload(): Promise<void> {
@@ -168,6 +203,7 @@ export async function resumeDownload(): Promise<void> {
     return
   }
   await apiFetch('/downloads/resume', { method: 'POST' })
+  clearPauseRequest('download')
   await invalidateDownloads()
 }
 
@@ -177,6 +213,7 @@ export async function cancelDownload(): Promise<void> {
     return
   }
   await apiFetch('/downloads/cancel', { method: 'POST' })
+  clearPauseRequest('download')
   await invalidateDownloads()
 }
 

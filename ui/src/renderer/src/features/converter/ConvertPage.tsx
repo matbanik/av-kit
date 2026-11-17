@@ -21,6 +21,7 @@ import {
   acquireQueueReorder,
   type ReorderQueueKey,
 } from '../../lib/queue/reorder-single-flight'
+import { PAUSE_PENDING_STATUS, usePausePending } from '../../lib/queue/pause-request'
 import { CLEAR_FINISHED_STATUSES } from '../../lib/queue/run-bulk'
 import { useQueueBulk } from '../../lib/queue/use-queue-bulk'
 import { logRenderer } from '../../lib/renderer-log'
@@ -239,6 +240,7 @@ export function ConvertPage() {
     refetch: async () => queue.refetch(),
   })
   const label = processorLabel(processorState)
+  const pausePending = usePausePending('convert', queue.data?.processor)
   const ffmpegAvailable = depsQuery.data?.ffmpeg?.available === true
   const ctx = { items, selectedId, processorState, ffmpegAvailable }
   const chip = gpuChipLabel({
@@ -557,7 +559,7 @@ export function ConvertPage() {
   // PAGE_STATE: the same expressions the queue toolbar and cancel control use.
   usePublishCommandState('/convert', {
     'convert:start': controlEnabled('start', ctx) && !busy,
-    'convert:pause': !paused && controlEnabled('pause', ctx) && !busy,
+    'convert:pause': !paused && controlEnabled('pause', ctx) && !busy && !pausePending,
     'convert:resume': paused && controlEnabled('resume', ctx) && !busy,
     'convert:cancel': controlEnabled('cancel', ctx) && !busy,
     'convert:clear': controlEnabled('clear-all', ctx) && !busy,
@@ -867,10 +869,11 @@ export function ConvertPage() {
           counts={summary}
           summaryTestId="convert-queue-summary"
           processorTestId="convert-processor"
-          processorLabel={label}
+          processorLabel={pausePending ? PAUSE_PENDING_STATUS : label}
           toolbar={{
             label: 'Conversion queue actions',
             processorState,
+            pausePending,
             canStart: controlEnabled('start', ctx) && !busy,
             canPauseResume: (paused ? controlEnabled('resume', ctx) : controlEnabled('pause', ctx)) && !busy,
             canClearFinished: hasFinished && !busy,

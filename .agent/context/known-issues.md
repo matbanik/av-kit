@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 142** — Active: 22 | Mitigated: 2 | Resolved: 116
+**Total: 143** — Active: 22 | Mitigated: 2 | Resolved: 117
 
 ## Active Issues
 
@@ -13,7 +13,6 @@
 | 🟡 | `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` | Non-English voices via the real espeak-ng CLI were never run end to end… | infrastructure | ⬜ open | 2026-10-15 |
 | 🟡 | `YOUTUBE-CAPTIONS-IP-BLOCK` | YouTube is blocking caption requests from the maintainer's IP | infrastructure | ⬜ open | 2026-11-03 |
 | 🟡 | `FFMPEG-LIBDVDCSS-BUNDLED` | The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses… | infrastructure | ⬜ open | 2026-11-04 |
-| 🟡 | `QUEUE-PAUSE-NO-FEEDBACK` | Convert and Downloader Pause gives no feedback while the current job ru… | ui | ⬜ open | 2026-11-16 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
 | 🟢 | `DOWNLOAD-QUEUE-DRAG-OVER-MISS` | Download-queue drag-over (A16 committed-over wait) occasionally misses… | ui | ⬜ open | 2026-10-01 |
 | 🟢 | `CAPTURE-ZOOM-PAN-ORIGIN-FLAKE` | Capture viewport AC-66.14 middle-button pan origin occasionally off und… | ui | ⬜ open | 2026-10-17 |
@@ -31,6 +30,7 @@
 | 🟢 | `E2E-MAIN-PROCESS-REJECTIONS-UNWATCHED` | E2E does not watch unhandled promise rejections in the Electron main pr… | ui | ⬜ open | 2026-11-15 |
 | 🟢 | `CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE` | Convert Ctrl+O delivery lost before the lazy page mounts | ui | ⬜ open | 2026-11-16 |
 | 🟢 | `PY-SUITE-5S-WAIT-FLAKE-UNDER-LOAD` | Full Python suite: tests with 5-second worker waits fail when the host… | infrastructure | ⬜ open | 2026-11-16 |
+| 🟢 | `QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT` | Cancel stays enabled while a queue is Paused, but nothing acts on it | ui | ⬜ open | 2026-11-17 |
 
 ## Mitigated / Workaround
 
@@ -39,9 +39,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (116)
+## Resolved (117)
 
-116 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+117 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

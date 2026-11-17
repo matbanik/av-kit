@@ -158,6 +158,7 @@
 | 10.7 | MEU-47 | `gui-queue-bulk` | [10 §Selection and bulk model](10-queue-card-ui.md#selection-and-bulk-model) | MEU-46 |
 | 10.8 | MEU-48 | `gui-queue-convergence` | [10 §Supersession of 06-gui.md](10-queue-card-ui.md#supersession-of-06-guimd) | MEU-47 |
 | 10.9 | MEU-49 | `gui-queue-dnd` | [10 §Reorder model](10-queue-card-ui.md#reorder-model) | MEU-47 |
+| 10.10 | MEU-155 | `gui-queue-pause-feedback` | [10 §Queue pause feedback (residual)](10-queue-card-ui.md#queue-pause-feedback-residual) | MEU-45, MEU-46 |
 | 11.1 | MEU-50 | `canon-page-layout` | [11 §Scope and non-goals](11-page-layout.md#scope-and-non-goals) | MEU-49 |
 | 11.2 | MEU-51 | `gui-layout-primitives` | [11 §Shared layout primitives](11-page-layout.md#shared-layout-primitives) | MEU-50 |
 | 11.3 | MEU-52 | `gui-queue-header-row` | [11 §Queue header row](11-page-layout.md#queue-header-row) | MEU-51 |
