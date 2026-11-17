@@ -226,7 +226,7 @@ describe('MEU-45 convert-controls', () => {
     ])
     expect(convertMetaSegments(row({ kind: 'cut', in_ms: 1000, out_ms: 4500 }))).toEqual([
       'Cut',
-      '1000–4500',
+      '00:00:01.000–00:00:04.500',
     ])
     expect(convertMetaSegments(row({ kind: 'extract', stream_index: 1 }))).toEqual([
       'Extract',

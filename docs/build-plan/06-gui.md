@@ -1660,6 +1660,13 @@ The following features are explicitly **deferred** to a future phase:
 | Edit kept | A Convert field the user edited (preset, CQ, scale or audio) is not replaced when settings arrive or change. A field the user has not touched still follows them. | Local Canon: AC-112.9, plan D-212 |
 | Tests | Renderer: a refetch during an open capture edit keeps the other field's newer value through Save; a CQ, a scale and an audio edit each survive late settings and a change of the saved default preset. | Local Canon |
 
+> **Delivered (Session 81).**
+> - The capture draft holds only the changed leaves: `changedOnly` drops a leaf set back to the saved value, and an empty draft is `null` (`useCaptureSettings.ts:56`, `:104-114`). `form` is the latest saved answer with the draft over it, so a refetch reaches every other leaf (AC-151.1, AC-151.3, AC-151.4).
+> - Save validates the merged form, then PUTs only the draft leaves that still differ from the saved answer; with none left it sends no PUT (`:116-129`, `CAPTURE_SAVE_CHANGED_ONLY`, D-966; AC-151.2, AC-151.5, AC-151.6). The Capture page and the Settings card both send the partial body (AC-151.7 to AC-151.9).
+> - On the Convert page the preset, CQ, scale and audio are each a choice that stays `null` until the user sets it, and each shown value is that choice or else the current preset's (`ConvertPage.tsx:189-201`, `:705`, `:715`, `:721`, D-967). The settings effect and `presetTouched` are gone, and a preset pick resets the three fields (`:315-321`). The edits survive late settings and a change of the saved default preset (AC-151.10 to AC-151.12). Existing tests pass unchanged (AC-151.13).
+> - Row 5: in round 1 Mat passed the capture check (HC-4, 'pass'). Under D-975 the Electron test AC-151.14 (`ui/tests/e2e/capture-settings-draft.test.ts`, a scratch profile and the real backend) replaced the manual round 2 and passed in each of row 5's three runs.
+> - AC-151.1 to AC-151.14. Plan `docs/execution/plans/2026-11-15-convert-settings-drafts/`.
+
 <a id="ready-line-buffer-residual"></a>
 
 ### READY line buffering (residual)

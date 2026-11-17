@@ -259,7 +259,7 @@ On Mat's word, run `/create-plan` once per session, in the §5 order. Nothing is
 | 78 | `e2e-harness-hardening` | — | P3 | executed (Session 78) | `docs/execution/plans/2026-11-15-e2e-harness-hardening/` |
 | 79 | `triage-tool-fixes` | — | P3 | executed (Session 79) | `docs/execution/plans/2026-11-15-triage-tool-fixes/` |
 | 80 | `tts-page-polish` | MEU-149, MEU-150 | P3 | executed (Session 80) | `docs/execution/plans/2026-11-15-tts-page-polish/` |
-| 81 | `convert-settings-drafts` | MEU-151, MEU-152 | P4 | proposed | — |
+| 81 | `convert-settings-drafts` | MEU-151, MEU-152 | P4 | executed (Session 81) | `docs/execution/plans/2026-11-15-convert-settings-drafts/` |
 | 82 | `ready-handshake` | MEU-153, MEU-154 | P4 | proposed | — |
 | 83 | `docs-path-hygiene` | — | P4 | proposed | — |
 

@@ -647,6 +647,14 @@ Resolution **is** in MVP via Mobile 720p + Advanced scale. 2-pass and size-targe
 | Cut encoder | A Cut's stored encoder and its card say what the job runs: none for Fast Copy, `libx265` for a re-encode. | Local Canon: MEU-123 `EXTRACT_NO_ENCODER` |
 | Tests | Unit: positions after a finish, a remove and a move; a Cut's stored encoder for Fast Copy and for a re-encode with the GPU setting at NVIDIA; a renderer test for the time codes. | Local Canon |
 
+> **Delivered (Session 81).**
+> - A Cut card writes its in and out points as `HH:MM:SS.mmm` through `formatConvertTime` (`convert-time.ts:36-46`, `convert-controls.ts:207-208`), and a value it cannot write drops the segment (D-969; AC-152.1 to AC-152.3).
+> - The corner number is the card's 1-based row as shown, and a waiting card reads `Waiting - next` or `Waiting - <n> in line`, its rank among the waiting jobs (`convertQueuePositions`, `convert-controls.ts:250`; `ConvertPage.tsx:519-523`; `QueueCard.tsx:290-293`; D-970). Stored `queue_position` values, the API and MCP are unchanged (AC-152.4 to AC-152.9).
+> - A Cut stores no encoder for Fast Copy or a missing copy mode, and `libx265` for a re-encode, with no GPU check (`services/conversion.py:567-582`, `CUT_NO_GPU_ENCODER`, D-968; AC-152.10, AC-152.11). Existing tests pass unchanged (AC-152.12).
+> - Amendment A1 (Mat's ruling D-1060 after row 5's round 1): a second Add of a file whose first job has not finished gets its own output name. Pending, Processing, Failed and Cancelled jobs hold their name (`OUTPUT_HOLDING_STATUSES`, `:85-95`, `:238-241`, `:439-441`, `QUEUE_OUTPUT_RESERVED`, D-1061). One Add runs at a time (`_add_lock`, `:178-179`, `:234-235`, `QUEUE_ADD_SERIAL`). A running media call holds its name until it exits, so a removed or cleared job's name stays taken (`_active_outputs`, `:180-184`, `:530-565`, `ACTIVE_WRITER_RESERVED`, D-1065). With `skip_existing` on, a held name with no file is suffixed, not skipped (D-1062), and a row with a probe or track error never takes the skip alias (`allow_skip`, `:340`, `:436`, D-1064). AC-152.13 to AC-152.20.
+> - Row 5: Mat's round-1 words were 'pass' for HC-1 and HC-3, and for HC-2 'job 1 and 2 where working on the same video, looks like 2 overwrote 1. But jobs finished', which A1 fixed. Under D-975 the Electron tests AC-152.21 to AC-152.24 (`ui/tests/e2e/convert-queue-labels.test.ts`, a scratch profile, the real backend and clips made with ffmpeg) replaced the manual round 2 and passed in each of row 5's three runs.
+> - AC-152.1 to AC-152.24. Plan `docs/execution/plans/2026-11-15-convert-settings-drafts/`.
+
 ---
 
 ## MEUs

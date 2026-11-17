@@ -1,7 +1,7 @@
 /** @vitest-environment jsdom */
 
 import { QueryClientProvider } from '@tanstack/react-query'
-import { act, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
@@ -72,7 +72,7 @@ describe('MEU-33 convert GUI runtime (exec r1 F1–F4)', () => {
   const fetches: FetchCall[] = []
   let converterGet = {
     output_dir: '~/Videos/av-kit',
-    default_preset: 'archival' as const,
+    default_preset: 'archival' as 'archival' | 'sharing' | 'mobile',
     skip_existing: true,
     gpu_preference: 'auto' as 'auto' | 'software' | 'nvidia',
   }
@@ -342,6 +342,15 @@ describe('MEU-33 convert GUI runtime (exec r1 F1–F4)', () => {
     })
   }
 
+  // MEU-151 (Session 81): the saved default preset changes and the settings query refetches.
+  async function savedDefaultPresetChangesTo(next: 'sharing' | 'mobile'): Promise<void> {
+    converterGet = { ...converterGet, default_preset: next }
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: ['settings', 'converter'] })
+      await queryUpdatesReachThePage()
+    })
+  }
+
   it('AC-112.8 a choice made before settings load survives them on Add', async () => {
     const { encoder, settingsArrive } = await renderConvertBeforeSettings('auto')
     await user.selectOptions(encoder, 'software')
@@ -528,6 +537,89 @@ describe('MEU-33 convert GUI runtime (exec r1 F1–F4)', () => {
     await editOutputFolder()
     await savedSettingChangesTo('nvidia')
     expect((screen.getByTestId('convert-output-dir') as HTMLInputElement).value).toBe('C:/edited-output')
+  })
+
+  // MEU-151 (Session 81, CONVERT_FIELD_CHOICE): an Advanced edit is a choice, kept until a preset pick.
+  function advancedFields(): { cq: HTMLInputElement; scale: HTMLSelectElement; audio: HTMLSelectElement } {
+    return {
+      cq: screen.getByLabelText('CQ') as HTMLInputElement,
+      scale: screen.getByLabelText('Scale') as HTMLSelectElement,
+      audio: screen.getByLabelText('Audio') as HTMLSelectElement,
+    }
+  }
+
+  function editAdvanced(): void {
+    const fields = advancedFields()
+    fireEvent.change(fields.cq, { target: { value: '31' } })
+    fireEvent.change(fields.scale, { target: { value: '720' } })
+    fireEvent.change(fields.audio, { target: { value: 'aac_192' } })
+  }
+
+  function advancedValues(): [string, string, string] {
+    const fields = advancedFields()
+    return [fields.cq.value, fields.scale.value, fields.audio.value]
+  }
+
+  async function renderConvertWithAdvancedOpen(): Promise<void> {
+    await renderConvert()
+    await vi.waitFor(() => {
+      expect(screen.queryByTestId('convert-preset-archival')?.className).toMatch(/bg-accent/)
+    })
+    await user.click(screen.getByTestId('convert-advanced'))
+  }
+
+  it('AC-151.10 CQ, scale and audio set before settings load survive them on Add and the snapshot', async () => {
+    const { settingsArrive } = await renderConvertBeforeSettings('auto')
+    editAdvanced()
+    await settingsArrive()
+    expect(advancedValues()).toEqual(['31', '720', 'aac_192'])
+    expect(convertCommands.snapshotCreateInput()).toMatchObject({
+      preset: 'archival',
+      cq: 31,
+      scale_height: 720,
+      audio_mode: 'aac_192',
+    })
+    await addOneFile()
+    expect(conversionPost()?.body).toMatchObject({
+      preset: 'archival',
+      cq: 31,
+      scale_height: 720,
+      audio_mode: 'aac_192',
+    })
+  })
+
+  it('AC-151.11 CQ, scale and audio edits survive a changed default preset, which the preset follows', async () => {
+    await renderConvertWithAdvancedOpen()
+    editAdvanced()
+    await savedDefaultPresetChangesTo('sharing')
+    await vi.waitFor(() => {
+      expect(screen.queryByTestId('convert-preset-sharing')?.className).toMatch(/bg-accent/)
+    })
+    expect(advancedValues()).toEqual(['31', '720', 'aac_192'])
+    await addOneFile()
+    expect(conversionPost()?.body).toMatchObject({
+      preset: 'sharing',
+      cq: 31,
+      scale_height: 720,
+      audio_mode: 'aac_192',
+    })
+  })
+
+  it('AC-151.12 untouched fields follow the default preset, a pick resets them, and a picked preset stays', async () => {
+    await renderConvertWithAdvancedOpen()
+    expect(advancedValues()).toEqual(['18', '0', 'copy'])
+    await savedDefaultPresetChangesTo('mobile')
+    await vi.waitFor(() => {
+      expect(screen.queryByTestId('convert-preset-mobile')?.className).toMatch(/bg-accent/)
+    })
+    expect(advancedValues()).toEqual(['30', '720', 'aac_96'])
+    editAdvanced()
+    await user.click(screen.getByTestId('convert-preset-high_quality'))
+    expect(advancedValues()).toEqual(['22', '0', 'aac_128'])
+    await savedDefaultPresetChangesTo('sharing')
+    expect(screen.queryByTestId('convert-preset-high_quality')?.className).toMatch(/bg-accent/)
+    expect(screen.queryByTestId('convert-preset-sharing')?.className).not.toMatch(/bg-accent/)
+    expect(advancedValues()).toEqual(['22', '0', 'aac_128'])
   })
 
   it('AC-33.5 Advanced disclosure is Compress-only', async () => {
@@ -1270,6 +1362,46 @@ describe('MEU-45 ConvertPage queue surface', () => {
     expect(within(region).getByTestId('queue-header-row')).toBeTruthy()
     expect(region.className).toContain('min-h-[20rem]')
     expect(within(region).getByTestId('convert-queue').parentElement?.className).toContain('overflow-auto')
+  })
+
+  // MEU-152 (Session 81, QUEUE_ROW_NUMBER, WAITING_POSITION): the card numbers are the rendered rows,
+  // not the stored positions, and the waiting text counts only the Pending jobs (D-970).
+  it('AC-152.9 a gap in the stored positions still numbers the cards 1, 2, 3 with contiguous waiting texts', async () => {
+    const template = queueItems()[0]
+    const gapped = [
+      { id: 'job-a', status: 'Processing', queue_position: 0 },
+      { id: 'job-b', status: 'Pending', queue_position: 2 },
+      { id: 'job-c', status: 'Pending', queue_position: 5 },
+    ].map((row) => ({ ...template, ...row, display_name: row.id + '.mkv', input_path: 'C:/in/' + row.id + '.mkv' }))
+    const stubbed = globalThis.fetch
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        const href = String(url)
+        const method = (init?.method ?? 'GET').toUpperCase()
+        if (href.includes('/conversions') && !href.includes('/conversions/gpu') && method === 'GET') {
+          return jsonResponse({ items: gapped, processor: { state: 'Processing', current_job_id: 'job-a' } })
+        }
+        return stubbed(url, init)
+      }),
+    )
+    await act(async () => {
+      render(
+        createElement(QueryClientProvider, { client: queryClient }, createElement(ConvertPage, null)),
+      )
+    })
+    await vi.waitFor(() => {
+      expect(screen.queryAllByTestId('convert-queue-row')).toHaveLength(gapped.length)
+    })
+    const cards = screen.getAllByTestId('convert-queue-row')
+    expect(cards.map((card) => card.dataset.jobId)).toEqual(['job-a', 'job-b', 'job-c'])
+    expect(
+      cards.map((card) => card.querySelector('[data-testid="queue-card-position"]')?.textContent),
+    ).toEqual(['1', '2', '3'])
+    const meta = (card: HTMLElement): string =>
+      card.querySelector('[data-testid="queue-card-meta"]')?.textContent ?? ''
+    expect(meta(cards[1])).toContain('Waiting - next')
+    expect(meta(cards[2])).toContain('Waiting - 2 in line')
   })
 })
 

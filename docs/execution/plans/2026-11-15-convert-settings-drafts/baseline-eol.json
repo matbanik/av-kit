@@ -1,0 +1,156 @@
+{
+  "ui/src/renderer/src/features/capture/useCaptureSettings.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 111,
+    "bare_lf": 0
+  },
+  "ui/src/renderer/src/features/converter/ConvertPage.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1005,
+    "bare_lf": 0
+  },
+  "ui/src/renderer/src/features/converter/convert-time.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 25,
+    "bare_lf": 0
+  },
+  "ui/src/renderer/src/features/converter/convert-controls.ts": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 228,
+    "bare_lf": 8,
+    "bare_lf_lines": [
+      174,
+      175,
+      176,
+      177,
+      227,
+      228,
+      229,
+      230
+    ]
+  },
+  "ui/src/renderer/src/components/queue/QueueCard.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 636,
+    "bare_lf": 0
+  },
+  "packages/core/src/avkit_core/services/conversion.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 648,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/capture-page.behavior.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 4166,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/convert-page.behavior.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 2460,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/convert-controls.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 274,
+    "bare_lf": 0
+  },
+  "docs/build-plan/06-gui.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1683,
+    "bare_lf": 0
+  },
+  "docs/build-plan/08-video-conversion.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 700
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 5342
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 54
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4045
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 249
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161
+  },
+  ".agent/context/grouping/2026-11-15-post-rc3-triage-residuals-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 329
+  },
+  "ui/tests/unit/capture-settings-draft.behavior.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/convert-queue-labels.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tests/unit/test_convert_cut_encoder.py": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/fixtures/queue-slot-baseline.json": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 6,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/convert-queue.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1584
+  },
+  "ui/tests/e2e/capture-inbox.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 3739
+  },
+  "tests/unit/test_conversion_service.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1185,
+    "bare_lf": 0
+  }
+}

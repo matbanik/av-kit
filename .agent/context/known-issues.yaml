@@ -3276,12 +3276,15 @@ issues:
     title: Convert's queue numbers aren't renumbered
     severity: low
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: queue_position is set once at enqueue from the current list length (packages/core/src/avkit_core/services/conversion.py:172,303), and the card prints it as stored (ui/src/renderer/src/features/converter/ConvertPage.tsx:521, ui/src/renderer/src/components/queue/QueueCard.tsx:558).
     blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. A job keeps the number it got at enqueue, so the number stops saying how many jobs are ahead. Cosmetic: the order itself holds.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-16'
+      method: 'Session 81 row 4 Green: AC-152.4 to AC-152.9 through vitest (C:/Temp/av-kit/convert-settings-drafts/cs81-152-green-ui.txt); and AC-152.22 in row 5''s three Electron runs of ui/tests/e2e/capture-settings-draft.test.ts and ui/tests/e2e/convert-queue-labels.test.ts (C:/Temp/av-kit/convert-settings-drafts/cs81-row5-e2e-r1.txt to -r3.txt)'
+      result: 'row 4: Tests  131 passed (131); row 5: r1 5 passed (1.1m); r2 5 passed (1.0m); r3 5 passed (1.9m)'
+    resolution_path: 'Fixed in Session 81 on 2026-11-16 (plan docs/execution/plans/2026-11-15-convert-settings-drafts): a Convert card''s corner number is its 1-based row as shown, and a waiting card reads Waiting - next or Waiting - <n> in line, its rank among the waiting jobs, worked out in the page from the list order (convertQueuePositions, D-970). Stored queue_position values, the API and MCP are unchanged. In the real app the cards renumber after a remove and a finish (AC-152.22). The Downloader and Transcript cards still print the stored position; that residual is named in the MEU-152 handoff for triage.'
     category: TECH-DEBT
     priority: P4
     meu_links:
@@ -3311,12 +3314,15 @@ issues:
     title: A cut job's row shows its times in raw milliseconds
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: convertMetaSegments prints in_ms and out_ms unformatted (ui/src/renderer/src/features/converter/convert-controls.ts:203-204).
     blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Cosmetic.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-16'
+      method: 'Session 81 row 4 Green: AC-152.1 to AC-152.3 through vitest (C:/Temp/av-kit/convert-settings-drafts/cs81-152-green-ui.txt); and AC-152.21 in row 5''s three Electron runs of ui/tests/e2e/capture-settings-draft.test.ts and ui/tests/e2e/convert-queue-labels.test.ts (C:/Temp/av-kit/convert-settings-drafts/cs81-row5-e2e-r1.txt to -r3.txt)'
+      result: 'row 4: Tests  131 passed (131); row 5: r1 5 passed (1.1m); r2 5 passed (1.0m); r3 5 passed (1.9m)'
+    resolution_path: 'Fixed in Session 81 on 2026-11-16 (plan docs/execution/plans/2026-11-15-convert-settings-drafts): a Cut card writes its in and out points as HH:MM:SS.mmm through formatConvertTime, and a value it cannot write drops the segment (D-969). In the real app a Cut from 00:00:01.000 to 00:00:02.500 reads 00:00:01.000–00:00:02.500 waiting and Done (AC-152.21).'
     category: TECH-DEBT
     priority: P4
     meu_links:
@@ -3466,12 +3472,15 @@ issues:
     title: An unsaved capture settings edit freezes the other capture settings at their old values
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: useCaptureSettings.ts:83 copies the whole form into its draft on the first edit, so the form stops following a refetch and save() writes the copy. useConverterSettings had the same shape and was fixed under AC-112.9 (plan D-212), because there it sent a job to the wrong encoder. Read from the code, not reproduced for capture.
     blast_radius: Reachable when an MCP client or API call changes a capture setting while a capture settings edit is open. A later Save would write the old value of the other fields back over the newer one. No job runs differently and no file is touched. An edit made before settings load would also hold the defaults for the other fields.
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-16'
+      method: 'Session 81 row 2 Green: the capture draft tests AC-151.1 to AC-151.9 through vitest (C:/Temp/av-kit/convert-settings-drafts/cs81-151-green.txt); and AC-151.14 in row 5''s three Electron runs of ui/tests/e2e/capture-settings-draft.test.ts and ui/tests/e2e/convert-queue-labels.test.ts (C:/Temp/av-kit/convert-settings-drafts/cs81-row5-e2e-r1.txt to -r3.txt)'
+      result: 'row 2: Tests  299 passed (299); row 5: r1 5 passed (1.1m); r2 5 passed (1.0m); r3 5 passed (1.9m)'
+    resolution_path: 'Fixed in Session 81 on 2026-11-16 (plan docs/execution/plans/2026-11-15-convert-settings-drafts): the capture settings draft holds only the fields the user changed, over the latest saved values, so a refetch still reaches every other field, and Save sends only the changed fields, or no PUT when none is left (CAPTURE_DRAFT_CHANGED_ONLY, CAPTURE_SAVE_CHANGED_ONLY, D-966). In the real app, saving only a new inbox folder sends a PUT with only inbox_dir and keeps the hotkey (AC-151.14).'
     category: TECH-DEBT
     priority: P4
     related:
@@ -3501,12 +3510,15 @@ issues:
     title: An Advanced edit on Convert snaps back when settings load late or the default preset changes
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-04'
     root_cause: The settings effect in ConvertPage.tsx replaces the preset, CQ, scale and audio unless presetTouched is set, and only selectPreset sets it, so an edit to CQ, Scale or Audio does not protect itself. Found while fixing F1 of execution review round 2, which took the encoder out of this effect and left the others.
     blast_radius: 'Measured on the real page in jsdom (C:/Temp/av-kit/rc1/sibling/result.txt): CQ set to 31 went back to 25 when settings arrived late, and became 30 when the saved default preset changed to mobile. Not measured: Scale and Audio, which the same effect sets the same way, or how often settings arrive after a user has edited something on a real PC. A job could run with values the user changed and did not notice changing back. The fields show the replaced values. Not fixed in RC1 (plan D-208); the release notes list it.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-16'
+      method: 'Session 81 row 2 Green: the Convert page tests AC-151.10 to AC-151.12 through vitest (C:/Temp/av-kit/convert-settings-drafts/cs81-151-green.txt). Row 5''s Electron tests do not cover the Advanced fields.'
+      result: 'row 2: Tests  299 passed (299)'
+    resolution_path: 'Fixed in Session 81 on 2026-11-16 (plan docs/execution/plans/2026-11-15-convert-settings-drafts): on the Convert page the preset, CQ, scale and audio are each the user''s choice once set, and each untouched field follows the current preset, so neither late settings nor a change of the saved default preset replaces an edit; a preset pick resets the three fields (D-967). The settings effect and presetTouched are gone.'
     category: TECH-DEBT
     priority: P4
     related:
@@ -4597,13 +4609,15 @@ issues:
     title: A cut is labelled with an encoder it does not use
     severity: low
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-07'
     root_cause: '_dispatch resolves an encoder for every job kind and saves it in gpu_encoder (packages/core/src/avkit_core/services/conversion.py:486-495 at 39ac742; MEU-123 edits _dispatch, so the lines move). A Cut never uses it: Fast Copy is -c copy (packages/infrastructure/src/avkit_infra/media/adapter.py:590-591), and the re-encode is fixed at libx265 with AAC audio (:592-604). A Cut stores no GPU preference (AC-112.4), so the GPU setting picks the label. MEU-123 stops this for Extract only (EXTRACT_NO_ENCODER).'
     blast_radius: 'Read from the code, not run: on an NVIDIA machine with the GPU setting at Auto or NVIDIA, a Cut row''s encoder segment in the Convert queue (ui/src/renderer/src/features/converter/ConvertPage.tsx:544-552) and the API''s gpu_encoder read hevc_nvenc, for Fast Copy and for a re-encode. At Software they read libx265, which is right for a re-encode and wrong for Fast Copy. The output file is unaffected. Found while planning Session 54 (D-373), beside CONVERT-EXTRACT-ENCODER-LABEL.'
-    resolution_path: 'Debt queue, before Session 57 if wanted: in _dispatch, a Fast Copy Cut saves gpu_encoder=None and a re-encode Cut saves libx265, without calling detect_gpu, next to MEU-123''s Extract branch. The adapter''s Cut command is unchanged. A Red covers both modes on NVIDIA caps (D-373''s widen option).'
+    resolution_path: 'Fixed in Session 81 on 2026-11-16 (plan docs/execution/plans/2026-11-15-convert-settings-drafts): a Cut stores no encoder for Fast Copy or a missing copy mode and libx265 for a re-encode, with no GPU check (CUT_NO_GPU_ENCODER, D-968); stored rows are not rewritten, and a retried Cut gets the new value at dispatch. In the real app a Fast copy Cut card shows no encoder while it waits, runs and is Done, and a re-encode Cut shows libx265 (AC-152.23).'
     verification:
-      last_checked: '2026-11-07'
+      last_checked: '2026-11-16'
+      method: 'Session 81 row 4 Green: AC-152.10 and AC-152.11 through uv run pytest (C:/Temp/av-kit/convert-settings-drafts/cs81-152-green-py.txt); and AC-152.23 in row 5''s three Electron runs of ui/tests/e2e/capture-settings-draft.test.ts and ui/tests/e2e/convert-queue-labels.test.ts (C:/Temp/av-kit/convert-settings-drafts/cs81-row5-e2e-r1.txt to -r3.txt)'
+      result: 'row 4: 5 passed in 0.35s; row 5: r1 5 passed (1.1m); r2 5 passed (1.0m); r3 5 passed (1.9m)'
     category: TECH-DEBT
     priority: P4
     related:
@@ -5340,3 +5354,16 @@ issues:
     discovered: '2026-11-16'
     root_cause: ConvertPage is a lazy route (ui/src/renderer/src/router.tsx:50). Ctrl+O runs convert:browse, whose navigateAndDeliver (ui/src/renderer/src/features/converter/convert-commands.ts:102) navigates to /convert when needed and dispatches CONVERT_BROWSE_EVENT after two animation frames; the listener is added only when ConvertPage mounts (ui/src/renderer/src/features/converter/ConvertPage.tsx:497). When the lazy page mounts after those two frames, the event is dropped and no file picker opens. E2E AC-97.7 (ui/tests/e2e/convert-queue.test.ts:1568) presses Ctrl+O right after clicking nav-convert, so it fails at times at :1579 (convert-staged-remove count 0, expected 1).
     blast_radius: 'Intermittent E2E failure, older than Session 78: AC-97.7 alone failed 2 of 20 on the Session 78 tree (C:/Temp/av-kit/e2e-harness-hardening/ehh-probe-ac977.txt) and 3 of 20 with the row-0 BASE spec on the same build (C:/Temp/av-kit/e2e-harness-hardening/ehh-probe-ac977-base.txt). It failed the Session 78 H1-2 gate once; D-1032 allowed one whole-gate repeat. Users: a Ctrl+O pressed in the first frames after a switch to Convert may open no picker; pressing again works. Fix in its own session: hold the browse request until the ConvertPage listener is mounted, and make the spec wait for the Convert page before Ctrl+O.'
+  - id: CONVERT-OUTPUT-NAME-REUSED
+    title: 'Convert: a second Add of the same file gets the output name of a job that has not finished'
+    severity: medium
+    component: core
+    status: resolved
+    discovered: '2026-11-16'
+    root_cause: 'add_to_queue keeps the names it hands out in a set local to one call (services/conversion.py:215), and _resolve_output avoids only a name on disk or in that set (:405-408). A waiting job has no file yet, so a second Add of the same file gets the same name, and FFmpeg runs with -y. The A1 plan review found two more routes: a Failed Add given the skip alias of a running job file (:305-320), and a removed or cleared job whose media call still writes its path (:263-273).'
+    blast_radius: When both jobs finish, the second overwrites the output of the first without a warning; the source file is not touched. Found by Mat in Session 81 row 5 (HC-2).
+    verification:
+      last_checked: '2026-11-16'
+      method: 'Session 81 row 4b Green: AC-152.13 to AC-152.20 with the existing conversion tests through uv run pytest (C:/Temp/av-kit/convert-settings-drafts/cs81-a1-green-py.txt); and AC-152.24 in row 5''s three Electron runs of ui/tests/e2e/capture-settings-draft.test.ts and ui/tests/e2e/convert-queue-labels.test.ts (C:/Temp/av-kit/convert-settings-drafts/cs81-row5-e2e-r1.txt to -r3.txt)'
+      result: 'row 4b: 83 passed in 13.37s; row 5: r1 5 passed (1.1m); r2 5 passed (1.0m); r3 5 passed (1.9m)'
+    resolution_path: 'Fixed in Session 81 on 2026-11-16 (plan docs/execution/plans/2026-11-15-convert-settings-drafts): amendment A1 (Mat''s ruling D-1060): Pending, Processing, Failed and Cancelled jobs hold their output name against a later Add (QUEUE_OUTPUT_RESERVED, D-1061), one Add runs at a time (QUEUE_ADD_SERIAL), a running media call holds its name until it exits, so a removed or cleared job''s name stays taken (ACTIVE_WRITER_RESERVED, D-1065), and a row with a probe or track error never takes the skip alias (D-1064). In the real app two Adds of one video as Cut give <stem>_cut.mp4 and <stem>_cut_1.mp4, and both files are kept (AC-152.24).'

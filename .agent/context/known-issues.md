@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 139** — Active: 29 | Mitigated: 2 | Resolved: 106
+**Total: 140** — Active: 24 | Mitigated: 2 | Resolved: 112
 
 ## Active Issues
 
@@ -21,17 +21,12 @@
 | 🟢 | `CAPTURE-E2E-LAUNCH-TEARDOWN-HANG` | capture-inbox Electron specs occasionally hang in launch or close under… | ui | ⬜ open | 2026-10-25 |
 | 🟢 | `BACKEND-READY-BEFORE-LISTEN` | The backend prints AVKIT_READY before its socket listens, so an immedia… | api | ⬜ open | 2026-11-03 |
 | 🟢 | `TRANSCRIPT-ADD-CHANNEL-422` | Adding a channel returned 422 after about 8 minutes of enumeration | core | ⬜ open | 2026-11-03 |
-| 🟢 | `CONVERT-POSITIONS-NOT-RENUMBERED` | Convert's queue numbers aren't renumbered | core | ⬜ open | 2026-11-03 |
-| 🟢 | `CONVERT-CUT-TIME-RAW-MS` | A cut job's row shows its times in raw milliseconds | ui | ⬜ open | 2026-11-03 |
 | 🟢 | `DOWNLOADER-ADVANCED-PANEL-GAP` | An empty gap sits under Advanced on the Downloader page | ui | ⬜ open | 2026-11-03 |
 | 🟢 | `E2E-CLIPBOARD-PRIMER-EMPTY` | AC-88.12's clipboard primer read an empty clipboard for 5 s once | ui | ⬜ open | 2026-11-04 |
-| 🟢 | `SETTINGS-DRAFT-STALE-BASELINE` | An unsaved capture settings edit freezes the other capture settings at… | ui | ⬜ open | 2026-11-04 |
-| 🟢 | `CONVERT-ADVANCED-EDIT-REPLACED` | An Advanced edit on Convert snaps back when settings load late or the d… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `GUI-READY-CHUNK-BOUNDARY` | A READY line split across output chunks can be missed, and two READY ch… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `INSTALL-FOLDER-NAME-MISMATCH` | The installer uses %LOCALAPPDATA%\Programs\av-kit-ui, but the build pla… | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `TRACKED-FILES-HOLD-HOME-PATH` | Tracked files name the maintainer's Windows home folder in full, user n… | agent | ⬜ open | 2026-11-07 |
 | 🟢 | `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` | The transcript queue E2E's seam reload failed once with ERR_ABORTED und… | ui | ⬜ open | 2026-11-07 |
-| 🟢 | `CONVERT-CUT-ENCODER-LABEL` | A cut is labelled with an encoder it does not use | core | ⬜ open | 2026-11-07 |
 | 🟢 | `MCP-AUDIT-BASELINE-PENDING-CROP` | The committed MCP audit baseline has no avkit_capture.crop entry | mcp-server | ⬜ open | 2026-11-08 |
 | 🟢 | `MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL` | Claude Code doesn't show a model the per-action text in _meta.action_de… | mcp-server | ⬜ open | 2026-11-10 |
 | 🟢 | `VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE` | Real-ffmpeg frame grabs near a clip's last frame occasionally fail (fra… | core | ⬜ open | 2026-11-15 |
@@ -46,9 +41,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (106)
+## Resolved (112)
 
-106 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+112 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

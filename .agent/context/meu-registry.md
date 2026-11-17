@@ -116,7 +116,7 @@
 | MEU-124 | `download-received-quality` | 6.16 | [Phase 6 §Downloader received quality (residual)](../../docs/build-plan/06-gui.md#download-received-quality-residual) | The file's real quality is stored in a new nullable field, and the row shows requested and received together only when they differ. | ✅ approved |
 | MEU-126 | `gui-light-accent-contrast` | 6.17 | [Phase 6 §Light accent contrast (residual)](../../docs/build-plan/06-gui.md#light-accent-contrast-residual) | The light theme's accent tokens move to the colours Mat ruled, so button labels reach AA contrast. | ✅ approved |
 | MEU-149 | `gui-tts-status-pill-contrast` | 6.18 | [Phase 6 §TTS status pill contrast (residual)](../../docs/build-plan/06-gui.md#tts-status-pill-contrast-residual) | Every TTS status pill label reaches 4.5:1 against its fill in both themes. | ✅ approved |
-| MEU-151 | `gui-settings-draft-baseline` | 6.19 | [Phase 6 §Settings drafts keep edits (residual)](../../docs/build-plan/06-gui.md#settings-draft-baseline-residual) | The capture settings draft and the Convert advanced fields keep the user's edits and follow everything else, as AC-112.9 did for the encoder. | ⬜ pending |
+| MEU-151 | `gui-settings-draft-baseline` | 6.19 | [Phase 6 §Settings drafts keep edits (residual)](../../docs/build-plan/06-gui.md#settings-draft-baseline-residual) | The capture settings draft and the Convert advanced fields keep the user's edits and follow everything else, as AC-112.9 did for the encoder. | ✅ approved |
 | MEU-154 | `gui-ready-line-buffer` | 6.20 | [Phase 6 §READY line buffering (residual)](../../docs/build-plan/06-gui.md#ready-line-buffer-residual) | The main process reads backend output as lines, so a split or repeated ready line publishes the API once. | ⬜ pending |
 
 
@@ -153,7 +153,7 @@
 | MEU-112 | `convert-job-gpu-preference` | 8.8 | [Phase 8 §Encoder choice per job (residual)](../../docs/build-plan/08-video-conversion.md#job-encoder-choice-residual) | The encoder chosen for one Compress job reaches FFmpeg, survives a re-queue or a restart, and an existing database upgrades in place. The setting still applies when a job sends nothing. | ✅ approved |
 | MEU-123 | `convert-extract-stream-index` | 8.9 | [Phase 8 §Extract stream index (residual)](../../docs/build-plan/08-video-conversion.md#extract-stream-index-residual) | stream_index is audio-relative everywhere, so extract picks the right extension and tracks; an Extract job saves no encoder. | ✅ approved |
 | MEU-133 | `convert-media-probe` | 8.10 | [Phase 8 §Media probe (residual)](../../docs/build-plan/08-video-conversion.md#media-probe-residual) | POST /conversions/probe and avkit_convert probe return a local video's duration, codecs, size, fps and streams through the existing MediaPort.probe. | ✅ approved |
-| MEU-152 | `convert-queue-labels` | 8.11 | [Phase 8 §Convert queue labels (residual)](../../docs/build-plan/08-video-conversion.md#convert-queue-labels-residual) | Convert queue cards show Cut times as time codes and current queue positions, and a Cut saves no GPU encoder. | ⬜ pending |
+| MEU-152 | `convert-queue-labels` | 8.11 | [Phase 8 §Convert queue labels (residual)](../../docs/build-plan/08-video-conversion.md#convert-queue-labels-residual) | Convert queue cards show Cut times as time codes and current queue positions, and a Cut saves no GPU encoder. | ✅ approved |
 
 
 ## Screenshot capture (P2)

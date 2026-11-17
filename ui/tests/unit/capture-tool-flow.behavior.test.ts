@@ -88,16 +88,8 @@ const LAND = makeShot('land', 400, 200)
 
 const PNG_BYTES = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52])
 
-/** Today's seven Capture card keys (AC-105.23, D-745). */
-const CARD_KEYS = [
-  'annotated_format',
-  'backup_dir',
-  'close_to_tray',
-  'copy_to_clipboard',
-  'flatten_backup',
-  'hotkey',
-  'inbox_dir',
-]
+/** The Capture card's Save body after an inbox-only edit: only the changed leaf (CAPTURE_SAVE_CHANGED_ONLY, D-966; D-1066). */
+const CARD_KEYS = ['inbox_dir']
 
 /** A rect mark's keys in the save POST (AC-143.34). */
 const RECT_KEYS = ['color', 'height', 'stroke_width', 'type', 'width', 'x', 'y']
@@ -1307,7 +1299,7 @@ describe('MEU-143 capture tool flow', () => {
 
   // ---------------------------------------------------------------- Guards
 
-  it("AC-143.30 after a Lock click the Capture card's unsaved edit stays, its Save sends today's seven keys, and the GET keeps tool_lock", async () => {
+  it("AC-143.30 after a Lock click the Capture card's unsaved edit stays, its Save sends only inbox_dir, and the GET keeps tool_lock", async () => {
     await openShot([], { tool_lock: true })
     await user.click(present('capture-settings-toggle'))
     const inbox = present('capture-inbox-path')

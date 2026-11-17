@@ -82,6 +82,17 @@ GPU_WIRE: dict[str, GpuPreference] = {
     "intel": GpuPreference.Intel,
     "software": GpuPreference.Software,
 }
+# QUEUE_OUTPUT_RESERVED (MEU-152, amendment A1, D-1060, D-1061): a stored job in one of
+# these statuses holds its output name against a later Add, even with no file on disk.
+# A Done or Skipped job holds none: its file on disk already blocks the name.
+OUTPUT_HOLDING_STATUSES = frozenset(
+    {
+        ConversionStatus.Pending,
+        ConversionStatus.Processing,
+        ConversionStatus.Failed,
+        ConversionStatus.Cancelled,
+    }
+)
 
 
 def _now() -> datetime:
@@ -164,6 +175,13 @@ class ConversionService:
         self._cancel = False
         self._thread: threading.Thread | None = None
         self._lock = threading.Lock()
+        # QUEUE_ADD_SERIAL (D-1061): one Add at a time, from its queue read to its commit.
+        self._add_lock = threading.Lock()
+        # ACTIVE_WRITER_RESERVED (D-1065): the output paths of running media calls, kept
+        # until each call exits, so a removed or cleared job's name stays held. The worker
+        # takes only _writer_lock, never _add_lock.
+        self._active_outputs: set[Path] = set()
+        self._writer_lock = threading.Lock()
         self._gpu: GPUCapabilities | None = None
 
     def should_stop(self) -> bool:
@@ -213,12 +231,19 @@ class ConversionService:
             raise ValidationError("paths must be a non-empty list")
         created = []
         reserved: set[Path] = set()
-        with self._uow_factory() as uow:
-            position = len(uow.conversion_jobs.list_ordered())
+        # QUEUE_ADD_SERIAL (D-1061): the lock spans the queue read, the probes and the commit.
+        with self._add_lock, self._uow_factory() as uow:
+            stored = uow.conversion_jobs.list_ordered()
+            position = len(stored)
+            # QUEUE_OUTPUT_RESERVED (D-1060, D-1061): names held by unfinished stored jobs,
+            # then ACTIVE_WRITER_RESERVED (D-1065): names of media calls still running.
+            held = {job.output_path for job in stored if job.status in OUTPUT_HOLDING_STATUSES}
+            with self._writer_lock:
+                held |= self._active_outputs
             for path in paths:
                 if not isinstance(path, Path):
                     raise ValidationError("paths must contain Path values")
-                for job in self._jobs_for_path(path, spec, position, reserved):
+                for job in self._jobs_for_path(path, spec, position, reserved, held):
                     uow.conversion_jobs.add(job)
                     created.append(job)
                     reserved.add(job.output_path)
@@ -288,6 +313,7 @@ class ConversionService:
         spec: ConversionAddSpec,
         position: int,
         reserved: set[Path],
+        held: frozenset[Path] | set[Path] = frozenset(),
     ) -> list:
         from avkit_core.domain.conversion import ConversionJob
 
@@ -309,6 +335,9 @@ class ConversionService:
                 plan,
                 info,
                 reserved,
+                held,
+                # D-1064: a row with a probe or track error never takes the skip alias.
+                allow_skip=error is None,
                 include_stream_index=(
                     spec.kind is ConversionKind.Extract
                     and spec.stream_mode == "all"
@@ -391,6 +420,8 @@ class ConversionService:
         plan: dict[str, int | None],
         info: MediaInfo | None,
         reserved: set[Path],
+        held: frozenset[Path] | set[Path] = frozenset(),
+        allow_skip: bool = True,
         include_stream_index: bool = False,
     ) -> tuple[Path, bool]:
         raw_dir = str(self._settings.get("converter", "output_dir"))
@@ -402,10 +433,11 @@ class ConversionService:
         if include_stream_index and plan.get("stream_index") is not None:
             stream_token = str(plan["stream_index"])
         candidate = dest_dir / f"{path.stem}_{token}{stream_token}{ext}"
-        if candidate.exists() and candidate not in reserved and skip:
+        if candidate.exists() and candidate not in reserved and skip and allow_skip:
             return candidate, True
         suffix = 1
-        while candidate.exists() or candidate in reserved:
+        # QUEUE_OUTPUT_RESERVED (D-1060, D-1061, D-1065): also avoid names still held.
+        while candidate.exists() or candidate in reserved or candidate in held:
             candidate = dest_dir / f"{path.stem}_{token}{stream_token}_{suffix}{ext}"
             suffix += 1
         return candidate, False
@@ -496,39 +528,52 @@ class ConversionService:
         return pending[0] if pending else None
 
     def _run_one(self, job) -> None:
-        with self._uow_factory() as uow:
-            latest = uow.conversion_jobs.get(job.id)
-            if latest is None or latest.status is not ConversionStatus.Pending:
-                return
-            processing = replace(
-                latest.transition(ConversionStatus.Processing),
-                updated_at=_now(),
-            )
-            uow.conversion_jobs.save(processing)
-            uow.commit()
-        self._runtime = QueueRuntime(
-            queue_name="conversions",
-            state=QueueProcessorState.Processing,
-            current_job_id=job.id,
-        )
+        # ACTIVE_WRITER_RESERVED (D-1065): the name is held from before the row read until
+        # the media call has returned or raised, whether or not the row still exists.
+        with self._writer_lock:
+            self._active_outputs.add(job.output_path)
         try:
-            self._dispatch(processing)
-        except Exception as exc:
+            with self._uow_factory() as uow:
+                latest = uow.conversion_jobs.get(job.id)
+                if latest is None or latest.status is not ConversionStatus.Pending:
+                    return
+                processing = replace(
+                    latest.transition(ConversionStatus.Processing),
+                    updated_at=_now(),
+                )
+                uow.conversion_jobs.save(processing)
+                uow.commit()
+            self._runtime = QueueRuntime(
+                queue_name="conversions",
+                state=QueueProcessorState.Processing,
+                current_job_id=job.id,
+            )
+            try:
+                self._dispatch(processing)
+            except Exception as exc:
+                if self._cancel:
+                    self._cancel_inflight()
+                    return
+                self._finish(job.id, ConversionStatus.Failed, error=str(exc))
+                return
             if self._cancel:
                 self._cancel_inflight()
                 return
-            self._finish(job.id, ConversionStatus.Failed, error=str(exc))
-            return
-        if self._cancel:
-            self._cancel_inflight()
-            return
-        self._finish(job.id, ConversionStatus.Done, progress=1.0)
+            self._finish(job.id, ConversionStatus.Done, progress=1.0)
+        finally:
+            with self._writer_lock:
+                self._active_outputs.discard(job.output_path)
 
     def _dispatch(self, job) -> None:
         # EXTRACT_NO_ENCODER: an Extract copies its audio stream, so it needs no GPU check,
         # and saving None clears the label an older build stored on the row.
+        # CUT_NO_GPU_ENCODER (MEU-152, D-968): a Fast Copy Cut, or one with no copy mode, copies
+        # its streams the same way and saves None; a Reencode Cut is re-encoded in software and
+        # saves "libx265". Neither runs detect_gpu or _resolve_encoder.
         encoder: str | None = None
-        if job.kind is not ConversionKind.Extract:
+        if job.kind is ConversionKind.Cut:
+            encoder = "libx265" if job.copy_mode is CutCopyMode.Reencode else None
+        elif job.kind is not ConversionKind.Extract:
             encoder = self._resolve_encoder(self._gpu or self.detect_gpu(), job.gpu_preference)
         with self._uow_factory() as uow:
             latest = uow.conversion_jobs.get(job.id)

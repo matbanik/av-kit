@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { HelpCard } from '../../components/help/HelpCard'
 import { BulkActionBar } from '../../components/queue/BulkActionBar'
@@ -33,6 +33,7 @@ import {
   buildReorderBody,
   controlEnabled,
   convertMetaSegments,
+  convertQueuePositions,
   JOB_STATUSES,
   openTarget,
   processorLabel,
@@ -185,13 +186,19 @@ export function ConvertPage() {
   })
   const [kind, setKind] = useState<ConversionKindWire>('compress')
   const [staging, setStaging] = useState<string[]>([])
-  const [preset, setPreset] = useState<PresetWire>(PRESET_DEFAULT)
+  // CONVERT_FIELD_CHOICE (MEU-151, D-967): the preset and the three Advanced fields are the user's
+  // choice once set; until then each follows the saved default preset, so no settings answer replaces an edit.
+  const [presetChoice, setPresetChoice] = useState<PresetWire | null>(null)
   const [advancedOpen, setAdvancedOpen] = useState(false)
-  const presetTouched = useRef(false)
-  const defaults = presetAdvanced(PRESET_DEFAULT)
-  const [cq, setCq] = useState(defaults.cq)
-  const [scaleHeight, setScaleHeight] = useState<ScaleHeight>(defaults.scale_height)
-  const [audioMode, setAudioMode] = useState<AudioModeWire>(defaults.audio_mode)
+  const [cqChoice, setCqChoice] = useState<number | null>(null)
+  const [scaleChoice, setScaleChoice] = useState<ScaleHeight | null>(null)
+  const [audioChoice, setAudioChoice] = useState<AudioModeWire | null>(null)
+  const savedPreset = converter.ready ? converter.form.default_preset : PRESET_DEFAULT
+  const preset = presetChoice ?? savedPreset
+  const presetDefaults = presetAdvanced(preset)
+  const cq = cqChoice ?? presetDefaults.cq
+  const scaleHeight = scaleChoice ?? presetDefaults.scale_height
+  const audioMode = audioChoice ?? presetDefaults.audio_mode
   const [encoderChoice, setEncoderChoice] = useState<GpuPrefWire | null>(null)
   const savedEncoder = converter.ready ? converter.form.gpu_preference : null
   const [cutIn, setCutIn] = useState('00:00:00.000')
@@ -268,18 +275,6 @@ export function ConvertPage() {
   }, [kind])
 
   useEffect(() => {
-    if (presetTouched.current || !converter.ready) {
-      return
-    }
-    const next = converter.form.default_preset
-    setPreset(next)
-    const advanced = presetAdvanced(next)
-    setCq(advanced.cq)
-    setScaleHeight(advanced.scale_height)
-    setAudioMode(advanced.audio_mode)
-  }, [converter.ready, converter.form.default_preset])
-
-  useEffect(() => {
     if (selectedId !== null && !items.some((item) => item.id === selectedId)) {
       setSelectedId(items[0]?.id ?? null)
     }
@@ -317,13 +312,12 @@ export function ConvertPage() {
     ffmpegAvailable,
   ])
 
+  // CONVERT_PRESET_PICK (MEU-151, D-967): a pick is the preset choice and resets the three fields to it.
   function selectPreset(next: PresetWire): void {
-    presetTouched.current = true
-    setPreset(next)
-    const advanced = presetAdvanced(next)
-    setCq(advanced.cq)
-    setScaleHeight(advanced.scale_height)
-    setAudioMode(advanced.audio_mode)
+    setPresetChoice(next)
+    setCqChoice(null)
+    setScaleChoice(null)
+    setAudioChoice(null)
   }
 
   function buildCreateInput(): unknown {
@@ -520,9 +514,13 @@ export function ConvertPage() {
     the input path: before an output exists, "copy location" copies where the
     job came FROM, which is the only location the row has.
   */
-  const cards: QueueCardJob[] = items.map((item) => ({
+  // QUEUE_ROW_NUMBER, WAITING_POSITION (MEU-152, D-970): zone 2 is the rendered row and the
+  // waiting text counts only the Pending jobs; the stored `queue_position` is not shown.
+  const positions = convertQueuePositions(items)
+  const cards: QueueCardJob[] = items.map((item, index) => ({
     id: item.id,
-    position: item.queue_position,
+    position: positions.get(item.id)?.row ?? index + 1,
+    waitingPosition: positions.get(item.id)?.waiting ?? undefined,
     status: item.status,
     title: item.display_name,
     progress: item.progress,
@@ -704,7 +702,7 @@ export function ConvertPage() {
                     max={CQ_MAX}
                     step={CQ_STEP}
                     value={cq}
-                    onChange={(event) => setCq(Number(event.target.value))}
+                    onChange={(event) => setCqChoice(Number(event.target.value))}
                   />
                 </label>
                 <SelectInput
@@ -714,13 +712,13 @@ export function ConvertPage() {
                     value: String(height),
                     label: height === 0 ? 'Source' : `${height}p`,
                   }))}
-                  onChange={(event) => setScaleHeight(asScale(Number(event.target.value)))}
+                  onChange={(event) => setScaleChoice(asScale(Number(event.target.value)))}
                 />
                 <SelectInput
                   label="Audio"
                   value={audioMode}
                   options={AUDIO_MODE_WIRES.map((mode) => ({ value: mode, label: mode }))}
-                  onChange={(event) => setAudioMode(event.target.value as AudioModeWire)}
+                  onChange={(event) => setAudioChoice(event.target.value as AudioModeWire)}
                 />
                 <SelectInput
                   label="Encoder override"

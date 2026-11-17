@@ -80,16 +80,8 @@ const SMALL = makeShot('small', 100, 80)
 
 const PNG_BYTES = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52])
 
-/** Today's seven Capture card keys (AC-105.23, D-745). */
-const CARD_KEYS = [
-  'annotated_format',
-  'backup_dir',
-  'close_to_tray',
-  'copy_to_clipboard',
-  'flatten_backup',
-  'hotkey',
-  'inbox_dir',
-]
+/** The Capture card's Save body after an inbox-only edit: only the changed leaf (CAPTURE_SAVE_CHANGED_ONLY, D-966; D-1066). */
+const CARD_KEYS = ['inbox_dir']
 
 /** A rect mark's keys in the save POST (AC-143.34). */
 const RECT_KEYS = ['color', 'height', 'stroke_width', 'type', 'width', 'x', 'y']
@@ -1044,7 +1036,7 @@ describe('MEU-106 and MEU-107 capture shapes and steps', () => {
     expect(puts(), 'no PUT').toEqual([])
   })
 
-  it("AC-107.27 after a step style commit the Capture card's unsaved edit stays and its Save sends the seven keys", async () => {
+  it("AC-107.27 after a step style commit the Capture card's unsaved edit stays and its Save sends only inbox_dir", async () => {
     await openShot([])
     await user.click(present('capture-settings-toggle'))
     const inbox = present('capture-inbox-path')

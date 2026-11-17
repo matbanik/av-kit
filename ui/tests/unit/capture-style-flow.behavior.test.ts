@@ -66,16 +66,8 @@ const SHOT: Shot = {
 
 const PNG_BYTES = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52])
 
-/** Today's seven Capture card keys (AC-105.23). */
-const CARD_KEYS = [
-  'annotated_format',
-  'backup_dir',
-  'close_to_tray',
-  'copy_to_clipboard',
-  'flatten_backup',
-  'hotkey',
-  'inbox_dir',
-]
+/** The Capture card's Save body after an inbox-only edit: only the changed leaf (CAPTURE_SAVE_CHANGED_ONLY, D-966; D-1066). */
+const CARD_KEYS = ['inbox_dir']
 
 const BASE_SETTINGS: Record<string, unknown> = {
   inbox_dir: 'C:/Pictures/av-kit',
@@ -891,7 +883,7 @@ describe('MEU-105 capture style and tool flow', () => {
     expect(puts(), 'exactly one PUT').toHaveLength(1)
   })
 
-  it("AC-105.23 a style PUT keeps the Capture card's unsaved edit, whose Save sends exactly today's seven keys", async () => {
+  it("AC-105.23 a style PUT keeps the Capture card's unsaved edit, whose Save sends only inbox_dir", async () => {
     await openShot([])
     await user.click(present('capture-settings-toggle'))
     const inbox = present('capture-inbox-path')

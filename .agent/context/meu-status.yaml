@@ -3939,10 +3939,10 @@ meus:
     anchor: settings-draft-baseline-residual
     text: Phase 6 §Settings drafts keep edits (residual)
   description: The capture settings draft and the Convert advanced fields keep the user's edits and follow everything else, as AC-112.9 did for the encoder.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-33, MEU-39, MEU-112
   dependency_parse_status: parsed
@@ -3950,8 +3950,8 @@ meus:
   - MEU-33
   - MEU-39
   - MEU-112
-  execution_plan: null
-  updated: '2026-11-15'
+  execution_plan: docs/execution/plans/2026-11-15-convert-settings-drafts/
+  updated: '2026-11-17'
   closed_reason: null
   note: Registered 2026-11-15 from SETTINGS-DRAFT-STALE-BASELINE and CONVERT-ADVANCED-EDIT-REPLACED (triage D-808; grouping D-814, D-815), Session 81.
 - row_key: MEU-152
@@ -3965,10 +3965,10 @@ meus:
     anchor: convert-queue-labels-residual
     text: Phase 8 §Convert queue labels (residual)
   description: Convert queue cards show Cut times as time codes and current queue positions, and a Cut saves no GPU encoder.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-30, MEU-33, MEU-112, MEU-123
   dependency_parse_status: parsed
@@ -3977,8 +3977,8 @@ meus:
   - MEU-33
   - MEU-112
   - MEU-123
-  execution_plan: null
-  updated: '2026-11-15'
+  execution_plan: docs/execution/plans/2026-11-15-convert-settings-drafts/
+  updated: '2026-11-17'
   closed_reason: null
   note: Registered 2026-11-15 from CONVERT-CUT-TIME-RAW-MS, CONVERT-POSITIONS-NOT-RENUMBERED and CONVERT-CUT-ENCODER-LABEL (triage D-809; grouping D-814, D-815), Session 81.
 - row_key: MEU-153

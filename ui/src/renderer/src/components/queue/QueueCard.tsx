@@ -71,7 +71,7 @@ export const CARD_STATE_CLASSES = {
 export type QueueCardJob = {
   /** Stable job id, passed back to every callback. */
   id: string
-  /** 1-based position in the queue, as the API reported it. */
+  /** 1-based row in the list the page renders. */
   position: number
   /** Status name as the API reported it. */
   status: string
@@ -87,6 +87,12 @@ export type QueueCardJob = {
   outputPath?: string | null
   /** Source URL the job was queued from. */
   sourceUrl?: string | null
+  /**
+   * WAITING_POSITION (MEU-152, D-970): the job's rank among the waiting jobs, 1 for the next one.
+   * When set, the Pending text is `Waiting - next` or `Waiting - <n> in line`; when unset, the
+   * text names `position` as before.
+   */
+  waitingPosition?: number
 }
 
 /**
@@ -281,6 +287,11 @@ function resolveMeta(job: QueueCardJob, isInFlight: boolean, blocked: boolean): 
     return formatFileSize(job.fileSize ?? null)
   }
   if (job.status === 'Pending') {
+    if (job.waitingPosition !== undefined) {
+      return job.waitingPosition === 1
+        ? 'Waiting - next'
+        : `Waiting - ${String(job.waitingPosition)} in line`
+    }
     return `Waiting - position ${String(job.position)} in queue`
   }
   return META_PLACEHOLDER

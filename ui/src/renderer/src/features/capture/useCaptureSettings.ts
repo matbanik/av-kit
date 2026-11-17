@@ -33,6 +33,31 @@ export const CAPTURE_DEFAULTS: CaptureForm = {
   annotated_format: 'png',
 }
 
+/** The seven leaves in `CaptureForm` order, the order a partial Save body keeps. */
+const CAPTURE_KEYS: readonly (keyof CaptureForm)[] = [
+  'inbox_dir',
+  'hotkey',
+  'copy_to_clipboard',
+  'close_to_tray',
+  'flatten_backup',
+  'backup_dir',
+  'annotated_format',
+]
+
+/** The leaves of `form` named in `keys`, in `CaptureForm` order. */
+function pickLeaves(form: Partial<CaptureForm>, keys: readonly (keyof CaptureForm)[]): Partial<CaptureForm> {
+  return Object.fromEntries(keys.map((key) => [key, form[key]])) as Partial<CaptureForm>
+}
+
+/**
+ * CAPTURE_DRAFT_CHANGED_ONLY (MEU-151, D-966): the draft keeps only the leaves that differ from the
+ * saved answer, so a refetch still reaches every other leaf. An empty draft is `null`.
+ */
+function changedOnly(draft: Partial<CaptureForm>, baseline: CaptureForm): Partial<CaptureForm> | null {
+  const kept = CAPTURE_KEYS.filter((key) => key in draft && draft[key] !== baseline[key])
+  return kept.length === 0 ? null : pickLeaves(draft, kept)
+}
+
 function isAnnotatedFormat(value: unknown): value is AnnotatedFormat {
   return typeof value === 'string' && (ANNOTATED_FORMATS as readonly string[]).includes(value)
 }
@@ -75,27 +100,44 @@ export function useCaptureSettings() {
     // STYLE_STORE (round 2 F3): the shared GET, which keeps a style commit its answer did not see.
     queryFn: fetchCaptureSettings,
   })
-  const [draft, setDraft] = useState<CaptureForm | null>(null)
+  // CAPTURE_DRAFT_CHANGED_ONLY (MEU-151, D-966): only the edited leaves; the rest come from the latest answer.
+  const [draft, setDraft] = useState<Partial<CaptureForm> | null>(null)
   const baseline = useMemo(() => asForm(query.data), [query.data])
-  const form = draft ?? baseline
+  // CS81-R1-F1, D-1067: when the saved answer changes, a draft leaf that now equals it leaves the draft for
+  // good, so a later answer reaches that leaf again. The prune runs during render (React's adjust-state-
+  // on-change pattern), so React discards this render and renders again before committing: no committed
+  // render shows the stale leaf, which an effect would for one frame.
+  const [prunedFor, setPrunedFor] = useState(baseline)
+  if (prunedFor !== baseline) {
+    setPrunedFor(baseline)
+    if (draft !== null) {
+      setDraft(changedOnly(draft, baseline))
+    }
+  }
+  const form = useMemo<CaptureForm>(() => (draft === null ? baseline : { ...baseline, ...draft }), [baseline, draft])
   const isDirty = query.data !== undefined && !sameForm(form, baseline)
 
   const patchForm = useCallback(
     (patch: Partial<CaptureForm>) => {
-      setDraft((current) => ({ ...(current ?? baseline), ...patch }))
+      setDraft((current) => changedOnly({ ...(current ?? {}), ...patch }, baseline))
     },
     [baseline],
   )
 
+  // CAPTURE_SAVE_CHANGED_ONLY (MEU-151, D-966): the merged form is validated whole, and the PUT carries
+  // only the draft leaves that still differ from the saved answer; none left means no PUT.
   const save = useCallback(async () => {
-    const body = parseSettingsPut('capture', form)
-    await apiFetch('/settings/capture', {
-      method: 'PUT',
-      body: JSON.stringify(body),
-    })
+    parseSettingsPut('capture', form)
+    const changed = CAPTURE_KEYS.filter((key) => draft !== null && key in draft && form[key] !== baseline[key])
+    if (changed.length > 0) {
+      await apiFetch('/settings/capture', {
+        method: 'PUT',
+        body: JSON.stringify(pickLeaves(form, changed)),
+      })
+    }
     setDraft(null)
     await queryClient.invalidateQueries({ queryKey: CAPTURE_SETTINGS_KEY })
-  }, [form, queryClient])
+  }, [baseline, draft, form, queryClient])
 
   return {
     form,

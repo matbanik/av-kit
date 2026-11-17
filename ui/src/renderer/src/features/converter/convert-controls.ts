@@ -1,4 +1,5 @@
 import { PRESET_LABELS, type PresetWire } from './convert-presets'
+import { formatConvertTime } from './convert-time'
 
 export const JOB_STATUSES = [
   'Pending',
@@ -187,7 +188,9 @@ export type ConvertMetaRow = {
  * kind-specific mode has not resolved yet. `extract` is the one exception:
  * it always yields a segment, falling back to the literal `'audio'` because
  * that states something true about the job — an empty dash would not
- * (AC-45.17).
+ * (AC-45.17). A cut's mode is its in and out points as `HH:MM:SS.mmm` time
+ * codes (CUT_SEGMENT_TIMECODE); a point that is missing or does not format
+ * drops the segment.
  */
 function convertModeSegment(row: ConvertMetaRow): string | null {
   if (row.kind === 'compress') {
@@ -200,10 +203,10 @@ function convertModeSegment(row: ConvertMetaRow): string | null {
     return null
   }
   if (row.kind === 'cut') {
-    if (row.in_ms !== null && row.out_ms !== null) {
-      return `${row.in_ms}–${row.out_ms}`
-    }
-    return null
+    // CUT_SEGMENT_TIMECODE (MEU-152, D-969): both points as time codes, or no segment.
+    const start = row.in_ms === null ? null : formatConvertTime(row.in_ms)
+    const end = row.out_ms === null ? null : formatConvertTime(row.out_ms)
+    return start !== null && end !== null ? `${start}–${end}` : null
   }
   if (row.kind === 'extract') {
     return row.stream_index !== null ? `a:${row.stream_index}` : 'audio'
@@ -233,4 +236,28 @@ export function convertMetaSegments(row: ConvertMetaRow): string[] {
   return segments.filter(
     (segment): segment is string => segment !== null && segment.length > 0,
   )
+}
+
+/** One card's numbers: its 1-based rendered row, and its rank among the waiting jobs. */
+export type ConvertQueuePosition = { row: number; waiting: number | null }
+
+/**
+ * QUEUE_ROW_NUMBER (MEU-152, D-970): each item's 1-based index in the array as the page renders
+ * it (the API's `list_ordered` order) and, for a `Pending` item, 1 plus the `Pending` items
+ * before it; `null` for every other status. Stored `queue_position` values are not read, so a
+ * finish, a remove or a move renumbers the cards with no server change.
+ */
+export function convertQueuePositions(
+  items: readonly { id: string; status: string }[],
+): Map<string, ConvertQueuePosition> {
+  const positions = new Map<string, ConvertQueuePosition>()
+  let waiting = 0
+  items.forEach((item, index) => {
+    const pending = item.status === 'Pending'
+    if (pending) {
+      waiting += 1
+    }
+    positions.set(item.id, { row: index + 1, waiting: pending ? waiting : null })
+  })
+  return positions
 }

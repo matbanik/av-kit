@@ -390,7 +390,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     await flush()
     const puts = fetches.filter((row) => row.method === 'PUT' && row.url.includes('/settings/capture'))
     expect(puts).toHaveLength(1)
-    expect(puts[0]?.body).toMatchObject({ inbox_dir: 'C:/Pictures/inbox-2', hotkey: 'F2' })
+    expect(puts[0]?.body).toEqual({ inbox_dir: 'C:/Pictures/inbox-2' })
   })
 
   it('AC-39.28 Capture region is primary md and tools are outline until active primary', async () => {
@@ -1229,7 +1229,38 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     await flush()
     expect(putCount()).toBe(1)
     const put = fetches.find((row) => row.method === 'PUT' && row.url.includes('/settings/capture'))
-    expect(put?.body).toMatchObject({ inbox_dir: 'C:/Pictures/inbox-3', hotkey: 'F2' })
+    expect(put?.body).toEqual({ inbox_dir: 'C:/Pictures/inbox-3' })
+  })
+
+  // MEU-151 (Session 81): the draft holds only the edited leaf, so a refetch reaches the others.
+  it('AC-151.7 a refetch reaches the hotkey under an inbox edit, and Save sends only the inbox', async () => {
+    await renderPage()
+    await user.click(screen.getByTestId('capture-settings-toggle'))
+    const inbox = screen.getByTestId('capture-inbox-path') as HTMLInputElement
+    await vi.waitFor(() => {
+      expect(inbox.value).toBe('C:/Pictures/av-kit')
+    })
+    await user.clear(inbox)
+    await user.type(inbox, 'C:/Pictures/inbox-7')
+    captureSettings = { ...captureSettings, hotkey: 'F7' }
+    await act(async () => {
+      await queryClient.invalidateQueries({ queryKey: ['settings', 'capture'] })
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    const hotkey = screen.getByTestId('capture-hotkey') as HTMLInputElement
+    expect(hotkey.value).toBe('F7')
+    await user.click(screen.getByTestId('capture-page-save'))
+    await flush()
+    await vi.waitFor(() => {
+      expect(putCount()).toBe(1)
+    })
+    const put = fetches.find((row) => row.method === 'PUT' && row.url.includes('/settings/capture'))
+    expect(put?.body).toEqual({ inbox_dir: 'C:/Pictures/inbox-7' })
+    await vi.waitFor(() => {
+      expect(inbox.value).toBe('C:/Pictures/inbox-7')
+      expect(hotkey.value).toBe('F7')
+    })
   })
 
   it('AC-57.2 hotkey key cap renders inside Capture region only when the hotkey is registered', async () => {
