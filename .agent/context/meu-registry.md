@@ -119,6 +119,7 @@
 | MEU-151 | `gui-settings-draft-baseline` | 6.19 | [Phase 6 §Settings drafts keep edits (residual)](../../docs/build-plan/06-gui.md#settings-draft-baseline-residual) | The capture settings draft and the Convert advanced fields keep the user's edits and follow everything else, as AC-112.9 did for the encoder. | ✅ approved |
 | MEU-154 | `gui-ready-line-buffer` | 6.20 | [Phase 6 §READY line buffering (residual)](../../docs/build-plan/06-gui.md#ready-line-buffer-residual) | The main process reads backend output as lines, so a split or repeated ready line publishes the API once. | ✅ approved |
 | MEU-157 | `gui-convert-browse-after-mount` | 6.21 | [Phase 6 §Convert browse waits for the page (residual)](../../docs/build-plan/06-gui.md#convert-browse-after-mount-residual) | A Ctrl+O browse request made before the lazy Convert page listens is held and delivered once when it mounts, so the file picker always opens; AC-97.7 waits for the page. | ✅ approved |
+| MEU-158 | `gui-help-f1-after-mount` | 6.22 | [Phase 6 §F1 help waits for the page (residual)](../../docs/build-plan/06-gui.md#help-f1-after-mount-residual) | An F1 pressed before a lazy page's HelpCard listens is held and toggles the help panel once when the page mounts, so F1 works on the first visit to Convert and Capture. | ⬜ pending |
 
 
 ## Distribution (P2)
@@ -248,5 +249,6 @@
 | MEU-64 | `gui-tts-text-panel` | 11.11 | [Phase 11 §TTS text panel (residual)](../../docs/build-plan/11-page-layout.md#tts-text-panel-residual) | Apply cleanup writes cleaned_text back to the text; preview-raw removed and the cleaned preview shown only after Preview; searchable voice combobox replaces the full-width language select + tall listbox. | ✅ approved |
 | MEU-70 | `gui-settings-section-emphasis` | 11.12 | [Phase 11 §Settings section emphasis (residual)](../../docs/build-plan/11-page-layout.md#settings-section-emphasis-residual) | After a target check of MEU-58's rail aria-current, the current section card gets a subtle surface-raised emphasis driven by the same observer state; no layout shift; all section ids kept. | ✅ approved |
 | MEU-79 | `gui-tts-voice-panel-layout` | 11.13 | [Phase 11 §TTS voice panel alignment (residual)](../../docs/build-plan/11-page-layout.md#tts-voice-panel-alignment-residual) | Model, Device and the model action share one aligned row and control height with no wrap at the default window; Format, Speed and voice search match; geometry pinned in Electron. Spec in 11 §TTS voice panel alignment (residual). | ✅ approved |
+| MEU-159 | `gui-downloader-advanced-gap` | 11.14 | [Phase 11 §Downloader Advanced gap (residual)](../../docs/build-plan/11-page-layout.md#downloader-advanced-gap-residual) | The empty gap under the Advanced disclosure on the Downloader page is measured and removed, proved by an Electron layout check, with every Advanced control kept. | ⬜ pending |
 
 <!-- END AUTOGEN:meu-status:registry -->

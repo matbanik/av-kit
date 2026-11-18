@@ -1961,6 +1961,47 @@ archived:
   category: null
   priority: null
   enrichment: null
+- id: YOUTUBE-CAPTIONS-IP-BLOCK
+  title: YouTube is blocking caption requests from the maintainer's IP
+  severity: medium
+  component: infrastructure
+  status: resolved
+  category: UPSTREAM
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-233
+      stage: triage
+      question: Do the priorities filed on 2026-11-04 stand against the Step 4 matrix?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Matrix applied. P1 to P2: TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME, TRANSCRIPT-FAILED-NO-REASON, YOUTUBE-CAPTIONS-IP-BLOCK. P2 to P3: TTS-FAILED-LOAD-DROPS-MODEL, MODELS-DIR-DOCS-AND-PROBE-MISMATCH,
+        TRANSCRIPT-BLOCK-KEEPS-REQUESTING, CONVERT-EXTRACT-STREAM-INDEX-MISMATCH. P3 to P4: CONSOLE-FAILURE-DETAIL-LOST, UNINSTALL-LEAVES-INSTALLER-COPY.'
+      source_tag: Local Canon
+      precedents:
+      - .agent/workflows/issue-triage.md Step 4 — priority matrix
+      research:
+        engine: none
+        sources: []
+      reasoning: High standalone is P2 and medium standalone is P3 by the workflow's table. This caption issue is medium and blocks the live audit gate, so P2, and it rises to high and P1 if the hotspot
+        check shows a wider change. Two-way.
+    - id: D-1125
+      stage: triage
+      question: Captions fetch again from this network on 2026-11-17. Close YOUTUBE-CAPTIONS-IP-BLOCK?
+      resolution: autonomous
+      class: two-way
+      chosen: 'Resolve it: the resolution_path condition (this network recovers) is met; reopen on a new 429. The rc.1 release notes stay as written.'
+      source_tag: Local Canon
+      precedents:
+      - 'YOUTUBE-CAPTIONS-IP-BLOCK resolution_path: close this when this network recovers'
+      - D-233 (triage 2026-11-04)
+      research:
+        engine: none
+        sources: []
+      reasoning: Two probes on the same address that was blocked, one through the shipped adapter, both succeed. The register's own close condition is met. Reopening is cheap. Two-way.
+    decided_by: agent
 - id: GUI-READY-PROBE-BLOCKS-MAIN
   title: The main window can freeze because a slow process query runs for every chunk of backend output
   severity: high
@@ -3363,6 +3404,48 @@ archived:
   category: null
   priority: null
   enrichment: null
+- id: UI-DEV-ELECTRON-RUN-AS-NODE-SILENT
+  title: npm run dev opens no window when ELECTRON_RUN_AS_NODE is set in the IDE terminal
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: E2E-MAIN-PROCESS-REJECTIONS-UNWATCHED
+  title: E2E does not watch unhandled promise rejections in the Electron main process
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment: null
+- id: CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE
+  title: Convert Ctrl+O delivery lost before the lazy page mounts
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    decided_by: agent
+    decision_log:
+    - id: D-1101
+      stage: triage
+      question: Which MEU covers Ctrl+O lost before the lazy Convert page mounts, and at what priority?
+      resolution: autonomous
+      class: two-way
+      chosen: 'MEU-157 gui-convert-browse-after-mount (06, matrix 6.21, P3): the browse request is held until the Convert page listener is mounted, and AC-97.7 waits for the page before Ctrl+O. The holding
+        mechanism is the plan''s.'
+      source_tag: Local Canon
+      precedents:
+      - '06 Common shortcuts (residual): Ctrl+O Browse files (Convert), Mat 2026-10-17 triage D-89'
+      - 'Session 78 D-1032: one whole-gate repeat allowed for AC-97.7'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'A user-facing chord (MEU-97) sometimes does nothing, and the same race fails session gates (2 and 3 of 20 runs), so it is low severity that blocks other work: P3 by the triage matrix.
+        Fixing only the spec lost: it hides the user-facing miss. Two-way.'
 - id: CONVERT-OUTPUT-NAME-REUSED
   title: 'Convert: a second Add of the same file gets the output name of a job that has not finished'
   severity: medium
@@ -3379,6 +3462,44 @@ archived:
   category: null
   priority: null
   enrichment: null
+- id: PY-SUITE-5S-WAIT-FLAKE-UNDER-LOAD
+  title: 'Full Python suite: tests with 5-second worker waits fail when the host is loaded'
+  severity: low
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
+- id: QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT
+  title: Cancel stays enabled while a queue is Paused, but nothing acts on it
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked:
+    - What should Cancel do while a Convert or Downloader queue is Paused?
+    answers:
+    - Disable Cancel while the queue is Paused
+    decided_by: human
+    decision_log:
+    - id: D-1100
+      stage: triage
+      question: What should Cancel do while a Convert or Downloader queue is Paused?
+      resolution: human
+      class: product-preference
+      chosen: Disable Cancel while the queue is Paused (MEU-156 gui-queue-cancel-paused, 10 matrix 10.11, P4). Making Cancel move a Paused queue to Idle and leaving it as it is both lost.
+      source_tag: Human-approved
+      precedents:
+      - 'Session 88 next-session prompt: recommendation disable Cancel while Paused, the alternative Cancel to Idle, and do nothing'
+      - '10 Queue pause feedback (residual) Cancel row: Cancel stops the running job at once'
+      research:
+        engine: none
+        sources: []
+      reasoning: No job runs while the queue is Paused, so there is nothing to cancel; a disabled button says so and matches what the services already do. Cancel to Idle changes a service and the API meaning
+        of cancel. Leaving it keeps a button that does nothing. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-17 'QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT - recommendation accepted, proceed'
 actionable:
 - id: TOOLING-SHARED-REGISTRY-COUPLING
   title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
@@ -3411,17 +3532,55 @@ actionable:
   severity: low
   component: ui
   status: open
-  category: MONITORING
-  priority: P4
-  enrichment: null
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1126
+      stage: triage
+      question: The Electron pointer, drag and launch flakes failed 4 of 7 full runs in Session 90. Keep them MONITORING P4?
+      resolution: autonomous
+      class: two-way
+      chosen: TECH-DEBT P3 for DOWNLOAD-QUEUE-DRAG-OVER-MISS, CAPTURE-ZOOM-PAN-ORIGIN-FLAKE and CAPTURE-E2E-LAUNCH-TEARDOWN-HANG, fixed together in one session that reproduces them under load; no retries
+        and no raised timeouts. Session 90's unnamed specs fold into the first two.
+      source_tag: Local Canon
+      precedents:
+      - 'Triage priority matrix: low severity that blocks other work is P3'
+      - 'Session 90 handoff line 290: unnamed specs left for the next triage'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
+    decided_by: agent
 - id: CAPTURE-ZOOM-PAN-ORIGIN-FLAKE
   title: Capture viewport AC-66.14 middle-button pan origin occasionally off under full Electron suite load
   severity: low
   component: ui
   status: open
-  category: MONITORING
-  priority: P4
-  enrichment: null
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1126
+      stage: triage
+      question: The Electron pointer, drag and launch flakes failed 4 of 7 full runs in Session 90. Keep them MONITORING P4?
+      resolution: autonomous
+      class: two-way
+      chosen: TECH-DEBT P3 for DOWNLOAD-QUEUE-DRAG-OVER-MISS, CAPTURE-ZOOM-PAN-ORIGIN-FLAKE and CAPTURE-E2E-LAUNCH-TEARDOWN-HANG, fixed together in one session that reproduces them under load; no retries
+        and no raised timeouts. Session 90's unnamed specs fold into the first two.
+      source_tag: Local Canon
+      precedents:
+      - 'Triage priority matrix: low severity that blocks other work is P3'
+      - 'Session 90 handoff line 290: unnamed specs left for the next triage'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
+    decided_by: agent
 - id: MCP-AUDIT-CENSUS-PROBE-SINGLE-SHOT
   title: MCP audit container census network proofs are single-shot, so YouTube's per-moment wall can fail a container run
   severity: low
@@ -3460,9 +3619,28 @@ actionable:
   severity: low
   component: ui
   status: open
-  category: MONITORING
-  priority: P4
-  enrichment: null
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1126
+      stage: triage
+      question: The Electron pointer, drag and launch flakes failed 4 of 7 full runs in Session 90. Keep them MONITORING P4?
+      resolution: autonomous
+      class: two-way
+      chosen: TECH-DEBT P3 for DOWNLOAD-QUEUE-DRAG-OVER-MISS, CAPTURE-ZOOM-PAN-ORIGIN-FLAKE and CAPTURE-E2E-LAUNCH-TEARDOWN-HANG, fixed together in one session that reproduces them under load; no retries
+        and no raised timeouts. Session 90's unnamed specs fold into the first two.
+      source_tag: Local Canon
+      precedents:
+      - 'Triage priority matrix: low severity that blocks other work is P3'
+      - 'Session 90 handoff line 290: unnamed specs left for the next triage'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
+    decided_by: agent
 - id: TRANSCRIPT-ADD-CHANNEL-422
   title: Adding a channel returned 422 after about 8 minutes of enumeration
   severity: low
@@ -3476,9 +3654,28 @@ actionable:
   severity: low
   component: ui
   status: open
-  category: TECH-DEBT
+  category: MEU-NEW
   priority: P4
-  enrichment: null
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1129
+      stage: triage
+      question: The Advanced gap is visible in the README's main screenshot. Give it an MEU?
+      resolution: autonomous
+      class: two-way
+      chosen: 'MEU-159 gui-downloader-advanced-gap (11, matrix 11.14, P4): the element that holds the space is found and the gap removed, proved by an Electron layout check; the README screenshot is retaken
+        only if Mat asks.'
+      source_tag: Local Canon
+      precedents:
+      - 11 page layout residual sections (MEU-79 pattern)
+      - MEU-53 gui-downloader-layout
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Cosmetic but on the first image a visitor sees; the cause is unknown, so it needs a home that a plan can scope. Low standalone: P4. Two-way.'
+    decided_by: agent
 - id: E2E-CLIPBOARD-PRIMER-EMPTY
   title: AC-88.12's clipboard primer read an empty clipboard for 5 s once
   severity: low
@@ -3601,89 +3798,80 @@ actionable:
   severity: low
   component: core
   status: open
-  category: MONITORING
-  priority: P4
-  enrichment: null
-- id: UI-DEV-ELECTRON-RUN-AS-NODE-SILENT
-  title: npm run dev opens no window when ELECTRON_RUN_AS_NODE is set in the IDE terminal
-  severity: low
-  component: ui
-  status: open
   category: TECH-DEBT
-  priority: P4
-  enrichment: null
-- id: E2E-MAIN-PROCESS-REJECTIONS-UNWATCHED
-  title: E2E does not watch unhandled promise rejections in the Electron main process
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P4
-  enrichment: null
-- id: CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE
-  title: Convert Ctrl+O delivery lost before the lazy page mounts
-  severity: low
-  component: ui
-  status: open
-  category: MEU-NEW
   priority: P3
   enrichment:
-    decided_by: agent
+    questions_asked: []
+    answers: []
     decision_log:
-    - id: D-1101
+    - id: D-1127
       stage: triage
-      question: Which MEU covers Ctrl+O lost before the lazy Convert page mounts, and at what priority?
+      question: The tail-frame flake failed the Python suite again on 2026-11-17. Keep it MONITORING P4?
       resolution: autonomous
       class: two-way
-      chosen: 'MEU-157 gui-convert-browse-after-mount (06, matrix 6.21, P3): the browse request is held until the Convert page listener is mounted, and AC-97.7 waits for the page before Ctrl+O. The holding
-        mechanism is the plan''s.'
+      chosen: 'TECH-DEBT P3: log the frame-grab ffmpeg stderr and the clip duration near the tail, find the cause, and check whether the product grab fails too; an MEU is registered at the plan gate only
+        if the fix is in the product.'
       source_tag: Local Canon
       precedents:
-      - '06 Common shortcuts (residual): Ctrl+O Browse files (Convert), Mat 2026-10-17 triage D-89'
-      - 'Session 78 D-1032: one whole-gate repeat allowed for AC-97.7'
+      - 'Triage priority matrix: low severity that blocks other work is P3'
+      - 'Issue notes: next step on a repeat'
       research:
         engine: none
         sources: []
-      reasoning: 'A user-facing chord (MEU-97) sometimes does nothing, and the same race fails session gates (2 and 3 of 20 runs), so it is low severity that blocks other work: P3 by the triage matrix.
-        Fixing only the spec lost: it hides the user-facing miss. Two-way.'
-- id: PY-SUITE-5S-WAIT-FLAKE-UNDER-LOAD
-  title: 'Full Python suite: tests with 5-second worker waits fail when the host is loaded'
-  severity: low
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
-- id: QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT
-  title: Cancel stays enabled while a queue is Paused, but nothing acts on it
+      reasoning: Second session in three days whose gate it failed, so it blocks other work. The product may share the cause. Two-way.
+    decided_by: agent
+- id: HELP-F1-BEFORE-LAZY-MOUNT-LOST
+  title: F1 on Convert or Capture can be lost while the page is still loading
   severity: low
   component: ui
   status: open
   category: MEU-NEW
   priority: P4
   enrichment:
-    questions_asked:
-    - What should Cancel do while a Convert or Downloader queue is Paused?
-    answers:
-    - Disable Cancel while the queue is Paused
-    decided_by: human
+    questions_asked: []
+    answers: []
     decision_log:
-    - id: D-1100
+    - id: D-1128
       stage: triage
-      question: What should Cancel do while a Convert or Downloader queue is Paused?
-      resolution: human
-      class: product-preference
-      chosen: Disable Cancel while the queue is Paused (MEU-156 gui-queue-cancel-paused, 10 matrix 10.11, P4). Making Cancel move a Paused queue to Idle and leaving it as it is both lost.
-      source_tag: Human-approved
+      question: Which MEU covers F1 lost before the lazy Convert and Capture pages mount, and at what priority?
+      resolution: autonomous
+      class: two-way
+      chosen: 'MEU-158 gui-help-f1-after-mount (06, matrix 6.22, P4): the help toggle is held until the page''s HelpCard listens, using the holding pattern MEU-157 built for Ctrl+O.'
+      source_tag: Local Canon
       precedents:
-      - 'Session 88 next-session prompt: recommendation disable Cancel while Paused, the alternative Cancel to Idle, and do nothing'
-      - '10 Queue pause feedback (residual) Cancel row: Cancel stops the running job at once'
+      - 'D-1109 (Session 89 plan): F1 registered, not fixed'
+      - MEU-157 gui-convert-browse-after-mount
       research:
         engine: none
         sources: []
-      reasoning: No job runs while the queue is Paused, so there is nothing to cancel; a disabled button says so and matches what the services already do. Cancel to Idle changes a service and the API meaning
-        of cancel. Leaving it keeps a button that does nothing. Two-way.
-      human_message_reference: USER_EXPLICIT 2026-11-17 'QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT - recommendation accepted, proceed'
+      reasoning: 'A user-facing key does nothing on a first visit and a second press works, and no gate fails on it: low standalone, P4. MEU-157''s held delivery fits it. Two-way.'
+    decided_by: agent
+- id: UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT
+  title: npm run preview opens no window when ELECTRON_RUN_AS_NODE is set in the IDE terminal
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1130
+      stage: triage
+      question: npm run preview opens no window from an IDE terminal. Class and priority?
+      resolution: autonomous
+      class: two-way
+      chosen: 'TECH-DEBT P4, no MEU: give preview the same wrapper Session 90 gave dev (ui/scripts/electron-vite-dev.mjs), in the small-fixes session.'
+      source_tag: Local Canon
+      precedents:
+      - 'D-1119 (Session 90): dev fixed, preview left'
+      - UI-DEV-ELECTRON-RUN-AS-NODE-SILENT (resolved)
+      research:
+        engine: none
+        sources: []
+      reasoning: Developer tooling only, with a workaround, and the fix copies an existing one. Two-way.
+    decided_by: agent
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -3744,33 +3932,6 @@ deferred:
         sources: []
       reasoning: D-101 removed the reason to wait, but the extras are hundreds of MB, nobody has asked for them, and D-70 already shows those voices disabled with a reason. Two-way.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted' (Mat was shown this autonomous decision in the triage report and accepted it)
-    decided_by: agent
-- id: YOUTUBE-CAPTIONS-IP-BLOCK
-  title: YouTube is blocking caption requests from the maintainer's IP
-  severity: medium
-  component: infrastructure
-  status: open
-  category: UPSTREAM
-  priority: P2
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-233
-      stage: triage
-      question: Do the priorities filed on 2026-11-04 stand against the Step 4 matrix?
-      resolution: autonomous
-      class: two-way
-      chosen: 'Matrix applied. P1 to P2: TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME, TRANSCRIPT-FAILED-NO-REASON, YOUTUBE-CAPTIONS-IP-BLOCK. P2 to P3: TTS-FAILED-LOAD-DROPS-MODEL, MODELS-DIR-DOCS-AND-PROBE-MISMATCH,
-        TRANSCRIPT-BLOCK-KEEPS-REQUESTING, CONVERT-EXTRACT-STREAM-INDEX-MISMATCH. P3 to P4: CONSOLE-FAILURE-DETAIL-LOST, UNINSTALL-LEAVES-INSTALLER-COPY.'
-      source_tag: Local Canon
-      precedents:
-      - .agent/workflows/issue-triage.md Step 4 — priority matrix
-      research:
-        engine: none
-        sources: []
-      reasoning: High standalone is P2 and medium standalone is P3 by the workflow's table. This caption issue is medium and blocks the live audit gate, so P2, and it rises to high and P1 if the hotspot
-        check shows a wider change. Two-way.
     decided_by: agent
 - id: FFMPEG-LIBDVDCSS-BUNDLED
   title: The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses it (accepted risk, D-266)
@@ -3916,18 +4077,18 @@ deferred:
         records the probe and the D-521 run's feedback for a plan of its own. Doing nothing leaves it in a plan note the register doesn't show. Two-way.
       human_message_reference: 'A: Register it (Recommended)'
 proposed_batches:
+- slug: ui-downloader-advanced-panel-gap-help-f1-before-lazy-mount-lost
+  issues:
+  - DOWNLOADER-ADVANCED-PANEL-GAP
+  - HELP-F1-BEFORE-LAZY-MOUNT-LOST
+  component: ui
+  priority_band: P4
+  complexity: M
+  has_duplicates: false
 - slug: infrastructure-tts-onnx-fp16-nonfinite-audio
   issues:
   - TTS-ONNX-FP16-NONFINITE-AUDIO
   component: infrastructure
   priority_band: P2
   complexity: S
-  has_duplicates: false
-- slug: ui-convert-ctrl-o-before-mount-flake-queue-cancel-while-paused-no-effect
-  issues:
-  - CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE
-  - QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT
-  component: ui
-  priority_band: P3
-  complexity: M
   has_duplicates: false

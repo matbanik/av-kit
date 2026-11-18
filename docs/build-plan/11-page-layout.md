@@ -169,6 +169,24 @@ One residual MEU from the 2026-10-09 local check. It recomposes the TTS Voice pa
 
 Migration record: [Session 35 plan](../execution/plans/2026-10-16-tts-voice-panel/implementation-plan.md) (`VOICE_GRID`, `VOICE_GEOMETRY`, `DEVICE_SELECT_VALUE`).
 
+## Residuals registered 2026-11-17
+
+One residual MEU from the 2026-11-17 triage. It removes empty space on the Downloader page within the MEU-53 layout; no test id is removed or renamed.
+
+<a id="downloader-advanced-gap-residual"></a>
+
+### Downloader Advanced gap (residual)
+
+> **MEU-159.** Registered 2026-11-17 from `DOWNLOADER-ADVANCED-PANEL-GAP` (triage D-1129). An empty gap sits under the Advanced disclosure on the Downloader page (`features/downloader/DownloaderPage.tsx`, `id="downloader-add-advanced"`, `testId="add-advanced-toggle"`). It was seen while staging the README screenshots on 2026-11-03 and shows in the README's main screenshot. Which element holds the space is not yet measured.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Cause | The plan measures which element holds the space, collapsed and expanded, and records it with its evidence before any change | Local Canon |
+| Collapsed | With Advanced collapsed, the next section starts within one standard gap of the disclosure toggle; no hidden panel content takes space | Local Canon: [§Downloader page layout](#downloader-page-layout) (MEU-53) |
+| Expanded | Expanding Advanced still shows every control it showed before, in the same order | Local Canon |
+| Screenshot | The README screenshot is retaken only if Mat asks | Local Canon: triage D-1129 |
+| Tests | Electron E2E at the default window (1280×800): the distance from the Advanced toggle to the next section, collapsed and expanded, is within the shared gap; the existing Downloader layout tests keep passing | Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
 ## Supersession
 
 | Earlier source | Carry-forward owner | Binding rule |

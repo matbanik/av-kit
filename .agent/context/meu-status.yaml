@@ -4106,6 +4106,56 @@ meus:
   updated: '2026-11-17'
   closed_reason: null
   note: Registered 2026-11-17 from CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE (triage D-1101; grouping D-1103), Session 89.
+- row_key: MEU-158
+  id: MEU-158
+  slug: gui-help-f1-after-mount
+  phase: '6'
+  band: P2
+  matrix_item: '6.22'
+  build_ref:
+    path: build-plan/06-gui.md
+    anchor: help-f1-after-mount-residual
+    text: Phase 6 §F1 help waits for the page (residual)
+  description: An F1 pressed before a lazy page's HelpCard listens is held and toggles the help panel once when the page mounts, so F1 works on the first visit to Convert and Capture.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-23, MEU-96, MEU-157
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-23
+  - MEU-96
+  - MEU-157
+  execution_plan: null
+  updated: '2026-11-17'
+  closed_reason: null
+  note: Registered 2026-11-17 from HELP-F1-BEFORE-LAZY-MOUNT-LOST (triage D-1128; grouping D-1132), Session 94.
+- row_key: MEU-159
+  id: MEU-159
+  slug: gui-downloader-advanced-gap
+  phase: '11'
+  band: P2
+  matrix_item: '11.14'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: downloader-advanced-gap-residual
+    text: Phase 11 §Downloader Advanced gap (residual)
+  description: The empty gap under the Advanced disclosure on the Downloader page is measured and removed, proved by an Electron layout check, with every Advanced control kept.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-53
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-53
+  execution_plan: null
+  updated: '2026-11-17'
+  closed_reason: null
+  note: Registered 2026-11-17 from DOWNLOADER-ADVANCED-PANEL-GAP (triage D-1129; grouping D-1132), Session 94.
 summary_bands:
 - key: P0
   label: P0
@@ -4115,8 +4165,8 @@ summary_bands:
   range: MEU-5–13 (Phases 2–3)
 - key: P2
   label: P2
-  range: MEU-14–157 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+  range: MEU-14–159 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
     triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127;
     2026-11-08 capture crop residuals MEU-128–132; 2026-11-09 video stills residuals MEU-133–136; 2026-11-10 download reliability residuals MEU-137–142; 2026-11-13 capture style split MEU-143; 2026-11-15
-    post-rc.3 triage residuals MEU-145–154, with MEU-144 held for Session 74; 2026-11-17 queue pause feedback MEU-155; 2026-11-17 triage residuals MEU-156–157)
+    post-rc.3 triage residuals MEU-145–154, with MEU-144 held for Session 74; 2026-11-17 queue pause feedback MEU-155; 2026-11-17 triage residuals MEU-156–157; 2026-11-17 value triage residuals MEU-158–159)
 narrative_sections: []

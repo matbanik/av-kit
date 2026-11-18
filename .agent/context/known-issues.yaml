@@ -977,12 +977,36 @@ issues:
     root_cause: 'Two observed misses: AC-49.26 in WINDOWS_GATE attempt 7 (A-4 diagnostics show human input on the window, A-7), and AC-49.28 once in the attempt-3 diagnostic run (about 1 in 40, before the A-4 hardening; unexplained). 30/30 traced passes after A-4.'
     blast_radius: ui/tests/e2e/download-queue.test.ts drag specs on a non-quiet Windows host, and since Session 39 also convert-queue.test.ts AC-49.29 and transcript-queue.test.ts W2-5. Each miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
     verification:
-      last_checked: '2026-11-04'
-    category: MONITORING
-    priority: P4
-    notes: 'TRIAGE 2026-10-09: Keep the A-4 diagnostics; reopen with their output on the next miss. REOPENED 2026-10-16 (Session 39 capture-new-marks gate, worktree s39-capture-new-marks; no change there reaches the queue pages): run 3 failed AC-49.25 (download) and W2-5 (transcript); the isolated rerun of those two files then failed AC-49.26 with A-4 diagnostics: live region "DL-1 was moved to position 4 of 4.", dragState idle, focused true, visibility visible (target position 3). Run 4 failed AC-49.29 (convert) with the PUT body [job-2, job-3, job-4, job-1] instead of [job-2, job-3, job-1, job-4]. Both are an overshoot by exactly one row with the window focused, so not the A-7 human-input case. In isolation each passes: AC-49.25/26 8/8, W2-5 4/4, AC-49.29 20/20. Seen only in the full 146-test Electron run. Next step: add A-4 style diagnostics to convert-queue dragOver and probe the over-target at release under load. SEEN AGAIN 2026-10-17 (Session 35 tts-voice-panel H1-2 re-run, worktree s35-tts-voice-panel; no change there reaches the queue pages): W2-5 hit its 180 s test timeout plus a worker teardown timeout in the full 161-test run (1 failed, 160 passed) while other worktrees ran on the host; alone it passed 4/4 in 13.8 s. Hang shape, not a drag overshoot. Receipts C:/Temp/av-kit/s35-gate-h1-r2fail/ and s35-gate-flake-w25.txt (walkthrough A-2).'
+      last_checked: '2026-11-17'
+      method: Session 90 full Electron runs (handoff failing-spec table)
+      result: 4 of 7 full runs failed; the specs named in notes
+    category: TECH-DEBT
+    priority: P3
+    notes: |-
+      TRIAGE 2026-10-09: Keep the A-4 diagnostics; reopen with their output on the next miss. REOPENED 2026-10-16 (Session 39 capture-new-marks gate, worktree s39-capture-new-marks; no change there reaches the queue pages): run 3 failed AC-49.25 (download) and W2-5 (transcript); the isolated rerun of those two files then failed AC-49.26 with A-4 diagnostics: live region "DL-1 was moved to position 4 of 4.", dragState idle, focused true, visibility visible (target position 3). Run 4 failed AC-49.29 (convert) with the PUT body [job-2, job-3, job-4, job-1] instead of [job-2, job-3, job-1, job-4]. Both are an overshoot by exactly one row with the window focused, so not the A-7 human-input case. In isolation each passes: AC-49.25/26 8/8, W2-5 4/4, AC-49.29 20/20. Seen only in the full 146-test Electron run. Next step: add A-4 style diagnostics to convert-queue dragOver and probe the over-target at release under load. SEEN AGAIN 2026-10-17 (Session 35 tts-voice-panel H1-2 re-run, worktree s35-tts-voice-panel; no change there reaches the queue pages): W2-5 hit its 180 s test timeout plus a worker teardown timeout in the full 161-test run (1 failed, 160 passed) while other worktrees ran on the host; alone it passed 4/4 in 13.8 s. Hang shape, not a drag overshoot. Receipts C:/Temp/av-kit/s35-gate-h1-r2fail/ and s35-gate-flake-w25.txt (walkthrough A-2).
+
+      SEEN AGAIN 2026-11-17. Session 90 test-run-reliability (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, failing-spec table): 4 of 7 full Electron runs failed on main. Drag specs among them: download-queue.test.ts:1319 and convert-queue.test.ts:1182 (AC-49.29, folded in here by triage D-1126). Reclassified MONITORING P4 to TECH-DEBT P3 (D-1126): it fails session gates.
     meu_links: []
     related: []
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1126
+          stage: triage
+          question: The Electron pointer, drag and launch flakes failed 4 of 7 full runs in Session 90. Keep them MONITORING P4?
+          resolution: autonomous
+          class: two-way
+          chosen: TECH-DEBT P3 for DOWNLOAD-QUEUE-DRAG-OVER-MISS, CAPTURE-ZOOM-PAN-ORIGIN-FLAKE and CAPTURE-E2E-LAUNCH-TEARDOWN-HANG, fixed together in one session that reproduces them under load; no retries and no raised timeouts. Session 90's unnamed specs fold into the first two.
+          source_tag: Local Canon
+          precedents:
+            - 'Triage priority matrix: low severity that blocks other work is P3'
+            - 'Session 90 handoff line 290: unnamed specs left for the next triage'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
+      decided_by: agent
   - id: CAPTURE-ZOOM-PAN-ORIGIN-FLAKE
     title: Capture viewport AC-66.14 middle-button pan origin occasionally off under full Electron suite load
     severity: low
@@ -992,12 +1016,36 @@ issues:
     root_cause: 'hypothesis: capture-inbox.test.ts AC-66.14 reads the 100% zoom origin (readZoom, two animation frames) and then pans 40 px with the middle button; under load the origin read before the pan may not have settled, so ox after the pan was 92 px off the expected centred.ox - 40 (-920.5 vs -828.5). Not reproduced in isolation; unexplained.'
     blast_radius: ui/tests/e2e/capture-inbox.test.ts AC-66.14 in the full Electron run. A miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
     verification:
-      last_checked: '2026-11-04'
-    category: MONITORING
-    priority: P4
-    notes: 'SEEN 2026-10-17 (Session 35 tts-voice-panel H1-2 re-run after the R2 F2 correction, worktree s35-tts-voice-panel; the only change since the previous passing gate was the TTS adapter and its Python test): 1 failed, 160 passed in the full 161-test run; alone 5/5 passed (--repeat-each=5, 15.5 s). Receipts C:/Temp/av-kit/s35-gate-h1-r3fail/ and s35-gate-flake-ac6614.txt (walkthrough A-4). Next step on a repeat: log readZoom before and after the pan and wait for a stable origin instead of a fixed two frames.'
+      last_checked: '2026-11-17'
+      method: Session 90 full Electron runs (handoff failing-spec table)
+      result: 4 of 7 full runs failed; the specs named in notes
+    category: TECH-DEBT
+    priority: P3
+    notes: |-
+      SEEN 2026-10-17 (Session 35 tts-voice-panel H1-2 re-run after the R2 F2 correction, worktree s35-tts-voice-panel; the only change since the previous passing gate was the TTS adapter and its Python test): 1 failed, 160 passed in the full 161-test run; alone 5/5 passed (--repeat-each=5, 15.5 s). Receipts C:/Temp/av-kit/s35-gate-h1-r3fail/ and s35-gate-flake-ac6614.txt (walkthrough A-4). Next step on a repeat: log readZoom before and after the pan and wait for a stable origin instead of a fixed two frames.
+
+      SEEN AGAIN 2026-11-17. Session 90 test-run-reliability (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, failing-spec table): 4 of 7 full Electron runs failed on main. Real-pointer capture specs among them: capture-inbox.test.ts:1601, :1658, :2001 and :3496 (folded in here by triage D-1126). Reclassified MONITORING P4 to TECH-DEBT P3 (D-1126): it fails session gates.
     meu_links: []
     related: []
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1126
+          stage: triage
+          question: The Electron pointer, drag and launch flakes failed 4 of 7 full runs in Session 90. Keep them MONITORING P4?
+          resolution: autonomous
+          class: two-way
+          chosen: TECH-DEBT P3 for DOWNLOAD-QUEUE-DRAG-OVER-MISS, CAPTURE-ZOOM-PAN-ORIGIN-FLAKE and CAPTURE-E2E-LAUNCH-TEARDOWN-HANG, fixed together in one session that reproduces them under load; no retries and no raised timeouts. Session 90's unnamed specs fold into the first two.
+          source_tag: Local Canon
+          precedents:
+            - 'Triage priority matrix: low severity that blocks other work is P3'
+            - 'Session 90 handoff line 290: unnamed specs left for the next triage'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
+      decided_by: agent
   - id: MCP-PACKAGED-ENTRY-UNREACHABLE
     title: 'Installed MCP server likely never serves: entry guard misses resources/mcp-server/index.js and dist ships without node_modules'
     severity: medium
@@ -1939,8 +1987,10 @@ issues:
       TRIAGE 2026-10-09: Track anthropics/claude-code #98978; remove DIALOG_FALLBACK only when every supported client renders elicitation.
 
       Triage 2026-11-04: Upstream tracking moves: anthropics/claude-code#98978 was closed on 2026-10-11 as a duplicate of #98256, which is open. DIALOG_FALLBACK stays.
+
+      Triage 2026-11-17: anthropics/claude-code#98256 is still open (last updated 2026-11-13). DIALOG_FALLBACK stays.
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-17'
     category: UPSTREAM
     priority: P3
     meu_links:
@@ -2860,16 +2910,38 @@ issues:
     root_cause: 'hypothesis: under host load (other agent sessions starting their MCP servers) an Electron launch or close in capture-inbox.test.ts stalls past the 60 s test timeout, and Playwright then cannot tear the worker down. No assertion or locator step fails. Not reproduced in isolation; unexplained.'
     blast_radius: ui/tests/e2e/capture-inbox.test.ts in the full Electron run (AC-67.24 and AC-67.35 seen). A miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
     verification:
-      last_checked: '2026-11-04'
-      method: Session 40 gui-theme-path-fields gate runs 3 and 4 (walkthrough §Gate run 3 and §Gate run 4)
-      result: 'run 3 AC-67.24 and run 4 AC-67.35: Test timeout of 60000ms exceeded, then Worker teardown timeout of 60000ms exceeded, 170 passed each. Alone: AC-67.24 --repeat-each=10 10 passed (28.2s); capture-inbox.test.ts 39 passed (1.2m)'
-    category: MONITORING
-    priority: P4
+      last_checked: '2026-11-17'
+      method: Session 90 full Electron runs (handoff failing-spec table)
+      result: 4 of 7 full runs failed; the specs named in notes
+    category: TECH-DEBT
+    priority: P3
     related:
       - e2e-flake
       - capture
     meu_links: []
-    notes: 'SEEN 2026-10-25 (Session 40 gui-theme-path-fields on main; no ui/src/main or capture file changed). In run 4 a zorivest session started its MCP servers at 09:52-09:53, while test 33 was running. Same hang shape as DOWNLOAD-QUEUE-DRAG-OVER-MISS W2-5 (Session 35 A-2) and 2026-09-28-p11-transcript-tts walkthrough line 151. Next step on a repeat: log host process starts during the Electron stage and time launch and close in the capture-inbox fixture.'
+    notes: |-
+      SEEN 2026-10-25 (Session 40 gui-theme-path-fields on main; no ui/src/main or capture file changed). In run 4 a zorivest session started its MCP servers at 09:52-09:53, while test 33 was running. Same hang shape as DOWNLOAD-QUEUE-DRAG-OVER-MISS W2-5 (Session 35 A-2) and 2026-09-28-p11-transcript-tts walkthrough line 151. Next step on a repeat: log host process starts during the Electron stage and time launch and close in the capture-inbox fixture.
+
+      SEEN AGAIN 2026-11-17. Session 90 test-run-reliability (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, failing-spec table): 4 of 7 full Electron runs failed on main. capture-inbox.test.ts:1948 (AC-81.11) hung at launch or teardown. Reclassified MONITORING P4 to TECH-DEBT P3 (D-1126): it fails session gates.
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1126
+          stage: triage
+          question: The Electron pointer, drag and launch flakes failed 4 of 7 full runs in Session 90. Keep them MONITORING P4?
+          resolution: autonomous
+          class: two-way
+          chosen: TECH-DEBT P3 for DOWNLOAD-QUEUE-DRAG-OVER-MISS, CAPTURE-ZOOM-PAN-ORIGIN-FLAKE and CAPTURE-E2E-LAUNCH-TEARDOWN-HANG, fixed together in one session that reproduces them under load; no retries and no raised timeouts. Session 90's unnamed specs fold into the first two.
+          source_tag: Local Canon
+          precedents:
+            - 'Triage priority matrix: low severity that blocks other work is P3'
+            - 'Session 90 handoff line 290: unnamed specs left for the next triage'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
+      decided_by: agent
   - id: PACKAGING-MCP-SNIPPET-TOKEN-STALE
     title: test_mcp_snippet_keys (AC-25.7) still requires AVKIT_API_TOKEN in mcp.json.example, which Session 31b made token-free
     severity: low
@@ -2966,20 +3038,21 @@ issues:
     title: YouTube is blocking caption requests from the maintainer's IP
     severity: medium
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: 'YouTube answers the caption fetch with HTTP 429 and its ''automated queries'' Sorry page. Measured on 2026-11-04 from the maintainer''s network: listing a video''s captions succeeds and the video does have them, then the GET of www.youtube.com/api/timedtext gets 429, for an auto-captioned video (VSU9VjZFoLI) and a manually captioned one (jNQXAC9IVRw). The same refusal came from youtube-transcript-api 1.2.4 (the latest on PyPI and the version the installer ships), plain requests, browser headers, curl_cffi impersonating Chrome, Firefox and Safari, system curl over IPv4, and yt-dlp 2026.10.26 with and without impersonation. The caption URL has no pot parameter and no exp=xpe, so this is not the library''s PoTokenRequired case. Video downloads from the same network work. The evidence points away from a changed caption format or a broken library, and at a block on the caption endpoint for this network. Not established: whether other networks get the same answer, which is what separates a block on this address from a wider YouTube change, and when or why it began. IPv6 and signed-in requests were not tried. The product adapter reports it as TranscriptRetryableError ''YouTube is blocking requests from your IP''.'
     blast_radius: 'Transcript fails on this network until the block lifts, and that includes the installed app: the published v0.1.0-rc.1 on the maintainer''s test PC, which shares this network''s one public address, failed this way for two videos on 2026-11-04. That PC is not a second network and no other network has been tested, so the reach is unknown. If other networks get the same answer, Transcript is broken for every user and this needs raising. The live MCP audit reports transcript.compile as a REGRESSION against the baseline because that signature is only tolerated in container mode. Do not refresh the audit baseline to hide it.'
-    resolution_path: 'Decisive check, for Mat: in the installed app, add a captioned video from a different public network, such as a phone hotspot. Real captions there mean the block is bound to this address: close this when this network recovers. The same failure there means a wider YouTube change: raise the severity, correct docs/releases/v0.1.0-rc.1.md:56-57 (which states it is your network) and the README, and reconsider the fetch path. Upstream answers IP blocks by pointing at proxies, and one reporter on its issue 613 saw a block clear after resetting their connection; neither is verified here.'
+    resolution_path: 'Decisive check, for Mat: in the installed app, add a captioned video from a different public network, such as a phone hotspot. Real captions there mean the block is bound to this address: close this when this network recovers. The same failure there means a wider YouTube change: raise the severity, correct docs/releases/v0.1.0-rc.1.md:56-57 (which states it is your network) and the README, and reconsider the fetch path. Upstream answers IP blocks by pointing at proxies, and one reporter on its issue 613 saw a block clear after resetting their connection; neither is verified here. RESOLVED 2026-11-17 (triage D-1125): captions fetch again from this network through the library and the product adapter, so the block was bound to this address and has lifted; the hotspot check is no longer needed. docs/releases/v0.1.0-rc.1.md is a dated release record and stays as written. Reopen on a new 429 from a residential address.'
     category: UPSTREAM
     priority: P2
     related:
       - TRANSCRIPT-FAILED-NO-REASON
       - TRANSCRIPT-BLOCK-KEEPS-REQUESTING
     verification:
-      last_checked: '2026-11-04'
-      method: Caption list and fetch probes with each client named in root_cause (C:/Temp/av-kit/transcript-probe/)
-      result: 429 Sorry page from every client, on both videos, from one public address. Other networks not tested.
+      last_checked: '2026-11-17'
+      method: 'Read-only caption fetches from the same network: youtube-transcript-api 1.2.4 directly, then the product TranscriptAdapter (C:/Temp/av-kit/triage-1117b/caption_probe.py and adapter_probe.py)'
+      result: jNQXAC9IVRw fetched 6 snippets; VSU9VjZFoLI returned a TranscriptResult, language en, 9648 characters. No 429.
+      evidence_file: C:/Temp/av-kit/triage-1117b/caption-probe.txt
     meu_links:
       - MEU-7
       - MEU-68
@@ -3001,6 +3074,20 @@ issues:
             engine: none
             sources: []
           reasoning: High standalone is P2 and medium standalone is P3 by the workflow's table. This caption issue is medium and blocks the live audit gate, so P2, and it rises to high and P1 if the hotspot check shows a wider change. Two-way.
+        - id: D-1125
+          stage: triage
+          question: Captions fetch again from this network on 2026-11-17. Close YOUTUBE-CAPTIONS-IP-BLOCK?
+          resolution: autonomous
+          class: two-way
+          chosen: 'Resolve it: the resolution_path condition (this network recovers) is met; reopen on a new 429. The rc.1 release notes stay as written.'
+          source_tag: Local Canon
+          precedents:
+            - 'YOUTUBE-CAPTIONS-IP-BLOCK resolution_path: close this when this network recovers'
+            - D-233 (triage 2026-11-04)
+          research:
+            engine: none
+            sources: []
+          reasoning: Two probes on the same address that was blocked, one through the shipped adapter, both succeed. The register's own close condition is met. Reopening is cheap. Two-way.
       decided_by: agent
   - id: GUI-READY-PROBE-BLOCKS-MAIN
     title: The main window can freeze because a slow process query runs for every chunk of backend output
@@ -3119,13 +3206,16 @@ issues:
     root_cause: add_channel enumerates the channel inside the add request (packages/core/src/avkit_core/services/transcript.py:129-130). Cause of the 422 not established.
     blast_radius: 'Measured once, not reproduced: `@BlenderOfficial/videos` returned 422 after about 8 minutes of enumeration while staging README screenshots on 2026-11-03. A 43-video playlist added normally in the same session. A replay meant to capture the error body was cut off when the app shut down, so the cause is not established. Not measured: what raised it, or the channel''s size.'
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-17'
     category: MONITORING
     priority: P4
     meu_links:
       - MEU-11
     related: []
-    notes: 'Triage 2026-11-04: Two leads for the next repeat, neither measured. add_channel calls extract_info non-flat (services/transcript.py:129-130, services/extract.py:34) and then enumerates flat, so a whole channel may be extracted twice, which could explain the wait. ExtractError also maps to 422 (packages/api/src/avkit_api/errors.py), so the status alone does not mean a bad info type. Capture the response body on repeat.'
+    notes: |-
+      Triage 2026-11-04: Two leads for the next repeat, neither measured. add_channel calls extract_info non-flat (services/transcript.py:129-130, services/extract.py:34) and then enumerates flat, so a whole channel may be extracted twice, which could explain the wait. ExtractError also maps to 422 (packages/api/src/avkit_api/errors.py), so the status alone does not mean a bad info type. Capture the response body on repeat.
+
+      Triage 2026-11-17: the first lead is gone. b216681 (2026-11-09) made add_channel call extract_info(url, flat=True) before extract_video_ids, so no non-flat extract remains; two flat enumerations do. No live channel probe this time, to avoid reopening the caption block. Stays MONITORING.
   - id: DOWNLOAD-ROW-SHOWS-REQUESTED-QUALITY
     title: A download row shows the quality you asked for, not the quality you got
     severity: medium
@@ -3376,14 +3466,34 @@ issues:
     component: ui
     status: open
     discovered: '2026-11-03'
-    root_cause: Cause not established. The panel is the Disclosure at ui/src/renderer/src/features/downloader/DownloaderPage.tsx:651-662.
+    root_cause: Cause not established. The panel is the Disclosure at ui/src/renderer/src/features/downloader/DownloaderPage.tsx:668 (id downloader-add-advanced; it sat at 651-662 when filed).
     blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Visible in the main screenshot. Cosmetic. Not measured: which element holds the space.'
     verification:
-      last_checked: '2026-11-04'
-    category: TECH-DEBT
+      last_checked: '2026-11-17'
+    category: MEU-NEW
     priority: P4
-    meu_links: []
+    meu_links:
+      - MEU-159
     related: []
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1129
+          stage: triage
+          question: The Advanced gap is visible in the README's main screenshot. Give it an MEU?
+          resolution: autonomous
+          class: two-way
+          chosen: 'MEU-159 gui-downloader-advanced-gap (11, matrix 11.14, P4): the element that holds the space is found and the gap removed, proved by an Electron layout check; the README screenshot is retaken only if Mat asks.'
+          source_tag: Local Canon
+          precedents:
+            - 11 page layout residual sections (MEU-79 pattern)
+            - MEU-53 gui-downloader-layout
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Cosmetic but on the first image a visitor sees; the cause is unknown, so it needs a home that a plan can scope. Low standalone: P4. Two-way.'
+      decided_by: agent
   - id: CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
     title: validate_closeout_artifacts --selftest fails when a .agent folder sits above the temp folder
     severity: low
@@ -4917,7 +5027,7 @@ issues:
     root_cause: MEU-130 adds avkit_capture.crop to ACTION_INDEX. The committed baseline (.agent/skills/mcp-tool-audit/resources/baseline-snapshot.json, authoritative, recorded at ddd1117 on 2026-10-16) can only gain an entry from an authoritative --update-baseline run, and BASELINE_UPDATE_RULE refuses that run while YOUTUBE-CAPTIONS-IP-BLOCK makes the transcript actions REGRESSION. Hand-adding the entry is forbidden by BASELINE_ANNOTATION_RULE.
     blast_radius: The audit coverage test (mcp-server/tests/audit/coverage.test.ts, AC-68.5) accepts the baseline missing exactly the keys in BASELINE_PENDING, which holds only avkit_capture.crop. Every other key still has to match, so a second missing action still fails. The next release audit reports avkit_capture.crop as NEW, and that audit's rule has to accept it.
     verification:
-      last_checked: '2026-11-09'
+      last_checked: '2026-11-17'
       method: coverage.test.ts AC-68.5 and AC-130.28 at the Session 59 gate
       result: the baseline misses only avkit_capture.crop and has no extra key
     category: TECH-DEBT
@@ -4926,7 +5036,10 @@ issues:
       - YOUTUBE-CAPTIONS-IP-BLOCK
     meu_links:
       - MEU-130
-    notes: Filed by Session 59 capture-crop-copy under D-499 A. Closed by the next authoritative baseline update, which records avkit_capture.crop and empties BASELINE_PENDING in the same change; AC-130.28 fails once the baseline holds a pending key, so the list can't outlive its reason. The next release audit is where avkit_capture.crop is accepted as NEW.
+    notes: |-
+      Filed by Session 59 capture-crop-copy under D-499 A. Closed by the next authoritative baseline update, which records avkit_capture.crop and empties BASELINE_PENDING in the same change; AC-130.28 fails once the baseline holds a pending key, so the list can't outlive its reason. The next release audit is where avkit_capture.crop is accepted as NEW.
+
+      Triage 2026-11-17: its blocker is gone (YOUTUBE-CAPTIONS-IP-BLOCK resolved, D-1125), so an authoritative audit can update the baseline now.
     enrichment:
       questions_asked: []
       answers: []
@@ -5322,12 +5435,36 @@ issues:
     root_cause: 'hypothesis: CaptureService.frames_from_video (packages/core/src/avkit_core/services/capture.py _frames_body) raises ValidationError(_frame_failed_text) when the real ffmpeg grab near the end of a 3 s test clip returns no frame; it fails only sometimes and more often in a full run, so the tail seek or the grab timeout may be load-sensitive. Not reproduced on demand; unexplained.'
     blast_radius: tests/integration/test_video_real_ffmpeg.py test_ac_134_10_counter_clip_frames_match_a_full_decode and test_ac_134_10_long_audio_past_the_last_frame. A miss fails a session gate's full py-tests step, so the gate has to be repeated. Whether the app's own frame grabs near a video's end can fail the same way is not known.
     verification:
-      last_checked: '2026-11-15'
-    category: MONITORING
-    priority: P4
-    notes: 'SEEN 2026-11-15 (Session 84 closeout-record-once H1-2, no change reaches packages/ or the media adapter): the full suite failed test_ac_134_10_counter_clip_frames_match_a_full_decode at 00:00:02.999 in two gate runs (1 failed, 2846 passed, 189.72 s and 188.81 s; row 0''s baseline suite passed it). Isolation: the test alone passed 3/3; the test file alone failed once (the same test) and then passed 6/6; tests/integration/ failed once on test_ac_134_10_long_audio_past_the_last_frame at 00:00:03.200. Receipts under C:/Temp/av-kit/cro/: cro-gate-h1-run1.txt, cro-D6-py-tests-run1.txt, cro-gate-h1-run2.txt, cro-D6-py-tests-run2.txt, cro-h12-flake-probe-1.txt to -3.txt, cro-h12-flake-probe-file.txt, cro-h12-flake-probe-integration.txt and cro-h12-flake-probe-repeat.txt. Next step on a repeat: log the frame-grab ffmpeg stderr and the clip duration near the tail.'
+      last_checked: '2026-11-17'
+      method: Session 82 baseline Python suite receipt
+      result: 'test_ac_134_10_long_audio_past_the_last_frame failed: frame grab failed at 00:00:03.200'
+    category: TECH-DEBT
+    priority: P3
+    notes: |-
+      SEEN 2026-11-15 (Session 84 closeout-record-once H1-2, no change reaches packages/ or the media adapter): the full suite failed test_ac_134_10_counter_clip_frames_match_a_full_decode at 00:00:02.999 in two gate runs (1 failed, 2846 passed, 189.72 s and 188.81 s; row 0's baseline suite passed it). Isolation: the test alone passed 3/3; the test file alone failed once (the same test) and then passed 6/6; tests/integration/ failed once on test_ac_134_10_long_audio_past_the_last_frame at 00:00:03.200. Receipts under C:/Temp/av-kit/cro/: cro-gate-h1-run1.txt, cro-D6-py-tests-run1.txt, cro-gate-h1-run2.txt, cro-D6-py-tests-run2.txt, cro-h12-flake-probe-1.txt to -3.txt, cro-h12-flake-probe-file.txt, cro-h12-flake-probe-integration.txt and cro-h12-flake-probe-repeat.txt. Next step on a repeat: log the frame-grab ffmpeg stderr and the clip duration near the tail.
+
+      SEEN AGAIN 2026-11-17 (Session 82 ready-handshake baseline, C:/Temp/av-kit/ready-handshake/rh-base-py.txt): "frame grab failed at 00:00:03.200", 1 failed, 3031 passed. Reclassified MONITORING P4 to TECH-DEBT P3 (D-1127). Whether a user frame grab near the end of a clip can fail the same way is checked when it is fixed.
     meu_links: []
     related: []
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1127
+          stage: triage
+          question: The tail-frame flake failed the Python suite again on 2026-11-17. Keep it MONITORING P4?
+          resolution: autonomous
+          class: two-way
+          chosen: 'TECH-DEBT P3: log the frame-grab ffmpeg stderr and the clip duration near the tail, find the cause, and check whether the product grab fails too; an MEU is registered at the plan gate only if the fix is in the product.'
+          source_tag: Local Canon
+          precedents:
+            - 'Triage priority matrix: low severity that blocks other work is P3'
+            - 'Issue notes: next step on a repeat'
+          research:
+            engine: none
+            sources: []
+          reasoning: Second session in three days whose gate it failed, so it blocks other work. The product may share the cause. Two-way.
+      decided_by: agent
   - id: E2E-CONSOLE-C15-COUNTS-GET
     title: Console E2E C1-5 counts the Console's settings GET as a PUT
     severity: low
@@ -5499,6 +5636,31 @@ issues:
     discovered: '2026-11-17'
     root_cause: On a help route F1 dispatches the local help toggle at once (ui/src/renderer/src/components/layout/AppShell.tsx:203-215, ui/src/renderer/src/features/settings/settings-commands.ts:14), and the lazy Convert and Capture pages add the HelpCard listener only when they mount (ui/src/renderer/src/components/help/HelpCard.tsx:69), so an F1 pressed while their chunk loads is lost; all six routes are help routes (AppShell.tsx:206), so F1 always takes this immediate path. Found in the Session 89 plan (D-1109); not fixed there (M-8).
     blast_radius: 'Convert and Capture on their first visit: an F1 in the moment before the page appears does not toggle the help panel; a second F1 works.'
+    category: MEU-NEW
+    priority: P4
+    meu_links:
+      - MEU-158
+    verification:
+      last_checked: '2026-11-17'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1128
+          stage: triage
+          question: Which MEU covers F1 lost before the lazy Convert and Capture pages mount, and at what priority?
+          resolution: autonomous
+          class: two-way
+          chosen: 'MEU-158 gui-help-f1-after-mount (06, matrix 6.22, P4): the help toggle is held until the page''s HelpCard listens, using the holding pattern MEU-157 built for Ctrl+O.'
+          source_tag: Local Canon
+          precedents:
+            - 'D-1109 (Session 89 plan): F1 registered, not fixed'
+            - MEU-157 gui-convert-browse-after-mount
+          research:
+            engine: none
+            sources: []
+          reasoning: 'A user-facing key does nothing on a first visit and a second press works, and no gate fails on it: low standalone, P4. MEU-157''s held delivery fits it. Two-way.'
+      decided_by: agent
   - id: UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT
     title: npm run preview opens no window when ELECTRON_RUN_AS_NODE is set in the IDE terminal
     severity: low
@@ -5507,3 +5669,26 @@ issues:
     discovered: '2026-11-17'
     root_cause: electron-vite preview starts Electron through the same startElectron as dev (ui/node_modules/electron-vite/dist/chunks/lib-Dvh2Hokw.js:21, lib-q6ns0vZr.js:220-240), which spawns it with no env, so the ELECTRON_RUN_AS_NODE=1 that VS Code and Cursor terminals set makes electron.exe start as plain Node and no window opens, with no error. Session 90 fixed dev with ui/scripts/electron-vite-dev.mjs and left preview (D-1119).
     blast_radius: 'Developer machines only: npm --prefix ui run preview from an IDE terminal. Workaround: clear the variable first, or use a terminal opened outside the IDE.'
+    category: TECH-DEBT
+    priority: P4
+    verification:
+      last_checked: '2026-11-17'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1130
+          stage: triage
+          question: npm run preview opens no window from an IDE terminal. Class and priority?
+          resolution: autonomous
+          class: two-way
+          chosen: 'TECH-DEBT P4, no MEU: give preview the same wrapper Session 90 gave dev (ui/scripts/electron-vite-dev.mjs), in the small-fixes session.'
+          source_tag: Local Canon
+          precedents:
+            - 'D-1119 (Session 90): dev fixed, preview left'
+            - UI-DEV-ELECTRON-RUN-AS-NODE-SILENT (resolved)
+          research:
+            engine: none
+            sources: []
+          reasoning: Developer tooling only, with a workaround, and the fix copies an existing one. Two-way.
+      decided_by: agent

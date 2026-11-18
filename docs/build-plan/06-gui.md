@@ -1707,6 +1707,19 @@ The following features are explicitly **deferred** to a future phase:
 > - Other chords: F1 on Convert or Capture has the same gap and is registered, not fixed (`HELP-F1-BEFORE-LAZY-MOUNT-LOST`, D-1109).
 > - AC-157.1 to AC-157.14. Plan `docs/execution/plans/2026-11-17-queue-convert-fixes/`.
 
+<a id="help-f1-after-mount-residual"></a>
+
+### F1 help waits for the page (residual)
+
+> **MEU-158.** Registered 2026-11-17 from `HELP-F1-BEFORE-LAZY-MOUNT-LOST` (triage D-1128). On a help route F1 dispatches the local help toggle at once (`components/layout/AppShell.tsx:203-215`, `features/settings/settings-commands.ts:14`), and all six routes are help routes. The lazy Convert and Capture pages add the `HelpCard` listener only when they mount (`components/help/HelpCard.tsx:69`), so an F1 pressed while their chunk loads is lost and a second F1 is needed. Found in the Session 89 plan (D-1109) and left out of MEU-157's scope.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Held | An F1 pressed before the current page's `HelpCard` listens is held and toggles the help panel once when it mounts; an F1 after it mounts toggles at once | Local Canon: [§Common shortcuts](#common-shortcuts-residual) Core set row (F1 help), triage D-1128 |
+| Once | One F1 toggles the panel at most once; a held F1 is dropped when the user leaves the page before it mounts | Local Canon: [§Convert browse waits for the page](#convert-browse-after-mount-residual) Once row |
+| Shared | The plan checks whether MEU-157's held delivery (`takeHeldBrowse` in `features/converter/convert-commands.ts`) can serve both chords, and keeps one mechanism if it can | Local Canon |
+| Tests | Unit: an F1 before mount toggles once on mount, one after mount at once, and a held F1 is dropped on leaving; Electron E2E on the real app: with the Convert and Capture chunks delayed, F1 opens the help panel on every run | Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
 ## Validation Commands
 
 ```bash

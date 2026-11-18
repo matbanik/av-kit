@@ -167,10 +167,10 @@ On Mat's word, run `/create-plan` once per session, in §5 order. Nothing is pla
 
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
-| 84 | `closeout-record-once` | — | P2 | proposed | — |
-| 85 | `hdp-v2-protocol` | — | P2 | proposed | — |
-| 86 | `hdp-expert-pass` | — | P2 | proposed | — |
-| 87 | `framework-small-syncs` | — | P3 | proposed | — |
+| 84 | `closeout-record-once` | — | P2 | executed (Session 84) | `docs/execution/plans/2026-11-15-closeout-record-once/` |
+| 85 | `hdp-v2-protocol` | — | P2 | executed (Session 85) | `docs/execution/plans/2026-11-15-hdp-v2-protocol/` |
+| 86 | `hdp-expert-pass` | — | P2 | executed (Session 86) | `docs/execution/plans/2026-11-15-hdp-expert-pass/` |
+| 87 | `framework-small-syncs` | — | P3 | executed (Session 87) | `docs/execution/plans/2026-11-15-framework-small-syncs/` |
 
 ---
 

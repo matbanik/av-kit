@@ -85,6 +85,7 @@
 | 6.19 | MEU-151 | `gui-settings-draft-baseline` | [06 §Settings drafts keep edits (residual)](06-gui.md#settings-draft-baseline-residual) | MEU-33, MEU-39, MEU-112 |
 | 6.20 | MEU-154 | `gui-ready-line-buffer` | [06 §READY line buffering (residual)](06-gui.md#ready-line-buffer-residual) | MEU-108 |
 | 6.21 | MEU-157 | `gui-convert-browse-after-mount` | [06 §Convert browse waits for the page (residual)](06-gui.md#convert-browse-after-mount-residual) | MEU-97 |
+| 6.22 | MEU-158 | `gui-help-f1-after-mount` | [06 §F1 help waits for the page (residual)](06-gui.md#help-f1-after-mount-residual) | MEU-23, MEU-96, MEU-157 |
 | 7.1 | MEU-24 | `dist-backend` | [07 §Backend packaging](07-distribution.md#backend-packaging-pyinstaller) | MEU-14, MEU-19 |
 | 7.2 | MEU-25 | `dist-installer` | [07 §Electron packaging](07-distribution.md#electron-packaging-electron-builder) | MEU-24, MEU-17 |
 | 7.3 | MEU-71 | `gui-mcp-setup-prompt` | [07 §MCP setup prompt (residual)](07-distribution.md#mcp-setup-prompt-residual) | MEU-23, MEU-25 |
@@ -174,6 +175,7 @@
 | 11.11 | MEU-64 | `gui-tts-text-panel` | [11 §TTS text panel (residual)](11-page-layout.md#tts-text-panel-residual) | MEU-56 |
 | 11.12 | MEU-70 | `gui-settings-section-emphasis` | [11 §Settings section emphasis (residual)](11-page-layout.md#settings-section-emphasis-residual) | MEU-58 |
 | 11.13 | MEU-79 | `gui-tts-voice-panel-layout` | [11 §TTS voice panel alignment (residual)](11-page-layout.md#tts-voice-panel-alignment-residual) | MEU-63, MEU-75 |
+| 11.14 | MEU-159 | `gui-downloader-advanced-gap` | [11 §Downloader Advanced gap (residual)](11-page-layout.md#downloader-advanced-gap-residual) | MEU-53 |
 
 Phase 0 ([00-overview.md](00-overview.md)) is a summary only — no MEU.
 
