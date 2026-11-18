@@ -5132,16 +5132,19 @@ issues:
     root_cause: Each compound MCP tool registers its per-action text only under _meta.action_descriptions (mcp-server/src/toolsets/registry.ts:599-610 at 237732d); description holds TOOL_TOP_LEVEL and inputSchema the flattened schema. Claude Code passes a model the server instructions, the top-level description and the input schema, not _meta. So the crop paragraph (CROP_TEXT, mcp-server/src/toolsets/capture.ts:51) and every other action's text never reach a Claude Code agent.
     blast_radius: A Claude Code agent learns an action's inputs, units and limits only from the flattened schema, which has no per-action text. Session 60's D-521 run (Haiku 5.5, given only that surface) still cropped a named region in one list and one crop call, and reported that neither the description nor the server instructions mention crop, that crop's inputs appear only in the schema, and that the unit enum doesn't say which value is the default. Clients that do read _meta are unaffected.
     verification:
-      last_checked: '2026-11-10'
-      method: d494-harness.ts describe against this tree's mcp-server/dist/index.js (C:/Temp/av-kit/s60-plan-d494-describe.txt), compared with avkit_capture's tool schema as Claude Code loaded it in Session 60, without calling the server
-      result: the crop text is only under _meta.action_descriptions.crop; the description and schema a Claude Code model receives don't carry it
-    category: UPSTREAM
+      last_checked: '2026-11-17'
+      method: 'HDP research and expert pass: registry.js ACTION_DESCRIPTIONS measured (C:/Temp/av-kit/triage-1117b/measure-desc.txt, first-lines.txt); peer-reviewer receipts C:/Temp/av-kit/peer-1117b/ (dedupe.txt, toolsearch.txt, cc-version.txt)'
+      result: 75 actions, 29,613 characters, all under _meta only; avkit_capture holds 4,719 characters once repeated sentences are removed, the other tools 188 to 1,266. Claude Code 2.1.325 cuts server instructions and upfront tool descriptions at 4,096 characters and tool-search descriptions at 16,384.
+    category: TECH-DEBT
     priority: P3
     related:
       - MCP-AUDIT-BASELINE-PENDING-CROP
     meu_links:
       - MEU-131
-    notes: Found by Session 60 gui-capture-crop-tool (MEU-131) while planning D-494's live agent run (D-521) and filed at its closeout under D-528, on Mat's plan-gate ruling. No fix is planned. A fix would move action text into what a client shows (the top-level description or the server instructions), which changes the MCP surface and its audit baseline and needs its own plan.
+    notes: |-
+      Found by Session 60 gui-capture-crop-tool (MEU-131) while planning D-494's live agent run (D-521) and filed at its closeout under D-528, on Mat's plan-gate ruling. No fix is planned. A fix would move action text into what a client shows (the top-level description or the server instructions), which changes the MCP surface and its audit baseline and needs its own plan.
+
+      Triage 2026-11-17 (D-1134): correction to the note above. The audit baseline stores only tool, action and status (.agent/skills/mcp-tool-audit/resources/baseline-snapshot.json), and the audit reads only the keys of _meta.action_descriptions (mcp-server/scripts/audit/discovery.ts:26-28), so changing a description does not change the baseline. Reclassified UPSTREAM P3 to TECH-DEBT P3: the fix is on the av-kit side. Session 64 evidence is one run per task: real-t1 and real-t2 failed their workflow checks with right answers (C:/Temp/av-kit/s64-E4-check.txt).
     enrichment:
       questions_asked: []
       answers: []
@@ -5163,6 +5166,28 @@ issues:
             sources: []
           reasoning: The gap was found on this session's own tool schema and changes what an agent can learn about every action, but the session's scope is renderer-only and changes no MCP text. Registering records the probe and the D-521 run's feedback for a plan of its own. Doing nothing leaves it in a plan note the register doesn't show. Two-way.
           human_message_reference: 'A: Register it (Recommended)'
+        - id: D-1134
+          stage: triage
+          question: Should the model see what each av-kit MCP action does?
+          resolution: human
+          class: one-way-door
+          mandatory:
+            - M-4
+          chosen: 'A: give avkit_capture a real description built from its existing action text, under 4,096 characters, with the Session 64 eval rerun as acceptance; the other seven tools stay as they are until a miss is measured. Lands in Session 92 before its baseline.'
+          source_tag: Human-approved
+          precedents:
+            - 'D-528 (Session 60 closeout): register, no fix planned'
+            - 'D-505 and D-608 A: Session 64 description eval (docs/build-plan/09-screenshot-capture.md:1247)'
+            - 'D-621 A: Session 64 eval recorded as evidence for this issue'
+          research:
+            engine: tavily
+            sources:
+              - https://code.claude.com/docs/en/mcp — server instructions and upfront tool descriptions are cut at 4,096 characters, tool-search descriptions at 16,384; before v2.1.296 the limit was 2,048
+              - https://modelcontextprotocol.io/specification/2025-06-18/basic — _meta is reserved metadata between client and server; nothing makes a client show it to a model
+              - https://github.com/anthropics/claude-code/issues/81268 — truncation is silent; server authors put critical details first and gate length themselves
+          reasoning: 'Capture is the only tool where a miss was measured, and its existing action text is what the passing Session 64 runs saw, so no new writing is needed. Every-tool lines (B) were mostly new writing with no measured need; keeping it as is (C) leaves the measured Capture misses. M-4 public MCP surface, so Mat decides. Undo: revert one TOOL_TOP_LEVEL entry and its test.'
+          human_message_reference: 'USER_EXPLICIT 2026-11-17 "D-1134: A"'
+    resolution_path: 'D-1134 A (Mat, 2026-11-17), in Session 92 before its authoritative baseline run: avkit_capture gets a real top-level description built from its existing per-action text, with the sentences every action repeats removed, the facts the Session 64 eval missed first (call image to view a frame or sheet; call sheet again over a narrower span to zoom), and a test that keeps it under 4,096 characters so it is whole when a client loads tools upfront. _meta.action_descriptions stays as it is. The Session 64 eval tasks are rerun on the new description as the acceptance check. The other seven tools keep their one-line descriptions until a miss is measured on one of them. The Session 92 plan decides whether this needs an MEU.'
   - id: DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT
     title: Downloads pin three YouTube clients and fail when only another client works
     severity: high

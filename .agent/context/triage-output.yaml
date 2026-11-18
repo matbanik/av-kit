@@ -3793,6 +3793,58 @@ actionable:
       reasoning: The baseline is a governed snapshot that only an authoritative run updates, and that run is blocked while the caption block holds. Naming the one gap in the test and here keeps main green
         and tells the next release audit what to accept. Two-way.
       human_message_reference: '**Mat''s ruling (2026-11-09):** option A, as recommended: `BASELINE_PENDING` in the test, plus a filed issue. Mat''s words: "D-499 A".'
+- id: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL
+  title: Claude Code doesn't show a model the per-action text in _meta.action_descriptions
+  severity: low
+  component: mcp-server
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-528
+      stage: closeout
+      question: Claude Code doesn't show a model _meta.action_descriptions, where each MCP action's text lives. Register it as a known issue, or leave it as the plan's observation?
+      resolution: human
+      class: two-way
+      chosen: 'A: register it, as recommended: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL, P3, open, linked to MEU-131, no fix planned, filed at closeout in Session 60''s commit'
+      source_tag: Human-approved
+      precedents:
+      - mcp-server/src/toolsets/registry.ts:599-610 — action text is registered only under _meta.action_descriptions
+      - C:/Temp/av-kit/s60-plan-d494-describe.txt — the crop text sits under the heading not shown to the agent
+      - docs/execution/plans/2026-11-10-gui-capture-crop-tool/implementation-plan.md — User Review Required, The gate, 2026-11-10
+      research:
+        engine: none
+        sources: []
+      reasoning: The gap was found on this session's own tool schema and changes what an agent can learn about every action, but the session's scope is renderer-only and changes no MCP text. Registering
+        records the probe and the D-521 run's feedback for a plan of its own. Doing nothing leaves it in a plan note the register doesn't show. Two-way.
+      human_message_reference: 'A: Register it (Recommended)'
+    - id: D-1134
+      stage: triage
+      question: Should the model see what each av-kit MCP action does?
+      resolution: human
+      class: one-way-door
+      mandatory:
+      - M-4
+      chosen: 'A: give avkit_capture a real description built from its existing action text, under 4,096 characters, with the Session 64 eval rerun as acceptance; the other seven tools stay as they are
+        until a miss is measured. Lands in Session 92 before its baseline.'
+      source_tag: Human-approved
+      precedents:
+      - 'D-528 (Session 60 closeout): register, no fix planned'
+      - 'D-505 and D-608 A: Session 64 description eval (docs/build-plan/09-screenshot-capture.md:1247)'
+      - 'D-621 A: Session 64 eval recorded as evidence for this issue'
+      research:
+        engine: tavily
+        sources:
+        - https://code.claude.com/docs/en/mcp — server instructions and upfront tool descriptions are cut at 4,096 characters, tool-search descriptions at 16,384; before v2.1.296 the limit was 2,048
+        - https://modelcontextprotocol.io/specification/2025-06-18/basic — _meta is reserved metadata between client and server; nothing makes a client show it to a model
+        - https://github.com/anthropics/claude-code/issues/81268 — truncation is silent; server authors put critical details first and gate length themselves
+      reasoning: 'Capture is the only tool where a miss was measured, and its existing action text is what the passing Session 64 runs saw, so no new writing is needed. Every-tool lines (B) were mostly
+        new writing with no measured need; keeping it as is (C) leaves the measured Capture misses. M-4 public MCP surface, so Mat decides. Undo: revert one TOOL_TOP_LEVEL entry and its test.'
+      human_message_reference: 'USER_EXPLICIT 2026-11-17 "D-1134: A"'
 - id: VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE
   title: Real-ffmpeg frame grabs near a clip's last frame occasionally fail (frame grab failed at 00:00:02.999 / 00:00:03.200)
   severity: low
@@ -4047,35 +4099,6 @@ deferred:
         list of every FFmpeg dependency and no change. Whether naming it changes legal exposure was not assessed; this is not legal advice.
       human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
     decided_by: human
-- id: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL
-  title: Claude Code doesn't show a model the per-action text in _meta.action_descriptions
-  severity: low
-  component: mcp-server
-  status: open
-  category: UPSTREAM
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-528
-      stage: closeout
-      question: Claude Code doesn't show a model _meta.action_descriptions, where each MCP action's text lives. Register it as a known issue, or leave it as the plan's observation?
-      resolution: human
-      class: two-way
-      chosen: 'A: register it, as recommended: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL, P3, open, linked to MEU-131, no fix planned, filed at closeout in Session 60''s commit'
-      source_tag: Human-approved
-      precedents:
-      - mcp-server/src/toolsets/registry.ts:599-610 — action text is registered only under _meta.action_descriptions
-      - C:/Temp/av-kit/s60-plan-d494-describe.txt — the crop text sits under the heading not shown to the agent
-      - docs/execution/plans/2026-11-10-gui-capture-crop-tool/implementation-plan.md — User Review Required, The gate, 2026-11-10
-      research:
-        engine: none
-        sources: []
-      reasoning: The gap was found on this session's own tool schema and changes what an agent can learn about every action, but the session's scope is renderer-only and changes no MCP text. Registering
-        records the probe and the D-521 run's feedback for a plan of its own. Doing nothing leaves it in a plan note the register doesn't show. Two-way.
-      human_message_reference: 'A: Register it (Recommended)'
 proposed_batches:
 - slug: ui-downloader-advanced-panel-gap-help-f1-before-lazy-mount-lost
   issues:

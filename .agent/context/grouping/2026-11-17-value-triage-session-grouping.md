@@ -38,7 +38,7 @@ Issue → disposition traceability (every issue open or mitigated at the start, 
 | `DOWNLOADER-ADVANCED-PANEL-GAP` | open · MEU-NEW P4 (was TECH-DEBT P4) | MEU-159, Session 94 (D-1129) |
 | `UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT` | open · TECH-DEBT P4 (was unclassified) | Session 94, no MEU (D-1130) |
 | `YOUTUBE-CAPTIONS-IP-BLOCK` | **resolved** (was open · UPSTREAM P2) | Closed by D-1125: captions fetch again from this network; reopen on a new 429 |
-| `MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL` | open · UPSTREAM P3 | Not grouped: no fix planned (D-528). A change is open for Mat (§5); if Mat picks it, it joins Session 92 |
+| `MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL` | open · TECH-DEBT P3 (was UPSTREAM P3) | Session 92, before its baseline run (D-1134 A, Mat). The Session 92 plan decides whether it needs an MEU |
 | `TOOLING-SHARED-REGISTRY-COUPLING` | mitigated · TECH-DEBT P2 | Not grouped: one test still reads the machine registry (D-912); it rides the next change to that file |
 | `TRANSCRIPT-ADD-CHANNEL-422` | open · MONITORING | Not grouped: watch for a repeat. Its first lead is gone (b216681) |
 | `E2E-CLIPBOARD-PRIMER-EMPTY` | open · MONITORING | Not grouped: not seen again |
@@ -68,7 +68,7 @@ Every MEU prerequisite is approved (`meu_status next` lists MEU-158 and MEU-159 
 
 **Soft order (shared files, not dependencies):**
 - `ui/tests/e2e/`: Session 91 edits the drag and capture specs; Session 94 adds F1 and layout specs. Session 94 runs after Session 91's commit so its gate runs on the steadier suite.
-- `mcp-server/`: Session 92 only, unless Mat picks the action-text change (§5), which then lands in Session 92 before its baseline.
+- `mcp-server/`: Session 92 only. The `avkit_capture` description change (D-1134) lands there before its baseline run.
 - `tests/integration/`: Session 93 only.
 
 ---
@@ -98,11 +98,12 @@ Every MEU prerequisite is approved (`meu_status next` lists MEU-158 and MEU-159 
 
 ### Session 92 — `mcp-audit-refresh` (no MEU) · P3
 
-- **Layer / files:** `mcp-server/` audit runner (census network proofs), `.agent/skills/mcp-tool-audit/resources/baseline-snapshot.json`, `BASELINE_PENDING` and `.agent/context/MCP/mcp-tool-audit-report.md`.
-- **Covers:** `MCP-AUDIT-CENSUS-PROBE-SINGLE-SHOT`, then `MCP-AUDIT-BASELINE-PENDING-CROP`.
+- **Layer / files:** `mcp-server/` audit runner (census network proofs), `mcp-server/src/toolsets/registry.ts` (`TOOL_TOP_LEVEL.avkit_capture`) and a new description-length test, `.agent/skills/mcp-tool-audit/resources/baseline-snapshot.json`, `BASELINE_PENDING` and `.agent/context/MCP/mcp-tool-audit-report.md`.
+- **Covers:** `MCP-AUDIT-CENSUS-PROBE-SINGLE-SHOT`, `MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL` (D-1134 A), then `MCP-AUDIT-BASELINE-PENDING-CROP`.
+- **D-1134 A (Mat):** `avkit_capture` gets a real description built from its existing action text, with the sentences every action repeats removed and the facts the Session 64 eval missed first (call `image` to view; call `sheet` again over a narrower span to zoom). A test keeps it under 4,096 characters, so it is whole when a client loads tools upfront. `_meta.action_descriptions` stays. The Session 64 eval tasks are rerun on the new description as the acceptance check. The other seven tools keep their descriptions until a miss is measured. The audit reads only action keys, so the baseline does not change for it.
 - **Why grouped:** the census fix changes the audit, and the authoritative run that follows records `avkit_capture.crop` and empties `BASELINE_PENDING` in the same change.
 - **Why now:** the caption block that stopped a clean authoritative run has lifted (D-1125). If it returns before the session starts, the session waits.
-- **Gate:** `--update-baseline` only from an authoritative Windows run with clean cleanup and no regression (BASELINE_UPDATE_RULE). The baseline is an MCP contract record; any tool-shape change in it is Mat's (M-4).
+- **Gate:** `--update-baseline` only from an authoritative Windows run with clean cleanup and no regression (BASELINE_UPDATE_RULE). The baseline is an MCP contract record; any tool-shape change in it is Mat's (M-4). Mat has ruled the `avkit_capture` description (D-1134); any other description change goes back to Mat.
 - **Cloud/local:** local (authoritative audit on the Windows host).
 - **Token estimate:** calibrate against the 2026-10-01 `mcp-live-audit` session and Session 59 `capture-crop-copy`.
 - **Split flag:** no.
@@ -148,7 +149,7 @@ Mat asked for triage and grouping only, so no plan is made yet. When Mat names a
 - **Queue (D-1133):** Session 74, then 91, 92, 93 and 94.
 - **Session 74:** Mat confirms the MEU registration and picks the delivery route at its plan gate.
 - **Session 92:** captions still fetch from this network at its start.
-- **Open for Mat, no id yet:** whether to change what Claude Code agents see of each MCP action (`MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL`). This changes the MCP tool shape (M-4). Recommendation A: add one line per action to each tool's top-level description and keep the full text in `_meta`, landing in Session 92 before its baseline. B: move the full text into the description. C: leave it (D-528).
+- **Ruled by Mat (D-1134 A):** `avkit_capture` gets a real description in Session 92, before its baseline run (§3).
 - **Not for a session:** `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` waits for Mat to install eSpeak NG on a test machine.
 - No branch or worktree; main only. The coordinator commits each session after its execution review and does not push.
 
@@ -187,8 +188,9 @@ The Band column is the session's queue priority. Both new MEUs are registered in
 | D-1131 | Triage the register and group what it leaves by value to the application? | human | Yes. D-1125 to D-1130 written; MEU-158 and MEU-159 registered; Session 74 and Sessions 91 to 94 grouped and ordered by value. No plan is made until Mat names a session. | Human-approved | Mat asked for exactly this, and for no planning or execution. | USER_EXPLICIT 2026-11-17 "run triage and create new session grouping based on what is of most value to the application" |
 | D-1132 | Which work shares a session, and does the debt with no MEU get one? | autonomous | Session 91: the three Electron load flakes. Session 92: the two audit issues. Session 93: the Python tail-frame flake alone. Session 94: MEU-158, MEU-159 and the preview script. The TTS FP16 issue stays with Session 74. No MEU for test or tooling debt; a plan registers one if a cause is in the product. | Local Canon | Test and tooling debt has run with no MEU since Sessions 78, 79 and 90 (D-815, D-1103). The Electron flakes share one symptom and one reproduction method; the audit fix and the baseline land in one change. One session for all P3 debt lost: Electron, MCP and ffmpeg share no file and would widen one review. The bucket tool proposed the two MEUs together. Two-way. | — |
 | D-1133 | Queue order by value to the application? | autonomous | Session 74, then 91, 92, 93 and 94. | Local Canon | Session 74 fixes the only high-severity user defect and Mat has ruled to ship it (D-797). Session 91 next: the flakes failed 4 of 7 full runs and cost every later session a rerun, so they also speed Sessions 92 to 94. Session 92 then, while captions work (it closes two P3 issues and records the crop tool). Session 93 is a P3 test flake with a possible product cause. Session 94 is P4 polish. Putting 91 first lost: it is test speed, and 74 is a user's audio. Two-way: one message from Mat reorders it. | — |
+| D-1134 | Should the model see what each av-kit MCP action does? | human | A: give `avkit_capture` a real description built from its existing action text, under 4,096 characters, with the Session 64 eval rerun as acceptance; the other seven tools stay as they are until a miss is measured. Lands in Session 92 before its baseline. | Human-approved | Capture is the only tool where a miss was measured (Session 64, one run per task), and its action text is what the passing runs saw. One line per action on every tool lost: mostly new writing with no measured need. Keeping it as is lost: the measured misses stay. Claude Code 2.1.325 cuts server instructions and upfront tool descriptions at 4,096 characters (code.claude.com/docs/en/mcp). M-4, one-way-door. Expert pass changed the first draft (receipt `C:/Temp/av-kit/triage-1117b/hdp-expert-pass.txt`). | USER_EXPLICIT 2026-11-17 "D-1134: A" |
 
 Carry-forward: the closeout validator reads every §8 row of the declared grouping through `--decision-source` on this file, so a session's reflection does not restate them; its `### Decisions Log` lists only that session's own reversible autonomous choices (HDP §6).
 
 - Session 74 carries D-1131 and D-1133, and its own D-797 and D-801.
-- Sessions 91 to 94 carry D-1131, D-1132 and D-1133.
+- Sessions 91 to 94 carry D-1131, D-1132 and D-1133. Session 92 also carries D-1134.
