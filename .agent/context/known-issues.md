@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 146** — Active: 15 | Mitigated: 2 | Resolved: 127
+**Total: 146** — Active: 14 | Mitigated: 2 | Resolved: 128
 
 ## Active Issues
 
@@ -20,7 +20,6 @@
 | 🟢 | `DOWNLOADER-ADVANCED-PANEL-GAP` | An empty gap sits under Advanced on the Downloader page | ui | ⬜ open | 2026-11-03 |
 | 🟢 | `E2E-CLIPBOARD-PRIMER-EMPTY` | AC-88.12's clipboard primer read an empty clipboard for 5 s once | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` | The transcript queue E2E's seam reload failed once with ERR_ABORTED und… | ui | ⬜ open | 2026-11-07 |
-| 🟢 | `VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE` | Real-ffmpeg frame grabs near a clip's last frame occasionally fail (fra… | core | ⬜ open | 2026-11-15 |
 | 🟢 | `HELP-F1-BEFORE-LAZY-MOUNT-LOST` | F1 on Convert or Capture can be lost while the page is still loading | ui | ⬜ open | 2026-11-17 |
 | 🟢 | `UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT` | npm run preview opens no window when ELECTRON_RUN_AS_NODE is set in the… | ui | ⬜ open | 2026-11-17 |
 | 🟢 | `EVAL-HARNESS-DESCRIBE-CP437-MOJIBAKE` | Session 64's eval describe capture decodes the MCP server's UTF-8 throu… | agent | ⬜ open | 2026-11-18 |
@@ -32,9 +31,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (127)
+## Resolved (128)
 
-127 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+128 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

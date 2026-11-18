@@ -623,7 +623,9 @@ class FFmpegAdapter:
         """END_GAP: the last video packet's whole milliseconds, read from 60 s before `time_ms`.
 
         Its own bounded `subprocess.run`, not `_run`, so the timeout and the decoding sit in one
-        call. A timeout, a non-zero exit or no usable time gives `None`.
+        call. A timeout, a non-zero exit or no usable time gives `None`. The interval has an end
+        of `time_ms` + 60 s past the first packet read, because an open interval reads unset
+        fields in ffprobe.
         """
         ffprobe = self._resolve_ffprobe(ffmpeg)
         if ffprobe is None:
@@ -641,7 +643,7 @@ class FFmpegAdapter:
             "-select_streams",
             "v:0",
             "-read_intervals",
-            f"{_seek_text(start)}%",
+            f"{_seek_text(start)}%+{_seek_text(time_ms + END_GAP_LOOKBACK_MS)}",
             "-show_entries",
             "packet=pts_time",
             "-of",

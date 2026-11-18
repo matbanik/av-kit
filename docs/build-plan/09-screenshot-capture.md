@@ -1300,6 +1300,30 @@ Two residual MEUs from the 2026-11-15 triage (grouping `.agent/context/grouping/
 > - Gate: the H1-2 `session-gate.ps1` record in the Session 75 MEU-146 handoff.
 > - Plan `docs/execution/plans/2026-11-15-capture-inbox-probe/`.
 
+## Residuals registered 2026-11-17
+
+One residual MEU from Session 93's plan (`docs/execution/plans/2026-11-17-video-tail-frame/`; grouping `.agent/context/grouping/2026-11-17-value-triage-session-grouping.md`). It changes the END_GAP packet read of [§Video frames](#video-frames) (`packages/infrastructure/src/avkit_infra/media/adapter.py`).
+
+<a id="video-tail-packet-read"></a>
+
+### Video tail packet read
+
+> **MEU-160.** From `VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE` (triage D-1127; plan D-1165). END_GAP (D-575) finds the last video packet with `ffprobe -read_intervals START%`, an interval with no end. In FFmpeg's `fftools/ffprobe.c` such an interval leaves its end fields unset (`parse_read_interval` sets only `has_end`, on memory from `av_malloc_array`), and `read_interval_packets` reads them. So the read can stop early and still exit 0 with empty stderr: no packet time, or a last time short of the clip's, and a time past the last frame then gives no frame or an earlier one. At plan time, 8 of 276 adapter sequences failed with one busy process per CPU, and 7 of 120 open-ended reads were empty or short with no added load. The same path serves `frames` and the sheet's cells (CELL_GRAB).
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Bounded | The packet read gives the interval an end: `START%+DURATION`, with START = max(0, T − 60 s) as now and DURATION = T + 60 s. ffprobe measures DURATION from the first packet it reads, at or before START, so the read always reaches past T. | Research-backed: ffprobe `-read_intervals` docs and `ffprobe.c`; D-1166 |
+| Same answer | The start, the lookback, the retry and the deadline are unchanged; the last packet time is the one a read with no interval gives. | Local Canon: D-575 |
+| Tests | Unit: the argv for T at 1, 59 999, 60 000, 60 001, 89 999 and 7 200 021 ms. Integration: a clip with one keyframe. Under load: 1000 adapter sequences with no bad read, and 5 runs of the real-FFmpeg module with zero failures. | Local Canon: D-1169 |
+
+> **Delivered (Session 93).**
+> - The END_GAP packet read in `_last_video_ms` (`packages/infrastructure/src/avkit_infra/media/adapter.py:646`) gives its interval an end: `START%+DURATION`, with DURATION = T + 60 s (`BOUNDED_TAIL_READ`, D-1166). The start, the lookback, the retry and the deadline are unchanged.
+> - The measured cause: the open `START%` interval left ffprobe's end fields unset, so the read sometimes stopped early with exit 0 and empty stderr. At base, 5 of 400 adapter sequences under load were empty or short, each with the signal; after the fix, 0 of 1000 were, and 5 of 5 runs of the real-FFmpeg module passed under load.
+> - The two `ARGV_NAMED` unit assertions expect the bounded form (D-1167).
+> - AC-160.1 to AC-160.13.
+> - Gate: the H1-2 `session-gate.ps1` record in the Session 93 MEU-160 handoff.
+> - Plan `docs/execution/plans/2026-11-17-video-tail-frame/`.
+
 ## Named deferrals (not this phase)
 
 | Feature | Why |
@@ -1368,6 +1392,7 @@ Two residual MEUs from the 2026-11-15 triage (grouping `.agent/context/grouping/
 | MEU-143 | `gui-capture-tool-flow` | [Style and tool flow](#style-and-tool-flow) | MEU-87, MEU-99, MEU-100, MEU-105 |
 | MEU-145 | `capture-scan-skip-unreadable` | [Scan skips unreadable files](#scan-skips-unreadable-files) | MEU-36, MEU-84, MEU-130 |
 | MEU-146 | `capture-exif-orientation` | [EXIF orientation on scan](#exif-orientation-on-scan) | MEU-35, MEU-36, MEU-128, MEU-129 |
+| MEU-160 | `capture-video-tail-packet-read` | [Video tail packet read](#video-tail-packet-read) | MEU-134 |
 
 ---
 

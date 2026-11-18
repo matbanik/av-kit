@@ -5459,21 +5459,23 @@ issues:
     title: Real-ffmpeg frame grabs near a clip's last frame occasionally fail (frame grab failed at 00:00:02.999 / 00:00:03.200)
     severity: low
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-15'
-    root_cause: 'hypothesis: CaptureService.frames_from_video (packages/core/src/avkit_core/services/capture.py _frames_body) raises ValidationError(_frame_failed_text) when the real ffmpeg grab near the end of a 3 s test clip returns no frame; it fails only sometimes and more often in a full run, so the tail seek or the grab timeout may be load-sensitive. Not reproduced on demand; unexplained.'
+    root_cause: 'Measured in Session 93: the END_GAP packet read used the open -read_intervals START% form, and FFmpeg''s fftools/ffprobe.c (master 3633db72) leaves that interval''s end, end_is_offset and duration_frames unset (parse_read_interval sets only has_end, :3344, on memory from av_malloc_array, :3365) while read_interval_packets reads them (:1878, :1883). So the packet read sometimes stopped after 0 or a few packets with exit 0 and empty stderr, _last_packet_ms got no time or a short one, and the grab past the last frame came back empty (frame grab failed) or with an earlier frame. Under load the unchanged adapter gave 5 bad sequences in 400, each with that signal. The grab timeout and the tail seek are not the cause.'
     blast_radius: tests/integration/test_video_real_ffmpeg.py test_ac_134_10_counter_clip_frames_match_a_full_decode and test_ac_134_10_long_audio_past_the_last_frame. A miss fails a session gate's full py-tests step, so the gate has to be repeated. Whether the app's own frame grabs near a video's end can fail the same way is not known.
     verification:
-      last_checked: '2026-11-17'
-      method: Session 82 baseline Python suite receipt
-      result: 'test_ac_134_10_long_audio_past_the_last_frame failed: frame grab failed at 00:00:03.200'
+      last_checked: '2026-11-18'
+      method: 'Session 93 rows 2, 4 and 5: the adapter stress driver (packet-stress.py) at base and after the fix, the traced real-FFmpeg module runs under load (load-run.py, trace-check.py), and the unit file with the real-FFmpeg module (receipts vtf-stress-bad.txt, vtf-load-base.txt, vtf-trace-check-base.txt, vtf-green.txt, vtf-stress-clean.txt, vtf-load-green.txt, vtf-trace-check-green.txt under C:/Temp/av-kit/video-tail-frame)'
+      result: 'Base: RESULT: 5 bad in 400, every one with the signal (exit 0). After the fix: 60 passed, 16 warnings in 9.22s; RESULT: 1000 of 1000 correct, every packet read good and bounded (exit 0); run 1: 22 passed, 16 warnings in 24.00s; run 2: 22 passed, 16 warnings in 23.77s; run 3: 22 passed, 16 warnings in 25.77s; run 4: 22 passed, 16 warnings in 23.53s; run 5: 22 passed, 16 warnings in 24.72s; PASS: 5 of 5 runs passed at median load 100.0 (threshold 85.0); trace totals: packets 15, bad 0, failed 0, wrong_arg 0'
+    resolution_path: 'Fixed in Session 93 on 2026-11-18 (plan docs/execution/plans/2026-11-17-video-tail-frame): the END_GAP packet read in packages/infrastructure/src/avkit_infra/media/adapter.py gets an end (D-1166): FFmpegAdapter._last_video_ms passes -read_intervals START%+DURATION, with DURATION = T + 60 s, instead of the open START% (BOUNDED_TAIL_READ); the start, the 60 s lookback, the single retry and the timeout are unchanged. The two ARGV_NAMED unit assertions expect the bounded form (D-1167); AC-160.1 pins the interval at six times and AC-160.8 guards the tail grab of a one-keyframe 150 s clip. MEU-160.'
     category: TECH-DEBT
     priority: P3
     notes: |-
       SEEN 2026-11-15 (Session 84 closeout-record-once H1-2, no change reaches packages/ or the media adapter): the full suite failed test_ac_134_10_counter_clip_frames_match_a_full_decode at 00:00:02.999 in two gate runs (1 failed, 2846 passed, 189.72 s and 188.81 s; row 0's baseline suite passed it). Isolation: the test alone passed 3/3; the test file alone failed once (the same test) and then passed 6/6; tests/integration/ failed once on test_ac_134_10_long_audio_past_the_last_frame at 00:00:03.200. Receipts under C:/Temp/av-kit/cro/: cro-gate-h1-run1.txt, cro-D6-py-tests-run1.txt, cro-gate-h1-run2.txt, cro-D6-py-tests-run2.txt, cro-h12-flake-probe-1.txt to -3.txt, cro-h12-flake-probe-file.txt, cro-h12-flake-probe-integration.txt and cro-h12-flake-probe-repeat.txt. Next step on a repeat: log the frame-grab ffmpeg stderr and the clip duration near the tail.
 
       SEEN AGAIN 2026-11-17 (Session 82 ready-handshake baseline, C:/Temp/av-kit/ready-handshake/rh-base-py.txt): "frame grab failed at 00:00:03.200", 1 failed, 3031 passed. Reclassified MONITORING P4 to TECH-DEBT P3 (D-1127). Whether a user frame grab near the end of a clip can fail the same way is checked when it is fixed.
-    meu_links: []
+    meu_links:
+      - MEU-160
     related: []
     enrichment:
       questions_asked: []

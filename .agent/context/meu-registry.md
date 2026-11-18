@@ -210,6 +210,7 @@
 | MEU-143 | `gui-capture-tool-flow` | 9.31a | [Phase 9 §Style and tool flow](../../docs/build-plan/09-screenshot-capture.md#style-and-tool-flow) | Lock is on by default and persisted with a one-shot preference, letter shortcuts pick tools, and Shift, Alt and Shift+arrow modify drawing and nudging. | ✅ approved |
 | MEU-145 | `capture-scan-skip-unreadable` | 9.43 | [Phase 9 §Scan skips unreadable files](../../docs/build-plan/09-screenshot-capture.md#scan-skips-unreadable-files) | One inbox file the scan can't read no longer fails the capture list, and the skip is logged without its path. | ✅ approved |
 | MEU-146 | `capture-exif-orientation` | 9.44 | [Phase 9 §EXIF orientation on scan](../../docs/build-plan/09-screenshot-capture.md#exif-orientation-on-scan) | A scanned or registered photo with an EXIF orientation tag is sized, marked, baked and region-viewed in the frame the GUI shows. | ✅ approved |
+| MEU-160 | `capture-video-tail-packet-read` | 9.45 | [Phase 9 §Video tail packet read](../../docs/build-plan/09-screenshot-capture.md#video-tail-packet-read) | The END_GAP packet read gives its ffprobe interval an end, so a time past a clip's last video frame gives the last frame on a busy host as on an idle one; proved by unit argv tests, a one-keyframe integration clip and load runs of the real-FFmpeg module. | ✅ approved |
 
 
 ## Queue card UI (P2)

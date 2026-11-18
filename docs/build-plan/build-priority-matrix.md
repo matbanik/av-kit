@@ -152,6 +152,7 @@
 | 9.42 | MEU-136 | `capture-export-copy` | [09 §Export copy](09-screenshot-capture.md#export-copy) | MEU-130 |
 | 9.43 | MEU-145 | `capture-scan-skip-unreadable` | [09 §Scan skips unreadable files](09-screenshot-capture.md#scan-skips-unreadable-files) | MEU-36, MEU-84, MEU-130 |
 | 9.44 | MEU-146 | `capture-exif-orientation` | [09 §EXIF orientation on scan](09-screenshot-capture.md#exif-orientation-on-scan) | MEU-35, MEU-36, MEU-128, MEU-129 |
+| 9.45 | MEU-160 | `capture-video-tail-packet-read` | [09 §Video tail packet read](09-screenshot-capture.md#video-tail-packet-read) | MEU-134 |
 | 10.1 | MEU-41 | `canon-queue-cards` | [10 §Scope and non-goals](10-queue-card-ui.md#scope-and-non-goals) | MEU-39 |
 | 10.2 | MEU-42 | `svc-requeue-widening` | [10 §Re-queue contract](10-queue-card-ui.md#re-queue-contract) | MEU-41 |
 | 10.3 | MEU-43 | `gui-queue-primitives` | [10 §Status token table](10-queue-card-ui.md#status-token-table) | MEU-41 |

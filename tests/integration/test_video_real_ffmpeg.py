@@ -282,6 +282,27 @@ def test_ac_134_10_long_audio_past_the_last_frame(
 
 
 @pytest.mark.integration
+def test_ac_160_8_one_keyframe_clip_tail_frame(tmp_path: Path) -> None:
+    """AC-160.8: on a clip with one keyframe, the END_GAP read past the last frame still finds it.
+
+    ffprobe measures a `+` end from the first packet it reads, the keyframe at 0, so an end
+    measured from the start (`T - S + 60 s`) would stop short of 149.96 s; `T + 60 s` does not.
+    """
+    _assert_pinned()
+    clip = tmp_path / "one_keyframe.mp4"
+    command = [str(FFMPEG), "-hide_banner", "-nostdin", "-y", "-f", "lavfi"]
+    command += ["-i", "testsrc2=size=320x240:rate=25:duration=150", "-c:v", "libx264"]
+    command += ["-g", "100000", "-keyint_min", "100000", "-sc_threshold", "0"]
+    command += ["-pix_fmt", "yuv420p", "-an", str(clip)]
+    subprocess.run(command, check=True, capture_output=True, timeout=300)
+    service, _ = _frames_service(tmp_path / "inbox")
+    result = service.frames_from_video(str(clip), at=[149.999])
+    assert len(result.frames) == 1
+    assert result.frames[0].time_ms == 149999
+    assert _shot_pixels(result.frames[0].path) == _pixels(_reference(clip, 3749))
+
+
+@pytest.mark.integration
 def test_ac_134_10_past_the_end_runs_no_grab(
     clips: dict[str, Path], hashes: dict[str, str], tmp_path: Path
 ) -> None:

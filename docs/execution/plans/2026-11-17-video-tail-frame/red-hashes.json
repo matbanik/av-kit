@@ -1,0 +1,4 @@
+{
+  "tests/unit/test_media_adapter_frames.py": "bba0e37301c964a52a58dbbb522cedccbe00ba0ee86afe26f4e55c04bd4add45",
+  "tests/integration/test_video_real_ffmpeg.py": "e32c97f390b9e9c95ec1d04cf6d66695e23188351c55951e154f4778f54f3397"
+}

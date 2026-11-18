@@ -286,7 +286,7 @@ def test_ac_134_9_end_gap_reads_the_last_packet_and_grabs_again(
         "-select_streams",
         "v:0",
         "-read_intervals",
-        "0.000%",
+        "0.000%+62.999",
         "-show_entries",
         "packet=pts_time",
         "-of",
@@ -310,9 +310,32 @@ def test_ac_134_9_end_gap_reads_from_60_seconds_before(
     data = adapter.grab_frame(video, 7_200_021, seek="input", timeout_s=5.0)
     assert data == PNG
     packet, _ = run.calls[1]
-    assert packet[packet.index("-read_intervals") + 1] == "7140.021%"
+    assert packet[packet.index("-read_intervals") + 1] == "7140.021%+7260.021"
     retry, _ = run.calls[2]
     assert retry[retry.index("-ss") + 1] == "7199.979"
+
+
+@pytest.mark.parametrize(
+    ("time_ms", "interval"),
+    [
+        (1, "0.000%+60.001"),
+        (59_999, "0.000%+119.999"),
+        (60_000, "0.000%+120.000"),
+        (60_001, "0.001%+120.001"),
+        (89_999, "29.999%+149.999"),
+        (7_200_021, "7140.021%+7260.021"),
+    ],
+    ids=["t1", "t59999", "t60000", "t60001", "t89999", "t7200021"],
+)
+def test_ac_160_1_end_gap_read_has_an_end(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, time_ms: int, interval: str
+) -> None:
+    adapter, run, _clock, video = _grab_setup(
+        tmp_path, monkeypatch, [_Bytes(b""), _packet("0.000\n"), _Bytes(PNG)]
+    )
+    adapter.grab_frame(video, time_ms, seek="input", timeout_s=5.0)
+    packet, _ = run.calls[1]
+    assert packet[packet.index("-read_intervals") + 1] == interval
 
 
 def test_ac_134_9_the_largest_packet_time_wins(

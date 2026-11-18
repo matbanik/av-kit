@@ -1,0 +1,237 @@
+{
+  "packages/infrastructure/src/avkit_infra/media/adapter.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 820,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "tests/unit/test_media_adapter_frames.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 542,
+    "bom": false
+  },
+  "tests/integration/test_video_real_ffmpeg.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 542,
+    "bom": false
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4197,
+    "bom": false
+  },
+  "docs/build-plan/09-screenshot-capture.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1455,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/build-plan/build-priority-matrix.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 196,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 255,
+    "bom": false
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 5731,
+    "bom": false
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 40,
+    "bom": false
+  },
+  ".agent/context/grouping/2026-11-17-value-triage-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 196,
+    "bom": false
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 101,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 218,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/handoffs/2026-11-17-video-tail-frame-MEU-160-handoff.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  ".agent/context/handoffs/2026-11-17-video-tail-frame-implementation-critical-review.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "docs/execution/reflections/2026-11-17-video-tail-frame-reflection.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "packages/core/src/avkit_core/services/capture.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 2424,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "packages/core/src/avkit_core/ports/capture.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 133,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "packages/api/src/avkit_api/routes/captures.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 567,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "tests/conftest.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 36,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/load-run.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 498,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 561,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 124,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/grab_trace.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 352,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/load-run.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 212,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/trace-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 308,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/packet-stress.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 342,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/diff-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 295,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/meu-register.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 462,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 368,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1459,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 397,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 235,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-video-tail-frame/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 319,
+    "bom": false
+  }
+}
