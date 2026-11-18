@@ -1,0 +1,18 @@
+{
+  ".agent/context/handoffs/2026-11-17-ui-small-fixes-plan-critical-review.md": "ba2530e00d4507c65dfd4ba28210339616f58c4b614563983a47e0584d666547",
+  ".agent/context/handoffs/2026-11-17-video-tail-frame-plan-critical-review.md": "7a3f133fffbab4c495f4021d6a14e26e49f2cf5503e20b0ecf330f71ad4679d5",
+  "docs/execution/plans/2026-11-17-e2e-pointer-flakes/assert-check.py": "17b2887c2ff3277d38156bac843dc0c1457795d1554259ff60cc70d71fd12234",
+  "docs/execution/plans/2026-11-17-e2e-pointer-flakes/flake-run.py": "7f887b2e4d97f1b45ea80857ddcbfb24e7d1f6df2c9f7cbc34082c71b0b7d9f0",
+  "docs/execution/plans/2026-11-17-e2e-pointer-flakes/implementation-plan.md": "7fb578b64b77a352375ee4bcf870394d3ec772326cb07035141335cd7c046808",
+  "docs/execution/plans/2026-11-17-e2e-pointer-flakes/task.md": "711ea4405afd2ea7ac9f7654f0c3fa446abecabbb6837c32aae73da017be5103",
+  "docs/execution/plans/2026-11-17-ui-small-fixes/implementation-plan.md": "a91c81f8f652b2436a2c04f2b1a9ebeba50a4fbd801916840994051b3a29a89c",
+  "docs/execution/plans/2026-11-17-ui-small-fixes/task.md": "07a356d2d2cbc0c57ad74f2d1ec6b2c8c9c2ecf705c0ef3cfed13d20feaf8e94",
+  "docs/execution/plans/2026-11-17-video-tail-frame/diff-check.py": "6a511f230a03a777d4521ee4eb9ea2f7ef6e516cb74d5c79d9b9aded1feecea8",
+  "docs/execution/plans/2026-11-17-video-tail-frame/grab_trace.py": "37468689aef19757e6066502ba359c0383bb276b34eb4e53b3ec475edb0aa906",
+  "docs/execution/plans/2026-11-17-video-tail-frame/implementation-plan.md": "be8734878d202f85c0fbc7ff7867dc877e32f97db1e2a7bf7f58b7d54a0fb770",
+  "docs/execution/plans/2026-11-17-video-tail-frame/load-run.py": "86e14d1220f8f6c6ab971a75c5f43a4cada1c3199a54934c703f1301aebabe55",
+  "docs/execution/plans/2026-11-17-video-tail-frame/meu-register.py": "a537ea9dae1ccb4a3fcde6b56aab34c0bf4a5eb42c0c1160c2914c75c9b6e4f9",
+  "docs/execution/plans/2026-11-17-video-tail-frame/packet-stress.py": "e34a9c93b9215e3fa80154f7294a8cc44f7b0bac9856ddc017882120e00b17de",
+  "docs/execution/plans/2026-11-17-video-tail-frame/task.md": "a70b433ffc3bf914252c486b907eb8f4d63edd38be414cd3f8a7386533664ac3",
+  "docs/execution/plans/2026-11-17-video-tail-frame/trace-check.py": "4d04d352ce86674e6feec70c6ce4cf07db48f31b05e2e54918ee3e006287f303"
+}

@@ -1192,18 +1192,20 @@ issues:
     title: MCP audit container census network proofs are single-shot, so YouTube's per-moment wall can fail a container run
     severity: low
     component: mcp-server
-    status: open
+    status: resolved
     discovered: '2026-10-01'
     root_cause: 'mcp-server/scripts/audit/run.ts (youtubeExtractWorks, mediaFetchBlocked) probes each failing URL once after the run. YouTube''s datacenter wall is per video and per moment, so a direct extract can succeed seconds after the backend''s request failed; the proof is then false and audit-container fails closed (seen in the Session 28 round-3 review: transcript.add 500, direct extract OK 2.4 s later).'
     blast_radius: 'Container (non-authoritative) MCP audit runs only: a spurious FAIL that needs a re-run. Never a false pass; authoritative Windows runs tolerate nothing.'
-    resolution_path: Sample each census network probe up to 3 times (proof holds only if every sample fails with the signature) and add a re-run note to .agent/workflows/mcp-audit.md. Batch with the next change under the MCP audit GATED_PATHS.
+    resolution_path: 'Fixed in Session 92 on 2026-11-18 (plan docs/execution/plans/2026-11-17-mcp-audit-refresh): mcp-server/scripts/audit/network-proof.ts samples each census network proof up to 3 times about 5 s apart (NETWORK_PROOF_SAMPLES, NETWORK_PROOF_GAP_MS) and a URL''s proof holds when any sample is blocked (D-1156, not the literal every-sample rule, which would fail more often); the probes moved from run.ts behind the NetworkProbes seam, and .agent/workflows/mcp-audit.md step 3 has the re-run note.'
     notes: 'Session 28 execution review round 3, finding R3-1 (Low, non-blocking): .agent/context/handoffs/2026-10-01-mcp-live-audit-implementation-critical-review.md.'
     category: TECH-DEBT
     priority: P3
     meu_links:
       - MEU-68
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-18'
+      method: 'Session 92 rows 1 and 2: mcp-server/tests/audit/network-proof.test.ts (Session 92 census network proof, 13 tests) with the runner tests, typecheck and build (receipts mar-np-red.txt, mar-np-green.txt, mar-np-green-types.txt, mar-np-green-build.txt under the session''s receipt folder)'
+      result: 'Red: Tests 7 failed | 6 passed with NETWORK_PROOF_SAMPLES = 1; Green: Test Files 5 passed (5), Tests 41 passed (41) with NETWORK_PROOF_SAMPLES = 3'
     related: []
   - id: CAPTURE-BAKE-ARROW-THIN
     title: Arrow is jagged when baked and its tip is drawn wrong (shaft runs through the head) in bake and preview
@@ -5023,14 +5025,15 @@ issues:
     title: The committed MCP audit baseline has no avkit_capture.crop entry
     severity: low
     component: mcp-server
-    status: open
+    status: resolved
     discovered: '2026-11-08'
     root_cause: MEU-130 adds avkit_capture.crop to ACTION_INDEX. The committed baseline (.agent/skills/mcp-tool-audit/resources/baseline-snapshot.json, authoritative, recorded at ddd1117 on 2026-10-16) can only gain an entry from an authoritative --update-baseline run, and BASELINE_UPDATE_RULE refuses that run while YOUTUBE-CAPTIONS-IP-BLOCK makes the transcript actions REGRESSION. Hand-adding the entry is forbidden by BASELINE_ANNOTATION_RULE.
-    blast_radius: The audit coverage test (mcp-server/tests/audit/coverage.test.ts, AC-68.5) accepts the baseline missing exactly the keys in BASELINE_PENDING, which holds only avkit_capture.crop. Every other key still has to match, so a second missing action still fails. The next release audit reports avkit_capture.crop as NEW, and that audit's rule has to accept it.
+    blast_radius: Until Session 92 the audit coverage test (mcp-server/tests/audit/coverage.test.ts, AC-68.5 and AC-130.28) accepted the committed baseline missing exactly the five BASELINE_PENDING keys (avkit_convert.probe, avkit_capture.crop, avkit_capture.frames, avkit_capture.sheet and avkit_capture.export); every other key still had to match. The next release audit reported those five as NEW.
     verification:
-      last_checked: '2026-11-17'
-      method: coverage.test.ts AC-68.5 and AC-130.28 at the Session 59 gate
-      result: the baseline misses only avkit_capture.crop and has no extra key
+      last_checked: '2026-11-18'
+      method: 'Session 92 rows 6 and 7: coverage.test.ts Red then Green around one authoritative Windows audit run with --update-baseline at cba97fe (receipts mar-cov-red.txt, mar-r7-audit.txt, mar-r7-summary-check.txt, mar-r7-baseline-check.txt, mar-cov-green.txt)'
+      result: 'mcp-audit authoritative: 104/104 pass, 0 discovery finding(s), cleanup ok, exit 0; discovery new: avkit_convert.probe, avkit_capture.crop, avkit_capture.frames, avkit_capture.sheet and avkit_capture.export; baseline-diff summary: ok; baseline-diff baseline: ok; coverage.test.ts Red Tests 4 failed | 14 passed, Green Tests 18 passed (18); BASELINE_PENDING is empty'
+    resolution_path: 'Fixed in Session 92 on 2026-11-18 (plan docs/execution/plans/2026-11-17-mcp-audit-refresh): an authoritative audit run with clean cleanup and no regression recorded avkit_convert.probe, avkit_capture.crop, avkit_capture.frames, avkit_capture.sheet and avkit_capture.export in the committed baseline and report (Mat''s D-1159 A), and coverage.test.ts BASELINE_PENDING is [] in the same change.'
     category: TECH-DEBT
     priority: P3
     related:
@@ -5128,14 +5131,14 @@ issues:
     title: Claude Code doesn't show a model the per-action text in _meta.action_descriptions
     severity: low
     component: mcp-server
-    status: open
+    status: resolved
     discovered: '2026-11-10'
     root_cause: Each compound MCP tool registers its per-action text only under _meta.action_descriptions (mcp-server/src/toolsets/registry.ts:599-610 at 237732d); description holds TOOL_TOP_LEVEL and inputSchema the flattened schema. Claude Code passes a model the server instructions, the top-level description and the input schema, not _meta. So the crop paragraph (CROP_TEXT, mcp-server/src/toolsets/capture.ts:51) and every other action's text never reach a Claude Code agent.
     blast_radius: A Claude Code agent learns an action's inputs, units and limits only from the flattened schema, which has no per-action text. Session 60's D-521 run (Haiku 5.5, given only that surface) still cropped a named region in one list and one crop call, and reported that neither the description nor the server instructions mention crop, that crop's inputs appear only in the schema, and that the unit enum doesn't say which value is the default. Clients that do read _meta are unaffected.
     verification:
-      last_checked: '2026-11-17'
-      method: 'HDP research and expert pass: registry.js ACTION_DESCRIPTIONS measured (C:/Temp/av-kit/triage-1117b/measure-desc.txt, first-lines.txt); peer-reviewer receipts C:/Temp/av-kit/peer-1117b/ (dedupe.txt, toolsearch.txt, cc-version.txt)'
-      result: 75 actions, 29,613 characters, all under _meta only; avkit_capture holds 4,719 characters once repeated sentences are removed, the other tools 188 to 1,266. Claude Code 2.1.325 cuts server instructions and upfront tool descriptions at 4,096 characters and tool-search descriptions at 16,384.
+      last_checked: '2026-11-18'
+      method: 'Session 92 rows 3 to 5: mcp-server/tests/capture-description.test.ts (5 tests) with m7-resource.test.ts and capture.test.ts, desc-check.mjs on the built server, and the three Session 64 eval tasks rerun on Claude Haiku (receipts mar-desc-red.txt, mar-desc-green.txt, mar-desc-check.txt, mar-eval-check.txt)'
+      result: 'Red: Tests 3 failed | 2 passed; Green: Test Files 3 passed (3), Tests 73 passed (73); desc-check: avkit_capture description: 3981 chars (limit 4096), equals expected: true; eval: run s92-real-t1: pass, run s92-real-t2: pass, run s92-real-t3: pass, eval-rerun check: ok'
     category: TECH-DEBT
     priority: P3
     related:
@@ -5188,7 +5191,7 @@ issues:
               - https://github.com/anthropics/claude-code/issues/81268 — truncation is silent; server authors put critical details first and gate length themselves
           reasoning: 'Capture is the only tool where a miss was measured, and its existing action text is what the passing Session 64 runs saw, so no new writing is needed. Every-tool lines (B) were mostly new writing with no measured need; keeping it as is (C) leaves the measured Capture misses. M-4 public MCP surface, so Mat decides. Undo: revert one TOOL_TOP_LEVEL entry and its test.'
           human_message_reference: 'USER_EXPLICIT 2026-11-17 "D-1134: A"'
-    resolution_path: 'D-1134 A (Mat, 2026-11-17), in Session 92 before its authoritative baseline run: avkit_capture gets a real top-level description built from its existing per-action text, with the sentences every action repeats removed, the facts the Session 64 eval missed first (call image to view a frame or sheet; call sheet again over a narrower span to zoom), and a test that keeps it under 4,096 characters so it is whole when a client loads tools upfront. _meta.action_descriptions stays as it is. The Session 64 eval tasks are rerun on the new description as the acceptance check. The other seven tools keep their one-line descriptions until a miss is measured on one of them. The Session 92 plan decides whether this needs an MEU.'
+    resolution_path: 'Fixed in Session 92 on 2026-11-18 (plan docs/execution/plans/2026-11-17-mcp-audit-refresh): the avkit_capture top-level description is now built from its action text (CAPTURE_TOOL_DESCRIPTION, mcp-server/src/toolsets/capture.ts): it leads with calling image to view a frame or sheet and calling sheet again over a narrower span to zoom, then one line per action, 3,981 characters (under Claude Code''s 4,096 cut), per Mat''s D-1134 A. _meta.action_descriptions, every input schema and the other seven tool descriptions are unchanged.'
   - id: DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT
     title: Downloads pin three YouTube clients and fail when only another client works
     severity: high
@@ -5718,3 +5721,11 @@ issues:
             sources: []
           reasoning: Developer tooling only, with a workaround, and the fix copies an existing one. Two-way.
       decided_by: agent
+  - id: EVAL-HARNESS-DESCRIBE-CP437-MOJIBAKE
+    title: Session 64's eval describe capture decodes the MCP server's UTF-8 through cp437, so the eval surface carries mojibake
+    severity: low
+    component: agent
+    status: open
+    discovered: '2026-11-18'
+    root_cause: 'docs/execution/plans/2026-11-11-capture-export-copy/eval-run.md step 3 and task.md row E-1 capture the eval-harness.ts describe output through a PowerShell redirect of native output (E-1: rtk proxy npx tsx ... describe *> s64-E1-describe.txt). PowerShell decodes the server''s UTF-8 bytes through the console code page (cp437) and writes the text back as UTF-8 with CRLF, so an arrow becomes ''ΓåÆ'' and an en dash ''ΓÇô'' in the receipt, and every prompt built from it shows the model that corrupted text. Found by Session 92 (D-1186): its first describe receipt and prompts had the defect (mar-eval-describe-attempt1.txt and mar-eval-d1186-roundtrip.txt in its receipt folder prove they are the raw bytes decoded through cp437). Session 64''s own C:/Temp/av-kit/s64-E1-describe.txt has the same mojibake arrows and no real one, so Session 64''s three eval runs read a corrupted surface.'
+    blast_radius: 'Any eval that follows Session 64''s eval-run.md step 3 or row E-1 as written: the model reads mojibake in the tool text, so a measured result describes a surface no client serves. Session 64''s AC-136.19 eval result rests on such a surface and was not rerun on clean text. Session 92 re-captured raw bytes with a subprocess and added a fail-closed mojibake and verbatim-description guard to its own eval-rerun.py prompts path only (D-1186), and its three runs passed on the clean surface. Fix direction for a later session: capture describe as raw bytes and refuse cp437 mojibake in Session 64''s eval tooling.'

@@ -14,7 +14,7 @@ import {
   type UserConfirmRequest,
 } from "../destructive.js";
 import { nativeConfirm } from "../native-confirm.js";
-import { captureDescriptions, captureSchema, GET_QUERY_KEYS, IMAGE_MAX_BYTES } from "./capture.js";
+import { CAPTURE_TOOL_DESCRIPTION, captureDescriptions, captureSchema, GET_QUERY_KEYS, IMAGE_MAX_BYTES } from "./capture.js";
 import { convertDescriptions, convertSchema } from "./convert.js";
 import { downloadDescriptions, downloadSchema } from "./download.js";
 import { healthDescriptions, healthSchema } from "./health.js";
@@ -169,7 +169,7 @@ const TOOL_TOP_LEVEL: Record<string, string> = {
   avkit_settings: `Workflow: get/set leaves. Prerequisite: see ${SETTINGS_SCHEMA_URI}. Returns: leaf map. Errors: TOOL_ERROR.`,
   avkit_health: "Workflow: liveness then dependencies. Prerequisite: api_base. Returns: status JSON. Errors: TOOL_ERROR.",
   avkit_convert: "Workflow: add → start → list. Prerequisite: local files only. Returns: queue JSON. Errors: TOOL_ERROR.",
-  avkit_capture: "Workflow: capture or list → get/image → annotate. Prerequisite: local screen and inbox files. Returns: catalog JSON or image. Errors: TOOL_ERROR.",
+  avkit_capture: CAPTURE_TOOL_DESCRIPTION,
 };
 
 const FORBIDDEN_KEYS = new Set([

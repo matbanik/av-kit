@@ -1,0 +1,48 @@
+?? .agent/context/handoffs/2026-11-17-mcp-audit-refresh-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-17-ui-small-fixes-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-17-video-tail-frame-plan-critical-review.md
+?? docs/execution/plans/2026-11-17-e2e-pointer-flakes/assert-check.py
+?? docs/execution/plans/2026-11-17-e2e-pointer-flakes/flake-run.py
+?? docs/execution/plans/2026-11-17-e2e-pointer-flakes/implementation-plan.md
+?? docs/execution/plans/2026-11-17-e2e-pointer-flakes/task.md
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/adapter_probe.py
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/baseline-diff.py
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/baseline.ps1
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/baseline.sha
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/caption_probe.py
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/capture-description.expected.txt
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/desc-check.mjs
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/eol-check.py
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/eval-rerun.py
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/host-load.ps1
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/identity.py
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/implementation-plan.md
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/issue-resolve.py
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/red-check.py
+?? docs/execution/plans/2026-11-17-mcp-audit-refresh/task.md
+?? docs/execution/plans/2026-11-17-ui-small-fixes/implementation-plan.md
+?? docs/execution/plans/2026-11-17-ui-small-fixes/task.md
+?? docs/execution/plans/2026-11-17-video-tail-frame/diff-check.py
+?? docs/execution/plans/2026-11-17-video-tail-frame/grab_trace.py
+?? docs/execution/plans/2026-11-17-video-tail-frame/implementation-plan.md
+?? docs/execution/plans/2026-11-17-video-tail-frame/load-run.py
+?? docs/execution/plans/2026-11-17-video-tail-frame/meu-register.py
+?? docs/execution/plans/2026-11-17-video-tail-frame/packet-stress.py
+?? docs/execution/plans/2026-11-17-video-tail-frame/task.md
+?? docs/execution/plans/2026-11-17-video-tail-frame/trace-check.py
+# foreign (Session 94): .agent/context/handoffs/2026-11-17-ui-small-fixes-plan-critical-review.md
+# foreign (Session 93): .agent/context/handoffs/2026-11-17-video-tail-frame-plan-critical-review.md
+# foreign (Session 91): docs/execution/plans/2026-11-17-e2e-pointer-flakes/assert-check.py
+# foreign (Session 91): docs/execution/plans/2026-11-17-e2e-pointer-flakes/flake-run.py
+# foreign (Session 91): docs/execution/plans/2026-11-17-e2e-pointer-flakes/implementation-plan.md
+# foreign (Session 91): docs/execution/plans/2026-11-17-e2e-pointer-flakes/task.md
+# foreign (Session 94): docs/execution/plans/2026-11-17-ui-small-fixes/implementation-plan.md
+# foreign (Session 94): docs/execution/plans/2026-11-17-ui-small-fixes/task.md
+# foreign (Session 93): docs/execution/plans/2026-11-17-video-tail-frame/diff-check.py
+# foreign (Session 93): docs/execution/plans/2026-11-17-video-tail-frame/grab_trace.py
+# foreign (Session 93): docs/execution/plans/2026-11-17-video-tail-frame/implementation-plan.md
+# foreign (Session 93): docs/execution/plans/2026-11-17-video-tail-frame/load-run.py
+# foreign (Session 93): docs/execution/plans/2026-11-17-video-tail-frame/meu-register.py
+# foreign (Session 93): docs/execution/plans/2026-11-17-video-tail-frame/packet-stress.py
+# foreign (Session 93): docs/execution/plans/2026-11-17-video-tail-frame/task.md
+# foreign (Session 93): docs/execution/plans/2026-11-17-video-tail-frame/trace-check.py

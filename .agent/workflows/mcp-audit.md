@@ -18,6 +18,7 @@ Procedure: [`.agent/skills/mcp-tool-audit/SKILL.md`](../skills/mcp-tool-audit/SK
 2. **Prepare.** Run `npm --prefix mcp-server ci`, `uv sync --frozen --all-packages`, and `npm --prefix mcp-server run build` (M4: the audit drives `dist/`).
 3. **Run.**
    - Container: `npm --prefix mcp-server run audit -- --mode container --no-baseline --out <abs dir> --agent <name>`
+     - Each census network proof is tried up to 3 times about 5 s apart and holds when any try is blocked (extract: any failure; cancel: the wall; compile: the retryable caption error). If a network member is still counted, rerun the container audit once before filing it. Authoritative runs gather no proof.
    - Authoritative, against the committed baseline: `npm --prefix mcp-server run audit -- --mode authoritative --baseline <abs .agent/skills/mcp-tool-audit/resources/baseline-snapshot.json> --report <abs .agent/context/MCP/mcp-tool-audit-report.md> --out <abs dir> --agent <name>`
    - Recording or replacing the baseline adds `--update-baseline`, and `--no-baseline` the first time. Only an authoritative Windows run with clean cleanup and no regression may write it (BASELINE_UPDATE_RULE).
 4. **Read the exit code and the summary** (`<out>/mcp-audit-summary.json`, `mcp-audit-summary.v1`):

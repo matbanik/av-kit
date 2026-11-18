@@ -30,12 +30,16 @@ export const GET_QUERY_KEYS = [
 export const REGION_MAX_EDGE_MIN = 64;
 export const REGION_MAX_EDGE_MAX = 2576;
 
+// The marker sentences desc() shares with frames, sheet and CAPTURE_TOOL_DESCRIPTION (Session 92).
+const DESC_PREREQUISITE = "Prerequisite: local screen grab or inbox files; Capture never uploads YouTube.";
+const DESC_ERRORS = "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.";
+
 function desc(action: string, method: string, path: string): string {
   return [
     `Workflow: call avkit_capture ${action} to ${method} ${path} then poll list/get.`,
-    `Prerequisite: local screen grab or inbox files; Capture never uploads YouTube.`,
+    DESC_PREREQUISITE,
     `Returns: JSON from ${method} ${path} with path pointers, or image content for image.`,
-    `Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.`,
+    DESC_ERRORS,
   ].join(" ");
 }
 
@@ -55,31 +59,38 @@ const CROP_TEXT =
 // D-577 A: at most 20 frames. D-576 A: a raw stream with no duration takes only at.
 const FRAMES_MAX = 20;
 const timeValue = z.union([z.number().nonnegative(), z.string().min(1).max(32)]);
+// D-605 (MEU-135): sheet finds the moment between probe and frames.
+const FRAMES_WORKFLOW =
+  "Workflow: call avkit_convert probe for the duration, then avkit_capture sheet to find the moment, then frames to POST /captures/frames for exact stills, then image to view a frame.";
+const VIDEO_PREREQUISITE =
+  "Prerequisite: a local absolute video path and FFmpeg; the video is read in place, never changed or uploaded.";
 const FRAMES_TEXT = [
-  // D-605 (MEU-135): sheet finds the moment between probe and frames.
-  "Workflow: call avkit_convert probe for the duration, then avkit_capture sheet to find the moment, then frames to POST /captures/frames for exact stills, then image to view a frame.",
-  "Prerequisite: a local absolute video path and FFmpeg; the video is read in place, never changed or uploaded.",
+  FRAMES_WORKFLOW,
+  VIDEO_PREREQUISITE,
   "Returns: JSON with the video's duration and size and each new shot's id, path, time_ms and timecode; no image bytes.",
-  "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
+  DESC_ERRORS,
   'Give at (1-20 times: seconds, or "HH:MM:SS.mmm") or count (1-20 evenly spaced frames, with optional start and end).',
   "Each frame is the first one at or after its time; a time after the last video frame but before the end returns the last frame.",
   "Frames are new shots, so image, crop and annotate work on them.",
   "A raw stream with no duration takes only at, and is slow; remuxing it with avkit_convert add (fast copy) gives it a duration.",
-].join(" ");
+];
 
 // SHEET_MCP (MEU-135): sheet has its own four markers. D-601 A: grid at most 5.
+const SHEET_WORKFLOW =
+  "Workflow: call avkit_convert probe for the duration, then avkit_capture sheet to POST /captures/sheet for a grid over a span, then frames for exact stills, then image to view the sheet.";
+const SHEET_ZOOM = "To zoom, call again with a narrower start and end; no state is kept between calls.";
 const SHEET_TEXT = [
-  "Workflow: call avkit_convert probe for the duration, then avkit_capture sheet to POST /captures/sheet for a grid over a span, then frames for exact stills, then image to view the sheet.",
-  "Prerequisite: a local absolute video path and FFmpeg; the video is read in place, never changed or uploaded.",
+  SHEET_WORKFLOW,
+  VIDEO_PREREQUISITE,
   "Returns: JSON with the video's duration and size, the new shot's id, path and size, spacing_ms and each cell's number, time_ms and timecode; no image bytes.",
-  "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
+  DESC_ERRORS,
   "One labelled grid image of a span (default the whole video): grid 2-5 (default 3, so 9 cells), max_edge 64-2576 (default 1568).",
   "Cells sit at the midpoints of equal parts of the span; each is the first frame at or after its time, and a time after the last video frame but before the end shows the last frame.",
   "Cite times from cells, never from the image.",
-  "To zoom, call again with a narrower start and end; no state is kept between calls.",
+  SHEET_ZOOM,
   "Events between cells can be missed.",
   "Needs a video with a duration.",
-].join(" ");
+];
 
 // EXPORT_MCP (MEU-136, D-616): export writes a resized or re-encoded copy as a new shot.
 const EXPORT_TEXT =
@@ -88,25 +99,60 @@ const EXPORT_TEXT =
 // EXPORT_MCP (D-620): an unknown key's name never comes back in the refusal; it may be a path.
 export const EXPORT_UNKNOWN_KEY = "export accepts only action, id, format, max_edge and quality";
 
+// The image, annotate, flatten and revert sentences captureDescriptions and
+// CAPTURE_TOOL_DESCRIPTION both read (Session 92).
+const IMAGE_VARIANT_TEXT = "variant=original|annotated.";
+const ANNOTATE_NEWLINE_TEXT =
+  "A text mark's text may hold \\n to start a new line; \\r\\n and \\r are stored as \\n, and lines never wrap.";
+const FLATTEN_TEXT = "Bakes the saved marks into the image file (backup first when capture.flatten_backup is on; a JPEG/WebP shot gets a new PNG copy instead); the user must also accept in the IDE.";
+const REVERT_TEXT = "Overwrites the image file from its newest backup; the user must also accept in the IDE.";
+
 const ANNOTATE_EXAMPLE =
   'Example annotations: [{"type": "arrow", "from": [10, 10], "to": [80, 40], "color": "red", "stroke_width": 3}, {"type": "text", "x": 12, "y": 48, "text": "Note", "color": "white", "font_size": 16}].';
 
 export const captureDescriptions: Record<string, string> = {
   "avkit_capture.list": desc("list", "GET", "/captures"),
   "avkit_capture.get": desc("get", "GET", "/captures/{id}"),
-  "avkit_capture.image": `${desc("image", "GET", "/captures/{id}/image")} variant=original|annotated. ${REGION_VIEW_TEXT} ${ANNOTATE_EXAMPLE}`,
+  "avkit_capture.image": `${desc("image", "GET", "/captures/{id}/image")} ${IMAGE_VARIANT_TEXT} ${REGION_VIEW_TEXT} ${ANNOTATE_EXAMPLE}`,
   "avkit_capture.capture": `${desc("capture", "POST", "/captures")} ${IMPORT_TEXT}`,
   "avkit_capture.capture_interactive": desc("capture_interactive", "POST", "/captures/requests"),
   "avkit_capture.list_requests": desc("list_requests", "GET", "/captures/requests"),
-  "avkit_capture.annotate": `${desc("annotate", "POST", "/captures/{id}/annotate")} ${ANNOTATE_EXAMPLE} A text mark's text may hold \\n to start a new line; \\r\\n and \\r are stored as \\n, and lines never wrap.`,
+  "avkit_capture.annotate": `${desc("annotate", "POST", "/captures/{id}/annotate")} ${ANNOTATE_EXAMPLE} ${ANNOTATE_NEWLINE_TEXT}`,
   "avkit_capture.remove": desc("remove", "DELETE", "/captures/{id}"),
-  "avkit_capture.flatten": `${desc("flatten", "POST", "/captures/{id}/flatten")} Bakes the saved marks into the image file (backup first when capture.flatten_backup is on; a JPEG/WebP shot gets a new PNG copy instead); the user must also accept in the IDE.`,
-  "avkit_capture.revert": `${desc("revert", "POST", "/captures/{id}/revert")} Overwrites the image file from its newest backup; the user must also accept in the IDE.`,
+  "avkit_capture.flatten": `${desc("flatten", "POST", "/captures/{id}/flatten")} ${FLATTEN_TEXT}`,
+  "avkit_capture.revert": `${desc("revert", "POST", "/captures/{id}/revert")} ${REVERT_TEXT}`,
   "avkit_capture.crop": `${desc("crop", "POST", "/captures/{id}/crop")} ${CROP_TEXT}`,
-  "avkit_capture.frames": FRAMES_TEXT,
-  "avkit_capture.sheet": SHEET_TEXT,
+  "avkit_capture.frames": FRAMES_TEXT.join(" "),
+  "avkit_capture.sheet": SHEET_TEXT.join(" "),
   "avkit_capture.export": `${desc("export", "POST", "/captures/{id}/export")} ${EXPORT_TEXT}`,
 };
+
+// D-1134 A (Session 92): the avkit_capture top-level description. Line 1 is the lead, lines 2
+// to 5 carry the four markers once, and lines 6 to 14 hold one line per action that adds its
+// own text, in ACTION_INDEX order, made only of that action's own sentences (D-1157).
+const TOOL_LEAD =
+  "Call image to view a frame or sheet. To zoom, call sheet again with a narrower start and end; no state is kept between calls.";
+const TOOL_WORKFLOW = "Workflow: capture or list → get/image → annotate.";
+const TOOL_VIDEO_WORKFLOW =
+  "For a video: call avkit_convert probe for the duration, then avkit_capture sheet to find the moment, then frames for exact stills, then image to view a frame.";
+const TOOL_RETURNS = "Returns: JSON with path pointers, or image content for image.";
+
+export const CAPTURE_TOOL_DESCRIPTION = [
+  TOOL_LEAD,
+  `${TOOL_WORKFLOW} ${TOOL_VIDEO_WORKFLOW}`,
+  DESC_PREREQUISITE,
+  TOOL_RETURNS,
+  DESC_ERRORS,
+  `image: ${IMAGE_VARIANT_TEXT} ${REGION_VIEW_TEXT}`,
+  `capture: ${IMPORT_TEXT}`,
+  `annotate: ${ANNOTATE_EXAMPLE} ${ANNOTATE_NEWLINE_TEXT}`,
+  `flatten: ${FLATTEN_TEXT}`,
+  `revert: ${REVERT_TEXT}`,
+  `crop: ${CROP_TEXT}`,
+  `frames: ${FRAMES_TEXT.filter((s) => s !== FRAMES_WORKFLOW && s !== DESC_ERRORS).join(" ")}`,
+  `sheet: ${SHEET_TEXT.filter((s) => ![SHEET_WORKFLOW, VIDEO_PREREQUISITE, DESC_ERRORS, SHEET_ZOOM].includes(s)).join(" ")}`,
+  `export: ${EXPORT_TEXT}`,
+].join("\n");
 
 function withDesc<T extends z.ZodTypeAny>(action: string, schema: T): T {
   return schema.describe(captureDescriptions[`avkit_capture.${action}`]) as T;

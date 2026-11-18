@@ -20,13 +20,8 @@ const COMMITTED_BASELINE = path.resolve(
 // MEU-134 (Session 62): + avkit_capture.frames, after crop.
 // MEU-135 (Session 63): + avkit_capture.sheet, after frames.
 // MEU-136 (Session 64): + avkit_capture.export, after sheet.
-const BASELINE_PENDING = [
-  "avkit_convert.probe",
-  "avkit_capture.crop",
-  "avkit_capture.frames",
-  "avkit_capture.sheet",
-  "avkit_capture.export",
-];
+// Session 92 (mcp-audit-refresh): the authoritative update recorded all five; MCP-AUDIT-BASELINE-PENDING-CROP is resolved.
+const BASELINE_PENDING: string[] = [];
 
 /** The pending keys that aren't served, or that the baseline already holds. */
 function pendingProblems(pending: string[], baselineKeys: string[], served: string[]): string[] {
@@ -162,7 +157,7 @@ describe("MEU-130 crop audit", () => {
     expect(baselineCoverage(baseline.entries, ACTION_SET)).toEqual({ missing: BASELINE_PENDING, extra: [] });
     expect(pendingProblems(BASELINE_PENDING, baselineKeys, ACTION_SET)).toEqual([]);
     // Negative controls: the helper flags a pending key the baseline already holds, and one not served.
-    expect(pendingProblems(BASELINE_PENDING, [...baselineKeys, "avkit_capture.crop"], ACTION_SET)).toEqual([
+    expect(pendingProblems(["avkit_capture.crop"], baselineKeys, ACTION_SET)).toEqual([
       "avkit_capture.crop is already in the baseline",
     ]);
     expect(pendingProblems(["avkit_capture.ghost"], baselineKeys, ACTION_SET)).toEqual([
@@ -296,9 +291,10 @@ describe("MEU-135 sheet audit", () => {
     expect(coverage(planKeys(AUDIT_PLAN), ACTION_SET)).toEqual([]);
   });
 
-  it("AC-135.19 sheet parity and audit coverage: BASELINE_PENDING ends with the served sheet action", () => {
-    // MEU-136 (Session 64): avkit_capture.export follows sheet and is last.
-    expect(BASELINE_PENDING.slice(-2)).toEqual(["avkit_capture.sheet", "avkit_capture.export"]);
+  it("AC-135.19 sheet parity and audit coverage: the committed baseline holds the served sheet action", () => {
+    const keys = parseBaseline(JSON.parse(readFileSync(COMMITTED_BASELINE, "utf8"))).entries.map((e) => `${e.tool}.${e.action}`);
+    expect(BASELINE_PENDING).toEqual([]);
+    expect(keys).toContain("avkit_capture.sheet");
     expect(ACTION_SET).toContain("avkit_capture.sheet");
     expect(ACTION_SET.indexOf("avkit_capture.sheet")).toBe(ACTION_SET.indexOf("avkit_capture.frames") + 1);
   });
@@ -325,8 +321,10 @@ describe("MEU-136 export audit", () => {
     expect(coverage(planKeys(AUDIT_PLAN), ACTION_SET)).toEqual([]);
   });
 
-  it("AC-136.18 export parity and audit coverage: BASELINE_PENDING ends with the served export action", () => {
-    expect(BASELINE_PENDING[BASELINE_PENDING.length - 1]).toBe("avkit_capture.export");
+  it("AC-136.18 export parity and audit coverage: the committed baseline holds the served export action", () => {
+    const keys = parseBaseline(JSON.parse(readFileSync(COMMITTED_BASELINE, "utf8"))).entries.map((e) => `${e.tool}.${e.action}`);
+    expect(BASELINE_PENDING).toEqual([]);
+    expect(keys).toContain("avkit_capture.export");
     expect(ACTION_SET).toContain("avkit_capture.export");
     expect(ACTION_SET.indexOf("avkit_capture.export")).toBe(ACTION_SET.indexOf("avkit_capture.sheet") + 1);
   });

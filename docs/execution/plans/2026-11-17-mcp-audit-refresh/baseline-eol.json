@@ -1,0 +1,348 @@
+{
+  "mcp-server/scripts/audit/run.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 683,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/workflows/mcp-audit.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 40,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/src/toolsets/capture.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 375,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/src/toolsets/registry.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 646,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/build-plan/05-mcp-server.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 404,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/audit/coverage.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 333,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/skills/mcp-tool-audit/resources/baseline-snapshot.json": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 359,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/MCP/mcp-tool-audit-report.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 169,
+    "bom": false
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 5720,
+    "bom": false
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 42,
+    "bom": false
+  },
+  ".agent/context/grouping/2026-11-17-value-triage-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 196,
+    "bom": false
+  },
+  "mcp-server/scripts/audit/network-proof.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "mcp-server/tests/audit/network-proof.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "mcp-server/tests/capture-description.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  ".agent/context/handoffs/2026-11-17-mcp-audit-refresh-handoff.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "mcp-server/scripts/audit/census.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 50,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/scripts/audit/plan.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 1796,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/scripts/audit/classify.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 319,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/scripts/audit/backend.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 156,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/audit/run-cli.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 138,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/audit/runner-fake-backend.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 218,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/audit/census-signature.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 27,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/audit/classify.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 313,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/audit/transcript-oracle.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 203,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/audit/docs.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 94,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/audit/forbidden-imports.txt": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 4,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/m7-resource.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 109,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/capture.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 1891,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "mcp-server/tests/fixtures.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 356,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/skills/mcp-tool-audit/SKILL.md": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 99,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-run.md": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 101,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-harness.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 228,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-check.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 392,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-seed.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 264,
+    "bom": false
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 100,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 215,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 575,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 102,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1269,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 395,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 312,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 258,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 498,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/host-load.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 42,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/desc-check.mjs": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 167,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/eval-rerun.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 252,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/baseline-diff.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 276,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/caption_probe.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 23,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/adapter_probe.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 22,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/capture-description.expected.txt": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 13,
+    "bom": false
+  }
+}

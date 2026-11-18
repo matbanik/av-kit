@@ -32,8 +32,9 @@ import { AuditClient, buildLaunch, type Launch } from "./client.js";
 import { extractMetaActions, extractSchemaActions, GHOST_PATTERN } from "./discovery.js";
 import { resolveFixtures, type Fixtures } from "./fixtures.js";
 import { CleanupLedger, evaluateCleanup } from "./ledger.js";
+import { gatherNetworkProof, REAL_PROBES } from "./network-proof.js";
 import { RestObserver } from "./observer.js";
-import { AUDIT_PLAN, NETWORK_STEP_URLS, payload, type OutSub, type StepContext, type StepOutcome, type StepSpec } from "./plan.js";
+import { AUDIT_PLAN, payload, type OutSub, type StepContext, type StepOutcome, type StepSpec } from "./plan.js";
 import { buildSummary, writeOutputs } from "./report.js";
 import {
   AUDIT_TOOLS,
@@ -349,64 +350,6 @@ async function cleanUp(
   };
 }
 
-/** Environment proof for the network census members: can yt-dlp extract the fixture at all? */
-function youtubeExtractWorks(url: string): boolean {
-  const code = [
-    "import sys, yt_dlp",
-    "with yt_dlp.YoutubeDL({'quiet': True, 'skip_download': True}) as y:",
-    "    y.extract_info(sys.argv[1], download=False)",
-  ].join("\n");
-  const res = spawnSync("uv", ["run", "python", "-c", code, url], {
-    cwd: REPO_ROOT,
-    encoding: "utf8",
-    timeout: 180_000,
-  });
-  return res.status === 0;
-}
-
-/** True only when a direct yt-dlp test fetch (first bytes of the media) fails with `wall`. */
-function mediaFetchBlocked(url: string, wall: RegExp): boolean {
-  const code = [
-    "import sys, tempfile, yt_dlp",
-    "with tempfile.TemporaryDirectory() as d:",
-    "    opts = {'quiet': True, 'no_warnings': True, 'format': 'worst', 'test': True, 'outtmpl': d + '/%(id)s.%(ext)s'}",
-    "    try:",
-    "        with yt_dlp.YoutubeDL(opts) as y:",
-    "            y.download([sys.argv[1]])",
-    "    except Exception as exc:",
-    "        print(str(exc))",
-    "        sys.exit(3)",
-  ].join("\n");
-  const res = spawnSync("uv", ["run", "python", "-c", code, url], {
-    cwd: REPO_ROOT,
-    encoding: "utf8",
-    timeout: 180_000,
-  });
-  return res.status === 3 && wall.test(`${res.stdout ?? ""}${res.stderr ?? ""}`);
-}
-
-/** True only when the product's TranscriptAdapter is IP-blocked for the source's first video. */
-function captionFetchBlocked(sourceUrl: string): boolean {
-  const code = [
-    "import sys, yt_dlp",
-    "from avkit_core.domain.errors import TranscriptRetryableError",
-    "from avkit_infra.transcript.adapter import TranscriptAdapter",
-    "with yt_dlp.YoutubeDL({'quiet': True, 'skip_download': True, 'extract_flat': True}) as y:",
-    "    info = y.extract_info(sys.argv[1], download=False)",
-    "entries = info.get('entries') or [info]",
-    "try:",
-    "    TranscriptAdapter().get_transcript(entries[0]['id'], ['en'])",
-    "except TranscriptRetryableError:",
-    "    sys.exit(3)",
-  ].join("\n");
-  const res = spawnSync("uv", ["run", "python", "-c", code, sourceUrl], {
-    cwd: REPO_ROOT,
-    encoding: "utf8",
-    timeout: 180_000,
-  });
-  return res.status === 3;
-}
-
 export async function runAudit(options: AuditOptions, deps: AuditDeps = {}): Promise<{ summary: Summary; exitCode: number }> {
   const launcher = deps.launcher ?? spawnBackend;
   const steps = deps.steps ?? AUDIT_PLAN;
@@ -548,33 +491,8 @@ export async function runAudit(options: AuditOptions, deps: AuditDeps = {}): Pro
   const env: EnvFacts = { platform };
   // The network proof is only gathered when a network census member already failed with its
   // signature, so the default test suite never touches YouTube (05 §Testing).
-  const networkKeys = new Set(
-    steps.filter((s) => s.id in NETWORK_STEP_URLS).map((s) => `${s.tool}.${s.action}`),
-  );
-  const networkCandidates = ENV_BOUND_AUDIT.filter((m) => networkKeys.has(m.key));
-  if (options.mode === "container" && fixtures) {
-    const probe: Record<string, boolean> = {};
-    for (const member of networkCandidates) {
-      const failing = records.filter(
-        (r) => r.verdict === "fail" && `${r.tool}.${r.action}` === member.key && member.signature.test(r.error ?? ""),
-      );
-      if (failing.length === 0) continue;
-      const urls = [...new Set(failing.map((r) => NETWORK_STEP_URLS[r.id]).map((k) => (k ? fixtures?.[k] : undefined)))];
-      // Proof holds only if every failing step's own URL also fails a direct extract.
-      probe[member.key] = !urls.every((url) => url !== undefined && !youtubeExtractWorks(url));
-    }
-    const cancel = ENV_BOUND_AUDIT.find((m) => m.key === "avkit_download.cancel");
-    const cancelFailed = records.some(
-      (r) => r.verdict === "fail" && cancel && `${r.tool}.${r.action}` === cancel.key && cancel.signature.test(r.error ?? ""),
-    );
-    if (cancel && cancelFailed) probe[cancel.key] = !mediaFetchBlocked(fixtures.download_url_c, cancel.signature);
-    const compile = ENV_BOUND_AUDIT.find((m) => m.key === "avkit_transcript.compile");
-    const compileFailed = records.some(
-      (r) => r.verdict === "fail" && compile && `${r.tool}.${r.action}` === compile.key && compile.signature.test(r.error ?? ""),
-    );
-    if (compile && compileFailed) probe[compile.key] = !captionFetchBlocked(fixtures.transcript_source_url);
-    if (Object.keys(probe).length > 0) env.networkProbe = probe;
-  }
+  const probe = gatherNetworkProof({ mode: options.mode, fixtures, steps, records, probes: REAL_PROBES });
+  if (probe) env.networkProbe = probe;
   const tolerated = applyTolerance(records, options.mode, ENV_BOUND_AUDIT, env);
   const counted = countedFailures(tolerated, options.mode);
   const current = aggregate(tolerated);

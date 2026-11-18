@@ -102,6 +102,8 @@ User confirmation (MEU-67, Session 30 plan D-24): the actions that delete or ove
 
 Server instructions: one-line workflow per toolset. Every tool/action description includes at least three of: `Workflow:`, `Prerequisite:`, `Returns:`, `Errors:`. Agents must be able to run add → start → list without this markdown file.
 
+`avkit_capture`'s top-level description is built from its action text (D-1134 A): the lead says to call `image` to view a frame or sheet and to call `sheet` again over a narrower span to zoom, then the four markers once, then one line per action; it stays under 4,096 characters, `_meta.action_descriptions` is unchanged, and the other tools keep their one-line descriptions.
+
 ### Build (M4)
 
 Live IDE uses `mcp-server/dist/`. After `src/` edits: `npm run build`, or `npm run dev` (tsx) while developing.

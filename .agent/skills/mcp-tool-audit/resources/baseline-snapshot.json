@@ -1,8 +1,8 @@
 {
   "schema": "mcp-audit-baseline.v1",
-  "recorded_commit": "ddd11171ceb3ce307a6a735a5b77094b7d456d39",
+  "recorded_commit": "cba97fe9795b8a76532c5c6fa9da37ffad10e206",
   "mode": "authoritative",
-  "recorded_at": "2026-10-16T12:29:45.989Z",
+  "recorded_at": "2026-11-18T14:12:39.266Z",
   "entries": [
     {
       "tool": "avkit_settings",
@@ -256,6 +256,11 @@
     },
     {
       "tool": "avkit_convert",
+      "action": "probe",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_convert",
       "action": "add",
       "status": "pass"
     },
@@ -337,6 +342,26 @@
     {
       "tool": "avkit_capture",
       "action": "revert",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "crop",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "frames",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "sheet",
+      "status": "pass"
+    },
+    {
+      "tool": "avkit_capture",
+      "action": "export",
       "status": "pass"
     },
     {
