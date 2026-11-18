@@ -5,7 +5,7 @@ model: opus
 effort: high
 tools: Read, Grep, Glob, Bash
 ---
-<!-- AUTOGEN: model-registry d9f65813eaec94486a50460fc4fceee45515f77937de3a0efa15ba25cf5b8ca4 -->
+<!-- AUTOGEN: model-registry 300a3db3905d19e0c7ea81b6d83b1a6697d7e65da1e4e82138620f890e6eb257 -->
 <!-- Local class: avkit_peer_reviewer; project: P:/av-kit; overlay_sha256: 03938faceb0ab1f4110db24dda019fd6f55457ef2f7e8fe9da96640acc69d6bc. Do not run global sync: its filename convention resolves global classes. Re-resolve this explicit local class before regenerating only model and provenance. -->
 # av-kit-peer-reviewer
 
