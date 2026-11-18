@@ -5345,20 +5345,30 @@ issues:
     title: npm run dev opens no window when ELECTRON_RUN_AS_NODE is set in the IDE terminal
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-09-03'
     root_cause: VS Code and Cursor terminals set ELECTRON_RUN_AS_NODE=1, so electron-vite dev starts electron.exe as plain Node and no window opens, with no error. Moved from E2E-ELECTRON-LAUNCH-FLAG on 2026-11-15 (Session 78, D-939); the E2E launch helper drops the variable, the dev command does not.
     blast_radius: 'Developer machines only: npm --prefix ui run dev from an IDE terminal. Workaround: clear the variable first ($env:ELECTRON_RUN_AS_NODE=$null) or use a terminal opened outside the IDE.'
+    verification:
+      last_checked: '2026-11-17'
+      method: 'Session 90 task rows 6 and 7 (plan docs/execution/plans/2026-11-17-test-run-reliability): row 6 receipts C:/Temp/av-kit/test-run-reliability/trr-dev-base-set.txt and trr-dev-base-unset.txt (dev-proof.py on the unchanged dev script, with ELECTRON_RUN_AS_NODE=1 and without it), and row 7 receipts trr-dev-green-unit.txt (ui/tests/unit/dev-script.test.ts), trr-dev-set.txt and trr-dev-unset.txt (dev-proof.py on the new dev script).'
+      result: 'Row 6: with the variable set ''window: no (after 5 s; root exited)'', ''notice: no'', ''left: 0''; without it ''window: yes (after 29 s; window)'', ''left: 0'', ''PASS: window opened, notice as expected, nothing left''. Row 7: ''Tests  2 passed (2)''; with the variable set ''window: yes (after 16 s; window)'', ''notice: yes'', ''left: 0'', ''PASS: window opened, notice as expected, nothing left''; without it ''window: yes (after 16 s; window)'', ''notice: no'', ''left: 0'', ''PASS: window opened, notice as expected, nothing left''.'
+    resolution_path: 'Fixed in Session 90 on 2026-11-17 (plan docs/execution/plans/2026-11-17-test-run-reliability): `ui/scripts/electron-vite-dev.mjs` and `ui/package.json:16`; the window proof with the variable set and its control; preview registered as `UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT` (D-1119).'
     category: TECH-DEBT
     priority: P4
   - id: E2E-MAIN-PROCESS-REJECTIONS-UNWATCHED
     title: E2E does not watch unhandled promise rejections in the Electron main process
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-15'
     root_cause: Electron 42.11.18 keeps unhandled promise rejections in the main process as warnings, not in the Node default throw mode (plan-time probe, Session 78 D-935). A rejection prints UnhandledPromiseRejectionWarning to stderr and the app keeps running, so the uncaughtException watch that Session 78 added never sees it.
     blast_radius: 'A main-process promise rejection in an E2E run fails no test. Next step: the watch could also append unhandledRejection events to the same per-launch log that the helper reads at close. W9-7 in capture-inbox.test.ts already reads stderr for the one path that needs it.'
+    verification:
+      last_checked: '2026-11-17'
+      method: 'Session 90 task rows 4 and 5 (plan docs/execution/plans/2026-11-17-test-run-reliability): row 4 receipts C:/Temp/av-kit/test-run-reliability/trr-watch-red-unit.txt and trr-watch-red-e2e.txt, and row 5 receipts trr-watch-green-unit.txt, trr-watch-green-e2e.txt and trr-watch-green-e2e-full-1.txt to -3.txt (attempt 3, D-1122 and D-1123), with trr-watch-green-e2e-full-3-attempt3-rerun-ac8111.txt for the spec that failed in full run 3. Attempts 1 and 2 are kept under -attempt1 and -attempt2 names.'
+      result: 'Row 4: ''Tests  2 failed | 1 passed (3)'' (AC-6 and AC-7) and AC-9 ''1 failed'', ''2 passed (8.3s)''. Row 5: ''Tests  8 passed (8)''; ''8 passed (54.7s)'' with AC-9, AC-10 and AC-11 ok; full run 1 ''226 passed (10.5m)'', full run 2 ''226 passed (9.4m)'', full run 3 ''1 failed'', ''225 passed (17.3m)''. The failure in full run 3 is capture-inbox.test.ts:1948 AC-81.11 (''Test timeout of 60000ms exceeded.'' and ''Worker teardown timeout of 60000ms exceeded.'', the signature of the open CAPTURE-E2E-LAUNCH-TEARDOWN-HANG); it held no rejection record and passed alone (''1 passed (9.0s)''), so it was handled by the plan''s S5 rule (D-1123). 0 ''unhandled rejection:'' lines in each of the three full runs.'
+    resolution_path: 'Fixed in Session 90 on 2026-11-17 (plan docs/execution/plans/2026-11-17-test-run-reliability): `REJECTION_WATCH`, `REJECTION_WARNING_LINE` and `REJECTION_FAILS_CLOSE`; three full `test:e2e` runs passed with the watch on and no rejection record; a rejection found later is registered with its stack and never allowlisted.'
     category: TECH-DEBT
     priority: P4
   - id: CONVERT-CTRL-O-BEFORE-MOUNT-FLAKE
@@ -5429,10 +5439,15 @@ issues:
     title: 'Full Python suite: tests with 5-second worker waits fail when the host is loaded'
     severity: low
     component: infrastructure
-    status: open
+    status: resolved
     discovered: '2026-11-16'
     root_cause: 'Some integration tests wait a fixed 5 seconds for a background worker. In Session 81''s gate, two of them each failed once while other sessions loaded the host (full py-tests took 676 s and 911 s, against 457 s unloaded): tests/integration/test_youtube_adapter.py::test_ac_122_8_surrogate_title_survives_real_storage (service._thread.join(timeout=5), then expected Done and got Processing at :940), and tests/integration/test_tts_assets.py::test_ac_62_16_model_overshoot_is_clipped_not_failed (wait_idle gives up after 5 s at :177; expected Idle and got Downloading at :260). Each passed alone, and the full gate passed once the load fell to 10% (Session 81 D-1068, runs 3 to 5).'
     blast_radius: 'Session gates on a shared host: a full-suite run can fail on code the session never touched, and a rerun costs about 15 minutes. No product effect.'
+    verification:
+      last_checked: '2026-11-17'
+      method: 'Session 90 task rows 1 to 3 (plan docs/execution/plans/2026-11-17-test-run-reliability): row 1 receipt C:/Temp/av-kit/test-run-reliability/trr-py-red.txt (the two pinned tests with the slow_worker plugin on the base files), row 2 receipts trr-py-green.txt (the same two tests at WORKER_WAIT_S), trr-wait-check.txt (the twelve waits and four bound lines) and trr-green-two.txt (the two files whole, with TIME_GUARD), and row 3 receipt trr-load-run.txt (three runs of the three files that reach the waits at host load of 85 % or more).'
+      result: 'Row 1: ''2 failed in 12.03s'' (test_ac_122_8 and test_ac_62_16). Row 2: ''2 passed in 33.58s''; ''wait-check: PASS''; ''74 passed in 8.33s'', ''wall_s: 9.2''. Row 3: ''74 passed in 11.74s'', ''74 passed in 11.74s'', ''74 passed in 14.43s'', ''busy children left: 0'' and ''PASS: 3 of 3 runs passed at median load 100.0 (threshold 85.0)''.'
+    resolution_path: 'Fixed in Session 90 on 2026-11-17 (plan docs/execution/plans/2026-11-17-test-run-reliability): the two files read `WORKER_WAIT_S = 60.0` at their twelve 5-second waits, four assertion lines change only their bound, the slowed-worker Red and Green (rows 1 and 2), three passing runs of the three files that reach the waits at 85 % load (row 3) and `TIME_GUARD`; the other 125 waits of the pattern are left, none having failed (D-1115).'
     category: TECH-DEBT
     priority: P3
   - id: QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT
@@ -5484,3 +5499,11 @@ issues:
     discovered: '2026-11-17'
     root_cause: On a help route F1 dispatches the local help toggle at once (ui/src/renderer/src/components/layout/AppShell.tsx:203-215, ui/src/renderer/src/features/settings/settings-commands.ts:14), and the lazy Convert and Capture pages add the HelpCard listener only when they mount (ui/src/renderer/src/components/help/HelpCard.tsx:69), so an F1 pressed while their chunk loads is lost; all six routes are help routes (AppShell.tsx:206), so F1 always takes this immediate path. Found in the Session 89 plan (D-1109); not fixed there (M-8).
     blast_radius: 'Convert and Capture on their first visit: an F1 in the moment before the page appears does not toggle the help panel; a second F1 works.'
+  - id: UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT
+    title: npm run preview opens no window when ELECTRON_RUN_AS_NODE is set in the IDE terminal
+    severity: low
+    component: ui
+    status: open
+    discovered: '2026-11-17'
+    root_cause: electron-vite preview starts Electron through the same startElectron as dev (ui/node_modules/electron-vite/dist/chunks/lib-Dvh2Hokw.js:21, lib-q6ns0vZr.js:220-240), which spawns it with no env, so the ELECTRON_RUN_AS_NODE=1 that VS Code and Cursor terminals set makes electron.exe start as plain Node and no window opens, with no error. Session 90 fixed dev with ui/scripts/electron-vite-dev.mjs and left preview (D-1119).
+    blast_radius: 'Developer machines only: npm --prefix ui run preview from an IDE terminal. Workaround: clear the variable first, or use a terminal opened outside the IDE.'

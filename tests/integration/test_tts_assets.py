@@ -28,6 +28,9 @@ from tests.tts_g2p_fakes import PACK_BYTES, g2p_lang_codes, write_voice_packs
 TOKEN = "s27-token"
 AUTH = {"Authorization": f"Bearer {TOKEN}"}
 VOCAB = {"vocab": {"a": 1, "b": 2}, "n_token": 3}
+# Upper bound for a fake worker's signal. Each wait returns as soon as its signal arrives,
+# so the bound only matters on a loaded host (PY-SUITE-5S-WAIT-FLAKE-UNDER-LOAD, Session 90).
+WORKER_WAIT_S = 60.0
 
 
 # --- fixtures ---------------------------------------------------------------------------
@@ -59,7 +62,7 @@ class WheelServer:
     def fetch(self, url: str, dest: Path, on_progress: Callable[[float], None]) -> None:
         self.calls.append(url)
         if self.hold is not None:
-            self.hold.wait(timeout=5)
+            self.hold.wait(timeout=WORKER_WAIT_S)
         on_progress(0.5)
         dest.write_bytes(self.payload)
         on_progress(1.0)
@@ -174,7 +177,7 @@ class Stack:
         )
         self.client = TestClient(app)
 
-    def wait_idle(self, timeout: float = 5.0) -> dict[str, Any]:
+    def wait_idle(self, timeout: float = WORKER_WAIT_S) -> dict[str, Any]:
         deadline = time.monotonic() + timeout
         while True:
             body = self.client.get("/api/v1/models/download-runtime", headers=AUTH).json()
@@ -224,7 +227,7 @@ def stack(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, isolated_path: None) 
 def _generate(stack: Stack, voice: str = "am_eric", steps: list[str] | None = None) -> Any:
     # FIXTURE_REPAIRS (f) (Session 33, MEU-77): let the background worker finish.
     response = _post_generate(stack, voice, steps)
-    stack.services.tts.wait_idle(5.0)  # type: ignore[attr-defined]
+    stack.services.tts.wait_idle(WORKER_WAIT_S)  # type: ignore[attr-defined]
     return response
 
 
@@ -523,7 +526,7 @@ def test_ac_62_7_load_defers_spacy_while_variant_download_runs(stack: Stack) -> 
     original = stack.hub
 
     def slow(**kwargs: Any) -> str:
-        gate.wait(timeout=5)
+        gate.wait(timeout=WORKER_WAIT_S)
         return original(**kwargs)
 
     import avkit_infra.model_manager.manager as manager
@@ -709,7 +712,7 @@ def _generate_with(client: TestClient) -> Any:
         },
     )
     # FIXTURE_REPAIRS (f) (Session 33, MEU-77): let the background worker finish.
-    client.app.state.services.tts.wait_idle(5.0)  # type: ignore[attr-defined]
+    client.app.state.services.tts.wait_idle(WORKER_WAIT_S)  # type: ignore[attr-defined]
     return response
 
 
@@ -893,7 +896,7 @@ def _lifespan_app(stack: Stack) -> Any:
     return create_app(tokens=frozenset({TOKEN}), services=stack.services, engine_dispose=None)
 
 
-def _poll_tts(client: TestClient, job_id: str, wanted: str, timeout: float = 5.0) -> str:
+def _poll_tts(client: TestClient, job_id: str, wanted: str, timeout: float = WORKER_WAIT_S) -> str:
     deadline = time.monotonic() + timeout
     while True:
         status = client.get(f"/api/v1/tts/{job_id}", headers=AUTH).json()["status"]
@@ -935,7 +938,7 @@ class _GatedGenerate:
         del text, voice, speed
         on_progress(0.1)
         self.entered.set()
-        self.released.append(self.release.wait(5.0))
+        self.released.append(self.release.wait(WORKER_WAIT_S))
         on_progress(0.5)
         return np.zeros(8, dtype=np.float32)
 
@@ -952,7 +955,7 @@ def test_ac_77_10_generate_returns_generating_then_cancel_reaches_cancelled(
     assert created.status_code == 201, created.text
     assert created.json()["status"] == "Generating"
     job_id = created.json()["id"]
-    assert gated.entered.wait(5.0)
+    assert gated.entered.wait(WORKER_WAIT_S)
     polled = stack.client.get(f"/api/v1/tts/{job_id}", headers=AUTH)
     assert polled.status_code == 200
     assert polled.json()["status"] == "Generating"
@@ -960,7 +963,7 @@ def test_ac_77_10_generate_returns_generating_then_cancel_reaches_cancelled(
     assert cancelled.status_code == 204
     gated.release.set()
     assert _poll_tts(stack.client, job_id, "Cancelled") == "Cancelled"
-    assert tts.wait_idle(5.0) is True
+    assert tts.wait_idle(WORKER_WAIT_S) is True
     assert gated.released == [True]
 
 
@@ -974,14 +977,14 @@ def test_ac_77_10_second_post_during_run_conflicts_neg(
     monkeypatch.setattr(tts._tts, "generate", gated)
     first = _post_generate(stack)
     assert first.status_code == 201, first.text
-    assert gated.entered.wait(5.0)
+    assert gated.entered.wait(WORKER_WAIT_S)
     second = _post_generate(stack)
     assert second.status_code == 409
     error = second.json()["error"]
     assert set(error) == {"code", "message", "details"}
     assert error["message"] == "a TTS generation is already in progress"
     gated.release.set()
-    assert tts.wait_idle(5.0) is True
+    assert tts.wait_idle(WORKER_WAIT_S) is True
 
 
 # --- AC-98.6 sideload contract: list then load (Session 42, MEU-98) ----------------------------

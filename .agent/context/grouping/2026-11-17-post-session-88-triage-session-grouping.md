@@ -122,7 +122,7 @@ Mat asked for planning and execution to continue, so `/create-plan` runs once pe
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
 | 89 | `queue-convert-fixes` | MEU-156, MEU-157 | P3 | executed (Session 89) | `docs/execution/plans/2026-11-17-queue-convert-fixes/` |
-| 90 | `test-run-reliability` | — | P3 | proposed | — |
+| 90 | `test-run-reliability` | — | P3 | executed (Session 90) | `docs/execution/plans/2026-11-17-test-run-reliability/` |
 
 The Band column is the session's queue priority. Both MEUs are registered in band P2, as the earlier triage residuals were; a session band below P2 orders the queue and changes no register field.
 

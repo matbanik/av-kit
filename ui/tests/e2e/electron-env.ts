@@ -10,6 +10,12 @@ const here = dirname(fileURLToPath(import.meta.url))
 /** The stderr prefix that main-error-watch.cjs writes before each uncaught exception's stack. */
 export const MAIN_ERROR_MARKER = '[avkit-e2e-main-error]'
 
+/**
+ * The stderr prefix that main-error-watch.cjs writes before each unhandled rejection's
+ * `UnhandledPromiseRejectionWarning: <stack>` line.
+ */
+export const MAIN_REJECTION_MARKER = '[avkit-e2e-main-rejection]'
+
 /** The variable that tells main-error-watch.cjs where to write its error log. */
 export const MAIN_ERROR_LOG_ENV = 'AVKIT_E2E_MAIN_ERROR_LOG'
 
@@ -37,6 +43,8 @@ export function electronEnv(base: Env = process.env, extra: Env = {}): Record<st
 
 /** One line of the error log: a parsed record, or the raw line when it is not one. */
 export interface MainErrorRecord {
+  /** 'rejection' for an unhandled promise rejection; absent for an uncaught exception. */
+  kind?: 'rejection'
   name?: string
   message?: string
   stack?: string

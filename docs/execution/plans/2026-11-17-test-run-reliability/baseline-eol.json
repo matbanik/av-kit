@@ -1,0 +1,264 @@
+{
+  "tests/integration/test_tts_assets.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1099,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "tests/integration/test_youtube_adapter.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1159,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/e2e/main-error-watch.cjs": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 25,
+    "bom": false
+  },
+  "ui/tests/e2e/electron-env.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 82,
+    "bom": false
+  },
+  "ui/tests/e2e/electron-app.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 96,
+    "bom": false
+  },
+  "ui/package.json": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 71,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/docs/commands.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 224,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 5486,
+    "bom": false
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 46,
+    "bom": false
+  },
+  ".agent/context/grouping/2026-11-17-post-session-88-triage-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 151,
+    "bom": false
+  },
+  "ui/scripts/electron-vite-dev.mjs": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/rejection-watch.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/dev-script.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/main-rejection-watch.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/capture-inbox.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 3739,
+    "bom": false
+  },
+  "ui/tests/unit/e2e-harness.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 135,
+    "bom": false
+  },
+  "ui/tests/e2e/electron-harness.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 129,
+    "bom": false
+  },
+  "ui/scripts/playwright-with-outputfile.mjs": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 56,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/e2e/global-setup.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 58,
+    "bom": false
+  },
+  "tests/unit/test_services.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 3484,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "tests/conftest.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 36,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "tests/integration/test_tts_voice_packs.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 338,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-15-convert-settings-drafts/dev-app-procs.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 323,
+    "bom": false
+  },
+  "ui/src/main/index.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 645,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/electron.vite.config.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 67,
+    "bom": false
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 98,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 206,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 571,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 100,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1405,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 395,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 319,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 233,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 376,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/wait-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 247,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/slow_worker.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 96,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/load-run.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 498,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/dev-proof.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 640,
+    "bom": false
+  }
+}

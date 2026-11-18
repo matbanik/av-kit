@@ -103,6 +103,9 @@ SABR_LINE_PHRASES = (
 )
 SABR_PROBE_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 PROGRESS_MIN_INTERVAL_S = 0.25
+# Upper bound for a fake worker's signal. Each wait returns as soon as its signal arrives,
+# so the bound only matters on a loaded host (PY-SUITE-5S-WAIT-FLAKE-UNDER-LOAD, Session 90).
+WORKER_WAIT_S = 60.0
 
 
 def _dependency_name(spec: str) -> str:
@@ -936,7 +939,7 @@ def test_ac_122_8_surrogate_title_survives_real_storage(
         assert [item.title for item in service.list_items(job.id)] == ["Talk title", None]
         service.start_processing()
         if service._thread is not None:
-            service._thread.join(timeout=5)
+            service._thread.join(timeout=WORKER_WAIT_S)
         assert service.get_job(job.id).status is TranscriptStatus.Done
         raw = (job.output_dir / "raw" / "a.md").read_bytes().decode("utf-8")
         assert '"Talk title"' in raw

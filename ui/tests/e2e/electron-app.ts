@@ -1,6 +1,6 @@
 // The one Electron launch path for the E2E suite. Every spec launches through launchElectron, so
 // each run drops ELECTRON_RUN_AS_NODE, needs a scratch profile, and fails when the main process
-// throws an uncaught exception.
+// throws an uncaught exception or leaves a promise rejection unhandled.
 import type { ChildProcess } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -56,7 +56,8 @@ async function checkMainErrors(dir: string, log: string): Promise<void> {
   }
   if (records.length > 0) {
     throw new Error(
-      'main-process uncaught exception(s):\n' + records.map((r) => r.stack ?? r.raw).join('\n---\n'),
+      'main-process uncaught exception(s) or unhandled rejection(s):\n' +
+        records.map((r) => (r.kind === 'rejection' ? 'unhandled rejection: ' : '') + (r.stack ?? r.raw)).join('\n---\n'),
     )
   }
 }
@@ -64,7 +65,7 @@ async function checkMainErrors(dir: string, log: string): Promise<void> {
 /**
  * Launches the app (or `main`) with the main-error watch preloaded. The returned app's close()
  * closes it as before, waits briefly for the process to exit, then throws if the main process
- * recorded any uncaught exception.
+ * recorded any uncaught exception or unhandled promise rejection.
  */
 export async function launchElectron({ main, env = {} }: LaunchOptions = {}): Promise<ElectronApplication> {
   requireScratchAppData(env)

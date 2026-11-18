@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 144** — Active: 21 | Mitigated: 2 | Resolved: 119
+**Total: 145** — Active: 19 | Mitigated: 2 | Resolved: 122
 
 ## Active Issues
 
@@ -26,10 +26,8 @@
 | 🟢 | `MCP-AUDIT-BASELINE-PENDING-CROP` | The committed MCP audit baseline has no avkit_capture.crop entry | mcp-server | ⬜ open | 2026-11-08 |
 | 🟢 | `MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL` | Claude Code doesn't show a model the per-action text in _meta.action_de… | mcp-server | ⬜ open | 2026-11-10 |
 | 🟢 | `VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE` | Real-ffmpeg frame grabs near a clip's last frame occasionally fail (fra… | core | ⬜ open | 2026-11-15 |
-| 🟢 | `UI-DEV-ELECTRON-RUN-AS-NODE-SILENT` | npm run dev opens no window when ELECTRON_RUN_AS_NODE is set in the IDE… | ui | ⬜ open | 2026-09-03 |
-| 🟢 | `E2E-MAIN-PROCESS-REJECTIONS-UNWATCHED` | E2E does not watch unhandled promise rejections in the Electron main pr… | ui | ⬜ open | 2026-11-15 |
-| 🟢 | `PY-SUITE-5S-WAIT-FLAKE-UNDER-LOAD` | Full Python suite: tests with 5-second worker waits fail when the host… | infrastructure | ⬜ open | 2026-11-16 |
 | 🟢 | `HELP-F1-BEFORE-LAZY-MOUNT-LOST` | F1 on Convert or Capture can be lost while the page is still loading | ui | ⬜ open | 2026-11-17 |
+| 🟢 | `UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT` | npm run preview opens no window when ELECTRON_RUN_AS_NODE is set in the… | ui | ⬜ open | 2026-11-17 |
 
 ## Mitigated / Workaround
 
@@ -38,9 +36,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (119)
+## Resolved (122)
 
-119 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+122 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*
