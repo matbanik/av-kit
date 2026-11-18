@@ -160,7 +160,7 @@ Mat asked for triage and grouping only, so no plan is made yet. When Mat names a
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
 | 74 | `tts-fp16-guard-ship` | MEU-144 | P2 | executed (Session 74) | `docs/execution/plans/2026-11-17-tts-fp16-guard-ship/` |
-| 91 | `e2e-pointer-flakes` | — | P3 | proposed | — |
+| 91 | `e2e-pointer-flakes` | — | P3 | executed (Session 91) | `docs/execution/plans/2026-11-17-e2e-pointer-flakes/` |
 | 92 | `mcp-audit-refresh` | — | P3 | executed (Session 92) | `docs/execution/plans/2026-11-17-mcp-audit-refresh/` |
 | 93 | `video-tail-frame` | MEU-160 | P3 | executed (Session 93) | `docs/execution/plans/2026-11-17-video-tail-frame/` |
 | 94 | `ui-small-fixes` | MEU-158, MEU-159 | P4 | executed (Session 94) | `docs/execution/plans/2026-11-17-ui-small-fixes/` |

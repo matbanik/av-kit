@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { launchElectron } from './electron-app'
+import { dragOver, grabRow } from './pointer-settle'
 import {
   addThemeProbe,
   expectInsertedOn,
@@ -1194,23 +1195,10 @@ test('AC-49.29 dragging a conversion onto the third row lands the exact order', 
     dragTo() emits too few, the drag never activates, and the assertion below
     would then be measuring nothing.
   */
-  const handle = page
-    .locator('[data-testid="convert-queue-row"][data-job-id="job-1"]')
-    .getByTestId('queue-card-drag-handle')
-  const from = await handle.boundingBox()
-  if (from === null) {
-    throw new Error('no drag handle rendered for job-1')
-  }
-  const target = page.locator('[data-testid="convert-queue-row"][data-job-id="job-3"]')
-  const to = await target.boundingBox()
-  if (to === null) {
-    throw new Error('no card rendered for job-3')
-  }
-
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
-  await page.mouse.down()
-  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2 + 14, { steps: 5 })
-  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 10 })
+  // DRAG_DRIVER_SHARED (Session 91): the downloader's driver, which waits for the press to register
+  // and for the committed-over announcement before the release.
+  await grabRow(page, 'job-1', { rowTestId: 'convert-queue-row' })
+  await dragOver(page, 'job-3', { rowTestId: 'convert-queue-row' })
   await page.mouse.up()
 
   // MOVE_TO_INDEX_CONTRACT — the FINAL index against the PRE-MOVE array, so

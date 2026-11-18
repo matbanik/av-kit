@@ -1,9 +1,10 @@
-import { expect, test, type Locator, type Page } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 import { launchElectron } from './electron-app'
+import { dragOver, grabRow, windowSettled } from './pointer-settle'
 
 /**
  * MEU-46 rewrite (E2E_REWRITE_RULE).
@@ -1085,185 +1086,9 @@ function handleOf(page: Page, id: string) {
     .getByTestId('queue-card-drag-handle')
 }
 
-/**
- * `E2E_DRAG_SETTLE` (Session 26 amendment A12). On Windows the drag specs raced
- * layout about one run in five: the pointer was aimed from a box read while the
- * page or a sortable transform was still moving, so either the press missed the
- * handle (no drag, an empty live region) or the pointer settled one row short
- * (`closestCenter` resolved the neighbour). Aim only at layout that has held
- * still for two animation frames, measured with every ancestor transform
- * removed — the same transform-agnostic rect dnd-kit measures droppables with —
- * so a row mid-shift is aimed at where it sits, not where it is sliding.
- */
-async function settledCenter(page: Page, locator: Locator): Promise<{ x: number; y: number }> {
-  let previous = ''
-  for (let frame = 0; frame < 60; frame += 1) {
-    const center = await locator.evaluate((element) => {
-      const rect = element.getBoundingClientRect()
-      let dx = 0
-      let dy = 0
-      for (let node: Element | null = element; node !== null; node = node.parentElement) {
-        const transform = getComputedStyle(node).transform
-        if (transform !== 'none') {
-          const matrix = new DOMMatrixReadOnly(transform)
-          dx += matrix.m41
-          dy += matrix.m42
-        }
-      }
-      return { x: rect.left - dx + rect.width / 2, y: rect.top - dy + rect.height / 2 }
-    })
-    const key = `${center.x},${center.y}`
-    if (key === previous) {
-      return center
-    }
-    previous = key
-    await page.evaluate(
-      () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
-    )
-  }
-  throw new Error('layout never settled for the drag target')
-}
-
-/** Wait until no CSS transition is running on a queue row or its sortable wrapper. */
-async function rowTransitionsIdle(page: Page): Promise<void> {
-  await page.waitForFunction(() =>
-    document.getAnimations().every((animation) => {
-      const target = (animation.effect as KeyframeEffect | null)?.target
-      const onRow =
-        target instanceof Element &&
-        (target.closest('[data-testid="queue-card"]') !== null ||
-          target.querySelector('[data-testid="queue-card"]') !== null)
-      return !onRow || animation.playState !== 'running'
-    }),
-  )
-}
-
-/**
- * `E2E_WINDOW_SETTLE` (Session 26 amendment A13). dnd-kit cancels an active
- * pointer or keyboard drag on any window `resize` or `visibilitychange`, and the
- * app window resizes once just after launch (probed: 1280x800 -> 1280x773 as
- * the window is shown). On a loaded Windows host that resize can land after the
- * pickup and cancel the drag ("… was cancelled"). Start a drag only once the
- * window is visible and has not resized for 500ms.
- */
-async function windowSettled(page: Page): Promise<void> {
-  await page.waitForFunction(() => document.visibilityState === 'visible')
-  // `E2E_WINDOW_SHOWN` (Session 27 A-4). The renderer reports `visible` even before the main
-  // process shows the window, and a not-yet-shown window is frame-throttled. Showing it resizes
-  // it, which cancels a held drag. Wait for full-rate frames (a shown window) first, so the
-  // reveal's resize falls before the quiet period below and not inside the drag.
-  const shown = await page.evaluate(
-    () =>
-      new Promise<boolean>((resolve) => {
-        const deadline = performance.now() + 15_000
-        let last = performance.now()
-        let fast = 0
-        const tick = (now: number): void => {
-          fast = now - last < 50 ? fast + 1 : 0
-          last = now
-          if (fast >= 6) {
-            resolve(true)
-          } else if (now > deadline) {
-            resolve(false)
-          } else {
-            requestAnimationFrame(tick)
-          }
-        }
-        requestAnimationFrame(tick)
-      }),
-  )
-  if (!shown) {
-    throw new Error('E2E_WINDOW_SHOWN: the window never reached full-rate frames within 15 s')
-  }
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        const quiet = 500
-        let timer = window.setTimeout(done, quiet)
-        function onResize(): void {
-          window.clearTimeout(timer)
-          timer = window.setTimeout(done, quiet)
-        }
-        function done(): void {
-          window.removeEventListener('resize', onResize)
-          resolve()
-        }
-        window.addEventListener('resize', onResize)
-      }),
-  )
-}
-
-/**
- * Press the pointer on a row's handle and cross dnd-kit's activation distance.
- *
- * `E2E_DRAG_DRIVER`: `locator.dragTo()` is NOT used. dnd-kit is pointer-events
- * only and its PointerSensor needs intermediate `pointermove` events to cross
- * `DND_SENSOR_CONFIG`'s 5px `activationConstraint`; `dragTo()` emits too few,
- * so the drag never activates and the test silently asserts nothing.
- */
-async function grabRow(page: Page, id: string): Promise<void> {
-  const handle = handleOf(page, id)
-  await handle.waitFor()
-  await windowSettled(page)
-  const { x, y } = await settledCenter(page, handle)
-  await page.mouse.move(x, y)
-  await page.mouse.down()
-  // The activation nudge: more than 5px, in steps, BEFORE the pointer reaches
-  // the target row.
-  await page.mouse.move(x, y + 14, { steps: 5 })
-  // dnd-kit marks the active handle `aria-pressed="true"` once the sensor has
-  // activated; only then is there a drag for the pointer to carry.
-  await page
-    .locator(
-      `[data-testid="queue-card"][data-job-id="${id}"] [data-testid="queue-card-drag-handle"][aria-pressed="true"]`,
-    )
-    .waitFor()
-}
-
-/** Move the held pointer onto the vertical centre of another row. */
-async function dragOver(page: Page, id: string): Promise<void> {
-  const target = page.locator(`[data-testid="queue-card"][data-job-id="${id}"]`)
-  await target.waitFor()
-  // Sortable rows move by transform only, so DOM order is still the pre-drag order.
-  const order = await page
-    .locator('[data-testid="queue-card"]')
-    .evaluateAll((cards) => cards.map((card) => card.getAttribute('data-job-id')))
-  const position = order.indexOf(id) + 1
-  const aim = await settledCenter(page, target)
-  await page.mouse.move(aim.x, aim.y, { steps: 10 })
-  // Let the sortable shift finish, then re-aim if the layout moved under the
-  // pointer while it travelled (a transform alone never changes the aim).
-  await rowTransitionsIdle(page)
-  const settled = await settledCenter(page, target)
-  if (settled.x !== aim.x || settled.y !== aim.y) {
-    await page.mouse.move(settled.x, settled.y, { steps: 2 })
-    await rowTransitionsIdle(page)
-  }
-  // `E2E_DRAG_COMMITTED_OVER` (Session 26 amendment A16). dnd-kit commits the
-  // row under the pointer two React renders after the last pointermove, and the
-  // drop reads whatever is committed at pointerup; a release that beats those
-  // renders (a loaded Windows host) drops on the previous row. The over
-  // announcement is emitted only once `over` is committed, so wait for it.
-  try {
-    await liveRegion(page)
-      .filter({ hasText: `moved to position ${position} of ${order.length}.` })
-      .waitFor({ state: 'attached' })
-  } catch (error) {
-    // Session 27 A-4: a timeout here used to leave no trace of the drag state (Playwright keeps
-    // no page snapshot for Electron windows), so the failure carries it.
-    const state = await page
-      .evaluate(() => ({
-        liveRegion: Array.from(document.querySelectorAll('[id^="DndLiveRegion"]')).map((node) => node.textContent),
-        dragState: document.querySelector('[data-testid="queue-list"]')?.getAttribute('data-drag-state'),
-        window: { width: window.innerWidth, height: window.innerHeight },
-        focused: document.hasFocus(),
-        visibility: document.visibilityState,
-      }))
-      .catch((probe: unknown) => ({ probeFailed: String(probe) }))
-    const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`${message}\nA-4 drag diagnostics: ${JSON.stringify(state)}`)
-  }
-}
+// `E2E_DRAG_SETTLE`, `E2E_WINDOW_SETTLE`, `E2E_DRAG_DRIVER` and `E2E_DRAG_COMMITTED_OVER` live in
+// pointer-settle.ts (Session 91, POINTER_HELPERS_SHARED): settledCenter, rowTransitionsIdle,
+// windowSettled, grabRow and dragOver, shared with the convert queue's drag.
 
 /** The dnd-kit live region. `DND_LIVE_REGION_LOCATOR` — never role=status. */
 function liveRegion(page: Page) {

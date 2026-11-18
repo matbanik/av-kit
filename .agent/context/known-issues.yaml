@@ -972,14 +972,15 @@ issues:
     title: Download-queue drag-over (A16 committed-over wait) occasionally misses on Windows
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-10-01'
     root_cause: 'Two observed misses: AC-49.26 in WINDOWS_GATE attempt 7 (A-4 diagnostics show human input on the window, A-7), and AC-49.28 once in the attempt-3 diagnostic run (about 1 in 40, before the A-4 hardening; unexplained). 30/30 traced passes after A-4.'
     blast_radius: ui/tests/e2e/download-queue.test.ts drag specs on a non-quiet Windows host, and since Session 39 also convert-queue.test.ts AC-49.29 and transcript-queue.test.ts W2-5. Each miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
     verification:
-      last_checked: '2026-11-17'
-      method: Session 90 full Electron runs (handoff failing-spec table)
-      result: 4 of 7 full runs failed; the specs named in notes
+      last_checked: '2026-11-18'
+      method: 'Session 91 task rows 3 and 8 (plan docs/execution/plans/2026-11-17-e2e-pointer-flakes). Row 3 rerun under D-1153, on the unfixed specs with the shield off at 18 busy children and one churn child: receipts epf-repro-b.txt (the watched tests ten times), epf-base-full-b.txt (one full run) and epf-burn-level-b.txt. Row 8, on the fixed tree with the shield on at the same level: epf-accept.txt (three full runs, invocation 20261118T154356-54848-b402d6) and epf-watch10.txt (the watched tests ten times, invocation 20261118T161319-47396-63fc86), then epf-accept-assert.txt and epf-accept-check.txt. The first row 3 run (epf-burn-level.txt) is kept as skewed evidence: F2 was held by another program then, so all its watched failures were AC-81.11 (D-1152).'
+      result: 'epf-burn-level-b.txt: ''children: 18'', ''watched failures: 4'', ''hang failures: 0'', ''escalate: no'', ''accept-runs: 3''. epf-repro-b.txt run 1: ''ok lines 106; failures 4; rejection lines 0'' (download-queue.test.ts:1319 AC-49.25, download-queue.test.ts:1348 AC-49.26, capture-inbox.test.ts:1601 AC-67.20 twice), median load 98.0. epf-base-full-b.txt run 1: ''ok lines 230; failures 2'' (convert-queue-labels.test.ts:519, cleared by its solo rerun, and e2e-diag.test.ts:191 AC-9, which fails by design without the shield), median load 98.3. epf-accept.txt: runs 1 to 3 each ''ok lines 232; failures 0; rejection lines 0''; ''PASS: 3 of 3 runs clean at median load 95.4 (threshold 60.0); uncovered failures cleared by a solo rerun: 0; hangs excused by a registered signature: 0''. epf-watch10.txt: ''run 1: exit 0 in 274 s; ok lines 110; failures 0; rejection lines 0''; ''PASS: 1 of 1 runs clean at median load 93.9 (threshold 60.0)''. No excused: line.'
+    resolution_path: 'Fixed in Session 91 on 2026-11-18 (plan docs/execution/plans/2026-11-17-e2e-pointer-flakes): the real pointer can no longer reach a test window: every launch of the built app sets setIgnoreMouseEvents(true) on each window (POINTER_SHIELD_DEFAULT in ui/tests/e2e/electron-app.ts and the main-process diagnostics in ui/tests/e2e/e2e-diag.ts, D-1149), and Playwright input still arrives (e2e-diag.test.ts AC-9). The pointer helpers live once in ui/tests/e2e/pointer-settle.ts (D-1147) and settle on two equal reads one animation frame apart, then hit-test the target (D-1148). No assertion line changed (assert-check.py, D-1151); no retry or timeout was added. download-queue.test.ts and convert-queue.test.ts use the shared grabRow and dragOver (convert-queue with rowTestId convert-queue-row), so the convert drive also waits for the press to register and for the committed-over announcement before the release (DRAG_DRIVER_SHARED). No MEU.'
     category: TECH-DEBT
     priority: P3
     notes: |-
@@ -1011,14 +1012,15 @@ issues:
     title: Capture viewport AC-66.14 middle-button pan origin occasionally off under full Electron suite load
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-10-17'
     root_cause: 'hypothesis: capture-inbox.test.ts AC-66.14 reads the 100% zoom origin (readZoom, two animation frames) and then pans 40 px with the middle button; under load the origin read before the pan may not have settled, so ox after the pan was 92 px off the expected centred.ox - 40 (-920.5 vs -828.5). Not reproduced in isolation; unexplained.'
     blast_radius: ui/tests/e2e/capture-inbox.test.ts AC-66.14 in the full Electron run. A miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
     verification:
-      last_checked: '2026-11-17'
-      method: Session 90 full Electron runs (handoff failing-spec table)
-      result: 4 of 7 full runs failed; the specs named in notes
+      last_checked: '2026-11-18'
+      method: 'Session 91 task rows 3 and 8 (plan docs/execution/plans/2026-11-17-e2e-pointer-flakes). Row 3 rerun under D-1153, on the unfixed specs with the shield off at 18 busy children and one churn child: receipts epf-repro-b.txt (the watched tests ten times), epf-base-full-b.txt (one full run) and epf-burn-level-b.txt. Row 8, on the fixed tree with the shield on at the same level: epf-accept.txt (three full runs, invocation 20261118T154356-54848-b402d6) and epf-watch10.txt (the watched tests ten times, invocation 20261118T161319-47396-63fc86), then epf-accept-assert.txt and epf-accept-check.txt. The first row 3 run (epf-burn-level.txt) is kept as skewed evidence: F2 was held by another program then, so all its watched failures were AC-81.11 (D-1152).'
+      result: 'epf-burn-level-b.txt: ''children: 18'', ''watched failures: 4'', ''hang failures: 0'', ''escalate: no'', ''accept-runs: 3''. epf-repro-b.txt run 1: ''ok lines 106; failures 4; rejection lines 0'' (download-queue.test.ts:1319 AC-49.25, download-queue.test.ts:1348 AC-49.26, capture-inbox.test.ts:1601 AC-67.20 twice), median load 98.0. epf-base-full-b.txt run 1: ''ok lines 230; failures 2'' (convert-queue-labels.test.ts:519, cleared by its solo rerun, and e2e-diag.test.ts:191 AC-9, which fails by design without the shield), median load 98.3. epf-accept.txt: runs 1 to 3 each ''ok lines 232; failures 0; rejection lines 0''; ''PASS: 3 of 3 runs clean at median load 95.4 (threshold 60.0); uncovered failures cleared by a solo rerun: 0; hangs excused by a registered signature: 0''. epf-watch10.txt: ''run 1: exit 0 in 274 s; ok lines 110; failures 0; rejection lines 0''; ''PASS: 1 of 1 runs clean at median load 93.9 (threshold 60.0)''. No excused: line.'
+    resolution_path: 'Fixed in Session 91 on 2026-11-18 (plan docs/execution/plans/2026-11-17-e2e-pointer-flakes): the real pointer can no longer reach a test window: every launch of the built app sets setIgnoreMouseEvents(true) on each window (POINTER_SHIELD_DEFAULT in ui/tests/e2e/electron-app.ts and the main-process diagnostics in ui/tests/e2e/e2e-diag.ts, D-1149), and Playwright input still arrives (e2e-diag.test.ts AC-9). The pointer helpers live once in ui/tests/e2e/pointer-settle.ts (D-1147) and settle on two equal reads one animation frame apart, then hit-test the target (D-1148). No assertion line changed (assert-check.py, D-1151); no retry or timeout was added. capture-inbox.test.ts imports the shared windowSettled in place of its copy, reads the zoom origin through settledZoom, and the AC-81.14 grab waits for GRAB_COMMITTED before it moves. No MEU.'
     category: TECH-DEBT
     priority: P3
     notes: |-
@@ -2925,6 +2927,8 @@ issues:
       SEEN 2026-10-25 (Session 40 gui-theme-path-fields on main; no ui/src/main or capture file changed). In run 4 a zorivest session started its MCP servers at 09:52-09:53, while test 33 was running. Same hang shape as DOWNLOAD-QUEUE-DRAG-OVER-MISS W2-5 (Session 35 A-2) and 2026-09-28-p11-transcript-tts walkthrough line 151. Next step on a repeat: log host process starts during the Electron stage and time launch and close in the capture-inbox fixture.
 
       SEEN AGAIN 2026-11-17. Session 90 test-run-reliability (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, failing-spec table): 4 of 7 full Electron runs failed on main. capture-inbox.test.ts:1948 (AC-81.11) hung at launch or teardown. Reclassified MONITORING P4 to TECH-DEBT P3 (D-1126): it fails session gates.
+
+      NOT REPRODUCED 2026-11-18. Session 91 e2e-pointer-flakes (plan docs/execution/plans/2026-11-17-e2e-pointer-flakes): no test-timeout hang in any row 3 to 8 receipt, including the row 3 rerun (D-1153) and the row 8 acceptance (epf-accept.txt, three full runs, and epf-watch10.txt, all clean at 18 busy children); epf-hang-verdict.txt ends 'outcome: not-reproduced' and epf-hang-signatures.json is []. The phase instrumentation stays (ui/tests/e2e/e2e-diag.ts writes each launch's launch, evaluate and close phases under its run id, and the plan's flake-run.py logs host process starts during the runs). Next step on a repeat: read that run's phases.jsonl for the last phase of each launch and classify the hang by it.
     enrichment:
       questions_asked: []
       answers: []

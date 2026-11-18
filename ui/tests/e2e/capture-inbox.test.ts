@@ -6,6 +6,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { launchElectron } from './electron-app'
+import { pointerOn, settle, settledBox, windowSettled } from './pointer-settle'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
@@ -779,53 +780,8 @@ test('AC-57.10 Save overlay mount rule, inline confirm strips and shot info vers
 
 // ── MEU-65 Capture toolbar icons and Options (Session 29 plan AC-65.4, AC-65.5) ───────────────────
 
-/**
- * WINDOW_SETTLED (Session 29 plan; copied from `download-queue.test.ts` `windowSettled`). The app
- * window resizes once just after launch (1280x800 -> 1280x773 as it is shown), so a geometry read
- * waits for a shown window at full frame rate and then 500 ms without a resize.
- */
-async function windowSettled(page: Page): Promise<void> {
-  await page.waitForFunction(() => document.visibilityState === 'visible')
-  const shown = await page.evaluate(
-    () =>
-      new Promise<boolean>((resolve) => {
-        const deadline = performance.now() + 15_000
-        let last = performance.now()
-        let fast = 0
-        const tick = (now: number): void => {
-          fast = now - last < 50 ? fast + 1 : 0
-          last = now
-          if (fast >= 6) {
-            resolve(true)
-          } else if (now > deadline) {
-            resolve(false)
-          } else {
-            requestAnimationFrame(tick)
-          }
-        }
-        requestAnimationFrame(tick)
-      }),
-  )
-  if (!shown) {
-    throw new Error('E2E_WINDOW_SHOWN: the window never reached full-rate frames within 15 s')
-  }
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) => {
-        const quiet = 500
-        let timer = window.setTimeout(done, quiet)
-        function onResize(): void {
-          window.clearTimeout(timer)
-          timer = window.setTimeout(done, quiet)
-        }
-        function done(): void {
-          window.removeEventListener('resize', onResize)
-          resolve()
-        }
-        window.addEventListener('resize', onResize)
-      }),
-  )
-}
+// WINDOW_SETTLED (Session 29 plan): the shared windowSettled in pointer-settle.ts (Session 91,
+// POINTER_HELPERS_SHARED) waits for a shown window at full frame rate, then 500 ms without a resize.
 
 async function twoFrames(page: Page): Promise<void> {
   await page.evaluate(
@@ -962,6 +918,11 @@ async function readZoom(page: Page): Promise<ZoomRead> {
       scrollTops: scrollers.map((node) => node.scrollTop),
     }
   })
+}
+
+/** SETTLED_ZOOM (Session 91): a zoom read once two reads in a row agree; readZoom waits two frames. */
+function settledZoom(page: Page): Promise<ZoomRead> {
+  return settle(() => readZoom(page), async () => undefined)
 }
 
 function nextUp(scale: number): number {
@@ -1166,12 +1127,12 @@ test('AC-66.14 an arrow drawn at 100% stores the zoomed image pixels; a Fit arro
     await page.getByTestId('capture-zoom-in').click()
   }
   await expect(level).toHaveText('100%')
-  const centred = await readZoom(page)
+  const centred = await settledZoom(page)
   await page.mouse.move(centred.left + centred.width / 2, centred.top + centred.height / 2)
   await page.mouse.down({ button: 'middle' })
   await page.mouse.move(centred.left + centred.width / 2 - 40, centred.top + centred.height / 2 - 30)
   await page.mouse.up({ button: 'middle' })
-  const view = await readZoom(page)
+  const view = await settledZoom(page)
   expect(view.ox).toBeCloseTo(centred.ox - 40, 3)
   const toClient = (x: number, y: number) => ({ x: view.left + view.ox + x * view.s, y: view.top + view.oy + y * view.s })
   const from = toClient(1200, 800)
@@ -1206,7 +1167,7 @@ test('AC-66.14 an arrow drawn at 100% stores the zoomed image pixels; a Fit arro
   await expect(mark).toHaveAttribute('y2', '830')
   await page.getByTestId('capture-zoom-fit').click()
   await expect(level).toHaveText('Fit')
-  const fitView = await readZoom(page)
+  const fitView = await settledZoom(page)
   const fitClient = (x: number, y: number) => ({
     x: fitView.left + fitView.ox + x * fitView.s,
     y: fitView.top + fitView.oy + y * fitView.s,
@@ -1610,8 +1571,9 @@ test('AC-67.20 A-6 a disabled Apply shows its reason where the pointer lands [TA
   await removeOnlyMark(page)
   const applyButton = page.getByTestId('capture-apply-image')
   await expect(applyButton).toBeDisabled()
-  const box = await applyButton.boundingBox()
+  const box = await settledBox(page, applyButton)
   expect(box).toBeTruthy()
+  await pointerOn(page, applyButton)
   await page.mouse.move((box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2)
   // MEU-80: the wrapper under the pointer shows the reason through the rendered hint, not a native title.
   const hint = page.getByTestId('capture-apply-image-hint')
@@ -1675,6 +1637,7 @@ test('AC-80.10: a real hover shows the enabled Arrow hint and the disabled Undo 
   const arrowHint = page.getByTestId('capture-tool-arrow-hint')
   await expect(arrowHint).toHaveCount(0)
   await expect(page.getByTestId('capture-tool-arrow-tip')).toHaveCount(1)
+  await pointerOn(page, page.getByTestId('capture-tool-arrow'))
   await page.getByTestId('capture-tool-arrow').hover()
   await page.waitForTimeout(HINT_DELAY_MS)
   await expect(arrowHint).toBeVisible()
@@ -1690,6 +1653,7 @@ test('AC-80.10: a real hover shows the enabled Arrow hint and the disabled Undo 
   const undoHint = page.getByTestId('capture-undo-hint')
   await expect(undo).toBeDisabled()
   await expect(undoTip).toHaveCount(1)
+  await pointerOn(page, undo)
   const box = await undo.boundingBox()
   await page.mouse.move((box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2)
   await page.waitForTimeout(HINT_DELAY_MS)
@@ -2007,12 +1971,12 @@ test('AC-81.14: at 100% after a pan the arrow handles track the arrow, a grab mo
     await page.getByTestId('capture-zoom-in').click()
   }
   await expect(level).toHaveText('100%')
-  const centred = await readZoom(page)
+  const centred = await settledZoom(page)
   await page.mouse.move(centred.left + centred.width / 2, centred.top + centred.height / 2)
   await page.mouse.down({ button: 'middle' })
   await page.mouse.move(centred.left + centred.width / 2 - 40, centred.top + centred.height / 2 - 30)
   await page.mouse.up({ button: 'middle' })
-  const view = await readZoom(page)
+  const view = await settledZoom(page)
   expect(view.ox).toBeCloseTo(centred.ox - 40, 3)
   const toClient = (x: number, y: number) => ({ x: view.left + view.ox + x * view.s, y: view.top + view.oy + y * view.s })
   const start = toClient(1200, 800)
@@ -2035,7 +1999,7 @@ test('AC-81.14: at 100% after a pan the arrow handles track the arrow, a grab mo
   // The surface can move when the selection mounts chrome above it, so each check re-reads the view.
   // The width is checked at rest only: the focus ring's wider stroke widens a focused handle's box.
   const expectOnArrowEnd = async (handle: typeof toHandle, label: string, atRest = true): Promise<void> => {
-    const now = await readZoom(page)
+    const now = await settledZoom(page)
     const { cx, cy } = await circle(handle)
     const box = await handle.boundingBox()
     expect(box, `${label} box`).toBeTruthy()
@@ -2058,13 +2022,18 @@ test('AC-81.14: at 100% after a pan the arrow handles track the arrow, a grab mo
     y2: Number(await line.getAttribute('y2')),
   })
   const before = await ends()
-  const grabView = await readZoom(page)
+  const grabView = await settledZoom(page)
   const headBox = await toHandle.boundingBox()
   const head = { x: (headBox?.x ?? 0) + (headBox?.width ?? 0) / 2, y: (headBox?.y ?? 0) + (headBox?.height ?? 0) / 2 }
   await page.mouse.move(head.x, head.y)
   await page.mouse.down()
   await page.mouse.move(head.x + 20, head.y)
   await page.mouse.up()
+  // GRAB_COMMITTED (Session 91): read the ends once the grab has moved the head.
+  await page.waitForFunction((x2) => {
+    const arrowLine = document.querySelector('[data-annotation-type="arrow"] line')
+    return arrowLine !== null && Number(arrowLine.getAttribute('x2')) !== x2
+  }, before.x2)
   const grabbed = await ends()
   expect(Math.abs(grabbed.x2 - before.x2 - 20 / grabView.s), 'x2 grows by 20 / s').toBeLessThanOrEqual(1)
   expect(grabbed.x1).toBe(before.x1)
@@ -2551,7 +2520,7 @@ test('AC-86.3 each Named option renders its own colour with the contrast-picked 
 /** A real-mouse drag between two image pixels of the 8 x 8 sample shot (the `drawArrow` mapping). */
 async function dragImage(page: Page, from: [number, number], to: [number, number]): Promise<void> {
   const surface = page.getByTestId('capture-draw-surface')
-  const box = await surface.boundingBox()
+  const box = await settledBox(page, surface)
   expect(box).toBeTruthy()
   const scale = Math.min((box?.width ?? 1) / 8, (box?.height ?? 1) / 8)
   const originX = (box?.x ?? 0) + ((box?.width ?? 0) - 8 * scale) / 2
