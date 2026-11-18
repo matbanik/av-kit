@@ -35,6 +35,7 @@ from avkit_core.domain.tts import MODEL_REASONS, ModelStatus, ModelVariant, Voic
 from avkit_infra.tts.assets import ONNX_VOCAB_FILE, ONNX_VOCAB_REPO
 from avkit_infra.tts.espeak import EspeakCliAdapter
 from avkit_infra.tts.g2p import KokoroG2p, split_phonemes
+from avkit_infra.tts.phase_guard import guarded_model
 from avkit_infra.tts.voices import (
     PACK_ROWS,
     STYLE_DIM,
@@ -397,9 +398,10 @@ class KokoroAdapter:
     def _load_onnx(
         self, variant: ModelVariant, path: Path, target: str
     ) -> tuple[InferenceSession, str]:
+        model = guarded_model(path, variant.id)
         if target == "cuda":
             try:
-                session = InferenceSession(str(path), providers=_onnx_providers("cuda"))
+                session = InferenceSession(model, providers=_onnx_providers("cuda"))
                 active = session.get_providers()
             except Exception:
                 # A session whose providers cannot be read cannot confirm its device.
@@ -411,7 +413,7 @@ class KokoroAdapter:
                 return session, "cpu"
         try:
             # The CPU session is trusted as built; `get_providers` is never read here.
-            session = InferenceSession(str(path), providers=_onnx_providers("cpu"))
+            session = InferenceSession(model, providers=_onnx_providers("cpu"))
         except Exception as exc:
             _log_load_failed(variant, "cpu", exc)
             raise ModelLoadError("ONNX session failed") from exc

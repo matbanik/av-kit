@@ -51,6 +51,7 @@
 | 3.18 | MEU-127 | `svc-tts-fp16-phase-guard` | [03 §TTS FP16 phase guard (residual)](03-service-layer.md#tts-fp16-phase-guard-residual) | MEU-121 |
 | 3.19 | MEU-137 | `svc-download-failure-reason` | [03 §Download failure reason (residual)](03-service-layer.md#download-failure-reason-residual) | MEU-10, MEU-15, MEU-46, MEU-115 |
 | 3.20 | MEU-142 | `svc-download-audio-extract` | [03 §Download audio extract (residual)](03-service-layer.md#download-audio-extract-residual) | MEU-8, MEU-10, MEU-78, MEU-137 |
+| 3.21 | MEU-144 | `svc-tts-fp16-guard-ship` | [03 §TTS FP16 guard ship (residual)](03-service-layer.md#tts-fp16-guard-ship-residual) | MEU-127 |
 | 3.22 | MEU-147 | `svc-transcript-title-cleaning` | [03 §Transcript title cleaning (residual)](03-service-layer.md#transcript-title-cleaning-residual) | MEU-122 |
 | 3.23 | MEU-148 | `svc-console-home-short-form` | [03 §Console home short form (residual)](03-service-layer.md#console-home-short-form-residual) | MEU-119 |
 | 3.24 | MEU-150 | `svc-tts-output-names-progress` | [03 §TTS output names and progress (residual)](03-service-layer.md#tts-output-names-progress-residual) | MEU-12, MEU-22, MEU-77 |

@@ -35,12 +35,12 @@ phases:
   - docs/build-plan/03-service-layer.md
   execution_plans:
   - docs/execution/plans/2026-08-19-p3-services/
-  last_updated: '2026-11-15'
+  last_updated: '2026-11-17'
   note: MEU-10–13 bound to p3-services — ready_for_review pending H1. MEU-62 residual (TTS runtime assets) registered 2026-09-30. MEU-73/74/75/77/78 residuals (TTS voice assets, language runtime, device
     fallback, async generate, ffmpeg resolver) registered 2026-10-09. MEU-75 delivered by Session 35 tts-voice-panel. MEU-98 residual (TTS sideload load) registered 2026-10-17. MEU-115/116 (transcript failure
     reason, block stop), MEU-117/119/121 (TTS build capability, load order, FP16 audio) and MEU-122 (transcript source metadata) residuals registered 2026-11-04. MEU-137/142 residuals (download failure
-    reason, download audio extract) registered 2026-11-10. MEU-147/148/150 residuals (transcript title cleaning, Console home short form, TTS output names and progress) registered 2026-11-15; matrix row
-    3.21 is held for Session 74's MEU-144.
+    reason, download audio extract) registered 2026-11-10. MEU-147/148/150 residuals (transcript title cleaning, Console home short form, TTS output names and progress) registered 2026-11-15; MEU-144 residual
+    (TTS FP16 guard ship) registered 2026-11-17 in Session 74 on matrix row 3.21.
 - id: '4'
   name: REST API
   band: P2
@@ -3777,6 +3777,31 @@ meus:
   updated: '2026-11-14'
   closed_reason: null
   note: Registered 2026-11-13 by splitting MEU-105 (D-713, USER_EXPLICIT 2026-11-13 "A"); it holds the Lock and Letters rows and the rest of the Modifiers row of 09 §Style and tool flow.
+- row_key: MEU-144
+  id: MEU-144
+  slug: svc-tts-fp16-guard-ship
+  phase: '3'
+  band: P2
+  matrix_item: '3.21'
+  build_ref:
+    path: build-plan/03-service-layer.md
+    anchor: tts-fp16-guard-ship-residual
+    text: Phase 3 §TTS FP16 guard ship (residual)
+  description: ONNX FP16 loads Session 73's guarded graph, built in memory from the user's unmodified download and checked by its two hashes, so the sentences that gave non-finite audio pass; any other
+    file loads as shipped.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-127
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-127
+  execution_plan: docs/execution/plans/2026-11-17-tts-fp16-guard-ship/
+  updated: '2026-11-18'
+  closed_reason: null
+  note: Registered 2026-11-17 in Session 74 from TTS-ONNX-FP16-NONFINITE-AUDIO on D-797 (Mat, "Ship guarded") and D-801 (MEU-144 and matrix row 3.21 held for it); D-1135 A, plan docs/execution/plans/2026-11-17-tts-fp16-guard-ship/.
 - row_key: MEU-145
   id: MEU-145
   slug: capture-scan-skip-unreadable
@@ -4168,5 +4193,5 @@ summary_bands:
   range: MEU-14–159 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
     triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127;
     2026-11-08 capture crop residuals MEU-128–132; 2026-11-09 video stills residuals MEU-133–136; 2026-11-10 download reliability residuals MEU-137–142; 2026-11-13 capture style split MEU-143; 2026-11-15
-    post-rc.3 triage residuals MEU-145–154, with MEU-144 held for Session 74; 2026-11-17 queue pause feedback MEU-155; 2026-11-17 triage residuals MEU-156–157; 2026-11-17 value triage residuals MEU-158–159)
+    post-rc.3 triage residuals MEU-145–154, with MEU-144 registered in Session 74; 2026-11-17 queue pause feedback MEU-155; 2026-11-17 triage residuals MEU-156–157; 2026-11-17 value triage residuals MEU-158–159)
 narrative_sections: []

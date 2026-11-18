@@ -701,6 +701,30 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 
 > **Delivered (Session 73).** MEU-127, plan `docs/execution/plans/2026-11-14-tts-fp16-phase-guard/`. FRESH_INPUTS downloaded the seven spike inputs at the app's pins, and each equals Session 52's cached copy; INSTALLED_READ found the installed FP16 file equal to it by hash. RUN_COPIES built one onedir and copied it per run. DENOM_COUNT: in the 12 failing jobs, 14 slots of `/decoder/decoder/generator/Div` divide 0 by 0, all in bin 10, and each gives a NaN phase; the 137 passing jobs have none. PATCH_COPY wrote PHASE_GUARD (`IsNaN` and `Where` after the `Div`, a NaN quotient becomes +0) into a copy. GRAPH_COMPARE: the guard changes exactly the 12 failing jobs and leaves 137 bit-identical. SENTENCE_SMOKE on the packaged build, 149 jobs: original FP16 fails the same 12 as Session 52, guarded FP16 passes 149 of 149 with each WAV's full payload, and INT8 passes 149 of 149. WAV_IDENTITY: the control's 137 WAVs are byte-identical in the guarded run. LISTEN_FOLDER held the 12 guarded FP16 and INT8 pairs, and OUTCOME_BRIEF put them to Mat. AC-127.1 to AC-127.12. D-797 (Mat, 2026-11-15, USER_EXPLICIT "Ship guarded (Recommended)"): the guarded graph ships, through a plan amendment with its own Red and review; until it lands, the FP16 stays rule holds and `TTS-ONNX-FP16-NONFINITE-AUDIO` stays open. Nothing was posted upstream.
 
+<a id="tts-fp16-guard-ship-residual"></a>
+
+## TTS FP16 guard ship (residual)
+
+> **MEU-144.** Registered 2026-11-17 in Session 74 from `TTS-ONNX-FP16-NONFINITE-AUDIO` on Mat's D-797 and D-801 rulings: the guarded FP16 graph that Session 73 built and Mat heard (MEU-127, §TTS FP16 phase guard (residual)) ships, and MEU-144 and matrix row 3.21 were held for it. Depends on MEU-127. Plan `docs/execution/plans/2026-11-17-tts-fp16-guard-ship/`.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Ships guarded | Session 73's guarded graph ships: `IsNaN` and `Where` after `/decoder/decoder/generator/Div`, so a NaN phase quotient becomes +0. It ships through this session's own Red and review, since it changes the adapter. | Human-approved: D-797; D-333 |
+| Delivery | The guarded graph is built in memory each time ONNX FP16 loads, from the user's downloaded file, and only when that file has Session 73's size and source hash; the result must have Session 73's guarded hash. Any other file, or a splice that fails or gives another hash, loads as shipped, and a failed splice logs one `tts.phase_guard` warning with no path. Nothing is written to the models folder. | Human-approved: D-1136 A |
+| FP16 stays | FP16 stays offered, and is never preselected while INT8 or FP32 can run. | Human-approved: D-330, D-331 |
+| Upstream | Nothing is posted to the model's Hugging Face discussion. | Human-approved: D-336 |
+| Tests | The packaged `--phase sentences` smoke, 149 jobs, on what the app loads: FP16 passes 149 of 149 with each WAV equal by job to Session 73's guarded run, and INT8 passes 149 of 149 unchanged. | Local Canon |
+
+> **Delivered (Session 74).** MEU-144, plan `docs/execution/plans/2026-11-17-tts-fp16-guard-ship/`. The guarded FP16 graph ships, built in memory at load (D-797; D-1136 A).
+> - `packages/infrastructure/src/avkit_infra/tts/phase_guard.py` (new): `splice` inserts `IsNaN` and `Where` after `/decoder/decoder/generator/Div` with a stdlib protobuf wire reader in one join (`PHASE_GUARD`, `ONE_JOIN`), and refuses any shape it does not know with `SpliceError`; `guarded_model` applies it only to `kokoro-onnx-fp16` of Session 73's size and source hash, returns the bytes only when they have Session 73's guarded hash, logs one `tts.phase_guard` event with no path, and writes no file (`GUARD_GATE`, `GUARD_REFUSE`, `GUARD_APPLIED`, `NO_FILE_WRITE`).
+> - `packages/infrastructure/src/avkit_infra/tts/adapter.py`: `_load_onnx` calls `guarded_model` once and gives the same model to the CUDA and the CPU session (`BOTH_SESSIONS`).
+> - Tests: `tests/tts_onnx_synthetic.py`, `tests/unit/test_tts_phase_guard.py`, `tests/integration/test_tts_phase_guard_load.py`; AC-144.1 to AC-144.17.
+> - Packaged Red (row 3, `ff-smoke-control-check.txt`, `ff-wavs-control.txt`): the FP16 smoke on the pre-change build failed 12 of 149, the same set as Sessions 52 and 73; `wavs jobs=149 done_ours=137 done_against=137 equal=137`.
+> - The real file (row 6, `ff-guard-check.json`): 163,235,204 bytes with SHA-256 `9037c82b84dca069464f707f31a4fcb6e5d57107b0534fd4a7ae0c044396fd33`, one `applied` event, `tracemalloc` peak 329,181,494 bytes against the 400,000,000 limit, the source file unchanged.
+> - Packaged Green (row 7, `ff-smoke-guarded-check.txt`, `ff-wavs-guarded.txt`): FP16 passed 149 of 149; `wavs jobs=149 done_ours=149 done_against=149 equal=149` against Session 73's guarded run.
+> - INT8 (row 8, `ff-smoke-int8-check.txt`, `ff-wavs-int8.txt`): INT8 passed 149 of 149 on the post-change build; `wavs jobs=149 done_ours=149 done_against=149 equal=149` against Session 73's INT8 run.
+> - The models copy is unchanged after each smoke (`ff-models-snapshot-3.txt`, `-6`, `-7`, `-8`: `smoke-check snapshot-compare: pass`). FP16 stays never preselected (`PRESELECT_KEPT`, D-330, D-331).
+
 <a id="download-failure-reason-residual"></a>
 
 ## Download failure reason (residual)
