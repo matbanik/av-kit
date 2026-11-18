@@ -815,7 +815,7 @@ export function DownloaderPage() {
         </Disclosure>
       </form>
 
-      <div className="min-h-6 max-w-[var(--layout-page-max-width)]">
+      <div className="min-h-6 max-w-[var(--layout-page-max-width)]" hidden={!addStatus && !error}>
       {addStatus ? (
         <p data-testid="add-status" className="text-fg-muted">
           {addStatus}

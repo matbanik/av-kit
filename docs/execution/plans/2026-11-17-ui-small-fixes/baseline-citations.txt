@@ -1,0 +1,45 @@
+ui/src/renderer/src/components/layout/AppShell.tsx:203 count 1 (as cited) :: const onHelpToggle = () => {
+ui/src/renderer/src/components/layout/AppShell.tsx:206 count 1 (as cited) :: const helpRoutes = [
+ui/src/renderer/src/features/settings/settings-commands.ts:5 count 1 (found) :: export const HELP_EVENTS = {
+ui/src/renderer/src/features/settings/settings-commands.ts:10 count 1 (found) :: export const HELP_PENDING_TOGGLE_KEY
+ui/src/renderer/src/features/settings/settings-commands.ts:12 count 1 (found) :: export const HELP_COMMANDS = {
+ui/src/renderer/src/features/settings/settings-commands.ts:17 count 1 (found) :: queueToggleAfterNavigate: () => {
+ui/src/renderer/src/components/help/HelpCard.tsx:69 count 1 (as cited) :: window.addEventListener('av-kit:help:toggle-local', onToggle)
+ui/src/renderer/src/components/help/HelpCard.tsx:3 count 1 (found) :: import { HELP_PENDING_TOGGLE_KEY } from
+ui/src/renderer/src/features/converter/convert-commands.ts:354 count 1 (found) :: let browseRequest: { held: boolean } | null = null
+ui/src/renderer/src/features/converter/convert-commands.ts:368 count 1 (found) :: export function deliverPaletteBrowse(): void {
+ui/src/renderer/src/features/converter/convert-commands.ts:394 count 1 (found) :: export function takeHeldBrowse(): boolean {
+ui/src/renderer/src/features/converter/convert-commands.ts:103 count 1 (found) :: export function isConvertHome(): boolean {
+ui/src/renderer/src/features/converter/ConvertPage.tsx:515 count 1 (found) :: if (takeHeldBrowse()) {
+ui/src/renderer/src/lib/shell-nav.ts:4 count 1 (as cited) :: export function navigateShell(
+ui/src/renderer/src/router.tsx:50 count 1 (as cited) :: component: lazyRouteComponent(() => import('./features/converter/ConvertPage')
+ui/src/renderer/src/router.tsx:57 count 1 (as cited) :: component: lazyRouteComponent(() => import('./features/capture/CapturePage')
+ui/src/renderer/src/features/downloader/DownloaderPage.tsx:669 count 1 (found) :: id="downloader-add-advanced"
+ui/src/renderer/src/features/downloader/DownloaderPage.tsx:818 count 1 (as cited) :: <div className="min-h-6 max-w-[var(--layout-page-max-width)]">
+ui/src/renderer/src/features/downloader/DownloaderPage.tsx:820 count 1 (found) :: <p data-testid="add-status" className="text-fg-muted">
+ui/src/renderer/src/features/downloader/DownloaderPage.tsx:824 count 1 (as cited) :: <p data-testid="add-status" hidden />
+ui/src/renderer/src/features/downloader/DownloaderPage.tsx:827 count 1 (found) :: <p data-testid="error-banner" className="text-error" role="alert">
+ui/src/renderer/src/features/downloader/DownloaderPage.tsx:831 count 1 (as cited) :: <p data-testid="error-banner" hidden className="text-error" />
+ui/src/renderer/src/features/downloader/DownloaderPage.tsx:844 count 1 (found) :: data-testid="download-queue-region"
+ui/src/renderer/src/features/downloader/DownloaderPage.tsx:355 count 1 (as cited) :: 'URL is required'
+ui/tests/e2e/electron-app.ts:70 count 1 (as cited) :: export async function launchElectron(
+ui/tests/e2e/convert-browse-mount.test.ts:30 count 1 (found) :: const CHUNK_DELAY_MS = 1_500
+ui/tests/e2e/convert-browse-mount.test.ts:31 count 1 (found) :: const TEST_TIMEOUT_MS = 240_000
+ui/tests/e2e/convert-browse-mount.test.ts:125 count 1 (as cited) :: async function launch(label: string)
+ui/tests/e2e/convert-browse-mount.test.ts:172 count 1 (found) :: protocol.handle('file'
+ui/tests/e2e/convert-browse-mount.test.ts:200 count 1 (as cited) :: async function requireNotMounted(
+ui/tests/e2e/convert-browse-mount.test.ts:207 count 1 (as cited) :: async function switchToLoadingConvert(
+ui/tests/e2e/convert-queue.test.ts:1568 count 1 (as cited) :: browses on Convert and is inert
+ui/tests/e2e/download-queue.test.ts:1574 count 1 (as cited) :: setViewportSize({ width: 700
+ui/tests/unit/dev-script.test.ts:64 count 1 (as cited) :: expect(pkg.scripts.preview).toBe('electron-vite preview')
+ui/package.json:18 count 1 (as cited) :: "preview": "electron-vite preview"
+.agent/docs/commands.md:80 count 1 (as cited) :: UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT
+docs/build-plan/06-gui.md:1710 count 1 (as cited) :: <a id="help-f1-after-mount-residual"></a>
+docs/build-plan/06-gui.md:1712 count 1 (found) :: ### F1 help waits for the page (residual)
+docs/build-plan/06-gui.md:1723 count 1 (as cited) :: ## Validation Commands
+docs/build-plan/11-page-layout.md:176 count 1 (as cited) :: <a id="downloader-advanced-gap-residual"></a>
+docs/build-plan/11-page-layout.md:178 count 1 (found) :: ### Downloader Advanced gap (residual)
+docs/build-plan/11-page-layout.md:190 count 1 (as cited) :: ## Supersession
+docs/build-plan/build-priority-matrix.md:89 count 1 (found) :: | 6.22 | MEU-158 |
+docs/build-plan/build-priority-matrix.md:180 count 1 (found) :: | 11.14 | MEU-159 |
+ui/src/main/index.ts:145 count 1 (as cited) :: return { width: 1280, height: 800 }

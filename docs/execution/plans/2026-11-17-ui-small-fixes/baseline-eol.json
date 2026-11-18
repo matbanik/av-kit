@@ -1,0 +1,485 @@
+{
+  "ui/src/renderer/src/lib/shell-nav.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 11,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/converter/convert-commands.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 625,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/settings/settings-commands.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 30,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/components/help/HelpCard.tsx": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 133,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/downloader/DownloaderPage.tsx": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 761,
+    "bare_lf": 226,
+    "bom": false
+  },
+  "ui/scripts/electron-vite-dev.mjs": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 79,
+    "bom": false
+  },
+  "ui/package.json": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 71,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/dev-script.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 66,
+    "bom": false
+  },
+  ".agent/docs/commands.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 225,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/build-plan/06-gui.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1730,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/build-plan/11-page-layout.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 373,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4223,
+    "bom": false
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 256,
+    "bom": false
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 5733,
+    "bom": false
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 39,
+    "bom": false
+  },
+  ".agent/context/grouping/2026-11-17-value-triage-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 196,
+    "bom": false
+  },
+  "ui/scripts/electron-vite-preview.mjs": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/help-f1-hold.test.tsx": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/preview-script.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/help-f1-mount.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/downloader-advanced-gap.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/s94-help-probe.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/s94-gap-probe.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/src/renderer/src/components/layout/AppShell.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 341,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/router.tsx": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 79,
+    "bom": false
+  },
+  "ui/src/renderer/src/components/ui/Disclosure.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 49,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/converter/ConvertPage.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 1030,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/renderer/src/features/capture/CapturePage.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 3007,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/src/main/index.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 645,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/e2e/electron-app.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 97,
+    "bom": false
+  },
+  "ui/tests/e2e/electron-env.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 90,
+    "bom": false
+  },
+  "ui/tests/e2e/main-error-watch.cjs": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 40,
+    "bom": false
+  },
+  "ui/tests/e2e/convert-browse-mount.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 276,
+    "bom": false
+  },
+  "ui/tests/e2e/convert-queue.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 1584,
+    "bom": false
+  },
+  "ui/tests/e2e/download-queue.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1695,
+    "bom": false
+  },
+  "ui/tests/e2e/keyboard-shortcuts.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 109,
+    "bom": false
+  },
+  "ui/tests/e2e/help-search.spec.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 62,
+    "bom": false
+  },
+  "ui/tests/e2e/layout-primitives.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 83,
+    "bom": false
+  },
+  "ui/tests/unit/help-card.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 140,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/convert-browse-hold.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 133,
+    "bom": false
+  },
+  "ui/tests/unit/convert-page.behavior.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 2962,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/convert-page.test.ts": {
+    "kind": "MIXED",
+    "expected": null,
+    "crlf": 731,
+    "bare_lf": 29,
+    "bom": false
+  },
+  "ui/tests/unit/convert-commands.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 250,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/common-shortcuts.test.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 123,
+    "bom": false
+  },
+  "ui/tests/unit/header-toggles.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 210,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/palette-curation.test.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 498,
+    "bom": false
+  },
+  "ui/tests/unit/gui-actions-audit.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 533,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/shortcuts.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 395,
+    "bom": false
+  },
+  "ui/tests/unit/capture-page.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 644,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "ui/tests/unit/downloader-page.test.ts": {
+    "kind": "MIXED",
+    "expected": null,
+    "crlf": 540,
+    "bare_lf": 15,
+    "bom": false
+  },
+  "ui/tests/unit/downloader-page.behavior.test.ts": {
+    "kind": "MIXED",
+    "expected": null,
+    "crlf": 2096,
+    "bare_lf": 623,
+    "bom": false
+  },
+  "ui/tests/unit/layout-canon.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 176,
+    "bom": false
+  },
+  "ui/tests/unit/layout-primitives.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 372,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/build-plan/build-priority-matrix.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 197,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-15-convert-settings-drafts/dev-app-procs.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 323,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/dev-proof.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 640,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-test-run-reliability/load-run.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 498,
+    "bom": false
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 102,
+    "bare_lf": 0,
+    "bom": false
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 221,
+    "bare_lf": 0,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-ui-small-fixes/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 570,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-ui-small-fixes/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 104,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-ui-small-fixes/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 500,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-ui-small-fixes/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1514,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-ui-small-fixes/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 400,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-ui-small-fixes/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 320,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-ui-small-fixes/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 245,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-ui-small-fixes/load-run.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 498,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-ui-small-fixes/host-wait.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 66,
+    "bom": false
+  },
+  "docs/execution/plans/2026-11-17-ui-small-fixes/preview-proof.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 809,
+    "bom": false
+  }
+}

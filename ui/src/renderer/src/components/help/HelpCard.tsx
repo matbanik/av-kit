@@ -1,6 +1,10 @@
 import { useEffect, useId, useMemo, useState } from 'react'
 
-import { HELP_PENDING_TOGGLE_KEY } from '../../features/settings/settings-commands'
+import {
+  HELP_FEATURE_ROUTE,
+  HELP_PENDING_TOGGLE_KEY,
+  takeHeldHelpToggle,
+} from '../../features/settings/settings-commands'
 import { ariaKeyshortcuts } from '../../registry/shortcuts'
 
 export type HelpSection = {
@@ -63,14 +67,32 @@ export function HelpCard({ feature, tabKey, sections }: HelpCardProps) {
   }, [])
 
   useEffect(() => {
-    const onToggle = () => {
+    // HELP_ROUTE_SCOPE (MEU-158, D-1176): the card's route comes from the fixed map, never from
+    // the hash at mount. A toggle with a route reaches only the cards on that route, which mark it
+    // received (preventDefault); a toggle with no route toggles every card, as before.
+    const route = HELP_FEATURE_ROUTE[feature]
+    const onToggle = (event: Event) => {
+      const detail: unknown = event instanceof CustomEvent ? event.detail : null
+      const target =
+        typeof detail === 'object' && detail !== null && 'route' in detail ? detail.route : undefined
+      if (target !== undefined) {
+        if (target !== route) {
+          return
+        }
+        event.preventDefault()
+      }
       setExpanded((value) => !value)
     }
     window.addEventListener('av-kit:help:toggle-local', onToggle)
+    // HELP_TAKE_ON_MOUNT: an F1 held for this card's route toggles it once. Under StrictMode's
+    // double effect the first run takes the request and the second finds none.
+    if (takeHeldHelpToggle(route)) {
+      setExpanded((value) => !value)
+    }
     return () => {
       window.removeEventListener('av-kit:help:toggle-local', onToggle)
     }
-  }, [])
+  }, [feature])
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()

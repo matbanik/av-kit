@@ -77,7 +77,7 @@ $env:ELECTRON_RUN_AS_NODE=$null; npm --prefix ui run test:e2e
 > |---|---|
 > | `npm --prefix ui run dev` | Clears it itself since Session 90: `ui/scripts/electron-vite-dev.mjs` removes the variable, prints `electron-vite-dev: cleared ELECTRON_RUN_AS_NODE` and starts `electron-vite dev`, so the window opens. |
 > | `npm --prefix ui run test:e2e` | All 14 `_electron.launch()` sites die with `electron.exe: bad option: --remote-debugging-port=0`. |
-> | `npm --prefix ui run preview` | **Silent**, as `dev` was. Tracked as `UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT`. |
+> | `npm --prefix ui run preview` | Clears it itself since Session 94: `ui/scripts/electron-vite-preview.mjs` removes the variable, prints `electron-vite-preview: cleared ELECTRON_RUN_AS_NODE` and starts `electron-vite preview`, so the window opens. |
 >
 > Check with `[Environment]::GetEnvironmentVariable('ELECTRON_RUN_AS_NODE','Process')`;
 > confirm the fix with `npx electron --version` (Node's `v24.x` when set, Electron's

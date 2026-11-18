@@ -61,6 +61,6 @@ describe('Session 90 dev script', () => {
 
     const pkg = JSON.parse(readFileSync(PACKAGE_JSON, 'utf8')) as { scripts: Record<string, string> }
     expect(pkg.scripts.dev).toBe('node ./scripts/electron-vite-dev.mjs')
-    expect(pkg.scripts.preview).toBe('electron-vite preview')
+    expect(pkg.scripts.preview).toBe('node ./scripts/electron-vite-preview.mjs')
   })
 })

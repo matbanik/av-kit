@@ -4142,10 +4142,10 @@ meus:
     anchor: help-f1-after-mount-residual
     text: Phase 6 §F1 help waits for the page (residual)
   description: An F1 pressed before a lazy page's HelpCard listens is held and toggles the help panel once when the page mounts, so F1 works on the first visit to Convert and Capture.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-23, MEU-96, MEU-157
   dependency_parse_status: parsed
@@ -4153,8 +4153,8 @@ meus:
   - MEU-23
   - MEU-96
   - MEU-157
-  execution_plan: null
-  updated: '2026-11-17'
+  execution_plan: docs/execution/plans/2026-11-17-ui-small-fixes/
+  updated: '2026-11-18'
   closed_reason: null
   note: Registered 2026-11-17 from HELP-F1-BEFORE-LAZY-MOUNT-LOST (triage D-1128; grouping D-1132), Session 94.
 - row_key: MEU-159
@@ -4168,17 +4168,17 @@ meus:
     anchor: downloader-advanced-gap-residual
     text: Phase 11 §Downloader Advanced gap (residual)
   description: The empty gap under the Advanced disclosure on the Downloader page is measured and removed, proved by an Electron layout check, with every Advanced control kept.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-53
   dependency_parse_status: parsed
   depends_on:
   - MEU-53
-  execution_plan: null
-  updated: '2026-11-17'
+  execution_plan: docs/execution/plans/2026-11-17-ui-small-fixes/
+  updated: '2026-11-18'
   closed_reason: null
   note: Registered 2026-11-17 from DOWNLOADER-ADVANCED-PANEL-GAP (triage D-1129; grouping D-1132), Session 94.
 - row_key: MEU-160

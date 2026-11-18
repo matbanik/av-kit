@@ -187,6 +187,14 @@ One residual MEU from the 2026-11-17 triage. It removes empty space on the Downl
 | Screenshot | The README screenshot is retaken only if Mat asks | Local Canon: triage D-1129 |
 | Tests | Electron E2E at the default window (1280×800): the distance from the Advanced toggle to the next section, collapsed and expanded, is within the shared gap; the existing Downloader layout tests keep passing | Mat, 2026-11-16 ("This should be done with framework and scripts!") |
 
+> **Delivered (Session 94).**
+> - Cause, measured on the unchanged build at 1280x800 and at 700x650, collapsed and expanded: the empty status wrapper under the form (`min-h-6`, 24 px, with no text) plus one 16 px row gap. The scrollable space below the disclosure (TAIL) read 40.5 px and the distance from the disclosure to the queue (GAP) 56 px in all four cases, where one gap is 16 px; no hidden Advanced panel content takes space. AC-159.1.
+> - The status wrapper is hidden while both the add status and the error banner are empty, and shows as before when either has text (`features/downloader/DownloaderPage.tsx:818`, `STATUS_SLOT`, D-1177). No class, test id or control changes. Nothing clears a message, so the band is closed on a fresh page; once a message has shown, the line stays where it is today. AC-159.2, AC-159.5.
+> - Expanding Advanced still shows the same controls in the same order: the eight ids are in the panel's DOM in their order, and the visible set matches the cookie mode shown. AC-159.3, AC-159.4.
+> - Electron E2E (`ui/tests/e2e/downloader-advanced-gap.test.ts`) checks the empty status, the DOM order, the visibility by mode, TAIL and GAP at both widths, collapsed and expanded, and the message guard; it passed 3 runs of 3 (D-1180). The Downloader unit and layout tests and the `download-queue.test.ts` and `layout-primitives.test.ts` E2E suites pass unchanged. AC-159.6, AC-159.7.
+> - The README screenshot is not retaken (D-1129).
+> - AC-159.1 to AC-159.7. Plan `docs/execution/plans/2026-11-17-ui-small-fixes/`.
+
 ## Supersession
 
 | Earlier source | Carry-forward owner | Binding rule |

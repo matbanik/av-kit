@@ -3466,12 +3466,15 @@ issues:
     title: An empty gap sits under Advanced on the Downloader page
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-03'
     root_cause: Cause not established. The panel is the Disclosure at ui/src/renderer/src/features/downloader/DownloaderPage.tsx:668 (id downloader-add-advanced; it sat at 651-662 when filed).
     blast_radius: 'Measured: Seen while staging README screenshots on 2026-11-03. Visible in the main screenshot. Cosmetic. Not measured: which element holds the space.'
     verification:
-      last_checked: '2026-11-17'
+      last_checked: '2026-11-18'
+      method: 'Session 94 rows 3, 4 and 7: the measurement probe on the unchanged build at 1280x800 and 700x650, collapsed and expanded; the Downloader and layout unit files; downloader-advanced-gap.test.ts in real Electron once and then three times; download-queue.test.ts and layout-primitives.test.ts once (receipts us-row3-measure.txt, us-row3-check.txt, us-159-green.txt, us-159-green-e2e.txt, us-row7-gap-r1.txt, us-row7-gap-r2.txt, us-row7-gap-r3.txt, us-row7-download-queue.txt, us-row7-layout-primitives.txt, us-row7-repeat.txt under C:/Temp/av-kit/ui-small-fixes)'
+      result: 'Row 3: cause: the empty status wrapper; status wrapper heights 24.0 in all four cases; TAIL 40.5 and GAP 56 in all four cases. Row 4: Test Files  4 passed (4); Tests  102 passed (102); 4 passed (13.3s). Row 7: 4 passed (13.2s); 4 passed (13.0s); 4 passed (13.2s); gap runs passing: True, True, True; 26 passed (28.1s); 1 passed (1.1s); no unhandled rejection line'
+    resolution_path: 'Fixed in Session 94 on 2026-11-18 (plan docs/execution/plans/2026-11-17-ui-small-fixes): measured cause, the empty status wrapper under the add form (min-h-6, 24 px) plus one 16 px row gap (D-1180). The wrapper in ui/src/renderer/src/features/downloader/DownloaderPage.tsx is hidden while both the add status and the error banner are empty and shows as before when either has text (STATUS_SLOT, D-1177); the band is closed on a fresh page, and once a message has shown the line stays. No control, class or test id changes; the README screenshot is not retaken (D-1129). MEU-159.'
     category: MEU-NEW
     priority: P4
     meu_links:
@@ -5663,16 +5666,19 @@ issues:
     title: F1 on Convert or Capture can be lost while the page is still loading
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-17'
     root_cause: On a help route F1 dispatches the local help toggle at once (ui/src/renderer/src/components/layout/AppShell.tsx:203-215, ui/src/renderer/src/features/settings/settings-commands.ts:14), and the lazy Convert and Capture pages add the HelpCard listener only when they mount (ui/src/renderer/src/components/help/HelpCard.tsx:69), so an F1 pressed while their chunk loads is lost; all six routes are help routes (AppShell.tsx:206), so F1 always takes this immediate path. Found in the Session 89 plan (D-1109); not fixed there (M-8).
     blast_radius: 'Convert and Capture on their first visit: an F1 in the moment before the page appears does not toggle the help panel; a second F1 works.'
+    resolution_path: 'Fixed in Session 94 on 2026-11-18 (plan docs/execution/plans/2026-11-17-ui-small-fixes): one held-request helper, createHeldRequest in ui/src/renderer/src/lib/shell-nav.ts, serves Ctrl+O and F1 (D-1175); BROWSE_HOLD moved onto it with its exports and behaviour unchanged. F1 carries the route it was pressed on, only a HelpCard on that route takes it, a press no card took is held and a second press joins it, and leaving the route drops it (HELP_ROUTE_SCOPE, HELP_HOLD, D-1176, settings-commands.ts); the card takes a held F1 for its route once on mount (HELP_TAKE_ON_MOUNT, HelpCard.tsx). MEU-158.'
     category: MEU-NEW
     priority: P4
     meu_links:
       - MEU-158
     verification:
-      last_checked: '2026-11-17'
+      last_checked: '2026-11-18'
+      method: 'Session 94 rows 2 and 7: the MEU-158 unit file with the AC-158.14 pins, help-f1-mount.test.ts in real Electron with the ConvertPage and CapturePage chunks held back 1 500 ms, then 20 repeats of it, of convert-browse-mount.test.ts and of the Ctrl+O test in convert-queue.test.ts, and help-search.spec.ts and keyboard-shortcuts.test.ts once (receipts us-158-green.txt, us-158-green-e2e.txt, us-row7-help-r20.txt, us-row7-browse-r20.txt, us-row7-ctrlo-r20.txt, us-row7-help-search.txt, us-row7-keyboard.txt, us-row7-repeat.txt under C:/Temp/av-kit/ui-small-fixes)'
+      result: 'Row 2: Test Files  12 passed (12); Tests  202 passed (202); 5 passed (28.1s). Row 7: 100 passed (9.2m); 80 passed (9.1m); 20 passed (23.0s); 3 passed (2.3s); 2 passed (2.1s); help-f1-mount ok counts (of 20): AC-158.8 20, AC-158.9 20, AC-158.10 20, AC-158.11 20, AC-158.12 20; browse-mount ok counts (of 20): 20 for each of its four tests; Ctrl+O ok count (of 20): 20; no unhandled rejection line'
     enrichment:
       questions_asked: []
       answers: []
@@ -5696,14 +5702,17 @@ issues:
     title: npm run preview opens no window when ELECTRON_RUN_AS_NODE is set in the IDE terminal
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-17'
     root_cause: electron-vite preview starts Electron through the same startElectron as dev (ui/node_modules/electron-vite/dist/chunks/lib-Dvh2Hokw.js:21, lib-q6ns0vZr.js:220-240), which spawns it with no env, so the ELECTRON_RUN_AS_NODE=1 that VS Code and Cursor terminals set makes electron.exe start as plain Node and no window opens, with no error. Session 90 fixed dev with ui/scripts/electron-vite-dev.mjs and left preview (D-1119).
     blast_radius: 'Developer machines only: npm --prefix ui run preview from an IDE terminal. Workaround: clear the variable first, or use a terminal opened outside the IDE.'
+    resolution_path: 'Fixed in Session 94 on 2026-11-18 (plan docs/execution/plans/2026-11-17-ui-small-fixes): ui/scripts/electron-vite-dev.mjs exports runElectronVite(command, notice, extra), the body of its old main; the new ui/scripts/electron-vite-preview.mjs calls it with preview and writes electron-vite-preview: cleared ELECTRON_RUN_AS_NODE to stderr when it removed the variable; ui/package.json preview runs it (PREVIEW_WRAPPER, D-1178). The one changed expectation is dev-script.test.ts:64 (PINS_NAMED), and .agent/docs/commands.md gives the preview row the dev row''s form (COMMANDS_DOC). No MEU.'
     category: TECH-DEBT
     priority: P4
     verification:
-      last_checked: '2026-11-17'
+      last_checked: '2026-11-18'
+      method: 'Session 94 rows 5 and 6: preview-proof.py launching npm run preview with ELECTRON_RUN_AS_NODE set and unset at base and after the fix, and npm run dev with it set after the fix; the two unit files preview-script.test.ts and dev-script.test.ts (receipts us-prev-base-set.txt, us-prev-base-unset.txt, us-prev-base-check.txt, us-prev-green.txt, us-prev-proof-set.txt, us-prev-proof-unset.txt, us-prev-proof-dev.txt under C:/Temp/av-kit/ui-small-fixes)'
+      result: 'Base, set: exit 1, window: no (after 11 s; root exited), left: 0, FAIL: no window opened; base, unset: exit 0, window: yes (after 18 s; window). After the fix: Test Files  2 passed (2); Tests  4 passed (4); preview set: window: yes (after 20 s; window), notice: yes, notice on stdout: no, left: 0, PASS; preview unset: window: yes (after 19 s; window), notice: no, left: 0, PASS; dev set: window: yes (after 16 s; window), notice: yes, left: 0, PASS'
     enrichment:
       questions_asked: []
       answers: []

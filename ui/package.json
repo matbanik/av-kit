@@ -15,7 +15,7 @@
   "scripts": {
     "dev": "node ./scripts/electron-vite-dev.mjs",
     "build": "electron-vite build",
-    "preview": "electron-vite preview",
+    "preview": "node ./scripts/electron-vite-preview.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --allowOnly=false",
     "lint": "eslint src/ tests/ --max-warnings 0",

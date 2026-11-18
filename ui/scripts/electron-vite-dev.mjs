@@ -8,6 +8,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ui = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const electronViteBin = resolve(ui, 'node_modules/electron-vite/bin/electron-vite.js')
 
 /** The line written to stderr when the variable was removed. */
 export const DEV_NOTICE = 'electron-vite-dev: cleared ELECTRON_RUN_AS_NODE'
@@ -31,7 +32,7 @@ export function devEnv(base) {
 
 /** The arguments after the Node executable: electron-vite's own bin, `dev`, then `extra`. */
 export function devArgs(extra) {
-  return [resolve(ui, 'node_modules/electron-vite/bin/electron-vite.js'), 'dev', ...extra]
+  return [electronViteBin, 'dev', ...extra]
 }
 
 /** True only when `argv1` names this module's own file (without case on win32). */
@@ -55,10 +56,16 @@ export function exitCodeFor(code, signal, platform = process.platform) {
   return 1
 }
 
-function main() {
+/**
+ * Runs `electron-vite <command> ...extra` without ELECTRON_RUN_AS_NODE (writing `notice` to stderr
+ * when it was removed), passes the child its own Ctrl+C and Ctrl+Break, forwards SIGTERM, and exits
+ * with the child's code. `npm run dev` calls it with `dev`; `npm run preview` (Session 94,
+ * D-1178) calls it with `preview` from electron-vite-preview.mjs.
+ */
+export function runElectronVite(command, notice, extra) {
   const { env, cleared } = devEnv(process.env)
-  if (cleared) process.stderr.write(DEV_NOTICE + '\n')
-  const child = spawn(process.execPath, devArgs(process.argv.slice(2)), { stdio: 'inherit', env, cwd: ui })
+  if (cleared) process.stderr.write(notice + '\n')
+  const child = spawn(process.execPath, [electronViteBin, command, ...extra], { stdio: 'inherit', env, cwd: ui })
   // Ctrl+C and Ctrl+Break reach the whole console group, so the child gets them itself; the
   // wrapper stays until the child exits, so electron-vite and Electron are never left behind.
   const ignore = () => {}
@@ -68,12 +75,16 @@ function main() {
     child.kill('SIGTERM')
   })
   child.on('error', (error) => {
-    process.stderr.write('electron-vite-dev: could not start electron-vite: ' + String(error) + '\n')
+    process.stderr.write('electron-vite-' + command + ': could not start electron-vite: ' + String(error) + '\n')
     process.exit(1)
   })
   child.on('exit', (code, signal) => {
     process.exit(exitCodeFor(code, signal))
   })
+}
+
+function main() {
+  runElectronVite('dev', DEV_NOTICE, process.argv.slice(2))
 }
 
 if (isEntry(process.argv[1], import.meta.url)) main()

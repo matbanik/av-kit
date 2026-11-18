@@ -163,7 +163,7 @@ Mat asked for triage and grouping only, so no plan is made yet. When Mat names a
 | 91 | `e2e-pointer-flakes` | — | P3 | proposed | — |
 | 92 | `mcp-audit-refresh` | — | P3 | executed (Session 92) | `docs/execution/plans/2026-11-17-mcp-audit-refresh/` |
 | 93 | `video-tail-frame` | MEU-160 | P3 | executed (Session 93) | `docs/execution/plans/2026-11-17-video-tail-frame/` |
-| 94 | `ui-small-fixes` | MEU-158, MEU-159 | P4 | proposed | — |
+| 94 | `ui-small-fixes` | MEU-158, MEU-159 | P4 | executed (Session 94) | `docs/execution/plans/2026-11-17-ui-small-fixes/` |
 
 The Band column is the session's queue priority. Both new MEUs are registered in band P2, as the earlier triage residuals were; a session band below P2 orders the queue and changes no register field.
 

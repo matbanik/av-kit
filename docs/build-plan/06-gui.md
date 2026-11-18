@@ -1720,6 +1720,14 @@ The following features are explicitly **deferred** to a future phase:
 | Shared | The plan checks whether MEU-157's held delivery (`takeHeldBrowse` in `features/converter/convert-commands.ts`) can serve both chords, and keeps one mechanism if it can | Local Canon |
 | Tests | Unit: an F1 before mount toggles once on mount, one after mount at once, and a held F1 is dropped on leaving; Electron E2E on the real app: with the Convert and Capture chunks delayed, F1 opens the help panel on every run | Mat, 2026-11-16 ("This should be done with framework and scripts!") |
 
+> **Delivered (Session 94).**
+> - One mechanism serves Ctrl+O and F1: `createHeldRequest(stillHome)` (`lib/shell-nav.ts:36`, `HELD_REQUEST`, D-1175) keeps one outstanding request per instance in renderer memory. A press for the key already outstanding joins it, a press for another key replaces it, a `hashchange` off its key drops it, `settle` holds a request that no receiver took, and `take` clears it once. `BROWSE_HOLD` runs on one instance with its exports and behaviour unchanged (`features/converter/convert-commands.ts:349-380`). AC-158.1, AC-158.2.
+> - F1 carries the route it was pressed on (`features/settings/settings-commands.ts:14-44`, `HELP_FEATURE_ROUTE`, `HELP_HOLD`). Only a `HelpCard` on that route takes it and calls `preventDefault`, so the page the user left keeps its panel as it was; a press no card took is held, and a second press while it is held joins it (`HELP_ROUTE_SCOPE`, D-1176). A mounted card toggles at once and is never held. AC-158.6, AC-158.7.
+> - The card adds its listener and then takes an F1 held for its route on mount, toggling once; under StrictMode's second effect run nothing is left to take (`components/help/HelpCard.tsx:69-95`, `takeHeldHelpToggle` at `settings-commands.ts:28-29`, `HELP_TAKE_ON_MOUNT`). Two presses before the mount toggle once, and a held F1 is dropped when the user leaves the route. AC-158.3 to AC-158.5.
+> - Electron E2E (`ui/tests/e2e/help-f1-mount.test.ts`) holds the ConvertPage and CapturePage chunks back by 1 500 ms with Session 89's `file` protocol handler: an F1 while Convert or Capture loads opens its help panel, two F1 open it once, an F1 held while Convert loads is dropped on leaving, and F1 on the mounted page toggles at once; each of the five tests passed 20 of 20 runs. `convert-browse-mount.test.ts` and the Ctrl+O test in `convert-queue.test.ts` passed 20 of 20 on the shared helper, and `help-search.spec.ts` and `keyboard-shortcuts.test.ts` passed. AC-158.8 to AC-158.13.
+> - The help, shortcut and MEU-157 unit pins pass unchanged. AC-158.14.
+> - AC-158.1 to AC-158.14. Plan `docs/execution/plans/2026-11-17-ui-small-fixes/`.
+
 ## Validation Commands
 
 ```bash
