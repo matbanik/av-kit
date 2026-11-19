@@ -616,6 +616,60 @@ archived:
   category: TECH-DEBT
   priority: P4
   enrichment: null
+- id: DOWNLOAD-QUEUE-DRAG-OVER-MISS
+  title: Download-queue drag-over (A16 committed-over wait) occasionally misses on Windows
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1126
+      stage: triage
+      question: The Electron pointer, drag and launch flakes failed 4 of 7 full runs in Session 90. Keep them MONITORING P4?
+      resolution: autonomous
+      class: two-way
+      chosen: TECH-DEBT P3 for DOWNLOAD-QUEUE-DRAG-OVER-MISS, CAPTURE-ZOOM-PAN-ORIGIN-FLAKE and CAPTURE-E2E-LAUNCH-TEARDOWN-HANG, fixed together in one session that reproduces them under load; no retries
+        and no raised timeouts. Session 90's unnamed specs fold into the first two.
+      source_tag: Local Canon
+      precedents:
+      - 'Triage priority matrix: low severity that blocks other work is P3'
+      - 'Session 90 handoff line 290: unnamed specs left for the next triage'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
+    decided_by: agent
+- id: CAPTURE-ZOOM-PAN-ORIGIN-FLAKE
+  title: Capture viewport AC-66.14 middle-button pan origin occasionally off under full Electron suite load
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1126
+      stage: triage
+      question: The Electron pointer, drag and launch flakes failed 4 of 7 full runs in Session 90. Keep them MONITORING P4?
+      resolution: autonomous
+      class: two-way
+      chosen: TECH-DEBT P3 for DOWNLOAD-QUEUE-DRAG-OVER-MISS, CAPTURE-ZOOM-PAN-ORIGIN-FLAKE and CAPTURE-E2E-LAUNCH-TEARDOWN-HANG, fixed together in one session that reproduces them under load; no retries
+        and no raised timeouts. Session 90's unnamed specs fold into the first two.
+      source_tag: Local Canon
+      precedents:
+      - 'Triage priority matrix: low severity that blocks other work is P3'
+      - 'Session 90 handoff line 290: unnamed specs left for the next triage'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
+    decided_by: agent
 - id: MCP-PACKAGED-ENTRY-UNREACHABLE
   title: 'Installed MCP server likely never serves: entry guard misses resources/mcp-server/index.js and dist ships without node_modules'
   severity: medium
@@ -711,6 +765,14 @@ archived:
         sources: []
       reasoning: Downloads, transcripts and conversions already follow queue-and-poll; TTS is the only inline long operation. Local API with in-repo clients only, so the contract change is two-way at ordinary
         cost.
+- id: MCP-AUDIT-CENSUS-PROBE-SINGLE-SHOT
+  title: MCP audit container census network proofs are single-shot, so YouTube's per-moment wall can fail a container run
+  severity: low
+  component: mcp-server
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment: null
 - id: CAPTURE-BAKE-ARROW-THIN
   title: Arrow is jagged when baked and its tip is drawn wrong (shaft runs through the head) in bake and preview
   severity: medium
@@ -2235,6 +2297,33 @@ archived:
   category: TECH-DEBT
   priority: P4
   enrichment: null
+- id: DOWNLOADER-ADVANCED-PANEL-GAP
+  title: An empty gap sits under Advanced on the Downloader page
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1129
+      stage: triage
+      question: The Advanced gap is visible in the README's main screenshot. Give it an MEU?
+      resolution: autonomous
+      class: two-way
+      chosen: 'MEU-159 gui-downloader-advanced-gap (11, matrix 11.14, P4): the element that holds the space is found and the gap removed, proved by an Electron layout check; the README screenshot is retaken
+        only if Mat asks.'
+      source_tag: Local Canon
+      precedents:
+      - 11 page layout residual sections (MEU-79 pattern)
+      - MEU-53 gui-downloader-layout
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Cosmetic but on the first image a visitor sees; the cause is unknown, so it needs a home that a plan can scope. Low standalone: P4. Two-way.'
+    decided_by: agent
 - id: CLOSEOUT-SELFTEST-ANCESTOR-AGENT-DIR
   title: validate_closeout_artifacts --selftest fails when a .agent folder sits above the temp folder
   severity: low
@@ -2764,6 +2853,52 @@ archived:
         because KModel loaded without those packages in the 2026-11-04 test, though only in the dev venv and without generating speech, and the bare-parent import is not a kokoro API, so it is tied to the
         kokoro pin. This is not legal advice. See the brief.
       human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+- id: TTS-ONNX-FP16-NONFINITE-AUDIO
+  title: ONNX FP16 fails on some ordinary sentences with 'generated audio must be finite', and a fresh install preselects it
+  severity: high
+  component: infrastructure
+  status: resolved
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked:
+    - 'D-239: Which model does a fresh install preselect while ONNX FP16 fails on some ordinary sentences?'
+    answers:
+    - 'D-239: INT8 or FP32 until the cause is known, per the recommendation Mat accepted on 2026-11-04'
+    decided_by: human
+    decision_log:
+    - id: D-239
+      stage: triage
+      question: Which model does a fresh install preselect while ONNX FP16 fails on some ordinary sentences?
+      resolution: human
+      class: product-preference
+      chosen: ONNX INT8 or ONNX FP32 until the cause is known. INT8 is the working choice, as the smallest file with the least memory. Mat listens to it first
+      source_tag: Human-approved
+      precedents:
+      - ui/src/renderer/src/features/tts/tts-controls.ts:104-117 — the fallback order that lands on FP16 today
+      - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME D-217 — Mat ruled the same day that PyTorch stays out of installed builds, which leaves only the ONNX variants
+      research:
+        engine: none
+        sources: []
+      reasoning: A user who keeps the preselected model should not hit a failure on an ordinary sentence. INT8 and FP32 had no failures in the 2026-11-04 probe and generated at the same speed. INT8 is 92
+        MB against 326 MB and peaked at 583 MB against 817 MB. Nobody has compared them by ear, so the choice between them stays with Mat's listening check.
+      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
+    - id: D-801
+      stage: triage
+      question: Does the 2026-11-15 triage register an MEU for the D-797 ship amendment?
+      resolution: autonomous
+      class: two-way
+      chosen: No. Session 74 is already prompted for it (C:/Temp/av-kit/session-74-prompt.md), runs alone with no grouping, and registers MEU-144 at its plan gate if Mat confirms. MEU-144 and matrix row
+        3.21 stay free for it; this batch starts at MEU-145.
+      source_tag: Human-approved
+      precedents:
+      - 'D-797 (Mat, 2026-11-15, ''Ship guarded (Recommended)''): a plan amendment with its own Red and review'
+      - 'Session 74 prompt: the registration is an open human check at that plan gate, with a do-nothing option'
+      - 'D-345: Session 52 registered MEU-127 from D-336 at plan time'
+      research:
+        engine: none
+        sources: []
+      reasoning: Registering it here would decide a check the Session 74 prompt leaves to Mat. Holding the number keeps that prompt's IDs true. Two-way.
 - id: CLOSEOUT-CHECK-REFUSES-REGISTER
   title: The closeout check refuses known-issues.yaml as the triage tool writes it, and --decision-issue keeps only the last value
   severity: medium
@@ -3173,6 +3308,40 @@ archived:
         engine: none
         sources: []
       reasoning: Same probe and the same scan path as MEU-145, so one session reuses the context. The route touches user files, so it is not decided here. Two-way.
+- id: MCP-AUDIT-BASELINE-PENDING-CROP
+  title: The committed MCP audit baseline has no avkit_capture.crop entry
+  severity: low
+  component: mcp-server
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-499
+      stage: planning
+      question: How does the MCP audit baseline meet the new crop action?
+      resolution: human
+      class: governance-value
+      chosen: 'A: BASELINE_PENDING = [''avkit_capture.crop''] in mcp-server/tests/audit/coverage.test.ts, AC-68.5''s committed-baseline clause amended, and this issue filed'
+      source_tag: Human
+      precedents:
+      - mcp-server/tests/audit/coverage.test.ts:78-85 — AC-68.5 at 8bcb4a6
+      - .agent/skills/mcp-tool-audit/SKILL.md:45-51 — BASELINE_UPDATE_RULE and BASELINE_ANNOTATION_RULE
+      - .agent/context/known-issues.yaml — YOUTUBE-CAPTIONS-IP-BLOCK, open; do not refresh the audit baseline to hide it
+      - docs/execution/plans/2026-10-02-capture-flatten-backup/implementation-plan.md:200 — D-20, a gate-only tolerance
+      research:
+        engine: exa
+        sources:
+        - https://contribute.qt-project.org/quips/24/
+        - https://handbook.gitlab.com/handbook/engineering/testing/quarantine-process/
+        - https://www.rad-ui.com/docs/contributing/flaky-test-quarantine
+        - https://sysroot.io/blog/flaky-tests-quarantine-strategy-ci-cd-reliability
+      reasoning: The baseline is a governed snapshot that only an authoritative run updates, and that run is blocked while the caption block holds. Naming the one gap in the test and here keeps main green
+        and tells the next release audit what to accept. Two-way.
+      human_message_reference: '**Mat''s ruling (2026-11-09):** option A, as recommended: `BASELINE_PENDING` in the test, plus a filed issue. Mat''s words: "D-499 A".'
 - id: CAPTURE-SCAN-UNPROBEABLE-FILE-BREAKS-LIST
   title: One inbox-root file the scan can't open breaks the capture list
   severity: medium
@@ -3220,6 +3389,58 @@ archived:
         sources: []
       reasoning: One file hides every shot from the page and MCP, and the 422 carries a path. The bucket command paired this with TTS-ONNX-FP16-NONFINITE-AUDIO only because both are P2 MEU-NEW; they share
         no file, so that pairing was dropped. Two-way.
+- id: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL
+  title: Claude Code doesn't show a model the per-action text in _meta.action_descriptions
+  severity: low
+  component: mcp-server
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: human
+    decision_log:
+    - id: D-528
+      stage: closeout
+      question: Claude Code doesn't show a model _meta.action_descriptions, where each MCP action's text lives. Register it as a known issue, or leave it as the plan's observation?
+      resolution: human
+      class: two-way
+      chosen: 'A: register it, as recommended: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL, P3, open, linked to MEU-131, no fix planned, filed at closeout in Session 60''s commit'
+      source_tag: Human-approved
+      precedents:
+      - mcp-server/src/toolsets/registry.ts:599-610 — action text is registered only under _meta.action_descriptions
+      - C:/Temp/av-kit/s60-plan-d494-describe.txt — the crop text sits under the heading not shown to the agent
+      - docs/execution/plans/2026-11-10-gui-capture-crop-tool/implementation-plan.md — User Review Required, The gate, 2026-11-10
+      research:
+        engine: none
+        sources: []
+      reasoning: The gap was found on this session's own tool schema and changes what an agent can learn about every action, but the session's scope is renderer-only and changes no MCP text. Registering
+        records the probe and the D-521 run's feedback for a plan of its own. Doing nothing leaves it in a plan note the register doesn't show. Two-way.
+      human_message_reference: 'A: Register it (Recommended)'
+    - id: D-1134
+      stage: triage
+      question: Should the model see what each av-kit MCP action does?
+      resolution: human
+      class: one-way-door
+      mandatory:
+      - M-4
+      chosen: 'A: give avkit_capture a real description built from its existing action text, under 4,096 characters, with the Session 64 eval rerun as acceptance; the other seven tools stay as they are
+        until a miss is measured. Lands in Session 92 before its baseline.'
+      source_tag: Human-approved
+      precedents:
+      - 'D-528 (Session 60 closeout): register, no fix planned'
+      - 'D-505 and D-608 A: Session 64 description eval (docs/build-plan/09-screenshot-capture.md:1247)'
+      - 'D-621 A: Session 64 eval recorded as evidence for this issue'
+      research:
+        engine: tavily
+        sources:
+        - https://code.claude.com/docs/en/mcp — server instructions and upfront tool descriptions are cut at 4,096 characters, tool-search descriptions at 16,384; before v2.1.296 the limit was 2,048
+        - https://modelcontextprotocol.io/specification/2025-06-18/basic — _meta is reserved metadata between client and server; nothing makes a client show it to a model
+        - https://github.com/anthropics/claude-code/issues/81268 — truncation is silent; server authors put critical details first and gate length themselves
+      reasoning: 'Capture is the only tool where a miss was measured, and its existing action text is what the passing Session 64 runs saw, so no new writing is needed. Every-tool lines (B) were mostly
+        new writing with no measured need; keeping it as is (C) leaves the measured Capture misses. M-4 public MCP surface, so Mat decides. Undo: revert one TOOL_TOP_LEVEL entry and its test.'
+      human_message_reference: 'USER_EXPLICIT 2026-11-17 "D-1134: A"'
 - id: DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT
   title: Downloads pin three YouTube clients and fail when only another client works
   severity: high
@@ -3396,6 +3617,33 @@ archived:
   category: TECH-DEBT
   priority: P4
   enrichment: null
+- id: VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE
+  title: Real-ffmpeg frame grabs near a clip's last frame occasionally fail (frame grab failed at 00:00:02.999 / 00:00:03.200)
+  severity: low
+  component: core
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1127
+      stage: triage
+      question: The tail-frame flake failed the Python suite again on 2026-11-17. Keep it MONITORING P4?
+      resolution: autonomous
+      class: two-way
+      chosen: 'TECH-DEBT P3: log the frame-grab ffmpeg stderr and the clip duration near the tail, find the cause, and check whether the product grab fails too; an MEU is registered at the plan gate only
+        if the fix is in the product.'
+      source_tag: Local Canon
+      precedents:
+      - 'Triage priority matrix: low severity that blocks other work is P3'
+      - 'Issue notes: next step on a repeat'
+      research:
+        engine: none
+        sources: []
+      reasoning: Second session in three days whose gate it failed, so it blocks other work. The product may share the cause. Two-way.
+    decided_by: agent
 - id: E2E-CONSOLE-C15-COUNTS-GET
   title: Console E2E C1-5 counts the Console's settings GET as a PUT
   severity: low
@@ -3500,6 +3748,58 @@ archived:
       reasoning: No job runs while the queue is Paused, so there is nothing to cancel; a disabled button says so and matches what the services already do. Cancel to Idle changes a service and the API meaning
         of cancel. Leaving it keeps a button that does nothing. Two-way.
       human_message_reference: USER_EXPLICIT 2026-11-17 'QUEUE-CANCEL-WHILE-PAUSED-NO-EFFECT - recommendation accepted, proceed'
+- id: HELP-F1-BEFORE-LAZY-MOUNT-LOST
+  title: F1 on Convert or Capture can be lost while the page is still loading
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1128
+      stage: triage
+      question: Which MEU covers F1 lost before the lazy Convert and Capture pages mount, and at what priority?
+      resolution: autonomous
+      class: two-way
+      chosen: 'MEU-158 gui-help-f1-after-mount (06, matrix 6.22, P4): the help toggle is held until the page''s HelpCard listens, using the holding pattern MEU-157 built for Ctrl+O.'
+      source_tag: Local Canon
+      precedents:
+      - 'D-1109 (Session 89 plan): F1 registered, not fixed'
+      - MEU-157 gui-convert-browse-after-mount
+      research:
+        engine: none
+        sources: []
+      reasoning: 'A user-facing key does nothing on a first visit and a second press works, and no gate fails on it: low standalone, P4. MEU-157''s held delivery fits it. Two-way.'
+    decided_by: agent
+- id: UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT
+  title: npm run preview opens no window when ELECTRON_RUN_AS_NODE is set in the IDE terminal
+  severity: low
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1130
+      stage: triage
+      question: npm run preview opens no window from an IDE terminal. Class and priority?
+      resolution: autonomous
+      class: two-way
+      chosen: 'TECH-DEBT P4, no MEU: give preview the same wrapper Session 90 gave dev (ui/scripts/electron-vite-dev.mjs), in the small-fixes session.'
+      source_tag: Local Canon
+      precedents:
+      - 'D-1119 (Session 90): dev fixed, preview left'
+      - UI-DEV-ELECTRON-RUN-AS-NODE-SILENT (resolved)
+      research:
+        engine: none
+        sources: []
+      reasoning: Developer tooling only, with a workaround, and the fix copies an existing one. Two-way.
+    decided_by: agent
 actionable:
 - id: TOOLING-SHARED-REGISTRY-COUPLING
   title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
@@ -3527,68 +3827,6 @@ actionable:
         engine: none
         sources: []
       reasoning: Three recurrences in three weeks, each blocking a gate or a dispatch for reasons outside av-kit. Two-way.
-- id: DOWNLOAD-QUEUE-DRAG-OVER-MISS
-  title: Download-queue drag-over (A16 committed-over wait) occasionally misses on Windows
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-1126
-      stage: triage
-      question: The Electron pointer, drag and launch flakes failed 4 of 7 full runs in Session 90. Keep them MONITORING P4?
-      resolution: autonomous
-      class: two-way
-      chosen: TECH-DEBT P3 for DOWNLOAD-QUEUE-DRAG-OVER-MISS, CAPTURE-ZOOM-PAN-ORIGIN-FLAKE and CAPTURE-E2E-LAUNCH-TEARDOWN-HANG, fixed together in one session that reproduces them under load; no retries
-        and no raised timeouts. Session 90's unnamed specs fold into the first two.
-      source_tag: Local Canon
-      precedents:
-      - 'Triage priority matrix: low severity that blocks other work is P3'
-      - 'Session 90 handoff line 290: unnamed specs left for the next triage'
-      research:
-        engine: none
-        sources: []
-      reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
-    decided_by: agent
-- id: CAPTURE-ZOOM-PAN-ORIGIN-FLAKE
-  title: Capture viewport AC-66.14 middle-button pan origin occasionally off under full Electron suite load
-  severity: low
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-1126
-      stage: triage
-      question: The Electron pointer, drag and launch flakes failed 4 of 7 full runs in Session 90. Keep them MONITORING P4?
-      resolution: autonomous
-      class: two-way
-      chosen: TECH-DEBT P3 for DOWNLOAD-QUEUE-DRAG-OVER-MISS, CAPTURE-ZOOM-PAN-ORIGIN-FLAKE and CAPTURE-E2E-LAUNCH-TEARDOWN-HANG, fixed together in one session that reproduces them under load; no retries
-        and no raised timeouts. Session 90's unnamed specs fold into the first two.
-      source_tag: Local Canon
-      precedents:
-      - 'Triage priority matrix: low severity that blocks other work is P3'
-      - 'Session 90 handoff line 290: unnamed specs left for the next triage'
-      research:
-        engine: none
-        sources: []
-      reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
-    decided_by: agent
-- id: MCP-AUDIT-CENSUS-PROBE-SINGLE-SHOT
-  title: MCP audit container census network proofs are single-shot, so YouTube's per-moment wall can fail a container run
-  severity: low
-  component: mcp-server
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment: null
 - id: TTS-ESPEAK-LIVE-PATH-UNVERIFIED
   title: Non-English voices via the real espeak-ng CLI were never run end to end (AC-74.11)
   severity: medium
@@ -3619,8 +3857,8 @@ actionable:
   severity: low
   component: ui
   status: open
-  category: TECH-DEBT
-  priority: P3
+  category: MONITORING
+  priority: P4
   enrichment:
     questions_asked: []
     answers: []
@@ -3640,6 +3878,22 @@ actionable:
         engine: none
         sources: []
       reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
+    - id: D-1197
+      stage: triage
+      question: Session 91 did not reproduce the capture-inbox launch hang. Keep it TECH-DEBT P3?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: MONITORING P4, not grouped. The phase logging stays in the suite; the next hang reopens it as TECH-DEBT P3.
+      source_tag: Local Canon
+      precedents:
+      - D-1126 (triage 2026-11-17) — P3 because the flakes failed session gates
+      - CAPTURE-E2E-LAUNCH-TEARDOWN-HANG notes, 2026-11-18 — Session 91 not-reproduced verdict
+      research:
+        engine: none
+        sources: []
+      reasoning: D-1126 raised it to P3 because it failed gates. In 13 instrumented runs it failed none, and the other two flakes it was grouped with are resolved. A session now would have nothing to reproduce.
+        The instrumentation will name the phase on a repeat, so waiting costs nothing. Two-way.
     decided_by: agent
 - id: TRANSCRIPT-ADD-CHANNEL-422
   title: Adding a channel returned 422 after about 8 minutes of enumeration
@@ -3649,33 +3903,6 @@ actionable:
   category: MONITORING
   priority: P4
   enrichment: null
-- id: DOWNLOADER-ADVANCED-PANEL-GAP
-  title: An empty gap sits under Advanced on the Downloader page
-  severity: low
-  component: ui
-  status: open
-  category: MEU-NEW
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-1129
-      stage: triage
-      question: The Advanced gap is visible in the README's main screenshot. Give it an MEU?
-      resolution: autonomous
-      class: two-way
-      chosen: 'MEU-159 gui-downloader-advanced-gap (11, matrix 11.14, P4): the element that holds the space is found and the gap removed, proved by an Electron layout check; the README screenshot is retaken
-        only if Mat asks.'
-      source_tag: Local Canon
-      precedents:
-      - 11 page layout residual sections (MEU-79 pattern)
-      - MEU-53 gui-downloader-layout
-      research:
-        engine: none
-        sources: []
-      reasoning: 'Cosmetic but on the first image a visitor sees; the cause is unknown, so it needs a home that a plan can scope. Low standalone: P4. Two-way.'
-    decided_by: agent
 - id: E2E-CLIPBOARD-PRIMER-EMPTY
   title: AC-88.12's clipboard primer read an empty clipboard for 5 s once
   severity: low
@@ -3684,52 +3911,6 @@ actionable:
   category: MONITORING
   priority: P4
   enrichment: null
-- id: TTS-ONNX-FP16-NONFINITE-AUDIO
-  title: ONNX FP16 fails on some ordinary sentences with 'generated audio must be finite', and a fresh install preselects it
-  severity: high
-  component: infrastructure
-  status: open
-  category: MEU-NEW
-  priority: P2
-  enrichment:
-    questions_asked:
-    - 'D-239: Which model does a fresh install preselect while ONNX FP16 fails on some ordinary sentences?'
-    answers:
-    - 'D-239: INT8 or FP32 until the cause is known, per the recommendation Mat accepted on 2026-11-04'
-    decided_by: human
-    decision_log:
-    - id: D-239
-      stage: triage
-      question: Which model does a fresh install preselect while ONNX FP16 fails on some ordinary sentences?
-      resolution: human
-      class: product-preference
-      chosen: ONNX INT8 or ONNX FP32 until the cause is known. INT8 is the working choice, as the smallest file with the least memory. Mat listens to it first
-      source_tag: Human-approved
-      precedents:
-      - ui/src/renderer/src/features/tts/tts-controls.ts:104-117 — the fallback order that lands on FP16 today
-      - TTS-PYTORCH-OFFERED-WITHOUT-RUNTIME D-217 — Mat ruled the same day that PyTorch stays out of installed builds, which leaves only the ONNX variants
-      research:
-        engine: none
-        sources: []
-      reasoning: A user who keeps the preselected model should not hit a failure on an ordinary sentence. INT8 and FP32 had no failures in the 2026-11-04 probe and generated at the same speed. INT8 is 92
-        MB against 326 MB and peaked at 583 MB against 817 MB. Nobody has compared them by ear, so the choice between them stays with Mat's listening check.
-      human_message_reference: USER_EXPLICIT 2026-11-04 'All ohter recommendations are accepted'
-    - id: D-801
-      stage: triage
-      question: Does the 2026-11-15 triage register an MEU for the D-797 ship amendment?
-      resolution: autonomous
-      class: two-way
-      chosen: No. Session 74 is already prompted for it (C:/Temp/av-kit/session-74-prompt.md), runs alone with no grouping, and registers MEU-144 at its plan gate if Mat confirms. MEU-144 and matrix row
-        3.21 stay free for it; this batch starts at MEU-145.
-      source_tag: Human-approved
-      precedents:
-      - 'D-797 (Mat, 2026-11-15, ''Ship guarded (Recommended)''): a plan amendment with its own Red and review'
-      - 'Session 74 prompt: the registration is an open human check at that plan gate, with a do-nothing option'
-      - 'D-345: Session 52 registered MEU-127 from D-336 at plan time'
-      research:
-        engine: none
-        sources: []
-      reasoning: Registering it here would decide a check the Session 74 prompt leaves to Mat. Holding the number keeps that prompt's IDs true. Two-way.
 - id: E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE
   title: The transcript queue E2E's seam reload failed once with ERR_ABORTED under load
   severity: low
@@ -3759,149 +3940,10 @@ actionable:
         - https://endform.dev/blog/quarantine-flaky-playwright-tests — a pass on retry is not a fix; track it with an owner
       reasoning: One failure can't show that a fix works, and no remaining session edits the test file. Session 57's gate runs it anyway, so a named watch item there costs one plan line. Two-way.
       human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
-- id: MCP-AUDIT-BASELINE-PENDING-CROP
-  title: The committed MCP audit baseline has no avkit_capture.crop entry
+- id: EVAL-HARNESS-DESCRIBE-CP437-MOJIBAKE
+  title: Session 64's eval describe capture decodes the MCP server's UTF-8 through cp437, so the eval surface carries mojibake
   severity: low
-  component: mcp-server
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-499
-      stage: planning
-      question: How does the MCP audit baseline meet the new crop action?
-      resolution: human
-      class: governance-value
-      chosen: 'A: BASELINE_PENDING = [''avkit_capture.crop''] in mcp-server/tests/audit/coverage.test.ts, AC-68.5''s committed-baseline clause amended, and this issue filed'
-      source_tag: Human
-      precedents:
-      - mcp-server/tests/audit/coverage.test.ts:78-85 — AC-68.5 at 8bcb4a6
-      - .agent/skills/mcp-tool-audit/SKILL.md:45-51 — BASELINE_UPDATE_RULE and BASELINE_ANNOTATION_RULE
-      - .agent/context/known-issues.yaml — YOUTUBE-CAPTIONS-IP-BLOCK, open; do not refresh the audit baseline to hide it
-      - docs/execution/plans/2026-10-02-capture-flatten-backup/implementation-plan.md:200 — D-20, a gate-only tolerance
-      research:
-        engine: exa
-        sources:
-        - https://contribute.qt-project.org/quips/24/
-        - https://handbook.gitlab.com/handbook/engineering/testing/quarantine-process/
-        - https://www.rad-ui.com/docs/contributing/flaky-test-quarantine
-        - https://sysroot.io/blog/flaky-tests-quarantine-strategy-ci-cd-reliability
-      reasoning: The baseline is a governed snapshot that only an authoritative run updates, and that run is blocked while the caption block holds. Naming the one gap in the test and here keeps main green
-        and tells the next release audit what to accept. Two-way.
-      human_message_reference: '**Mat''s ruling (2026-11-09):** option A, as recommended: `BASELINE_PENDING` in the test, plus a filed issue. Mat''s words: "D-499 A".'
-- id: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL
-  title: Claude Code doesn't show a model the per-action text in _meta.action_descriptions
-  severity: low
-  component: mcp-server
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decided_by: human
-    decision_log:
-    - id: D-528
-      stage: closeout
-      question: Claude Code doesn't show a model _meta.action_descriptions, where each MCP action's text lives. Register it as a known issue, or leave it as the plan's observation?
-      resolution: human
-      class: two-way
-      chosen: 'A: register it, as recommended: MCP-ACTION-DESCRIPTIONS-HIDDEN-FROM-MODEL, P3, open, linked to MEU-131, no fix planned, filed at closeout in Session 60''s commit'
-      source_tag: Human-approved
-      precedents:
-      - mcp-server/src/toolsets/registry.ts:599-610 — action text is registered only under _meta.action_descriptions
-      - C:/Temp/av-kit/s60-plan-d494-describe.txt — the crop text sits under the heading not shown to the agent
-      - docs/execution/plans/2026-11-10-gui-capture-crop-tool/implementation-plan.md — User Review Required, The gate, 2026-11-10
-      research:
-        engine: none
-        sources: []
-      reasoning: The gap was found on this session's own tool schema and changes what an agent can learn about every action, but the session's scope is renderer-only and changes no MCP text. Registering
-        records the probe and the D-521 run's feedback for a plan of its own. Doing nothing leaves it in a plan note the register doesn't show. Two-way.
-      human_message_reference: 'A: Register it (Recommended)'
-    - id: D-1134
-      stage: triage
-      question: Should the model see what each av-kit MCP action does?
-      resolution: human
-      class: one-way-door
-      mandatory:
-      - M-4
-      chosen: 'A: give avkit_capture a real description built from its existing action text, under 4,096 characters, with the Session 64 eval rerun as acceptance; the other seven tools stay as they are
-        until a miss is measured. Lands in Session 92 before its baseline.'
-      source_tag: Human-approved
-      precedents:
-      - 'D-528 (Session 60 closeout): register, no fix planned'
-      - 'D-505 and D-608 A: Session 64 description eval (docs/build-plan/09-screenshot-capture.md:1247)'
-      - 'D-621 A: Session 64 eval recorded as evidence for this issue'
-      research:
-        engine: tavily
-        sources:
-        - https://code.claude.com/docs/en/mcp — server instructions and upfront tool descriptions are cut at 4,096 characters, tool-search descriptions at 16,384; before v2.1.296 the limit was 2,048
-        - https://modelcontextprotocol.io/specification/2025-06-18/basic — _meta is reserved metadata between client and server; nothing makes a client show it to a model
-        - https://github.com/anthropics/claude-code/issues/81268 — truncation is silent; server authors put critical details first and gate length themselves
-      reasoning: 'Capture is the only tool where a miss was measured, and its existing action text is what the passing Session 64 runs saw, so no new writing is needed. Every-tool lines (B) were mostly
-        new writing with no measured need; keeping it as is (C) leaves the measured Capture misses. M-4 public MCP surface, so Mat decides. Undo: revert one TOOL_TOP_LEVEL entry and its test.'
-      human_message_reference: 'USER_EXPLICIT 2026-11-17 "D-1134: A"'
-- id: VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE
-  title: Real-ffmpeg frame grabs near a clip's last frame occasionally fail (frame grab failed at 00:00:02.999 / 00:00:03.200)
-  severity: low
-  component: core
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-1127
-      stage: triage
-      question: The tail-frame flake failed the Python suite again on 2026-11-17. Keep it MONITORING P4?
-      resolution: autonomous
-      class: two-way
-      chosen: 'TECH-DEBT P3: log the frame-grab ffmpeg stderr and the clip duration near the tail, find the cause, and check whether the product grab fails too; an MEU is registered at the plan gate only
-        if the fix is in the product.'
-      source_tag: Local Canon
-      precedents:
-      - 'Triage priority matrix: low severity that blocks other work is P3'
-      - 'Issue notes: next step on a repeat'
-      research:
-        engine: none
-        sources: []
-      reasoning: Second session in three days whose gate it failed, so it blocks other work. The product may share the cause. Two-way.
-    decided_by: agent
-- id: HELP-F1-BEFORE-LAZY-MOUNT-LOST
-  title: F1 on Convert or Capture can be lost while the page is still loading
-  severity: low
-  component: ui
-  status: open
-  category: MEU-NEW
-  priority: P4
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-1128
-      stage: triage
-      question: Which MEU covers F1 lost before the lazy Convert and Capture pages mount, and at what priority?
-      resolution: autonomous
-      class: two-way
-      chosen: 'MEU-158 gui-help-f1-after-mount (06, matrix 6.22, P4): the help toggle is held until the page''s HelpCard listens, using the holding pattern MEU-157 built for Ctrl+O.'
-      source_tag: Local Canon
-      precedents:
-      - 'D-1109 (Session 89 plan): F1 registered, not fixed'
-      - MEU-157 gui-convert-browse-after-mount
-      research:
-        engine: none
-        sources: []
-      reasoning: 'A user-facing key does nothing on a first visit and a second press works, and no gate fails on it: low standalone, P4. MEU-157''s held delivery fits it. Two-way.'
-    decided_by: agent
-- id: UI-PREVIEW-ELECTRON-RUN-AS-NODE-SILENT
-  title: npm run preview opens no window when ELECTRON_RUN_AS_NODE is set in the IDE terminal
-  severity: low
-  component: ui
+  component: agent
   status: open
   category: TECH-DEBT
   priority: P4
@@ -3909,20 +3951,25 @@ actionable:
     questions_asked: []
     answers: []
     decision_log:
-    - id: D-1130
+    - id: D-1196
       stage: triage
-      question: npm run preview opens no window from an IDE terminal. Class and priority?
+      question: How is the eval describe mojibake classified, and is it fixed now?
       resolution: autonomous
       class: two-way
-      chosen: 'TECH-DEBT P4, no MEU: give preview the same wrapper Session 90 gave dev (ui/scripts/electron-vite-dev.mjs), in the small-fixes session.'
+      mandatory: none
+      chosen: 'TECH-DEBT P4, fixed in its own small session: Session 64''s eval tooling captures describe as raw bytes and refuses cp437 mojibake, modelled on Session 92''s eval-rerun.py guard. No MEU,
+        no eval rerun.'
       source_tag: Local Canon
       precedents:
-      - 'D-1119 (Session 90): dev fixed, preview left'
-      - UI-DEV-ELECTRON-RUN-AS-NODE-SILENT (resolved)
+      - docs/execution/plans/2026-11-17-mcp-audit-refresh/eval-rerun.py — Session 92's raw-byte capture and fail-closed mojibake guard (D-1186)
+      - .agent/workflows/issue-triage.md priority matrix — low severity that blocks nothing is P4
+      - D-1132 (grouping 2026-11-17) — debt with no product change gets no MEU
       research:
         engine: none
         sources: []
-      reasoning: Developer tooling only, with a workaround, and the fix copies an existing one. Two-way.
+      reasoning: 'Low severity: it corrupts only evals run the eval-run.md way, and none is queued. It is still a live trap in a run book a later session will follow, and Session 92 already wrote the guard,
+        so the fix is small and copies proven code. Doing nothing leaves the next eval reading box-drawing characters. A rerun of Session 64''s eval would measure a surface no client serves any more, because
+        Session 92 changed avkit_capture and evaluated it on clean text. Two-way.'
     decided_by: agent
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
@@ -4099,19 +4146,4 @@ deferred:
         list of every FFmpeg dependency and no change. Whether naming it changes legal exposure was not assessed; this is not legal advice.
       human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
     decided_by: human
-proposed_batches:
-- slug: ui-downloader-advanced-panel-gap-help-f1-before-lazy-mount-lost
-  issues:
-  - DOWNLOADER-ADVANCED-PANEL-GAP
-  - HELP-F1-BEFORE-LAZY-MOUNT-LOST
-  component: ui
-  priority_band: P4
-  complexity: M
-  has_duplicates: false
-- slug: infrastructure-tts-onnx-fp16-nonfinite-audio
-  issues:
-  - TTS-ONNX-FP16-NONFINITE-AUDIO
-  component: infrastructure
-  priority_band: P2
-  complexity: S
-  has_duplicates: false
+proposed_batches: []

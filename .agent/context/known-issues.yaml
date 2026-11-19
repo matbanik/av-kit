@@ -987,6 +987,8 @@ issues:
       TRIAGE 2026-10-09: Keep the A-4 diagnostics; reopen with their output on the next miss. REOPENED 2026-10-16 (Session 39 capture-new-marks gate, worktree s39-capture-new-marks; no change there reaches the queue pages): run 3 failed AC-49.25 (download) and W2-5 (transcript); the isolated rerun of those two files then failed AC-49.26 with A-4 diagnostics: live region "DL-1 was moved to position 4 of 4.", dragState idle, focused true, visibility visible (target position 3). Run 4 failed AC-49.29 (convert) with the PUT body [job-2, job-3, job-4, job-1] instead of [job-2, job-3, job-1, job-4]. Both are an overshoot by exactly one row with the window focused, so not the A-7 human-input case. In isolation each passes: AC-49.25/26 8/8, W2-5 4/4, AC-49.29 20/20. Seen only in the full 146-test Electron run. Next step: add A-4 style diagnostics to convert-queue dragOver and probe the over-target at release under load. SEEN AGAIN 2026-10-17 (Session 35 tts-voice-panel H1-2 re-run, worktree s35-tts-voice-panel; no change there reaches the queue pages): W2-5 hit its 180 s test timeout plus a worker teardown timeout in the full 161-test run (1 failed, 160 passed) while other worktrees ran on the host; alone it passed 4/4 in 13.8 s. Hang shape, not a drag overshoot. Receipts C:/Temp/av-kit/s35-gate-h1-r2fail/ and s35-gate-flake-w25.txt (walkthrough A-2).
 
       SEEN AGAIN 2026-11-17. Session 90 test-run-reliability (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, failing-spec table): 4 of 7 full Electron runs failed on main. Drag specs among them: download-queue.test.ts:1319 and convert-queue.test.ts:1182 (AC-49.29, folded in here by triage D-1126). Reclassified MONITORING P4 to TECH-DEBT P3 (D-1126): it fails session gates.
+
+      COUNT CORRECTED 2026-11-18 (triage): Session 90 failed 3 of 7 full Electron runs, not 4 of 7 (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, row 5 attempts table: attempt 1 run 3, attempt 2 run 1 and attempt 3 run 3; found by Session 91's expert pass). The 2026-11-17 note and the D-1126 question above keep the count as it was written.
     meu_links: []
     related: []
     enrichment:
@@ -1027,6 +1029,8 @@ issues:
       SEEN 2026-10-17 (Session 35 tts-voice-panel H1-2 re-run after the R2 F2 correction, worktree s35-tts-voice-panel; the only change since the previous passing gate was the TTS adapter and its Python test): 1 failed, 160 passed in the full 161-test run; alone 5/5 passed (--repeat-each=5, 15.5 s). Receipts C:/Temp/av-kit/s35-gate-h1-r3fail/ and s35-gate-flake-ac6614.txt (walkthrough A-4). Next step on a repeat: log readZoom before and after the pan and wait for a stable origin instead of a fixed two frames.
 
       SEEN AGAIN 2026-11-17. Session 90 test-run-reliability (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, failing-spec table): 4 of 7 full Electron runs failed on main. Real-pointer capture specs among them: capture-inbox.test.ts:1601, :1658, :2001 and :3496 (folded in here by triage D-1126). Reclassified MONITORING P4 to TECH-DEBT P3 (D-1126): it fails session gates.
+
+      COUNT CORRECTED 2026-11-18 (triage): Session 90 failed 3 of 7 full Electron runs, not 4 of 7 (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, row 5 attempts table: attempt 1 run 3, attempt 2 run 1 and attempt 3 run 3; found by Session 91's expert pass). The 2026-11-17 note and the D-1126 question above keep the count as it was written.
     meu_links: []
     related: []
     enrichment:
@@ -1993,8 +1997,10 @@ issues:
       Triage 2026-11-04: Upstream tracking moves: anthropics/claude-code#98978 was closed on 2026-10-11 as a duplicate of #98256, which is open. DIALOG_FALLBACK stays.
 
       Triage 2026-11-17: anthropics/claude-code#98256 is still open (last updated 2026-11-13). DIALOG_FALLBACK stays.
+
+      Triage 2026-11-18: anthropics/claude-code#98256 is still open (last updated 2026-11-13). DIALOG_FALLBACK stays.
     verification:
-      last_checked: '2026-11-17'
+      last_checked: '2026-11-18'
     category: UPSTREAM
     priority: P3
     meu_links:
@@ -2914,11 +2920,11 @@ issues:
     root_cause: 'hypothesis: under host load (other agent sessions starting their MCP servers) an Electron launch or close in capture-inbox.test.ts stalls past the 60 s test timeout, and Playwright then cannot tear the worker down. No assertion or locator step fails. Not reproduced in isolation; unexplained.'
     blast_radius: ui/tests/e2e/capture-inbox.test.ts in the full Electron run (AC-67.24 and AC-67.35 seen). A miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
     verification:
-      last_checked: '2026-11-17'
-      method: Session 90 full Electron runs (handoff failing-spec table)
-      result: 4 of 7 full runs failed; the specs named in notes
-    category: TECH-DEBT
-    priority: P3
+      last_checked: '2026-11-18'
+      method: Session 91 e2e-pointer-flakes receipts (C:/Temp/av-kit/e2e-pointer-flakes/epf-hang-verdict.txt, epf-accept.txt, epf-watch10.txt)
+      result: 'outcome: not-reproduced; epf-hang-signatures.json is []; three acceptance runs and ten watch runs clean'
+    category: MONITORING
+    priority: P4
     related:
       - e2e-flake
       - capture
@@ -2929,6 +2935,10 @@ issues:
       SEEN AGAIN 2026-11-17. Session 90 test-run-reliability (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, failing-spec table): 4 of 7 full Electron runs failed on main. capture-inbox.test.ts:1948 (AC-81.11) hung at launch or teardown. Reclassified MONITORING P4 to TECH-DEBT P3 (D-1126): it fails session gates.
 
       NOT REPRODUCED 2026-11-18. Session 91 e2e-pointer-flakes (plan docs/execution/plans/2026-11-17-e2e-pointer-flakes): no test-timeout hang in any row 3 to 8 receipt, including the row 3 rerun (D-1153) and the row 8 acceptance (epf-accept.txt, three full runs, and epf-watch10.txt, all clean at 18 busy children); epf-hang-verdict.txt ends 'outcome: not-reproduced' and epf-hang-signatures.json is []. The phase instrumentation stays (ui/tests/e2e/e2e-diag.ts writes each launch's launch, evaluate and close phases under its run id, and the plan's flake-run.py logs host process starts during the runs). Next step on a repeat: read that run's phases.jsonl for the last phase of each launch and classify the hang by it.
+
+      COUNT CORRECTED 2026-11-18 (triage): Session 90 failed 3 of 7 full Electron runs, not 4 of 7 (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, row 5 attempts table: attempt 1 run 3, attempt 2 run 1 and attempt 3 run 3; found by Session 91's expert pass). The 2026-11-17 note and the D-1126 question above keep the count as it was written.
+
+      Triage 2026-11-18 (D-1197): back to MONITORING P4. Session 91 ran 13 instrumented full or watch runs under load with no hang. Reopen as TECH-DEBT P3 on the next hang, and classify it by the last phase in that run's phases.jsonl.
     enrichment:
       questions_asked: []
       answers: []
@@ -2947,6 +2957,21 @@ issues:
             engine: none
             sources: []
           reasoning: 'A gate that fails more often than it passes slows every session, so these block other work: P3 by the matrix. Retrying would hide a race the product may share. Two-way.'
+        - id: D-1197
+          stage: triage
+          question: Session 91 did not reproduce the capture-inbox launch hang. Keep it TECH-DEBT P3?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: MONITORING P4, not grouped. The phase logging stays in the suite; the next hang reopens it as TECH-DEBT P3.
+          source_tag: Local Canon
+          precedents:
+            - D-1126 (triage 2026-11-17) — P3 because the flakes failed session gates
+            - CAPTURE-E2E-LAUNCH-TEARDOWN-HANG notes, 2026-11-18 — Session 91 not-reproduced verdict
+          research:
+            engine: none
+            sources: []
+          reasoning: D-1126 raised it to P3 because it failed gates. In 13 instrumented runs it failed none, and the other two flakes it was grouped with are resolved. A session now would have nothing to reproduce. The instrumentation will name the phase on a repeat, so waiting costs nothing. Two-way.
       decided_by: agent
   - id: PACKAGING-MCP-SNIPPET-TOKEN-STALE
     title: test_mcp_snippet_keys (AC-25.7) still requires AVKIT_API_TOKEN in mcp.json.example, which Session 31b made token-free
@@ -5744,3 +5769,35 @@ issues:
     discovered: '2026-11-18'
     root_cause: 'docs/execution/plans/2026-11-11-capture-export-copy/eval-run.md step 3 and task.md row E-1 capture the eval-harness.ts describe output through a PowerShell redirect of native output (E-1: rtk proxy npx tsx ... describe *> s64-E1-describe.txt). PowerShell decodes the server''s UTF-8 bytes through the console code page (cp437) and writes the text back as UTF-8 with CRLF, so an arrow becomes ''ΓåÆ'' and an en dash ''ΓÇô'' in the receipt, and every prompt built from it shows the model that corrupted text. Found by Session 92 (D-1186): its first describe receipt and prompts had the defect (mar-eval-describe-attempt1.txt and mar-eval-d1186-roundtrip.txt in its receipt folder prove they are the raw bytes decoded through cp437). Session 64''s own C:/Temp/av-kit/s64-E1-describe.txt has the same mojibake arrows and no real one, so Session 64''s three eval runs read a corrupted surface.'
     blast_radius: 'Any eval that follows Session 64''s eval-run.md step 3 or row E-1 as written: the model reads mojibake in the tool text, so a measured result describes a surface no client serves. Session 64''s AC-136.19 eval result rests on such a surface and was not rerun on clean text. Session 92 re-captured raw bytes with a subprocess and added a fail-closed mojibake and verbatim-description guard to its own eval-rerun.py prompts path only (D-1186), and its three runs passed on the clean surface. Fix direction for a later session: capture describe as raw bytes and refuse cp437 mojibake in Session 64''s eval tooling.'
+    category: TECH-DEBT
+    priority: P4
+    meu_links: []
+    related:
+      - eval
+      - mcp
+    verification:
+      last_checked: '2026-11-18'
+      method: Byte read of Session 64's describe receipt (C:/Temp/av-kit/s64-E1-describe.txt) and a read of eval-run.md step 3
+      result: 30806 bytes, 725 CRLF; 9 mojibake arrows and 2 mojibake en dashes, no real arrow. eval-run.md:24 still captures describe through a shell redirect.
+    notes: 'Triage 2026-11-18 (D-1196): TECH-DEBT P4, grouped as Session 95 eval-describe-raw-bytes in .agent/context/grouping/2026-11-18-eval-describe-session-grouping.md. No product code changes, so no MEU. The live avkit_capture surface was already evaluated on clean text by Session 92 (D-1186), so the fix is to the tooling and its run book, not a rerun.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1196
+          stage: triage
+          question: How is the eval describe mojibake classified, and is it fixed now?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: 'TECH-DEBT P4, fixed in its own small session: Session 64''s eval tooling captures describe as raw bytes and refuses cp437 mojibake, modelled on Session 92''s eval-rerun.py guard. No MEU, no eval rerun.'
+          source_tag: Local Canon
+          precedents:
+            - docs/execution/plans/2026-11-17-mcp-audit-refresh/eval-rerun.py — Session 92's raw-byte capture and fail-closed mojibake guard (D-1186)
+            - .agent/workflows/issue-triage.md priority matrix — low severity that blocks nothing is P4
+            - D-1132 (grouping 2026-11-17) — debt with no product change gets no MEU
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Low severity: it corrupts only evals run the eval-run.md way, and none is queued. It is still a live trap in a run book a later session will follow, and Session 92 already wrote the guard, so the fix is small and copies proven code. Doing nothing leaves the next eval reading box-drawing characters. A rerun of Session 64''s eval would measure a surface no client serves any more, because Session 92 changed avkit_capture and evaluated it on clean text. Two-way.'
+      decided_by: agent
