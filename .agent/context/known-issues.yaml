@@ -5802,3 +5802,122 @@ issues:
             sources: []
           reasoning: 'Low severity: it corrupts only evals run the eval-run.md way, and none is queued. It is still a live trap in a run book a later session will follow, and Session 92 already wrote the guard, so the fix is small and copies proven code. Doing nothing leaves the next eval reading box-drawing characters. A rerun of Session 64''s eval would measure a surface no client serves any more, because Session 92 changed avkit_capture and evaluated it on clean text. Two-way.'
       decided_by: agent
+  - id: CI-E2E-FLEET-HOST-UNTRACKED
+    status: open
+    discovered: '2026-11-18'
+    meu_links: []
+    title: The full Electron E2E suite can run on a second Windows host (MINI_AIR12), but only from untracked scratch scripts
+    severity: medium
+    component: agent
+    root_cause: 'Every full E2E run happens on the dev PC, where other agent sessions load the host: gates wait on host-load and the pointer flakes of Sessions 90 and 91 were load-driven. On 2026-11-18 the coordinator set up MINI_AIR12 by hand over SSH (alias mini-air12): Node, the Visual C++ runtime (onnxruntime fails to load without it), a sha256-checked gyan.dev 9.0.2 release ffmpeg (Smart App Control is enforced there and blocks the nightly ffprobe), a git archive of HEAD with its mtimes reset (the host clock is Pacific), the ui build plus the out-e2e harness build, and an Interactive-logon scheduled task as the signed-in user that runs the suite in the desktop session with no stored password. That setup lives only in C:/Temp/av-kit/fleet-research/miniair/ and is not tracked, tested or reviewed. The agentic-framework fleet member runs steps in S4U tasks with no desktop and refuses pwsh, so it cannot run Electron E2E as it stands. A zorivest session is preparing a GitHub Actions self-hosted runner (user zvci) on the same host; it is uncommitted, and two suites on one 4-core host must not overlap.'
+    blast_radius: New tracked tooling to send a commit to the host, build it, run the E2E suite in the signed-in desktop session and bring back report.json and a summary; refusals for session 0, a locked desktop, a busy host (zvci or another av-kit run) and a tree that is not the commit asked for; a run book with the host prerequisites; host names and accounts in an untracked local config. No product code. No GitHub runner registration and no stored password.
+    verification:
+      last_checked: '2026-11-18'
+      method: Run receipts copied from the host (C:/Temp/av-kit/fleet-research/miniair/results/20261118-191358/meta.txt, report.json)
+      result: 'run 20261118-191358: 228 of 232 passed in 19 min, 2 clipboard specs skipped by design; the 4 failures are host findings (CAPTURE-TEXT-PIXEL-2PX-MINIAIR, E2E-HOVER-NO-POINTER-DEVICE)'
+    category: PLAN-NEW
+    priority: P2
+    related:
+      - e2e
+      - fleet
+      - ci
+    notes: 'Triage 2026-11-18 (D-1212): PLAN-NEW P2, grouped as Session 96 e2e-remote-host in .agent/context/grouping/2026-11-18-e2e-remote-host-session-grouping.md. Mat asked for it on 2026-11-18: "There is mini-air 12 windows pc that could be used to run the E2E tests rather than running them directly on this system." Smart App Control, auto sign-in and any GitHub runner registration stay Mat''s decisions.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1212
+          stage: triage
+          question: How is the mini-air E2E setup classified, and is it built now?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: 'PLAN-NEW P2: tracked tooling that runs the full E2E suite on the mini-air in its signed-in desktop session over SSH and an Interactive-logon scheduled task, its own session (96), no MEU.'
+          source_tag: Local Canon
+          precedents:
+            - USER_EXPLICIT 2026-11-18 "There is mini-air 12 windows pc that could be used to run the E2E tests rather than running them directly on this system."
+            - 'AGENTS.md: automate app checks; Mat 2026-11-16 "This should be done with framework and scripts!"'
+            - 'D-1132 (grouping 2026-11-17): tooling with no product change gets no MEU'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for it, and the hand setup already passed 228 of 232, so the risk is in keeping it, not in proving it. Untracked scripts in a scratch folder are lost or drift, and the next session would redo the host fixes by hand. Moving the load off the dev PC removes the host-load waits that slowed every gate this week. Doing nothing keeps E2E on the shared dev PC. Two-way: the tooling can be dropped and the dev-PC route is unchanged.'
+      decided_by: agent
+  - id: CAPTURE-TEXT-PIXEL-2PX-MINIAIR
+    status: open
+    discovered: '2026-11-18'
+    meu_links: []
+    title: Capture text preview and its baked PNG land 2 px apart on the mini-air (AC-82.6, AC-102.19, AC-102.20)
+    severity: medium
+    component: ui
+    root_cause: 'unknown. On MINI_AIR12 (Windows 11 26H2, 96 DPI, 1920x1080, Intel N95 graphics) the three TEXT_PIXEL_ORACLE and TEXT_PARITY_E2E specs in ui/tests/e2e/capture-inbox.test.ts measure 2 px between the preview text box and the baked PNG, against a tolerance of 1, at 100% zoom; they pass on the dev PC. The text font is "Segoe UI", Arial, sans-serif (capture-text-metrics.ts:3), which every Windows 11 has. Candidates: a different Segoe UI build, GPU or software rasterisation, or the device scale factor. If it is the product, a user on such a PC saves text 2 px from where the preview showed it.'
+    blast_radius: ui/src/renderer/src/features/capture text bake or preview geometry, or the spec tolerance if the difference is rasterisation only; ui/tests/e2e/capture-inbox.test.ts AC-82.6, AC-102.19, AC-102.20.
+    verification:
+      last_checked: '2026-11-18'
+      method: Mini-air full runs 20261118-183804, -185348 and -191358 (C:/Temp/av-kit/fleet-research/miniair/results/20261118-191358/report.json)
+      result: 'all three runs: Expected <= 1, Received 2, in all three specs; the dev PC passes them'
+    category: TECH-DEBT
+    priority: P2
+    related:
+      - capture
+      - e2e
+      - fidelity
+    notes: 'Triage 2026-11-18 (D-1213): diagnose first, P2, grouped as Session 97 e2e-host-parity. The session proves which side moved before it changes product code or a tolerance; a tolerance change needs the measured cause.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1213
+          stage: triage
+          question: The capture text oracle is 2 px off on a second host. Fix it now, and how?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: 'Diagnose first in Session 97, after Session 96 makes mini-air runs repeatable: measure the preview and bake boxes on both hosts, name the side that moves, then fix the product or, only if both are correct and the difference is rasterisation, the tolerance.'
+          source_tag: Local Canon
+          precedents:
+            - 'AGENTS.md S3: never edit a test to pass'
+            - 'Session 82 TEXT_PARITY_E2E: the oracle exists to catch preview and bake drift'
+          research:
+            engine: none
+            sources: []
+          reasoning: It fails every run on a clean, ordinary Windows 11 PC, which looks more like a user's machine than the dev PC does, so it may be a real fidelity bug. Widening the tolerance without a cause would hide one. Doing nothing leaves three red specs on the second host, so its runs could never gate. Two-way.
+      decided_by: agent
+  - id: E2E-HOVER-NO-POINTER-DEVICE
+    status: open
+    discovered: '2026-11-18'
+    meu_links: []
+    title: 'settings AC-126.8 fails on a host with no mouse: the hover colour never applies'
+    severity: low
+    component: ui
+    root_cause: 'hypothesis: MINI_AIR12 has no pointing device (SM_MOUSEPRESENT 0), so Chromium reports hover: none and pointer: none, and Tailwind v4 emits hover: variants inside @media (hover: hover). The spec hovers theme-light-btn and expects rgb(22, 78, 99); it reads rgb(21, 94, 117), the resting colour. The spec assumes a mouse; the product behaves as designed for a touch-only device.'
+    blast_radius: 'ui/tests/e2e/settings.test.ts AC-126.8 (and any other spec that asserts a hover: style); the E2E launch or a fixture that states the hover capability the spec needs.'
+    verification:
+      last_checked: '2026-11-18'
+      method: Mini-air full runs 20261118-183804, -185348 and -191358 (C:/Temp/av-kit/fleet-research/miniair/results/20261118-191358/report.json); 16-pointer.ps1 probe
+      result: 'all three runs: toHaveCSS expected rgb(22, 78, 99), received rgb(21, 94, 117); SM_MOUSEPRESENT 0, no pointing device'
+    category: TECH-DEBT
+    priority: P3
+    related:
+      - e2e
+      - settings
+    notes: 'Triage 2026-11-18 (D-1214): TECH-DEBT P3, grouped with CAPTURE-TEXT-PIXEL-2PX-MINIAIR as Session 97 e2e-host-parity.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1214
+          stage: triage
+          question: How is the no-mouse hover failure handled?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: 'TECH-DEBT P3 in Session 97: prove the cause by reproducing hover: none on the dev PC, then make the spec state the hover capability it needs (or assert the hover-none behaviour where that is the product rule); no product change unless the proof says otherwise.'
+          source_tag: Local Canon
+          precedents:
+            - 'AGENTS.md S3: never edit a test to pass; a spec that states its environment is not weakened'
+          research:
+            engine: none
+            sources: []
+          reasoning: The product follows Tailwind's rule for touch-only devices, so the defect is the spec's unstated mouse. It blocks the second host from gating the settings spec. Doing nothing keeps one red spec on every mini-air run. Two-way.
+      decided_by: agent

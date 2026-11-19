@@ -3800,6 +3800,37 @@ archived:
         sources: []
       reasoning: Developer tooling only, with a workaround, and the fix copies an existing one. Two-way.
     decided_by: agent
+- id: EVAL-HARNESS-DESCRIBE-CP437-MOJIBAKE
+  title: Session 64's eval describe capture decodes the MCP server's UTF-8 through cp437, so the eval surface carries mojibake
+  severity: low
+  component: agent
+  status: resolved
+  category: TECH-DEBT
+  priority: P4
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1196
+      stage: triage
+      question: How is the eval describe mojibake classified, and is it fixed now?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: 'TECH-DEBT P4, fixed in its own small session: Session 64''s eval tooling captures describe as raw bytes and refuses cp437 mojibake, modelled on Session 92''s eval-rerun.py guard. No MEU,
+        no eval rerun.'
+      source_tag: Local Canon
+      precedents:
+      - docs/execution/plans/2026-11-17-mcp-audit-refresh/eval-rerun.py — Session 92's raw-byte capture and fail-closed mojibake guard (D-1186)
+      - .agent/workflows/issue-triage.md priority matrix — low severity that blocks nothing is P4
+      - D-1132 (grouping 2026-11-17) — debt with no product change gets no MEU
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Low severity: it corrupts only evals run the eval-run.md way, and none is queued. It is still a live trap in a run book a later session will follow, and Session 92 already wrote the guard,
+        so the fix is small and copies proven code. Doing nothing leaves the next eval reading box-drawing characters. A rerun of Session 64''s eval would measure a surface no client serves any more, because
+        Session 92 changed avkit_capture and evaluated it on clean text. Two-way.'
+    decided_by: agent
 actionable:
 - id: TOOLING-SHARED-REGISTRY-COUPLING
   title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
@@ -3940,36 +3971,92 @@ actionable:
         - https://endform.dev/blog/quarantine-flaky-playwright-tests — a pass on retry is not a fix; track it with an owner
       reasoning: One failure can't show that a fix works, and no remaining session edits the test file. Session 57's gate runs it anyway, so a named watch item there costs one plan line. Two-way.
       human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
-- id: EVAL-HARNESS-DESCRIBE-CP437-MOJIBAKE
-  title: Session 64's eval describe capture decodes the MCP server's UTF-8 through cp437, so the eval surface carries mojibake
-  severity: low
+- id: CI-E2E-FLEET-HOST-UNTRACKED
+  title: The full Electron E2E suite can run on a second Windows host (MINI_AIR12), but only from untracked scratch scripts
+  severity: medium
   component: agent
   status: open
-  category: TECH-DEBT
-  priority: P4
+  category: PLAN-NEW
+  priority: P2
   enrichment:
     questions_asked: []
     answers: []
     decision_log:
-    - id: D-1196
+    - id: D-1212
       stage: triage
-      question: How is the eval describe mojibake classified, and is it fixed now?
+      question: How is the mini-air E2E setup classified, and is it built now?
       resolution: autonomous
       class: two-way
       mandatory: none
-      chosen: 'TECH-DEBT P4, fixed in its own small session: Session 64''s eval tooling captures describe as raw bytes and refuses cp437 mojibake, modelled on Session 92''s eval-rerun.py guard. No MEU,
-        no eval rerun.'
+      chosen: 'PLAN-NEW P2: tracked tooling that runs the full E2E suite on the mini-air in its signed-in desktop session over SSH and an Interactive-logon scheduled task, its own session (96), no MEU.'
       source_tag: Local Canon
       precedents:
-      - docs/execution/plans/2026-11-17-mcp-audit-refresh/eval-rerun.py — Session 92's raw-byte capture and fail-closed mojibake guard (D-1186)
-      - .agent/workflows/issue-triage.md priority matrix — low severity that blocks nothing is P4
-      - D-1132 (grouping 2026-11-17) — debt with no product change gets no MEU
+      - USER_EXPLICIT 2026-11-18 "There is mini-air 12 windows pc that could be used to run the E2E tests rather than running them directly on this system."
+      - 'AGENTS.md: automate app checks; Mat 2026-11-16 "This should be done with framework and scripts!"'
+      - 'D-1132 (grouping 2026-11-17): tooling with no product change gets no MEU'
       research:
         engine: none
         sources: []
-      reasoning: 'Low severity: it corrupts only evals run the eval-run.md way, and none is queued. It is still a live trap in a run book a later session will follow, and Session 92 already wrote the guard,
-        so the fix is small and copies proven code. Doing nothing leaves the next eval reading box-drawing characters. A rerun of Session 64''s eval would measure a surface no client serves any more, because
-        Session 92 changed avkit_capture and evaluated it on clean text. Two-way.'
+      reasoning: 'Mat asked for it, and the hand setup already passed 228 of 232, so the risk is in keeping it, not in proving it. Untracked scripts in a scratch folder are lost or drift, and the next session
+        would redo the host fixes by hand. Moving the load off the dev PC removes the host-load waits that slowed every gate this week. Doing nothing keeps E2E on the shared dev PC. Two-way: the tooling
+        can be dropped and the dev-PC route is unchanged.'
+    decided_by: agent
+- id: CAPTURE-TEXT-PIXEL-2PX-MINIAIR
+  title: Capture text preview and its baked PNG land 2 px apart on the mini-air (AC-82.6, AC-102.19, AC-102.20)
+  severity: medium
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1213
+      stage: triage
+      question: The capture text oracle is 2 px off on a second host. Fix it now, and how?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: 'Diagnose first in Session 97, after Session 96 makes mini-air runs repeatable: measure the preview and bake boxes on both hosts, name the side that moves, then fix the product or, only if
+        both are correct and the difference is rasterisation, the tolerance.'
+      source_tag: Local Canon
+      precedents:
+      - 'AGENTS.md S3: never edit a test to pass'
+      - 'Session 82 TEXT_PARITY_E2E: the oracle exists to catch preview and bake drift'
+      research:
+        engine: none
+        sources: []
+      reasoning: It fails every run on a clean, ordinary Windows 11 PC, which looks more like a user's machine than the dev PC does, so it may be a real fidelity bug. Widening the tolerance without a cause
+        would hide one. Doing nothing leaves three red specs on the second host, so its runs could never gate. Two-way.
+    decided_by: agent
+- id: E2E-HOVER-NO-POINTER-DEVICE
+  title: 'settings AC-126.8 fails on a host with no mouse: the hover colour never applies'
+  severity: low
+  component: ui
+  status: open
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1214
+      stage: triage
+      question: How is the no-mouse hover failure handled?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: 'TECH-DEBT P3 in Session 97: prove the cause by reproducing hover: none on the dev PC, then make the spec state the hover capability it needs (or assert the hover-none behaviour where that
+        is the product rule); no product change unless the proof says otherwise.'
+      source_tag: Local Canon
+      precedents:
+      - 'AGENTS.md S3: never edit a test to pass; a spec that states its environment is not weakened'
+      research:
+        engine: none
+        sources: []
+      reasoning: The product follows Tailwind's rule for touch-only devices, so the defect is the spec's unstated mouse. It blocks the second host from gating the settings spec. Doing nothing keeps one
+        red spec on every mini-air run. Two-way.
     decided_by: agent
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
@@ -4146,4 +4233,11 @@ deferred:
         list of every FFmpeg dependency and no change. Whether naming it changes legal exposure was not assessed; this is not legal advice.
       human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
     decided_by: human
-proposed_batches: []
+proposed_batches:
+- slug: agent-ci-e2e-fleet-host-untracked
+  issues:
+  - CI-E2E-FLEET-HOST-UNTRACKED
+  component: agent
+  priority_band: P2
+  complexity: S
+  has_duplicates: false
