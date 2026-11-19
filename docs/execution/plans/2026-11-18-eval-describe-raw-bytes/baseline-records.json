@@ -1,0 +1,11 @@
+{
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/eval-rerun.py": "ce2d3d46dc935c605724bf97f2c8e97dd264578cc90ade4467fd94e5cdf453b0",
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/capture-description.expected.txt": "1d547ab350d6cfbe4a42f30a5f546cfd25b4d851de0788db3b25aaf0ee8e99d3",
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-check.py": "fe1c618be7f1c73e73b3d504564815e1c7978151bad69f131fa15edd595f9d58",
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-harness.ts": "4edef3a4bc7ebbedfdccb429aa10e68107f1df5da1e8b17830669b5bfea91a05",
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-seed.py": "457f0eddd38f94f7dd5bac80d9d4f06464a3c1f08de940e81ea86e4cf18217d5",
+  "docs/execution/plans/2026-11-11-capture-export-copy/task.md": "ad82aab406a6758be755696e7196aa05c132757b62d121eaf78448b599dac4df",
+  "docs/execution/plans/2026-11-11-capture-export-copy/implementation-plan.md": "49faf29f33072c05c87c5cd69e4e4700002b175512b856cade62fdcaf3eb94f1",
+  "mcp-server/scripts/audit/backend.ts": "93584f45347c8450b9b4c6ec8c278065a1e83eaa8afd4fb0ddd2919619111f2a",
+  "C:/Temp/av-kit/s64-E1-describe.txt": "88ebd5ab00a4374d62c145934538a7745bacdd11fcb093cbfa0fb97521cf6c6a"
+}

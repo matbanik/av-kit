@@ -5765,10 +5765,11 @@ issues:
     title: Session 64's eval describe capture decodes the MCP server's UTF-8 through cp437, so the eval surface carries mojibake
     severity: low
     component: agent
-    status: open
+    status: resolved
     discovered: '2026-11-18'
     root_cause: 'docs/execution/plans/2026-11-11-capture-export-copy/eval-run.md step 3 and task.md row E-1 capture the eval-harness.ts describe output through a PowerShell redirect of native output (E-1: rtk proxy npx tsx ... describe *> s64-E1-describe.txt). PowerShell decodes the server''s UTF-8 bytes through the console code page (cp437) and writes the text back as UTF-8 with CRLF, so an arrow becomes ''ΓåÆ'' and an en dash ''ΓÇô'' in the receipt, and every prompt built from it shows the model that corrupted text. Found by Session 92 (D-1186): its first describe receipt and prompts had the defect (mar-eval-describe-attempt1.txt and mar-eval-d1186-roundtrip.txt in its receipt folder prove they are the raw bytes decoded through cp437). Session 64''s own C:/Temp/av-kit/s64-E1-describe.txt has the same mojibake arrows and no real one, so Session 64''s three eval runs read a corrupted surface.'
     blast_radius: 'Any eval that follows Session 64''s eval-run.md step 3 or row E-1 as written: the model reads mojibake in the tool text, so a measured result describes a surface no client serves. Session 64''s AC-136.19 eval result rests on such a surface and was not rerun on clean text. Session 92 re-captured raw bytes with a subprocess and added a fail-closed mojibake and verbatim-description guard to its own eval-rerun.py prompts path only (D-1186), and its three runs passed on the clean surface. Fix direction for a later session: capture describe as raw bytes and refuse cp437 mojibake in Session 64''s eval tooling.'
+    resolution_path: 'Fixed in Session 95 on 2026-11-18 (plan docs/execution/plans/2026-11-18-eval-describe-raw-bytes): the new docs/execution/plans/2026-11-11-capture-export-copy/eval-describe.py runs eval-harness.ts describe in a subprocess (node on tsx''s cli.mjs, no shell), writes its stdout bytes unchanged and refuses an empty capture, a BOM, bytes that are not UTF-8, a CR byte, cp437 mojibake, a CUT count other than one, a failing harness and a timed-out one, with the MOJIBAKE pattern and the CUT line read from Session 92''s eval-rerun.py (ONE_GUARD, D-1201). eval-run.md step 3 now runs eval-describe.py capture, with a dated note after line 6 (STEP3_NAMES_SCRIPT); Session 64''s task rows and receipts are kept as they ran (RECORDS_KEPT). No MEU.'
     category: TECH-DEBT
     priority: P4
     meu_links: []
@@ -5777,8 +5778,8 @@ issues:
       - mcp
     verification:
       last_checked: '2026-11-18'
-      method: Byte read of Session 64's describe receipt (C:/Temp/av-kit/s64-E1-describe.txt) and a read of eval-run.md step 3
-      result: 30806 bytes, 725 CRLF; 9 mojibake arrows and 2 mojibake en dashes, no real arrow. eval-run.md:24 still captures describe through a shell redirect.
+      method: 'Session 95 rows 1 to 4 (receipts under C:/Temp/av-kit/eval-describe-raw-bytes): edr-check.py old over both old-redirect forms, the E-1 form and the step-3 form run by edr-old.ps1 (edr-old-check.txt); test_eval_describe.py at Green (edr-green.txt); eval-describe.py check on both old receipts and on Session 64''s s64-E1-describe.txt (edr-old-refused-e1.txt, edr-old-refused-step3.txt, edr-old-refused-s64.txt); eval-describe.py capture on the real harness and edr-check.py live against a direct npx read on another root (edr-capture.txt, edr-live.txt); edr-check.py doc on the new eval-run.md (edr-doc.txt)'
+      result: 'Old forms: old: e1 -> reproduced; old: step3 -> reproduced; old: 2 of 2 forms reproduced, not []. Green: 25 passed. check, each exit 1: e1 cr: 835 CR byte(s), mojibake: 14 match(es); step3 cr: 834 CR byte(s), mojibake: 13 match(es); Session 64''s receipt cr: 725 CR byte(s), mojibake: 12 match(es). Live: captured: 36533 bytes sha256 6613cd4173b49d157a9232fa34ab3b05...; PASS equal-direct: receipt 36533 B, direct 36533 B; PASS real-text: arrows 9, en dashes 4; PASS cp437-trap: MOJIBAKE matches after a cp437 decode 13; PASS build: 3 prompts, clean True; edr-check: 13 pass, 0 fail []. Doc: PASS exact-bytes: now 6980 B, expected 6980 B; edr-check: 4 pass, 0 fail [].'
     notes: 'Triage 2026-11-18 (D-1196): TECH-DEBT P4, grouped as Session 95 eval-describe-raw-bytes in .agent/context/grouping/2026-11-18-eval-describe-session-grouping.md. No product code changes, so no MEU. The live avkit_capture surface was already evaluated on clean text by Session 92 (D-1186), so the fix is to the tooling and its run book, not a rerun.'
     enrichment:
       questions_asked: []

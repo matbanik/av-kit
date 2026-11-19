@@ -5,6 +5,8 @@ under D-608 C. Each run's prompt is one block under §Prompts, with `{{DESCRIBE}
 `{{MEDIA}}` replaced. Under A the six runs are `real-t1`, `real-t2`, `real-t3`, `meta-t1`,
 `meta-t2`, `meta-t3`; under B the three `real-*` runs.
 
+> Changed 2026-11-18 (Session 95, issue `EVAL-HARNESS-DESCRIBE-CP437-MOJIBAKE`): step 3 used to capture `describe` with a shell redirect. PowerShell decoded the server's UTF-8 through the console code page (cp437), so Session 64's receipt holds 9 mojibake arrows and 2 mojibake en dashes and no real one, and the eval prompts built from it read that text. Step 3 now runs `eval-describe.py`, which keeps the raw bytes and refuses mojibake with the guard from Session 92's `eval-rerun.py` (D-1186). Session 64's task rows and receipts are kept as they ran.
+
 Paths:
 
 - `BASE` = `C:/Temp/av-kit/s64/eval`;
@@ -21,7 +23,7 @@ cleared:
    - It refuses a folder that already holds files.
    - It exits 1 when one of its own checks fails. That is S6.
 2. **Build.** Run `npm --prefix mcp-server run build`, so that `mcp-server/dist/index.js` is this work tree's server.
-3. **Describe.** From `mcp-server`, run `npx tsx ../docs/execution/plans/2026-11-11-capture-export-copy/eval-harness.ts C:/Temp/av-kit/s64/eval/describe/root describe > C:/Temp/av-kit/s64-E1-describe.txt 2>&1`.
+3. **Describe.** Run `uv run python docs/execution/plans/2026-11-11-capture-export-copy/eval-describe.py capture C:/Temp/av-kit/s64/eval/<label>/root <receipt>`, with a new `<label>` (Session 64 used `describe`) and a `<receipt>` path that does not exist yet. Step 2 builds first. It runs `eval-harness.ts` `describe` from `mcp-server` in a subprocess and writes the server's stdout bytes to `<receipt>` unchanged, and its stderr to `<receipt>.stderr.txt`. It refuses output that is not UTF-8 or holds a BOM, a CR byte or cp437 mojibake, or lacks exactly one CUT line: it exits 1 with a named reason, writes no receipt and keeps the bytes as `<receipt>.refused`. It never overwrites a file (exit 2). Never capture `describe` through a shell redirect: a PowerShell redirect that merges stderr decodes the bytes through the console code page, and older PowerShell decodes every redirect.
    - The `real` surface is the receipt's text above the line `<!-- CUT: the real surface ends above this line -->`. That is what Claude Code shows a model: the server instructions, and each tool's description and flattened input schema.
    - The `meta` surface is the whole receipt with the CUT line deleted. It adds each tool's `_meta.action_descriptions`.
 4. **Each run.** For each run, in the order above:

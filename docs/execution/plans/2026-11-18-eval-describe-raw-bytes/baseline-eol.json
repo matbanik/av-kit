@@ -1,0 +1,228 @@
+{
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-run.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 101,
+    "bom": false,
+    "bytes": 5748
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 5803,
+    "bom": false,
+    "bytes": 539618
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 34,
+    "bom": false,
+    "bytes": 2406
+  },
+  ".agent/context/grouping/2026-11-18-eval-describe-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 140,
+    "bom": false,
+    "bytes": 12032
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/test_eval_describe.py": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-describe.py": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  ".agent/context/handoffs/2026-11-18-eval-describe-raw-bytes-handoff.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/eval-rerun.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 280,
+    "bom": false,
+    "bytes": 12056
+  },
+  "docs/execution/plans/2026-11-17-mcp-audit-refresh/capture-description.expected.txt": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 13,
+    "bom": false,
+    "bytes": 3989
+  },
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-check.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 392,
+    "bom": false,
+    "bytes": 22441
+  },
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-harness.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 228,
+    "bom": false,
+    "bytes": 11400
+  },
+  "docs/execution/plans/2026-11-11-capture-export-copy/eval-seed.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 264,
+    "bom": false,
+    "bytes": 11528
+  },
+  "docs/execution/plans/2026-11-11-capture-export-copy/task.md": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 112,
+    "bom": false,
+    "bytes": 47794
+  },
+  "docs/execution/plans/2026-11-11-capture-export-copy/implementation-plan.md": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 658,
+    "bom": false,
+    "bytes": 102057
+  },
+  "mcp-server/scripts/audit/backend.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 156,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 6037
+  },
+  "C:/Temp/av-kit/s64-E1-describe.txt": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 725,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 30806
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false,
+    "bytes": 19968
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 104,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 120367
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 230,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 93950
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 446,
+    "bom": false,
+    "bytes": 59065
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 98,
+    "bom": false,
+    "bytes": 52797
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/edr-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 428,
+    "bom": false,
+    "bytes": 19840
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/edr-old.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 55,
+    "bom": false,
+    "bytes": 2264
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 967,
+    "bom": false,
+    "bytes": 33567
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 395,
+    "bom": false,
+    "bytes": 17650
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 311,
+    "bom": false,
+    "bytes": 12180
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 251,
+    "bom": false,
+    "bytes": 10908
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 419,
+    "bom": false,
+    "bytes": 20992
+  },
+  "docs/execution/plans/2026-11-18-eval-describe-raw-bytes/host-load.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 42,
+    "bom": false,
+    "bytes": 1961
+  }
+}

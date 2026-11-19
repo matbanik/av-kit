@@ -115,7 +115,7 @@ Mat's request continues the orchestration, so the coordinator runs plan creation
 
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
-| 95 | `eval-describe-raw-bytes` | — | P4 | proposed | `docs/execution/plans/2026-11-18-eval-describe-raw-bytes/` |
+| 95 | `eval-describe-raw-bytes` | — | P4 | executed (Session 95) | `docs/execution/plans/2026-11-18-eval-describe-raw-bytes/` |
 
 ---
 
