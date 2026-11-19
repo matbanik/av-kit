@@ -1,0 +1,288 @@
+{
+  ".agent/docs/commands.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 225,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 19003
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 5923,
+    "bom": false,
+    "bytes": 550954
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 36,
+    "bom": false,
+    "bytes": 2694
+  },
+  ".agent/context/grouping/2026-11-18-e2e-remote-host-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 159,
+    "bom": false,
+    "bytes": 14963
+  },
+  "tests/tooling/test_e2e_remote.py": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tools/e2e_remote.py": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tools/e2e_host/e2e-host.example.json": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tools/e2e_host/known-failures.json": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tools/e2e_host/host-facts.ps1": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tools/e2e_host/host-lock.ps1": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tools/e2e_host/host-prepare.ps1": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tools/e2e_host/host-start.ps1": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tools/e2e_host/host-status.ps1": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tools/e2e_host/host-release.ps1": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tools/e2e_host/run-e2e.ps1": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  ".agent/docs/e2e-remote-host.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  ".agent/context/handoffs/2026-11-18-e2e-remote-host-handoff.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/global-setup.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 58,
+    "bom": false,
+    "bytes": 2640
+  },
+  "ui/playwright.config.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 23,
+    "bom": false,
+    "bytes": 563
+  },
+  "ui/scripts/playwright-with-outputfile.mjs": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 56,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1442
+  },
+  "ui/package.json": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 71,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2914
+  },
+  ".node-version": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 1,
+    "bom": false,
+    "bytes": 8
+  },
+  ".gitignore": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 51,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 866
+  },
+  "pyproject.toml": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 48,
+    "bom": false,
+    "bytes": 1177
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false,
+    "bytes": 19968
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 105,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 122108
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 233,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 95483
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 750,
+    "bom": false,
+    "bytes": 111920
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 103,
+    "bom": false,
+    "bytes": 64286
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/zip-time.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 66,
+    "bom": false,
+    "bytes": 2774
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/host-probe.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 40,
+    "bom": false,
+    "bytes": 4347
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/host-probe-run.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 75,
+    "bom": false,
+    "bytes": 2762
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/host-details-scan.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 101,
+    "bom": false,
+    "bytes": 3960
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 966,
+    "bom": false,
+    "bytes": 33452
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 401,
+    "bom": false,
+    "bytes": 17643
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 311,
+    "bom": false,
+    "bytes": 12176
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 261,
+    "bom": false,
+    "bytes": 11254
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 493,
+    "bom": false,
+    "bytes": 24575
+  },
+  "docs/execution/plans/2026-11-18-e2e-remote-host/host-load.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 43,
+    "bom": false,
+    "bytes": 2029
+  }
+}

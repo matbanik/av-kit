@@ -130,7 +130,7 @@ Mat's requests continue the orchestration, so the coordinator runs plan creation
 
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
-| 96 | `e2e-remote-host` | — | P2 | pending | `docs/execution/plans/2026-11-18-e2e-remote-host/` |
+| 96 | `e2e-remote-host` | — | P2 | executed (Session 96) | `docs/execution/plans/2026-11-18-e2e-remote-host/` |
 | 97 | `e2e-host-parity` | — | P2 | pending | — |
 
 ---

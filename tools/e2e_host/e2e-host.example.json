@@ -1,0 +1,13 @@
+{
+  "host": "e2e-host",
+  "user": "tester",
+  "label": "example-host",
+  "root": "C:\\e2e-root",
+  "task": "\\example\\e2e-task",
+  "node_exe": "C:\\Program Files\\nodejs\\node.exe",
+  "ffmpeg_bin": "C:\\e2e-root\\ffmpeg\\bin",
+  "busy_users": ["ci-runner"],
+  "min_free_gb": 20,
+  "poll_s": 30,
+  "timeout_min": 110
+}

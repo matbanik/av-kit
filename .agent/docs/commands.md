@@ -203,6 +203,7 @@ Each row below defines argv, scope and stage. Common fields: cwd `P:/av-kit` (np
 | ui-tests | full | `npm --prefix ui run test` | UI Vitest suite and fixtures; pass affected paths for targeted checks |
 | ui-build | full | `npm --prefix ui run build` | Electron main/preload/renderer outputs |
 | ui-electron | runtime | `npm --prefix ui run test:e2e` | Real Electron; build first; clear process ELECTRON_RUN_AS_NODE; retain script's Playwright JSON output |
+| ui-electron-remote | runtime | `uv run python tools/e2e_remote.py run <commit>` | Full Electron E2E suite on the second Windows host over SSH (`.agent/docs/e2e-remote-host.md`); untracked config `<HOME>/.config/av-kit/e2e-host.json`; exit 0 only when every failure is listed in `tools/e2e_host/known-failures.json`; refusals 2 to 40 named in the run book; never stops a host process; adds a run and does not replace `ui-electron` |
 | mcp-types | static | `npm --prefix mcp-server run typecheck` | MCP source/tests and tsconfig |
 | mcp-tests | full | `npm --prefix mcp-server run test` | MCP Vitest contracts and fixtures |
 | mcp-build | full | `npm --prefix mcp-server run build` | MCP generated JS |

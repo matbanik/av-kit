@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 149** — Active: 11 | Mitigated: 2 | Resolved: 134
+**Total: 149** — Active: 10 | Mitigated: 2 | Resolved: 135
 
 ## Active Issues
 
@@ -11,7 +11,6 @@
 |-----|-----|-------|-----------|--------|------------|
 | 🟡 | `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` | Non-English voices via the real espeak-ng CLI were never run end to end… | infrastructure | ⬜ open | 2026-10-15 |
 | 🟡 | `FFMPEG-LIBDVDCSS-BUNDLED` | The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses… | infrastructure | ⬜ open | 2026-11-04 |
-| 🟡 | `CI-E2E-FLEET-HOST-UNTRACKED` | The full Electron E2E suite can run on a second Windows host (MINI_AIR1… | agent | ⬜ open | 2026-11-18 |
 | 🟡 | `CAPTURE-TEXT-PIXEL-2PX-MINIAIR` | Capture text preview and its baked PNG land 2 px apart on the mini-air… | ui | ⬜ open | 2026-11-18 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
 | 🟢 | `TTS-JA-ZH-G2P-EXTRAS` | Japanese and Mandarin Kokoro voices are listed but unavailable (no misa… | infrastructure | ⬜ open | 2026-10-15 |
@@ -28,9 +27,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (134)
+## Resolved (135)
 
-134 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+135 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*
