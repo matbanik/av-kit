@@ -1324,6 +1324,33 @@ One residual MEU from Session 93's plan (`docs/execution/plans/2026-11-17-video-
 > - Gate: the H1-2 `session-gate.ps1` record in the Session 93 MEU-160 handoff.
 > - Plan `docs/execution/plans/2026-11-17-video-tail-frame/`.
 
+## Residuals registered 2026-11-19
+
+One residual MEU from Session 97's plan (`docs/execution/plans/2026-11-19-e2e-host-parity/`; grouping `.agent/context/grouping/2026-11-18-e2e-remote-host-session-grouping.md`). It changes the preview plate of [§Text preview baseline](#text-preview-baseline) and [§Multi-line text](#multi-line-text) (`ui/src/renderer/src/features/capture/capture-text-metrics.ts`).
+
+<a id="text-plate-metrics"></a>
+
+### Text plate metrics
+
+> **MEU-161.** From `CAPTURE-TEXT-PIXEL-2PX-MINIAIR` (triage D-1213; plan D-1242). The preview's plate (`textBackgroundBox`) scaled a 16 px glyph table linearly and rounded the union once, and its width was r − l, while the bake paints Pillow's inclusive rectangle, r − l + 1 pixels wide. At a device scale of 1 the two right edges sit 2 px apart, so the fidelity E2E (AC-82.6, AC-102.19, AC-102.20) failed on the second Windows host; the dev PC's device scale of 2 at a half-pixel origin hid the gap. The preview follows the bake, as MEU-82 asks: one anchor from the same Segoe metrics the bake uses.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Units | Glyph extents and advances for printable ASCII are kept in font units (2048 per em), generated from the system Segoe UI with Pillow; any other character takes the old fallback's units. | Local Canon: D-1243 |
+| Rounding | Each extent is the pen or baseline position plus the FreeType rounding of its scaled units (FT_MulFix by size × 2048, then FT_PIX_ROUND); the advance is rounded the same way; the baseline is the line top plus the Segoe ascent, and lines stay ascent + 4 px apart. | Research-backed: FreeType FT_MulFix and FT_PIX_ROUND; D-1243 |
+| Painted size | The box is x = l, y = t, width r − l + 1 and height b − t + 1, the pixels Pillow's inclusive rectangle paints. | Local Canon: D-1242; `adapter.py` `_apply_text` |
+| Residual | Against Pillow over 2,448 breadth cases (18 texts × 136 sizes) at least 1,702 are exact on all four sides, at most 5 differ by more than 1 px on a side and none by more than 2; of the 40 multi-line matrix cases 36 are exact and the other four differ by 1 px on one side. The residual is a P3 issue. | Local Canon: D-1244 |
+| Tests | A Pillow-generated plate fixture read by pytest and Vitest, and the fidelity E2E at a device scale of 1. | Local Canon: D-1245, D-1251 |
+
+> **Delivered (Session 97).**
+> - The preview plate `textBackgroundBox` (`ui/src/renderer/src/features/capture/capture-text-metrics.ts`) follows the bake (PREVIEW_FOLLOWS_BAKE, D-1242): each glyph's font units scaled by FT_MulFix and rounded by FT_PIX_ROUND, the pen moved by each pair's kerning step, and Pillow's inclusive box, r − l + 1 by b − t + 1 (PLATE_UNITS, D-1243).
+> - `ui/src/renderer/src/features/capture/capture-segoe-metrics.ts` holds `SEGOE_UI_GLYPH_UNITS` (95 printable ASCII glyphs) and `SEGOE_UI_KERN_UNITS` (372 pairs) in font units, generated from the system Segoe UI; the 16 px table is gone.
+> - The plate fixture `ui/tests/e2e/fixtures/capture-text-plates.json` holds the box the bake paints for each case, guarded against Pillow by pytest and read by Vitest: 1,702 of 2,448 breadth cases exact, 5 over 1 px on a side, none over 2; 36 of 40 matrix cases exact, the other four 1 px off on one side. The residual is `CAPTURE-TEXT-PLATE-METRICS-RESIDUAL` (P3, D-1244).
+> - The fidelity E2E (AC-82.6, AC-102.19, AC-102.20) launch at a device scale of 1 (FIDELITY_FRAME, D-1245), and AC-126.8 states a hover-capable pointer (HOVER_CAPABLE, D-1246).
+> - AC-161.1 to AC-161.15.
+> - Gate: the H1-2 `session-gate.ps1` record in the Session 97 MEU-161 handoff.
+> - Plan `docs/execution/plans/2026-11-19-e2e-host-parity/`.
+
 ## Named deferrals (not this phase)
 
 | Feature | Why |
@@ -1393,6 +1420,7 @@ One residual MEU from Session 93's plan (`docs/execution/plans/2026-11-17-video-
 | MEU-145 | `capture-scan-skip-unreadable` | [Scan skips unreadable files](#scan-skips-unreadable-files) | MEU-36, MEU-84, MEU-130 |
 | MEU-146 | `capture-exif-orientation` | [EXIF orientation on scan](#exif-orientation-on-scan) | MEU-35, MEU-36, MEU-128, MEU-129 |
 | MEU-160 | `capture-video-tail-packet-read` | [Video tail packet read](#video-tail-packet-read) | MEU-134 |
+| MEU-161 | `capture-text-plate-metrics` | [Text plate metrics](#text-plate-metrics) | MEU-82, MEU-102 |
 
 ---
 

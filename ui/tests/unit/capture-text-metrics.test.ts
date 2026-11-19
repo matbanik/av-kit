@@ -14,7 +14,7 @@ describe('MEU-59 text metrics', () => {
     expect(mod.SVG_TEXT_ANCHOR).toBe('start')
     expect(mod.SVG_DOMINANT_BASELINE).toBe('alphabetic')
     const box = mod.textBackgroundBox({ x: 10, y: 20, text: 'Hi', font_size: 16 })
-    expect(box).toEqual({ x: 10, y: 26, width: 15, height: 12 })
+    expect(box).toEqual({ x: 10, y: 26, width: 16, height: 13 })
   })
 })
 

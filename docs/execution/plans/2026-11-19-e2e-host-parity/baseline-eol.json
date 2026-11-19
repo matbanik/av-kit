@@ -1,0 +1,534 @@
+{
+  "ui/tests/unit/e2e-harness.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 135,
+    "bom": false,
+    "bytes": 6645
+  },
+  "ui/tests/e2e/electron-app.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 169,
+    "bom": false,
+    "bytes": 6264
+  },
+  "ui/tests/e2e/settings.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 920,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 41349
+  },
+  "ui/tests/e2e/capture-inbox.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 3708,
+    "bom": false,
+    "bytes": 176855
+  },
+  "ui/tests/unit/capture-text-metrics.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 50,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2507
+  },
+  "ui/tests/unit/capture-transform.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 209,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 11198
+  },
+  "ui/tests/unit/capture-text-lines.behavior.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 449,
+    "bom": false,
+    "bytes": 19067
+  },
+  "ui/tests/unit/capture-page.behavior.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 4197,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 197677
+  },
+  "ui/src/renderer/src/features/capture/capture-segoe-metrics.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 102,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 4907
+  },
+  "ui/src/renderer/src/features/capture/capture-text-metrics.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 93,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 3534
+  },
+  "tools/e2e_host/known-failures.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 12,
+    "bom": false,
+    "bytes": 740
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4223,
+    "bom": false,
+    "bytes": 151600
+  },
+  "docs/build-plan/09-screenshot-capture.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1480,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 161512
+  },
+  "docs/build-plan/build-priority-matrix.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 197,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 25900
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 256,
+    "bom": false,
+    "bytes": 54217
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false,
+    "bytes": 19968
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 5924,
+    "bom": false,
+    "bytes": 552702
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 35,
+    "bom": false,
+    "bytes": 2544
+  },
+  ".agent/context/grouping/2026-11-18-e2e-remote-host-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 159,
+    "bom": false,
+    "bytes": 14977
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 236,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 97387
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 106,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 124413
+  },
+  "ui/tests/e2e/fixtures/capture-text-plates.json": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/unit/capture-text-plates.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "tests/unit/test_capture_text_plates.py": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  ".agent/context/handoffs/2026-11-19-e2e-host-parity-MEU-161-handoff.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  ".agent/context/handoffs/2026-11-19-e2e-host-parity-implementation-critical-review.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "docs/execution/reflections/2026-11-19-e2e-host-parity-reflection.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "packages/infrastructure/src/avkit_infra/capture/adapter.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 1133,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 50191
+  },
+  "ui/tests/e2e/fixtures/capture-geometry.json": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 84,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 5186
+  },
+  "ui/tests/unit/capture-hit-test.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 299,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 10907
+  },
+  "tests/unit/test_capture_text_lines.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 198,
+    "bom": false,
+    "bytes": 6620
+  },
+  "tools/e2e_remote.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 1396,
+    "bom": false,
+    "bytes": 49889
+  },
+  "tools/e2e_host/e2e-host.example.json": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 13,
+    "bom": false,
+    "bytes": 319
+  },
+  "tools/e2e_host/host-facts.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 281,
+    "bom": false,
+    "bytes": 12136
+  },
+  "tools/e2e_host/host-lock.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 261,
+    "bom": false,
+    "bytes": 11270
+  },
+  "tools/e2e_host/host-prepare.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 229,
+    "bom": false,
+    "bytes": 10851
+  },
+  "tools/e2e_host/host-release.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 77,
+    "bom": false,
+    "bytes": 2985
+  },
+  "tools/e2e_host/host-start.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 274,
+    "bom": false,
+    "bytes": 12263
+  },
+  "tools/e2e_host/host-status.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 268,
+    "bom": false,
+    "bytes": 11492
+  },
+  "tools/e2e_host/run-e2e.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 120,
+    "bom": false,
+    "bytes": 6784
+  },
+  "ui/tests/e2e/electron-env.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 90,
+    "bom": false,
+    "bytes": 3307
+  },
+  "ui/tests/e2e/global-setup.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 58,
+    "bom": false,
+    "bytes": 2640
+  },
+  "ui/playwright.config.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 23,
+    "bom": false,
+    "bytes": 563
+  },
+  "ui/scripts/playwright-with-outputfile.mjs": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 56,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1442
+  },
+  "ui/package.json": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 71,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2914
+  },
+  ".github/workflows/ci.yml": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 153,
+    "bom": false,
+    "bytes": 5137
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 599,
+    "bom": false,
+    "bytes": 31208
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/boxes-report.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 73,
+    "bom": false,
+    "bytes": 2847
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/diff-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 731,
+    "bom": false,
+    "bytes": 29344
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/e2e-subset.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 42,
+    "bom": false,
+    "bytes": 2112
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 267,
+    "bom": false,
+    "bytes": 11727
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/fidelity-probe.mjs": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 116,
+    "bom": false,
+    "bytes": 6243
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/flake-run.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1803,
+    "bom": false,
+    "bytes": 78793
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/host-details-scan.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 119,
+    "bom": false,
+    "bytes": 4967
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/host-load.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 44,
+    "bom": false,
+    "bytes": 2062
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/hover-probe.mjs": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 61,
+    "bom": false,
+    "bytes": 2792
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/hover-spec-red.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 148,
+    "bom": false,
+    "bytes": 6018
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 407,
+    "bom": false,
+    "bytes": 18090
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 825,
+    "bom": false,
+    "bytes": 125015
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 319,
+    "bom": false,
+    "bytes": 12548
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/meu-register.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 476,
+    "bom": false,
+    "bytes": 22124
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/plate-fixture.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 223,
+    "bom": false,
+    "bytes": 8489
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/probe-app.cjs": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 16,
+    "bom": false,
+    "bytes": 966
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 970,
+    "bom": false,
+    "bytes": 33679
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/run-probe.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 11,
+    "bom": false,
+    "bytes": 525
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/segoe-units.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 197,
+    "bom": false,
+    "bytes": 8801
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/snapshot-commit.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 293,
+    "bom": false,
+    "bytes": 13177
+  },
+  "docs/execution/plans/2026-11-19-e2e-host-parity/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 110,
+    "bom": false,
+    "bytes": 118434
+  }
+}

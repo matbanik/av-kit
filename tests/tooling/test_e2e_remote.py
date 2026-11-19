@@ -1562,12 +1562,7 @@ def test_ac_11_known_tracked_list(tmp_path):
     m = _load()
     assert KNOWN.is_file(), "tools/e2e_host/known-failures.json does not exist yet"
     data = json.loads(KNOWN.read_text(encoding="utf-8"))
-    assert [(e["label"], e["file"], e["ac"], e["issue"]) for e in data["known"]] == [
-        ("mini-air", "capture-inbox.test.ts", "AC-82.6", "CAPTURE-TEXT-PIXEL-2PX-MINIAIR"),
-        ("mini-air", "capture-inbox.test.ts", "AC-102.19", "CAPTURE-TEXT-PIXEL-2PX-MINIAIR"),
-        ("mini-air", "capture-inbox.test.ts", "AC-102.20", "CAPTURE-TEXT-PIXEL-2PX-MINIAIR"),
-        ("mini-air", "settings.test.ts", "AC-126.8", "E2E-HOVER-NO-POINTER-DEVICE"),
-    ]
+    assert [(e["label"], e["file"], e["ac"], e["issue"]) for e in data["known"]] == []
     assert [(e["label"], e["file"]) for e in data["skip"]] == [
         ("mini-air", "capture-filmstrip-actions.test.ts"),
         ("mini-air", "capture-import.test.ts"),

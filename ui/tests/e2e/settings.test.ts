@@ -19,8 +19,12 @@ import {
   type ThemeProbeMode,
 } from './theme-probe'
 
-async function launchApp() {
+// HOVER_CAPABLE (Session 97, D-1246): AC-126.8 checks a hover colour, and Tailwind v4 applies hover: only under (hover: hover); this states a mouse-capable device so a host with no pointing device (the second host) runs the same rule.
+const HOVER_CAPABLE_ARGS = ['--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4'] as const
+
+async function launchApp(args: readonly string[] = []) {
   return launchElectron({
+    args,
     env: {
       AVKIT_APP_DATA: mkdtempSync(join(tmpdir(), 'avkit-e2e-settings-')),
     },
@@ -698,7 +702,7 @@ test('AC-94.7 Settings selects follow a live theme toggle', async () => {
 // Each toHaveCSS polls past the 120 ms colour transition (--duration-fast).
 
 test('AC-126.8 light accent paints the ruled colours', async () => {
-  const app = await launchApp()
+  const app = await launchApp(HOVER_CAPABLE_ARGS)
   const page = await app.firstWindow()
   await installSettingsSeam(page, {}, { themeProbe: { theme: { answer: 'dark' } } })
   await openSettings(page)
@@ -721,6 +725,7 @@ test('AC-126.8 light accent paints the ruled colours', async () => {
   await expect(lightBtn).toHaveCSS('color', 'rgb(255, 255, 255)')
   await expect(darkBtn).toHaveCSS('color', 'rgb(21, 94, 117)')
   await expect(fileOption).toHaveCSS('color', 'rgb(21, 94, 117)')
+  expect(await page.evaluate(() => matchMedia('(hover: hover)').matches), 'HOVER_CAPABLE: (hover: hover) matches before the hover').toBe(true)
   await lightBtn.hover()
   await expect(lightBtn).toHaveCSS('background-color', 'rgb(22, 78, 99)')
   await darkBtn.click()

@@ -186,10 +186,10 @@ describe('MEU-101 text scale', () => {
     expectNear(plateCorners(fromNw).se, corners.se, 'nw keeps se')
     // Image edge (review round 1 F2): the glyph bearing puts the plate 6 px below y, so a grown mark needs y < 0.
     const edge: TextMark = { ...TEXT, y: 0 }
-    expect(textBackgroundBox(edge)).toEqual({ x: 10, y: 6, width: 15, height: 12 })
-    const grown = tx.scaleTextMark(edge, 'se', at(40, 30), 100, 100)
+    expect(textBackgroundBox(edge)).toEqual({ x: 10, y: 6, width: 16, height: 13 })
+    const grown = tx.scaleTextMark(edge, 'se', at(42, 32), 100, 100)
     expect({ x: grown.x, y: grown.y, font_size: grown.font_size }).toEqual({ x: 10, y: -6, font_size: 32 })
-    expect(textBackgroundBox(grown)).toEqual({ x: 10, y: 6, width: 30, height: 24 })
+    expect(textBackgroundBox(grown)).toEqual({ x: 10, y: 6, width: 32, height: 24 })
     // Each anchor plate corner sits 5 px from an image corner of a 100×100 image; the handle goes to the far edge.
     const cases: Array<[Corner, TextMark, { x: number; y: number }]> = [
       ['se', { ...TEXT, x: 5, y: -1 }, at(99, 99)],

@@ -39,6 +39,8 @@ export interface LaunchOptions {
   env?: Record<string, string | undefined>
   /** SHIELD_OPT_OUT: `false` keeps the windows taking OS mouse input; the diagnostics still run. */
   pointerShield?: false
+  /** CHROMIUM_ARGS (Session 97): extra Chromium switches after the main entry; FIDELITY_FRAME and HOVER_CAPABLE use it. */
+  args?: readonly string[]
 }
 
 /**
@@ -107,7 +109,7 @@ async function checkMainErrors(dir: string, log: string): Promise<void> {
  * phase lines (PHASE_LINES); for the built app it installs the main diagnostics and the pointer
  * shield (MAIN_DIAG, DIAG_DEFAULT_MAIN_ONLY), and an evaluate that throws is logged, not raised.
  */
-export async function launchElectron({ main, env = {}, pointerShield }: LaunchOptions = {}): Promise<ElectronApplication> {
+export async function launchElectron({ main, env = {}, pointerShield, args }: LaunchOptions = {}): Promise<ElectronApplication> {
   requireScratchAppData(env)
   const diag = diagDir()
   launches += 1
@@ -131,7 +133,7 @@ export async function launchElectron({ main, env = {}, pointerShield }: LaunchOp
   mark('launch-start')
   try {
     app = await _electron.launch({
-      args: ['-r', MAIN_ERROR_WATCH, main ?? DEFAULT_MAIN],
+      args: ['-r', MAIN_ERROR_WATCH, main ?? DEFAULT_MAIN, ...(args ?? [])],
       env: electronEnv(process.env, { ...env, [MAIN_ERROR_LOG_ENV]: log }),
     })
   } catch (error) {

@@ -2,7 +2,7 @@ export const SVG_TEXT_ANCHOR = 'start'
 export const SVG_DOMINANT_BASELINE = 'alphabetic'
 export const SVG_TEXT_FONT_FAMILY = '"Segoe UI", Arial, sans-serif'
 
-import { SEGOE_LA_BASE_SIZE, SEGOE_LA_GLYPHS, SEGOE_UI_ASCENDER, SEGOE_UI_UNITS_PER_EM } from './capture-segoe-metrics'
+import { SEGOE_UI_ASCENDER, SEGOE_UI_GLYPH_UNITS, SEGOE_UI_KERN_UNITS, SEGOE_UI_UNITS_PER_EM } from './capture-segoe-metrics'
 
 /**
  * SEGOE_ASCENT (MEU-82, D-10): FreeType's 26.6 ascent, which Pillow's `la` anchor uses.
@@ -48,19 +48,41 @@ export type TextBackgroundBox = {
   height: number
 }
 
-const FALLBACK_GLYPH = { l: 0, t: 7, r: 8, b: 18, adv: 8 }
+/** The unknown-glyph box in font units: the old 16 px fallback (l 0, t 7, r 8, b 18, adv 8 at `la`) at 128 units a px. */
+const FALLBACK_GLYPH_UNITS = { l: 0, t: -1408, r: 1024, b: 0, adv: 1024 }
 
-/**
- * TEXT_PLATE_LINES (MEU-102): the union of each line's unrounded glyph extents, line `i` at
- * `y + i * pitch`; an empty line counts as the point `(x, y_i)`. The union is rounded and clamped
- * once. A text with no `\n` keeps the one-line box (an empty text measures one space).
- */
+/** FreeType's FT_MulFix: (a * b + 0x8000) / 0x10000, rounded half away from zero; exact below 2^53. */
+function mulFix(a: number, b: number): number {
+  const magnitude = Math.floor((Math.abs(a) * Math.abs(b) + 0x8000) / 0x10000)
+  return a < 0 !== b < 0 ? -magnitude : magnitude
+}
+
+/** FreeType's FT_PIX_ROUND of a 26.6 value, in whole px: (v + 32) >> 6, written without a 32-bit shift. */
+function pixRound(value26: number): number {
+  return Math.floor((value26 + 32) / 64)
+}
+
+/** The bake's kerning step for a pair (Pillow's basic layout over FT_Get_Kerning): the pair's font units by FT_MulFix, shrunk below 25 px as FreeType's default kerning does, rounded to whole px. */
+function kernStep(pair: string, size: number, scale: number): number {
+  const units = SEGOE_UI_KERN_UNITS[pair]
+  if (!units) return 0
+  let kern26 = mulFix(units, scale)
+  if (size < 25) {
+    const magnitude = Math.floor((Math.abs(kern26) * size + 12) / 25)
+    kern26 = kern26 < 0 ? -magnitude : magnitude
+  }
+  return pixRound(kern26)
+}
+
+/** TEXT_PLATE_UNITS (MEU-161, D-1243) and PREVIEW_FOLLOWS_BAKE (D-1242): the plate the bake paints, from each glyph's font units scaled by FT_MulFix and rounded per extent and advance as FreeType does, the pen moved by each pair's kerning step, line `i` at `y + i * pitch` with its baseline the ascent below, an empty line the point `(x, y_i)`; Pillow's textbbox is inclusive, so the box is `r - l + 1` by `b - t + 1`. */
 export function textBackgroundBox(input: TextMetricsInput): TextBackgroundBox {
   const size = Math.max(1, input.font_size)
-  const scale = size / SEGOE_LA_BASE_SIZE
+  const scale = (size * 64 * 0x10000) / SEGOE_UI_UNITS_PER_EM
+  const ascent = segoeAscentPx(size)
+  const pitch = segoeLinePitchPx(size)
   const multiline = input.text.includes('\n')
   const lines = multiline ? textLines(input.text) : [input.text.length > 0 ? input.text : ' ']
-  const pitch = segoeLinePitchPx(size)
+  // left, top, right, bottom: the inclusive pixel extents, as Pillow's textbbox reports them
   let left = Number.POSITIVE_INFINITY
   let top = Number.POSITIVE_INFINITY
   let right = Number.NEGATIVE_INFINITY
@@ -74,20 +96,21 @@ export function textBackgroundBox(input: TextMetricsInput): TextBackgroundBox {
       bottom = Math.max(bottom, lineTop)
       return
     }
-    let cursor = input.x
+    const baseline = lineTop + ascent
+    let pen26 = 0
+    let previous = ''
     for (const ch of line) {
-      const glyph = SEGOE_LA_GLYPHS[ch] ?? FALLBACK_GLYPH
-      left = Math.min(left, cursor + glyph.l * scale)
-      top = Math.min(top, lineTop + glyph.t * scale)
-      right = Math.max(right, cursor + glyph.r * scale)
-      bottom = Math.max(bottom, lineTop + glyph.b * scale)
-      cursor += glyph.adv * scale
+      const known = SEGOE_UI_GLYPH_UNITS[ch]
+      if (previous && known) pen26 += kernStep(previous + ch, size, scale)
+      const glyph = known ?? FALLBACK_GLYPH_UNITS
+      const origin = input.x + pixRound(pen26)
+      left = Math.min(left, origin + pixRound(mulFix(glyph.l, scale)))
+      top = Math.min(top, baseline + pixRound(mulFix(glyph.t, scale)))
+      right = Math.max(right, origin + pixRound(mulFix(glyph.r, scale)))
+      bottom = Math.max(bottom, baseline + pixRound(mulFix(glyph.b, scale)))
+      pen26 += pixRound(mulFix(glyph.adv, scale)) * 64
+      previous = known ? ch : ''
     }
   })
-  return {
-    x: Math.round(left),
-    y: Math.round(top),
-    width: Math.max(1, Math.round(right) - Math.round(left)),
-    height: Math.max(1, Math.round(bottom) - Math.round(top)),
-  }
+  return { x: left, y: top, width: Math.max(1, right - left + 1), height: Math.max(1, bottom - top + 1) }
 }

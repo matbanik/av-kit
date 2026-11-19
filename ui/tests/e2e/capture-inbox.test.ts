@@ -8,6 +8,9 @@ import { fileURLToPath } from 'node:url'
 import { launchElectron } from './electron-app'
 import { pointerOn, settle, settledBox, windowSettled } from './pointer-settle'
 
+// FIDELITY_FRAME (Session 97, D-1245): the fidelity specs measure at a device scale of 1 on every host, the second host's native scale; at 2 the dev PC halves a pixel gap and hid the 2 px plate drift.
+const FIDELITY_ARGS = ['--force-device-scale-factor=1'] as const
+
 const here = dirname(fileURLToPath(import.meta.url))
 
 /** MEU-80 HINT_TIMING (`components/ui/Tooltip.tsx`): a hover shows after the delay; a leave hides after the grace. */
@@ -65,8 +68,9 @@ async function clickSampleImagePoint(page: Page, x: number, y: number): Promise<
   await surface.click({ position: { x: originX + x * scale, y: originY + y * scale } })
 }
 
-async function launchApp() {
+async function launchApp(args: readonly string[] = []) {
   return launchElectron({
+    args,
     env: {
       AVKIT_APP_DATA: mkdtempSync(join(tmpdir(), 'avkit-e2e-capture-')),
     },
@@ -2241,7 +2245,7 @@ function expectInkInsidePlate(view: FidelityBoxes): void {
 }
 
 test('AC-82.6 TEXT_PIXEL_ORACLE: the preview text and plate match the baked PNG within 1 px at 100%', async () => {
-  const app = await launchApp()
+  const app = await launchApp(FIDELITY_ARGS)
   const page = await app.firstWindow()
   const shot = {
     ...sampleShot('e2e-fid-1', 'fidelity.png', '2026-10-14T12:00:00Z', { width: 240, height: 120 }),
@@ -2304,7 +2308,7 @@ async function fidelityViews(
   name: string,
   size: { width: number; height: number },
 ): Promise<{ app: Awaited<ReturnType<typeof launchApp>>; preview: FidelityBoxes; bake: FidelityBoxes }> {
-  const app = await launchApp()
+  const app = await launchApp(FIDELITY_ARGS)
   const page = await app.firstWindow()
   const shot = {
     ...sampleShot(id, name, '2026-11-13T12:00:00Z', size),
@@ -3088,15 +3092,15 @@ test('AC-101.6 a double-click reopens a committed text mark; Save posts the new 
   const draft = page.getByTestId('capture-text-draft')
   await page.getByTestId('capture-tool-text').click()
   await page.getByTestId('capture-font-size').fill('2')
-  await clickSampleImagePoint(page, 3, 6)
+  await clickSampleImagePoint(page, 3, 4)
   await draft.fill('Note')
   await draft.press('Enter')
   await expect(text).toHaveCount(1)
   await expect(draft).toHaveCount(0)
   await page.getByTestId('capture-tool-select').click()
   await test.step('double-click the Note plate', async () => {
-    // `Note` at font size 2 from (3,6) has the plate {3,7,4,1}; its centre is image (5,7.5).
-    const centre = await sampleImagePagePoint(page, 5, 7.5)
+    // `Note` at font size 2 from (3,4) has the plate {3,6,6,2}; its centre is image (6,7).
+    const centre = await sampleImagePagePoint(page, 6, 7)
     await page.mouse.dblclick(centre.x, centre.y)
     await expect.poll(() => draft.count()).toBe(1)
     await expect(draft).toHaveValue('Note')
@@ -3108,10 +3112,10 @@ test('AC-101.6 a double-click reopens a committed text mark; Save posts the new 
   await expect.poll(async () => (await annotatePosts(page)).length).toBe(1)
   const edited = (await annotatePosts(page))[0]?.annotations ?? []
   expect(edited).toHaveLength(1)
-  expect(edited[0]).toMatchObject({ type: 'text', text: 'Done', x: 3, y: 6, font_size: 2 })
+  expect(edited[0]).toMatchObject({ type: 'text', text: 'Done', x: 3, y: 4, font_size: 2 })
   await test.step('drag the nw plate corner outward', async () => {
-    // `Done` has the plate {3,7,5,1}: its se corner is the image corner (8,8), where the clamped pointer
-    // cannot move it outward, so the drag takes the nw corner (3,7) out to (0,0) about the se anchor.
+    // `Done` has the plate {3,6,5,2}: its se corner is the image corner (8,8), where the clamped pointer
+    // cannot move it outward, so the drag takes the nw corner (3,6) out to (0,0) about the se anchor.
     await page.getByTestId('capture-mark-list').locator('button', { hasText: 'Text' }).click()
     const nw = page.getByTestId('capture-handle-resize-nw')
     await expect.poll(() => nw.count()).toBe(1)

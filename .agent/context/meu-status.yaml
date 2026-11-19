@@ -4206,6 +4206,33 @@ meus:
   updated: '2026-11-18'
   closed_reason: null
   note: Registered 2026-11-17 from VIDEO-REAL-FFMPEG-TAIL-FRAME-FLAKE (triage D-1127; plan D-1165), Session 93.
+- row_key: MEU-161
+  id: MEU-161
+  slug: capture-text-plate-metrics
+  phase: '9'
+  band: P2
+  matrix_item: '9.46'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: text-plate-metrics
+    text: Phase 9 §Text plate metrics
+  description: 'The preview''s text plate takes the bake''s box: glyph extents in font units scaled and rounded per extent as FreeType does, and the painted size r - l + 1; against Pillow the preview plate
+    is exact on all four sides in at least 1,702 of 2,448 breadth cases, more than 1 px off on a side in at most 5 and never more than 2 px off, and exact in 36 of the 40 multi-line matrix cases with the
+    other four 1 px off; proved by a Pillow-generated plate fixture, unit tests and the fidelity E2E at a device scale of 1.'
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-82, MEU-102
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-82
+  - MEU-102
+  execution_plan: docs/execution/plans/2026-11-19-e2e-host-parity/
+  updated: '2026-11-19'
+  closed_reason: null
+  note: Registered 2026-11-19 from CAPTURE-TEXT-PIXEL-2PX-MINIAIR (triage D-1213; plan D-1250), Session 97.
 summary_bands:
 - key: P0
   label: P0
@@ -4215,9 +4242,9 @@ summary_bands:
   range: MEU-5–13 (Phases 2–3)
 - key: P2
   label: P2
-  range: MEU-14–160 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+  range: MEU-14–161 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
     triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127;
     2026-11-08 capture crop residuals MEU-128–132; 2026-11-09 video stills residuals MEU-133–136; 2026-11-10 download reliability residuals MEU-137–142; 2026-11-13 capture style split MEU-143; 2026-11-15
     post-rc.3 triage residuals MEU-145–154, with MEU-144 registered in Session 74; 2026-11-17 queue pause feedback MEU-155; 2026-11-17 triage residuals MEU-156–157; 2026-11-17 value triage residuals MEU-158–159;
-    2026-11-17 Session 93 residual MEU-160)
+    2026-11-17 Session 93 residual MEU-160; 2026-11-19 Session 97 residual MEU-161)
 narrative_sections: []

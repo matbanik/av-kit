@@ -956,10 +956,10 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
     expect([plate.getAttribute('x'), plate.getAttribute('y'), plate.getAttribute('width'), plate.getAttribute('height')]).toEqual([
       '10',
       '26',
-      '15',
-      '12',
+      '16',
+      '13',
     ])
-    // Fit scale 5 on the 200 px surface: the plate covers CSS x 50..125, y 130..190.
+    // Fit scale 5 on the 200 px surface: the plate covers CSS x 50..130, y 130..195.
     await act(async () => {
       dispatchPointer(surface, 'pointerdown', 180, 20)
       dispatchPointer(surface, 'pointerup', 180, 20)
@@ -3156,7 +3156,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
 
   // ── MEU-101 Capture text re-edit and scale (Session 43 plan AC-101.2–AC-101.4) ──────────────────
   describe('MEU-101 text re-edit and scale', () => {
-    // At the 25 px/px fit, `Hello` at font size 2 from image (1,1) has the plate {1,2,5,1}: CSS (25,50)-(150,75).
+    // At the 25 px/px fit, `Hello` at font size 2 from image (1,1) has the plate {1,3,4,2}: CSS (25,75)-(125,125).
     const HELLO: Extract<Annotation, { type: 'text' }> = {
       type: 'text',
       x: 1,
@@ -3208,7 +3208,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       const fill = textMarks()[0]?.getAttribute('fill')
       const plates = document.querySelectorAll('[data-testid="capture-text-bg-plate"]').length
       await user.click(screen.getByTestId('capture-tool-select'))
-      await doubleClickAt(surface, 87, 62)
+      await doubleClickAt(surface, 75, 100)
       expect(draftField()?.value, 'the draft opens with the text').toBe('Hello')
       expect(textMarks(), 'the edited mark is not painted').toHaveLength(0)
       expect(resizeHandles(), 'no handles while editing').toHaveLength(0)
@@ -3267,17 +3267,17 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       await user.click(textChip())
       const handles = resizeHandles().map((element) => element.getAttribute('data-handle'))
       expect(handles.sort(), 'four corners').toEqual(['ne', 'nw', 'se', 'sw'])
-      // The se plate corner is image (6,3), CSS (150,75); CSS (175,100) is image (7,4): ratio max(6/5, 2/1) = 2.
-      await drag(surface, 150, 75, 175, 100)
+      // The se plate corner is image (5,5), CSS (125,125); CSS (150,175) is image (6,7): ratio max(5/4, 4/2) = 2.
+      await drag(surface, 125, 125, 150, 175)
       expect(textMarks()[0]?.getAttribute('font-size'), 'scaled').toBe('4')
       await user.click(screen.getByTestId('capture-undo'))
       expect(textMarks()[0]?.getAttribute('font-size'), 'one Undo').toBe('2')
       expect(undoDisabled(), 'one step').toBe(true)
       const { hitTestMarks } = await import('../../src/renderer/src/features/capture/capture-hit-test')
-      // The plate's n edge midpoint is image (3.5,2), CSS (87.5,50).
+      // The plate's n edge midpoint is image (3,3), CSS (75,75).
       const hit = hitTestMarks({
-        cssX: 87.5,
-        cssY: 50,
+        cssX: 75,
+        cssY: 75,
         scale: 25,
         ox: 0,
         oy: 0,
@@ -3293,7 +3293,7 @@ describe('MEU-39 capture GUI runtime (exec r1 F1 F2 F5)', () => {
       detailAnnotations['shot-1'] = [HELLO]
       const surface = await openSelectedSurface()
       await user.click(textChip())
-      await drag(surface, 150, 75, 175, 100)
+      await drag(surface, 125, 125, 150, 175)
       expect(textMarks()[0]?.getAttribute('font-size'), 'scaled').toBe('4')
       const font = screen.getByTestId('capture-font-size') as HTMLInputElement
       expect(font.value, 'Size after the scale').toBe('4')
@@ -3533,8 +3533,8 @@ describe('MEU-59 viewport preview', () => {
     const plate = screen.getByTestId('capture-text-bg-plate')
     expect(plate.getAttribute('x')).toBe('10')
     expect(plate.getAttribute('y')).toBe('26')
-    expect(plate.getAttribute('width')).toBe('15')
-    expect(plate.getAttribute('height')).toBe('12')
+    expect(plate.getAttribute('width')).toBe('16')
+    expect(plate.getAttribute('height')).toBe('13')
   })
 })
 

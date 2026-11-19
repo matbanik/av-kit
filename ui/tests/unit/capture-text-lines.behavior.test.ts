@@ -11,7 +11,6 @@ import { createElement } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { CapturePage } from '../../src/renderer/src/features/capture/CapturePage'
-import { SEGOE_LA_BASE_SIZE, SEGOE_LA_GLYPHS } from '../../src/renderer/src/features/capture/capture-segoe-metrics'
 import * as tm from '../../src/renderer/src/features/capture/capture-text-metrics'
 import { queryClient } from '../../src/renderer/src/lib/query-client'
 import * as ids from '../e2e/test-ids'
@@ -50,42 +49,6 @@ const GEOMETRY = JSON.parse(
 ) as Geometry
 
 const HINT = 'Enter to finish, Shift+Enter for a new line, Esc to cancel'
-const MATRIX_TEXTS = ['Hi\nHi', 'Hi\n\nHi', 'Hi\n', '\nHi', '\n', 'Hello\nW\ngy', 'Hi\n\nHello\n', 'i\nWWWW', '  \n  ']
-const FALLBACK = { l: 0, t: 7, r: 8, b: 18, adv: 8 }
-
-/** The TEXT_PLATE_LINES oracle: the union of each line's unrounded extents, rounded and clamped once. */
-function unionOracle(x: number, y: number, text: string, fontSize: number): { x: number; y: number; width: number; height: number } {
-  const size = Math.max(1, fontSize)
-  const scale = size / SEGOE_LA_BASE_SIZE
-  const pitch = GEOMETRY.segoe_line_pitch[String(size)] as number
-  let l = Number.POSITIVE_INFINITY
-  let t = Number.POSITIVE_INFINITY
-  let r = Number.NEGATIVE_INFINITY
-  let b = Number.NEGATIVE_INFINITY
-  text.split('\n').forEach((line, i) => {
-    const top = y + i * pitch
-    if (line.length === 0) {
-      l = Math.min(l, x)
-      t = Math.min(t, top)
-      r = Math.max(r, x)
-      b = Math.max(b, top)
-      return
-    }
-    let cursor = x
-    for (const ch of line) {
-      const g = SEGOE_LA_GLYPHS[ch] ?? FALLBACK
-      l = Math.min(l, cursor + g.l * scale)
-      t = Math.min(t, top + g.t * scale)
-      r = Math.max(r, cursor + g.r * scale)
-      b = Math.max(b, top + g.b * scale)
-      cursor += g.adv * scale
-    }
-  })
-  const left = Math.round(l)
-  const tp = Math.round(t)
-  return { x: left, y: tp, width: Math.max(1, Math.round(r) - left), height: Math.max(1, Math.round(b) - tp) }
-}
-
 type Shot = {
   id: string
   original_path: string
@@ -312,28 +275,28 @@ describe('MEU-102 multi-line text marks', () => {
     expect(tm.textLines('Hi')).toEqual(['Hi'])
   })
 
-  it('AC-102.10 textBackgroundBox equals each text_plates box and the line-union oracle; a trailing \\n reaches the empty line', () => {
+  it('AC-102.10 textBackgroundBox equals each painted text_plates box; a trailing \\n reaches the empty line', () => {
     expect(GEOMETRY.text_plates).toHaveLength(16)
+    // PREVIEW_FOLLOWS_BAKE (MEU-161): the painted plate is Pillow's inclusive box, r - l + 1 by b - t + 1.
+    // One plate is the named residual: 'Hi\n' at 24 tops out 1 px above the paint, its bottom equal.
+    let exact = 0
     for (const plate of GEOMETRY.text_plates) {
       const [l, t, r, b] = plate.box
       const label = `${JSON.stringify(plate.text)}@${plate.font_size}`
-      expect(tm.textBackgroundBox(plate), label).toEqual({ x: l, y: t, width: r - l, height: b - t })
-    }
-    for (const text of MATRIX_TEXTS) {
-      for (const size of [8, 16, 32, 64]) {
-        const input = { x: 10, y: 20, text, font_size: size }
-        expect(tm.textBackgroundBox(input), `${JSON.stringify(text)}@${size}`).toEqual(unionOracle(10, 20, text, size))
+      const painted = { x: l, y: t, width: r - l + 1, height: b - t + 1 }
+      if (plate.text === 'Hi\n' && plate.font_size === 24) {
+        expect(painted, `${label} painted`).toEqual({ x: 10, y: 29, width: 24, height: 22 })
+        expect(tm.textBackgroundBox(plate), `${label} the named residual`).toEqual({ x: 10, y: 28, width: 24, height: 23 })
+        continue
       }
+      expect(tm.textBackgroundBox(plate), label).toEqual(painted)
+      exact += 1
     }
-    for (const size of [8, 16, 32, 64]) {
-      expect(tm.textBackgroundBox({ x: 10, y: 20, text: 'Hello', font_size: size })).toEqual(
-        unionOracle(10, 20, 'Hello', size),
-      )
-    }
+    expect(exact, 'plates exact').toBe(15)
     const one = tm.textBackgroundBox({ x: 10, y: 20, text: 'Hi', font_size: 16 })
     const trailing = tm.textBackgroundBox({ x: 10, y: 20, text: 'Hi\n', font_size: 16 })
-    expect(one.y + one.height, 'Hi ends at 38').toBe(38)
-    expect(trailing.y + trailing.height, 'Hi\\n ends at the empty line top, 42').toBe(42)
+    expect(one.y + one.height, 'Hi ends at 39').toBe(39)
+    expect(trailing.y + trailing.height, 'Hi\\n ends one row past the empty line top, 43').toBe(43)
   })
 
   it('AC-102.11 a multi-line mark paints one <text> with a <tspan> per line; a one-line mark has none', async () => {
