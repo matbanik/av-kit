@@ -42,9 +42,9 @@ issues:
     root_cause: tests/tooling/test_framework_adoption.py runs the live P:/.agent/tools/resolve_model.py with AGENT_MODEL_REGISTRY_HOME=P:/.agent (lines ~317-498, 800, 867). av-kit's tracked overlay .agent/model-registry.local.json pins validated_against to the global registry hash, so any edit to P:/.agent/model-registry.json made for another project (e.g. the 2026-09-29 zorivest gpt-6.1 bump) makes the resolver refuse the overlay (overlay_not_validated) and fails py-tests until the overlay is revalidated. Found by Session 26 WINDOWS_GATE attempt 6.
     blast_radius: 'Any av-kit Windows gate after a shared-registry change fails py-tests until av-kit''s overlay is revalidated; the product is unaffected. Session 26 revalidated the overlay (A17). It recurred in Session 30 (LOCAL_SEQUENCE attempt 3, registry b06d7cda… → ad9a09de…; revalidated under A-12, 2026-10-07), so severity is raised to medium. Durable fix: give these tests a fixture registry home (a snapshot of the resolver contract plus a registry) so the gate no longer depends on machine-level state, keeping one opt-in live check. RECURRED 2026-10-09 (third time): the Codex scoping-review dispatch for the 2026-10-09 grouping stopped before any provider call with overlay_not_validated (overlay records ad9a09de…, registry in use a7c95972…). Revalidating rewrites .agent/model-registry.local.json, which is in Session 30''s GATED_PATHS, so it waits for Session 30''s approval; the next av-kit WINDOWS_GATE will also fail py-tests until then.'
     verification:
-      last_checked: '2026-11-15'
-      method: 'Session 76 row 2: the registry tests run under a hostile AGENT_MODEL_REGISTRY (C:/Temp/av-kit/tth/tth-reg-hostile.txt)'
-      result: 17 passed, 75 deselected in 3.62s
+      last_checked: '2026-11-20'
+      method: 'Session 97 handoff: final H1-2 gate py-tests (C:/Temp/av-kit/e2e-host-parity receipts)'
+      result: Python 3,301 passed; no overlay_not_validated in Sessions 95 to 97
     resolution_path: 'Mitigated in Session 76 on 2026-11-15 (plan docs/execution/plans/2026-11-15-tooling-test-hermeticity): the adoption tests are hermetic. They resolve against a tracked fixture registry home (tests/tooling/fixtures/registry-home) and a byte copy of the dispatch wrapper, so a machine registry bump no longer reds them. Residual, kept by design (D-912): a machine registry bump still reds tests/tooling/test_hdp_expert_pass.py::test_ac_10_compiled_registry_is_current_and_adds_only_the_peer_reviewer until the overlay is revalidated, because the wrapper refuses the same stale stamp.'
     category: TECH-DEBT
     priority: P2
@@ -69,6 +69,7 @@ issues:
             engine: none
             sources: []
           reasoning: Three recurrences in three weeks, each blocking a gate or a dispatch for reasons outside av-kit. Two-way.
+    notes: 'Triage 2026-11-20: no recurrence in Sessions 95 to 97. The D-912 residual rides the next change to that file.'
   - id: TTS-MODEL-MANAGE-AFFORDANCE
     title: TTS 'Manage' disclosure hides model selection; Get/Load/Unload should follow a selected model's state
     severity: medium
@@ -1999,8 +2000,12 @@ issues:
       Triage 2026-11-17: anthropics/claude-code#98256 is still open (last updated 2026-11-13). DIALOG_FALLBACK stays.
 
       Triage 2026-11-18: anthropics/claude-code#98256 is still open (last updated 2026-11-13). DIALOG_FALLBACK stays.
+
+      Triage 2026-11-20: anthropics/claude-code#98256 is still open (last updated 2026-11-20). DIALOG_FALLBACK stays (D-232).
     verification:
-      last_checked: '2026-11-18'
+      last_checked: '2026-11-20'
+      method: gh api repos/anthropics/claude-code/issues/98256 (read only)
+      result: open, last updated 2026-11-20, 11 comments
     category: UPSTREAM
     priority: P3
     meu_links:
@@ -2277,10 +2282,13 @@ issues:
       - MEU-74
       - MEU-98
     verification:
-      last_checked: '2026-11-04'
-      method: Session 42 row 10 ESPEAK_STAGE probe, EspeakCliAdapter().status() (PATH, then Program Files, then --version)
-      result: 'absent: espeak-ng: <absent> version: - (exit 3); AC-74.11 not run; row 10 [B] (b) B-10 in docs/execution/plans/2026-10-26-tts-sideload-load/task.md'
-    notes: 'Triage 2026-11-04: Blocked on Mat installing eSpeak NG 1.52 and running AC-74.11 in the dev app; Session 42''s row 10 then turns [x].'
+      last_checked: '2026-11-20'
+      method: where espeak-ng; Program Files and Program Files (x86) eSpeak NG folders
+      result: 'absent: espeak-ng not on PATH and neither install folder exists; AC-74.11 still not run'
+    notes: |-
+      Triage 2026-11-04: Blocked on Mat installing eSpeak NG 1.52 and running AC-74.11 in the dev app; Session 42's row 10 then turns [x].
+
+      Triage 2026-11-20: eSpeak NG is still not installed on the dev PC. Stays BLOCKED P3 on Mat's install (D-230).
     enrichment:
       questions_asked: []
       answers: []
@@ -2920,9 +2928,9 @@ issues:
     root_cause: 'hypothesis: under host load (other agent sessions starting their MCP servers) an Electron launch or close in capture-inbox.test.ts stalls past the 60 s test timeout, and Playwright then cannot tear the worker down. No assertion or locator step fails. Not reproduced in isolation; unexplained.'
     blast_radius: ui/tests/e2e/capture-inbox.test.ts in the full Electron run (AC-67.24 and AC-67.35 seen). A miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
     verification:
-      last_checked: '2026-11-18'
-      method: Session 91 e2e-pointer-flakes receipts (C:/Temp/av-kit/e2e-pointer-flakes/epf-hang-verdict.txt, epf-accept.txt, epf-watch10.txt)
-      result: 'outcome: not-reproduced; epf-hang-signatures.json is []; three acceptance runs and ten watch runs clean'
+      last_checked: '2026-11-20'
+      method: the mini-air runs r20261119T074154Z-a43cdb2, r20261119T084412Z-a43cdb2, r20261119T135541Z-ed48964 and r20261119T143010Z-484d4ab (summary.json and host/report.json); Session 97's dev-PC final full run (epf-gate-1 receipt); C:/Temp/av-kit/triage-1120/recheck-runs.txt
+      result: no test or worker teardown timeout, no retry and no capture-inbox result over 45 s in five full runs of 232 on two hosts
     category: MONITORING
     priority: P4
     related:
@@ -2939,6 +2947,8 @@ issues:
       COUNT CORRECTED 2026-11-18 (triage): Session 90 failed 3 of 7 full Electron runs, not 4 of 7 (handoff .agent/context/handoffs/2026-11-17-test-run-reliability-handoff.md, row 5 attempts table: attempt 1 run 3, attempt 2 run 1 and attempt 3 run 3; found by Session 91's expert pass). The 2026-11-17 note and the D-1126 question above keep the count as it was written.
 
       Triage 2026-11-18 (D-1197): back to MONITORING P4. Session 91 ran 13 instrumented full or watch runs under load with no hang. Reopen as TECH-DEBT P3 on the next hang, and classify it by the last phase in that run's phases.jsonl.
+
+      Triage 2026-11-20 (D-1263): stays MONITORING P4. Five more clean full runs (four on the mini-air, one on the dev PC) since D-1197, none with the hang. D-1197's reopen rule stands.
     enrichment:
       questions_asked: []
       answers: []
@@ -2972,6 +2982,21 @@ issues:
             engine: none
             sources: []
           reasoning: D-1126 raised it to P3 because it failed gates. In 13 instrumented runs it failed none, and the other two flakes it was grouped with are resolved. A session now would have nothing to reproduce. The instrumentation will name the phase on a repeat, so waiting costs nothing. Two-way.
+        - id: D-1263
+          stage: triage
+          question: Five more full runs on two hosts show no launch hang. Close the issue?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: No. MONITORING P4 under D-1197's reopen rule; the phase logging stays.
+          source_tag: Local Canon
+          precedents:
+            - 'D-1197 (triage 2026-11-18): reopen as TECH-DEBT P3 on the next hang'
+            - 'Notes: seen 2026-10-25, then not again until 2026-11-17'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue orchestrating the next prompt session and the session after if there is any''. It once went 23 days unseen and came back, so two days of clean runs do not meet any close bar. The mini-air is an idle host, and the hypothesis is host load, so its clean runs say little. Keeping a P4 watch item costs nothing. M items: none. Two-way.'
       decided_by: agent
   - id: PACKAGING-MCP-SNIPPET-TOKEN-STALE
     title: test_mcp_snippet_keys (AC-25.7) still requires AVKIT_API_TOKEN in mcp.json.example, which Session 31b made token-free
@@ -3609,12 +3634,36 @@ issues:
     root_cause: Not established. primeTransparentClipboard in ui/tests/e2e/capture-filmstrip-actions.test.ts writes the image once and then polls the read. In H1-2 attempt 4 the read stayed empty until the 5 s poll ended. The clipboard is shared with the whole desktop, and Mat was using the PC during that run, so another program replacing it is one candidate. Nothing tested that.
     blast_radius: One failure in H1-2 attempt 4, the first test of that run. It passed in attempts 2, 3, 5 and 6 and 8 of 8 repeats after ECN-9. A failure here stops a gate at ui-electron and costs a rerun. The primer is a precondition of the test, so it says nothing about the product.
     verification:
-      last_checked: '2026-11-04'
+      last_checked: '2026-11-20'
+      method: the mini-air runs r20261119T074154Z-a43cdb2, r20261119T084412Z-a43cdb2, r20261119T135541Z-ed48964 and r20261119T143010Z-484d4ab (summary.json and host/report.json); Session 97's dev-PC full run
+      result: 'not run: capture-filmstrip-actions.test.ts is excluded from every full run on both hosts, so AC-88.12''s primer had no chance to recur'
     category: MONITORING
     priority: P4
     related:
       - E2E-MAIN-PROCESS-ERRORS-UNWATCHED
+      - E2E-CLIPBOARD-SPECS-UNGATED
     meu_links: []
+    notes: 'Triage 2026-11-20 (D-1262): stays MONITORING P4, a watch item of Session 98. Its spec has run in no gate since Session 91, so ''not seen again'' says nothing; Session 98 runs AC-88.12 on the mini-air again, and a primer failure there reopens this with that run''s receipts. Close it only after AC-88.12 has passed in repeated gated runs.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1262
+          stage: triage
+          question: The primer failure has not been seen since 2026-11-04. Close it?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: No. MONITORING P4, attached to Session 98 as a watch item; close it only after AC-88.12 runs in gates again and passes.
+          source_tag: Local Canon
+          precedents:
+            - '.agent/context/grouping/2026-11-17-value-triage-session-grouping.md §1: ''Not grouped: not seen again'''
+            - 'C:/Temp/av-kit/triage-1120/recheck-runs.txt: the clipboard files are absent from every run since 2026-11-18'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue orchestrating the next prompt session and the session after if there is any''. The test behind it has been excluded from every full run, so its absence is no evidence. Session 98 runs it again at no extra cost. Closing now would drop the record just before the first chance to see it. M items: none. Two-way.'
+      decided_by: agent
   - id: SETTINGS-DRAFT-STALE-BASELINE
     title: An unsaved capture settings edit freezes the other capture settings at their old values
     severity: low
@@ -4675,14 +4724,19 @@ issues:
     blast_radius: 'One failure, in Session 53 gate run 2''s first attempt (W2-4, E2E_HAPPY_PATH via E2E_SEAM), with no change under ui/. That attempt was slow throughout (pytest 305 s against 191 s, the Electron spec 2.6 min against 22 s). The unchanged rerun passed 11 of 11. Receipts: C:/Temp/av-kit/s53-gate-r2a/. A failure stops a gate at ui-electron and costs a rerun; it says nothing about the product.'
     resolution_path: 'Watch item in MEU-125 (Session 57 release-rc2): its plan names this issue, and if W2-4 fails again there or in an earlier gate, the fix lands before the release. The likely fix is to wait for the first load to settle before the reload.'
     verification:
-      last_checked: '2026-11-07'
+      last_checked: '2026-11-20'
+      method: the mini-air runs r20261119T074154Z-a43cdb2, r20261119T084412Z-a43cdb2, r20261119T135541Z-ed48964 and r20261119T143010Z-484d4ab (summary.json and host/report.json); Session 97's dev-PC final full run; C:/Temp/av-kit/triage-1120/recheck-runs.txt
+      result: W2-4 passed in all five full runs; transcript-queue.test.ts 11 of 11 each time; no ERR_ABORTED
     category: MONITORING
     priority: P4
     related:
       - E2E-CLIPBOARD-PRIMER-EMPTY
     meu_links:
       - MEU-125
-    notes: 'Session 53 closeout D-362 (Mat 2026-11-07). Session 53 RULE-4 governs a recurrence in a gate: rerun once unchanged, keep the failed attempt''s receipts and state both attempts.'
+    notes: |-
+      Session 53 closeout D-362 (Mat 2026-11-07). Session 53 RULE-4 governs a recurrence in a gate: rerun once unchanged, keep the failed attempt's receipts and state both attempts.
+
+      Triage 2026-11-20 (D-1264): stays MONITORING P4. MEU-125's watch window ended without a repeat, and W2-4 passed in five more full runs on two hosts. Session 53 RULE-4 still governs a recurrence in a gate.
     enrichment:
       questions_asked: []
       answers: []
@@ -4705,6 +4759,21 @@ issues:
               - https://endform.dev/blog/quarantine-flaky-playwright-tests — a pass on retry is not a fix; track it with an owner
           reasoning: One failure can't show that a fix works, and no remaining session edits the test file. Session 57's gate runs it anyway, so a named watch item there costs one plan line. Two-way.
           human_message_reference: 'USER_EXPLICIT 2026-11-07 ''all recommendations are accepted'' (briefs: docs/execution/plans/2026-11-07-transcript-metadata/closeout-decisions.md)'
+        - id: D-1264
+          stage: triage
+          question: The seam reload has passed every run since 2026-11-07, including the second host. Close it?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: No. MONITORING P4, as D-362 filed it; a recurrence follows Session 53 RULE-4 and lands the settle-before-reload fix.
+          source_tag: Local Canon
+          precedents:
+            - 'D-362 (Mat, 2026-11-07): MONITORING P4 with no code change'
+            - 'CAPTURE-E2E-LAUNCH-TEARDOWN-HANG: a load flake that returned after 23 days'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue orchestrating the next prompt session and the session after if there is any''. The one failure came under heavy load, and the mini-air runs are unloaded, so they do not test the trigger. A record with its receipts and likely fix costs nothing and saves the next session a diagnosis. M items: none. Two-way.'
   - id: TRANSCRIPT-UNCLEANED-TITLE-FALLBACKS
     title: Two older title paths into transcript storage skip the lone-surrogate cleaning
     severity: low
@@ -5932,4 +6001,79 @@ issues:
     status: open
     discovered: '2026-11-19'
     root_cause: Per-glyph FreeType rounding and hinting in font units leave at most 2 px on a few breadth sizes and 1 px on four matrix cases; Pillow basic layout without raqm adds kerning in 1/64 px, which the model mirrors, so a Pillow or raqm change moves the bake; characters outside printable ASCII use the fallback box (D-1244, AC-161.5)
-    blast_radius: ''
+    blast_radius: 'Preview only: the saved PNG is the bake and is unchanged. In the capture editor a text mark''s background plate is 1 px off on a side at 5 of 2,448 measured breadth cases (worst 2 px) and on 4 of 40 matrix cases (Session 97 handoff; AC-161.5 pins those limits). A Pillow or raqm change moves the bake, and AC-161.5 then fails in the gate, so a drift either way is caught. Characters outside printable ASCII use the fallback box.'
+    category: TECH-DEBT
+    priority: P4
+    related:
+      - capture
+      - text-parity
+    meu_links:
+      - MEU-161
+    verification:
+      last_checked: '2026-11-20'
+      method: Session 97's final dev-PC gate and the mini-air runs r20261119T074154Z-a43cdb2, r20261119T084412Z-a43cdb2, r20261119T135541Z-ed48964 and r20261119T143010Z-484d4ab (summary.json and host/report.json)
+      result: AC-161.5 and the three fidelity specs passed on both hosts at 484d4ab; no new drift
+    notes: 'Triage 2026-11-20 (D-1260): TECH-DEBT P4, not grouped. The residual is a measured limit of the per-glyph model that AC-161.5 pins, not a defect a user reported. Recheck when AC-161.5 fails on a Pillow or raqm change, or when someone reports a visible plate misfit.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1260
+          stage: triage
+          question: Session 97 left the 1 to 2 px plate residual unclassified. Which category and priority, and is it grouped?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: TECH-DEBT P4, not grouped. AC-161.5 keeps the measured limits, so any drift fails the gate; recheck on such a failure or a user report.
+          source_tag: Local Canon
+          precedents:
+            - 'docs/execution/plans/2026-11-19-e2e-host-parity/implementation-plan.md D-1244: pin the measured residual in AC-161.5 and track it as a low issue'
+            - 'Triage priority matrix (.agent/workflows/issue-triage.md §4): low severity and standalone is P4'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue orchestrating the next prompt session and the session after if there is any''. It is low, preview only, and blocks nothing: the saved image is the bake, and both hosts pass at the limits. Closing a gap of 1 px at 9 cases would need FreeType hinting modelled in the renderer, a large change for a difference nobody has reported. MONITORING fits less well, because AC-161.5 already watches it. Doing nothing would leave it uncategorised and outside every triage pass. M items: none. Two-way.'
+      decided_by: agent
+  - id: E2E-CLIPBOARD-SPECS-UNGATED
+    title: 'Seven capture E2E tests run in no gate: two touch the clipboard, and five only share their files'
+    severity: medium
+    component: ui
+    status: open
+    discovered: '2026-11-20'
+    root_cause: 'Every full Electron run excludes ui/tests/e2e/capture-filmstrip-actions.test.ts and capture-import.test.ts by file: on the dev PC the plan-local flake-run.py (EXCLUDED, since Session 91 (executed 2026-11-18), copied by later plans) keeps them off because Mat uses that clipboard (Session 57 RULE-4); on the mini-air the tracked skip entries in tools/e2e_host/known-failures.json keep them off because a connected RustDesk session syncs that clipboard (grouping 2026-11-18 §3 Gate). Only two of the seven tests in those files touch the system clipboard: AC-88.12 (a)(b)(f), Copy full path and Copy image, and AC-132.23, Ctrl+V paste. The other five, AC-88.12 (c) and (d)(e), AC-89.9, AC-89.15 and AC-132.22, are excluded only because they share a file.'
+    blast_radius: 'No gate since Session 91 (executed 2026-11-18) has checked the filmstrip context menu from the keyboard, menu Delete, Shift-click batch delete with a reported failure, checkbox delete, drop import of images, Copy image, Copy full path, or Ctrl+V paste import. Nothing has failed: the specs were last edited on 2026-11-16 (771c279) and no main-process file changed since but the ready handshake (86ee8e3). A regression in those user-visible capture actions would reach a release unseen. E2E-CLIPBOARD-PRIMER-EMPTY cannot recur, or be closed, while AC-88.12 never runs.'
+    verification:
+      last_checked: '2026-11-20'
+      method: the mini-air runs r20261119T074154Z-a43cdb2, r20261119T084412Z-a43cdb2, r20261119T135541Z-ed48964 and r20261119T143010Z-484d4ab (summary.json and host/report.json); Session 97's dev-PC full run; test titles and clipboard calls in the two spec files
+      result: both files absent from all five full runs (skip entries on the mini-air, EXCLUDED on the dev PC); 2 of their 7 tests call the clipboard
+    category: TECH-DEBT
+    priority: P3
+    related:
+      - E2E-CLIPBOARD-PRIMER-EMPTY
+      - e2e
+      - capture
+    meu_links: []
+    notes: 'Triage 2026-11-20 (D-1261): TECH-DEBT P3, grouped as Session 98 e2e-clipboard-specs in .agent/context/grouping/2026-11-20-e2e-clipboard-specs-session-grouping.md, with no MEU (test files and tooling only). RustDesk''s own settings and processes on the host stay Mat''s (D-1216 class).'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1261
+          stage: triage
+          question: The two clipboard spec files run in no gate on either host. Register it, and is it worth a session?
+          resolution: autonomous
+          class: two-way
+          mandatory:
+            - M-8
+          chosen: 'Register E2E-CLIPBOARD-SPECS-UNGATED as TECH-DEBT P3 and group it as Session 98, no MEU: put the five tests that never touch the clipboard back into every full run on both hosts, and run the two clipboard tests on the mini-air only when no remote-desktop session is connected.'
+          source_tag: Local Canon
+          precedents:
+            - 'tools/e2e_host/known-failures.json skip entries: ''clipboard spec; grouping §3 Gate'''
+            - 'docs/execution/plans/2026-11-17-e2e-pointer-flakes/flake-run.py:50 EXCLUDED: ''the two clipboard specs this session never runs'''
+            - '.agent/context/grouping/2026-11-18-e2e-remote-host-session-grouping.md:36 and :91: the clipboard specs stay off the mini-air because RustDesk syncs its clipboard'
+            - 'Triage priority matrix: medium severity and standalone is P3'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue orchestrating the next prompt session and the session after if there is any''. The exclusion was meant for two tests that write the system clipboard, but it is by file, so five tests of user-visible capture actions lost their gate too, and no session owns bringing them back. The fix is in test files and tooling only, and the second host now gives the clipboard tests a desktop that is not Mat''s. Doing nothing keeps seven tests unrun for as long as every plan copies the exclusion. M items: M-8 (it adds a session and changes the 2026-11-18 grouping''s rule that the clipboard specs stay skipped on the mini-air). Two-way.'
+      decided_by: agent
