@@ -65,6 +65,7 @@ $env:ELECTRON_RUN_AS_NODE=$null; npm --prefix ui run dev
 
 # Runtime: build UI before real Electron tests.
 $env:ELECTRON_RUN_AS_NODE=$null; npm --prefix ui run test:e2e
+# The clipboard spec capture-system-clipboard.test.ts skips itself unless AVKIT_E2E_CLIPBOARD_GATED=1; never set it on the dev PC: only the second Windows host's gated stage sets it (.agent/docs/e2e-remote-host.md).
 ```
 
 > [!IMPORTANT]
@@ -202,7 +203,7 @@ Each row below defines argv, scope and stage. Common fields: cwd `P:/av-kit` (np
 | ui-lint | static | `npm --prefix ui run lint` | UI source/tests, ESLint config |
 | ui-tests | full | `npm --prefix ui run test` | UI Vitest suite and fixtures; pass affected paths for targeted checks |
 | ui-build | full | `npm --prefix ui run build` | Electron main/preload/renderer outputs |
-| ui-electron | runtime | `npm --prefix ui run test:e2e` | Real Electron; build first; clear process ELECTRON_RUN_AS_NODE; retain script's Playwright JSON output |
+| ui-electron | runtime | `npm --prefix ui run test:e2e` | Real Electron; build first; clear process ELECTRON_RUN_AS_NODE; retain script's Playwright JSON output; the clipboard spec `capture-system-clipboard.test.ts` skips itself unless `AVKIT_E2E_CLIPBOARD_GATED=1`, which only the second Windows host's gated stage sets, never the dev PC (`.agent/docs/e2e-remote-host.md`) |
 | ui-electron-remote | runtime | `uv run python tools/e2e_remote.py run <commit>` | Full Electron E2E suite on the second Windows host over SSH (`.agent/docs/e2e-remote-host.md`); untracked config `<HOME>/.config/av-kit/e2e-host.json`; exit 0 only when every failure is listed in `tools/e2e_host/known-failures.json`; refusals 2 to 40 named in the run book; never stops a host process; adds a run and does not replace `ui-electron` |
 | mcp-types | static | `npm --prefix mcp-server run typecheck` | MCP source/tests and tsconfig |
 | mcp-tests | full | `npm --prefix mcp-server run test` | MCP Vitest contracts and fixtures |

@@ -1,6 +1,6 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
-import { mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -17,11 +17,10 @@ import { launchElectron } from './electron-app'
  * The paste proof uses the system clipboard as D-560 A rules: main saves its text, HTML, RTF and
  * image first, and `finally` restores them only if this test wrote to it, then reads them back
  * and fails on any difference (S13). The formats before and after are printed for the receipt.
+ * Session 98 (D-1268): AC-132.23 and its clipboard helpers moved to capture-system-clipboard.test.ts.
  */
 
 const NOT_AN_IMAGE = 'not an image av-kit can open (png, jpg, jpeg, webp)'
-const PASTED_NAME = /^\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}(_\d+)?\.png$/
-
 type CaptureRow = {
   id: string
   original_path: string
@@ -206,10 +205,6 @@ async function mainPng(app: ElectronApplication, bgra: [number, number, number, 
   return Buffer.from(encoded, 'base64')
 }
 
-function pngs(dir: string): string[] {
-  return readdirSync(dir).filter((name) => name.toLowerCase().endsWith('.png'))
-}
-
 function slashes(path: string): string {
   return path.replace(/\\/g, '/')
 }
@@ -220,12 +215,6 @@ function importBodies(backend: Backend): Record<string, unknown>[] {
 
 function registerBodies(backend: Backend): Record<string, unknown>[] {
   return backend.bodies.filter((body) => body.mode === 'register')
-}
-
-/** The nth register body, with its path in forward slashes. */
-function registerBody(backend: Backend, index: number): Record<string, unknown> {
-  const body = registerBodies(backend)[index] ?? {}
-  return { ...body, path: slashes(String(body.path)) }
 }
 
 /** The toast's message without its Dismiss label. */
@@ -277,149 +266,5 @@ test('AC-132.22 a drop of two PNGs and a text file imports the two images in ord
     expect(registerBodies(h.backend)).toEqual([])
   } finally {
     await h.close()
-  }
-})
-
-type SavedClipboard = {
-  formats: string[]
-  text: string
-  html: string
-  rtf: string
-  image: string | null
-  size: { width: number; height: number } | null
-  bitmap: string | null
-}
-
-async function readClipboard(app: ElectronApplication): Promise<SavedClipboard> {
-  return app.evaluate(({ clipboard }) => {
-    const image = clipboard.readImage()
-    const empty = image.isEmpty()
-    return {
-      formats: clipboard.availableFormats(),
-      text: clipboard.readText(),
-      html: clipboard.readHTML(),
-      rtf: clipboard.readRTF(),
-      image: empty ? null : image.toPNG().toString('base64'),
-      size: empty ? null : image.getSize(),
-      bitmap: empty ? null : image.toBitmap().toString('base64'),
-    }
-  })
-}
-
-/** D-560 A: one write of everything saved, or a clear when nothing was on the clipboard. */
-async function restoreClipboard(app: ElectronApplication, saved: SavedClipboard): Promise<void> {
-  await app.evaluate(({ clipboard, nativeImage }, value) => {
-    if (value.formats.length === 0) {
-      clipboard.clear()
-      return
-    }
-    const data: Parameters<typeof clipboard.write>[0] = {}
-    if (value.text.length > 0) {
-      data.text = value.text
-    }
-    if (value.html.length > 0) {
-      data.html = value.html
-    }
-    if (value.rtf.length > 0) {
-      data.rtf = value.rtf
-    }
-    if (value.image !== null) {
-      data.image = nativeImage.createFromBuffer(Buffer.from(value.image, 'base64'))
-    }
-    clipboard.write(data)
-  }, saved)
-}
-
-function describeFormats(label: string, formats: string[]): void {
-  console.log(`[D-560] clipboard formats ${label}: ${formats.length === 0 ? '(none)' : formats.join(', ')}`)
-}
-
-test('AC-132.23 Ctrl+V pastes a clipboard image into the configured inbox, and text fields keep their paste', async () => {
-  test.setTimeout(120_000)
-  const h = await launch()
-  let saved: SavedClipboard | null = null
-  let wrote = false
-  try {
-    const page = h.page
-    const toast = page.getByTestId('bulk-toast')
-    const notAnImage = `Imported 0 of 1. 1 failed: sample.mp4 - ${NOT_AN_IMAGE}`
-
-    // 1. The button: the E2E dialog answers C:/e2e/sample.mp4.
-    await page.getByTestId('capture-import').click()
-    await expect(toast).toBeVisible({ timeout: 10_000 })
-    await expect.poll(() => toastMessage(page)).toBe(notAnImage)
-
-    // 2. A test PNG on the clipboard, then Ctrl+V on the page body.
-    saved = await readClipboard(h.app)
-    describeFormats('before', saved.formats)
-    await h.app.evaluate(({ clipboard, nativeImage }) => {
-      const bitmap = Buffer.alloc(8 * 8 * 4)
-      for (let i = 0; i < bitmap.length; i += 4) {
-        bitmap[i] = 255
-        bitmap[i + 1] = 128
-        bitmap[i + 2] = 0
-        bitmap[i + 3] = 255
-      }
-      clipboard.writeImage(nativeImage.createFromBitmap(bitmap, { width: 8, height: 8 }))
-    })
-    wrote = true
-    await page.evaluate(() => {
-      ;(document.activeElement as HTMLElement | null)?.blur()
-    })
-    await page.keyboard.press('Control+V')
-    await expect.poll(() => pngs(h.inboxA).length, { timeout: 15_000 }).toBe(1)
-    const first = pngs(h.inboxA)[0] as string
-    expect(first).toMatch(PASTED_NAME)
-    await expect.poll(() => toastMessage(page)).toBe(`Pasted as ${first}.`)
-    await expect.poll(() => registerBodies(h.backend).length).toBe(1)
-    expect(registerBody(h.backend, 0)).toEqual({ mode: 'register', source: 'gui', path: slashes(join(h.inboxA, first)) })
-
-    // 3. Tab reaches the button and Enter activates it.
-    await page.getByTestId('capture-region').focus()
-    await page.keyboard.press('Tab')
-    expect(await page.evaluate(() => document.activeElement?.getAttribute('data-testid'))).toBe('capture-import')
-    await page.keyboard.press('Enter')
-    await expect.poll(() => toastMessage(page)).toBe(notAnImage)
-
-    // 4. The inbox moves with no wait for main's poll; the next paste lands in the new folder.
-    h.backend.setInbox(h.inboxB)
-    await page.keyboard.press('Control+V')
-    await expect.poll(() => pngs(h.inboxB).length, { timeout: 15_000 }).toBe(1)
-    const second = pngs(h.inboxB)[0] as string
-    expect(second).toMatch(PASTED_NAME)
-    await expect.poll(() => toastMessage(page)).toBe(`Pasted as ${second}.`)
-    await expect(toast).toHaveCount(1)
-    await expect.poll(() => registerBodies(h.backend).length).toBe(2)
-    expect(registerBody(h.backend, 1)).toEqual({ mode: 'register', source: 'gui', path: slashes(join(h.inboxB, second)) })
-    expect(pngs(h.inboxA)).toEqual([first])
-
-    // 5. Ctrl+V in the inbox field keeps the field's own paste and adds no file.
-    const field = page.getByTestId('capture-inbox-path')
-    if (!(await field.isVisible())) {
-      await page.getByTestId('capture-settings-toggle').click()
-    }
-    await field.focus()
-    await page.keyboard.press('Control+V')
-    await page.waitForTimeout(2000)
-    expect(pngs(h.inboxA)).toEqual([first])
-    expect(pngs(h.inboxB)).toEqual([second])
-    expect(registerBodies(h.backend)).toHaveLength(2)
-  } finally {
-    try {
-      if (wrote && saved !== null) {
-        await restoreClipboard(h.app, saved)
-        const after = await readClipboard(h.app)
-        describeFormats('after', after.formats)
-        const lost = saved.formats.filter((format) => !after.formats.includes(format))
-        expect(lost, 'S13: clipboard formats lost by the restore').toEqual([])
-        expect(after.text, 'S13: clipboard text').toBe(saved.text)
-        expect(after.html, 'S13: clipboard HTML').toBe(saved.html)
-        expect(after.rtf, 'S13: clipboard RTF').toBe(saved.rtf)
-        expect(after.size, 'S13: clipboard image size').toEqual(saved.size)
-        expect(after.bitmap, 'S13: clipboard image bitmap').toBe(saved.bitmap)
-      }
-    } finally {
-      await h.close()
-    }
   }
 })

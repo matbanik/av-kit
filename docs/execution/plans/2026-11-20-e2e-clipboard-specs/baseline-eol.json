@@ -1,0 +1,394 @@
+{
+  "ui/tests/e2e/capture-filmstrip-actions.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 388,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 17530
+  },
+  "ui/tests/e2e/capture-import.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 425,
+    "bom": false,
+    "bytes": 15284
+  },
+  "tools/e2e_remote.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1396,
+    "bom": false,
+    "bytes": 49889
+  },
+  "tools/e2e_host/host-facts.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 281,
+    "bom": false,
+    "bytes": 12136
+  },
+  "tools/e2e_host/host-status.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 268,
+    "bom": false,
+    "bytes": 11492
+  },
+  "tools/e2e_host/run-e2e.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 120,
+    "bom": false,
+    "bytes": 6784
+  },
+  "tools/e2e_host/known-failures.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 7,
+    "bom": false,
+    "bytes": 261
+  },
+  "tests/tooling/test_e2e_remote.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 2305,
+    "bom": false,
+    "bytes": 84900
+  },
+  ".agent/docs/e2e-remote-host.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 259,
+    "bom": false,
+    "bytes": 16280
+  },
+  ".agent/docs/commands.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 226,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 19438
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 6079,
+    "bom": false,
+    "bytes": 569841
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 35,
+    "bom": false,
+    "bytes": 2548
+  },
+  ".agent/context/grouping/2026-11-20-e2e-clipboard-specs-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 131,
+    "bom": false,
+    "bytes": 14357
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 242,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 100157
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 107,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 126661
+  },
+  "ui/tests/e2e/capture-system-clipboard.test.ts": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  ".agent/context/handoffs/2026-11-20-e2e-clipboard-specs-handoff.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  ".agent/context/handoffs/2026-11-20-e2e-clipboard-specs-implementation-critical-review.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "docs/execution/reflections/2026-11-20-e2e-clipboard-specs-reflection.md": {
+    "kind": "absent",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 0
+  },
+  "ui/tests/e2e/console-chrome.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 232,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 10558
+  },
+  "ui/tests/e2e/mcp-setup-prompt.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 165,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 8202
+  },
+  "ui/tests/e2e/electron-app.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 171,
+    "bom": false,
+    "bytes": 6438
+  },
+  "ui/tests/e2e/electron-env.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 90,
+    "bom": false,
+    "bytes": 3307
+  },
+  "ui/tests/e2e/global-setup.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 58,
+    "bom": false,
+    "bytes": 2640
+  },
+  "ui/playwright.config.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 23,
+    "bom": false,
+    "bytes": 563
+  },
+  "ui/scripts/playwright-with-outputfile.mjs": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 56,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1442
+  },
+  "ui/package.json": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 71,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2914
+  },
+  "tools/e2e_host/host-lock.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 261,
+    "bom": false,
+    "bytes": 11270
+  },
+  "tools/e2e_host/host-prepare.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 229,
+    "bom": false,
+    "bytes": 10851
+  },
+  "tools/e2e_host/host-release.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 77,
+    "bom": false,
+    "bytes": 2985
+  },
+  "tools/e2e_host/host-start.ps1": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 274,
+    "bom": false,
+    "bytes": 12263
+  },
+  "tools/e2e_host/e2e-host.example.json": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 13,
+    "bom": false,
+    "bytes": 319
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false,
+    "bytes": 20008
+  },
+  ".github/workflows/ci.yml": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 153,
+    "bom": false,
+    "bytes": 5137
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 544,
+    "bom": false,
+    "bytes": 27979
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 259,
+    "bom": false,
+    "bytes": 11259
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/flake-run.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1849,
+    "bom": false,
+    "bytes": 81382
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/guard-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 217,
+    "bom": false,
+    "bytes": 9091
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/host-details-scan.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 112,
+    "bom": false,
+    "bytes": 4658
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/host-load.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 44,
+    "bom": false,
+    "bytes": 2068
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 408,
+    "bom": false,
+    "bytes": 18149
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1120,
+    "bom": false,
+    "bytes": 143255
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 319,
+    "bom": false,
+    "bytes": 12541
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/pins-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 155,
+    "bom": false,
+    "bytes": 5817
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/probe-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 371,
+    "bom": false,
+    "bytes": 15947
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 973,
+    "bom": false,
+    "bytes": 33764
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/session-gate.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 327,
+    "bom": false,
+    "bytes": 21556
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/snapshot-commit.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 296,
+    "bom": false,
+    "bytes": 13351
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/split-specs.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 540,
+    "bom": false,
+    "bytes": 21593
+  },
+  "docs/execution/plans/2026-11-20-e2e-clipboard-specs/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 112,
+    "bom": false,
+    "bytes": 106122
+  }
+}

@@ -3635,8 +3635,8 @@ issues:
     blast_radius: One failure in H1-2 attempt 4, the first test of that run. It passed in attempts 2, 3, 5 and 6 and 8 of 8 repeats after ECN-9. A failure here stops a gate at ui-electron and costs a rerun. The primer is a precondition of the test, so it says nothing about the product.
     verification:
       last_checked: '2026-11-20'
-      method: the mini-air runs r20261119T074154Z-a43cdb2, r20261119T084412Z-a43cdb2, r20261119T135541Z-ed48964 and r20261119T143010Z-484d4ab (summary.json and host/report.json); Session 97's dev-PC full run
-      result: 'not run: capture-filmstrip-actions.test.ts is excluded from every full run on both hosts, so AC-88.12''s primer had no chance to recur'
+      method: Session 98 ecs-run-8-check.txt, the mini-air run r20261120T230628Z-ef4842e (summary.json gated object and host/gated/report.json); the run r20261120T215925Z-9ac9adc (snapshot 9ac9adc; ecs-run-8-r1-check.txt and ecs-judge-gate-8-r1.txt) was superseded under S13 after the D-1284 fix, with the same outcome
+      result: 'gated outcome run, reason no-remote-session: capture-system-clipboard.test.ts tests 2 expected 2 unexpected 0 flaky 0 skipped 0, new []; AC-88.12''s primer passed in this gated run and in the superseded run; stays open until repeated gated passes'
     category: MONITORING
     priority: P4
     related:
@@ -6038,14 +6038,15 @@ issues:
     title: 'Seven capture E2E tests run in no gate: two touch the clipboard, and five only share their files'
     severity: medium
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-20'
     root_cause: 'Every full Electron run excludes ui/tests/e2e/capture-filmstrip-actions.test.ts and capture-import.test.ts by file: on the dev PC the plan-local flake-run.py (EXCLUDED, since Session 91 (executed 2026-11-18), copied by later plans) keeps them off because Mat uses that clipboard (Session 57 RULE-4); on the mini-air the tracked skip entries in tools/e2e_host/known-failures.json keep them off because a connected RustDesk session syncs that clipboard (grouping 2026-11-18 §3 Gate). Only two of the seven tests in those files touch the system clipboard: AC-88.12 (a)(b)(f), Copy full path and Copy image, and AC-132.23, Ctrl+V paste. The other five, AC-88.12 (c) and (d)(e), AC-89.9, AC-89.15 and AC-132.22, are excluded only because they share a file.'
     blast_radius: 'No gate since Session 91 (executed 2026-11-18) has checked the filmstrip context menu from the keyboard, menu Delete, Shift-click batch delete with a reported failure, checkbox delete, drop import of images, Copy image, Copy full path, or Ctrl+V paste import. Nothing has failed: the specs were last edited on 2026-11-16 (771c279) and no main-process file changed since but the ready handshake (86ee8e3). A regression in those user-visible capture actions would reach a release unseen. E2E-CLIPBOARD-PRIMER-EMPTY cannot recur, or be closed, while AC-88.12 never runs.'
     verification:
       last_checked: '2026-11-20'
-      method: the mini-air runs r20261119T074154Z-a43cdb2, r20261119T084412Z-a43cdb2, r20261119T135541Z-ed48964 and r20261119T143010Z-484d4ab (summary.json and host/report.json); Session 97's dev-PC full run; test titles and clipboard calls in the two spec files
-      result: both files absent from all five full runs (skip entries on the mini-air, EXCLUDED on the dev PC); 2 of their 7 tests call the clipboard
+      method: Session 98 receipts ecs-split-check-2.txt (the two clipboard tests moved byte for byte), ecs-full-7b-check.txt (dev-PC full run, 237 ok, the five rejoined titles passed, the clipboard file not run), ecs-green-6.txt, ecs-flag-7.txt (split flag probe), ecs-run-8-check.txt (the mini-air run r20261120T230628Z-ef4842e) and ecs-judge-gate-8.txt; the run r20261120T215925Z-9ac9adc (snapshot 9ac9adc; ecs-run-8-r1-check.txt and ecs-judge-gate-8-r1.txt) was superseded under S13 after the D-1284 fix, with the same outcome
+      result: 'main stage tests 237 expected 237 unexpected 0 flaky 0 skipped 0 spec_files 29, new [] overlap [], commit equals the snapshot ef4842e; gated outcome run, reason no-remote-session: capture-system-clipboard.test.ts tests 2 expected 2 unexpected 0 flaky 0 skipped 0, new []; the judge printed ''ungated: resolve (outcome run, reason no-remote-session)'''
+    resolution_path: 'Fixed in Session 98 on 2026-11-20 (plan docs/execution/plans/2026-11-20-e2e-clipboard-specs): the two clipboard tests AC-88.12 (a)(b)(f) and AC-132.23 moved byte for byte into ui/tests/e2e/capture-system-clipboard.test.ts (CLIPBOARD_SPLIT), which skips itself unless AVKIT_E2E_CLIPBOARD_GATED=1 and never runs on the dev PC (CLIPBOARD_NEVER_DEVPC), so the five other tests of the two files run in every full run again; tools/e2e_remote.py and the shared session probe block in the three host scripts run the new file on the second Windows host in a gated stage only when the probe reads no RustDesk or RDP session (SESSION_PROBE, GATED_STAGE); tools/e2e_host/known-failures.json lists it under gated.'
     category: TECH-DEBT
     priority: P3
     related:
@@ -6077,3 +6078,22 @@ issues:
             sources: []
           reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue orchestrating the next prompt session and the session after if there is any''. The exclusion was meant for two tests that write the system clipboard, but it is by file, so five tests of user-visible capture actions lost their gate too, and no session owns bringing them back. The fix is in test files and tooling only, and the second host now gives the clipboard tests a desktop that is not Mat''s. Doing nothing keeps seven tests unrun for as long as every plan copies the exclusion. M items: M-8 (it adds a session and changes the 2026-11-18 grouping''s rule that the clipboard specs stay skipped on the mini-air). Two-way.'
       decided_by: agent
+  - id: E2E-DEVPC-CLIPBOARD-SPECS
+    title: Two E2E specs write the dev PC's system clipboard in every full run
+    severity: low
+    component: ui
+    status: open
+    discovered: '2026-11-20'
+    root_cause: 'Two E2E tests outside the clipboard spec file still write the real system clipboard: C1-5 (ui/tests/e2e/console-chrome.test.ts:77, the console Copy button) and AC-71.15 (ui/tests/e2e/mcp-setup-prompt.test.ts:91, Copy prompt). Session 57 RULE-4 keeps clipboard-writing specs off the dev PC''s canonical command, and Session 98 moved the two capture clipboard tests into capture-system-clipboard.test.ts behind a guard, but these two tests were not in its scope and run in every dev-PC full run.'
+    blast_radius: Every dev-PC full E2E run overwrites whatever the person at the desk last copied with a log line and a setup prompt. No test fails and no product code is affected; the cost is a lost clipboard entry on the developer's machine during a run, and the rule that the dev PC never runs clipboard specs is only partly true until these two are gated or stubbed.
+    category: TECH-DEBT
+    priority: P4
+    related:
+      - E2E-CLIPBOARD-SPECS-UNGATED
+      - e2e
+      - clipboard
+    meu_links: []
+    notes: |-
+      Found in Session 98 (D-1277), which split the capture clipboard tests and left these two for the next triage.
+      D-1282: the guard keeps the new clipboard file off the canonical command, but C1-5 and AC-71.15 still write the clipboard in every dev-PC full run.
+      D-1281: a stale RustDesk --cm window can outlive a connection and skip the mini-air's gated stage until it is closed; gated.detail shows its start time.

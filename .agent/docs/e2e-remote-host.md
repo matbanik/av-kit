@@ -180,7 +180,13 @@ Each is a hand step for Mat or the coordinator; the tool reports it and stops wi
   bin\<set>\                        host scripts + host.json, content-addressed
   runs\<run-id>\                    request.json, src.zip, publish\, tree\, logs\
   results\<run-id>\                 meta.txt, specs.txt, report.json, run.log, run.err, pid.txt, diag\, DONE
+  results\<run-id>\                 stage.txt, probe-before.json, probe-after.json (Session 98)
+  results\<run-id>\gated\           specs.txt, report.json, run.log, run.err, pid.txt (Session 98)
 ```
+
+`stage.txt` holds `main` while the main stage runs and `gated` while the gated stage runs.
+`probe-before.json` is written only when the request names gated files; `gated\` and
+`probe-after.json` exist only when that probe read `none`.
 
 The hand setup's `dl\`, `src\`, `tools\`, `probe-appdata\`, `results\<stamp>\` and numbered
 scripts are read, never written. The real app data, settings, downloads and models folders are
@@ -203,6 +209,75 @@ its title. The rules:
 When a session resolves one of the listed issues, it must remove the entries in the same commit,
 or its next run exits 32. Session 97 owns `CAPTURE-TEXT-PIXEL-2PX-MINIAIR` and
 `E2E-HOVER-NO-POINTER-DEVICE`, so Session 97 updates this file when it resolves either.
+
+Session 98 adds an optional third list, `gated`, each entry `{label, file, reason}`. A gated
+file is left out of the main stage and runs only in the gated stage below; a missing key is an
+empty list. A gated entry with no reason, a file the commit does not hold, or a file that is both
+skipped and gated for the run's label is `known-failures-stale` (exit 32) before anything is
+sent to the host; an entry that is not an object, or a `gated` that is not a list, is the same.
+The gated report is never matched against `known`.
+
+## The gated clipboard stage (Session 98)
+
+`ui/tests/e2e/capture-system-clipboard.test.ts` holds the tests that write the system clipboard.
+It skips itself unless `AVKIT_E2E_CLIPBOARD_GATED=1`, which only this stage sets, never the dev
+PC. When the request names gated files, the launcher runs the main stage first (every spec file
+minus `skip` and `gated`, with `stage.txt` set to `main`), then reads the session probe into
+`probe-before.json`. Only when that probe reads `none` does it write `gated` to `stage.txt`,
+call `AvStage -Gated` on `results\<run-id>\gated\` (the variable is set for that child alone),
+and read the probe again into `probe-after.json`. `DONE` carries the main stage's exit; the tool
+judges the gated stage from its files. A probe that throws is written as
+`undecided-probe-failed`, so the launcher always reaches `DONE`. `meta.txt` gains `gated_exit=`,
+`probe_before=<state>/<reason>` and `probe_after=<state>/<reason>`.
+
+The probe is one block, the same bytes in `host-facts.ps1`, `host-status.ps1` and
+`run-e2e.ps1`. It only reads process, session and file-version state: it never changes
+RustDesk, never stops a process, and returns no account, address or folder. It returns a state
+and a reason, by the first rule that matches:
+
+| Order | Reading | State | Reason |
+|---|---|---|---|
+| 1 | A read failed | `undecided` | `undecided-probe-failed` |
+| 2 | A RustDesk process with `--cm` or `--cm-no-ui` (its connection manager) | `connected` | `connected-rustdesk-cm` |
+| 3 | An `rdpclip.exe` process, or a `qwinsta` row `rdp-tcp#<n>` that is `Active` | `connected` | `connected-rdp` |
+| 4 | A RustDesk process whose command line is unreadable and that is not the session-0 service process or its direct child | `undecided` | `undecided-unreadable` |
+| 5 | A readable RustDesk process whose switches are not exactly `--service`, `--server` or `--tray` | `undecided` | `undecided-rustdesk-other` |
+| 6 | Otherwise | `none` | `no-remote-session` |
+
+The summary's `gated` object holds `outcome`, `reason`, `files`, `probe_before`, `probe_after`,
+`counts`, `new`, `detail` and `voided_failures`. The outcomes:
+
+| Outcome | When | Exit |
+|---|---|---|
+| `run` | The before probe read `none` and no later reading did otherwise | 0, or 40 when a gated test failed (`gated.new`) |
+| `skipped-connected` | The before probe read `connected`; the stage did not run | adds nothing |
+| `skipped-undecided` | The before probe read `undecided`; the stage did not run | adds nothing |
+| `voided-connected-during` | The after probe, or a poll taken while `stage` was `gated`, read `connected` | adds nothing |
+| `voided-undecided-during` | As above with `undecided`, and no reading was `connected`. A `probe-after.json` that is missing reads `undecided` with the reason `after-probe-missing`, and one that is unreadable or has no valid probe state with `after-probe-invalid` (D-1284); the launcher logs a failed probe write as `probe-write-failed <file>` in `meta.txt` | adds nothing |
+
+A connection during the stage voids its result: the failing tests of a voided stage are listed
+under `voided_failures` and never enter `new` or the exit code. A poll taken during the main stage
+never voids. `gated.detail` lists each RustDesk and `rdpclip.exe` process of the before and after
+probes as `<name> <switches> session=N started=<UTC> age_s=<seconds>`. A missing
+`probe-before.json`, or a `none` before probe with no `gated\report.json`, is `report-missing`
+(exit 31).
+
+`check` prints the probe as one fact line, whatever its state:
+`session-probe: state=<state> reason=<reason> rustdesk=<version or ->`. Each `polls.jsonl` record
+gains `session_probe` (`{state, reason}`) and `stage`; while `stage` is `gated`, the status's
+`pid_file` reads `gated\pid.txt`.
+
+Known risks of the stage:
+
+- The probe reads moments, not a stream. A connection that opens and closes between two readings
+  (the before probe, each poll at the config's `poll_s`, the after probe) is missed.
+- RustDesk keeps a closed connection's tab in its `--cm` window until someone closes it, so
+  `connected-rustdesk-cm` can stick and skip every later gated stage until that window is closed;
+  `gated.detail` shows its start time (D-1281).
+- A void discards the result but cannot undo what the tests already wrote to that desktop's
+  clipboard, which RustDesk can sync to the remote side (D-1283).
+- `check` reads elevated from session 0; the gating probe reads with the task's Limited token in
+  the desktop session, so the two can differ.
 
 ## After `poll-timeout`, `launcher-ended` or a crash
 
@@ -257,3 +332,10 @@ The next tool run swaps it again.
   (exit 27); record it, never retry it in the same session.
 - Smart App Control, auto sign-in and a GitHub runner on the host stay Mat's decisions (D-1216);
   the tool assumes none of them.
+- The session probe (Session 98) misses a connection that opens and closes between two readings.
+- A stale RustDesk `--cm` window reads `connected-rustdesk-cm` and skips every gated stage until
+  it is closed; `gated.detail` names its start time (D-1281).
+- A connection that opens during the gated stage voids it but cannot undo the clipboard writes
+  already made; the probe sees RustDesk and RDP only (AnyDesk, TeamViewer, Chrome Remote Desktop
+  and VNC read `none`); an `rdpclip.exe` left in a disconnected RDP session reads `connected-rdp`
+  until logoff; `qwinsta`'s state words are read in English (D-1283).

@@ -223,6 +223,125 @@ function AvDesktopCheck($hj, $scan) {
 }
 # end busy-check
 
+# begin session-probe
+# One copy of the session probe (Session 98, D-1270, D-1271). host-facts, host-status and run-e2e
+# each hold it byte for byte. It only reads process, session and file-version state; it returns
+# no account, address or folder, and it never changes RustDesk or ends a process.
+function AvProbeFacts {
+    $f = [ordered]@{ error = $null; procs = @(); service_pid = $null; service_session = $null; rustdesk_version = $null; sessions = @() }
+    $all = @()
+    try {
+        $all = @(Get-CimInstance -ClassName Win32_Process -Filter "Name = 'rustdesk.exe' OR Name = 'rdpclip.exe'" -ErrorAction Stop)
+    } catch {
+        $f.error = 'processes'
+        return $f
+    }
+    $procs = @()
+    foreach ($p in $all) {
+        $cl = $p.CommandLine
+        $sw = $null
+        if ($null -ne $cl) {
+            $t = ([string]$cl).Trim()
+            if ($t.StartsWith('"')) {
+                $i = $t.IndexOf('"', 1)
+                if ($i -gt 0) { $t = $t.Substring($i + 1) } else { $t = '' }
+            } else {
+                $i = $t.IndexOf(' ')
+                if ($i -gt 0) { $t = $t.Substring($i) } else { $t = '' }
+            }
+            $words = @()
+            foreach ($w in @($t.Trim() -split '\s+' | Where-Object { $_ })) {
+                if ($w -cmatch '^--?[A-Za-z][A-Za-z0-9-]*$') { $words += $w } else { $words += '<arg>' }
+            }
+            $sw = $words -join ' '
+        }
+        $started = $null
+        if ($p.CreationDate) { $started = ([datetime]$p.CreationDate).ToUniversalTime().ToString('o') }
+        $procs += [ordered]@{ name = ([string]$p.Name).ToLower(); pid = [int]$p.ProcessId; ppid = [int]$p.ParentProcessId; session = [int]$p.SessionId; readable = ($null -ne $cl); switches = $sw; started = $started }
+    }
+    $f.procs = $procs
+    try {
+        $svc = @(Get-CimInstance -ClassName Win32_Service -Filter "Name = 'RustDesk'" -ErrorAction Stop)
+        if ($svc.Count -gt 0 -and [int]$svc[0].ProcessId -gt 0) {
+            $f.service_pid = [int]$svc[0].ProcessId
+            foreach ($p in $all) {
+                if ([int]$p.ProcessId -eq $f.service_pid) { $f.service_session = [int]$p.SessionId }
+            }
+        }
+    } catch {
+        $f.error = 'service'
+    }
+    foreach ($p in $all) {
+        if ($null -eq $f.rustdesk_version -and ([string]$p.Name) -eq 'rustdesk.exe' -and $p.ExecutablePath) {
+            try { $f.rustdesk_version = [string](Get-Item -LiteralPath $p.ExecutablePath -ErrorAction Stop).VersionInfo.FileVersion } catch { $f.rustdesk_version = $null }
+        }
+    }
+    if (-not (Get-Command qwinsta.exe -ErrorAction SilentlyContinue)) {
+        $f.error = 'qwinsta'
+        return $f
+    }
+    $rows = @(qwinsta.exe 2>$null)
+    if ($LASTEXITCODE -ne 0) {
+        $f.error = 'qwinsta'
+        return $f
+    }
+    $sessions = @()
+    foreach ($ln in $rows) {
+        $s = [string]$ln
+        if ($s.Length -lt 2) { continue }
+        if ($s.Substring(1) -match '^(\S*)\s+(?:(\S+)\s+)?(\d+)\s+(\S+)') {
+            $n = $Matches[1].ToLower()
+            $sid = [int]$Matches[3]
+            $st = [string]$Matches[4]
+            if ($n -notmatch '^(console|services|rdp-tcp(#\d+)?)$') { $n = '<other>' }
+            $sessions += [ordered]@{ name = $n; id = $sid; state = $st }
+        }
+    }
+    $f.sessions = $sessions
+    return $f
+}
+
+function AvProbeClassify($f) {
+    if ($null -ne $f.error -and [string]$f.error -ne '') { return [ordered]@{ state = 'undecided'; reason = 'undecided-probe-failed' } }
+    $procs = @(@($f.procs) | Where-Object { $null -ne $_ })
+    $rd = @($procs | Where-Object { [string]$_.name -eq 'rustdesk.exe' })
+    foreach ($p in $rd) {
+        if ($p.readable) {
+            $words = @(([string]$p.switches) -split ' ' | Where-Object { $_ })
+            if ($words -contains '--cm' -or $words -contains '--cm-no-ui') { return [ordered]@{ state = 'connected'; reason = 'connected-rustdesk-cm' } }
+        }
+    }
+    if (@($procs | Where-Object { [string]$_.name -eq 'rdpclip.exe' }).Count -gt 0) { return [ordered]@{ state = 'connected'; reason = 'connected-rdp' } }
+    foreach ($s in @(@($f.sessions) | Where-Object { $null -ne $_ })) {
+        if ([string]$s.name -match '^rdp-tcp#\d+$' -and [string]$s.state -eq 'Active') { return [ordered]@{ state = 'connected'; reason = 'connected-rdp' } }
+    }
+    $svc = -1
+    if ($null -ne $f.service_pid -and $null -ne $f.service_session -and [int]$f.service_session -eq 0) { $svc = [int]$f.service_pid }
+    foreach ($p in $rd) {
+        if (-not $p.readable -and -not ($svc -gt 0 -and ([int]$p.pid -eq $svc -or [int]$p.ppid -eq $svc))) {
+            return [ordered]@{ state = 'undecided'; reason = 'undecided-unreadable' }
+        }
+    }
+    foreach ($p in $rd) {
+        if ($p.readable -and @('--service', '--server', '--tray') -cnotcontains ([string]$p.switches).Trim()) {
+            return [ordered]@{ state = 'undecided'; reason = 'undecided-rustdesk-other' }
+        }
+    }
+    return [ordered]@{ state = 'none'; reason = 'no-remote-session' }
+}
+
+function AvSessionProbe {
+    $f = $null
+    try { $f = AvProbeFacts } catch { $f = [ordered]@{ error = 'probe'; procs = @(); rustdesk_version = $null } }
+    $c = AvProbeClassify $f
+    $out = @()
+    foreach ($p in @(@($f.procs) | Where-Object { $null -ne $_ })) {
+        $out += [ordered]@{ name = [string]$p.name; session = $p.session; switches = $p.switches; readable = [bool]$p.readable; started = $p.started }
+    }
+    return [ordered]@{ state = $c.state; reason = $c.reason; rustdesk_version = $f.rustdesk_version; procs = $out; utc = [DateTime]::UtcNow.ToString('o') }
+}
+# end session-probe
+
 $hj = AvHostJson
 $root = [string]$hj.root
 $scan = AvScan $hj
@@ -277,5 +396,6 @@ $o = [ordered]@{
     tz_offset_min = [int][TimeZoneInfo]::Local.GetUtcOffset([DateTime]::UtcNow).TotalMinutes
     utc_now = [DateTime]::UtcNow.ToString('o')
     ssh_shell = $shell
+    session_probe = (AvSessionProbe)
 }
 AvOut $o 0

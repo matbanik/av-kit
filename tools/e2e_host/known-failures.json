@@ -1,7 +1,7 @@
 {
   "known": [],
-  "skip": [
-    {"label": "mini-air", "file": "capture-filmstrip-actions.test.ts", "reason": "clipboard spec; grouping §3 Gate"},
-    {"label": "mini-air", "file": "capture-import.test.ts", "reason": "clipboard spec; grouping §3 Gate"}
+  "skip": [],
+  "gated": [
+    {"label": "mini-air", "file": "capture-system-clipboard.test.ts", "reason": "system clipboard spec; runs only when the session probe reads no remote session (D-1269)"}
   ]
 }

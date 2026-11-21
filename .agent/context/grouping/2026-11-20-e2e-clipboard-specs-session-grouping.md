@@ -105,7 +105,7 @@ Mat's request continues the orchestration, so the coordinator runs plan creation
 
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
-| 98 | `e2e-clipboard-specs` | — | P3 | pending | `docs/execution/plans/2026-11-20-e2e-clipboard-specs/` |
+| 98 | `e2e-clipboard-specs` | — | P3 | executed (Session 98) | `docs/execution/plans/2026-11-20-e2e-clipboard-specs/` |
 
 ---
 

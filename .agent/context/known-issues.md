@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 151** — Active: 10 | Mitigated: 2 | Resolved: 137
+**Total: 152** — Active: 10 | Mitigated: 2 | Resolved: 138
 
 ## Active Issues
 
@@ -11,7 +11,6 @@
 |-----|-----|-------|-----------|--------|------------|
 | 🟡 | `TTS-ESPEAK-LIVE-PATH-UNVERIFIED` | Non-English voices via the real espeak-ng CLI were never run end to end… | infrastructure | ⬜ open | 2026-10-15 |
 | 🟡 | `FFMPEG-LIBDVDCSS-BUNDLED` | The installer's FFmpeg has libdvdcss compiled in, and av-kit never uses… | infrastructure | ⬜ open | 2026-11-04 |
-| 🟡 | `E2E-CLIPBOARD-SPECS-UNGATED` | Seven capture E2E tests run in no gate: two touch the clipboard, and fi… | ui | ⬜ open | 2026-11-20 |
 | 🟢 | `CAPTURE-JOURNAL-VOLATILE` | Interactive capture completion journal is in-memory only | ui | ⬜ open | 2026-09-01 |
 | 🟢 | `TTS-JA-ZH-G2P-EXTRAS` | Japanese and Mandarin Kokoro voices are listed but unavailable (no misa… | infrastructure | ⬜ open | 2026-10-15 |
 | 🟢 | `CAPTURE-E2E-LAUNCH-TEARDOWN-HANG` | capture-inbox Electron specs occasionally hang in launch or close under… | ui | ⬜ open | 2026-10-25 |
@@ -19,6 +18,7 @@
 | 🟢 | `E2E-CLIPBOARD-PRIMER-EMPTY` | AC-88.12's clipboard primer read an empty clipboard for 5 s once | ui | ⬜ open | 2026-11-04 |
 | 🟢 | `E2E-TRANSCRIPT-SEAM-RELOAD-FLAKE` | The transcript queue E2E's seam reload failed once with ERR_ABORTED und… | ui | ⬜ open | 2026-11-07 |
 | 🟢 | `CAPTURE-TEXT-PLATE-METRICS-RESIDUAL` | The preview text plate differs from the bake by 1 to 2 px in a few cases | ui | ⬜ open | 2026-11-19 |
+| 🟢 | `E2E-DEVPC-CLIPBOARD-SPECS` | Two E2E specs write the dev PC's system clipboard in every full run | ui | ⬜ open | 2026-11-20 |
 
 ## Mitigated / Workaround
 
@@ -27,9 +27,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (137)
+## Resolved (138)
 
-137 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+138 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

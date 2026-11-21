@@ -8,6 +8,7 @@ import { launchElectron } from './electron-app'
 // Session 38 (MEU-88/89): the filmstrip thumbnail menu and range delete in the built app.
 // Its seam is stateful: a per-id DELETE ledger, per-id failures, and per-id image bytes, so the
 // Copy image oracle (SHOT_PIXELS) reads real decoded pixels back from the main-process clipboard.
+// Session 98 (D-1268): AC-88.12 (a)(b)(f) and its clipboard oracle moved to capture-system-clipboard.test.ts.
 
 type CaptureItem = {
   id: string
@@ -161,60 +162,6 @@ async function deleteLedger(page: Page): Promise<string[]> {
   return page.evaluate(() => [...((window as unknown as SeamState).__e2eDeletes ?? [])])
 }
 
-type ClipboardProbe = { empty: boolean; width: number; height: number; left: number[]; right: number[] }
-
-/** Reads the main-process clipboard image: its size and the BGRA pixels at (1,3) and (6,3). */
-async function readClipboardImage(app: ElectronApplication): Promise<ClipboardProbe> {
-  return app.evaluate(({ clipboard }) => {
-    const img = clipboard.readImage()
-    const { width, height } = img.getSize()
-    const bitmap = img.toBitmap()
-    const px = (x: number, y: number): number[] => {
-      if (x >= width || y >= height) {
-        return []
-      }
-      const i = (y * width + x) * 4
-      return [bitmap[i] ?? 0, bitmap[i + 1] ?? 0, bitmap[i + 2] ?? 0, bitmap[i + 3] ?? 0]
-    }
-    return { empty: img.isEmpty(), width, height, left: px(1, 3), right: px(6, 3) }
-  })
-}
-
-/**
- * Clipboard listeners (Windows clipboard history, screenshot tools) open the clipboard right
- * after every write, and a read that loses that race comes back empty. Retry until it is not.
- */
-async function readSettledClipboardImage(app: ElectronApplication, label: string): Promise<ClipboardProbe> {
-  let probe = await readClipboardImage(app)
-  await expect
-    .poll(async () => {
-      probe = await readClipboardImage(app)
-      return probe.empty
-    }, { message: `${label}: clipboard image read stayed empty` })
-    .toBe(false)
-  return probe
-}
-
-/** SHOT_PIXELS: (1,3) red and (6,3) blue, each channel within ±16, alpha 255. */
-function passesShotPixels(probe: ClipboardProbe): boolean {
-  const near = (value: number | undefined, target: number) => value !== undefined && Math.abs(value - target) <= 16
-  const [lb, lg, lr, la] = probe.left
-  const [rb, rg, rr, ra] = probe.right
-  return (
-    !probe.empty &&
-    near(lb, 0) && near(lg, 0) && near(lr, 255) && la === 255 &&
-    near(rb, 255) && near(rg, 0) && near(rr, 0) && ra === 255
-  )
-}
-
-/** Puts a transparent 8×6 image on the clipboard; the oracle must reject it (AC-88.12 f). */
-async function primeTransparentClipboard(app: ElectronApplication): Promise<void> {
-  await app.evaluate(({ clipboard, nativeImage }, size) => {
-    clipboard.writeImage(nativeImage.createFromBitmap(Buffer.alloc(size.w * size.h * 4), { width: size.w, height: size.h }))
-  }, { w: SHOT_W, h: SHOT_H })
-  expect(passesShotPixels(await readSettledClipboardImage(app, 'primer'))).toBe(false)
-}
-
 const SHOT_A = sampleShot('e2e-a', 'a.png', '2026-10-14T12:00:00Z')
 const SHOT_B = sampleShot('e2e-b', 'b.webp', '2026-10-14T11:00:00Z')
 const SHOT_C = sampleShot('e2e-c', 'c.png', '2026-10-14T10:00:00Z')
@@ -238,33 +185,6 @@ async function openCapture(seed: CaptureItem[], failDeletes: string[] = []) {
   await expect(thumbs.nth(0)).toHaveAttribute('aria-current', 'true')
   return { app, page, thumbs }
 }
-
-test('AC-88.12 (a)(b)(f) Copy full path and Copy image reach the main-process clipboard', async () => {
-  const { app, page, thumbs } = await openCapture([SHOT_A, SHOT_B, SHOT_C])
-  const menu = page.getByTestId('capture-filmstrip-menu')
-
-  await app.evaluate(({ clipboard }) => clipboard.writeText('sentinel'))
-  await thumbs.nth(1).click({ button: 'right' })
-  await expect(menu).toBeVisible()
-  await page.getByTestId('capture-filmstrip-menu-copy-path').click()
-  await expect.poll(() => app.evaluate(({ clipboard }) => clipboard.readText())).toBe('C:/e2e/b.webp')
-  await expect(page.getByTestId('capture-status')).toHaveText('Copied the path of b.webp.')
-
-  // (b) the WebP shot goes through the renderer re-encode; the PNG shot is passed through.
-  for (const [index, name] of [[1, 'b.webp'], [2, 'c.png']] as const) {
-    await primeTransparentClipboard(app)
-    await thumbs.nth(index).click({ button: 'right' })
-    await expect(menu).toBeVisible()
-    await page.getByTestId('capture-filmstrip-menu-copy-image').click()
-    await expect(page.getByTestId('capture-status')).toHaveText(`Copied ${name} as an image.`)
-    const probe = await readSettledClipboardImage(app, name)
-    expect(probe.empty, name).toBe(false)
-    expect({ width: probe.width, height: probe.height }, name).toEqual({ width: SHOT_W, height: SHOT_H })
-    expect(passesShotPixels(probe), `${name} ${JSON.stringify(probe)}`).toBe(true)
-  }
-  await expect(thumbs.nth(0)).toHaveAttribute('aria-current', 'true')
-  await app.close()
-})
 
 test('AC-88.12 (c) Shift+F10 and the ContextMenu key open the menu from a focused thumb', async () => {
   const { app, page, thumbs } = await openCapture([SHOT_A, SHOT_B])

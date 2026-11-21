@@ -8,6 +8,9 @@ name and passes ``git`` to the real one, so a run binds the real HEAD. ``HOST_DI
 (AC-15) run real Windows PowerShell 5.1 under an outer ``powershell.exe -c``, as the host's sshd
 does, on fixture roots under ``tmp_path``. No case reaches a network host or reads user data.
 Each case asserts its target file exists first, so before Green every case fails by assertion.
+Session 98 (docs/execution/plans/2026-11-20-e2e-clipboard-specs) adds the gated clipboard stage
+and the session probe (AC-5 to AC-12 and AC-16; D-1269 to D-1272); each new case asserts its new
+name with ``hasattr``, or its block or text, first, so before Green it fails by assertion.
 """
 
 from __future__ import annotations
@@ -1563,11 +1566,12 @@ def test_ac_11_known_tracked_list(tmp_path):
     assert KNOWN.is_file(), "tools/e2e_host/known-failures.json does not exist yet"
     data = json.loads(KNOWN.read_text(encoding="utf-8"))
     assert [(e["label"], e["file"], e["ac"], e["issue"]) for e in data["known"]] == []
-    assert [(e["label"], e["file"]) for e in data["skip"]] == [
-        ("mini-air", "capture-filmstrip-actions.test.ts"),
-        ("mini-air", "capture-import.test.ts"),
+    assert [(e["label"], e["file"]) for e in data["skip"]] == []
+    gated = data.get("gated", [])
+    assert [(e["label"], e["file"]) for e in gated] == [
+        ("mini-air", "capture-system-clipboard.test.ts"),
     ]
-    assert all(e["reason"] for e in data["skip"])
+    assert all(e["reason"] for e in data["skip"] + gated)
     assert Path(m.KNOWN_FILE) == KNOWN
 
 
@@ -2303,3 +2307,757 @@ def test_ac_21_no_host_details_scan_catches_a_hit(tmp_path):
     text = bad.read_text(encoding="utf-8")
     assert IPV4.search(text)
     assert HOME_WIN.lower() in text.lower() and SSH_DIRS[1] in text
+
+
+# --- Session 98: the gated clipboard stage and the session probe ----------------------------
+
+PROBE_COPIES = ("host-facts.ps1", "host-status.ps1", "run-e2e.ps1")
+PROBE_STATES_T = {
+    "none": ("no-remote-session",),
+    "connected": ("connected-rustdesk-cm", "connected-rdp"),
+    "undecided": ("undecided-probe-failed", "undecided-unreadable", "undecided-rustdesk-other"),
+}
+GATED_OUTCOMES_T = (
+    "run",
+    "skipped-connected",
+    "skipped-undecided",
+    "voided-connected-during",
+    "voided-undecided-during",
+)
+
+
+def _s98_proc(
+    switches: str | None = "--tray",
+    started: str = "2026-11-18T08:00:00.0000000Z",
+    name: str = "rustdesk.exe",
+) -> dict:
+    """One ``procs`` item of ``AvSessionProbe``; ``None`` switches is an unreadable command line."""
+    return {
+        "name": name,
+        "session": 1,
+        "switches": switches,
+        "readable": switches is not None,
+        "started": started,
+    }
+
+
+def _s98_probe(
+    state: str,
+    reason: str,
+    procs: list[dict] | None = None,
+    version: str | None = "1.4.6",
+    utc: str = "2026-11-18T12:30:00.0000000Z",
+) -> dict:
+    return {
+        "state": state,
+        "reason": reason,
+        "rustdesk_version": version,
+        "procs": [_s98_proc()] if procs is None else procs,
+        "utc": utc,
+    }
+
+
+def _s98_none() -> dict:
+    return _s98_probe("none", "no-remote-session")
+
+
+def _s98_status(fake: Fake, probe: dict | None, stage: str | None, done: int | None) -> dict:
+    s = healthy_status(fake.run_id, fake.sha, done)
+    s["session_probe"] = probe
+    s["stage"] = stage
+    return s
+
+
+def _s98_rows(second: str) -> list[tuple[str, str]]:
+    return [("AC-88.12 (a)(b)(f) clip", "expected"), ("AC-132.23 paste", second)]
+
+
+def _s98_gated_fake(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp: Path,
+    before: dict | None,
+    after: dict | None,
+    gated_rows: list[tuple[str, str]] | None,
+) -> tuple[Fake, str]:
+    """A fake host whose label gates the file the base fake skipped (``G``).
+
+    The host results gain ``stage.txt``, the probe files that are not ``None`` and, unless
+    ``gated_rows`` is ``None``, ``gated/report.json`` and ``gated/specs.txt`` for ``G``.
+    """
+    fake = new_fake(monkeypatch, tmp)
+    g = fake.skip[0]
+    data = json.loads(fake.known.read_text(encoding="utf-8"))
+    data["skip"] = [e for e in data["skip"] if e["label"] != LABEL]
+    data["gated"] = [
+        {"label": LABEL, "file": g, "reason": "fixture"},
+        {"label": "other-host", "file": "nowhere.test.ts", "reason": "fixture"},
+    ]
+    fake.known.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    fake.skip = []
+    ran = before is not None and before["state"] == "none"
+    out = fake.host_results
+    (out / "stage.txt").write_text("gated\n" if ran else "main\n", encoding="ascii")
+    for name, probe in (("probe-before.json", before), ("probe-after.json", after)):
+        if probe is not None:
+            (out / name).write_text(json.dumps(probe), encoding="utf-8")
+    if gated_rows is not None:
+        (out / "gated").mkdir()
+        rows = [(g, title, status) for title, status in gated_rows]
+        (out / "gated" / "report.json").write_text(json.dumps(report(rows)), encoding="utf-8")
+        (out / "gated" / "specs.txt").write_text(g + "\n", encoding="utf-8")
+    fake.results["host-status.ps1"] = [
+        _s98_status(fake, _s98_none(), "gated" if ran else "main", 1)
+    ]
+    return fake, g
+
+
+def _s98_block(name: str) -> str:
+    """The session-probe block of a host script, from its begin line through its end line."""
+    text = _script(name).decode("utf-8", "replace")
+    begin, end = "# begin session-probe\n", "# end session-probe\n"
+    assert begin in text, f"tools/e2e_host/{name} has no session-probe block yet"
+    i = text.index(begin)
+    assert i == 0 or text[i - 1] == "\n", f"{name}: the begin marker is not a whole line"
+    assert end in text[i:], f"tools/e2e_host/{name} has no end of its session-probe block"
+    j = text.index(end, i)
+    return text[i : j + len(end)]
+
+
+def _s98_stub() -> str:
+    """The later ``AvSessionProbe`` the launcher seam inserts: the next line of probe-seq.txt."""
+    return (
+        "function AvSessionProbe {\n"
+        "    $seq = Join-Path $PSScriptRoot 'probe-seq.txt'\n"
+        "    $cnt = Join-Path $PSScriptRoot 'probe-seq.count'\n"
+        "    $n = 0\n"
+        "    if (Test-Path -LiteralPath $cnt) {\n"
+        "        $n = [int](([string](Get-Content -LiteralPath $cnt -Raw)).Trim())\n"
+        "    }\n"
+        "    Set-Content -LiteralPath $cnt -Value ($n + 1) -Encoding ASCII\n"
+        "    $lines = @(Get-Content -LiteralPath $seq)\n"
+        "    return ($lines[$n] | ConvertFrom-Json)\n"
+        "}\n"
+    )
+
+
+def _s98_fake_playwright() -> str:
+    """Writes the specs it was given and the gate variable it saw, then exits.
+
+    The main stage exits with ``ui/fake-exit.txt``; the gated stage (the variable is ``1``)
+    exits 0. It runs no spec and touches no clipboard.
+    """
+    return (
+        "import { readFileSync, writeFileSync } from 'node:fs'\n"
+        "const args = process.argv.slice(2)\n"
+        "const out = args.find((a) => a.startsWith('--outputFile=')).slice(13)\n"
+        "const specs = args.filter((a) => !a.startsWith('--'))\n"
+        "const gated = process.env.AVKIT_E2E_CLIPBOARD_GATED ?? null\n"
+        "writeFileSync(out, JSON.stringify({ specs, gated }))\n"
+        "process.exit(gated === '1' ? 0 : Number(readFileSync('fake-exit.txt', 'utf8').trim()))\n"
+    )
+
+
+def _s98_launch(tmp: Path, probes: list[dict], main_exit: int = 0) -> tuple[HostRoot, int]:
+    """Run a copy of ``run-e2e.ps1`` with the stubbed probe on a HostRoot fixture tree.
+
+    The tracked script is never changed; the copy gains the stub right after its block.
+    """
+    text = _script("run-e2e.ps1").decode("utf-8", "replace")
+    end = "# end session-probe\n"
+    assert text.count(end) == 1, "tools/e2e_host/run-e2e.ps1 has no session-probe block yet"
+    node = shutil.which("node")
+    assert node, "node is not on PATH"
+    hr = HostRoot(tmp)
+    hr.lock(RUN_A, SHA_A)
+    d = _upload(hr, RUN_A, SHA_A, SHA_A)
+    tree = _tree(hr, RUN_A, SHA_A, SHA_A, stale=False)
+    req = json.loads((d / "request.json").read_text(encoding="utf-8"))
+    req.update(
+        {
+            "node_exe": node,
+            "skip": ["skipped.test.ts"],
+            "gated": ["capture-system-clipboard.test.ts"],
+        }
+    )
+    (d / "request.json").write_text(json.dumps(req), encoding="utf-8")
+    e2e = tree / "ui" / "tests" / "e2e"
+    e2e.mkdir(parents=True)
+    for n in (
+        "a-main.test.ts",
+        "b-main.spec.ts",
+        "capture-system-clipboard.test.ts",
+        "skipped.test.ts",
+    ):
+        (e2e / n).write_text("// fixture\n", encoding="ascii")
+    (tree / "ui" / "scripts").mkdir()
+    (tree / "ui" / "scripts" / "playwright-with-outputfile.mjs").write_text(
+        _s98_fake_playwright(), encoding="ascii"
+    )
+    (tree / "ui" / "fake-exit.txt").write_text(str(main_exit), encoding="ascii")
+    (hr.root / "probe-seq.txt").write_text(
+        "".join(json.dumps(p) + "\n" for p in probes), encoding="ascii"
+    )
+    (hr.root / "run-e2e.ps1").write_bytes(text.replace(end, end + _s98_stub(), 1).encode("ascii"))
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if k.upper() not in ("AVKIT_E2E_CLIPBOARD_GATED", "ELECTRON_RUN_AS_NODE")
+    }
+    r = subprocess.run(
+        [
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            str(hr.root / "run-e2e.ps1"),
+        ],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+        env=env,
+        timeout=240,
+    )
+    return hr, r.returncode
+
+
+def _s98_lines(path: Path) -> list[str]:
+    return [ln.strip() for ln in path.read_text(encoding="utf-8-sig").splitlines() if ln.strip()]
+
+
+def _s98_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8-sig"))
+
+
+@pytest.mark.parametrize(
+    "case", ["valid", "not-a-list", "no-reason", "not-an-object", "in-both", "not-a-spec"]
+)
+def test_s98_ac_5_gated_schema(tmp_path, monkeypatch, capsys, case, env_clean):
+    fake, g = _s98_gated_fake(
+        monkeypatch, tmp_path, _s98_none(), _s98_none(), _s98_rows("expected")
+    )
+    m = fake.m
+    assert hasattr(m, "label_gated"), "tools/e2e_remote.py has no label_gated yet"
+    if case == "valid":
+        probe_form = tmp_path / "probe-form.json"
+        entry = {"label": "mini-air", "file": "capture-system-clipboard.test.ts", "reason": "r"}
+        probe_form.write_text(
+            json.dumps({"known": [], "skip": [], "gated": [entry]}), encoding="utf-8"
+        )
+        k = m.load_known(probe_form)
+        assert m.label_gated(k, "mini-air") == ["capture-system-clipboard.test.ts"]
+        assert m.label_gated(k, LABEL) == []
+        bare = tmp_path / "no-gated.json"
+        bare.write_text(json.dumps({"known": [], "skip": []}), encoding="utf-8")
+        assert m.label_gated(m.load_known(bare), "mini-air") == []
+        assert fake.run() == 0, capsys.readouterr().out
+        req = _s98_json(fake.run_dir / "upload" / "runs" / fake.run_id / "request.json")
+        assert req["gated"] == [g] and req["skip"] == []
+        return
+    data = json.loads(fake.known.read_text(encoding="utf-8"))
+    mine = data["gated"][0]
+    if case == "not-a-list":
+        data["gated"] = mine
+    elif case == "no-reason":
+        mine.pop("reason")
+    elif case == "not-an-object":
+        data["gated"] = [g] + data["gated"][1:]
+    elif case == "in-both":
+        data["skip"].append({"label": LABEL, "file": g, "reason": "fixture"})
+    else:
+        mine["file"] = "absent.test.ts"
+    fake.known.write_text(json.dumps(data), encoding="utf-8")
+    assert fake.run() == 32
+    assert "known-failures-stale" in capsys.readouterr().out
+    assert fake.calls == []
+
+
+def test_s98_ac_6_probe_block_identical():
+    blocks = {n: _s98_block(n) for n in PROBE_COPIES}
+    first = blocks[PROBE_COPIES[0]]
+    assert all(b == first for b in blocks.values()), "the session-probe copies differ"
+    for fn in ("AvProbeFacts", "AvProbeClassify", "AvSessionProbe"):
+        assert re.search(r"(?m)^function " + fn + r"\b", first), fn
+    for n in SCRIPTS:
+        raw = _script(n)
+        assert b"\r" not in raw and all(b < 128 for b in raw), n
+        count = raw.count(b"# begin session-probe\n")
+        assert count == (1 if n in PROBE_COPIES else 0), (n, count)
+        assert raw.count(b"# end session-probe\n") == count, n
+
+
+def _s98_rd(pid: int, ppid: int, switches: str | None, name: str = "rustdesk.exe") -> dict:
+    """One process of the classify facts; ``None`` switches is an unreadable command line."""
+    return {
+        "name": name,
+        "pid": pid,
+        "ppid": ppid,
+        "session": 0 if pid == 100 else 1,
+        "readable": switches is not None,
+        "switches": switches,
+        "started": "2026-11-18T08:00:00.0000000Z",
+    }
+
+
+def _s98_facts(
+    procs: list[dict], sessions: list[dict] | None = None, error: str | None = None
+) -> dict:
+    base = [
+        {"name": "services", "id": 0, "state": "Disc"},
+        {"name": "console", "id": 1, "state": "Active"},
+    ]
+    return {
+        "error": error,
+        "procs": procs,
+        "service_pid": 100,
+        "service_session": 0,
+        "rustdesk_version": "1.4.6",
+        "sessions": base + (sessions or []),
+    }
+
+
+@pytest.mark.skipif(not ON_WINDOWS, reason=WINDOWS_ONLY)
+def test_s98_ac_6_classify_reasons(tmp_path):
+    block = _s98_block("run-e2e.ps1")
+    service = _s98_rd(100, 4, None)
+    child = _s98_rd(200, 100, None)
+    tray = _s98_rd(300, 200, "--tray")
+    cm = _s98_rd(400, 200, "--cm")
+    grandchild = _s98_rd(500, 200, None)
+    rdp_active = [{"name": "rdp-tcp#3", "id": 3, "state": "Active"}]
+    rdp_idle = [
+        {"name": "rdp-tcp", "id": 65536, "state": "Listen"},
+        {"name": "rdp-tcp#4", "id": 4, "state": "Disc"},
+    ]
+    cases = {
+        "probe-failed": (_s98_facts([], error="qwinsta"), "undecided/undecided-probe-failed"),
+        "error-plus-cm": (_s98_facts([cm], error="cim"), "undecided/undecided-probe-failed"),
+        "tray-plus-cm": (
+            _s98_facts([service, child, tray, cm]),
+            "connected/connected-rustdesk-cm",
+        ),
+        "cm-no-ui": (
+            _s98_facts([_s98_rd(400, 200, "--cm-no-ui")]),
+            "connected/connected-rustdesk-cm",
+        ),
+        "cm-plus-unreadable": (_s98_facts([cm, grandchild]), "connected/connected-rustdesk-cm"),
+        "rdpclip": (
+            _s98_facts([tray, _s98_rd(600, 1, "", name="rdpclip.exe")]),
+            "connected/connected-rdp",
+        ),
+        "rdp-active": (_s98_facts([tray], rdp_active), "connected/connected-rdp"),
+        "rdp-idle": (_s98_facts([tray], rdp_idle), "none/no-remote-session"),
+        "service-exempt": (_s98_facts([service, child, tray]), "none/no-remote-session"),
+        "grandchild": (
+            _s98_facts([service, child, grandchild]),
+            "undecided/undecided-unreadable",
+        ),
+        "empty-switch": (
+            _s98_facts([_s98_rd(700, 1, "")]),
+            "undecided/undecided-rustdesk-other",
+        ),
+        "connect-arg": (
+            _s98_facts([_s98_rd(700, 1, "--connect <arg>")]),
+            "undecided/undecided-rustdesk-other",
+        ),
+        "server-only": (_s98_facts([_s98_rd(700, 1, "--server")]), "none/no-remote-session"),
+        "no-rustdesk": (_s98_facts([]), "none/no-remote-session"),
+    }
+    harness = (
+        "$data = Get-Content -LiteralPath $args[0] -Raw | ConvertFrom-Json\n"
+        "foreach ($c in @($data.cases)) {\n"
+        "    $r = AvProbeClassify $c.facts\n"
+        "    Write-Output ([string]$c.name + '=' + [string]$r.state + '/' + [string]$r.reason)\n"
+        "}\n"
+    )
+    script = tmp_path / "classify.ps1"
+    script.write_bytes((block + "\n" + harness).encode("ascii"))
+    data = tmp_path / "cases.json"
+    data.write_text(
+        json.dumps({"cases": [{"name": k, "facts": v[0]} for k, v in cases.items()]}),
+        encoding="ascii",
+    )
+    r = subprocess.run(
+        [
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            str(script),
+            str(data),
+        ],
+        capture_output=True,
+        text=True,
+        stdin=subprocess.DEVNULL,
+        timeout=240,
+    )
+    got = {}
+    for ln in r.stdout.splitlines():
+        name, _, value = ln.strip().partition("=")
+        if name in cases:
+            got[name] = value
+    assert got == {k: v[1] for k, v in cases.items()}, (r.stdout[-2000:], r.stderr[-2000:])
+
+
+def test_s98_ac_7_gated_run_passes(tmp_path, monkeypatch, capsys, env_clean):
+    fake, g = _s98_gated_fake(
+        monkeypatch, tmp_path, _s98_none(), _s98_none(), _s98_rows("expected")
+    )
+    assert hasattr(fake.m, "gated_outcome"), "tools/e2e_remote.py has no gated_outcome yet"
+    assert fake.run() == 0, capsys.readouterr().out
+    s = summary_of(fake.run_dir)
+    gs = s["gated"]
+    assert set(gs) == {
+        "outcome",
+        "reason",
+        "files",
+        "probe_before",
+        "probe_after",
+        "counts",
+        "new",
+        "detail",
+        "voided_failures",
+    }
+    assert (gs["outcome"], gs["reason"]) == ("run", "no-remote-session")
+    assert gs["files"] == [g]
+    assert gs["probe_before"] == _s98_none() and gs["probe_after"] == _s98_none()
+    assert gs["counts"] == {"tests": 2, "expected": 2, "unexpected": 0, "flaky": 0, "skipped": 0}
+    assert gs["new"] == [] and gs["voided_failures"] == []
+    assert s["skip"] == [] and s["spec_files"] == len(fake.specs) and s["exit"] == 0
+    assert fake.released() == [fake.run_id]
+
+
+def test_s98_ac_7_gated_failure_exits_40(tmp_path, monkeypatch, capsys, env_clean):
+    fake, g = _s98_gated_fake(
+        monkeypatch, tmp_path, _s98_none(), _s98_none(), _s98_rows("unexpected")
+    )
+    assert hasattr(fake.m, "gated_outcome"), "tools/e2e_remote.py has no gated_outcome yet"
+    assert fake.run() == 40
+    assert "new-failures" in capsys.readouterr().out
+    s = summary_of(fake.run_dir)
+    assert s["exit"] == 40 and s["new"] == []
+    assert s["gated"]["outcome"] == "run"
+    assert [n["title"] for n in s["gated"]["new"]] == ["AC-132.23 paste"]
+    assert fake.released() == [fake.run_id]
+
+
+@pytest.mark.skipif(not ON_WINDOWS, reason=WINDOWS_ONLY)
+def test_s98_ac_7_launcher_stages(tmp_path):
+    hr, code = _s98_launch(tmp_path, [_s98_none(), _s98_none()])
+    res = hr.root / "results" / RUN_A
+    meta = _s98_lines(res / "meta.txt")
+    assert _done(hr, RUN_A) == "0" and code == 0, meta
+    assert _s98_lines(res / "specs.txt") == ["a-main.test.ts", "b-main.spec.ts"]
+    assert _s98_lines(res / "gated" / "specs.txt") == ["capture-system-clipboard.test.ts"]
+    assert _s98_lines(res / "stage.txt") == ["gated"]
+    for line in (
+        "probe_before=none/no-remote-session",
+        "probe_after=none/no-remote-session",
+        "gated_exit=0",
+    ):
+        assert line in meta, meta
+    assert _s98_json(res / "report.json") == {
+        "specs": ["a-main.test.ts", "b-main.spec.ts"],
+        "gated": None,
+    }
+    assert _s98_json(res / "gated" / "report.json") == {
+        "specs": ["capture-system-clipboard.test.ts"],
+        "gated": "1",
+    }
+    for name in ("probe-before.json", "probe-after.json"):
+        assert _s98_json(res / name)["state"] == "none", name
+
+
+@pytest.mark.parametrize("case", ["no-probe-before", "no-gated-report"])
+def test_s98_ac_7_missing_probe_before_31(tmp_path, monkeypatch, capsys, case, env_clean):
+    if case == "no-probe-before":
+        fake, g = _s98_gated_fake(monkeypatch, tmp_path, None, _s98_none(), _s98_rows("expected"))
+    else:
+        fake, g = _s98_gated_fake(monkeypatch, tmp_path, _s98_none(), _s98_none(), None)
+    assert hasattr(fake.m, "gated_outcome"), "tools/e2e_remote.py has no gated_outcome yet"
+    assert fake.run() == 31
+    assert "report-missing" in capsys.readouterr().out
+    assert fake.released() == [fake.run_id]
+
+
+@pytest.mark.skipif(not ON_WINDOWS, reason=WINDOWS_ONLY)
+def test_s98_ac_8_skipped_connected(tmp_path, monkeypatch, capsys, env_clean):
+    started = "2026-11-18T09:30:00.0000000Z"
+    before = _s98_probe(
+        "connected",
+        "connected-rustdesk-cm",
+        [_s98_proc("--cm", started=started), _s98_proc("--tray")],
+    )
+    (tmp_path / "tool").mkdir()
+    fake, g = _s98_gated_fake(monkeypatch, tmp_path / "tool", before, None, None)
+    assert hasattr(fake.m, "gated_outcome"), "tools/e2e_remote.py has no gated_outcome yet"
+    assert fake.run() == 0, capsys.readouterr().out
+    gs = summary_of(fake.run_dir)["gated"]
+    assert (gs["outcome"], gs["reason"]) == ("skipped-connected", "connected-rustdesk-cm")
+    assert f"rustdesk.exe --cm session=1 started={started} age_s=10800" in gs["detail"], gs
+    assert gs["counts"] is None and gs["probe_after"] is None and gs["new"] == []
+    hr, code = _s98_launch(tmp_path / "host", [before])
+    res = hr.root / "results" / RUN_A
+    meta = _s98_lines(res / "meta.txt")
+    assert _done(hr, RUN_A) == "0" and code == 0, meta
+    assert not (res / "gated").exists() and not (res / "probe-after.json").exists()
+    assert _s98_lines(res / "stage.txt") == ["main"]
+    assert "probe_before=connected/connected-rustdesk-cm" in meta, meta
+
+
+def test_s98_ac_9_skipped_undecided(tmp_path, monkeypatch, capsys, env_clean):
+    before = _s98_probe("undecided", "undecided-unreadable", [_s98_proc(None)])
+    fake, g = _s98_gated_fake(monkeypatch, tmp_path, before, None, None)
+    assert hasattr(fake.m, "gated_outcome"), "tools/e2e_remote.py has no gated_outcome yet"
+    assert fake.run() == 0, capsys.readouterr().out
+    gs = summary_of(fake.run_dir)["gated"]
+    assert (gs["outcome"], gs["reason"]) == ("skipped-undecided", "undecided-unreadable")
+    assert gs["counts"] is None and gs["files"] == [g]
+
+
+def test_s98_ac_10_voided_after(tmp_path, monkeypatch, capsys, env_clean):
+    after = _s98_probe("connected", "connected-rustdesk-cm", [_s98_proc("--cm")])
+    fake, g = _s98_gated_fake(monkeypatch, tmp_path, _s98_none(), after, _s98_rows("unexpected"))
+    assert hasattr(fake.m, "gated_outcome"), "tools/e2e_remote.py has no gated_outcome yet"
+    assert fake.run() == 0, capsys.readouterr().out
+    s = summary_of(fake.run_dir)
+    gs = s["gated"]
+    assert (gs["outcome"], gs["reason"]) == ("voided-connected-during", "connected-rustdesk-cm")
+    assert gs["new"] == [] and s["exit"] == 0
+    assert [f["title"] for f in gs["voided_failures"]] == ["AC-132.23 paste"]
+    assert fake.released() == [fake.run_id]
+
+
+def test_s98_ac_10_voided_poll(tmp_path, monkeypatch, capsys, env_clean):
+    fake, g = _s98_gated_fake(
+        monkeypatch, tmp_path, _s98_none(), _s98_none(), _s98_rows("expected")
+    )
+    m = fake.m
+    assert hasattr(m, "gated_outcome"), "tools/e2e_remote.py has no gated_outcome yet"
+    assert tuple(m.PROBE_STATES) == tuple(PROBE_STATES_T)
+    assert tuple(m.GATED_OUTCOMES) == GATED_OUTCOMES_T
+    none = _s98_none()
+    und = {
+        "stage": "gated",
+        "session_probe": {"state": "undecided", "reason": "undecided-rustdesk-other"},
+    }
+    rdp = {"stage": "gated", "session_probe": {"state": "connected", "reason": "connected-rdp"}}
+    main_cm = {
+        "stage": "main",
+        "session_probe": {"state": "connected", "reason": "connected-rustdesk-cm"},
+    }
+    assert tuple(m.gated_outcome(none, none, [und])) == (
+        "voided-undecided-during",
+        "undecided-rustdesk-other",
+    )
+    assert tuple(m.gated_outcome(none, none, [und, rdp])) == (
+        "voided-connected-during",
+        "connected-rdp",
+    )
+    assert tuple(m.gated_outcome(none, none, [main_cm])) == ("run", "no-remote-session")
+    cm = _s98_probe("connected", "connected-rustdesk-cm", [_s98_proc("--cm")])
+    assert tuple(m.gated_outcome(cm, None, [])) == ("skipped-connected", "connected-rustdesk-cm")
+    other = _s98_probe("undecided", "undecided-rustdesk-other", [_s98_proc("")])
+    fake.results["host-status.ps1"] = [
+        _s98_status(fake, other, "gated", None),
+        _s98_status(fake, none, "gated", 1),
+    ]
+    assert fake.run() == 0, capsys.readouterr().out
+    gs = summary_of(fake.run_dir)["gated"]
+    assert (gs["outcome"], gs["reason"]) == ("voided-undecided-during", "undecided-rustdesk-other")
+
+
+@pytest.mark.skipif(not ON_WINDOWS, reason=WINDOWS_ONLY)
+def test_s98_ac_10_launcher_after(tmp_path):
+    cm = _s98_probe("connected", "connected-rustdesk-cm", [_s98_proc("--cm")])
+    hr, code = _s98_launch(tmp_path, [_s98_none(), cm])
+    res = hr.root / "results" / RUN_A
+    meta = _s98_lines(res / "meta.txt")
+    assert _done(hr, RUN_A) == "0" and code == 0, meta
+    assert _s98_json(res / "probe-after.json")["state"] == "connected"
+    assert (res / "gated" / "report.json").is_file()
+    assert "probe_after=connected/connected-rustdesk-cm" in meta, meta
+
+
+@pytest.mark.parametrize(
+    ("state", "reason", "version", "shown"),
+    [
+        ("none", "no-remote-session", "1.4.6", "1.4.6"),
+        ("connected", "connected-rustdesk-cm", None, "-"),
+    ],
+)
+def test_s98_ac_12_check_prints_probe(
+    tmp_path, monkeypatch, capsys, state, reason, version, shown, env_clean
+):
+    fake = new_fake(monkeypatch, tmp_path)
+    assert hasattr(fake.m, "PROBE_STATES"), "tools/e2e_remote.py has no PROBE_STATES yet"
+    probe = _s98_probe(state, reason, version=version)
+    fake.results["host-facts.ps1"] = [facts(session_probe=probe)]
+    assert fake.check() == 0
+    out = capsys.readouterr().out
+    lines = [ln for ln in out.splitlines() if ln.startswith("session-probe:")]
+    assert lines == [f"session-probe: state={state} reason={reason} rustdesk={shown}"], out
+
+
+def test_s98_ac_12_polls_record_probe(tmp_path, monkeypatch, capsys, env_clean):
+    fake, g = _s98_gated_fake(
+        monkeypatch, tmp_path, _s98_none(), _s98_none(), _s98_rows("expected")
+    )
+    assert hasattr(fake.m, "gated_outcome"), "tools/e2e_remote.py has no gated_outcome yet"
+    fake.results["host-status.ps1"] = [
+        _s98_status(fake, _s98_none(), "main", None),
+        _s98_status(fake, _s98_none(), "gated", 1),
+    ]
+    assert fake.run() == 0, capsys.readouterr().out
+    text = (fake.run_dir / "polls.jsonl").read_text(encoding="utf-8")
+    recs = [json.loads(ln) for ln in text.splitlines() if ln.strip()]
+    assert [r["stage"] for r in recs] == ["main", "gated"]
+    for r in recs:
+        assert r["session_probe"] == {"state": "none", "reason": "no-remote-session"}, r
+
+
+def test_s98_ac_16_run_book_session_98():
+    m = _load()
+    assert hasattr(m, "GATED_OUTCOMES"), "tools/e2e_remote.py has no GATED_OUTCOMES yet"
+    text = RUN_BOOK.read_text(encoding="utf-8")
+    for outcome in m.GATED_OUTCOMES:
+        assert f"`{outcome}`" in text, outcome
+    for state, reasons in PROBE_STATES_T.items():
+        assert f"`{state}`" in text, state
+        for reason in reasons:
+            assert f"`{reason}`" in text, reason
+    for word in ("stage.txt", "probe-before.json", "probe-after.json", "Session 98"):
+        assert word in text, word
+
+
+@pytest.mark.skipif(not ON_WINDOWS, reason=WINDOWS_ONLY)
+def test_s98_ac_7_launcher_main_exit(tmp_path):
+    hr, code = _s98_launch(tmp_path, [_s98_none(), _s98_none()], main_exit=3)
+    meta = _s98_lines(hr.root / "results" / RUN_A / "meta.txt")
+    assert _done(hr, RUN_A) == "3", meta
+    assert code == 3, meta
+
+
+def test_s98_ac_20_clipboard_file_guard():
+    text = _script("run-e2e.ps1").decode("utf-8", "replace")
+    assert "if ($Gated)" in text, "tools/e2e_host/run-e2e.ps1 has no gated branch yet"
+    lines = text.splitlines()
+    var = "$env:AVKIT_E2E_CLIPBOARD_GATED"
+    sets = [i for i, ln in enumerate(lines) if var + " = '1'" in ln]
+    clears = [i for i, ln in enumerate(lines) if var + " = $null" in ln]
+    starts = [i for i, ln in enumerate(lines) if "Start-Process" in ln]
+    assert len(sets) == 1 and len(starts) == 1, (sets, starts)
+    assert "if ($Gated)" in lines[sets[0]] and sets[0] < starts[0], lines[sets[0]]
+    assert clears and all(c > starts[0] for c in clears), clears
+    assert sum(var in ln for ln in lines) == len(sets) + len(clears)
+    calls = [
+        ln.strip()
+        for ln in lines
+        if re.search(r"\bAvStage\b", ln) and not ln.lstrip().startswith(("function", "#"))
+    ]
+    assert len([c for c in calls if "-Gated" in c]) == 1, calls
+    assert len([c for c in calls if "-Gated" not in c]) == 1, calls
+    spec = (ROOT / "ui/tests/e2e/capture-system-clipboard.test.ts").read_text(encoding="utf-8")
+    guard = "process.env.AVKIT_E2E_CLIPBOARD_GATED !== '1'"
+    reason = "'system clipboard spec: runs only in the gated stage on the second Windows host'"
+    assert spec.count(guard) == 1 and spec.count(reason) == 1
+    sl = spec.splitlines()
+    last_import = max(i for i, ln in enumerate(sl) if ln.startswith("import "))
+    assert min(i for i, ln in enumerate(sl) if guard in ln) > last_import
+
+
+def _s98_fake_playwright_blocks_after() -> str:
+    """As ``_s98_fake_playwright``; the gated stage also makes ``probe-after.json`` a folder.
+
+    The launcher then cannot write its after probe (ECS-R1-1, D-1284).
+    """
+    return (
+        "import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'\n"
+        "import { dirname, join } from 'node:path'\n"
+        "const args = process.argv.slice(2)\n"
+        "const out = args.find((a) => a.startsWith('--outputFile=')).slice(13)\n"
+        "const specs = args.filter((a) => !a.startsWith('--'))\n"
+        "const gated = process.env.AVKIT_E2E_CLIPBOARD_GATED ?? null\n"
+        "writeFileSync(out, JSON.stringify({ specs, gated }))\n"
+        "if (gated === '1') mkdirSync(join(dirname(out), '..', 'probe-after.json'))\n"
+        "process.exit(gated === '1' ? 0 : Number(readFileSync('fake-exit.txt', 'utf8').trim()))\n"
+    )
+
+
+def test_s98_r1fix_outcome_after_probe():
+    """A missing or invalid after probe voids the stage; a gated ``connected`` poll still wins."""
+    m = _load()
+    none = _s98_none()
+    und = {
+        "stage": "gated",
+        "session_probe": {"state": "undecided", "reason": "undecided-rustdesk-other"},
+    }
+    rdp = {"stage": "gated", "session_probe": {"state": "connected", "reason": "connected-rdp"}}
+    main_cm = {
+        "stage": "main",
+        "session_probe": {"state": "connected", "reason": "connected-rustdesk-cm"},
+    }
+    missing = ("voided-undecided-during", "after-probe-missing")
+    invalid = ("voided-undecided-during", "after-probe-invalid")
+    assert tuple(m.gated_outcome(none, None, [])) == missing
+    assert tuple(m.gated_outcome(none, None, [main_cm])) == missing
+    assert tuple(m.gated_outcome(none, {}, [])) == invalid
+    assert tuple(m.gated_outcome(none, {"state": "maybe", "reason": "x"}, [])) == invalid
+    assert tuple(m.gated_outcome(none, {"reason": "no-remote-session"}, [])) == invalid
+    assert tuple(m.gated_outcome(none, None, [und])) == (
+        "voided-undecided-during",
+        "undecided-rustdesk-other",
+    )
+    assert tuple(m.gated_outcome(none, None, [rdp])) == ("voided-connected-during", "connected-rdp")
+    assert tuple(m.gated_outcome(none, {}, [und, rdp])) == (
+        "voided-connected-during",
+        "connected-rdp",
+    )
+    assert tuple(m.gated_outcome(none, none, [])) == ("run", "no-remote-session")
+
+
+@pytest.mark.parametrize(
+    ("case", "reason"),
+    [
+        ("missing", "after-probe-missing"),
+        ("empty-object", "after-probe-invalid"),
+        ("bad-state", "after-probe-invalid"),
+        ("not-json", "after-probe-invalid"),
+    ],
+)
+def test_s98_r1fix_run_after_probe_voids(tmp_path, monkeypatch, capsys, case, reason, env_clean):
+    after = {"empty-object": {}, "bad-state": {"state": "maybe", "reason": "x"}}.get(case)
+    fake, g = _s98_gated_fake(monkeypatch, tmp_path, _s98_none(), after, _s98_rows("unexpected"))
+    if case == "not-json":
+        (fake.host_results / "probe-after.json").write_bytes(b"not json\n")
+    assert fake.run() == 0, capsys.readouterr().out
+    s = summary_of(fake.run_dir)
+    gs = s["gated"]
+    assert (gs["outcome"], gs["reason"]) == ("voided-undecided-during", reason)
+    assert gs["files"] == [g] and gs["new"] == []
+    assert [n["title"] for n in gs["voided_failures"]] == ["AC-132.23 paste"]
+    assert gs["counts"] == {"tests": 2, "expected": 1, "unexpected": 1, "flaky": 0, "skipped": 0}
+    assert s["exit"] == 0 and s["new"] == [] and s["skip"] == []
+    assert s["spec_files"] == len(fake.specs)
+    assert fake.released() == [fake.run_id]
+
+
+@pytest.mark.skipif(not ON_WINDOWS, reason=WINDOWS_ONLY)
+def test_s98_r1fix_launcher_after_unwritable(tmp_path, monkeypatch):
+    monkeypatch.setitem(globals(), "_s98_fake_playwright", _s98_fake_playwright_blocks_after)
+    hr, code = _s98_launch(tmp_path, [_s98_none(), _s98_none()])
+    res = hr.root / "results" / RUN_A
+    meta = _s98_lines(res / "meta.txt")
+    assert _done(hr, RUN_A) == "0" and code == 0, meta
+    assert (res / "probe-after.json").is_dir()
+    assert "probe-write-failed probe-after.json" in meta, meta
+    assert "gated_exit=0" in meta, meta
+    g = "capture-system-clipboard.test.ts"
+    rows = [(g, "AC-88.12 (a)(b)(f) clip", "expected")]
+    (res / "gated" / "report.json").write_text(json.dumps(report(rows)), encoding="utf-8")
+    gs = _load().gated_summary(res, [g], [])
+    assert (gs["outcome"], gs["reason"]) == ("voided-undecided-during", "after-probe-missing")
+    assert gs["probe_after"] is None and gs["new"] == []

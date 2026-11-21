@@ -400,6 +400,13 @@ def load_known(path: Path) -> dict:
         or not all(isinstance(e, dict) for e in data["known"] + data["skip"])
     ):
         raise Refusal("known-failures-stale", f"known list malformed: {Path(path).name}")
+    # Session 98: an optional ``gated`` list of {label, file, reason}; a missing key is [].
+    gated = data.get("gated", [])
+    if not isinstance(gated, list) or not all(
+        isinstance(e, dict) and all(k in e for k in ("label", "file", "reason")) for e in gated
+    ):
+        raise Refusal("known-failures-stale", f"known list gated malformed: {Path(path).name}")
+    data["gated"] = gated
     return data
 
 
@@ -409,6 +416,15 @@ def label_skip(known: dict, label: str) -> list[dict]:
         for e in known["skip"]
         if e.get("label") == label
     ]
+
+
+def label_gated(known: dict, label: str) -> list[str]:
+    """The label's gated spec files (Session 98): they run in the gated stage, not the main."""
+    return [e.get("file") for e in known.get("gated", []) if e.get("label") == label]
+
+
+def _label_gated_entries(known: dict, label: str) -> list[dict]:
+    return [e for e in known.get("gated", []) if e.get("label") == label]
 
 
 def register_status(path: Path) -> dict[str, str]:
@@ -577,7 +593,7 @@ def fact_lines(f: dict) -> list[str]:
     sess = f.get("user_session") or {}
     node = f.get("node") or {}
     launcher = f.get("launcher") or {}
-    return [
+    lines = [
         f"facts: ps={f.get('ps_version')} elevated={f.get('elevated')} "
         f"procs={f.get('procs_total')} owners_seen={f.get('owners_seen')}",
         f"desktop: explorer={len(f.get('explorer') or [])} session={sess.get('id')} "
@@ -594,6 +610,14 @@ def fact_lines(f: dict) -> list[str]:
         f"clock: utc_now={f.get('utc_now')} tz_offset_min={f.get('tz_offset_min')} "
         f"ssh_shell_set={bool(f.get('ssh_shell'))}",
     ]
+    probe = f.get("session_probe")
+    if isinstance(probe, dict):
+        # A fact, not a refusal: printed whatever the state (Session 98).
+        lines.append(
+            f"session-probe: state={probe.get('state')} reason={probe.get('reason')} "
+            f"rustdesk={probe.get('rustdesk_version') or '-'}"
+        )
+    return lines
 
 
 # --- transport ------------------------------------------------------------------------------
@@ -728,15 +752,8 @@ def _walk(suites: list, inherited: str | None, rows: list[dict]) -> None:
         _walk(s.get("suites") or [], sfile, rows)
 
 
-def build_summary(
-    report_path: Path,
-    specs_path: Path | None,
-    expected: list[str] | None,
-    label: str,
-    known_path: Path,
-    register_path: Path,
-) -> dict:
-    """The summary of one Playwright JSON report; refusals 31 raise, 32 and 40 return."""
+def _report_rows(report_path: Path) -> tuple[dict, list[dict], dict[str, int]]:
+    """A Playwright JSON report's data, test rows and counts; refusals 31 raise."""
     if not report_path.is_file():
         raise Refusal("report-missing", str(report_path))
     try:
@@ -766,6 +783,20 @@ def build_summary(
         off.append(f"{len(rows) - sum(counts.values())} test(s) with another status")
     if off:
         raise Refusal("report-inconsistent", "; ".join(off))
+    return data, rows, counts
+
+
+def build_summary(
+    report_path: Path,
+    specs_path: Path | None,
+    expected: list[str] | None,
+    label: str,
+    known_path: Path,
+    register_path: Path,
+) -> dict:
+    """The summary of one Playwright JSON report; refusals 31 raise, 32 and 40 return."""
+    data, rows, counts = _report_rows(report_path)
+    stats = data["stats"]
     files = sorted({r["file"] for r in rows})
     specs_checked = False
     if specs_path is not None:
@@ -844,6 +875,154 @@ def build_summary(
     }
 
 
+# --- the gated stage (Session 98) -----------------------------------------------------------
+
+#: The session probe's states, in the order the run book names them.
+PROBE_STATES = ("none", "connected", "undecided")
+#: The gated stage's outcomes; only ``run`` can add to the exit code (L2, D-1283).
+GATED_OUTCOMES = (
+    "run",
+    "skipped-connected",
+    "skipped-undecided",
+    "voided-connected-during",
+    "voided-undecided-during",
+)
+_UTC_RE = re.compile(r"(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.(\d+))?(Z|[+-]\d\d:\d\d)?")
+
+
+def _probe_reading(probe: object) -> dict | None:
+    """The ``{state, reason}`` of one probe, or ``None`` when there is none."""
+    if not isinstance(probe, dict):
+        return None
+    return {"state": probe.get("state"), "reason": probe.get("reason")}
+
+
+def _parse_utc(text: object) -> datetime | None:
+    """A round-trip (``'o'``) time with up to 7 fractional digits; ``None`` when unparseable."""
+    m = _UTC_RE.fullmatch(str(text or ""))
+    if not m:
+        return None
+    frac = (m.group(2) or "")[:6].ljust(6, "0")
+    tz = m.group(3) or "Z"
+    try:
+        return datetime.fromisoformat(
+            f"{m.group(1)}.{frac}{'+00:00' if tz == 'Z' else tz}"
+        ).astimezone(UTC)
+    except ValueError:
+        return None
+
+
+def _state_of(reading: object) -> str | None:
+    return reading.get("state") if isinstance(reading, dict) else None
+
+
+def gated_outcome(before: dict, after: dict | None, polls: list[dict]) -> tuple[str, str]:
+    """The gated stage's outcome and reason from its probes (D-1269, D-1283, D-1284).
+
+    A before probe that is not ``none`` skips the stage. Otherwise any reading that is not
+    ``none`` from the after probe, or from a poll taken while ``stage`` was ``gated``, voids it;
+    ``connected`` wins over ``undecided``. A poll taken during the main stage never voids. An
+    after probe that is missing (``None``) reads ``undecided`` with the reason
+    ``after-probe-missing``, and one with no probe state (``{}``, unreadable or an unknown
+    state) reads ``undecided`` with ``after-probe-invalid``, so the stage is voided, never
+    ``run`` (fail closed); an earlier gated poll's reading keeps its own reason.
+    """
+    state = _state_of(before)
+    if state != "none":
+        kind = "connected" if state == "connected" else "undecided"
+        return f"skipped-{kind}", str(before.get("reason") if isinstance(before, dict) else "")
+    readings = [
+        p.get("session_probe") for p in polls if isinstance(p, dict) and p.get("stage") == "gated"
+    ]
+    if after is None:
+        readings.append({"state": "undecided", "reason": "after-probe-missing"})
+    elif _state_of(after) not in PROBE_STATES:
+        readings.append({"state": "undecided", "reason": "after-probe-invalid"})
+    else:
+        readings.append(after)
+    seen = [r for r in readings if _state_of(r) not in (None, "none")]
+    for want in ("connected", None):
+        for r in seen:
+            if want is None or _state_of(r) == want:
+                kind = "connected" if _state_of(r) == "connected" else "undecided"
+                return f"voided-{kind}-during", str(r.get("reason"))
+    return "run", str(before.get("reason"))
+
+
+def _probe_detail(probe: dict | None) -> list[str]:
+    """Each proc of a probe as ``<name> <switches> session=N started=<UTC> age_s=<seconds>``."""
+    if not isinstance(probe, dict):
+        return []
+    at = _parse_utc(probe.get("utc"))
+    out = []
+    for p in probe.get("procs") or []:
+        if not isinstance(p, dict):
+            continue
+        sw = p.get("switches")
+        shown = "(unreadable)" if sw is None else (str(sw).strip() or "-")
+        started = _parse_utc(p.get("started"))
+        age = "-" if at is None or started is None else str(int((at - started).total_seconds()))
+        out.append(
+            f"{p.get('name')} {shown} session={p.get('session')} "
+            f"started={p.get('started')} age_s={age}"
+        )
+    return out
+
+
+def _polls_of(folder: Path) -> list[dict]:
+    path = folder / "polls.jsonl"
+    if not path.is_file():
+        return []
+    out = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            rec = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(rec, dict):
+            out.append(rec)
+    return out
+
+
+def gated_summary(host: Path, files: list[str], polls: list[dict]) -> dict:
+    """The ``gated`` object of a run's summary; a missing before probe or report is 31.
+
+    The gated report is never matched against the known list (D-1272). A missing or unreadable
+    after probe is no refusal: ``gated_outcome`` voids the stage (D-1284), and the main stage's
+    summary is unchanged.
+    """
+    pb_path = host / "probe-before.json"
+    if not pb_path.is_file():
+        raise Refusal("report-missing", str(pb_path))
+    before = _read_json(pb_path)
+    if _state_of(before) not in PROBE_STATES:
+        raise Refusal("report-invalid", "probe-before.json has no probe state")
+    pa_path = host / "probe-after.json"
+    after = _read_json(pa_path) if pa_path.is_file() else None
+    outcome, reason = gated_outcome(before, after, polls)
+    counts = None
+    failing: list[dict] = []
+    if _state_of(before) == "none":
+        _, rows, c = _report_rows(host / "gated" / "report.json")
+        counts = {"tests": len(rows), **c}
+        failing = [
+            {"file": r["file"], "ac": r["ac"], "title": r["title"], "status": r["status"]}
+            for r in rows
+            if r["status"] != "expected"
+        ]
+    return {
+        "outcome": outcome,
+        "reason": reason,
+        "files": list(files),
+        "probe_before": before,
+        "probe_after": after,
+        "counts": counts,
+        "new": failing if outcome == "run" else [],
+        "detail": _probe_detail(before) + _probe_detail(after),
+        "voided_failures": failing if outcome.startswith("voided-") else [],
+    }
+
+
 def summary_lines(s: dict) -> list[str]:
     lines = [
         f"summary: tests={s['tests']} expected={s['expected']} unexpected={s['unexpected']} "
@@ -856,6 +1035,24 @@ def summary_lines(s: dict) -> list[str]:
     lines += [f"new: {n['file']} [{n.get('status')}] {n['title']}" for n in s["new"]]
     lines += [f"stale: {x}" for x in s.get("stale", [])]
     lines += [f"skip: {e['file']} ({e['reason']})" for e in s["skip"]]
+    g = s.get("gated")
+    if g:
+        c = g["counts"]
+        shown = "-" if c is None else " ".join(f"{k}={c[k]}" for k in ("tests", *STATUSES))
+        lines.append(
+            f"gated: outcome={g['outcome']} reason={g['reason']} files={','.join(g['files'])} "
+            f"counts={shown}"
+        )
+        for name in ("probe_before", "probe_after"):
+            r = _probe_reading(g[name])
+            if r is not None:
+                lines.append(f"gated {name}: state={r['state']} reason={r['reason']}")
+        lines += [f"gated new: {n['file']} [{n.get('status')}] {n['title']}" for n in g["new"]]
+        lines += [
+            f"gated voided: {n['file']} [{n.get('status')}] {n['title']}"
+            for n in g["voided_failures"]
+        ]
+        lines += [f"gated detail: {d}" for d in g["detail"]]
     lines.append(f"result: {s['result']} exit={s['exit']}")
     return lines
 
@@ -874,8 +1071,10 @@ def _summary_refusal(s: dict) -> Refusal | None:
     if s["result"] == "known-failures-stale":
         return Refusal("known-failures-stale", "; ".join(s["stale"]))
     if s["result"] == "new-failures":
-        names = "; ".join(f"{n['file']}: {n['title']}" for n in s["new"])
-        return Refusal("new-failures", f"{len(s['new'])} new: {names}")
+        # A gated-stage failure counts as a main-stage one does (Session 98).
+        new = s["new"] + ((s.get("gated") or {}).get("new") or [])
+        names = "; ".join(f"{n['file']}: {n['title']}" for n in new)
+        return Refusal("new-failures", f"{len(new)} new: {names}")
     return None
 
 
@@ -976,6 +1175,8 @@ def _poll(cfg: dict, st: RunState) -> dict:
                 "runner_workers": status.get("runner_workers"),
                 "own_orphans": status.get("own_orphans"),
                 "problems": problems,
+                "session_probe": _probe_reading(status.get("session_probe")),
+                "stage": status.get("stage"),
             }
             try:
                 with open(st.dir / "polls.jsonl", "a", encoding="ascii") as fh:
@@ -1010,20 +1211,11 @@ def _poll(cfg: dict, st: RunState) -> dict:
 
 
 def _overlap_from_polls(folder: Path) -> list[dict]:
-    path = folder / "polls.jsonl"
-    if not path.is_file():
-        return []
-    out = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        try:
-            rec = json.loads(line)
-        except ValueError:
-            continue
-        if rec.get("problems"):
-            out.append(
-                {"poll": rec.get("poll"), "utc": rec.get("utc"), "problems": rec["problems"]}
-            )
-    return out
+    return [
+        {"poll": rec.get("poll"), "utc": rec.get("utc"), "problems": rec["problems"]}
+        for rec in _polls_of(folder)
+        if rec.get("problems")
+    ]
 
 
 def _read_json(path: Path) -> dict:
@@ -1070,7 +1262,10 @@ def _collect_and_summarize(cfg: dict, st: RunState, status: dict) -> int:
         raise Refusal(DONE_MAP[done], f"the launcher wrote DONE {done}")
     known_data = load_known(KNOWN_FILE)
     skip_files = {e["file"] for e in label_skip(known_data, cfg["label"])}
-    expected = [s for s in commit_specs(req["commit"]) if s not in skip_files]
+    gated_files = label_gated(known_data, cfg["label"])
+    expected = [
+        s for s in commit_specs(req["commit"]) if s not in skip_files and s not in gated_files
+    ]
     s = build_summary(
         rd / "host" / "report.json",
         rd / "host" / "specs.txt",
@@ -1079,6 +1274,7 @@ def _collect_and_summarize(cfg: dict, st: RunState, status: dict) -> int:
         KNOWN_FILE,
         REGISTER,
     )
+    gated = gated_summary(rd / "host", gated_files, _polls_of(rd)) if gated_files else None
     extract = _read_json(rd / "prepare-extract.json")
     facts = _read_json(rd / "facts.json")
     s.update(
@@ -1096,6 +1292,11 @@ def _collect_and_summarize(cfg: dict, st: RunState, status: dict) -> int:
             "tool_sha256": tool_hashes(),
         }
     )
+    if gated is not None:
+        s["gated"] = gated
+        if gated["new"] and s["result"] == "ok":
+            s["result"] = "new-failures"
+            s["exit"] = REASONS["new-failures"]
     for line in summary_lines(s):
         say(line)
     if s["overlap"]:
@@ -1130,6 +1331,20 @@ def _run(args: argparse.Namespace, st: RunState) -> int:
                 "known-failures-stale",
                 f"skip entry {e.get('file')} has no reason or names no spec file of {sha[:7]}",
             )
+    # Only this label's gated entries are checked against the commit (Session 98).
+    gated = _label_gated_entries(known_data, cfg["label"])
+    skip_names = {e.get("file") for e in skip}
+    for e in gated:
+        if not e.get("reason") or e.get("file") not in all_specs:
+            raise Refusal(
+                "known-failures-stale",
+                f"gated entry {e.get('file')} has no reason or names no spec file of {sha[:7]}",
+            )
+        if e.get("file") in skip_names:
+            raise Refusal(
+                "known-failures-stale",
+                f"{e.get('file')} is both skipped and gated for {cfg['label']}",
+            )
     if not all((Path(STUB_DIR) / n).is_file() for n in STUB_NAMES):
         raise Refusal("prerequisite-missing", "picker-stub-local")
     receipts.mkdir(parents=True, exist_ok=True)
@@ -1162,6 +1377,7 @@ def _run(args: argparse.Namespace, st: RunState) -> int:
         "zip_sha256": zip_sha,
         "stub": stub,
         "skip": [e["file"] for e in skip],
+        "gated": [e["file"] for e in gated],
         "node_exe": cfg["node_exe"],
         "ffmpeg_bin": cfg["ffmpeg_bin"],
         "user": cfg["user"],
