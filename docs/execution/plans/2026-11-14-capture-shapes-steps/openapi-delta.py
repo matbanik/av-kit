@@ -145,6 +145,9 @@ def check(base: dict[str, Any], new: dict[str, Any]) -> list[str]:
         items = union_items(stripped, name)
         items["oneOf"] = [m for m in items["oneOf"] if m != {"$ref": STEP_REF}]
         del items["discriminator"]["mapping"]["step"]
+    # A release bump changes info.version (0.1.0-rc.4, 2026-11-21); it is release metadata, not
+    # the API shape this AC pins, so it is set back to the base's value before the compare.
+    stripped["info"]["version"] = base["info"]["version"]
     diff = first_difference(stripped, base)
     if diff:
         problems.append(f"a change AC-106.5 doesn't name: {diff}")
@@ -201,7 +204,13 @@ def selftest() -> int:
     def default(doc: dict[str, Any]) -> None:
         doc["components"]["schemas"]["RectAnnotationIn"]["properties"]["shape"]["default"] = "ellipse"
 
-    cases: list[tuple[str, dict[str, Any], bool]] = [("expected", good, True), ("base itself", copy.deepcopy(base), False)]
+    bumped = copy.deepcopy(good)
+    bumped["info"]["version"] = "0.0.0-selftest"
+    cases: list[tuple[str, dict[str, Any], bool]] = [
+        ("expected", good, True),
+        ("version bump only", bumped, True),
+        ("base itself", copy.deepcopy(base), False),
+    ]
     for label, mutate in (("extra property", extra), ("missing addition", missing), ("renamed schema", renamed),
                           ("changed required", required), ("stray reference", stray), ("wrong default", default)):
         doc = copy.deepcopy(good)
