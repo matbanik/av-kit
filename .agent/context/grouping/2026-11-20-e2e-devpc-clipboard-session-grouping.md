@@ -102,7 +102,7 @@ Mat's request continues the orchestration, so the coordinator runs plan creation
 
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
-| 100 | `e2e-devpc-clipboard` | — | P3 | approved | `docs/execution/plans/2026-11-20-e2e-devpc-clipboard/` |
+| 100 | `e2e-devpc-clipboard` | — | P3 | executed (Session 100) | `docs/execution/plans/2026-11-20-e2e-devpc-clipboard/` |
 
 ---
 

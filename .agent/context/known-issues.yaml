@@ -3636,9 +3636,9 @@ issues:
     root_cause: Not established. primeTransparentClipboard in ui/tests/e2e/capture-filmstrip-actions.test.ts writes the image once and then polls the read. In H1-2 attempt 4 the read stayed empty until the 5 s poll ended. The clipboard is shared with the whole desktop, and Mat was using the PC during that run, so another program replacing it is one candidate. Nothing tested that.
     blast_radius: One failure in H1-2 attempt 4, the first test of that run. It passed in attempts 2, 3, 5 and 6 and 8 of 8 repeats after ECN-9. A failure here stops a gate at ui-electron and costs a rerun. The primer is a precondition of the test, so it says nothing about the product.
     verification:
-      last_checked: '2026-11-20'
-      method: 'Session 98''s gated stage on the mini-air: r20261120T215925Z-9ac9adc and r20261120T230628Z-ef4842e (summary.json gated object)'
-      result: 'AC-88.12 ran in both: outcome run, reason no-remote-session, 2 of 2 expected; the primer did not fail'
+      last_checked: '2026-11-21'
+      method: 'Session 100''s gated stage on the mini-air: r20261121T044121Z-3b7b4ac (edc-run-8-check.txt, summary.json gated object) and edc-gated-count-8.txt (D-1301 tally)'
+      result: 'outcome run, reason no-remote-session, primer=2/2, other=3/3; the primer did not fail; d1301 tally: 3 of 5 from r20261120T215925Z-9ac9adc -> open'
     category: MONITORING
     priority: P4
     related:
@@ -6104,10 +6104,11 @@ issues:
     title: Four E2E tests write the dev PC's system clipboard in every full run, two of them with the test app's API token
     severity: medium
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-20'
     root_cause: 'Four E2E tests outside the gated clipboard file still reach the real system clipboard through the main process: C1-5 (ui/tests/e2e/console-chrome.test.ts:77, the console Copy button), AC-71.15 (b) (mcp-setup-prompt.test.ts:91, Copy prompt), AC-71.15 (d) (mcp-setup-prompt.test.ts:126, Copy MCP config) and W4-3 (settings.test.ts:195, which clicks copy-mcp-btn at :216). Copy MCP config goes through the copy-mcp-config IPC (ui/src/main/ipc.ts:419), which writes a JSON payload with AVKIT_API_TOKEN through writeClipboard (ui/src/main/index.ts:411). Session 57 RULE-4 keeps clipboard-writing specs off the dev PC, and Session 98 gated the two capture clipboard tests, but these four were outside its scope; Session 98 (D-1277) named only the first two.'
     blast_radius: Every dev-PC full E2E run overwrites whatever the person at the desk last copied, about four times, with a log snapshot, a setup prompt and twice a JSON block that holds the throwaway test app's API token; with Windows clipboard history on, those entries stay in the history list. No test fails and no product code is affected. The rule that the dev PC never runs clipboard specs (CLIPBOARD_NEVER_DEVPC) is only partly true, and nothing stops a new spec from adding another writer.
+    resolution_path: 'Fixed in Session 100 on 2026-11-21 (plan docs/execution/plans/2026-11-20-e2e-devpc-clipboard): the clipboard steps of C1-5, AC-71.15 (b) and AC-71.15 (d) moved with their assertions unchanged into ui/tests/e2e/copy-system-clipboard.test.ts, which skips itself unless AVKIT_E2E_CLIPBOARD_GATED=1 and runs only in the second Windows host''s gated stage (CLIPBOARD_SPLIT); W4-3 no longer clicks the two MCP copy buttons and AC-71.15 (e) gets a seeded throwaway token; tools/e2e_host/known-failures.json lists the new file under gated; every other launch preloads ui/tests/e2e/clipboard-guard.cjs, which replaces the main-process and renderer clipboard calls with recorders and fails the test with a CLIPBOARD_GUARD message (CLIPBOARD_GUARD); and the static scan ui/tests/unit/e2e-clipboard-guard.test.ts fails on any clipboard call, copy or paste chord or copy-button click outside the gated and guard files'
     category: TECH-DEBT
     priority: P3
     related:
@@ -6122,9 +6123,9 @@ issues:
 
       Triage 2026-11-20 (D-1299): corrected to four tests (AC-71.15 (d) and W4-3 were missed) and raised to medium P3, because two of them put an API token on the developer's clipboard. Grouped as Session 100 e2e-devpc-clipboard in .agent/context/grouping/2026-11-20-e2e-devpc-clipboard-session-grouping.md, with no MEU (test files and E2E tooling only).
     verification:
-      last_checked: '2026-11-20'
-      method: git grep over ui/tests/e2e for clipboard calls and copy-button test ids outside capture-system-clipboard.test.ts; the copy-mcp-config IPC (ui/src/main/ipc.ts:419) and writeClipboard (ui/src/main/index.ts:411)
-      result: 'four writers: C1-5, AC-71.15 (b), AC-71.15 (d) and W4-3; the last two copy the AVKIT_API_TOKEN payload'
+      last_checked: '2026-11-21'
+      method: Session 100 receipts edc-full-7-check.txt (dev-PC full run through flake-run.py with the clipboard guard on, both gated files excluded), edc-run-8-check.txt (the mini-air run r20261121T044121Z-3b7b4ac at snapshot 3b7b4ac, HEAD f1ba411 plus the session's eleven code and test paths) and edc-gated-count-8.txt (its gated stage); edc-writer-scan-4.txt and edc-guard-logs-5.txt for the static scan and the guard log
+      result: 'dev-PC full run: 238 of 238 ok, no CLIPBOARD_GUARD or rejection line, kept titles missing [], gated tests listed 0, guard-logs 0 failing; mini-air main stage: tests 238 expected 238 unexpected 0 flaky 0 skipped 0 spec_files 30 new [] overlap [] commit equals the snapshot: True exit 0; gated outcome run, reason no-remote-session, capture-system-clipboard.test.ts and copy-system-clipboard.test.ts 5 of 5 expected, unexpected 0, new []'
     enrichment:
       questions_asked: []
       answers: []

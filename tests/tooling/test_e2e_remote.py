@@ -11,6 +11,9 @@ Each case asserts its target file exists first, so before Green every case fails
 Session 98 (docs/execution/plans/2026-11-20-e2e-clipboard-specs) adds the gated clipboard stage
 and the session probe (AC-5 to AC-12 and AC-16; D-1269 to D-1272); each new case asserts its new
 name with ``hasattr``, or its block or text, first, so before Green it fails by assertion.
+Session 100 (docs/execution/plans/2026-11-20-e2e-devpc-clipboard) adds the second gated file
+and the guard's run-book section (AC-11 and AC-18; D-1305, D-1318); each new case asserts its
+file or text first.
 """
 
 from __future__ import annotations
@@ -1570,6 +1573,7 @@ def test_ac_11_known_tracked_list(tmp_path):
     gated = data.get("gated", [])
     assert [(e["label"], e["file"]) for e in gated] == [
         ("mini-air", "capture-system-clipboard.test.ts"),
+        ("mini-air", "copy-system-clipboard.test.ts"),
     ]
     assert all(e["reason"] for e in data["skip"] + gated)
     assert Path(m.KNOWN_FILE) == KNOWN
@@ -3061,3 +3065,88 @@ def test_s98_r1fix_launcher_after_unwritable(tmp_path, monkeypatch):
     gs = _load().gated_summary(res, [g], [])
     assert (gs["outcome"], gs["reason"]) == ("voided-undecided-during", "after-probe-missing")
     assert gs["probe_after"] is None and gs["new"] == []
+
+
+# --- Session 100: the second gated file and the guard's run book (AC-11, AC-18) -------------
+
+GATED_FILES_S100 = ("capture-system-clipboard.test.ts", "copy-system-clipboard.test.ts")
+
+
+def test_s100_ac_11_known_two_gated_files():
+    assert KNOWN.is_file(), "tools/e2e_host/known-failures.json does not exist"
+    data = json.loads(KNOWN.read_text(encoding="utf-8"))
+    mine = [e for e in data.get("gated", []) if e.get("label") == "mini-air"]
+    assert tuple(e["file"] for e in mine) == GATED_FILES_S100, "the second gated file is not listed"
+    assert all(e["reason"] for e in mine)
+    m = _load()
+    assert m.label_gated(m.load_known(KNOWN), "mini-air") == list(GATED_FILES_S100)
+    for name in GATED_FILES_S100:
+        assert (ROOT / "ui/tests/e2e" / name).is_file(), name
+
+
+def test_s100_ac_11_run_carries_both_gated_files(tmp_path, monkeypatch, capsys, env_clean):
+    data = json.loads(KNOWN.read_text(encoding="utf-8"))
+    tracked = tuple(e["file"] for e in data.get("gated", []) if e.get("label") == "mini-air")
+    assert tracked == GATED_FILES_S100, "the tracked list does not gate both clipboard files yet"
+    fake, g = _s98_gated_fake(monkeypatch, tmp_path, _s98_none(), _s98_none(), None)
+    second = fake.specs.pop()
+    files = [g, second]
+    known = json.loads(fake.known.read_text(encoding="utf-8"))
+    known["gated"] = [{"label": LABEL, "file": f, "reason": "fixture"} for f in files] + [
+        e for e in known["gated"] if e["label"] != LABEL
+    ]
+    fake.known.write_text(json.dumps(known, indent=2) + "\n", encoding="utf-8")
+    out = fake.host_results
+    rows = [(f, f"AC-900.{i} case", "expected") for i, f in enumerate(fake.specs)]
+    rows.append((fake.specs[0], "AC-901.1 known failure", "unexpected"))
+    (out / "report.json").write_text(json.dumps(report(rows)), encoding="utf-8")
+    (out / "specs.txt").write_text("\n".join(fake.specs) + "\n", encoding="utf-8")
+    gated_rows = [(g, f"AC-88.{i} clip", "expected") for i in (1, 2)]
+    gated_rows += [(second, f"AC-71.{i} copy", "expected") for i in (1, 2, 3)]
+    (out / "gated").mkdir()
+    (out / "gated" / "report.json").write_text(json.dumps(report(gated_rows)), encoding="utf-8")
+    (out / "gated" / "specs.txt").write_text("\n".join(files) + "\n", encoding="utf-8")
+    assert fake.run() == 0, capsys.readouterr().out
+    req = _s98_json(fake.run_dir / "upload" / "runs" / fake.run_id / "request.json")
+    assert req["gated"] == files and req["skip"] == []
+    s = summary_of(fake.run_dir)
+    gs = s["gated"]
+    assert gs["outcome"] == "run" and gs["files"] == files
+    assert gs["counts"] == {"tests": 5, "expected": 5, "unexpected": 0, "flaky": 0, "skipped": 0}
+    assert gs["new"] == [] and s["exit"] == 0
+
+
+def test_s100_ac_18_run_book_session_100():
+    text = RUN_BOOK.read_text(encoding="utf-8")
+    head = "## The dev-PC clipboard guard (Session 100)\n"
+    assert head in text, "the run book has no Session 100 section yet"
+    s98 = text.index("## The gated clipboard stage (Session 98)\n")
+    i = text.index(head)
+    assert s98 < i, "the Session 100 section does not follow the Session 98 one"
+    rest = text[i + len(head) :]
+    section = rest.split("\n## ", 1)[0]
+    for word in (
+        "copy-system-clipboard.test.ts",
+        "clipboard-guard.cjs",
+        "`CLIPBOARD_GUARD:`",
+        "AVKIT_E2E_CLIPBOARD_GATED",
+        "main stage",
+        "empty",
+        "e2e-clipboard-guard.test.ts",
+        "D-1301",
+    ):
+        assert word in section, word
+    assert "copy-system-clipboard.test.ts" in text[s98:i], "the Session 98 section names one file"
+
+
+def test_s100_ac_18_commands_names_the_guard():
+    text = (ROOT / ".agent/docs/commands.md").read_text(encoding="utf-8")
+    assert "CLIPBOARD_GUARD:" in text, "commands.md does not name the guard yet"
+    lines = text.splitlines()
+    anchor = "# The clipboard spec capture-system-clipboard.test.ts skips itself unless"
+    at = [i for i, line in enumerate(lines) if line.startswith(anchor)]
+    assert len(at) == 1, at
+    first, second = lines[at[0] + 1], lines[at[0] + 2]
+    assert first.startswith("# ") and "AVKIT_E2E_CLIPBOARD_GATED=1" in first, first
+    assert "CLIPBOARD_GUARD:" in first, first
+    assert second.startswith("# ") and "tools/e2e_host/known-failures.json" in second, second

@@ -1,5 +1,6 @@
 import { expect, test, type ElectronApplication, type Page } from '@playwright/test'
-import { mkdtempSync } from 'node:fs'
+import { randomUUID } from 'node:crypto'
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
@@ -7,8 +8,6 @@ import { launchElectron } from './electron-app'
 import {
   MCP_ADVANCED_SUMMARY,
   MCP_CLIENT_SELECT,
-  MCP_COPY_PROMPT_BTN,
-  MCP_PROMPT_STATUS,
   MCP_SCOPE_SELECT,
   MCP_SETUP_PROMPT,
 } from './test-ids'
@@ -25,8 +24,11 @@ const CLIENT_SET = [
 ] as const
 const PROJECT_CLIENTS = ['claude-code', 'codex', 'cursor', 'vscode']
 
-async function launchApp(): Promise<{ app: ElectronApplication; appData: string }> {
+async function launchApp(token?: string): Promise<{ app: ElectronApplication; appData: string }> {
   const appData = mkdtempSync(join(tmpdir(), 'avkit-e2e-mcp-prompt-'))
+  // Session 100 (D-1307): a test that needs the app's MCP token seeds a throwaway one in its own
+  // scratch app data, which readOrCreateMcpToken (src/main/index.ts) reads instead of making one.
+  if (token !== undefined) writeFileSync(join(appData, 'mcp-token.txt'), `${token}\n`, { encoding: 'utf8' })
   const app = await launchElectron({
     env: { AVKIT_APP_DATA: appData },
   })
@@ -88,7 +90,7 @@ function tomlString(text: string, key: string): string | undefined {
   return line === undefined ? undefined : (JSON.parse(line.slice(key.length + 3)) as string)
 }
 
-test('AC-71.15 Codex prompt carries execPath and app data, Copy prompt fills the clipboard, Claude Desktop disables scope', async () => {
+test('AC-71.15 Codex prompt carries execPath and app data, Claude Desktop disables scope', async () => {
   const { app, appData } = await launchApp()
   try {
     const page = await app.firstWindow()
@@ -103,15 +105,7 @@ test('AC-71.15 Codex prompt carries execPath and app data, Copy prompt fills the
     expect(tomlString(text, 'AVKIT_APP_DATA')).toBe(appData)
     expect(tomlString(text, 'ELECTRON_RUN_AS_NODE')).toBe('1')
 
-    // (b) Copy prompt: the main-process clipboard holds exactly the viewer text.
-    // Clipboard listeners (Windows clipboard history) lock the clipboard right after each write, and a
-    // write that meets the lock is dropped silently, so click again until the copy lands (D-94).
-    await app.evaluate(({ clipboard }) => clipboard.writeText('s31b-clipboard-sentinel'))
-    await expect(async () => {
-      await page.getByTestId(MCP_COPY_PROMPT_BTN).click()
-      expect(await app.evaluate(({ clipboard }) => clipboard.readText())).toBe(text)
-    }).toPass({ timeout: 10_000 })
-    await expect(page.getByTestId(MCP_PROMPT_STATUS)).toHaveText('Copied the Codex setup prompt.')
+    // Session 100 (D-1305): (b) Copy prompt runs in copy-system-clipboard.test.ts (gated stage only).
 
     // (c) Claude Desktop has no project file: scope is forced to user and disabled.
     await page.getByTestId(MCP_SCOPE_SELECT).selectOption('project')
@@ -123,8 +117,9 @@ test('AC-71.15 Codex prompt carries execPath and app data, Copy prompt fills the
   }
 })
 
-test('AC-71.15 Advanced starts closed and holds Copy MCP config; no setup prompt contains the token it copies', async () => {
-  const { app } = await launchApp()
+test('AC-71.15 Advanced starts closed and holds Copy MCP config; no setup prompt contains the app token', async () => {
+  const token = randomUUID()
+  const { app, appData } = await launchApp(token)
   try {
     const page = await app.firstWindow()
     await installSettingsSeam(page)
@@ -135,20 +130,9 @@ test('AC-71.15 Advanced starts closed and holds Copy MCP config; no setup prompt
     await expect(page.getByTestId('copy-mcp-btn')).toBeHidden()
     await page.getByTestId(MCP_ADVANCED_SUMMARY).click()
     await expect(page.getByTestId('copy-mcp-btn')).toBeVisible()
-    // Same clipboard-lock race as (b): click again until the copy lands (D-94). An empty read is a lost race too.
-    await app.evaluate(({ clipboard }) => clipboard.writeText('s31b-clipboard-sentinel'))
-    let copiedText = ''
-    await expect(async () => {
-      await page.getByTestId('copy-mcp-btn').click()
-      copiedText = await app.evaluate(({ clipboard }) => clipboard.readText())
-      expect(copiedText).not.toBe('s31b-clipboard-sentinel')
-      expect(copiedText).not.toBe('')
-    }).toPass({ timeout: 10_000 })
-    const copied = JSON.parse(copiedText) as { AVKIT_API_TOKEN?: string }
-    const token = copied.AVKIT_API_TOKEN ?? ''
-    expect(token.length).toBeGreaterThan(0)
+    // Session 100 (D-1305): (d)'s Copy MCP config read runs in copy-system-clipboard.test.ts (gated stage only).
 
-    // (e) No viewer text for any client, at any scope it offers, contains that token.
+    // (e) No viewer text for any client, at any scope it offers, contains the app's token (seeded at launch, D-1307).
     for (const [client, label] of CLIENT_SET) {
       const scopes: Array<'user' | 'project'> = PROJECT_CLIENTS.includes(client) ? ['user', 'project'] : ['user']
       for (const scope of scopes) {
@@ -159,6 +143,8 @@ test('AC-71.15 Advanced starts closed and holds Copy MCP config; no setup prompt
         expect(text.includes(token), `${client}-${scope}`).toBe(false)
       }
     }
+    // Session 100 (D-1327): the app read the seeded token and kept it, so (e) checked the token it uses.
+    expect(readFileSync(join(appData, 'mcp-token.txt'), 'utf8')).toBe(`${token}\n`)
   } finally {
     await app.close()
   }

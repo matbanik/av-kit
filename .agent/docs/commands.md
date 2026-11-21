@@ -66,6 +66,8 @@ $env:ELECTRON_RUN_AS_NODE=$null; npm --prefix ui run dev
 # Runtime: build UI before real Electron tests.
 $env:ELECTRON_RUN_AS_NODE=$null; npm --prefix ui run test:e2e
 # The clipboard spec capture-system-clipboard.test.ts skips itself unless AVKIT_E2E_CLIPBOARD_GATED=1; never set it on the dev PC: only the second Windows host's gated stage sets it (.agent/docs/e2e-remote-host.md).
+# Any E2E launch without AVKIT_E2E_CLIPBOARD_GATED=1 runs with the clipboard guard (ui/tests/e2e/clipboard-guard.cjs) and fails a test that touches the system clipboard with CLIPBOARD_GUARD: (Session 100).
+# A spec that needs the system clipboard belongs in a gated file named in tools/e2e_host/known-failures.json, never in a file the dev PC runs.
 ```
 
 > [!IMPORTANT]

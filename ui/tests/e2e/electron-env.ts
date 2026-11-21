@@ -2,7 +2,7 @@
 // Playwright import, so the Vitest unit tests (ui/tests/unit/e2e-harness.test.ts) load them
 // directly.
 import { tmpdir } from 'node:os'
-import { dirname, isAbsolute, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -21,6 +21,12 @@ export const MAIN_ERROR_LOG_ENV = 'AVKIT_E2E_MAIN_ERROR_LOG'
 
 /** The preload that watches the main process for uncaught exceptions. */
 export const MAIN_ERROR_WATCH = resolve(here, 'main-error-watch.cjs')
+
+/** The preload that keeps a launch off the system clipboard (Session 100, D-1310, D-1320). */
+export const CLIPBOARD_GUARD_WATCH = resolve(here, 'clipboard-guard.cjs')
+
+/** The variable that tells clipboard-guard.cjs where to append its log (D-1321). */
+export const CLIPBOARD_GUARD_LOG_ENV = 'AVKIT_E2E_CLIPBOARD_GUARD_LOG'
 
 type Env = Record<string, string | undefined>
 
@@ -87,4 +93,55 @@ export function requireScratchAppData(env: Env = {}): string {
     if (rel !== '' && !rel.startsWith('..') && !isAbsolute(rel)) return value
   }
   throw new Error('launchElectron needs a scratch AVKIT_APP_DATA under tmpdir(): ' + String(value))
+}
+
+/** Only the gated stage on the second Windows host sets this to 1 (Session 98 D-1282). */
+const CLIPBOARD_GATE_ENV = 'AVKIT_E2E_CLIPBOARD_GATED'
+
+/** The prefix of every guard failure message. */
+const CLIPBOARD_GUARD_PREFIX = 'CLIPBOARD_GUARD:'
+
+/**
+ * The Node arguments that preload the clipboard guard (Session 100, D-1310): none when
+ * AVKIT_E2E_CLIPBOARD_GATED is exactly 1, the guard for every other launch.
+ */
+export function clipboardGuardArgs(env: Env = process.env): string[] {
+  return env[CLIPBOARD_GATE_ENV] === '1' ? [] : ['-r', CLIPBOARD_GUARD_WATCH]
+}
+
+/**
+ * One launch's guard log (D-1321): beside the launch's phase lines when a diag folder is set, so
+ * it is kept; else in the launch's scratch folder, which close() deletes.
+ */
+export function clipboardGuardLogPath(scratch: string, diag: string | null, launch: number): string {
+  return diag === null ? join(scratch, 'clipboard.jsonl') : join(diag, `clipboard-${launch}.jsonl`)
+}
+
+/**
+ * The guard's verdict on one launch's log (D-1321): ok only when the guard installed and
+ * recorded no call. Otherwise the message names the first problem: a missing log, a line that is
+ * not a JSON object (numbered from 1), an install failure, no install, or the calls in log order.
+ */
+export function clipboardGuardVerdict(text: string | null): { ok: boolean; message: string } {
+  const fail = (what: string): { ok: boolean; message: string } => ({ ok: false, message: `${CLIPBOARD_GUARD_PREFIX} ${what}` })
+  if (text === null) return fail('the guard log is missing')
+  const rows: Array<Record<string, unknown>> = []
+  const lines = text.split('\n')
+  for (let i = 0; i < lines.length; i += 1) {
+    if (lines[i].trim() === '') continue
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(lines[i])
+    } catch {
+      parsed = undefined
+    }
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) return fail(`invalid guard log line ${i + 1}`)
+    rows.push(parsed as Record<string, unknown>)
+  }
+  const failed = rows.filter((row) => typeof row.failed === 'string').map((row) => String(row.failed))
+  if (failed.length > 0) return fail(`the guard failed to install: ${failed.join(', ')}`)
+  if (!rows.some((row) => row.installed === true)) return fail('the guard was never installed')
+  const calls = rows.filter((row) => typeof row.call === 'string').map((row) => String(row.call))
+  if (calls.length > 0) return fail(`clipboard call(s) in a launch without ${CLIPBOARD_GATE_ENV}=1: ${calls.join(', ')}`)
+  return { ok: true, message: '' }
 }

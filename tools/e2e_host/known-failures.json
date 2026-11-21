@@ -2,6 +2,7 @@
   "known": [],
   "skip": [],
   "gated": [
-    {"label": "mini-air", "file": "capture-system-clipboard.test.ts", "reason": "system clipboard spec; runs only when the session probe reads no remote session (D-1269)"}
+    {"label": "mini-air", "file": "capture-system-clipboard.test.ts", "reason": "system clipboard spec; runs only when the session probe reads no remote session (D-1269)"},
+    {"label": "mini-air", "file": "copy-system-clipboard.test.ts", "reason": "system clipboard spec; runs only when the session probe reads no remote session (D-1305)"}
   ]
 }

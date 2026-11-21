@@ -14,8 +14,12 @@ import { _electron, test, type ElectronApplication, type TestInfo } from '@playw
 import { diagDir, installMainDiag, phaseLine, runId, type PhaseRow } from './e2e-diag'
 
 import {
+  CLIPBOARD_GUARD_LOG_ENV,
   MAIN_ERROR_LOG_ENV,
   MAIN_ERROR_WATCH,
+  clipboardGuardArgs,
+  clipboardGuardLogPath,
+  clipboardGuardVerdict,
   electronEnv,
   mainErrorRecords,
   requireScratchAppData,
@@ -129,12 +133,19 @@ export async function launchElectron({ main, env = {}, pointerShield, args }: La
   }
   const dir = mkdtempSync(join(tmpdir(), 'avkit-e2e-main-'))
   const log = join(dir, 'errors.jsonl')
+  // Session 100 (D-1310, D-1321): the clipboard guard is preloaded unless the gated stage runs.
+  const guardArgs = clipboardGuardArgs(process.env)
+  const guardLog = clipboardGuardLogPath(dir, diag, launch)
   let app: ElectronApplication
   mark('launch-start')
   try {
     app = await _electron.launch({
-      args: ['-r', MAIN_ERROR_WATCH, main ?? DEFAULT_MAIN, ...(args ?? [])],
-      env: electronEnv(process.env, { ...env, [MAIN_ERROR_LOG_ENV]: log }),
+      args: ['-r', MAIN_ERROR_WATCH, ...guardArgs, main ?? DEFAULT_MAIN, ...(args ?? [])],
+      env: electronEnv(process.env, {
+        ...env,
+        [MAIN_ERROR_LOG_ENV]: log,
+        ...(guardArgs.length > 0 ? { [CLIPBOARD_GUARD_LOG_ENV]: guardLog } : {}),
+      }),
     })
   } catch (error) {
     rmSync(dir, { recursive: true, force: true })
@@ -163,7 +174,21 @@ export async function launchElectron({ main, env = {}, pointerShield, args }: La
       mark('close-end')
       await waitForExit(child)
       mark('exit')
-      await checkMainErrors(dir, log)
+      // Read first: checkMainErrors deletes the scratch folder, which may hold the guard log.
+      const guardText = guardArgs.length === 0 ? undefined : existsSync(guardLog) ? readFileSync(guardLog, 'utf8') : null
+      let mainError: unknown = undefined
+      try {
+        await checkMainErrors(dir, log)
+      } catch (error) {
+        mainError = error
+      }
+      const verdict = guardText === undefined ? { ok: true, message: '' } : clipboardGuardVerdict(guardText)
+      if (verdict.ok) {
+        if (mainError !== undefined) throw mainError
+        return
+      }
+      const mainMessage = mainError === undefined ? '' : mainError instanceof Error ? mainError.message : String(mainError)
+      throw new Error([verdict.message, mainMessage].filter((m) => m !== '').join('\n'))
     })()
     return closing
   }

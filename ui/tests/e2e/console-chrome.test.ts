@@ -74,7 +74,8 @@ test('C1-4 close via X Escape and header toggle', async () => {
   await app.close()
 })
 
-test('C1-5 copy writes clipboard and log-to-file PUTs settings/app', async () => {
+// Session 100 (D-1305): C1-5's copy step runs in copy-system-clipboard.test.ts (gated stage only).
+test('C1-5 log-to-file PUTs settings/app', async () => {
   const { app, page } = await firstWindow()
   const putBodies: string[] = []
   await page.context().route((url) => url.pathname.includes('/settings/app'), async (route) => {
@@ -87,10 +88,6 @@ test('C1-5 copy writes clipboard and log-to-file PUTs settings/app', async () =>
   await expect(page.getByTestId('header-console-btn')).toBeVisible()
   await page.getByTestId('header-console-btn').click()
   await expect(page.getByTestId('console-panel')).toBeVisible()
-  const visibleLogs = await page.locator('[data-testid="console-panel"] pre').innerText()
-  await page.getByTestId('console-copy').click()
-  const clipboard = await app.evaluate(({ clipboard }) => clipboard.readText())
-  expect(clipboard).toBe(visibleLogs)
   await page.getByTestId('console-log-to-file').click()
   await expect.poll(() => putBodies.length).toBe(1)
   expect(putBodies[0]).toBe(JSON.stringify({ log_to_file: true }))

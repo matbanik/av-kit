@@ -221,7 +221,9 @@ The gated report is never matched against `known`.
 
 `ui/tests/e2e/capture-system-clipboard.test.ts` holds the tests that write the system clipboard.
 It skips itself unless `AVKIT_E2E_CLIPBOARD_GATED=1`, which only this stage sets, never the dev
-PC. When the request names gated files, the launcher runs the main stage first (every spec file
+PC. Since Session 100 the stage runs two gated files, this one and
+`ui/tests/e2e/copy-system-clipboard.test.ts`, in the order `known-failures.json` lists them.
+When the request names gated files, the launcher runs the main stage first (every spec file
 minus `skip` and `gated`, with `stage.txt` set to `main`), then reads the session probe into
 `probe-before.json`. Only when that probe reads `none` does it write `gated` to `stage.txt`,
 call `AvStage -Gated` on `results\<run-id>\gated\` (the variable is set for that child alone),
@@ -278,6 +280,37 @@ Known risks of the stage:
   clipboard, which RustDesk can sync to the remote side (D-1283).
 - `check` reads elevated from session 0; the gating probe reads with the task's Limited token in
   the desktop session, so the two can differ.
+
+## The dev-PC clipboard guard (Session 100)
+
+Session 100 keeps every E2E launch off the system clipboard unless it runs in the gated
+stage. The clipboard tests of `console-chrome.test.ts`, `mcp-setup-prompt.test.ts` and
+`settings.test.ts` moved to `ui/tests/e2e/copy-system-clipboard.test.ts`, the second gated
+file in `tools/e2e_host/known-failures.json`; like the capture file it skips itself unless
+`AVKIT_E2E_CLIPBOARD_GATED=1`.
+
+`CLIPBOARD_GUARD` is a preload, `ui/tests/e2e/clipboard-guard.cjs`, that `launchElectron`
+(`electron-app.ts`) adds with `-r` to every launch unless `AVKIT_E2E_CLIPBOARD_GATED` is
+exactly `1`. Only the gated stage sets that variable, so the mini-air's main stage runs
+guarded, as the dev PC does. The guard replaces each `electron.clipboard` function with a
+recorder that never calls the original: the writers write nothing and the readers return
+empty values (`''`, `[]`, `false`, an empty image or buffer), so a guarded test can neither
+change nor read what the desktop copied. In each page it replaces `navigator.clipboard`'s
+methods and `execCommand('copy'|'cut'|'paste')`; it also wraps the `webContents` copy, cut
+and paste calls, blocks the copy and paste chords and denies the two clipboard permissions.
+Each call is appended to the launch's guard log, and the launch's `close()` then fails with a
+message that starts `CLIPBOARD_GUARD:` and names the calls. A launch whose guard does not
+fully install exits 70 before the app starts; a missing, invalid or install-failed log fails
+the close the same way. A spec that needs the real clipboard belongs in a gated file.
+
+The static scan, `ui/tests/unit/e2e-clipboard-guard.test.ts` (`S100 AC-5`), runs in every
+Vitest run and fails on a clipboard call, a copy or paste chord, a click on a copy control,
+or a direct `_electron.launch(` in `ui/tests/e2e`, outside the gated files that
+`known-failures.json` names and the guard's own two files.
+
+The `E2E-CLIPBOARD-PRIMER-EMPTY` tally (D-1301) counts a run only when its gated outcome is
+`run` and the capture file's two tests both pass; the copy file's tests never decide it
+(D-1314).
 
 ## After `poll-timeout`, `launcher-ended` or a crash
 

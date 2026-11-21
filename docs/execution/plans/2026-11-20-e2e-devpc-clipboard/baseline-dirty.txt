@@ -1,0 +1,43 @@
+?? .agent/context/handoffs/2026-11-20-e2e-devpc-clipboard-plan-critical-review.md
+?? .agent/context/handoffs/2026-11-20-help-quick-start-plan-critical-review.md
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/baseline-dirty-hashes.json
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/baseline-dirty.txt
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/baseline-eol.json
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/baseline-scope.json
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/baseline-skip-hashes.json
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/baseline.ps1
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/baseline.sha
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/eol-check.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/flake-run.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/gated-count.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/guard-check.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/guard-logs.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/host-details-scan.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/host-load.ps1
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/identity.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/implementation-plan.md
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/issue-resolve.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/pins-check.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/red-check.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/session-gate.ps1
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/snapshot-commit.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/split-specs.py
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/task.md
+?? docs/execution/plans/2026-11-20-e2e-devpc-clipboard/writer-scan.py
+?? docs/execution/plans/2026-11-20-help-quick-start/eol-check.py
+?? docs/execution/plans/2026-11-20-help-quick-start/host-wait.py
+?? docs/execution/plans/2026-11-20-help-quick-start/identity.py
+?? docs/execution/plans/2026-11-20-help-quick-start/implementation-plan.md
+?? docs/execution/plans/2026-11-20-help-quick-start/load-run.py
+?? docs/execution/plans/2026-11-20-help-quick-start/quick-start-draft.json
+?? docs/execution/plans/2026-11-20-help-quick-start/red-check.py
+?? docs/execution/plans/2026-11-20-help-quick-start/task.md
+# foreign (Session 99 folder, named only): .agent/context/handoffs/2026-11-20-help-quick-start-plan-critical-review.md
+# foreign (Session 99 folder, named only): docs/execution/plans/2026-11-20-help-quick-start/eol-check.py
+# foreign (Session 99 folder, named only): docs/execution/plans/2026-11-20-help-quick-start/host-wait.py
+# foreign (Session 99 folder, named only): docs/execution/plans/2026-11-20-help-quick-start/identity.py
+# foreign (Session 99 folder, named only): docs/execution/plans/2026-11-20-help-quick-start/implementation-plan.md
+# foreign (Session 99 folder, named only): docs/execution/plans/2026-11-20-help-quick-start/load-run.py
+# foreign (Session 99 folder, named only): docs/execution/plans/2026-11-20-help-quick-start/quick-start-draft.json
+# foreign (Session 99 folder, named only): docs/execution/plans/2026-11-20-help-quick-start/red-check.py
+# foreign (Session 99 folder, named only): docs/execution/plans/2026-11-20-help-quick-start/task.md
