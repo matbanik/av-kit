@@ -2004,8 +2004,8 @@ issues:
       Triage 2026-11-20: anthropics/claude-code#98256 is still open (last updated 2026-11-20). DIALOG_FALLBACK stays (D-232).
     verification:
       last_checked: '2026-11-20'
-      method: gh api repos/anthropics/claude-code/issues/98256 (read only)
-      result: open, last updated 2026-11-20, 11 comments
+      method: gh api repos/anthropics/claude-code/issues/98256 (read only; C:/Temp/av-kit/triage-1120b/upstream.txt)
+      result: open, last updated 2026-11-20T17:38:00Z, 11 comments
     category: UPSTREAM
     priority: P3
     meu_links:
@@ -2283,7 +2283,7 @@ issues:
       - MEU-98
     verification:
       last_checked: '2026-11-20'
-      method: where espeak-ng; Program Files and Program Files (x86) eSpeak NG folders
+      method: where espeak-ng; Program Files and Program Files (x86) eSpeak NG folders (C:/Temp/av-kit/triage-1120b/espeak.txt)
       result: 'absent: espeak-ng not on PATH and neither install folder exists; AC-74.11 still not run'
     notes: |-
       Triage 2026-11-04: Blocked on Mat installing eSpeak NG 1.52 and running AC-74.11 in the dev app; Session 42's row 10 then turns [x].
@@ -2929,8 +2929,8 @@ issues:
     blast_radius: ui/tests/e2e/capture-inbox.test.ts in the full Electron run (AC-67.24 and AC-67.35 seen). A miss fails the fail-fast session gate at ui-electron, so the run has to be repeated.
     verification:
       last_checked: '2026-11-20'
-      method: the mini-air runs r20261119T074154Z-a43cdb2, r20261119T084412Z-a43cdb2, r20261119T135541Z-ed48964 and r20261119T143010Z-484d4ab (summary.json and host/report.json); Session 97's dev-PC final full run (epf-gate-1 receipt); C:/Temp/av-kit/triage-1120/recheck-runs.txt
-      result: no test or worker teardown timeout, no retry and no capture-inbox result over 45 s in five full runs of 232 on two hosts
+      method: 'Session 98''s four full runs: the mini-air main stages r20261120T215925Z-9ac9adc and r20261120T230628Z-ef4842e (237 of 237, flaky 0, each), the dev-PC row-7b full run and the final gate''s dev-PC full run (237 of 237 each); .agent/context/handoffs/2026-11-20-e2e-clipboard-specs-handoff.md'
+      result: no launch or teardown hang and no flaky result in four more full runs of 237 on two hosts
     category: MONITORING
     priority: P4
     related:
@@ -2949,6 +2949,8 @@ issues:
       Triage 2026-11-18 (D-1197): back to MONITORING P4. Session 91 ran 13 instrumented full or watch runs under load with no hang. Reopen as TECH-DEBT P3 on the next hang, and classify it by the last phase in that run's phases.jsonl.
 
       Triage 2026-11-20 (D-1263): stays MONITORING P4. Five more clean full runs (four on the mini-air, one on the dev PC) since D-1197, none with the hang. D-1197's reopen rule stands.
+
+      Triage 2026-11-20 (second pass): four more clean full runs in Session 98. D-1197's reopen rule stands.
     enrichment:
       questions_asked: []
       answers: []
@@ -3635,15 +3637,18 @@ issues:
     blast_radius: One failure in H1-2 attempt 4, the first test of that run. It passed in attempts 2, 3, 5 and 6 and 8 of 8 repeats after ECN-9. A failure here stops a gate at ui-electron and costs a rerun. The primer is a precondition of the test, so it says nothing about the product.
     verification:
       last_checked: '2026-11-20'
-      method: Session 98 ecs-run-8-check.txt, the mini-air run r20261120T230628Z-ef4842e (summary.json gated object and host/gated/report.json); the run r20261120T215925Z-9ac9adc (snapshot 9ac9adc; ecs-run-8-r1-check.txt and ecs-judge-gate-8-r1.txt) was superseded under S13 after the D-1284 fix, with the same outcome
-      result: 'gated outcome run, reason no-remote-session: capture-system-clipboard.test.ts tests 2 expected 2 unexpected 0 flaky 0 skipped 0, new []; AC-88.12''s primer passed in this gated run and in the superseded run; stays open until repeated gated passes'
+      method: 'Session 98''s gated stage on the mini-air: r20261120T215925Z-9ac9adc and r20261120T230628Z-ef4842e (summary.json gated object)'
+      result: 'AC-88.12 ran in both: outcome run, reason no-remote-session, 2 of 2 expected; the primer did not fail'
     category: MONITORING
     priority: P4
     related:
       - E2E-MAIN-PROCESS-ERRORS-UNWATCHED
       - E2E-CLIPBOARD-SPECS-UNGATED
     meu_links: []
-    notes: 'Triage 2026-11-20 (D-1262): stays MONITORING P4, a watch item of Session 98. Its spec has run in no gate since Session 91, so ''not seen again'' says nothing; Session 98 runs AC-88.12 on the mini-air again, and a primer failure there reopens this with that run''s receipts. Close it only after AC-88.12 has passed in repeated gated runs.'
+    notes: |-
+      Triage 2026-11-20 (D-1262): stays MONITORING P4, a watch item of Session 98. Its spec has run in no gate since Session 91, so 'not seen again' says nothing; Session 98 runs AC-88.12 on the mini-air again, and a primer failure there reopens this with that run's receipts. Close it only after AC-88.12 has passed in repeated gated runs.
+
+      Triage 2026-11-20 (D-1301): stays MONITORING P4 with a close bar. Close it once five gated runs with outcome run and 2 of 2 expected have passed with no primer failure, counted from r20261120T215925Z-9ac9adc; two have passed so far, and Session 100's acceptance run adds one. A skipped or voided gated stage does not count either way.
     enrichment:
       questions_asked: []
       answers: []
@@ -3663,6 +3668,21 @@ issues:
             engine: none
             sources: []
           reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue orchestrating the next prompt session and the session after if there is any''. The test behind it has been excluded from every full run, so its absence is no evidence. Session 98 runs it again at no extra cost. Closing now would drop the record just before the first chance to see it. M items: none. Two-way.'
+        - id: D-1301
+          stage: triage
+          question: AC-88.12 passed in Session 98's two gated runs. When does this issue close?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: Not yet. MONITORING P4 until five gated runs with outcome run and 2 of 2 expected pass with no primer failure, counted from r20261120T215925Z-9ac9adc (two so far); skipped and voided stages do not count.
+          source_tag: Local Canon
+          precedents:
+            - '.agent/context/grouping/2026-11-20-e2e-clipboard-specs-session-grouping.md D-1262: close only after repeated gated passes'
+            - 'CAPTURE-E2E-LAUNCH-TEARDOWN-HANG: a load flake that returned after 23 days unseen'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue with next prompt''. The primer failed once in many dev-PC runs, so two passes on an idle host prove little, but an open watch item with no bar never closes. Five counted runs gives a number the next triage can check from summary.json. Closing now would drop the record just as its test started running again. M items: none. Two-way.'
       decided_by: agent
   - id: SETTINGS-DRAFT-STALE-BASELINE
     title: An unsaved capture settings edit freezes the other capture settings at their old values
@@ -4725,8 +4745,8 @@ issues:
     resolution_path: 'Watch item in MEU-125 (Session 57 release-rc2): its plan names this issue, and if W2-4 fails again there or in an earlier gate, the fix lands before the release. The likely fix is to wait for the first load to settle before the reload.'
     verification:
       last_checked: '2026-11-20'
-      method: the mini-air runs r20261119T074154Z-a43cdb2, r20261119T084412Z-a43cdb2, r20261119T135541Z-ed48964 and r20261119T143010Z-484d4ab (summary.json and host/report.json); Session 97's dev-PC final full run; C:/Temp/av-kit/triage-1120/recheck-runs.txt
-      result: W2-4 passed in all five full runs; transcript-queue.test.ts 11 of 11 each time; no ERR_ABORTED
+      method: 'Session 98''s four full runs: the mini-air main stages r20261120T215925Z-9ac9adc and r20261120T230628Z-ef4842e (237 of 237, flaky 0, each), the dev-PC row-7b full run and the final gate''s dev-PC full run (237 of 237 each); .agent/context/handoffs/2026-11-20-e2e-clipboard-specs-handoff.md'
+      result: every test expected in all four runs, so W2-4 passed each time; no ERR_ABORTED
     category: MONITORING
     priority: P4
     related:
@@ -4737,6 +4757,8 @@ issues:
       Session 53 closeout D-362 (Mat 2026-11-07). Session 53 RULE-4 governs a recurrence in a gate: rerun once unchanged, keep the failed attempt's receipts and state both attempts.
 
       Triage 2026-11-20 (D-1264): stays MONITORING P4. MEU-125's watch window ended without a repeat, and W2-4 passed in five more full runs on two hosts. Session 53 RULE-4 still governs a recurrence in a gate.
+
+      Triage 2026-11-20 (second pass): W2-4 passed in Session 98's four full runs. Stays MONITORING P4 (D-362).
     enrichment:
       questions_asked: []
       answers: []
@@ -6079,15 +6101,15 @@ issues:
           reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue orchestrating the next prompt session and the session after if there is any''. The exclusion was meant for two tests that write the system clipboard, but it is by file, so five tests of user-visible capture actions lost their gate too, and no session owns bringing them back. The fix is in test files and tooling only, and the second host now gives the clipboard tests a desktop that is not Mat''s. Doing nothing keeps seven tests unrun for as long as every plan copies the exclusion. M items: M-8 (it adds a session and changes the 2026-11-18 grouping''s rule that the clipboard specs stay skipped on the mini-air). Two-way.'
       decided_by: agent
   - id: E2E-DEVPC-CLIPBOARD-SPECS
-    title: Two E2E specs write the dev PC's system clipboard in every full run
-    severity: low
+    title: Four E2E tests write the dev PC's system clipboard in every full run, two of them with the test app's API token
+    severity: medium
     component: ui
     status: open
     discovered: '2026-11-20'
-    root_cause: 'Two E2E tests outside the clipboard spec file still write the real system clipboard: C1-5 (ui/tests/e2e/console-chrome.test.ts:77, the console Copy button) and AC-71.15 (ui/tests/e2e/mcp-setup-prompt.test.ts:91, Copy prompt). Session 57 RULE-4 keeps clipboard-writing specs off the dev PC''s canonical command, and Session 98 moved the two capture clipboard tests into capture-system-clipboard.test.ts behind a guard, but these two tests were not in its scope and run in every dev-PC full run.'
-    blast_radius: Every dev-PC full E2E run overwrites whatever the person at the desk last copied with a log line and a setup prompt. No test fails and no product code is affected; the cost is a lost clipboard entry on the developer's machine during a run, and the rule that the dev PC never runs clipboard specs is only partly true until these two are gated or stubbed.
+    root_cause: 'Four E2E tests outside the gated clipboard file still reach the real system clipboard through the main process: C1-5 (ui/tests/e2e/console-chrome.test.ts:77, the console Copy button), AC-71.15 (b) (mcp-setup-prompt.test.ts:91, Copy prompt), AC-71.15 (d) (mcp-setup-prompt.test.ts:126, Copy MCP config) and W4-3 (settings.test.ts:195, which clicks copy-mcp-btn at :216). Copy MCP config goes through the copy-mcp-config IPC (ui/src/main/ipc.ts:419), which writes a JSON payload with AVKIT_API_TOKEN through writeClipboard (ui/src/main/index.ts:411). Session 57 RULE-4 keeps clipboard-writing specs off the dev PC, and Session 98 gated the two capture clipboard tests, but these four were outside its scope; Session 98 (D-1277) named only the first two.'
+    blast_radius: Every dev-PC full E2E run overwrites whatever the person at the desk last copied, about four times, with a log snapshot, a setup prompt and twice a JSON block that holds the throwaway test app's API token; with Windows clipboard history on, those entries stay in the history list. No test fails and no product code is affected. The rule that the dev PC never runs clipboard specs (CLIPBOARD_NEVER_DEVPC) is only partly true, and nothing stops a new spec from adding another writer.
     category: TECH-DEBT
-    priority: P4
+    priority: P3
     related:
       - E2E-CLIPBOARD-SPECS-UNGATED
       - e2e
@@ -6097,3 +6119,70 @@ issues:
       Found in Session 98 (D-1277), which split the capture clipboard tests and left these two for the next triage.
       D-1282: the guard keeps the new clipboard file off the canonical command, but C1-5 and AC-71.15 still write the clipboard in every dev-PC full run.
       D-1281: a stale RustDesk --cm window can outlive a connection and skip the mini-air's gated stage until it is closed; gated.detail shows its start time.
+
+      Triage 2026-11-20 (D-1299): corrected to four tests (AC-71.15 (d) and W4-3 were missed) and raised to medium P3, because two of them put an API token on the developer's clipboard. Grouped as Session 100 e2e-devpc-clipboard in .agent/context/grouping/2026-11-20-e2e-devpc-clipboard-session-grouping.md, with no MEU (test files and E2E tooling only).
+    verification:
+      last_checked: '2026-11-20'
+      method: git grep over ui/tests/e2e for clipboard calls and copy-button test ids outside capture-system-clipboard.test.ts; the copy-mcp-config IPC (ui/src/main/ipc.ts:419) and writeClipboard (ui/src/main/index.ts:411)
+      result: 'four writers: C1-5, AC-71.15 (b), AC-71.15 (d) and W4-3; the last two copy the AVKIT_API_TOKEN payload'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1299
+          stage: triage
+          question: Session 98 found two dev-PC specs that still write the system clipboard. Is the record right, and is it worth a session?
+          resolution: autonomous
+          class: two-way
+          mandatory:
+            - M-8
+          chosen: 'Correct the record to four tests (C1-5, AC-71.15 (b), AC-71.15 (d), W4-3), raise it to medium P3, and group it as Session 100 e2e-devpc-clipboard with no MEU: move their clipboard assertions into the gated stage on the mini-air, and make any clipboard write in a dev-PC E2E launch fail the test.'
+          source_tag: Local Canon
+          precedents:
+            - '.agent/context/grouping/2026-11-20-e2e-clipboard-specs-session-grouping.md D-1265 to D-1267: the same fix for the capture clipboard tests'
+            - 'Session 57 RULE-4 and Session 98 CLIPBOARD_NEVER_DEVPC: the dev PC never runs clipboard specs'
+            - 'Triage priority matrix (.agent/workflows/issue-triage.md §4): medium severity and standalone is P3'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue with next prompt''. A search for copy buttons, not only clipboard calls, found two more writers, and both copy the test app''s API token, which Windows clipboard history can keep. The token belongs to a throwaway app data folder, so the risk is small, but Mat loses his clipboard in every run and the rule meant to protect it is untrue. Session 98''s gated stage already gives these tests a host, so the fix is test files and tooling only. Doing nothing keeps four writes per run and lets a new spec add a fifth. M items: M-8 (it adds a session). Two-way.'
+      decided_by: agent
+  - id: TOOLING-RUFF-TOOLS-UNCLEAN
+    title: ruff check and ruff format --check fail over tools/ outside CI's lint scope
+    severity: low
+    component: agent
+    status: open
+    discovered: '2026-11-20'
+    root_cause: CI lints packages/, tests/ and tools/deps_report.py only (.github/workflows/ci.yml:53), so the register and MEU tools were never held to ruff. `ruff check tools/` reports 10 errors in 7 files under tools/issue_triage* and tools/meu_status* (I001 x7, E501 x3; 7 auto-fixable), and `ruff format --check tools/` would reformat 15 files.
+    blast_radius: No runtime effect and CI stays green. Any plan that lints its own Python together with a tools/ path it did not change has to narrow its lint scope by hand, as Session 98 did (D-1287).
+    verification:
+      last_checked: '2026-11-20'
+      method: uv run ruff check tools/ and ruff format --check tools/ at e8207e1 (C:/Temp/av-kit/triage-1120b/ruff-tools.txt, ruff-fmt-tools.txt)
+      result: 10 errors in 7 files; 15 files would be reformatted, 24 already formatted
+    category: TECH-DEBT
+    priority: P4
+    related:
+      - tooling
+      - lint
+    meu_links: []
+    notes: 'Triage 2026-11-20 (D-1300): TECH-DEBT P4, not grouped. Session 99 (MEU-162) runs tools/meu_status.py while this triage runs, so a reformat now would touch a tool another session is using. Fix it in the next session that changes these tools, with ruff format and ruff check --fix in their own commit, and widen CI''s scope to tools/ then.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decision_log:
+        - id: D-1300
+          stage: triage
+          question: Session 98 left 10 ruff errors in tools/ that CI does not lint. Register them, and fix them now?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: 'Register TOOLING-RUFF-TOOLS-UNCLEAN as TECH-DEBT P4, not grouped: the next session that changes those tools runs ruff format and ruff check --fix over them and widens CI''s lint scope to tools/.'
+          source_tag: Local Canon
+          precedents:
+            - 'docs/execution/plans/2026-11-20-e2e-clipboard-specs/implementation-plan.md D-1287: the gate''s lint scope narrowed around these errors'
+            - 'TOOLING-SHARED-REGISTRY-COUPLING (D-912): a tooling fix rides the next change to its file'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue with next prompt''. The errors are import order and line length, with no runtime effect, but every plan must work around them. The formatter would rewrite 15 files, so it is a whole-folder change, not a quick lint row, and Session 99 is using tools/meu_status.py now. Grouping it into Session 100 would mix a tooling reformat into a test-only session. Doing nothing without a record would leave the workaround undocumented. M items: none. Two-way.'
+      decided_by: agent
