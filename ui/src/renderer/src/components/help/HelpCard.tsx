@@ -6,6 +6,8 @@ import {
   takeHeldHelpToggle,
 } from '../../features/settings/settings-commands'
 import { ariaKeyshortcuts } from '../../registry/shortcuts'
+import { shotSize, shotUrl } from './help-shots'
+import { QUICK_START, type QuickStartPage, type QuickStartShot } from './quick-start'
 
 export type HelpSection = {
   id: string
@@ -38,6 +40,65 @@ function readExpanded(feature: string, tabKey: string): boolean {
   return false
 }
 
+/** One screenshot of the quick start, with a light and a dark image (THEME_SHOT_CSS hides one). */
+function HelpShot({ shot }: { shot: QuickStartShot }) {
+  const light = shotUrl(shot.name, 'light')
+  const dark = shotUrl(shot.name, 'dark')
+  const size = shotSize(shot.name)
+  if (light === null || dark === null || size === null) {
+    return null
+  }
+  return (
+    <figure
+      data-testid="help-shot"
+      data-shot={shot.name}
+      data-shot-steps={shot.steps.join(',')}
+      className="help-shot"
+    >
+      <img
+        className="help-shot__img--light"
+        src={light}
+        alt={shot.alt}
+        width={size.width}
+        height={size.height}
+        loading="lazy"
+        decoding="async"
+      />
+      <img
+        className="help-shot__img--dark"
+        src={dark}
+        alt={shot.alt}
+        width={size.width}
+        height={size.height}
+        loading="lazy"
+        decoding="async"
+      />
+      <figcaption>{shot.alt}</figcaption>
+    </figure>
+  )
+}
+
+/** The intro, the numbered steps and the screenshots; shown only while the search is empty. */
+function QuickStart({ page }: { page: QuickStartPage }) {
+  return (
+    <>
+      <p data-testid="help-quick-start-intro" className="text-sm">
+        {page.intro}
+      </p>
+      <ol data-testid="help-quick-start" className="help-quick-start">
+        {page.steps.map((step, index) => (
+          <li key={index} data-testid="help-quick-start-step" data-step={index + 1}>
+            {step.text}
+          </li>
+        ))}
+      </ol>
+      {page.shots.map((shot) => (
+        <HelpShot key={shot.name} shot={shot} />
+      ))}
+    </>
+  )
+}
+
 function writeExpanded(feature: string, tabKey: string, expanded: boolean): void {
   try {
     localStorage.setItem(storageKey(feature, tabKey), expanded ? 'expanded' : 'collapsed')
@@ -50,6 +111,7 @@ export function HelpCard({ feature, tabKey, sections }: HelpCardProps) {
   const panelId = useId()
   const [expanded, setExpanded] = useState(() => readExpanded(feature, tabKey))
   const [query, setQuery] = useState('')
+  const page = QUICK_START[feature]
 
   useEffect(() => {
     writeExpanded(feature, tabKey, expanded)
@@ -94,6 +156,7 @@ export function HelpCard({ feature, tabKey, sections }: HelpCardProps) {
     }
   }, [feature])
 
+  const searching = query.trim().length > 0
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase()
     if (needle.length === 0) {
@@ -121,6 +184,9 @@ export function HelpCard({ feature, tabKey, sections }: HelpCardProps) {
         <span className="flex items-center gap-2">
           <span aria-hidden="true">ℹ️</span>
           <span>How it works</span>
+          <span data-testid="help-quick-start-hint" className="text-xs font-normal text-muted">
+            {`Quick start · ${page.steps.length} steps`}
+          </span>
         </span>
         <span aria-hidden="true">{expanded ? '−' : '+'}</span>
       </button>
@@ -139,11 +205,17 @@ export function HelpCard({ feature, tabKey, sections }: HelpCardProps) {
               className="rounded border border-border bg-bg px-2 py-1"
             />
           </label>
+          {searching ? null : (
+            <>
+              <QuickStart page={page} />
+              <h3 className="font-medium text-sm">More about this page</h3>
+            </>
+          )}
           {filtered.map((section) => (
-            <article key={section.id} data-help-section={section.id}>
-              <h3 className="font-medium text-sm">{section.title}</h3>
+            <details key={section.id} data-help-section={section.id} open={searching} className="help-topic">
+              <summary className="font-medium text-sm cursor-pointer">{section.title}</summary>
               <p className="text-sm text-muted mt-1">{section.body}</p>
-            </article>
+            </details>
           ))}
           {filtered.length === 0 ? (
             <p className="text-sm text-muted">No help topics match your search.</p>

@@ -27,9 +27,9 @@ describe('MEU-115 failure-reason copy', () => {
     expect(settingsPage).toContain('Persist to {consoleLogFileLabel(readiness?.logFilePath)}')
     const consoleHelp = SETTINGS_HELP_SECTIONS.find((section) => section.id === 'console')
     expect(consoleHelp?.body).toBe(
-      'Set log_level, log_to_file, and console_visible under app settings. Errors are always written to ' +
-        '{app_data}/logs/console.log; Log to file adds every other line. That path is not configurable. ' +
-        'Open the console panel from the header.',
+      'Set Log level, Log to file and Console visible on the Console card. Errors are always written to ' +
+        'console.log in the logs folder of the app data. Log to file adds every other line. ' +
+        'You cannot change that path. Open the Console panel from the header.',
     )
     expect(source('components/layout/ConsolePanel.tsx')).toContain(
       '<p data-testid="console-log-file-path">Errors always go to {CONSOLE_LOG_FILE_SPEC_PATH}. Turn this on for every line.</p>',

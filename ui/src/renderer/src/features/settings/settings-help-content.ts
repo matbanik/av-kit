@@ -3,27 +3,27 @@ import type { HelpSection } from '../../components/help/HelpCard'
 export const SETTINGS_HELP_SECTIONS: HelpSection[] = [
   {
     id: 'leaf-keys',
-    title: 'Leaf settings keys',
-    body: 'Each card saves individual leaf keys with PUT /settings/{namespace}. Bodies never use dotted paths like namespace plus leaf joined by a dot.',
+    title: 'How each card saves',
+    body: 'Each card shows how it saves next to its name. Most cards save as you type. Convert and Capture need Save. Appearance applies at once. A change on one card does not change a different card.',
   },
   {
     id: 'ffmpeg',
-    title: 'FFmpeg probe',
-    body: 'Browse to your FFmpeg binary and check dependencies to confirm ffmpeg.available before running media jobs.',
+    title: 'Check FFmpeg',
+    body: 'Browse to FFmpeg, then click Check dependencies. Do this before you run media jobs.',
   },
   {
     id: 'mcp',
-    title: 'MCP access',
-    body: 'Copy MCP config to clipboard or pin the API base. Token presence is shown as yes/no — the secret is never displayed.',
+    title: 'MCP setup',
+    body: 'Copy the MCP setup for your client. The app shows only if a token exists. It never shows the token.',
   },
   {
     id: 'console',
     title: 'Console and logging',
-    body: 'Set log_level, log_to_file, and console_visible under app settings. Errors are always written to {app_data}/logs/console.log; Log to file adds every other line. That path is not configurable. Open the console panel from the header.',
+    body: 'Set Log level, Log to file and Console visible on the Console card. Errors are always written to console.log in the logs folder of the app data. Log to file adds every other line. You cannot change that path. Open the Console panel from the header.',
   },
   {
     id: 'startup',
-    title: 'Startup',
-    body: 'Start when I sign in registers a per-user Startup entry. It needs no administrator approval and can be turned off here or in Task Manager → Startup. Start minimized waits in the notification area so F2 still works.',
+    title: 'Start with Windows',
+    body: 'Start when I sign in adds a startup entry for your user only. It needs no administrator approval. Turn it off here or in Task Manager → Startup. Start minimized waits in the notification area, so F2 still works.',
   },
 ]

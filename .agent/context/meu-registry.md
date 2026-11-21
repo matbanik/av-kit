@@ -121,6 +121,7 @@
 | MEU-154 | `gui-ready-line-buffer` | 6.20 | [Phase 6 §READY line buffering (residual)](../../docs/build-plan/06-gui.md#ready-line-buffer-residual) | The main process reads backend output as lines, so a split or repeated ready line publishes the API once. | ✅ approved |
 | MEU-157 | `gui-convert-browse-after-mount` | 6.21 | [Phase 6 §Convert browse waits for the page (residual)](../../docs/build-plan/06-gui.md#convert-browse-after-mount-residual) | A Ctrl+O browse request made before the lazy Convert page listens is held and delivered once when it mounts, so the file picker always opens; AC-97.7 waits for the page. | ✅ approved |
 | MEU-158 | `gui-help-f1-after-mount` | 6.22 | [Phase 6 §F1 help waits for the page (residual)](../../docs/build-plan/06-gui.md#help-f1-after-mount-residual) | An F1 pressed before a lazy page's HelpCard listens is held and toggles the help panel once when the page mounts, so F1 works on the first visit to Convert and Capture. | ✅ approved |
+| MEU-162 | `gui-help-quick-start` | 6.23 | [Phase 6 §Help quick start (residual)](../../docs/build-plan/06-gui.md#help-quick-start-residual) | Each page's help card gets a short quick start: one intro sentence, 4 or 5 numbered steps in ASD-STE100 Strict style and a marked screenshot (two on Settings) in light and dark, taken by script from demo data; the card stays closed on a first visit and its header names the quick start; a unit test fails on step drift and an Electron test proves every step target and image on the real app. | ✅ approved |
 
 
 ## Distribution (P2)

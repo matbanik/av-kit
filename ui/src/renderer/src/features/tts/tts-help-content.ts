@@ -3,27 +3,27 @@ import type { HelpSection } from '../../components/help/HelpCard'
 export const TTS_HELP_SECTIONS: HelpSection[] = [
   {
     id: 'prepare',
-    title: 'Prepare cleanup',
-    body: 'Prepare runs text cleanup steps before generation so punctuation and whitespace are speech-ready.',
+    title: 'Prepare the text',
+    body: 'Prepare cleans the text before you click Generate. It corrects the punctuation and the spaces for speech.',
   },
   {
     id: 'voice',
-    title: 'Voice selection',
-    body: 'Pick a voice and language filter to narrow Kokoro voices. Speed presets adjust playback rate.',
+    title: 'Pick a voice',
+    body: 'Use the language filter to make the voice list shorter. The speed presets make the speech faster or slower.',
   },
   {
     id: 'download',
-    title: 'Model download',
-    body: 'Download fetches a Kokoro variant into your models directory when it is not yet cached locally.',
+    title: 'Get a model',
+    body: 'Get downloads a Kokoro model to your models folder when the model is not there.',
   },
   {
     id: 'load',
-    title: 'Load and unload',
-    body: 'Load mounts the selected variant into memory. Unload frees GPU/CPU resources when switching models.',
+    title: 'Load and Unload',
+    body: 'Load puts the model in memory. Unload frees the memory. Unload the model before you change to a different model.',
   },
   {
     id: 'paste',
-    title: 'File and paste input',
-    body: 'Paste clipboard text or load a .txt/.md file. Large inputs are split using chunk_max_chars from settings.',
+    title: 'Paste or open a file',
+    body: 'Paste the text, or open a .txt or .md file. The app splits long text into parts. Set the part size in Settings.',
   },
 ]

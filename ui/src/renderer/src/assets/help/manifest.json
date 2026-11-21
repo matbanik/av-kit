@@ -1,0 +1,79 @@
+[
+  {
+    "name": "downloader",
+    "page": "downloader",
+    "width": 1091,
+    "height": 330,
+    "bytes": {
+      "light": 15510,
+      "dark": 15760
+    },
+    "stepsHash": "9c5795d99f83398cd48fd773e6547252d5f690d45dc95830491b6dfeedb9e397"
+  },
+  {
+    "name": "transcript",
+    "page": "transcript",
+    "width": 1091,
+    "height": 217,
+    "bytes": {
+      "light": 13766,
+      "dark": 14674
+    },
+    "stepsHash": "a68f37288614161eafff88b92e5c66eac346837b9002c9b12610d6a9081cb37a"
+  },
+  {
+    "name": "tts",
+    "page": "tts",
+    "width": 1075,
+    "height": 500,
+    "bytes": {
+      "light": 25880,
+      "dark": 26094
+    },
+    "stepsHash": "12687530790ce791b96c01263b31a4e0e6bbdbf4c2aec308fc29e9b050fc21d9"
+  },
+  {
+    "name": "convert",
+    "page": "converter",
+    "width": 1091,
+    "height": 386,
+    "bytes": {
+      "light": 25186,
+      "dark": 25420
+    },
+    "stepsHash": "a67d74bace0df722ae783df0f6e2f82c6a56bb261d2889e8228943b00710d266"
+  },
+  {
+    "name": "capture",
+    "page": "capture",
+    "width": 1091,
+    "height": 212,
+    "bytes": {
+      "light": 17280,
+      "dark": 18050
+    },
+    "stepsHash": "daf13885bb7aeb447c50d4b1e1e41226d27443d7c58923426acfb4339efb5721"
+  },
+  {
+    "name": "settings-download",
+    "page": "settings",
+    "width": 804,
+    "height": 102,
+    "bytes": {
+      "light": 5096,
+      "dark": 5076
+    },
+    "stepsHash": "3cdb9b2811d3fd3ff15f1852aa92a43e1af18448c4050b851d3d1cea0e78ba6b"
+  },
+  {
+    "name": "settings-setup",
+    "page": "settings",
+    "width": 804,
+    "height": 645,
+    "bytes": {
+      "light": 11402,
+      "dark": 11776
+    },
+    "stepsHash": "3cdb9b2811d3fd3ff15f1852aa92a43e1af18448c4050b851d3d1cea0e78ba6b"
+  }
+]

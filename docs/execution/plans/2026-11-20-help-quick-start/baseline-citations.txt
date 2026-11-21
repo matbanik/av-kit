@@ -1,0 +1,51 @@
+anchor ui/src/renderer/src/features/downloader/DownloaderPage.tsx:574 at line hits=1 :: <HelpCard feature="downloader"
+anchor ui/src/renderer/src/features/transcript/TranscriptPage.tsx:487 at line hits=1 :: <HelpCard feature="transcript"
+anchor ui/src/renderer/src/features/tts/TTSPage.tsx:307 at line hits=1 :: <HelpCard feature="tts"
+anchor ui/src/renderer/src/features/converter/ConvertPage.tsx:602 at line hits=1 :: <HelpCard feature="converter"
+anchor ui/src/renderer/src/features/capture/CapturePage.tsx:2652 at line hits=1 :: <HelpCard feature="capture"
+anchor ui/src/renderer/src/features/settings/SettingsPage.tsx:624 at line hits=1 :: <HelpCard feature="settings"
+anchor ui/src/renderer/src/components/help/HelpCard.tsx:28 at line hits=1 :: function readExpanded(
+anchor ui/src/renderer/src/components/help/HelpCard.tsx:73 at line hits=1 :: HELP_FEATURE_ROUTE[feature]
+anchor docs/build-plan/06-gui.md:319 at line hits=1 :: ### Help (per page)
+anchor docs/build-plan/06-gui.md:1731 at line hits=1 :: ## Validation Commands
+anchor docs/build-plan/build-priority-matrix.md:89 at line hits=1 :: | 6.22 |
+anchor ui/tests/e2e/electron-app.ts:112 at line hits=1 :: export async function launchElectron
+anchor ui/tests/e2e/download-queue.test.ts:128 at line hits=1 :: function seededQueue(): DownloadItem[]
+anchor ui/tests/e2e/download-queue.test.ts:172 at line hits=1 :: async function installSeam(page: Page, seed?: Partial<SeamSeed>)
+anchor ui/tests/e2e/transcript-queue.test.ts:56 at line hits=1 :: async function installTranscriptSeam(page: Page)
+anchor ui/tests/e2e/tts-generate.test.ts:32 at line hits=1 :: async function installTtsSeam(
+anchor ui/tests/e2e/convert-queue.test.ts:176 at line hits=1 :: async function installSeam(
+anchor ui/tests/e2e/convert-queue.test.ts:130 at line hits=1 :: function seededQueue(): ConversionItem[]
+anchor ui/tests/e2e/capture-inbox.test.ts:88 at line hits=1 :: async function installSeam(
+anchor ui/tests/e2e/capture-inbox.test.ts:2110 at line hits=1 :: async function installFidelitySeam(
+anchor ui/tests/e2e/settings.test.ts:41 at line hits=1 :: async function installSettingsSeam(
+anchor ui/tests/e2e/test-ids.ts:292 at line hits=1 :: // MEU-51 primitive harness IDs.
+anchor ui/package.json:25 at line hits=1 :: "test:e2e"
+file ui/tests/e2e/fixtures/capture-fidelity-original.png present
+target downloader step 1: none
+target downloader step 2 url-input: feature folder 5 hit(s), first ui/src/renderer/src/features/downloader/download-commands.ts:91
+target downloader step 3 add-btn: feature folder 2 hit(s), first ui/src/renderer/src/features/downloader/DownloaderPage.tsx:97
+target downloader step 4 queue-toolbar-start: feature folder 1 hit(s), first ui/src/renderer/src/features/downloader/DownloaderPage.tsx:104
+target downloader step 5 queue-card-primary-action: feature folder 1 hit(s), first ui/src/renderer/src/features/downloader/DownloaderPage.tsx:100
+target transcript step 1 channel-input: feature folder 4 hit(s), first ui/src/renderer/src/features/transcript/transcript-commands.ts:74
+target transcript step 2 add-btn: feature folder 2 hit(s), first ui/src/renderer/src/features/transcript/TranscriptPage.tsx:65
+target transcript step 3 start-btn: feature folder 2 hit(s), first ui/src/renderer/src/features/transcript/TranscriptPage.tsx:66
+target transcript step 4 open-zip-link: feature folder 1 hit(s), first ui/src/renderer/src/features/transcript/transcript-card.ts:52
+target tts step 1 model-select: feature folder 1 hit(s), first ui/src/renderer/src/features/tts/TTSPage.tsx:467
+target tts step 2 model-get-btn: feature folder 1 hit(s), first ui/src/renderer/src/features/tts/TTSPage.tsx:75
+target tts step 3 text-input: feature folder 1 hit(s), first ui/src/renderer/src/features/tts/TTSPage.tsx:364
+target tts step 4 voice-combobox: feature folder 1 hit(s), first ui/src/renderer/src/features/tts/TTSPage.tsx:595
+target tts step 5 generate-btn: feature folder 2 hit(s), first ui/src/renderer/src/features/tts/tts-commands.ts:275
+target converter step 1 convert-task-compress: templated, template ui/src/renderer/src/features/converter/ConvertPage.tsx:613, value ui/src/renderer/src/features/converter/ConvertPage.tsx:611
+target converter step 2 convert-dropzone: feature folder 2 hit(s), first ui/src/renderer/src/features/converter/convert-commands.ts:119
+target converter step 3 convert-preset-balanced: feature folder 1 hit(s), first ui/src/renderer/src/features/converter/ConvertPage.tsx:96
+target converter step 4 convert-add: feature folder 1 hit(s), first ui/src/renderer/src/features/converter/ConvertPage.tsx:664
+target converter step 5 queue-card-primary-action: components/ 1 hit(s), first ui/src/renderer/src/components/queue/QueueCard.tsx:619
+target capture step 1 capture-region: feature folder 2 hit(s), first ui/src/renderer/src/features/capture/capture-commands.ts:8
+target capture step 2 capture-filmstrip-item: feature folder 1 hit(s), first ui/src/renderer/src/features/capture/CaptureFilmstrip.tsx:245
+target capture step 3 capture-tool-arrow: feature folder 4 hit(s), first ui/src/renderer/src/features/capture/capture-toolbar.ts:48
+target capture step 4 capture-save: feature folder 4 hit(s), first ui/src/renderer/src/features/capture/capture-commands.ts:204
+target settings step 1 settings-mode-download: templated, template ui/src/renderer/src/features/settings/SettingsPage.tsx:234, value ui/src/renderer/src/features/settings/settings-sections.ts:35
+target settings step 2 browse-download-path-btn: feature folder 1 hit(s), first ui/src/renderer/src/features/settings/SettingsPage.tsx:649
+target settings step 3 settings-readiness-count: feature folder 1 hit(s), first ui/src/renderer/src/features/settings/SettingsPage.tsx:1258
+target settings step 4 mcp-copy-prompt-btn: feature folder 1 hit(s), first ui/src/renderer/src/features/settings/SettingsPage.tsx:1325

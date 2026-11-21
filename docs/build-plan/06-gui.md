@@ -1728,6 +1728,22 @@ The following features are explicitly **deferred** to a future phase:
 > - The help, shortcut and MEU-157 unit pins pass unchanged. AC-158.14.
 > - AC-158.1 to AC-158.14. Plan `docs/execution/plans/2026-11-17-ui-small-fixes/`.
 
+<a id="help-quick-start-residual"></a>
+
+### Help quick start (residual)
+
+> **MEU-162.** Registered 2026-11-20 from Mat's request ("very inadequate guide on how to use each page"; D-1289 to D-1294). Each page's `HelpCard` gets a short quick start with marked screenshots taken by script, with the steps in ASD-STE100 Strict style.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Quick start | When the card is open, it shows one intro sentence, 4 or 5 numbered steps and one marked screenshot (two on Settings) before the topics | Human-approved: Mat 2026-11-20 |
+| Style | Steps pass the vendored ASD-STE100 linter in Strict mode with 20 words or fewer per sentence; intros, alt texts and unpinned topics pass it with 0 `advisory-free` findings | Human-approved: Mat 2026-11-20 |
+| Images | Light and dark WebP of 150 KB or less, taken by `npm --prefix ui run help:shots` from demo data, with no home folder path | Human-approved: Mat 2026-11-20; Mat 2026-11-16 ("This should be done with framework and scripts!") |
+| First visit | The card stays closed on a first visit, and its header names the quick start | D-1289 |
+| Drift | A unit test fails when a page's steps change and its images were not taken again; an Electron test proves every step target and image on the real app | Mat 2026-11-16 |
+
+> **Delivered (Session 99).** Each page's help card now holds a quick start: one intro sentence, 4 or 5 numbered steps and a marked light and dark screenshot (two on Settings), then the topics as titles you open. `npm --prefix ui run help:shots` takes the 14 WebP images again from demo data on a scratch profile (build first); a privacy guard blocks any image that shows a home or temp path, and a unit test fails when the steps change and the images were not taken again. The unpinned topics are in plain words, and `tools/help_guide_ste.py` gates the steps (Strict), intros, alt texts and topics with the vendored ASD-STE100 linter (`.agent/skills/asd-ste100/`). Mat's rulings (2026-11-20, "1289 A, 1290 A, execute"): D-1289 A keeps the card closed on a first visit with "Quick start · N steps" in its header; D-1290 A rewrote the topics, unpinned the Console topic and replaced one Save sentence in `capture:four-tools`. The four pinned topics (`downloader:pause`, `transcript:blocked`, `capture:four-tools` apart from that sentence, `capture:original-annotated`) keep their text.
+
 ## Validation Commands
 
 ```bash

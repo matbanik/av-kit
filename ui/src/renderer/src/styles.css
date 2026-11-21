@@ -209,3 +209,62 @@ body,
   color: var(--color-fg);
   letter-spacing: 0.01em;
 }
+
+/* MEU-162 (D-1292, THEME_SHOT_CSS): the How it works quick start. Each shot has a light and a
+   dark image; the theme hides one, and a hidden lazy image is not fetched. */
+:root.dark .help-shot__img--light { display: none; }
+:root:not(.dark) .help-shot__img--dark { display: none; }
+
+.help-quick-start {
+  counter-reset: help-step;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.help-quick-start > li {
+  counter-increment: help-step;
+  position: relative;
+  padding-left: 2rem;
+  min-height: 1.5rem;
+  line-height: 1.5rem;
+}
+
+.help-quick-start > li::before {
+  content: counter(help-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+  text-align: center;
+}
+
+.help-shot {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.help-shot img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.help-shot figcaption {
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+}

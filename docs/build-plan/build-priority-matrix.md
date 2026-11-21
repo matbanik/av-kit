@@ -87,6 +87,7 @@
 | 6.20 | MEU-154 | `gui-ready-line-buffer` | [06 §READY line buffering (residual)](06-gui.md#ready-line-buffer-residual) | MEU-108 |
 | 6.21 | MEU-157 | `gui-convert-browse-after-mount` | [06 §Convert browse waits for the page (residual)](06-gui.md#convert-browse-after-mount-residual) | MEU-97 |
 | 6.22 | MEU-158 | `gui-help-f1-after-mount` | [06 §F1 help waits for the page (residual)](06-gui.md#help-f1-after-mount-residual) | MEU-23, MEU-96, MEU-157 |
+| 6.23 | MEU-162 | `gui-help-quick-start` | [06 §Help quick start (residual)](06-gui.md#help-quick-start-residual) | MEU-23, MEU-158 |
 | 7.1 | MEU-24 | `dist-backend` | [07 §Backend packaging](07-distribution.md#backend-packaging-pyinstaller) | MEU-14, MEU-19 |
 | 7.2 | MEU-25 | `dist-installer` | [07 §Electron packaging](07-distribution.md#electron-packaging-electron-builder) | MEU-24, MEU-17 |
 | 7.3 | MEU-71 | `gui-mcp-setup-prompt` | [07 §MCP setup prompt (residual)](07-distribution.md#mcp-setup-prompt-residual) | MEU-23, MEU-25 |

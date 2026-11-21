@@ -1,0 +1,626 @@
+{
+  "ui/src/renderer/src/components/help/HelpCard.tsx": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 155,
+    "bom": false,
+    "bytes": 5088
+  },
+  "ui/src/renderer/src/styles.css": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 211,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 5493
+  },
+  "ui/src/renderer/src/features/downloader/downloader-help-content.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 29,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1189
+  },
+  "ui/src/renderer/src/features/transcript/transcript-help-content.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 34,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1274
+  },
+  "ui/src/renderer/src/features/tts/tts-help-content.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 29,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 995
+  },
+  "ui/src/renderer/src/features/converter/convert-help-content.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 34,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1485
+  },
+  "ui/src/renderer/src/features/capture/capture-help-content.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 44,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 4681
+  },
+  "ui/src/renderer/src/features/settings/settings-help-content.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 29,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1312
+  },
+  "ui/tsconfig.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 20,
+    "bom": false,
+    "bytes": 381
+  },
+  "ui/package.json": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 71,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2914
+  },
+  "ui/tests/e2e/test-ids.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 532,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 27770
+  },
+  "ui/tests/unit/failure-reason-copy.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 48,
+    "bom": false,
+    "bytes": 2458
+  },
+  ".agent/skills/README.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 52,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2896
+  },
+  "docs/build-plan/06-gui.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1738,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 155482
+  },
+  "docs/build-plan/build-priority-matrix.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 198,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 26042
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4250,
+    "bom": false,
+    "bytes": 152856
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 257,
+    "bom": false,
+    "bytes": 54893
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false,
+    "bytes": 20008
+  },
+  ".agent/docs/commands.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 229,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 20219
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 248,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 103407
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 108,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 128531
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 6188,
+    "bom": false,
+    "bytes": 580780
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 36,
+    "bom": false,
+    "bytes": 2695
+  },
+  "ui/src/renderer/src/features/downloader/DownloaderPage.tsx": {
+    "kind": "MIXED",
+    "expected": null,
+    "crlf": 761,
+    "bare_lf": 226,
+    "bom": false,
+    "bytes": 35498
+  },
+  "ui/src/renderer/src/features/transcript/TranscriptPage.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 672,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 23820
+  },
+  "ui/src/renderer/src/features/tts/TTSPage.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 796,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 31842
+  },
+  "ui/src/renderer/src/features/converter/ConvertPage.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 1030,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 37385
+  },
+  "ui/src/renderer/src/features/capture/CapturePage.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 3007,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 109704
+  },
+  "ui/src/renderer/src/features/settings/SettingsPage.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 1373,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 52968
+  },
+  "ui/src/renderer/src/lib/theme.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 174,
+    "bom": false,
+    "bytes": 5460
+  },
+  "ui/tests/e2e/electron-app.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 171,
+    "bom": false,
+    "bytes": 6438
+  },
+  "ui/playwright.config.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 23,
+    "bom": false,
+    "bytes": 563
+  },
+  "ui/tests/e2e/download-queue.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 1520,
+    "bom": false,
+    "bytes": 68148
+  },
+  "ui/tests/e2e/transcript-queue.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 643,
+    "bom": false,
+    "bytes": 28256
+  },
+  "ui/tests/e2e/tts-generate.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 950,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 42842
+  },
+  "ui/tests/e2e/convert-queue.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 1572,
+    "bom": false,
+    "bytes": 71165
+  },
+  "ui/tests/e2e/capture-inbox.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 3712,
+    "bom": false,
+    "bytes": 177183
+  },
+  "ui/tests/e2e/settings.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 924,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 41933
+  },
+  "ui/tests/e2e/fixtures/capture-fidelity-original.png": {
+    "kind": "MIXED",
+    "expected": null,
+    "crlf": 1,
+    "bare_lf": 1,
+    "bom": false,
+    "bytes": 403
+  },
+  "ui/tests/unit/help-card.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 140,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 6031
+  },
+  "ui/tests/unit/help-f1-hold.test.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 191,
+    "bom": false,
+    "bytes": 6644
+  },
+  "ui/tests/unit/capture-help-content.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 186,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 10986
+  },
+  "ui/tests/unit/capture-action-row.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 801,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 36317
+  },
+  "ui/tests/unit/capture-copy-image.behavior.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 834,
+    "bom": false,
+    "bytes": 34330
+  },
+  "ui/tests/unit/capture-redact.behavior.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 533,
+    "bom": false,
+    "bytes": 25548
+  },
+  "ui/tests/unit/capture-tool-style.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 247,
+    "bom": false,
+    "bytes": 11768
+  },
+  "ui/tests/unit/queue-pause-feedback.test.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 757,
+    "bom": false,
+    "bytes": 30765
+  },
+  "ui/tests/unit/layout-primitives.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 372,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 20215
+  },
+  "ui/tests/unit/settings-rail.test.tsx": {
+    "kind": "MIXED",
+    "expected": null,
+    "crlf": 743,
+    "bare_lf": 77,
+    "bom": false,
+    "bytes": 39355
+  },
+  "ui/tests/unit/common-shortcuts.test.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 123,
+    "bom": false,
+    "bytes": 5642
+  },
+  "ui/tests/unit/gui-actions-audit.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 533,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 26384
+  },
+  "ui/tests/unit/capture-page.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 644,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 29440
+  },
+  "ui/tests/unit/convert-page.test.ts": {
+    "kind": "MIXED",
+    "expected": null,
+    "crlf": 731,
+    "bare_lf": 29,
+    "bom": false,
+    "bytes": 36563
+  },
+  "ui/tests/e2e/help-search.spec.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 62,
+    "bom": false,
+    "bytes": 2258
+  },
+  "ui/tests/e2e/help-f1-mount.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 289,
+    "bom": false,
+    "bytes": 11640
+  },
+  "ui/tests/e2e/keyboard-shortcuts.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 109,
+    "bom": false,
+    "bytes": 4169
+  },
+  "P:/creative-writing/.agent/skills/asd-ste100/SKILL.md": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 139,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 16557
+  },
+  "P:/creative-writing/.agent/skills/asd-ste100/LICENSE": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 21,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1096
+  },
+  "P:/creative-writing/.agent/skills/asd-ste100/UPSTREAM.md": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 30,
+    "bom": false,
+    "bytes": 1933
+  },
+  "P:/creative-writing/.agent/skills/asd-ste100/references/writing-rules.md": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 59,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 4950
+  },
+  "P:/creative-writing/.agent/skills/asd-ste100/examples/before-after.md": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 92,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 7513
+  },
+  "P:/creative-writing/.agent/skills/asd-ste100/examples/linter-edge-cases.md": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 14,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 237
+  },
+  "P:/creative-writing/.agent/skills/asd-ste100/scripts/ste-lint.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 486,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 22947
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/baseline-dirty-hashes.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 35,
+    "bom": false,
+    "bytes": 4428
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/baseline-eol.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 602,
+    "bom": false,
+    "bytes": 12810
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/baseline-pins.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 219,
+    "bom": false,
+    "bytes": 10116
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/baseline-scope.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 80,
+    "bom": false,
+    "bytes": 7868
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/baseline-skip-hashes.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 181,
+    "bom": false,
+    "bytes": 20932
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 502,
+    "bom": false,
+    "bytes": 24419
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 280,
+    "bom": false,
+    "bytes": 12484
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/host-wait.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 66,
+    "bom": false,
+    "bytes": 2465
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 414,
+    "bom": false,
+    "bytes": 18504
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 649,
+    "bom": false,
+    "bytes": 85589
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/load-run.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 498,
+    "bom": false,
+    "bytes": 20282
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/quick-start-draft.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 223,
+    "bom": false,
+    "bytes": 6495
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1978,
+    "bom": false,
+    "bytes": 67274
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/row-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 827,
+    "bom": false,
+    "bytes": 37704
+  },
+  "docs/execution/plans/2026-11-20-help-quick-start/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 101,
+    "bom": false,
+    "bytes": 68910
+  }
+}

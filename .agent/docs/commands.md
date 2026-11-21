@@ -68,6 +68,11 @@ $env:ELECTRON_RUN_AS_NODE=$null; npm --prefix ui run test:e2e
 # The clipboard spec capture-system-clipboard.test.ts skips itself unless AVKIT_E2E_CLIPBOARD_GATED=1; never set it on the dev PC: only the second Windows host's gated stage sets it (.agent/docs/e2e-remote-host.md).
 # Any E2E launch without AVKIT_E2E_CLIPBOARD_GATED=1 runs with the clipboard guard (ui/tests/e2e/clipboard-guard.cjs) and fails a test that touches the system clipboard with CLIPBOARD_GUARD: (Session 100).
 # A spec that needs the system clipboard belongs in a gated file named in tools/e2e_host/known-failures.json, never in a file the dev PC runs.
+
+# Help card screenshots (MEU-162): takes the 14 quick start images again from demo data on a scratch profile.
+# Build first. Run it after a change to a quick start step (components/help/quick-start.json) or to a page a shot shows.
+# A new or renamed image also needs `npx vitest --clearCache` (in ui/) before the unit tests see it.
+$env:ELECTRON_RUN_AS_NODE=$null; npm --prefix ui run build; npm --prefix ui run help:shots
 ```
 
 > [!IMPORTANT]

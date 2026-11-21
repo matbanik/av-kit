@@ -1,0 +1,223 @@
+{
+  "schema": "help-quick-start/1",
+  "pages": {
+    "downloader": {
+      "intro": "Download videos, playlists and channels from YouTube to your computer.",
+      "steps": [
+        {
+          "text": "Copy the link of a YouTube video, playlist or channel.",
+          "target": null
+        },
+        {
+          "text": "Paste the link in the URL field. Ctrl+L moves the cursor to the field.",
+          "target": "url-input"
+        },
+        {
+          "text": "Click Add. The app reads the link and puts each video in the queue.",
+          "target": "add-btn"
+        },
+        {
+          "text": "Click Start. The app downloads the videos one at a time.",
+          "target": "queue-toolbar-start"
+        },
+        {
+          "text": "When a row shows Done, click Open file.",
+          "target": "queue-card-primary-action"
+        }
+      ],
+      "shots": [
+        {
+          "name": "downloader",
+          "steps": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "alt": "The Downloader page. Numbers 2 to 5 mark the URL field, Add, Start and Open file."
+        }
+      ]
+    },
+    "transcript": {
+      "intro": "Get the transcripts of all the videos on a YouTube channel.",
+      "steps": [
+        {
+          "text": "Paste the link of a YouTube channel in the Channel URL field.",
+          "target": "channel-input"
+        },
+        {
+          "text": "Click Add. The app reads the list of videos on the channel.",
+          "target": "add-btn"
+        },
+        {
+          "text": "Click Start. The app gets the transcript of each video.",
+          "target": "start-btn"
+        },
+        {
+          "text": "When the channel shows Done, click Open ZIP. The ZIP file contains the transcripts.",
+          "target": "open-zip-link"
+        }
+      ],
+      "shots": [
+        {
+          "name": "transcript",
+          "steps": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "alt": "The Transcript page. Numbers 1 to 4 mark the Channel URL field, Add, Start and Open ZIP."
+        }
+      ]
+    },
+    "tts": {
+      "intro": "Change text into speech with a voice model that runs on your computer.",
+      "steps": [
+        {
+          "text": "Select a voice model in the Model list.",
+          "target": "model-select"
+        },
+        {
+          "text": "Click Get to download the model. Then click Load.",
+          "target": "model-get-btn"
+        },
+        {
+          "text": "Type text in the Text box, or click Paste or Load file.",
+          "target": "text-input"
+        },
+        {
+          "text": "Select a voice and a speed.",
+          "target": "voice-combobox"
+        },
+        {
+          "text": "Click Generate. When the job ends, click Open file.",
+          "target": "generate-btn"
+        }
+      ],
+      "shots": [
+        {
+          "name": "tts",
+          "steps": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "alt": "The Text to speech page. Numbers 1 to 5 mark the Model list, Get, the Text box, the voice and Generate."
+        }
+      ]
+    },
+    "converter": {
+      "intro": "Make video files smaller, cut them or get the audio from them.",
+      "steps": [
+        {
+          "text": "Select the Compress task. The Cut and Extract tasks have other settings.",
+          "target": "convert-task-compress"
+        },
+        {
+          "text": "Drop files on the panel, or click Browse.",
+          "target": "convert-dropzone"
+        },
+        {
+          "text": "Select a preset for Compress. Balanced is the default.",
+          "target": "convert-preset-balanced"
+        },
+        {
+          "text": "Click Add. Then click Start.",
+          "target": "convert-add"
+        },
+        {
+          "text": "When a row shows Done, click Open file.",
+          "target": "queue-card-primary-action"
+        }
+      ],
+      "shots": [
+        {
+          "name": "convert",
+          "steps": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "alt": "The Convert page. Numbers 1 to 5 mark the Compress task, the drop panel, the preset, Add and Open file."
+        }
+      ]
+    },
+    "capture": {
+      "intro": "Take a picture of part of your screen and put marks on it.",
+      "steps": [
+        {
+          "text": "Push F2 or click Capture region. Then drag a box on the screen.",
+          "target": "capture-region"
+        },
+        {
+          "text": "Click the new shot in the list at the left of the image.",
+          "target": "capture-filmstrip-item"
+        },
+        {
+          "text": "Select a tool, for example Arrow or Box. Then drag on the image.",
+          "target": "capture-tool-arrow"
+        },
+        {
+          "text": "Click Save to keep your marks, or click Copy image.",
+          "target": "capture-save"
+        }
+      ],
+      "shots": [
+        {
+          "name": "capture",
+          "steps": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "alt": "The Capture page. Numbers 1 to 4 mark Capture region, a shot, the Arrow tool and Save."
+        }
+      ]
+    },
+    "settings": {
+      "intro": "Set the folders and the tools that the app uses.",
+      "steps": [
+        {
+          "text": "Read the note next to the name of the Download card. It tells you when the card saves your changes.",
+          "target": "settings-mode-download"
+        },
+        {
+          "text": "In the Download card, click Browse. Then select the folder for your downloads.",
+          "target": "browse-download-path-btn"
+        },
+        {
+          "text": "Look at the Readiness card. Click Fix next to each item that is not ready.",
+          "target": "settings-readiness-count"
+        },
+        {
+          "text": "In the MCP card, select your AI client. Then click Copy prompt.",
+          "target": "mcp-copy-prompt-btn"
+        }
+      ],
+      "shots": [
+        {
+          "name": "settings-download",
+          "steps": [
+            1,
+            2
+          ],
+          "alt": "The Settings page. Numbers 1 and 2 mark the save note and the Browse button of the Download card."
+        },
+        {
+          "name": "settings-setup",
+          "steps": [
+            3,
+            4
+          ],
+          "alt": "The Settings page. Numbers 3 and 4 mark the Readiness count and Copy prompt in the MCP card."
+        }
+      ]
+    }
+  }
+}

@@ -764,7 +764,7 @@ describe('MEU-61 settings startup card', () => {
     const helpPath = resolve(settingsDir, 'settings-help-content.ts')
     const help = readRequired(helpPath)
     expect(help).toContain("id: 'startup'")
-    expect(help).toContain('per-user Startup entry')
+    expect(help).toContain('startup entry for your user only')
     expect(help).toContain('administrator')
     expect(help).toContain('Task Manager')
     expect(help).toContain('notification area')

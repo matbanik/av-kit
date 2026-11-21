@@ -121,7 +121,7 @@ const HELP_TOPICS = [
   'accurate',
   'extract',
   'sequential',
-  'add then start',
+  'add and start',
 ] as const
 
 

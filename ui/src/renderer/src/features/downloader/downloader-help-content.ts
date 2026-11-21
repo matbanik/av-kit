@@ -3,23 +3,23 @@ import type { HelpSection } from '../../components/help/HelpCard'
 export const DOWNLOADER_HELP_SECTIONS: HelpSection[] = [
   {
     id: 'url-types',
-    title: 'URL types',
-    body: 'Paste a video URL, playlist URL, or channel page URL into the queue. Each URL type resolves metadata before download starts.',
+    title: 'Links you can add',
+    body: 'Paste a video, playlist or channel URL into the box. The app reads the details of each link before it downloads.',
   },
   {
     id: 'sabr',
-    title: 'SABR restrictions',
-    body: 'When SABR is active, quality and audio options are limited. Run a SABR check to see whether Server-Adaptive Bitrate is blocking higher formats.',
+    title: 'SABR limits',
+    body: 'When SABR is on, YouTube limits the quality and audio choices. Run the SABR check to see if it blocks better formats.',
   },
   {
     id: 'cookies',
-    title: 'Cookie authentication',
-    body: 'Use cookie mode browser or file when YouTube requires signed-in access. Test cookies before starting large batches.',
+    title: 'Videos that need a sign-in',
+    body: 'Some videos need a sign-in. Set the cookie mode to Browser or File to use your sign-in. Test the cookies before you start a large batch.',
   },
   {
     id: 'archive',
-    title: 'Archive tracking',
-    body: 'Enable archive tracking in settings to skip videos you already downloaded in prior sessions.',
+    title: 'Skip the videos you have',
+    body: 'Enable archive tracking in Settings. The app then skips the videos that you downloaded before.',
   },
   {
     id: 'pause',

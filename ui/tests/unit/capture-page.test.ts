@@ -109,12 +109,12 @@ const WAVE9_EXTRA_TESTIDS = [
 const CAPTURE_PALETTE_IDS = ['nav:capture', 'capture:region', 'capture:save', 'capture:open_folder'] as const
 const HELP_TOPICS = [
   'What Capture does',
-  'F2 vs ShareX conflict',
+  'When F2 is in use',
   'inbox folder',
   'original vs .annotated.png',
   'annotation tools',
-  'MCP can see the PNG',
-  'close-to-tray keeps the hotkey',
+  'MCP sees the same shots',
+  'Close to tray keeps F2',
   'never uploads',
 ] as const
 const TRAY_MENU = ['Show window', 'Capture region', 'Open inbox folder', 'Quit'] as const

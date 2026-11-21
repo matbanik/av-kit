@@ -23,6 +23,7 @@
     "build:picker": "dotnet publish ../native/region-picker -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o ../native/region-picker/publish",
     "build:picker-stub": "dotnet publish ../native/region-picker-stub -c Release -r win-x64 --self-contained false -o ../native/region-picker-stub/publish",
     "test:e2e": "node ./scripts/playwright-with-outputfile.mjs",
+    "help:shots": "playwright test -c playwright.help-shots.config.ts",
     "test:e2e:capture": "npx playwright test tests/e2e/capture-picker.test.ts --reporter=json",
     "dist:prep": "npm run clean:out && npm run build && npm run build:picker && npm --prefix ../mcp-server run bundle",
     "dist": "npm run dist:prep && electron-builder --win nsis --x64"

@@ -48,5 +48,6 @@ applies_to: [paths or concerns this skill covers]
 | `session-meta-review/SKILL.md` | reflections | Friction taxonomy → Next Session Design Rules |
 | `deep-research-prompting/SKILL.md` | `/inspiration-research`, deep-research prompts | Pomera preflight gate, capability snapshots, D1/D2/D3 prompt templates |
 | `deep-research/SKILL.md` | av-kit `/deep-research` workflow | Project-kept prompt pack (ChatGPT/Gemini/Claude) under `.agent/workflows/prompts/deep-research/` |
+| `asd-ste100/SKILL.md` | help card content, `tools/help_guide_ste.py` | Vendored ASD-STE100 (Simplified Technical English) skill and linter; see its `UPSTREAM.md` |
 
 See `.agent/docs/triage-meu-loop.md` for how `issue-triage` + `meu-status` feed planning.
