@@ -264,9 +264,10 @@ def test_ac_122_11_folder_volume_and_zip_names_unchanged(
 def test_ac_122_12_no_extra_request_per_video(tmp_path: Path, count: int) -> None:
     _require_listing()
     ids = [f"v{index}" for index in range(count)]
-    service, _settings, yt, uow, _fs, captions, _sleeps = _listed_stack(
+    service, settings, yt, uow, _fs, captions, _sleeps = _listed_stack(
         tmp_path, ids, {video_id: f"Title {video_id}" for video_id in ids}, "Real Channel"
     )
+    settings.set("transcript", "requests_per_hour", 0)
     job = service.add_channel(URL)
     assert (yt.extract_calls, yt.ids_calls, yt.last_options) == (1, 1, None)
     _process(service, timeout=20.0)

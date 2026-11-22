@@ -22,6 +22,7 @@ export type QueueControl =
   | 'view-compiled'
   | 'open-zip'
   | 'open-folder'
+  | 'resume-job'
 
 export type QueueItemLike = {
   id: string
@@ -81,6 +82,14 @@ export function controlEnabled(control: QueueControl, ctx: ControlContext): bool
       return current?.zip_path != null && current.zip_path.length > 0
     case 'open-folder':
       return current != null && current.output_dir.length > 0
+    case 'resume-job':
+      // CARD_RESUME_RULE (MEU-163): the server resumes the first Paused job, so only that
+      // job's card offers Resume, and never while the processor is busy.
+      return (
+        current?.status === 'Paused' &&
+        ctx.items.findIndex((item) => item.status === 'Paused') === selected &&
+        ctx.processorState !== 'Processing'
+      )
     default: {
       const _never: never = control
       return _never

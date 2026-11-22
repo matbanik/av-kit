@@ -35,6 +35,7 @@
 | `transcript:start` | Start | yes | `POST /transcripts/start` | specified | 04 / 06 |
 | `transcript:pause` | Pause | yes | `POST /transcripts/pause` | specified | 04 / 06 |
 | `transcript:resume` | Resume | yes | `POST /transcripts/resume` | specified | 04 / 06 |
+| `transcript:resume_job` | Card menu Resume (first Paused job) | no | `POST /transcripts/resume` | specified | 10 / 06 |
 | `transcript:stop` | Stop | yes | `POST /transcripts/stop` | specified | 03 / 04 / 06 |
 | `transcript:requeue` | Requeue cancelled | no | `POST /transcripts/{id}/requeue` | specified | 03 / 04 / 06 |
 | `transcript:retry` | Retry failed | no | `POST /transcripts/{id}/retry` | specified | 03 / 04 / 06 |

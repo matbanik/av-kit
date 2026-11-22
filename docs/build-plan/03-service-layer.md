@@ -574,7 +574,7 @@ Tests: unit for the download-with-vocab path and the fail-fast check (fake adapt
 | Stop on block | When one video exhausts `max_retries` on `TranscriptRetryableError`, the run stops. That video and the rest stay `Pending`, and the job goes `Paused` with the reason. No growing wait and no new number. | Research-backed: triage D-219 |
 | Resume | `resume_processing` picks up the `Pending` videos, as it does after any pause. | Spec §TranscriptService |
 | Other failures | A failure that isn't a block ends that video `Failed` and the run goes on, as the run loop does today. | Spec §TranscriptService |
-| Rate cap | `transcript.requests_per_hour` is enforced as a rolling cap over real requests. Default behaviour doesn't change: 6 s apart with a 300 s pause after 50 is already about 300 an hour. | Local Canon: triage D-220 |
+| Rate cap | `transcript.requests_per_hour` is enforced as a rolling cap over real requests. The defaults do not reach it: 120 s apart with a 500 s pause after each 5 requests, before the next, is at most 18 starts in any hour, under the cap of 20, and `max_retries` 1 makes no retry (Mat 2026-11-21, D-1355). Until Session 101 the defaults were 6 s apart with a 300 s pause after 50, about 300 an hour. | Local Canon: triage D-220; D-1355 |
 | Tests | Unit with a fake port and clock: a block on the first video makes `max_retries` attempts and no request for the next video, then the job reads `Paused` with the reason; resume finishes the rest; a lowered cap delays the next request and the default cap delays nothing. | Local Canon |
 
 > **Delivered (Session 50).**

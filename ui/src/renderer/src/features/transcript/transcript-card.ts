@@ -22,6 +22,7 @@ import type { TranscriptListItem } from './useTranscriptQueue'
  * the existing footer button's test id on its menu item.
  */
 export const TRANSCRIPT_MENU_ORDER = [
+  'resume-job',
   'requeue',
   'retry',
   'compile',
@@ -35,6 +36,8 @@ export type TranscriptCardAction = (typeof TRANSCRIPT_MENU_ORDER)[number]
 
 /** The existing test id each action keeps (`PRESERVED_TESTIDS`). */
 export const CARD_ACTION_TESTIDS: Readonly<Record<TranscriptCardAction, string>> = {
+  // Not `resume-btn`: that is the toolbar's queue-level Resume (CARD_RESUME_MENU, MEU-163).
+  'resume-job': 'resume-job-btn',
   requeue: 'requeue-btn',
   retry: 'retry-btn',
   compile: 'compile-btn',
@@ -93,6 +96,7 @@ export function cardActionAvailable(
     case 'requeue':
     case 'retry':
       return actionVisible(action, card.status)
+    case 'resume-job':
     case 'compile':
     case 'view-compiled':
     case 'open-zip':

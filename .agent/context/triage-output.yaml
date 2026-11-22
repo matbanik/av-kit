@@ -3952,6 +3952,39 @@ archived:
         and no session owns bringing them back. The fix is in test files and tooling only, and the second host now gives the clipboard tests a desktop that is not Mat''s. Doing nothing keeps seven tests
         unrun for as long as every plan copies the exclusion. M items: M-8 (it adds a session and changes the 2026-11-18 grouping''s rule that the clipboard specs stay skipped on the mini-air). Two-way.'
     decided_by: agent
+- id: E2E-DEVPC-CLIPBOARD-SPECS
+  title: Four E2E tests write the dev PC's system clipboard in every full run, two of them with the test app's API token
+  severity: medium
+  component: ui
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1299
+      stage: triage
+      question: Session 98 found two dev-PC specs that still write the system clipboard. Is the record right, and is it worth a session?
+      resolution: autonomous
+      class: two-way
+      mandatory:
+      - M-8
+      chosen: 'Correct the record to four tests (C1-5, AC-71.15 (b), AC-71.15 (d), W4-3), raise it to medium P3, and group it as Session 100 e2e-devpc-clipboard with no MEU: move their clipboard assertions
+        into the gated stage on the mini-air, and make any clipboard write in a dev-PC E2E launch fail the test.'
+      source_tag: Local Canon
+      precedents:
+      - '.agent/context/grouping/2026-11-20-e2e-clipboard-specs-session-grouping.md D-1265 to D-1267: the same fix for the capture clipboard tests'
+      - 'Session 57 RULE-4 and Session 98 CLIPBOARD_NEVER_DEVPC: the dev PC never runs clipboard specs'
+      - 'Triage priority matrix (.agent/workflows/issue-triage.md §4): medium severity and standalone is P3'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue with next prompt''. A search for copy buttons,
+        not only clipboard calls, found two more writers, and both copy the test app''s API token, which Windows clipboard history can keep. The token belongs to a throwaway app data folder, so the risk
+        is small, but Mat loses his clipboard in every run and the rule meant to protect it is untrue. Session 98''s gated stage already gives these tests a host, so the fix is test files and tooling only.
+        Doing nothing keeps four writes per run and lets a new spec add a fifth. M items: M-8 (it adds a session). Two-way.'
+    decided_by: agent
 actionable:
 - id: TOOLING-SHARED-REGISTRY-COUPLING
   title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
@@ -4195,39 +4228,6 @@ actionable:
         hinting modelled in the renderer, a large change for a difference nobody has reported. MONITORING fits less well, because AC-161.5 already watches it. Doing nothing would leave it uncategorised
         and outside every triage pass. M items: none. Two-way.'
     decided_by: agent
-- id: E2E-DEVPC-CLIPBOARD-SPECS
-  title: Four E2E tests write the dev PC's system clipboard in every full run, two of them with the test app's API token
-  severity: medium
-  component: ui
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-1299
-      stage: triage
-      question: Session 98 found two dev-PC specs that still write the system clipboard. Is the record right, and is it worth a session?
-      resolution: autonomous
-      class: two-way
-      mandatory:
-      - M-8
-      chosen: 'Correct the record to four tests (C1-5, AC-71.15 (b), AC-71.15 (d), W4-3), raise it to medium P3, and group it as Session 100 e2e-devpc-clipboard with no MEU: move their clipboard assertions
-        into the gated stage on the mini-air, and make any clipboard write in a dev-PC E2E launch fail the test.'
-      source_tag: Local Canon
-      precedents:
-      - '.agent/context/grouping/2026-11-20-e2e-clipboard-specs-session-grouping.md D-1265 to D-1267: the same fix for the capture clipboard tests'
-      - 'Session 57 RULE-4 and Session 98 CLIPBOARD_NEVER_DEVPC: the dev PC never runs clipboard specs'
-      - 'Triage priority matrix (.agent/workflows/issue-triage.md §4): medium severity and standalone is P3'
-      research:
-        engine: none
-        sources: []
-      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue with next prompt''. A search for copy buttons,
-        not only clipboard calls, found two more writers, and both copy the test app''s API token, which Windows clipboard history can keep. The token belongs to a throwaway app data folder, so the risk
-        is small, but Mat loses his clipboard in every run and the rule meant to protect it is untrue. Session 98''s gated stage already gives these tests a host, so the fix is test files and tooling only.
-        Doing nothing keeps four writes per run and lets a new spec add a fifth. M items: M-8 (it adds a session). Two-way.'
-    decided_by: agent
 - id: TOOLING-RUFF-TOOLS-UNCLEAN
   title: ruff check and ruff format --check fail over tools/ outside CI's lint scope
   severity: low
@@ -4259,6 +4259,37 @@ actionable:
         using tools/meu_status.py now. Grouping it into Session 100 would mix a tooling reformat into a test-only session. Doing nothing without a record would leave the workaround undocumented. M items:
         none. Two-way.'
     decided_by: agent
+- id: TRANSCRIPT-PAUSED-JOB-NO-RESUME-AFTER-RESTART
+  title: After an app restart a Paused transcript job has no Resume on its page
+  severity: medium
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked:
+    - Where does a Paused transcript job get a Resume when the processor is not Paused?
+    answers:
+    - In the job card's three-dot menu, with Remove, Open folder and Compile
+    decided_by: human
+    decision_log:
+    - id: D-1350
+      stage: triage
+      question: Where does a Paused transcript job get a Resume when the processor is not Paused, and which MEU covers it?
+      resolution: human
+      class: product-preference
+      chosen: A Resume item in the transcript job card's kebab menu (MEU-163 gui-transcript-job-resume, 10 matrix 10.12, P3). The toolbar keeps its three actions and Start keeps skipping Paused jobs.
+      source_tag: Human-approved
+      precedents:
+      - '10 §Kebab menu: per-card actions live in the kebab; an unavailable action is omitted'
+      - '11-page-layout TR1: the Transcript toolbar keeps three actions'
+      - '03 transcript queue: Start ignores Paused and Failed jobs'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for it in those words. A Paused job after a restart has no way back in the app; the service already resumes the first Paused job from Idle, so the card needs only a menu item.
+        P3: a user-facing dead end with an MCP workaround. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-21 'can we add resume as action on the job in the 3 dot menu where the remove, open folder and compile options are?'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -4434,4 +4465,11 @@ deferred:
         list of every FFmpeg dependency and no change. Whether naming it changes legal exposure was not assessed; this is not legal advice.
       human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
     decided_by: human
-proposed_batches: []
+proposed_batches:
+- slug: ui-transcript-paused-job-no-resume-after-restart
+  issues:
+  - TRANSCRIPT-PAUSED-JOB-NO-RESUME-AFTER-RESTART
+  component: ui
+  priority_band: P3
+  complexity: S
+  has_duplicates: false

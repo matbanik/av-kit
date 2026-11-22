@@ -1,0 +1,498 @@
+{
+  "ui/src/renderer/src/features/transcript/transcript-controls.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 125,
+    "bom": false,
+    "bytes": 3204
+  },
+  "ui/src/renderer/src/features/transcript/transcript-card.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 143,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 4948
+  },
+  "ui/src/renderer/src/features/transcript/transcript-commands.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 257,
+    "bom": false,
+    "bytes": 6659
+  },
+  "ui/src/renderer/src/features/transcript/TranscriptPage.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 672,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 23820
+  },
+  "packages/core/src/avkit_core/services/transcript.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 851,
+    "bom": false,
+    "bytes": 35220
+  },
+  "tests/unit/test_services.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 3484,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 132282
+  },
+  "tests/unit/test_transcript_metadata.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 418,
+    "bom": false,
+    "bytes": 16877
+  },
+  "packages/core/src/avkit_core/services/settings.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 285,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 13081
+  },
+  "mcp-server/src/toolsets/settings.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 195,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 8199
+  },
+  "docs/build-plan/06-gui.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1754,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 157898
+  },
+  "docs/build-plan/03-service-layer.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 898,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 88684
+  },
+  "docs/build-plan/gui-actions-index.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 140,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 14125
+  },
+  "docs/build-plan/10-queue-card-ui.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 393,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 29879
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4303,
+    "bom": false,
+    "bytes": 155011
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 259,
+    "bom": false,
+    "bytes": 55867
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false,
+    "bytes": 20093
+  },
+  ".agent/context/grouping/2026-11-21-transcript-job-resume-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 121,
+    "bom": false,
+    "bytes": 9217
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 257,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 107728
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 110,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 132563
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 6229,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 592320
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 36,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2747
+  },
+  "ui/src/renderer/src/features/transcript/TranscriptToolbar.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 71,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2354
+  },
+  "ui/src/renderer/src/features/transcript/useTranscriptQueue.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 66,
+    "bom": false,
+    "bytes": 2089
+  },
+  "packages/api/src/avkit_api/routes/transcripts.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 185,
+    "bom": false,
+    "bytes": 6460
+  },
+  "openapi.committed.json": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 8105,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 213567
+  },
+  "packages/api/src/avkit_api/schemas/settings.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 73,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2832
+  },
+  "ui/src/renderer/src/features/settings/SettingsChrome.tsx": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 21,
+    "bom": false,
+    "bytes": 760
+  },
+  "ui/src/renderer/src/features/settings/SettingsPage.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 1373,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 52968
+  },
+  "ui/src/renderer/src/features/settings/SettingsRail.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 289,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 12162
+  },
+  "ui/src/renderer/src/features/settings/StartAtSignInControl.tsx": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 122,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 3548
+  },
+  "ui/src/renderer/src/features/settings/settings-commands.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 59,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1979
+  },
+  "ui/src/renderer/src/features/settings/settings-help-content.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 29,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1344
+  },
+  "ui/src/renderer/src/features/settings/settings-paths.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 11,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 349
+  },
+  "ui/src/renderer/src/features/settings/settings-schemas.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 180,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 6525
+  },
+  "ui/src/renderer/src/features/settings/settings-section-frame.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 30,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1484
+  },
+  "ui/src/renderer/src/features/settings/settings-sections.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 95,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 4495
+  },
+  "ui/src/renderer/src/features/settings/settings-tail-spacer.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 131,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 4860
+  },
+  "ui/src/renderer/src/features/settings/useSettingsPage.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 194,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 6497
+  },
+  "ui/tests/e2e/electron-app.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 196,
+    "bom": false,
+    "bytes": 7617
+  },
+  "tests/orientation_fixtures.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 202,
+    "bom": false,
+    "bytes": 7463
+  },
+  "_inspiration/_transcript_pseudo_logic.md": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 190,
+    "bom": false,
+    "bytes": 6993
+  },
+  "ui/tests/e2e/queue-cancel-paused.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 593,
+    "bom": false,
+    "bytes": 24460
+  },
+  "ui/tests/unit/transcript-page.behavior.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 664,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 31127
+  },
+  "ui/tests/unit/transcript-page.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 368,
+    "bom": false,
+    "bytes": 14877
+  },
+  "ui/tests/unit/gui-actions-audit.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 533,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 26384
+  },
+  "ui/tests/unit/layout-primitives.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 372,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 20215
+  },
+  "ui/tests/e2e/test-ids.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 538,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 28082
+  },
+  "ui/tests/e2e/transcript-queue.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 643,
+    "bom": false,
+    "bytes": 28256
+  },
+  "tests/unit/test_transcript_pause_wake.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 169,
+    "bom": false,
+    "bytes": 5914
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/baseline-dirty-hashes.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4,
+    "bom": false,
+    "bytes": 224
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/baseline-scope.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 71,
+    "bom": false,
+    "bytes": 6541
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 481,
+    "bom": false,
+    "bytes": 22437
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 277,
+    "bom": false,
+    "bytes": 12218
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/host-wait.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 67,
+    "bom": false,
+    "bytes": 2481
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 402,
+    "bom": false,
+    "bytes": 17831
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 518,
+    "bom": false,
+    "bytes": 70907
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 321,
+    "bom": false,
+    "bytes": 12704
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/load-run.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 498,
+    "bom": false,
+    "bytes": 20282
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 2230,
+    "bom": false,
+    "bytes": 76370
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/row-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 1049,
+    "bom": false,
+    "bytes": 48424
+  },
+  "docs/execution/plans/2026-11-21-transcript-job-resume/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 100,
+    "bom": false,
+    "bytes": 73250
+  },
+  ".agent/context/handoffs/2026-11-21-transcript-job-resume-plan-critical-review.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 131,
+    "bom": false,
+    "bytes": 19612
+  }
+}

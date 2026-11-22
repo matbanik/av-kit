@@ -166,6 +166,7 @@
 | 10.9 | MEU-49 | `gui-queue-dnd` | [10 §Reorder model](10-queue-card-ui.md#reorder-model) | MEU-47 |
 | 10.10 | MEU-155 | `gui-queue-pause-feedback` | [10 §Queue pause feedback (residual)](10-queue-card-ui.md#queue-pause-feedback-residual) | MEU-45, MEU-46 |
 | 10.11 | MEU-156 | `gui-queue-cancel-paused` | [10 §Cancel while paused (residual)](10-queue-card-ui.md#queue-cancel-paused-residual) | MEU-45, MEU-46, MEU-155 |
+| 10.12 | MEU-163 | `gui-transcript-job-resume` | [10 §Per-job resume (residual)](10-queue-card-ui.md#transcript-job-resume-residual) | MEU-44, MEU-55, MEU-116 |
 | 11.1 | MEU-50 | `canon-page-layout` | [11 §Scope and non-goals](11-page-layout.md#scope-and-non-goals) | MEU-49 |
 | 11.2 | MEU-51 | `gui-layout-primitives` | [11 §Shared layout primitives](11-page-layout.md#shared-layout-primitives) | MEU-50 |
 | 11.3 | MEU-52 | `gui-queue-header-row` | [11 §Queue header row](11-page-layout.md#queue-header-row) | MEU-51 |

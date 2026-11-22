@@ -46,6 +46,7 @@ import {
   postTranscriptCreate,
   removeTranscript,
   requeueTranscript,
+  resumeTranscriptJob,
   resumeTranscripts,
   retryTranscript,
   startTranscripts,
@@ -92,6 +93,7 @@ const TRANSCRIPT_ERROR_EVENT = 'av-kit:transcript:error'
 
 /** Visible and accessible labels for each per-card action. */
 const ACTION_LABELS: Readonly<Record<TranscriptCardAction, string>> = {
+  'resume-job': 'Resume',
   requeue: 'Requeue',
   retry: 'Retry',
   compile: 'Compile',
@@ -320,6 +322,11 @@ export function TranscriptPage() {
   function runCardAction(item: TranscriptListItem, action: TranscriptCardAction): void {
     setSelectedId(item.id)
     switch (action) {
+      case 'resume-job':
+        void run(async () => {
+          await resumeTranscriptJob(item.id)
+        })
+        return
       case 'compile':
         void run(async () => {
           const compiled = await compileTranscript(item.id)

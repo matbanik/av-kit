@@ -1,0 +1,40 @@
+anchor ui/src/renderer/src/features/transcript/transcript-controls.ts:24 at line hits=1 ::   | 'open-folder'
+anchor ui/src/renderer/src/features/transcript/transcript-controls.ts:66 at line hits=1 :: case 'resume':
+anchor ui/src/renderer/src/features/transcript/transcript-card.ts:24 at line hits=1 :: export const TRANSCRIPT_MENU_ORDER
+anchor ui/src/renderer/src/features/transcript/transcript-card.ts:37 at line hits=1 :: export const CARD_ACTION_TESTIDS
+anchor ui/src/renderer/src/features/transcript/transcript-card.ts:66 at line hits=1 :: Paused: [],
+anchor ui/src/renderer/src/features/transcript/transcript-card.ts:87 at line hits=1 :: export function cardActionAvailable
+anchor ui/src/renderer/src/features/transcript/transcript-commands.ts:88 at line hits=1 :: async function queueContext
+anchor ui/src/renderer/src/features/transcript/transcript-commands.ts:144 at line hits=1 :: export async function resumeTranscripts
+anchor ui/src/renderer/src/features/transcript/TranscriptPage.tsx:94 at line hits=1 :: const ACTION_LABELS
+anchor ui/src/renderer/src/features/transcript/TranscriptPage.tsx:320 at line hits=1 :: function runCardAction
+anchor packages/core/src/avkit_core/services/transcript.py:239 at line hits=1 :: def resume_processing
+anchor tests/unit/test_services.py:1278 at line hits=1 :: def test_ac_11_3_resume_only_from_paused
+anchor tests/unit/test_services.py:3071 at line hits=1 :: def _four_hundred
+anchor tests/unit/test_services.py:3085 at line hits=1 :: def test_ac_116_5_default_cap_delays_nothing_without_retries
+anchor tests/unit/test_services.py:3091 at line hits=1 :: def test_ac_116_9_a_retry_makes_the_default_cap_wait
+anchor tests/unit/test_transcript_metadata.py:264 at line hits=1 :: def test_ac_122_12_no_extra_request_per_video
+anchor docs/build-plan/gui-actions-index.md:37 at line hits=1 :: | `transcript:resume` |
+anchor ui/tests/e2e/transcript-queue.test.ts:56 at line hits=1 :: function installTranscriptSeam
+anchor ui/tests/e2e/queue-cancel-paused.test.ts:209 at line hits=1 :: async function launch(
+anchor packages/infrastructure/src/avkit_infra/database/engine.py:38 at line hits=1 :: os.environ.get("AVKIT_APP_DATA"
+anchor packages/core/src/avkit_core/services/settings.py:69 at line hits=1 ::     ("transcript", "requests_per_hour"): SettingSpec("number", 300, min_number=0),
+anchor packages/core/src/avkit_core/services/settings.py:70 at line hits=1 ::     ("transcript", "delay_between_requests"): SettingSpec("number", 6, min_number=0),
+anchor packages/core/src/avkit_core/services/settings.py:71 at line hits=1 ::     ("transcript", "max_retries"): SettingSpec("number", 3, min_number=0),
+anchor packages/core/src/avkit_core/services/settings.py:72 at line hits=1 ::     ("transcript", "retry_delay"): SettingSpec("number", 30, min_number=0),
+anchor packages/core/src/avkit_core/services/settings.py:73 at line hits=1 ::     ("transcript", "batch_size"): SettingSpec("number", 50, min_number=0),
+anchor packages/core/src/avkit_core/services/settings.py:74 at line hits=1 ::     ("transcript", "pause_between_batches"): SettingSpec("number", 300, min_number=0),
+anchor mcp-server/src/toolsets/settings.ts:34 at line hits=1 ::       requests_per_hour: { type: "number", default: 300 },
+anchor mcp-server/src/toolsets/settings.ts:35 at line hits=1 ::       delay_between_requests: { type: "number", default: 6 },
+anchor mcp-server/src/toolsets/settings.ts:36 at line hits=1 ::       max_retries: { type: "number", default: 3 },
+anchor mcp-server/src/toolsets/settings.ts:37 at line hits=1 ::       retry_delay: { type: "number", default: 30 },
+anchor mcp-server/src/toolsets/settings.ts:38 at line hits=1 ::       batch_size: { type: "number", default: 50 },
+anchor mcp-server/src/toolsets/settings.ts:39 at line hits=1 ::       pause_between_batches: { type: "number", default: 300 },
+anchor docs/build-plan/06-gui.md:1055 at line hits=1 :: | `transcript.requests_per_hour` | `number` | `300` | [Transcript §3](../../_inspiration/_transcript
+anchor docs/build-plan/06-gui.md:1056 at line hits=1 :: | `transcript.delay_between_requests` | `number` | `6` | [Transcript §3](../../_inspiration/_transcr
+anchor docs/build-plan/06-gui.md:1057 at line hits=1 :: | `transcript.max_retries` | `number` | `3` | [Transcript §3](../../_inspiration/_transcript_pseudo_
+anchor docs/build-plan/06-gui.md:1058 at line hits=1 :: | `transcript.retry_delay` | `number` | `30` | [Transcript §3](../../_inspiration/_transcript_pseudo
+anchor docs/build-plan/06-gui.md:1059 at line hits=1 :: | `transcript.batch_size` | `number` | `50` | [Transcript §3](../../_inspiration/_transcript_pseudo_
+anchor docs/build-plan/06-gui.md:1060 at line hits=1 :: | `transcript.pause_between_batches` | `number` | `300` | [Transcript §3](../../_inspiration/_transc
+anchor docs/build-plan/03-service-layer.md:577 at line hits=1 :: | Rate cap | `transcript.requests_per_hour` is enforced as a rolling cap over real requests. Default
+anchor packages/core/src/avkit_core/services/transcript.py:242 at line :: with self._lock: (first in resume_processing)

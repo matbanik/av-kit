@@ -3,7 +3,7 @@
 > Auto-generated from `known-issues.yaml` by `tools/issue_triage.py render`.
 > Do not edit manually. Run `uv run python tools/issue_triage.py render` to regenerate.
 
-**Total: 153** — Active: 10 | Mitigated: 2 | Resolved: 139
+**Total: 154** — Active: 10 | Mitigated: 2 | Resolved: 140
 
 ## Active Issues
 
@@ -27,9 +27,9 @@
 | 🟠 | `MCP-ELICITATION-VSCODE-AUTO-DECLINE` | Claude Code VS Code auto-declines MCP elicitation, so USER_CONFIRM neve… | mcp-server | 🟢 mitigated |
 | 🟡 | `TOOLING-SHARED-REGISTRY-COUPLING` | Framework-adoption tests depend on the shared P:/.agent registry and re… | infrastructure | 🟢 mitigated |
 
-## Resolved (139)
+## Resolved (140)
 
-139 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
+140 issues resolved. Query with `uv run python tools/issue_triage.py list --status resolved`.
 
 ---
 *Managed by `tools/issue_triage.py`. See `known-issues.yaml` for full details including root cause, blast radius, and verification metadata.*

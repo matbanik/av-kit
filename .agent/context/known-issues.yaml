@@ -6187,3 +6187,44 @@ issues:
             sources: []
           reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue with next prompt''. The errors are import order and line length, with no runtime effect, but every plan must work around them. The formatter would rewrite 15 files, so it is a whole-folder change, not a quick lint row, and Session 99 is using tools/meu_status.py now. Grouping it into Session 100 would mix a tooling reformat into a test-only session. Doing nothing without a record would leave the workaround undocumented. M items: none. Two-way.'
       decided_by: agent
+  - id: TRANSCRIPT-PAUSED-JOB-NO-RESUME-AFTER-RESTART
+    title: After an app restart a Paused transcript job has no Resume on its page
+    severity: medium
+    component: ui
+    status: resolved
+    discovered: '2026-11-21'
+    root_cause: The processor state is held in memory and job status is stored, so after a restart a job paused by a caption block (MEU-116) is Paused while the processor is Idle. The toolbar shows Resume only while the processor is Paused (ui/src/renderer/src/features/transcript/TranscriptToolbar.tsx:47, transcript-controls.ts controlEnabled 'resume'), Start skips Paused jobs (packages/core/src/avkit_core/services/transcript.py _next_job:472; 03 Start ignores Paused/Failed), Stop is disabled and the card kebab has no resume (transcript-card.ts TRANSCRIPT_MENU_ORDER). The service already resumes the first Paused job from Idle (transcript.py resume_processing:239-273). Found 2026-11-21 when a VPN caption block paused a job; it was resumed through the MCP tool avkit_transcript resume.
+    blast_radius: 'Transcript page after a restart with a Paused job: the job cannot be resumed from the app; the only ways out are the MCP tool or Remove. While a job runs, resume_processing also moves a Paused job to Processing, so two jobs can read Processing at once (transcript.py:249-260).'
+    resolution_path: 'Fixed in Session 101 on 2026-11-21 (plan docs/execution/plans/2026-11-21-transcript-job-resume): the first Paused job''s card offers Resume first in its three-dot menu while the processor is not Processing (CARD_RESUME_RULE in ui/src/renderer/src/features/transcript/transcript-controls.ts, CARD_RESUME_MENU in transcript-card.ts with the test id resume-job-btn, and resumeTranscriptJob in transcript-commands.ts, which reads the queue fresh and sends the existing bodyless POST /transcripts/resume); RESUME_GUARD in packages/core/src/avkit_core/services/transcript.py resume_processing refuses with 409 while a job runs, so a Paused job never becomes a second Processing job; and the real-backend Electron test (AC-163.8, tests/transcript_paused_fixture.py) resumes a seeded Paused job after a fresh launch to Done'
+    category: MEU-NEW
+    priority: P3
+    meu_links:
+      - MEU-163
+    verification:
+      last_checked: '2026-11-21'
+      method: Session 101 receipts tjr-row4-py.txt (the AC-11, AC-116 and AC-163.6 pytest tests with RESUME_GUARD), tjr-row5-green.txt (the card Resume unit tests, ui/tests/unit/transcript-job-resume.test.tsx) and tjr-row6-runs.txt (Electron E2E ui/tests/e2e/transcript-job-resume.test.ts three times, seam and real backend, and the transcript-queue pin suite)
+      result: 'pytest 31 passed, 0 failed; Vitest 12 passed (12); Electron 6 AC-163 ok lines of 6 (3 x AC-163.7 seam, 3 x AC-163.8 real backend: a Paused job seeded into a fresh app data folder resumed from its card menu to Done with its ZIP and compiled file), transcript-queue.test.ts 11 passed; row-check e2e-count 0 problems'
+    notes: 'Triage 2026-11-21 (D-1350): MEU-NEW P3, MEU-163 gui-transcript-job-resume (10, matrix 10.12), Session 101. Mat asked for a Resume item in the card''s three-dot menu. The toolbar keeps its three actions (11 TR1) and Start keeps skipping Paused jobs (03).'
+    enrichment:
+      questions_asked:
+        - Where does a Paused transcript job get a Resume when the processor is not Paused?
+      answers:
+        - In the job card's three-dot menu, with Remove, Open folder and Compile
+      decided_by: human
+      decision_log:
+        - id: D-1350
+          stage: triage
+          question: Where does a Paused transcript job get a Resume when the processor is not Paused, and which MEU covers it?
+          resolution: human
+          class: product-preference
+          chosen: A Resume item in the transcript job card's kebab menu (MEU-163 gui-transcript-job-resume, 10 matrix 10.12, P3). The toolbar keeps its three actions and Start keeps skipping Paused jobs.
+          source_tag: Human-approved
+          precedents:
+            - '10 §Kebab menu: per-card actions live in the kebab; an unavailable action is omitted'
+            - '11-page-layout TR1: the Transcript toolbar keeps three actions'
+            - '03 transcript queue: Start ignores Paused and Failed jobs'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for it in those words. A Paused job after a restart has no way back in the app; the service already resumes the first Paused job from Idle, so the card needs only a menu item. P3: a user-facing dead end with an MCP workaround. Two-way.'
+          human_message_reference: USER_EXPLICIT 2026-11-21 'can we add resume as action on the job in the 3 dot menu where the remove, open folder and compile options are?'

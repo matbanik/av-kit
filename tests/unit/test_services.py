@@ -1282,6 +1282,57 @@ def test_ac_11_3_resume_only_from_paused(tmp_path: Path) -> None:
         service.resume_processing()
 
 
+def test_ac_163_6_refused_while_processing(tmp_path: Path) -> None:
+    from avkit_core.domain.enums import TranscriptStatus
+
+    service, _settings, _yt, uow, _fs, captions, _sleeps = _transcript_stack(tmp_path)
+    paused = service.add_channel("https://youtube.com/@paused")
+    uow.transcripts.save_job(
+        replace(paused, status=TranscriptStatus.Paused, channel_url="https://youtube.com/@paused")
+    )
+    pending = service.add_channel("https://youtube.com/@pending")
+    captions.hold = True
+    service.start_processing()
+    try:
+        assert captions.entered.wait(timeout=2)
+        with pytest.raises(ConflictError):
+            service.resume_processing()
+        assert uow.transcripts.get_job(paused.id).status is TranscriptStatus.Paused
+        assert uow.transcripts.get_job(pending.id).status is TranscriptStatus.Processing
+    finally:
+        service.stop_processing()
+        captions.release.set()
+        _join(service, timeout=2)
+
+
+def test_ac_163_6_idle_resume_done(tmp_path: Path) -> None:
+    from avkit_core.domain.enums import TranscriptItemStatus, TranscriptStatus
+    from avkit_core.domain.transcript import TranscriptItem
+
+    service, _settings, _yt, uow, _fs, _captions, _sleeps = _transcript_stack(tmp_path)
+    job = service.add_channel("https://youtube.com/@paused")
+    uow.transcripts.save_job(replace(job, status=TranscriptStatus.Paused))
+    (tmp_path / "raw").mkdir(parents=True, exist_ok=True)
+    for item in uow.transcripts.list_items(job.id):
+        (tmp_path / "raw" / f"{item.video_id}.md").write_text("hello world\n", encoding="utf-8")
+    done = [
+        TranscriptItem(
+            **{
+                **item.__dict__,
+                "status": TranscriptItemStatus.Done,
+                "path": tmp_path / "raw" / f"{item.video_id}.md",
+                "word_count": 2,
+            }
+        )
+        for item in uow.transcripts.list_items(job.id)
+    ]
+    uow.transcripts.replace_items(job.id, done)
+    assert service.get_processor_state().state is QueueProcessorState.Idle
+    service.resume_processing()
+    assert _wait_until(lambda: uow.transcripts.get_job(job.id).status is TranscriptStatus.Done)
+    _join(service, timeout=2)
+
+
 def test_ac_11_4_stop_leaves_pending_and_keeps_done(tmp_path: Path) -> None:
     from avkit_core.domain.enums import TranscriptItemStatus, TranscriptStatus
 
@@ -3068,11 +3119,23 @@ def test_ac_116_4_a_raised_or_cleared_cap_ends_the_wait(tmp_path: Path, raised: 
     assert captions.starts == [0.0, 100.0]
 
 
-def _four_hundred(tmp_path: Path, *, retries: int):
+MEU_116_PACING = {
+    "requests_per_hour": 300,
+    "delay_between_requests": 6,
+    "max_retries": 3,
+    "retry_delay": 30,
+    "batch_size": 50,
+    "pause_between_batches": 300,
+}
+
+
+def _four_hundred(tmp_path: Path, *, retries: int, pacing: dict[str, int] | None = None):
     from avkit_core.domain.enums import TranscriptStatus
 
     clock = FakeClock()
-    service, _settings, yt, uow, _fs, captions, _sleeps = _transcript_stack(tmp_path, clock=clock)
+    service, settings, yt, uow, _fs, captions, _sleeps = _transcript_stack(tmp_path, clock=clock)
+    for key, value in (pacing or {}).items():
+        settings.set("transcript", key, value)
     _set_ids(yt, [f"v{index}" for index in range(400)])
     captions.retryable_left = retries
     job = service.add_channel("https://youtube.com/@four-hundred")
@@ -3085,12 +3148,12 @@ def _four_hundred(tmp_path: Path, *, retries: int):
 def test_ac_116_5_default_cap_delays_nothing_without_retries(tmp_path: Path) -> None:
     captions, clock = _four_hundred(tmp_path, retries=0)
     assert len(captions.fetch_calls) == 400
-    assert set(clock.sleeps) <= {0.0, 6.0, 300.0}, sorted(set(clock.sleeps))
+    assert set(clock.sleeps) <= {0.0, 120.0, 500.0}, sorted(set(clock.sleeps))
 
 
-def test_ac_116_9_a_retry_makes_the_default_cap_wait(tmp_path: Path) -> None:
+def test_ac_116_9_a_retry_makes_a_300_an_hour_cap_wait(tmp_path: Path) -> None:
     _require_clock()
-    captions, _clock = _four_hundred(tmp_path, retries=1)
+    captions, _clock = _four_hundred(tmp_path, retries=1, pacing=MEU_116_PACING)
     starts = captions.starts
     assert len(starts) == 401
     assert starts[300] == pytest.approx(3600.0)

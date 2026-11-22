@@ -240,6 +240,8 @@ class TranscriptService:
         # One critical section with the worker's exits (D-306): either the worker sees
         # this resume before it exits, or this resume sees no worker and starts one.
         with self._lock:
+            if self._runtime.state is QueueProcessorState.Processing:
+                raise ConflictError("resume_processing requires Paused")
             paused: TranscriptJob | None = None
             with self._uow_factory() as uow:
                 for job in uow.transcripts.list_jobs_ordered():

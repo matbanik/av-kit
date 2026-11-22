@@ -1052,12 +1052,12 @@ Logical keys below are `namespace.leaf`. Persist with `PUT /api/v1/settings/{nam
 | `downloader.yt_dlp_debug` | `boolean` | `false` | [Downloader §8](../../_inspiration/_downloader_pseudo_logic.md) |
 | `downloader.deno_path` | `string` | `""` | Phase 7 Deno probe #1, empty means skip to the bundle ([07 §Deno (locked)](07-distribution.md#deno-locked); MEU-141) |
 | `transcript.output_dir` | `string` | `~/Documents/Transcripts` | [Transcript §7](../../_inspiration/_transcript_pseudo_logic.md) |
-| `transcript.requests_per_hour` | `number` | `300` | [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
-| `transcript.delay_between_requests` | `number` | `6` | [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
-| `transcript.max_retries` | `number` | `3` | [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
-| `transcript.retry_delay` | `number` | `30` | [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
-| `transcript.batch_size` | `number` | `50` | [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
-| `transcript.pause_between_batches` | `number` | `300` | [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
+| `transcript.requests_per_hour` | `number` | `20` | Mat 2026-11-21 (D-1355); was 300 per [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
+| `transcript.delay_between_requests` | `number` | `120` | Mat 2026-11-21 (D-1355); was 6 per [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
+| `transcript.max_retries` | `number` | `1` | Mat 2026-11-21 (D-1355); was 3 per [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
+| `transcript.retry_delay` | `number` | `7` | Mat 2026-11-21 (D-1355); was 30 per [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
+| `transcript.batch_size` | `number` | `5` | Mat 2026-11-21 (D-1355); was 50 per [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
+| `transcript.pause_between_batches` | `number` | `500` | Mat 2026-11-21 (D-1355); was 300 per [Transcript §3](../../_inspiration/_transcript_pseudo_logic.md) |
 | `transcript.playlist_end` | `number` | `0` | [Transcript §7](../../_inspiration/_transcript_pseudo_logic.md) |
 | `transcript.max_words_per_document` | `number` | `490000` | [Transcript §4](../../_inspiration/_transcript_pseudo_logic.md) |
 | `tts.models_directory` | `string` | `~/.avkit/models` | — |

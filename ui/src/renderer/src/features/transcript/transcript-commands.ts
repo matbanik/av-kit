@@ -150,6 +150,28 @@ export async function resumeTranscripts(): Promise<void> {
   await invalidateTranscripts()
 }
 
+/**
+ * CARD_RESUME_COMMAND (MEU-163): resume one card's job. The server resumes the first Paused
+ * job, so this always reads the queue fresh (never the cache) and posts only when the
+ * clicked job is that job and the processor is not busy. It refreshes the page even when the
+ * POST is refused, and the error still reaches the caller.
+ *
+ * @param id - The clicked card's job id.
+ */
+export async function resumeTranscriptJob(id: string): Promise<void> {
+  try {
+    const envelope = parseListEnvelope(await apiFetch<unknown>('/transcripts'))
+    queryClient.setQueryData(QUERY_KEY, envelope)
+    const ctx = { items: envelope.items, processorState: envelope.processor.state, selectedId: id }
+    if (!controlEnabled('resume-job', ctx)) {
+      return
+    }
+    await apiFetch('/transcripts/resume', { method: 'POST' })
+  } finally {
+    await invalidateTranscripts()
+  }
+}
+
 export async function stopTranscripts(): Promise<void> {
   const ctx = await queueContext()
   if (!controlEnabled('stop', ctx)) {
