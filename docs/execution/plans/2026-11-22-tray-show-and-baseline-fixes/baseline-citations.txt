@@ -1,0 +1,14 @@
+anchor ui/src/main/capture-tray.ts:16 at line hits=1 :: label: 'Show window',
+anchor ui/src/main/capture-tray.ts:18 at line hits=1 :: opts.window.show()
+anchor ui/src/main/capture-tray.ts:44 at line hits=1 :: tray.setContextMenu(menu)
+anchor ui/src/main/capture-tray.ts:47 at line hits=1 :: registerNotifyTray(tray)
+anchor ui/src/main/index.ts:594 at line hits=1 :: startCaptureTray({
+anchor ui/src/main/index.ts:104 at line hits=1 :: target.on('second-instance'
+anchor ui/src/main/e2e-shell.ts:15 at line hits=1 :: shellGlobal.__AVKIT_E2E_SHELL_LOG__ = e2eShellLog
+anchor ui/tests/e2e/electron-env.ts:40 at line hits=1 :: env.AVKIT_E2E = '1'
+anchor tests/unit/test_capture_adapter.py:1657 at line hits=1 :: def test_ac_130_10_cmyk_icc_to_srgb
+anchor tests/unit/test_capture_adapter.py:1684 at line hits=1 :: assert cropped.info.get("icc_profile") == srgb.tobytes()
+anchor tools/validate_closeout_artifacts.py:290 at line hits=1 :: def plan_slug(
+anchor tools/validate_closeout_artifacts.py:298 at line hits=1 :: for part in reversed(parts[:-1] if parts[-1].endswith(".md") else parts):
+anchor tools/validate_closeout_artifacts.py:2847 at line hits=1 :: "unslugged-plan-path-is-usage",
+anchor docs/build-plan/09-screenshot-capture.md:167 at line hits=1 :: | Tray icon | Electron main | Always created while the app runs. Menu: Show window, Capture region, 

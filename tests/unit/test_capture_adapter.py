@@ -1652,6 +1652,16 @@ def _cmyk_jpeg(path: Path, icc: bytes | None) -> None:
     image.save(path, format="JPEG", quality=95, **extra)
 
 
+def _same_icc_ignoring_creation(a: bytes | None, b: bytes | None) -> bool:
+    """Compare two ICC profiles byte for byte.
+
+    The ICC header's creation date and time, bytes 24 to 35 (ICC.1 §7.2.1), are ignored.
+    """
+    if a is None or b is None or len(a) != len(b) or len(a) < 128:
+        return False
+    return a[:24] + a[36:] == b[:24] + b[36:]
+
+
 @pytest.mark.parametrize("ac_id", ["AC-130.10"], ids=["AC-130.10"])
 @pytest.mark.unit
 def test_ac_130_10_cmyk_icc_to_srgb(ac_id: str, tmp_path: Path) -> None:
@@ -1681,8 +1691,42 @@ def test_ac_130_10_cmyk_icc_to_srgb(ac_id: str, tmp_path: Path) -> None:
     with Image.open(out) as cropped:
         cropped.load()
         assert (cropped.mode, cropped.size) == ("RGB", (20, 16))
-        assert cropped.info.get("icc_profile") == srgb.tobytes()
+        assert _same_icc_ignoring_creation(cropped.info.get("icc_profile"), srgb.tobytes())
         assert cropped.tobytes() == managed.tobytes()
+
+
+@pytest.mark.unit
+def test_ac_164_8_icc_compare_ignores_creation_time() -> None:
+    """D-1367: two profiles that differ only in the creation date and time are the same."""
+    from PIL import ImageCms
+
+    base = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes()
+    assert _same_icc_ignoring_creation(base, base)
+    for index in range(24, 36):
+        changed = bytearray(base)
+        changed[index] ^= 0xFF
+        assert _same_icc_ignoring_creation(base, bytes(changed)), index
+    every = bytearray(base)
+    for index in range(24, 36):
+        every[index] ^= 0xFF
+    assert _same_icc_ignoring_creation(base, bytes(every))
+
+
+@pytest.mark.unit
+def test_ac_164_8_icc_compare_sees_other_bytes() -> None:
+    """D-1367: any other byte, a length or a missing or short profile still tells them apart."""
+    from PIL import ImageCms
+
+    base = ImageCms.ImageCmsProfile(ImageCms.createProfile("sRGB")).tobytes()
+    for index in (23, 36, 100):
+        changed = bytearray(base)
+        changed[index] ^= 0xFF
+        assert not _same_icc_ignoring_creation(base, bytes(changed)), index
+    assert not _same_icc_ignoring_creation(base, base[:-1])
+    assert not _same_icc_ignoring_creation(None, base)
+    assert not _same_icc_ignoring_creation(base, None)
+    short = bytes(100)
+    assert not _same_icc_ignoring_creation(short, short)
 
 
 @pytest.mark.parametrize("icc", [None, b"not a profile"], ids=["none", "junk"])

@@ -1,0 +1,386 @@
+{
+  "ui/src/main/capture-tray.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 49,
+    "bom": false,
+    "bytes": 1181
+  },
+  "tests/unit/test_capture_adapter.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1738,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 68181
+  },
+  "tools/validate_closeout_artifacts.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 6001,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 223729
+  },
+  "docs/build-plan/09-screenshot-capture.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1525,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 166752
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4328,
+    "bom": false,
+    "bytes": 156027
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 260,
+    "bom": false,
+    "bytes": 56214
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false,
+    "bytes": 20131
+  },
+  ".agent/context/grouping/2026-11-22-tray-show-and-baseline-fixes-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 129,
+    "bom": false,
+    "bytes": 10508
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 260,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 109088
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 111,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 133744
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 6351,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 602981
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 38,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 3057
+  },
+  "ui/src/main/index.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 645,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 20658
+  },
+  "ui/src/main/e2e-shell.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 16,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 645
+  },
+  "ui/src/main/app-icon.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 39,
+    "bom": false,
+    "bytes": 1229
+  },
+  "ui/src/main/notify-user.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 110,
+    "bom": false,
+    "bytes": 3292
+  },
+  "ui/tests/unit/helpers/electron-stub.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 181,
+    "bom": false,
+    "bytes": 4537
+  },
+  "ui/vitest.config.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 19,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 533
+  },
+  "ui/tests/e2e/electron-app.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 196,
+    "bom": false,
+    "bytes": 7617
+  },
+  "ui/tests/e2e/electron-env.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 147,
+    "bom": false,
+    "bytes": 6191
+  },
+  "ui/tests/e2e/test-ids.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 538,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 28082
+  },
+  "packages/infrastructure/src/avkit_infra/capture/adapter.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 1133,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 50191
+  },
+  "tests/tooling/test_closeout_record_once.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 538,
+    "bom": false,
+    "bytes": 19510
+  },
+  "ui/tests/unit/app-icon.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 61,
+    "bom": false,
+    "bytes": 2761
+  },
+  "ui/tests/unit/capture-main.behavior.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 310,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 12480
+  },
+  "ui/tests/unit/capture-page.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 644,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 29432
+  },
+  "ui/tests/unit/login-item-ipc.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 100,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 4438
+  },
+  "ui/tests/e2e/startup-reveal.test.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 60,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2402
+  },
+  "tests/tooling/test_framework_adoption.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 1275,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 49718
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/baseline-dirty-hashes.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4,
+    "bom": false,
+    "bytes": 224
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/baseline-scope.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 49,
+    "bom": false,
+    "bytes": 3748
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/baseline.ps1": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 434,
+    "bom": false,
+    "bytes": 19951
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/crlf.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 32,
+    "bom": false,
+    "bytes": 1082
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/debt-edit.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 195,
+    "bom": false,
+    "bytes": 7971
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/eol-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 269,
+    "bom": false,
+    "bytes": 11602
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/host-wait.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 68,
+    "bom": false,
+    "bytes": 2498
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/identity.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 393,
+    "bom": false,
+    "bytes": 17297
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 392,
+    "bom": false,
+    "bytes": 47294
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/issue-resolve.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 322,
+    "bom": false,
+    "bytes": 12787
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/link-issue.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 48,
+    "bom": false,
+    "bytes": 1914
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/load-run.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 498,
+    "bom": false,
+    "bytes": 20282
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/plan-fix-r1.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 85,
+    "bom": false,
+    "bytes": 3444
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/plan-fix-r2.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 67,
+    "bom": false,
+    "bytes": 2925
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/red-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 2302,
+    "bom": false,
+    "bytes": 78796
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/register-meu.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 139,
+    "bom": false,
+    "bytes": 5764
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/row-check.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 931,
+    "bom": false,
+    "bytes": 43101
+  },
+  "docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 98,
+    "bom": false,
+    "bytes": 63527
+  },
+  ".agent/context/handoffs/2026-11-22-tray-show-and-baseline-fixes-plan-critical-review.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 187,
+    "bom": false,
+    "bytes": 24836
+  }
+}

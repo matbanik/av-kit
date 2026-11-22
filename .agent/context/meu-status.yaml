@@ -4287,6 +4287,30 @@ meus:
   updated: '2026-11-21'
   closed_reason: null
   note: Registered 2026-11-21 from TRANSCRIPT-PAUSED-JOB-NO-RESUME-AFTER-RESTART (triage D-1350, Mat's request; grouping D-1351), Session 101.
+- row_key: MEU-164
+  id: MEU-164
+  slug: gui-tray-double-click-show
+  phase: '9'
+  band: P2
+  matrix_item: '9.47'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: tray-double-click
+    text: Phase 9 §Tray double-click
+  description: A double-click on the tray icon runs the tray menu's Show window action, through one show function shared by the menu item and the double-click listener; the tray menu is unchanged.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-39
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-39
+  execution_plan: docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/implementation-plan.md
+  updated: '2026-11-22'
+  closed_reason: null
+  note: Registered 2026-11-22 from TRAY-DOUBLE-CLICK-NO-SHOW (triage D-1363, Mat's request; grouping D-1364), Session 102.
 summary_bands:
 - key: P0
   label: P0
@@ -4296,9 +4320,9 @@ summary_bands:
   range: MEU-5–13 (Phases 2–3)
 - key: P2
   label: P2
-  range: MEU-14–163 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+  range: MEU-14–164 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
     triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127;
     2026-11-08 capture crop residuals MEU-128–132; 2026-11-09 video stills residuals MEU-133–136; 2026-11-10 download reliability residuals MEU-137–142; 2026-11-13 capture style split MEU-143; 2026-11-15
     post-rc.3 triage residuals MEU-145–154, with MEU-144 registered in Session 74; 2026-11-17 queue pause feedback MEU-155; 2026-11-17 triage residuals MEU-156–157; 2026-11-17 value triage residuals MEU-158–159;
-    2026-11-17 Session 93 residual MEU-160; 2026-11-19 Session 97 residual MEU-161; 2026-11-20 Session 99 residual MEU-162; 2026-11-21 transcript job resume MEU-163)
+    2026-11-17 Session 93 residual MEU-160; 2026-11-19 Session 97 residual MEU-161; 2026-11-20 Session 99 residual MEU-162; 2026-11-21 transcript job resume MEU-163; 2026-11-22 tray double-click MEU-164)
 narrative_sections: []

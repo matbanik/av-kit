@@ -1,0 +1,49 @@
+{
+  "ui/src/main/capture-tray.ts": "8e78d3a84861ffa43db360aa740a723ad9f246b8444639d2629e6f253c25ec7d",
+  "tests/unit/test_capture_adapter.py": "080191a95c9bc2e5c81aa0d4db50b0d7788090f82560e37408fcf610573e29de",
+  "tools/validate_closeout_artifacts.py": "94c7ac24ab354d7aad8235fa452cecf3b32ab809909127d57f7289342e8b99ed",
+  "docs/build-plan/09-screenshot-capture.md": "0038ab4a0c138b3c1e36447de63f95d78997d1eb32999b6895122cdc84e8676b",
+  ".agent/context/meu-status.yaml": "78ea473af836ac8e9b8c3ea169fd6e7e5cb64ad21bc880c9598fa02c118f59b1",
+  ".agent/context/meu-registry.md": "c5c2353ca596343c8043b1c13cefed0ab2dbdebeddc0f4b4d4c3d967ce156cc2",
+  "docs/BUILD_PLAN.md": "05371028184070712a09d8f7c2daa53d40f8f30f7b3008163db951da730a9199",
+  ".agent/context/grouping/2026-11-22-tray-show-and-baseline-fixes-session-grouping.md": "f640dd6b72ec1c05c7b66892b626497332aab89ce95d160fc92d57c0722c0578",
+  "ui/tests/unit/capture-tray.test.ts": "absent",
+  "ui/tests/e2e/tray-double-click.test.ts": "absent",
+  "tests/tooling/test_closeout_plan_slug.py": "absent",
+  ".agent/context/handoffs/2026-11-22-tray-show-and-baseline-fixes-MEU-164-handoff.md": "absent",
+  ".agent/context/handoffs/2026-11-22-tray-show-and-baseline-fixes-implementation-critical-review.md": "absent",
+  "docs/execution/reflections/2026-11-22-tray-show-and-baseline-fixes-reflection.md": "absent",
+  "ui/src/main/index.ts": "10ce14178c5c2c3cf2128ae014d751de07048156933d729cb568fff162ddeee3",
+  "ui/src/main/e2e-shell.ts": "a41f9edac397bb0bdbf9b91891d4c63ba79a2a35af91064b83cbbb773af7af7c",
+  "ui/src/main/app-icon.ts": "0d1b17e29503bf3a62fb7eb3c062ea71f63d68898ac7fec36ce453914e7a0c10",
+  "ui/src/main/notify-user.ts": "22e401778d7a8526943dcad61fb361ce0dc89d226a207000404c6a51bce46c9b",
+  "ui/tests/unit/helpers/electron-stub.ts": "1436cf03f7c8a61c7e65818f319298e91c64df0d2c39b73b28f6855a301465d8",
+  "ui/vitest.config.ts": "2480ac54b6d4767edb13105d8d0292884aa3e548250cb975c25d02c99c599bc6",
+  "ui/tests/e2e/electron-app.ts": "7fea46aac13966216a9658bf107272178c138aef42f18e93550592d9f74fd4fa",
+  "ui/tests/e2e/electron-env.ts": "c556afdf2d88679ace37b3c56e12d80536103005a15d3f626dfcf0b70704803b",
+  "ui/tests/e2e/test-ids.ts": "cc233e56c72b696987877686bd6b4bb0c3435a4f919213c716f05cbc1b051388",
+  "packages/infrastructure/src/avkit_infra/capture/adapter.py": "757bd955f59f7f2c78d320d1aaf4d23a8b9a8aa074fc48e1754b8cd8d78a1332",
+  "tests/tooling/test_closeout_record_once.py": "0f826f02b326cde045033b7ffe90f0ca45cde3a387e854799d9723490ea3a39c",
+  "ui/tests/unit/app-icon.test.ts": "a1ca9f46efd9b04699814068f1eca6b0a909ccb6ba4002e93a47c776f927c792",
+  "ui/tests/unit/capture-main.behavior.test.ts": "2f39643761e58b74143d395e89d689801678b125d10bdcca70c711db95d50cc7",
+  "ui/tests/unit/capture-page.test.ts": "8c9fa8a8aba80406fdf7b629e5b9ff54a5e431d54a853939a45239d08cbd492b",
+  "ui/tests/unit/login-item-ipc.test.ts": "aa80905382602f8486efb4af1ff86c479db8d65108ac406395c3508104cde078",
+  "ui/tests/e2e/startup-reveal.test.ts": "c40a1f4981ae25b73ff6d617eeeedebc5281edc80d6a22dc179b204e73a9dbbd",
+  "tests/tooling/test_framework_adoption.py": "25f8594ea688aff15b717d9de0c4a79b35ff30a747cd0f1b1904e62353545567",
+  ".agent/context/current-focus.md": {
+    "kind": "shared",
+    "sha256": "4264e3552c5ae636a725d222d9cd73ccd479ec580830928cacb388146335f99a"
+  },
+  "docs/execution/metrics.md": {
+    "kind": "shared",
+    "sha256": "a973daeb755c22f779d349be717aab3c5b9a9949e34640d5d49ef86ed06bd6c4"
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "shared",
+    "sha256": "a58132dd22ff8319618ab8c63682caa6c2ed16f44a71fade138edac63b32b3e1"
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "shared",
+    "sha256": "6f3f1a0cfe4b2bb91dc56257060106361fbe7dfdf5c737752d14020f3988b3b0"
+  }
+}

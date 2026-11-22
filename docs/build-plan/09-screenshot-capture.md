@@ -164,7 +164,7 @@ This surface **cannot** live in FastAPI. FastAPI cannot hold a global hotkey whi
 
 | Concern | Owner | Rule |
 |---------|-------|------|
-| Tray icon | Electron main | Always created while the app runs. Menu: Show window, Capture region, Open inbox folder, Quit |
+| Tray icon | Electron main | Always created while the app runs. Menu: Show window, Capture region, Open inbox folder, Quit. A double-click on the icon runs Show window (MEU-164) |
 | Close-to-tray | Electron main | Window `close` hides; does not quit. Quit only from tray or app menu |
 | Single instance | Existing | Second launch focuses the running app (already locked) |
 | `globalShortcut` | Electron main | Register `capture.hotkey` after settings load. Unregister on change/quit |
@@ -1351,6 +1351,28 @@ One residual MEU from Session 97's plan (`docs/execution/plans/2026-11-19-e2e-ho
 > - Gate: the H1-2 `session-gate.ps1` record in the Session 97 MEU-161 handoff.
 > - Plan `docs/execution/plans/2026-11-19-e2e-host-parity/`.
 
+## Residuals registered 2026-11-22
+
+One residual MEU from the 2026-11-22 triage (grouping `.agent/context/grouping/2026-11-22-tray-show-and-baseline-fixes-session-grouping.md`; plan `docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/`). It changes the tray icon of §Electron OS surface (`ui/src/main/capture-tray.ts`).
+
+<a id="tray-double-click"></a>
+
+### Tray double-click
+
+> **MEU-164.** From `TRAY-DOUBLE-CLICK-NO-SHOW` (triage D-1363, Mat's request; grouping D-1364). The tray icon has a context menu and no double-click action, so after close-to-tray the window comes back only through the right-click menu, while a double-click on the icon does nothing. A double-click runs the menu's Show window action.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Double-click | A `double-click` on the tray icon runs the same function as the tray menu's Show window item. | Human-approved: D-1363 |
+| One function | The menu item and the double-click listener share one show function inside `startCaptureTray`; neither restates its steps. | Local Canon: D-1363 |
+| Menu | The tray menu keeps its four items, in order: Show window, Capture region, Open inbox folder, Quit. A single click and a right-click keep today's behaviour. | Local Canon: §Electron OS surface tray row |
+
+> **Delivered (Session 102).**
+> - `TRAY_SHOW_SHARED`: `startCaptureTray` in `ui/src/main/capture-tray.ts` defines one `showWindow` function, which does a `restore` when the window is minimized and then shows and focuses it. The Show window item's `click` and the tray's `double-click` listener are that same function (D-1365).
+> - `TRAY_E2E_HOOK`: only a launch with `AVKIT_E2E=1` sets `globalThis.__AVKIT_E2E_TRAY__` to `{ tray, menu }`, so Playwright can emit the tray's `double-click` and call the Show window item (D-1366).
+> - Tests: `ui/tests/unit/capture-tray.test.ts` (AC-164.1 to AC-164.3) and the Electron test `ui/tests/e2e/tray-double-click.test.ts` (AC-164.4 hidden, AC-164.5 minimized).
+> - The same session fixed two test baselines: AC-130.10 compares ICC profiles without their creation time (D-1367), and the closeout validator names a plan by its own folder only (D-1368). D-1365 to D-1368 are in the plan `docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/`.
+
 ## Named deferrals (not this phase)
 
 | Feature | Why |
@@ -1421,6 +1443,7 @@ One residual MEU from Session 97's plan (`docs/execution/plans/2026-11-19-e2e-ho
 | MEU-146 | `capture-exif-orientation` | [EXIF orientation on scan](#exif-orientation-on-scan) | MEU-35, MEU-36, MEU-128, MEU-129 |
 | MEU-160 | `capture-video-tail-packet-read` | [Video tail packet read](#video-tail-packet-read) | MEU-134 |
 | MEU-161 | `capture-text-plate-metrics` | [Text plate metrics](#text-plate-metrics) | MEU-82, MEU-102 |
+| MEU-164 | `gui-tray-double-click-show` | [Tray double-click](#tray-double-click) | MEU-39 |
 
 ---
 

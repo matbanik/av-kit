@@ -293,12 +293,13 @@ def plan_slug(plan_path: str) -> str:
     The slug, not the filename. Every plan is called ``implementation-plan.md``, so
     a handoff that merely mentions that filename is bound to no particular plan --
     which is the defect this whole check exists for.
+    Only the plan's own folder counts, so a dated ancestor (a dated TEMP, say) names no plan.
     """
     parts = Path(plan_path).as_posix().split("/")
-    for part in reversed(parts[:-1] if parts[-1].endswith(".md") else parts):
-        match = PLAN_SLUG.fullmatch(part)
-        if match:
-            return match.group(1)
+    folder = parts[-2] if parts[-1].endswith(".md") and len(parts) > 1 else parts[-1]
+    match = PLAN_SLUG.fullmatch(folder)
+    if match:
+        return match.group(1)
     raise Usage(
         f"cannot derive a plan slug from {plan_path!r}. Expected a path under "
         f"docs/execution/plans/{{YYYY-MM-DD}}-{{project-slug}}/."
