@@ -17,7 +17,7 @@ export const SERVER_INSTRUCTIONS = [
 
 export function createServer(options: McpSurfaceOptions = {}): McpServer {
   const server = new McpServer(
-    { name: "av-kit", version: "0.1.0-rc.4" },
+    { name: "av-kit", version: "0.1.0-rc.5" },
     { instructions: SERVER_INSTRUCTIONS },
   );
   registerMcpSurface(server, options);
