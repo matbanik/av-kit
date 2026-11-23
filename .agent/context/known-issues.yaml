@@ -6157,16 +6157,17 @@ issues:
     root_cause: CI lints packages/, tests/ and tools/deps_report.py only (.github/workflows/ci.yml:53), so the register and MEU tools were never held to ruff. `ruff check tools/` reports 10 errors in 7 files under tools/issue_triage* and tools/meu_status* (I001 x7, E501 x3; 7 auto-fixable), and `ruff format --check tools/` would reformat 15 files.
     blast_radius: No runtime effect and CI stays green. Any plan that lints its own Python together with a tools/ path it did not change has to narrow its lint scope by hand, as Session 98 did (D-1287).
     verification:
-      last_checked: '2026-11-20'
-      method: uv run ruff check tools/ and ruff format --check tools/ at e8207e1 (C:/Temp/av-kit/triage-1120b/ruff-tools.txt, ruff-fmt-tools.txt)
-      result: 10 errors in 7 files; 15 files would be reformatted, 24 already formatted
+      last_checked: '2026-11-22'
+      method: uv run ruff check tools/ and ruff format --check tools/ at 068d64d, and the same rules over P:/agentic-framework core/tools at 4df0e85 (C:/Temp/av-kit/triage-1122b/ruff-tools.txt, ruff-fmt-tools.txt, ruff-upstream.txt)
+      result: 10 errors in 7 files, unchanged; 15 files would be reformatted, 25 already formatted. All 15 came in with the framework adoption (docs/execution/plans/2026-09-26-framework-update-adoption/adoption-manifest.json), and the framework source shows 13 findings under the same rules
+      evidence_file: C:/Temp/av-kit/triage-1122b/ruff-tools.txt
     category: TECH-DEBT
     priority: P4
     related:
       - tooling
       - lint
     meu_links: []
-    notes: 'Triage 2026-11-20 (D-1300): TECH-DEBT P4, not grouped. Session 99 (MEU-162) runs tools/meu_status.py while this triage runs, so a reformat now would touch a tool another session is using. Fix it in the next session that changes these tools, with ruff format and ruff check --fix in their own commit, and widen CI''s scope to tools/ then.'
+    notes: 'Triage 2026-11-20 (D-1300): TECH-DEBT P4, not grouped. Session 99 (MEU-162) runs tools/meu_status.py while this triage runs, so a reformat now would touch a tool another session is using. Fix it in the next session that changes these tools, with ruff format and ruff check --fix in their own commit, and widen CI''s scope to tools/ then. Re-triage 2026-11-22 (D-1371): kept TECH-DEBT P4, not grouped. Session 99 no longer holds the tools, but the route of D-1300 stands. The 15 files came from the framework, whose source has the same errors; av-kit''s copies already differ from it in local edits, so av-kit fixes its own copies.'
     enrichment:
       questions_asked: []
       answers: []
@@ -6186,6 +6187,22 @@ issues:
             engine: none
             sources: []
           reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-20 ''continue with next prompt''. The errors are import order and line length, with no runtime effect, but every plan must work around them. The formatter would rewrite 15 files, so it is a whole-folder change, not a quick lint row, and Session 99 is using tools/meu_status.py now. Grouping it into Session 100 would mix a tooling reformat into a test-only session. Doing nothing without a record would leave the workaround undocumented. M items: none. Two-way.'
+        - id: D-1371
+          stage: triage
+          question: D-1300 held this fix back while Session 99 used tools/meu_status.py. That session is done and the queue is empty. Group the fix as its own session now?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: 'Keep TECH-DEBT P4, not grouped. The route of D-1300 stands: the next session that changes these tools runs ruff format and ruff check --fix over them and widens CI''s lint scope to tools/.'
+          source_tag: Local Canon
+          precedents:
+            - 'D-1300 (this issue): the fix rides the next session that changes these tools'
+            - 'TOOLING-SHARED-REGISTRY-COUPLING (D-912): a tooling fix rides the next change to its file'
+            - '.agent/workflows/issue-triage.md §4: low severity and standalone is P4, opportunistic'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-22 ''commit it, and push and continue with next session''. The errors are import order and line length with no runtime effect, and P4 is opportunistic. A session of its own costs a plan and at least two Codex reviews (Session 102 used 23.7M tokens) and a whole-folder reformat of 15 files that came from the framework, whose source has the same errors. Grouping it now loses on cost for no user-visible change; closing it loses because plans still narrow their lint scope by hand. M items: none. Two-way.'
       decided_by: agent
   - id: TRANSCRIPT-PAUSED-JOB-NO-RESUME-AFTER-RESTART
     title: After an app restart a Paused transcript job has no Resume on its page

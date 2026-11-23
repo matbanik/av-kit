@@ -4016,6 +4016,96 @@ archived:
       reasoning: 'Mat asked for it in those words. A Paused job after a restart has no way back in the app; the service already resumes the first Paused job from Idle, so the card needs only a menu item.
         P3: a user-facing dead end with an MCP workaround. Two-way.'
       human_message_reference: USER_EXPLICIT 2026-11-21 'can we add resume as action on the job in the 3 dot menu where the remove, open folder and compile options are?'
+- id: TEST-CAPTURE-SRGB-ICC-TIMESTAMP-FLAKE
+  title: AC-130.10 compares two sRGB ICC profiles that carry their creation time, so it fails when a second passes between them
+  severity: low
+  component: infrastructure
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1361
+      stage: triage
+      question: Session 101 deselected AC-130.10 as a baseline failure (D-1360). Is it environmental, and how is it registered?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: 'Register TEST-CAPTURE-SRGB-ICC-TIMESTAMP-FLAKE as TECH-DEBT P3: the test compares ICC creation timestamps; fix it by masking header bytes 24 to 35 or comparing the profile description.'
+      source_tag: Local Canon
+      precedents:
+      - 'docs/execution/plans/2026-11-21-transcript-job-resume D-1360: the two baseline failures deselected and left for triage'
+      - 'Triage priority matrix (.agent/workflows/issue-triage.md §4): low severity that blocks other work is P3'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-22 ''@.agent/skills/issue-triage/''. The repro shows the
+        only difference is the seconds byte of the creation time, so it is a timing flake in the test, not an environment or product fault. Every full gate meets it, so it blocks other work: P3. Doing nothing
+        leaves each gate deselecting a real test by name. M items: none. Two-way.'
+    decided_by: agent
+- id: TOOLING-PLAN-SLUG-ANCESTOR-MATCH
+  title: validate_closeout_artifacts plan_slug accepts any dated ancestor folder, so its selftest fails under a dated TEMP
+  severity: low
+  component: agent
+  status: resolved
+  category: TECH-DEBT
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decision_log:
+    - id: D-1362
+      stage: triage
+      question: Session 101 deselected the validate_closeout_artifacts.py selftest as a baseline failure (D-1360). Is it environmental, and how is it registered?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: 'Register TOOLING-PLAN-SLUG-ANCESTOR-MATCH as TECH-DEBT P3: plan_slug must read the slug from the plan folder, not any ancestor, and the selftest must not depend on TEMP.'
+      source_tag: Local Canon
+      precedents:
+      - 'docs/execution/plans/2026-11-21-transcript-job-resume D-1360: the two baseline failures deselected and left for triage'
+      - 'TOOLING-RUFF-TOOLS-UNCLEAN (D-1300): a tooling defect registered as TECH-DEBT'
+      - 'Triage priority matrix (.agent/workflows/issue-triage.md §4): low severity that blocks other work is P3'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-22 ''@.agent/skills/issue-triage/''. The repro shows the
+        arm passes under an undated TEMP and fails under a dated one, so the trigger is the environment Session 101 set, but the cause is the tool: an ancestor match is looser than the check''s own error
+        message promises. A gate that keeps its TEMP under the plan''s dated receipt folder fails, so it blocks other work: P3. Doing nothing means every plan must keep TEMP undated or deselect the test.
+        M items: none. Two-way.'
+    decided_by: agent
+- id: TRAY-DOUBLE-CLICK-NO-SHOW
+  title: Double-clicking the tray icon does nothing; it should run the tray menu's Show window action
+  severity: low
+  component: ui
+  status: resolved
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked:
+    - What should a double-click on the tray icon do?
+    answers:
+    - Run the Show window action
+    decided_by: human
+    decision_log:
+    - id: D-1363
+      stage: triage
+      question: What should a double-click on the tray icon do?
+      resolution: human
+      class: product-preference
+      chosen: A double-click on the tray icon runs the tray menu's Show window action (one shared function for both).
+      source_tag: Human-approved
+      precedents:
+      - '09-screenshot-capture.md tray row: menu Show window, Capture region, Open inbox folder, Quit'
+      - '06-gui.md Start minimized: tray Show window still shows the window'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for it in those words. Double-click to reopen is the usual Windows tray behaviour, and the window is otherwise reachable only through the right-click menu. P3: Mat asked for
+        it now; standalone. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-22 'add an issue where if icon in system tray is double clicked the "Show window" action needs to be executed. Than proceed with you recommendations'
 actionable:
 - id: TOOLING-SHARED-REGISTRY-COUPLING
   title: Framework-adoption tests depend on the shared P:/.agent registry and resolver
@@ -4289,97 +4379,25 @@ actionable:
         order and line length, with no runtime effect, but every plan must work around them. The formatter would rewrite 15 files, so it is a whole-folder change, not a quick lint row, and Session 99 is
         using tools/meu_status.py now. Grouping it into Session 100 would mix a tooling reformat into a test-only session. Doing nothing without a record would leave the workaround undocumented. M items:
         none. Two-way.'
-    decided_by: agent
-- id: TEST-CAPTURE-SRGB-ICC-TIMESTAMP-FLAKE
-  title: AC-130.10 compares two sRGB ICC profiles that carry their creation time, so it fails when a second passes between them
-  severity: low
-  component: infrastructure
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-1361
+    - id: D-1371
       stage: triage
-      question: Session 101 deselected AC-130.10 as a baseline failure (D-1360). Is it environmental, and how is it registered?
+      question: D-1300 held this fix back while Session 99 used tools/meu_status.py. That session is done and the queue is empty. Group the fix as its own session now?
       resolution: autonomous
       class: two-way
       mandatory: none
-      chosen: 'Register TEST-CAPTURE-SRGB-ICC-TIMESTAMP-FLAKE as TECH-DEBT P3: the test compares ICC creation timestamps; fix it by masking header bytes 24 to 35 or comparing the profile description.'
+      chosen: 'Keep TECH-DEBT P4, not grouped. The route of D-1300 stands: the next session that changes these tools runs ruff format and ruff check --fix over them and widens CI''s lint scope to tools/.'
       source_tag: Local Canon
       precedents:
-      - 'docs/execution/plans/2026-11-21-transcript-job-resume D-1360: the two baseline failures deselected and left for triage'
-      - 'Triage priority matrix (.agent/workflows/issue-triage.md §4): low severity that blocks other work is P3'
+      - 'D-1300 (this issue): the fix rides the next session that changes these tools'
+      - 'TOOLING-SHARED-REGISTRY-COUPLING (D-912): a tooling fix rides the next change to its file'
+      - '.agent/workflows/issue-triage.md §4: low severity and standalone is P4, opportunistic'
       research:
         engine: none
         sources: []
-      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-22 ''@.agent/skills/issue-triage/''. The repro shows the
-        only difference is the seconds byte of the creation time, so it is a timing flake in the test, not an environment or product fault. Every full gate meets it, so it blocks other work: P3. Doing nothing
-        leaves each gate deselecting a real test by name. M items: none. Two-way.'
+      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-22 ''commit it, and push and continue with next session''. The errors are import order and line length with no runtime effect, and P4 is opportunistic.
+        A session of its own costs a plan and at least two Codex reviews (Session 102 used 23.7M tokens) and a whole-folder reformat of 15 files that came from the framework, whose source has the same errors.
+        Grouping it now loses on cost for no user-visible change; closing it loses because plans still narrow their lint scope by hand. M items: none. Two-way.'
     decided_by: agent
-- id: TOOLING-PLAN-SLUG-ANCESTOR-MATCH
-  title: validate_closeout_artifacts plan_slug accepts any dated ancestor folder, so its selftest fails under a dated TEMP
-  severity: low
-  component: agent
-  status: open
-  category: TECH-DEBT
-  priority: P3
-  enrichment:
-    questions_asked: []
-    answers: []
-    decision_log:
-    - id: D-1362
-      stage: triage
-      question: Session 101 deselected the validate_closeout_artifacts.py selftest as a baseline failure (D-1360). Is it environmental, and how is it registered?
-      resolution: autonomous
-      class: two-way
-      mandatory: none
-      chosen: 'Register TOOLING-PLAN-SLUG-ANCESTOR-MATCH as TECH-DEBT P3: plan_slug must read the slug from the plan folder, not any ancestor, and the selftest must not depend on TEMP.'
-      source_tag: Local Canon
-      precedents:
-      - 'docs/execution/plans/2026-11-21-transcript-job-resume D-1360: the two baseline failures deselected and left for triage'
-      - 'TOOLING-RUFF-TOOLS-UNCLEAN (D-1300): a tooling defect registered as TECH-DEBT'
-      - 'Triage priority matrix (.agent/workflows/issue-triage.md §4): low severity that blocks other work is P3'
-      research:
-        engine: none
-        sources: []
-      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-22 ''@.agent/skills/issue-triage/''. The repro shows the
-        arm passes under an undated TEMP and fails under a dated one, so the trigger is the environment Session 101 set, but the cause is the tool: an ancestor match is looser than the check''s own error
-        message promises. A gate that keeps its TEMP under the plan''s dated receipt folder fails, so it blocks other work: P3. Doing nothing means every plan must keep TEMP undated or deselect the test.
-        M items: none. Two-way.'
-    decided_by: agent
-- id: TRAY-DOUBLE-CLICK-NO-SHOW
-  title: Double-clicking the tray icon does nothing; it should run the tray menu's Show window action
-  severity: low
-  component: ui
-  status: open
-  category: MEU-NEW
-  priority: P3
-  enrichment:
-    questions_asked:
-    - What should a double-click on the tray icon do?
-    answers:
-    - Run the Show window action
-    decided_by: human
-    decision_log:
-    - id: D-1363
-      stage: triage
-      question: What should a double-click on the tray icon do?
-      resolution: human
-      class: product-preference
-      chosen: A double-click on the tray icon runs the tray menu's Show window action (one shared function for both).
-      source_tag: Human-approved
-      precedents:
-      - '09-screenshot-capture.md tray row: menu Show window, Capture region, Open inbox folder, Quit'
-      - '06-gui.md Start minimized: tray Show window still shows the window'
-      research:
-        engine: none
-        sources: []
-      reasoning: 'Mat asked for it in those words. Double-click to reopen is the usual Windows tray behaviour, and the window is otherwise reachable only through the right-click menu. P3: Mat asked for
-        it now; standalone. Two-way.'
-      human_message_reference: USER_EXPLICIT 2026-11-22 'add an issue where if icon in system tray is double clicked the "Show window" action needs to be executed. Than proceed with you recommendations'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -4555,11 +4573,4 @@ deferred:
         list of every FFmpeg dependency and no change. Whether naming it changes legal exposure was not assessed; this is not legal advice.
       human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
     decided_by: human
-proposed_batches:
-- slug: ui-tray-double-click-no-show
-  issues:
-  - TRAY-DOUBLE-CLICK-NO-SHOW
-  component: ui
-  priority_band: P3
-  complexity: S
-  has_duplicates: false
+proposed_batches: []
