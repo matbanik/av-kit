@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { Button } from '../../components/ui/Button'
 import { SegmentedControl } from '../../components/ui/SegmentedControl'
@@ -60,6 +60,7 @@ import { ToolbarIconButton } from './ToolbarIconButton'
 import { CaptureCropOverlay } from './CaptureCropOverlay'
 import { CaptureScrubField } from './CaptureScrubField'
 import { FONT_SCRUB_MAX, parsePositiveInt, STROKE_SCRUB_MAX } from './capture-scrub'
+import { SCROLL_BAR_THICKNESS, scrollBars, thumbDragToPan, type ScrollBarAxis } from './capture-scroll-bars'
 import { isRegistryChord } from '../../registry/commandRegistry'
 
 /** HOVER_CURSOR: literal class names, so Tailwind emits each one. */
@@ -588,6 +589,93 @@ function releasePointer(target: HTMLElement, pointerId: number): void {
   }
 }
 
+/**
+ * SCROLL_BAR_OVERLAY (MEU-167): one bar drawn over the frame's edge from the view transform; the frame stays
+ * overflow-hidden. SCROLL_BAR_DRAG: only the thumb takes pointer input, and it stops every pointer and mouse
+ * event, so the draw surface never sees a thumb drag. SCROLL_BAR_LOOK: theme tokens only and no transition.
+ */
+function ViewportScrollBar({
+  axis,
+  bar,
+  controls,
+  onDrag,
+}: {
+  axis: 'x' | 'y'
+  bar: ScrollBarAxis
+  controls: string
+  onDrag: (pixels: number) => void
+}) {
+  const dragRef = useRef<{ pointerId: number; at: number } | null>(null)
+  const horizontal = axis === 'x'
+  const place = horizontal
+    ? { left: 0, bottom: 0, width: bar.track, height: SCROLL_BAR_THICKNESS }
+    : { top: 0, right: 0, width: SCROLL_BAR_THICKNESS, height: bar.track }
+  const thumb = horizontal
+    ? { left: bar.offset, top: 0, width: bar.thumb, height: '100%' }
+    : { top: bar.offset, left: 0, width: '100%', height: bar.thumb }
+  const stop = (event: React.SyntheticEvent): void => {
+    event.stopPropagation()
+  }
+  const end = (event: React.PointerEvent<HTMLDivElement>): void => {
+    event.stopPropagation()
+    if (dragRef.current?.pointerId === event.pointerId) {
+      dragRef.current = null
+      releasePointer(event.currentTarget, event.pointerId)
+    }
+  }
+  return (
+    <div
+      data-testid={`capture-scrollbar-${axis}`}
+      role="scrollbar"
+      aria-orientation={horizontal ? 'horizontal' : 'vertical'}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={bar.value}
+      aria-controls={controls}
+      aria-label={horizontal ? 'Horizontal scroll' : 'Vertical scroll'}
+      className="absolute pointer-events-none bg-transparent"
+      style={place}
+    >
+      <div
+        data-testid={`capture-scrollbar-${axis}-thumb`}
+        className="absolute pointer-events-auto rounded-full border border-bg bg-fg-muted"
+        style={thumb}
+        onPointerDown={(event) => {
+          event.stopPropagation()
+          if (event.button !== 0) {
+            return
+          }
+          // No compatibility mouse events, no text selection and no focus move from a thumb press.
+          event.preventDefault()
+          dragRef.current = { pointerId: event.pointerId, at: horizontal ? event.clientX : event.clientY }
+          capturePointer(event.currentTarget, event.pointerId)
+        }}
+        onPointerMove={(event) => {
+          event.stopPropagation()
+          const drag = dragRef.current
+          if (drag === null || drag.pointerId !== event.pointerId) {
+            return
+          }
+          const at = horizontal ? event.clientX : event.clientY
+          dragRef.current = { ...drag, at }
+          onDrag(at - drag.at)
+        }}
+        onPointerUp={end}
+        onPointerCancel={end}
+        onLostPointerCapture={(event) => {
+          event.stopPropagation()
+          dragRef.current = null
+        }}
+        onMouseDown={stop}
+        onMouseMove={stop}
+        onMouseUp={stop}
+        onClick={stop}
+        onDoubleClick={stop}
+      />
+    </div>
+  )
+}
+
 const NO_SHOT_HINT = 'Select a shot first'
 
 /** SWATCH_OPTIONS (MEU-86): each Named option shows its own colour with contrast-picked text. */
@@ -685,6 +773,8 @@ export function CaptureViewport({
   // ALT_NO_MENU: an Alt draw ended with Alt still held, so its keyup must not open the menu bar.
   const altPendingRef = useRef(false)
   const surfaceRef = useRef<HTMLDivElement>(null)
+  // SCROLL_BAR_LOOK: the bars' aria-controls names the surface by this id.
+  const surfaceId = useId()
   // The measured surface box; VIEW_TRANSFORM reads it for the observables, handles and content box.
   const [frame, setFrame] = useState({ w: 0, h: 0 })
   const [zoom, setZoom] = useState<ZoomState>(FIT_STATE)
@@ -720,6 +810,8 @@ export function CaptureViewport({
   const scrubTarget = selectedIndex ?? '-'
   const imageBox = { w: imageWidth, h: imageHeight }
   const view = viewTransform(frame, imageBox, zoom)
+  // SCROLL_BAR_GEOMETRY (MEU-167): a bar on each axis where the zoomed image is longer than the frame.
+  const bars = scrollBars(frame, imageBox, zoom)
   const fitView = viewTransform(frame, imageBox, FIT_STATE)
   const handleRadius = view !== null ? HANDLE_RADIUS_CSS / view.s : HANDLE_RADIUS_CSS
   // RESIZE_HANDLES: `selected` is the painted list's mark, so the squares follow the live preview.
@@ -878,6 +970,24 @@ export function CaptureViewport({
         : viewTransform(live.container, imageBox, { kind: 'scale', scale: now.s, ox: now.ox + dx, oy: now.oy + dy })
     if (placed !== null) {
       commitZoom({ kind: 'scale', scale: placed.s, ox: placed.ox, oy: placed.oy })
+    }
+  }
+
+  /** SCROLL_BAR_DRAG: a thumb drag of `pixels` on `axis` pans through `panBy`, so the clamp is the pan's own. */
+  function dragScrollThumb(axis: 'x' | 'y', pixels: number): void {
+    const live = liveFrame()
+    if (live === null) {
+      return
+    }
+    const bar = scrollBars(live.container, imageBox, zoomRef.current)[axis]
+    if (bar === null) {
+      return
+    }
+    const change = thumbDragToPan(pixels, bar)
+    if (axis === 'x') {
+      panBy(change, 0)
+    } else {
+      panBy(0, change)
     }
   }
 
@@ -1496,6 +1606,7 @@ export function CaptureViewport({
       ) : (
         <div
           ref={surfaceRef}
+          id={surfaceId}
           className={`flex-1 min-h-[200px] relative overflow-hidden bg-bg-elevated${surfaceCursor}`}
           data-testid="capture-draw-surface"
           data-overlay-ready={overlayReady === undefined ? undefined : overlayReady ? 'true' : 'false'}
@@ -1822,6 +1933,26 @@ export function CaptureViewport({
                   event.preventDefault()
                   onTextCancel()
                 }
+              }}
+            />
+          ) : null}
+          {bars.x !== null ? (
+            <ViewportScrollBar
+              axis="x"
+              bar={bars.x}
+              controls={surfaceId}
+              onDrag={(pixels) => {
+                dragScrollThumb('x', pixels)
+              }}
+            />
+          ) : null}
+          {bars.y !== null ? (
+            <ViewportScrollBar
+              axis="y"
+              bar={bars.y}
+              controls={surfaceId}
+              onDrag={(pixels) => {
+                dragScrollThumb('y', pixels)
               }}
             />
           ) : null}

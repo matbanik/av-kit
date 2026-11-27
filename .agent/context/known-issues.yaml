@@ -6373,15 +6373,15 @@ issues:
     title: Capture texts say F2 after the capture key is changed
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-26'
     root_cause: ui/src/renderer/src/features/capture/CapturePage.tsx:107 holds the literal 'Press F2 or Capture region' and renders it as the empty state (:2821). The same literal key is in capture-help-content.ts (:7, :11-12, :36-37), settings-help-content.ts:27 and components/help/quick-start.json:154. The setting is capture.hotkey (packages/core/src/avkit_core/services/settings.py:102, default F2); only the in-use banner ({accelerator}, CapturePage.tsx:106) and the key cap (status.accelerator, :856-860) read the real key. 09-screenshot-capture.md:115 writes the empty state with the literal too.
     blast_radius: 'Capture page and its help, the Settings startup help and the Capture quick start: after the key is changed (for example to F3) the page tells the user to press a key that no longer captures. No data effect.'
     verification:
-      last_checked: '2026-11-26'
-      method: read of CapturePage.tsx, capture-help-content.ts, settings-help-content.ts, quick-start.json and settings.py by a read-only investigator (2026-11-26)
-      result: six user-facing F2 literals; two places already show the configured key
-    resolution_path: 'Session 103 `capture-key-inbox-scrollbars`, MEU-165: every in-app text that names the capture key shows the configured key.'
+      last_checked: '2026-11-27'
+      method: Session 103 row 7 Green receipt cki-row7-green.txt (capture-key.test.ts, capture-key.behavior.test.ts), cki-row7-ste.txt, and the row 10 Electron run on mini-air, cki-run-10.txt (AC-165.10)
+      result: 'cki-row7-green.txt: Tests 13 passed (13); cki-row7-ste.txt: help-guide-ste: 0 problems; cki-run-10.txt (run r20261127T170013Z-02ecd38: tests=260 expected=260 unexpected=0 flaky=0 skipped=0)'
+    resolution_path: 'Fixed in Session 103 on 2026-11-27 (MEU-165): CAPTURE_KEY_TOKEN, CAPTURE_KEY_SAVED, CAPTURE_KEY_FOLLOW, CAPTURE_KEY_UNCONFIRMED and CAPTURE_KEY_DEFAULT_READING. The Capture empty state, the Capture help, the Settings startup help and the Capture quick start name the saved capture.hotkey through captureKeyText; F2 stays the default. Plan docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/.'
     category: MEU-NEW
     priority: P3
     related:
@@ -6415,15 +6415,15 @@ issues:
     title: After the inbox folder is changed, the Capture list still shows the shots of the old folder
     severity: medium
     component: core
-    status: open
+    status: resolved
     discovered: '2026-11-26'
     root_cause: CaptureService.scan_inbox (packages/core/src/avkit_core/services/capture.py:651-746) adds rows for the files of the current inbox and deletes a row only when its file is gone (:706-709), then returns every row (:746). list_shots (:862-871) lists every row too, and SqlAlchemyCaptureShotRepository.list() (repositories.py:443-447) has no filter. A shot whose file still exists in the old folder therefore stays in GET /captures. 09-screenshot-capture.md:480 defines the catalog as the files in inbox_dir. The renderer refetches every 5 s and is not the cause; a capture settings save does not invalidate the ['captures'] query.
     blast_radius: 'Capture page list and MCP capture list: shots from a folder the user left stay in the list and stay selectable and editable, mixed with the new folder''s shots. Files are not touched.'
     verification:
-      last_checked: '2026-11-26'
-      method: read of capture.py, repositories.py, routes/captures.py, useCaptureCatalog.ts and CapturePage.tsx by a read-only investigator (2026-11-26)
-      result: no code path limits the catalog to the current inbox; no test changes the inbox folder
-    resolution_path: 'Session 103 `capture-key-inbox-scrollbars`, MEU-166: the catalog lists only shots whose file is in the current inbox folder; rows of other folders are kept, not deleted, so their marks return when the user switches back.'
+      last_checked: '2026-11-27'
+      method: Session 103 Green receipts cki-row3-green.txt (test_capture_inbox_scope.py, test_api_capture_inbox_scope.py) and cki-row5-green.txt (capture-inbox-scope.behavior.test.ts), and the row 10 Electron run on mini-air, cki-run-10.txt (AC-166.7)
+      result: 'cki-row3-green.txt: 21 passed in 26.68s; cki-row5-green.txt: Tests 6 passed (6); cki-run-10.txt (run r20261127T170013Z-02ecd38: tests=260 expected=260 unexpected=0 flaky=0 skipped=0)'
+    resolution_path: 'Fixed in Session 103 on 2026-11-27 (MEU-166): INBOX_SCOPE, INBOX_SCOPE_SCAN, INBOX_SCOPE_BY_ID, INBOX_SAVE_REFRESH, INBOX_SELECTION_LEFT and INBOX_RESULT_BOUND. scan_inbox, list_shots and every by-id CaptureService method cover only the shots directly in the current inbox folder; rows of other folders are kept untouched, and a settings save that changes the folder refreshes the Capture list. Plan docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/.'
     category: MEU-NEW
     priority: P2
     related:
@@ -6457,15 +6457,15 @@ issues:
     title: A zoomed Capture image has no scroll bars at the bottom and right
     severity: low
     component: ui
-    status: open
+    status: resolved
     discovered: '2026-11-26'
     root_cause: 'By design of MEU-66: 09-screenshot-capture.md:646 (Session 29 plan D-15) says pan moves a clamped offset inside a fixed, overflow-hidden frame with no scrollbars. CaptureViewport.tsx:1499 is `relative overflow-hidden`; zoom sets the image box position and size from viewTransform (capture-fit-map.ts:85-98); panning is Space+drag or middle-drag only (:868-905), and every wheel event zooms (:1007-1013). The only on-screen hint of panning is the zoom readout tooltip.'
     blast_radius: 'Capture page viewport at any zoom above Fit: nothing shows that the image continues past the frame or where the view sits in it, and a user who does not know Space+drag cannot move the view.'
     verification:
-      last_checked: '2026-11-26'
-      method: read of CaptureViewport.tsx, capture-fit-map.ts, capture-zoom.ts and 09 §Viewport zoom by a read-only investigator (2026-11-26)
-      result: no scroll bar exists; the spec row forbids one
-    resolution_path: 'Session 103 `capture-key-inbox-scrollbars`, MEU-167: a horizontal and a vertical scroll bar show the view''s position and move it, on each axis where the image is larger than the frame.'
+      last_checked: '2026-11-27'
+      method: Session 103 row 9 Green receipt cki-row9-green.txt (capture-scroll-bars.test.ts, capture-scroll-bars.behavior.test.ts), and the row 10 Electron run on mini-air, cki-run-10.txt (AC-167.7, AC-167.8)
+      result: 'cki-row9-green.txt: Tests 13 passed (13); cki-run-10.txt (run r20261127T170013Z-02ecd38: tests=260 expected=260 unexpected=0 flaky=0 skipped=0)'
+    resolution_path: 'Fixed in Session 103 on 2026-11-27 (MEU-167): SCROLL_BAR_GEOMETRY, SCROLL_BAR_OVERLAY, SCROLL_BAR_DRAG and SCROLL_BAR_LOOK. A horizontal and a vertical scroll bar are drawn over the zoomed viewport on each axis where the image is larger than the frame; a thumb drag moves the view inside the pan clamp. Plan docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/.'
     category: MEU-NEW
     priority: P3
     related:

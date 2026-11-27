@@ -1,0 +1,22 @@
+anchor ui/src/renderer/src/features/capture/CapturePage.tsx:107 hits=1 :: const EMPTY_STATE = 'Press F2 or Capture region'
+anchor ui/src/renderer/src/features/capture/CapturePage.tsx:106 hits=1 :: const HOTKEY_IN_USE_TEMPLATE =
+anchor ui/src/renderer/src/features/capture/CapturePage.tsx:856 hits=1 :: void window.api.getHotkeyStatus().then((status) => {
+anchor ui/src/renderer/src/features/capture/capture-help-content.ts:11 hits=1 :: title: 'When F2 is in use',
+anchor ui/src/renderer/src/features/capture/capture-help-content.ts:36 hits=1 :: title: 'Close to tray keeps F2',
+anchor ui/src/renderer/src/features/settings/settings-help-content.ts:27 hits=1 :: so F2 still works.
+anchor ui/src/renderer/src/components/help/quick-start.json:154 hits=1 :: "text": "Push F2 or click Capture region. Then drag a box on the screen.",
+anchor ui/src/renderer/src/components/help/HelpCard.tsx:114 hits=1 :: const page = QUICK_START[feature]
+anchor ui/src/renderer/src/features/capture/useCaptureCatalog.ts:6 hits=1 :: export const QUERY_KEY = ['captures'] as const
+anchor packages/core/src/avkit_core/services/capture.py:651 hits=1 :: def scan_inbox
+anchor packages/core/src/avkit_core/services/capture.py:862 hits=1 :: def list_shots
+anchor packages/core/src/avkit_core/services/capture.py:873 hits=1 :: def get_shot
+anchor packages/core/src/avkit_core/services/capture.py:2283 hits=1 :: def _require_inbox_file
+anchor ui/tests/unit/capture-page.test.ts:328 hits=1 :: expect(page).toMatch(/Press F2 or Capture region/)
+anchor ui/tests/unit/capture-page.test.ts:112 hits=1 :: 'When F2 is in use',
+anchor ui/tests/unit/capture-page.test.ts:117 hits=1 :: 'Close to tray keeps F2',
+anchor ui/tests/unit/settings-page.test.ts:771 hits=1 :: expect(help).toContain('F2')
+anchor docs/build-plan/09-screenshot-capture.md:646 hits=1 :: | Pan gestures |
+anchor docs/build-plan/09-screenshot-capture.md:1382 hits=1 :: ### Capture key in texts
+anchor docs/build-plan/09-screenshot-capture.md:1397 hits=1 :: ### Catalog follows the inbox folder
+anchor docs/build-plan/09-screenshot-capture.md:1411 hits=1 :: ### Viewport scroll bars
+anchor packages/api/src/avkit_api/errors.py:37 hits=1 :: NotFoundError: 404,

@@ -112,7 +112,7 @@ Krug’s first law: **don’t make me think** — pages must be self-evident. Ap
 
 **Scan path:** Help → where files go / which key captures → **Capture region** → pick a thumb → mark the image → Save.
 
-Empty inbox: viewport shows a short empty state (“Press F2 or Capture region”). Do not show a drop-zone as the primary path (hotkey is the path). Import of files already in `inbox_dir` happens via scan, not a second Add flow.
+Empty inbox: viewport shows a short empty state (“Press F2 or Capture region”), which names the key set in `capture.hotkey`, `F2` by default ([§Capture key in texts](#capture-key-in-texts)). Do not show a drop-zone as the primary path (hotkey is the path). Import of files already in `inbox_dir` happens via scan, not a second Add flow.
 
 ### Inbox + hotkey header
 
@@ -305,7 +305,7 @@ One row per **original** file in the inbox. Scan upserts by resolved `original_p
 
 - SQLite stores **pointers only** — no PNG bytes, no thumbnail blobs.
 - `original_path` must resolve **inside** `capture.inbox_dir` (after `resolve()`; reject `..` / junction escape) — 422.
-- Scan never deletes rows whose files still exist. If the file is gone, `list` omits it **or** the service marks it missing and `GET` 404s — **omit from list, leave row until Delete** (simpler: **prune missing files from list response and delete the row** on scan). Lock: **scan deletes rows whose original file is missing** (inbox is source of files).
+- Scan never deletes rows whose files still exist. If the file is gone, `list` omits it **or** the service marks it missing and `GET` 404s — **omit from list, leave row until Delete** (simpler: **prune missing files from list response and delete the row** on scan). Lock: **scan deletes rows whose original file is missing** (inbox is source of files). The scan, its prune, the list and every by-id lookup cover only the shots directly inside the current `inbox_dir`; rows of other folders stay in the catalog untouched and are listed again when their folder is the inbox again ([§Catalog follows the inbox folder](#catalog-follows-the-inbox-folder)).
 - Baking does not modify `original_path` bytes.
 - Convert / TTS / download must **not** insert `CaptureShot` rows.
 
@@ -477,9 +477,9 @@ Dependencies: `pillow`, `mss` in `packages/infrastructure` (MEU-35). Do not impo
 
 | Method | Behavior |
 |--------|----------|
-| `scan_inbox` | List `*.png`, `*.jpg`, `*.jpeg`, `*.webp` in `inbox_dir` (**non-recursive**). Upsert shots; delete rows whose file vanished |
-| `list_shots` | `scan_inbox` then return shots newest first |
-| `get_shot` | 404 if missing |
+| `scan_inbox` | List `*.png`, `*.jpg`, `*.jpeg`, `*.webp` in `inbox_dir` (**non-recursive**). Upsert shots; delete rows of the current inbox whose file vanished. Rows of other folders are neither touched nor returned |
+| `list_shots` | `scan_inbox` then return the current inbox's shots newest first |
+| `get_shot` | 404 if missing or outside the current inbox; every method that takes a shot id answers the same 404 |
 | `register_shot(path, source)` | Verify inbox containment + probe; insert. 409 if path already registered (idempotent return of existing row is allowed if file unchanged) |
 | `capture_fullscreen` / `capture_region` | Write under inbox with timestamp name; register `McpFullscreen` / `McpRegion` |
 | `request_interactive` | Insert Pending; 409 if one Pending |
@@ -643,7 +643,7 @@ Three residual MEUs from the 2026-09-30 GUI walkthrough (known issues `CAPTURE-T
 | Controls | Wheel over the image zooms about the cursor (Ctrl+wheel identical); `+`, `−` and `Fit` buttons sit in the viewport toolbar (MEU-65 layout); keyboard `Ctrl+=` / `Ctrl+-` / `Ctrl+0` mirror them | Human-approved 2026-09-30 ("mouse wheel and + and - buttons"); Research-backed (Windows Photos / IrfanView wheel-zoom) |
 | Levels | `Fit` plus the ladder 0.25, 1/3, 0.5, 2/3, 0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3, 4, 5 (25 %–500 %, includes `100%`). This is Chromium's `kPresetBrowserZoomFactorsArray` (`third_party/blink/common/page/page_zoom.cc`); stepping past either end is a no-op | Spec; Session 29 plan D-14 |
 | Pan | When the image exceeds the container it scrolls/drag-pans; pointer-down in the letterbox still creates nothing | Local Canon §Annotation geometry Letterbox rule |
-| Pan gestures | Space+drag and middle-button drag move a clamped offset inside a fixed, `overflow-hidden` frame with no scrollbars. An axis whose image fits is centred; an overflowing axis never shows blank margin. A pan creates no mark, gesture, history entry or sample (Sample removed by MEU-81) | Session 29 plan D-15 |
+| Pan gestures | Space+drag and middle-button drag move a clamped offset inside a fixed, `overflow-hidden` frame. On each axis where the image is larger than the frame, a scroll bar drawn over the frame shows where the view is, and dragging its thumb moves the same clamped offset ([§Viewport scroll bars](#viewport-scroll-bars)). An axis whose image fits is centred; an overflowing axis never shows blank margin. A pan or a thumb drag creates no mark, gesture, history entry or sample (Sample removed by MEU-81) | Session 29 plan D-15; its no-scrollbars half replaced by triage D-1402 (Mat, 2026-11-26) and Session 103 plan D-1426 |
 | Wheel step | Line- or page-mode wheel events step one level each; pixel-mode deltas accumulate to 100 px per step, resetting on a sign change or after 250 ms idle. Every wheel event over the image is prevented, with or without Ctrl, so the page neither scrolls nor zooms | Session 29 plan D-18 |
 | Key scope | `Ctrl+=` / `Ctrl+-` / `Ctrl+0` (and `+`, NumpadAdd, NumpadSubtract, Numpad0; Meta on macOS) act only on the Capture page with a shot selected, never while focus is in a text input or a confirm strip is open, and the handled key is prevented. Buttons and keys zoom about the frame centre, the wheel about the cursor | Session 29 plan D-17 |
 | Mapping | `FIT_MAP` gains scale and offset for the zoom/pan state so pointer → image mapping, handle radii and hit tests stay exact at every level; **stored annotations never rewrite** | Local Canon §Annotation geometry "Resize / zoom" |
@@ -1392,6 +1392,13 @@ Three residual MEUs from Mat's report of 2026-11-26 (grouping `.agent/context/gr
 | Help rules | The quick start step still passes the ASD-STE100 gate, and the help images are retaken only if a step's text or target changes. | Human-approved: [06 §Help quick start (residual)](06-gui.md#help-quick-start-residual) Style and Drift rows |
 | Tests | Unit: each text with another key shows that key and holds no `F2`; with the default it is unchanged. Electron E2E on the real app: the key is changed and the empty state names it. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
 
+> **Delivered (Session 103).**
+> - `CAPTURE_KEY_TOKEN`: each text that names the capture key holds `{captureKey}`, and one formatter, `captureKeyText(template, key)` in `ui/src/renderer/src/features/capture/capture-key.ts`, replaces it; a blank key gives `F2`.
+> - `CAPTURE_KEY_SAVED`: the texts, the key cap and the in-use banner show the saved `capture.hotkey` (`saved.hotkey` from `useCaptureSettings`); a draft changes none of them (D-1420).
+> - `CAPTURE_KEY_FOLLOW` and `CAPTURE_KEY_UNCONFIRMED`: the page reads main's hotkey status on mount and after the saved key changes, and again every 500 ms, at most 10 times, while the status names another key. If no read confirms the saved key, the banner place says that the key is saved but av-kit cannot confirm that it works.
+> - `CAPTURE_KEY_DEFAULT_READING`: `CAPTURE_HELP_SECTIONS`, `SETTINGS_HELP_SECTIONS` and `QUICK_START` read as before with `F2`; `captureHelpSections(key)`, `settingsHelpSections(key)` and `quickStartPage(feature, key)` give the texts for another key. The help images are not retaken (D-1421).
+> - Tests: `ui/tests/unit/capture-key.test.ts` and `ui/tests/unit/capture-key.behavior.test.ts` (AC-165.1 to AC-165.9), and the Electron test in `ui/tests/e2e/capture-settings-draft.test.ts` (AC-165.10). D-1422 names the four test expectations that changed. D-1420 to D-1422 and D-1435 to D-1437 are in the plan `docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/`.
+
 <a id="catalog-follows-the-inbox-folder"></a>
 
 ### Catalog follows the inbox folder
@@ -1405,6 +1412,12 @@ Three residual MEUs from Mat's report of 2026-11-26 (grouping `.agent/context/gr
 | By id | Whether a shot outside the current inbox stays reachable by id (the `/captures/{id}` routes and the MCP capture actions) is chosen at plan time against the rule that `original_path` must resolve inside `capture.inbox_dir`. | Local Canon: [§REST API](#rest-api); plan-time |
 | Refresh | After a settings save that changes the inbox folder, the Capture list refreshes at once, and a selection that left the list is cleared. | Local Canon: D-1401 |
 | Tests | Unit: shots in two folders, only the current folder's are listed, and a change back lists the first folder's again. API test for `GET /captures`. Electron E2E on the real app: the inbox is changed and the old shots leave the list. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
+> **Delivered (Session 103).**
+> - `INBOX_SCOPE` and `INBOX_SCOPE_SCAN`: in `packages/core/src/avkit_core/services/capture.py` a shot is in scope when the parent of its `original_path` is the resolved inbox folder. `scan_inbox` and `list_shots` return only those shots, and they do not probe, prune, recover or write any other row (D-1423).
+> - `INBOX_SCOPE_BY_ID`: every public `CaptureService` method that takes a shot id answers a shot out of scope with the same not-found error as an unknown id, through one lookup, and writes nothing (D-1424).
+> - `INBOX_SAVE_REFRESH`, `INBOX_SELECTION_LEFT` and `INBOX_RESULT_BOUND`: a settings save that changes `inbox_dir` refreshes the Capture list at once; a selection that left the list is cleared; a crop result or a flatten's PNG copy is selected only when the inbox did not change while it ran (D-1425).
+> - Tests: `tests/unit/test_capture_inbox_scope.py`, `tests/e2e/test_api_capture_inbox_scope.py` and `ui/tests/unit/capture-inbox-scope.behavior.test.ts` (AC-166.1 to AC-166.8), with the Electron test in `ui/tests/e2e/capture-settings-draft.test.ts` (AC-166.7). D-1423 to D-1425, D-1435 and D-1436 are in the plan `docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/`.
 
 <a id="viewport-scroll-bars"></a>
 
@@ -1420,6 +1433,12 @@ Three residual MEUs from Mat's report of 2026-11-26 (grouping `.agent/context/gr
 | Build | Whether the bars are drawn over the frame from the pan offset or come from a native scroll container is chosen at plan time. The pointer mapping of marks, crop and the letterbox rule does not change, and a bar drag creates no mark, history entry or sample. | Local Canon: D-1402; §Viewport zoom Pan gestures row |
 | Look | The bars use theme tokens only and can be seen in both themes. | Local Canon: `.agent/docs/emerging-standards.md` G32 |
 | Tests | Unit: thumb position and length from the view transform. Electron E2E on the real app: zoom in and the bars show; a thumb drag moves the view; Fit hides them. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
+> **Delivered (Session 103).**
+> - `SCROLL_BAR_GEOMETRY`: `scrollBars(frame, image, state)` and `thumbDragToPan(drag, bar)` in `ui/src/renderer/src/features/capture/capture-scroll-bars.ts` give each axis's bar from the view transform: it shows when the zoomed image is longer than the frame, it is 10 px thick, its thumb is at least 24 px and never longer than the track, and its value goes from 0 to 100.
+> - `SCROLL_BAR_OVERLAY` and `SCROLL_BAR_DRAG`: `ViewportScrollBar` in `CaptureViewport.tsx` draws the bars over the `overflow-hidden` frame. Only a thumb takes the pointer, and its drag pans through the existing clamp with no mark, history entry or sample. `capture-fit-map.ts` does not change (D-1426).
+> - `SCROLL_BAR_LOOK`: theme tokens only (a `fg-muted` thumb with a `bg` edge on a transparent track), no transition, and the `scrollbar` role with its values; a bar is not a tab stop (D-1427).
+> - Tests: `ui/tests/unit/capture-scroll-bars.test.ts` and `ui/tests/unit/capture-scroll-bars.behavior.test.ts` (AC-167.1 to AC-167.6), and the Electron tests in `ui/tests/e2e/capture-inbox.test.ts` (AC-167.7 in the light theme, AC-167.8 in the dark theme). D-1426, D-1427 and D-1431 are in the plan `docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/`.
 
 ## Named deferrals (not this phase)
 

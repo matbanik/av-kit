@@ -19,6 +19,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { CAPTURE_KEY_DEFAULT, captureKeyText } from '../../src/renderer/src/features/capture/capture-key'
 import {
   FEATURE_PAGES,
   HELP_FEATURES,
@@ -132,7 +133,10 @@ for (const feature of HELP_FEATURES) {
     await setDark(page, false)
     await helpHeader(page, feature).click()
     await expect(card.getByTestId(HELP_QUICK_START)).toBeVisible()
-    await expect(card.getByTestId(HELP_QUICK_START_STEP)).toHaveText((data?.steps ?? []).map((s) => s.text))
+    await expect(card.getByTestId(HELP_QUICK_START_STEP)).toHaveText(
+      // MEU-165: the stored step names the capture key by its token; the isolated app saves the default key.
+      (data?.steps ?? []).map((s) => captureKeyText(s.text, CAPTURE_KEY_DEFAULT)),
+    )
 
     const shots = data?.shots ?? []
     await expect(card.getByTestId(HELP_SHOT)).toHaveCount(shots.length)

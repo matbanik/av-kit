@@ -137,10 +137,17 @@ export function useCaptureSettings() {
     }
     setDraft(null)
     await queryClient.invalidateQueries({ queryKey: CAPTURE_SETTINGS_KEY })
+    // INBOX_SAVE_REFRESH (MEU-166): a changed inbox lists its folder at once, not at the next poll. It runs
+    // after the saved answer, so the page already reads the new inbox when the list answers.
+    if (changed.includes('inbox_dir')) {
+      await queryClient.invalidateQueries({ queryKey: ['captures'] })
+    }
   }, [baseline, draft, form, queryClient])
 
   return {
     form,
+    /** The last saved answer, with no draft leaf (INBOX_SELECTION_LEFT reads its `inbox_dir`). */
+    saved: baseline,
     isDirty,
     ready: query.isSuccess,
     patchForm,

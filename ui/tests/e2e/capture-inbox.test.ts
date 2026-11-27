@@ -3710,3 +3710,132 @@ test('AC-146.19 Electron: Chromium turns a tag-6 JPEG, MPO and PNG, and no WebP 
   }
   expect(sizes).toEqual(shown)
 })
+
+// ── MEU-167 (Session 103, D-1426, D-1427): the viewport scroll bars, AC-167.7 and AC-167.8 ─────────
+// The bars are drawn over the frame from the view transform: on each axis where the image is larger
+// than the frame, the bar is the track, the thumb's length is the frame's share of the image, and a
+// thumb drag pans through the clamped pan. The literal test ids are the plan's.
+
+/** WCAG 2.1 relative luminance of an sRGB byte triple. */
+function relativeLuminance(rgb: readonly number[]): number {
+  const channel = (value: number): number => {
+    const s = value / 255
+    return s <= 0.04045 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4
+  }
+  return 0.2126 * channel(rgb[0] ?? 0) + 0.7152 * channel(rgb[1] ?? 0) + 0.0722 * channel(rgb[2] ?? 0)
+}
+
+/** WCAG 2.1 contrast ratio of two sRGB byte triples. */
+function contrastRatio(a: readonly number[], b: readonly number[]): number {
+  const [high, low] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x)
+  return ((high ?? 0) + 0.05) / ((low ?? 0) + 0.05)
+}
+
+test('AC-167.7 scroll bars show the view and a thumb drag moves it', async () => {
+  const app = await launchApp()
+  try {
+    const page = await app.firstWindow()
+    await openZoomShot(page)
+    await zoomToOneToOne(page)
+    const barX = page.getByTestId('capture-scrollbar-x')
+    const barY = page.getByTestId('capture-scrollbar-y')
+    const thumbX = page.getByTestId('capture-scrollbar-x-thumb')
+    const thumbY = page.getByTestId('capture-scrollbar-y-thumb')
+    await expect(barX, 'the horizontal bar shows on a zoomed shot').toBeVisible({ timeout: 5_000 })
+    await expect(barY, 'the vertical bar shows on a zoomed shot').toBeVisible({ timeout: 5_000 })
+    const view = await settledZoom(page)
+    const frame = { x: view.width, y: view.height }
+    const image = { x: ZOOM_W * view.s, y: ZOOM_H * view.s }
+    expect(image.x).toBeGreaterThan(frame.x)
+    expect(image.y).toBeGreaterThan(frame.y)
+    const trackX = await settledBox(page, barX)
+    const trackY = await settledBox(page, barY)
+    const boxX = await settledBox(page, thumbX)
+    const boxY = await settledBox(page, thumbY)
+    if (trackX === null || trackY === null || boxX === null || boxY === null) {
+      throw new Error('a scroll bar or thumb has no box')
+    }
+    expect(Math.abs(boxX.width - (trackX.width * frame.x) / image.x), 'x thumb is the frame share').toBeLessThanOrEqual(1)
+    expect(Math.abs(boxY.height - (trackY.height * frame.y) / image.y), 'y thumb is the frame share').toBeLessThanOrEqual(1)
+
+    const low = frame.y - image.y
+    const clampY = (offset: number): number => Math.min(0, Math.max(low, offset))
+    const drag = 40
+    const expected = clampY(view.oy + (-drag * (image.y - frame.y)) / (trackY.height - boxY.height))
+    const start = await pointerOn(page, thumbY)
+    await page.mouse.move(start.x, start.y)
+    await page.mouse.down()
+    await page.mouse.move(start.x, start.y + drag, { steps: 4 })
+    await page.mouse.up()
+    const moved = await settledZoom(page)
+    expect(Math.abs(moved.oy - expected), 'a 40 px thumb drag moves the image by the geometry').toBeLessThanOrEqual(1)
+    expect(Math.abs(moved.ox - view.ox), 'the horizontal offset is kept').toBeLessThanOrEqual(0.001)
+    expect(moved.s).toBe(view.s)
+
+    const again = await pointerOn(page, thumbY)
+    const bottom = await page.evaluate(() => window.innerHeight - 1)
+    expect(bottom, 'the drag ends past the end of the track').toBeGreaterThan(trackY.y + trackY.height)
+    await page.mouse.move(again.x, again.y)
+    await page.mouse.down()
+    await page.mouse.move(again.x, bottom, { steps: 8 })
+    await page.mouse.up()
+    const end = await settledZoom(page)
+    expect(Math.abs(end.oy - low), 'a drag past the end stops at the pan limit').toBeLessThanOrEqual(1)
+    await expect(barY).toHaveAttribute('aria-valuenow', '100')
+    await expect(page.getByTestId('capture-annotation')).toHaveCount(0)
+
+    await page.getByTestId('capture-zoom-fit').click()
+    await expect(page.getByTestId('capture-zoom-level')).toHaveText('Fit')
+    await expect(barX).toHaveCount(0)
+    await expect(barY).toHaveCount(0)
+  } finally {
+    await app.close()
+  }
+})
+
+test('AC-167.8 the scroll bar thumb is seen in both themes', async () => {
+  const app = await launchApp()
+  try {
+    const page = await app.firstWindow()
+    await openZoomShot(page)
+    await zoomToOneToOne(page)
+    const thumb = page.getByTestId('capture-scrollbar-y-thumb')
+    await expect(thumb, 'the vertical thumb shows on a zoomed shot').toBeVisible({ timeout: 5_000 })
+    for (const theme of ['dark', 'light'] as const) {
+      await page.evaluate((dark) => {
+        document.documentElement.classList.toggle('dark', dark)
+      }, theme === 'dark')
+      await twoFrames(page)
+      await expect(thumb, `${theme}: the thumb is visible`).toBeVisible()
+      const read = await thumb.evaluate((node) => {
+        const style = getComputedStyle(node)
+        const canvas = document.createElement('canvas')
+        canvas.width = 1
+        canvas.height = 1
+        const context = canvas.getContext('2d', { willReadFrequently: true })
+        if (context === null) {
+          throw new Error('no 2d context')
+        }
+        const bytes = (color: string): number[] => {
+          context.clearRect(0, 0, 1, 1)
+          context.fillStyle = color
+          context.fillRect(0, 0, 1, 1)
+          return Array.from(context.getImageData(0, 0, 1, 1).data)
+        }
+        return {
+          fillCss: style.backgroundColor,
+          edgeCss: style.borderTopColor,
+          fill: bytes(style.backgroundColor),
+          edge: bytes(style.borderTopColor),
+        }
+      })
+      const ratio = contrastRatio(read.fill, read.edge)
+      console.log(`[s103-e2e] ${theme} thumb fill ${read.fillCss} edge ${read.edgeCss} contrast ${ratio.toFixed(2)}`)
+      expect(read.fill[3], `${theme}: the fill is opaque`).toBe(255)
+      expect(read.edge[3], `${theme}: the edge is opaque`).toBe(255)
+      expect(ratio, `${theme}: fill against edge`).toBeGreaterThanOrEqual(3)
+    }
+  } finally {
+    await app.close()
+  }
+})

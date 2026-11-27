@@ -768,7 +768,7 @@ describe('MEU-61 settings startup card', () => {
     expect(help).toContain('administrator')
     expect(help).toContain('Task Manager')
     expect(help).toContain('notification area')
-    expect(help).toContain('F2')
+    expect(help).toContain('{captureKey}')
   })
 
   it('AC-61.20 omitting get at runtime yields unsupported, no throw', async () => {

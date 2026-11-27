@@ -4325,10 +4325,10 @@ meus:
     text: Phase 9 §Capture key in texts
   description: Every in-app text that names the capture key (the Capture empty state, the Capture help, the Settings startup help and the Capture quick start) shows the key set in capture.hotkey; F2 stays
     the default.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-39, MEU-57, MEU-162
   dependency_parse_status: parsed
@@ -4336,8 +4336,8 @@ meus:
   - MEU-39
   - MEU-57
   - MEU-162
-  execution_plan: null
-  updated: '2026-11-26'
+  execution_plan: docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/implementation-plan.md
+  updated: '2026-11-27'
   closed_reason: null
   note: Registered 2026-11-26 from CAPTURE-HOTKEY-TEXT-HARDCODED (triage D-1400, Mat's report; grouping D-1410), Session 103.
 - row_key: MEU-166
@@ -4351,10 +4351,10 @@ meus:
     anchor: catalog-follows-the-inbox-folder
     text: Phase 9 §Catalog follows the inbox folder
   description: The capture catalog lists only the shots whose file is in the current inbox folder; rows of other folders are kept, not deleted, and the Capture list refreshes when the inbox folder is changed.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-36, MEU-37, MEU-39
   dependency_parse_status: parsed
@@ -4362,8 +4362,8 @@ meus:
   - MEU-36
   - MEU-37
   - MEU-39
-  execution_plan: null
-  updated: '2026-11-26'
+  execution_plan: docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/implementation-plan.md
+  updated: '2026-11-27'
   closed_reason: null
   note: Registered 2026-11-26 from CAPTURE-INBOX-CHANGE-KEEPS-OLD-SHOTS (triage D-1401, Mat's report; grouping D-1410), Session 103.
 - row_key: MEU-167
@@ -4378,17 +4378,17 @@ meus:
     text: Phase 9 §Viewport scroll bars
   description: A zoomed Capture image has a horizontal and a vertical scroll bar on each axis where it is larger than the frame; a bar shows where the view is and moves it, and the pan and zoom gestures
     are unchanged.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-66
   dependency_parse_status: parsed
   depends_on:
   - MEU-66
-  execution_plan: null
-  updated: '2026-11-26'
+  execution_plan: docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/implementation-plan.md
+  updated: '2026-11-27'
   closed_reason: null
   note: Registered 2026-11-26 from CAPTURE-ZOOM-NO-SCROLLBARS (triage D-1402, Mat's request; grouping D-1410), Session 103.
 - row_key: MEU-168

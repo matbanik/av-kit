@@ -1,6 +1,8 @@
 import type { HelpSection } from '../../components/help/HelpCard'
+import { CAPTURE_KEY_DEFAULT, captureKeyText } from '../capture/capture-key'
 
-export const SETTINGS_HELP_SECTIONS: HelpSection[] = [
+/** The topics with the `{captureKey}` token (CAPTURE_KEY_TOKEN); the readers below resolve it. */
+const SETTINGS_HELP_TEMPLATES: HelpSection[] = [
   {
     id: 'leaf-keys',
     title: 'How each card saves',
@@ -24,6 +26,18 @@ export const SETTINGS_HELP_SECTIONS: HelpSection[] = [
   {
     id: 'startup',
     title: 'Start with Windows',
-    body: 'Start when I sign in adds a startup entry for your user only. It needs no administrator approval. Turn it off here or in Task Manager → Startup. Start minimized waits in the notification area, so F2 still works.',
+    body: 'Start when I sign in adds a startup entry for your user only. It needs no administrator approval. Turn it off here or in Task Manager → Startup. Start minimized waits in the notification area, so {captureKey} still works.',
   },
 ]
+
+/** CAPTURE_KEY_DEFAULT_READING (MEU-165): the topics with the given capture key. */
+export function settingsHelpSections(key: string): HelpSection[] {
+  return SETTINGS_HELP_TEMPLATES.map((section) => ({
+    ...section,
+    title: captureKeyText(section.title, key),
+    body: captureKeyText(section.body, key),
+  }))
+}
+
+/** The topics with the default key, as they read before MEU-165. */
+export const SETTINGS_HELP_SECTIONS: HelpSection[] = settingsHelpSections(CAPTURE_KEY_DEFAULT)

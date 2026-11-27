@@ -666,6 +666,10 @@ class CaptureService:
                     resolved = child
                     try:
                         resolved = child.resolve()
+                        # INBOX_SCOPE_SCAN (D-1423): a file link that resolves into another
+                        # folder is neither probed nor saved.
+                        if resolved.parent != inbox:
+                            continue
                         probe = self._annotate.probe(resolved)
                     except (InboxPathError, OSError):
                         skipped.add(str(resolved))
@@ -704,6 +708,9 @@ class CaptureService:
                         )
             failed: set[str] = set()
             for shot in list(uow.capture_shots.list()):
+                # INBOX_SCOPE_SCAN (D-1423): a row of another folder keeps every field.
+                if not self._in_scope(shot, inbox):
+                    continue
                 if not shot.original_path.is_file():
                     uow.capture_shots.delete(shot.id)
                     continue
@@ -743,7 +750,19 @@ class CaptureService:
                         failed.add(str(shot.original_path))
             self._log_scan_skipped(frozenset(skipped))
             self._log_stale_bake_failed(frozenset(failed))
-            return list(uow.capture_shots.list())
+            return [shot for shot in uow.capture_shots.list() if self._in_scope(shot, inbox)]
+
+    @staticmethod
+    def _in_scope(shot: CaptureShot, inbox: Path) -> bool:
+        """INBOX_SCOPE (D-1423): the original sits in the inbox folder; no filesystem call."""
+        return shot.original_path.parent == inbox
+
+    def _scoped_shot(self, uow: UnitOfWork, shot_id: str) -> CaptureShot:
+        """INBOX_SCOPE_BY_ID (D-1424): a shot of another folder answers as an unknown id."""
+        shot = uow.capture_shots.get(shot_id)
+        if shot is None or not self._in_scope(shot, self._inbox()):
+            raise NotFoundError(f"capture shot {shot_id} not found")
+        return shot
 
     def _log_scan_skipped(self, skipped: frozenset[str]) -> None:
         """SKIP_LOG (D-902): one count-only warning when the skipped set is new."""
@@ -863,8 +882,9 @@ class CaptureService:
         """Expire stale requests, scan the inbox, return newest first."""
         self.expire_stale_requests()
         self.scan_inbox()
+        inbox = self._inbox()
         with self._uow_factory() as uow:
-            shots = list(uow.capture_shots.list())
+            shots = [shot for shot in uow.capture_shots.list() if self._in_scope(shot, inbox)]
         return sorted(
             shots,
             key=lambda shot: (-shot.created_at.timestamp(), shot.display_name.lower()),
@@ -874,10 +894,7 @@ class CaptureService:
         """Return one shot or raise NotFoundError."""
         self.expire_stale_requests()
         with self._uow_factory() as uow:
-            shot = uow.capture_shots.get(shot_id)
-        if shot is None:
-            raise NotFoundError(f"capture shot {shot_id} not found")
-        return shot
+            return self._scoped_shot(uow, shot_id)
 
     def load_shot_annotations(self, shot_id: str) -> list[Annotation]:
         """Read sidecar annotations for a shot. Missing file is []. Malformed is 422."""
@@ -1682,9 +1699,7 @@ class CaptureService:
         """
         output_format = self._annotated_format()
         with CAPTURE_FILE_LOCK, self._uow_factory() as uow:
-            shot = uow.capture_shots.get(shot_id)
-            if shot is None:
-                raise NotFoundError(f"capture shot {shot_id} not found")
+            shot = self._scoped_shot(uow, shot_id)
             now = self._now()
             annotated_path = annotated_path_for(shot.original_path, output_format)
             sidecar_path = _sidecar_for(shot.original_path)
@@ -1726,9 +1741,7 @@ class CaptureService:
         Clamps each mark as `annotate_and_save` does and writes nothing: no file, no row.
         """
         with CAPTURE_FILE_LOCK, self._uow_factory() as uow:
-            shot = uow.capture_shots.get(shot_id)
-            if shot is None:
-                raise NotFoundError(f"capture shot {shot_id} not found")
+            shot = self._scoped_shot(uow, shot_id)
             if not _is_file(shot.original_path):
                 raise NotFoundError("original image is missing")
             clamped = [
@@ -1792,9 +1805,7 @@ class CaptureService:
     def remove(self, shot_id: str) -> None:
         """Delete original, sidecar, and annotated files, then the row."""
         with CAPTURE_FILE_LOCK, self._uow_factory() as uow:
-            shot = uow.capture_shots.get(shot_id)
-            if shot is None:
-                raise NotFoundError(f"capture shot {shot_id} not found")
+            shot = self._scoped_shot(uow, shot_id)
             self._unlink_if_file(shot.original_path)
             self._unlink_if_file(shot.annotated_path)
             for sibling in _annotated_siblings(shot.original_path):
@@ -1889,9 +1900,7 @@ class CaptureService:
         with CAPTURE_FILE_LOCK:
             try:
                 with self._uow_factory() as uow:
-                    shot = uow.capture_shots.get(shot_id)
-                    if shot is None:
-                        raise NotFoundError(f"capture shot {shot_id} not found")
+                    shot = self._scoped_shot(uow, shot_id)
                     marks = self._saved_marks(shot.original_path)
                     if not all(math.isfinite(value) for value in (x, y, width, height)):
                         raise ValidationError("x, y, width and height must be finite numbers")
@@ -2000,9 +2009,7 @@ class CaptureService:
         with CAPTURE_FILE_LOCK:
             try:
                 with self._uow_factory() as uow:
-                    shot = uow.capture_shots.get(shot_id)
-                    if shot is None:
-                        raise NotFoundError(f"capture shot {shot_id} not found")
+                    shot = self._scoped_shot(uow, shot_id)
                     marks = self._saved_marks(shot.original_path)
                     source = self._variant_path(shot, "annotated" if marks else "original")
                     size = export_size(shot.width, shot.height, max_edge)

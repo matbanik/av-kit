@@ -538,3 +538,8 @@ export const HELP_QUICK_START_HINT = 'help-quick-start-hint'
 export const HELP_SHOT = 'help-shot'
 // MEU-169 cookie test result ID.
 export const COOKIE_TEST_RESULT = 'cookie-test-result'
+// MEU-167 viewport scroll bar IDs.
+export const CAPTURE_SCROLLBAR_X = 'capture-scrollbar-x'
+export const CAPTURE_SCROLLBAR_Y = 'capture-scrollbar-y'
+export const CAPTURE_SCROLLBAR_X_THUMB = 'capture-scrollbar-x-thumb'
+export const CAPTURE_SCROLLBAR_Y_THUMB = 'capture-scrollbar-y-thumb'

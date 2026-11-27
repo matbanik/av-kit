@@ -7,6 +7,7 @@
  * steps and shots (the image manifest's `stepsHash`).
  */
 
+import { CAPTURE_KEY_DEFAULT, CAPTURE_KEY_TOKEN, captureKeyText } from '../../features/capture/capture-key'
 import data from './quick-start.json'
 
 export type HelpFeature = 'downloader' | 'transcript' | 'tts' | 'converter' | 'capture' | 'settings'
@@ -24,7 +25,30 @@ export const HELP_FEATURES: readonly HelpFeature[] = [
   'settings',
 ]
 
-export const QUICK_START = data.pages as Record<HelpFeature, QuickStartPage>
+/** The pages as stored: a text that names the capture key holds `{captureKey}` (CAPTURE_KEY_TOKEN). */
+const QUICK_START_TEMPLATES = data.pages as Record<HelpFeature, QuickStartPage>
+
+/** The page with the key in place of the token; a page with no token is returned as it is. */
+function withCaptureKey(page: QuickStartPage, key: string): QuickStartPage {
+  if (!JSON.stringify(page).includes(CAPTURE_KEY_TOKEN)) {
+    return page
+  }
+  return {
+    intro: captureKeyText(page.intro, key),
+    steps: page.steps.map((step) => ({ ...step, text: captureKeyText(step.text, key) })),
+    shots: page.shots.map((shot) => ({ ...shot, alt: captureKeyText(shot.alt, key) })),
+  }
+}
+
+/** CAPTURE_KEY_DEFAULT_READING (MEU-165): each page with the default capture key, as before MEU-165. */
+export const QUICK_START = Object.fromEntries(
+  Object.entries(QUICK_START_TEMPLATES).map(([feature, page]) => [feature, withCaptureKey(page, CAPTURE_KEY_DEFAULT)]),
+) as Record<HelpFeature, QuickStartPage>
+
+/** The page of a feature with the given capture key; a page with no token is `QUICK_START[feature]`. */
+export function quickStartPage(feature: HelpFeature, key: string): QuickStartPage {
+  return withCaptureKey(QUICK_START_TEMPLATES[feature], key)
+}
 
 const MIN_STEPS = 4
 const MAX_STEPS = 5

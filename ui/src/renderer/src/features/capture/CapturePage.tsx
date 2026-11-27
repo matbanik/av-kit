@@ -41,7 +41,8 @@ import {
   revertConfirmText,
   revertState,
 } from './capture-flatten'
-import { CAPTURE_HELP_SECTIONS } from './capture-help-content'
+import { captureHelpSections } from './capture-help-content'
+import { captureKeyText } from './capture-key'
 import { parsePositiveInt } from './capture-scrub'
 import type { Annotation, RedactMode } from './capture-annotate'
 import { parseAnnotateBody } from './capture-annotate'
@@ -104,7 +105,15 @@ import { useCaptureToolLock } from './useCaptureToolLock'
 import { useCaptureToolStyles } from './useCaptureToolStyles'
 
 const HOTKEY_IN_USE_TEMPLATE = '{accelerator} is in use — quit ShareX or pick another key'
-const EMPTY_STATE = 'Press F2 or Capture region'
+// CAPTURE_KEY_UNCONFIRMED (MEU-165): the follow ended with no read that confirms the saved key. It claims no
+// registration, only that the key is saved.
+const HOTKEY_UNCONFIRMED_TEMPLATE =
+  '{accelerator} is saved, but av-kit cannot confirm it works. Restart av-kit if {accelerator} does nothing.'
+const EMPTY_STATE = 'Press {captureKey} or Capture region'
+// CAPTURE_KEY_FOLLOW (D-1420): while main's status names another key than the saved one, read it again this
+// often, at most this many times.
+const HOTKEY_FOLLOW_MS = 500
+const HOTKEY_FOLLOW_READS = 10
 const DRAG_THRESHOLD_CSS = 3
 const KEYBOARD_NUDGE_PX = 1
 // STYLE_STORE (MEU-105): a failed tool-style PUT; it names no value.
@@ -449,6 +458,20 @@ export function CapturePage() {
   const { styles, saveToolStyle } = toolStyles
   const items = useMemo(() => catalog.data?.items ?? [], [catalog.data?.items])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  // INBOX_SELECTION_LEFT (MEU-166, D-1425): the saved inbox (null until it loads), the inbox a Save on this
+  // page moves to until the saved answer changes, the inbox the selection was made under, and the ids
+  // of the last catalog answer. `awaitAnswer` holds the newest-shot pick for the next answer.
+  const savedInbox = settings.ready ? settings.saved.inbox_dir : null
+  // CAPTURE_KEY_SAVED (MEU-165): the texts, the key cap and the banner name the saved key, never a draft.
+  const captureKey = settings.saved.hotkey
+  const helpSections = useMemo(() => captureHelpSections(captureKey), [captureKey])
+  // The follow starts once the saved answer is in, so a mount does not follow the default key first.
+  const followKey = settings.ready ? captureKey : null
+  const savedInboxRef = useRef<string | null>(savedInbox)
+  const pendingInboxRef = useRef<string | null>(null)
+  const selectionRef = useRef<{ id: string | null; inbox: string | null }>({ id: null, inbox: null })
+  const answerRef = useRef<{ items: CaptureListItem[] | null; ids: Set<string> }>({ items: null, ids: new Set() })
+  const awaitAnswerRef = useRef(false)
   const [tool, setTool] = useState<CaptureTool>('arrow')
   // LOCK_PERSISTS (MEU-87): only the lock button changes this; choosing a tool keeps it.
   // LOCK_STORE (MEU-143): on by default, kept in capture.tool_lock through the style queue.
@@ -485,6 +508,8 @@ export function CapturePage() {
   const [hotkeyInUse, setHotkeyInUse] = useState(false)
   // CP2: the key cap shows only for a hotkey the main process actually registered.
   const [hotkeyCap, setHotkeyCap] = useState<string | null>(null)
+  // CAPTURE_KEY_UNCONFIRMED (MEU-165): the follow ended, or a status read was refused, with no confirmation.
+  const [hotkeyUnconfirmed, setHotkeyUnconfirmed] = useState(false)
   // CP3/OQ-3: the Settings disclosure starts closed; later toggles are local presentation state.
   const [settingsOpen, setSettingsOpen] = useState(false)
   const confirmCancelRef = useRef<HTMLButtonElement>(null)
@@ -660,8 +685,59 @@ export function CapturePage() {
     }
   }, [])
 
+  // INBOX_SELECTION_LEFT: a new saved inbox ends this page's pending Save, and a selection bound to the
+  // pending target moves to the inbox the answer named.
   useEffect(() => {
-    if (selectedId !== null) {
+    const before = savedInboxRef.current
+    savedInboxRef.current = savedInbox
+    if (before === savedInbox) {
+      return
+    }
+    const pending = pendingInboxRef.current
+    pendingInboxRef.current = null
+    if (pending !== null && selectionRef.current.inbox === pending) {
+      selectionRef.current = { ...selectionRef.current, inbox: savedInbox }
+    }
+  }, [savedInbox])
+
+  // INBOX_SELECTION_LEFT: the selection is bound to the inbox in force when it was made.
+  useEffect(() => {
+    const now = pendingInboxRef.current ?? savedInboxRef.current
+    if (selectionRef.current.id !== selectedId) {
+      selectionRef.current = { id: selectedId, inbox: selectedId === null ? null : now }
+    } else if (selectedId !== null && selectionRef.current.inbox === null) {
+      selectionRef.current = { id: selectedId, inbox: now }
+    }
+  }, [selectedId, savedInbox])
+
+  // INBOX_SELECTION_LEFT: a selected shot that an earlier answer held, or one made under an earlier saved
+  // inbox, leaves with the delete path's resets when a new answer lacks it. A crop or copy result that no
+  // answer has held yet stays while the inbox is the one it was made under.
+  useEffect(() => {
+    const answer = answerRef.current
+    if (answer.items === items) {
+      return
+    }
+    const next = new Set(items.map((item) => item.id))
+    answerRef.current = { items, ids: next }
+    awaitAnswerRef.current = false
+    if (selectedId === null || next.has(selectedId)) {
+      return
+    }
+    const made = selectionRef.current.id === selectedId ? selectionRef.current.inbox : null
+    const now = pendingInboxRef.current ?? savedInboxRef.current
+    const earlierInbox = made !== null && now !== null && made !== now
+    if (answer.ids.has(selectedId) || earlierInbox) {
+      setSelectedId(null)
+      setViewVariant('original')
+      setTextDraft(null)
+      setPast([])
+      setFuture([])
+    }
+  }, [items, selectedId])
+
+  useEffect(() => {
+    if (selectedId !== null || awaitAnswerRef.current) {
       return
     }
     const newest = sortFilmstrip(items)[0]
@@ -843,6 +919,19 @@ export function CapturePage() {
         if (cancelled) {
           return
         }
+        // INBOX_SELECTION_LEFT: a shot made under an earlier saved inbox answers not found; it leaves quietly,
+        // and the next catalog answer picks the newest shot.
+        const made = selectionRef.current.id === loadId ? selectionRef.current.inbox : null
+        const now = pendingInboxRef.current ?? savedInboxRef.current
+        if (caught instanceof ApiError && caught.status === 404 && made !== null && now !== null && made !== now) {
+          awaitAnswerRef.current = true
+          setSelectedId(null)
+          setViewVariant('original')
+          setTextDraft(null)
+          setPast([])
+          setFuture([])
+          return
+        }
         const message =
           caught instanceof ApiError || caught instanceof Error ? caught.message : String(caught)
         window.dispatchEvent(new CustomEvent('av-kit:capture:error', { detail: message }))
@@ -853,11 +942,53 @@ export function CapturePage() {
   }, [selectedId, detailRevision])
 
   useEffect(() => {
-    void window.api.getHotkeyStatus().then((status) => {
-      setHotkeyInUse(status.inUse)
-      setHotkeyCap(status.registered && status.accelerator.length > 0 ? status.accelerator : null)
-    })
-  }, [settings.form.hotkey])
+    // CAPTURE_KEY_FOLLOW (D-1420): read main's status on mount and when the saved key changes; while it names
+    // another key, read again every HOTKEY_FOLLOW_MS, at most HOTKEY_FOLLOW_READS times, and stop on a match
+    // or on unmount. CAPTURE_KEY_UNCONFIRMED: the follow ends with no confirming read, or a read is refused.
+    if (followKey === null) {
+      return
+    }
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | null = null
+    let follows = 0
+    const read = (): void => {
+      window.api.getHotkeyStatus().then(
+        (status) => {
+          if (cancelled) {
+            return
+          }
+          const named = status.accelerator === followKey
+          if (!named && follows < HOTKEY_FOLLOW_READS) {
+            follows += 1
+            setHotkeyInUse(false)
+            setHotkeyCap(null)
+            setHotkeyUnconfirmed(false)
+            timer = setTimeout(read, HOTKEY_FOLLOW_MS)
+            return
+          }
+          const confirmed = named && status.registered
+          setHotkeyInUse(status.inUse)
+          setHotkeyCap(confirmed ? followKey : null)
+          setHotkeyUnconfirmed(!confirmed && !status.inUse)
+        },
+        () => {
+          if (cancelled) {
+            return
+          }
+          setHotkeyInUse(false)
+          setHotkeyCap(null)
+          setHotkeyUnconfirmed(true)
+        },
+      )
+    }
+    read()
+    return () => {
+      cancelled = true
+      if (timer !== null) {
+        clearTimeout(timer)
+      }
+    }
+  }, [followKey])
 
   useEffect(() => {
     // APG alert-dialog guidance: an opening confirmation focuses its least destructive action.
@@ -988,6 +1119,7 @@ export function CapturePage() {
     }
     cropBusyRef.current = true
     const { shotId, box, prior } = open
+    const startInbox = pendingInboxRef.current ?? savedInboxRef.current
     updateCrop({ ...open, busy: true })
     setError(null)
     void run(async () => {
@@ -996,6 +1128,10 @@ export function CapturePage() {
         if (cropRef.current?.shotId === shotId) {
           updateCrop(null)
           setTool(prior)
+        }
+        // INBOX_RESULT_BOUND (D-1425): a crop that ends under another saved inbox selects nothing.
+        if ((pendingInboxRef.current ?? savedInboxRef.current) !== startInbox) {
+          return
         }
         applyRange({ anchorId: result.item.id, rangeIds: [] })
         cropCopyRef.current = result.item.id
@@ -2219,7 +2355,11 @@ export function CapturePage() {
     }
   }
 
-  const banner = HOTKEY_IN_USE_TEMPLATE.replace('{accelerator}', settings.form.hotkey)
+  const banner = hotkeyInUse
+    ? HOTKEY_IN_USE_TEMPLATE.replace('{accelerator}', captureKey)
+    : hotkeyUnconfirmed
+      ? HOTKEY_UNCONFIRMED_TEMPLATE.split('{accelerator}').join(captureKey)
+      : null
 
   function cancelConfirm(): void {
     setConfirm(null)
@@ -2355,6 +2495,7 @@ export function CapturePage() {
       const id = selectedId
       const before = backupPath
       const unsaved = dirty
+      const startInbox = pendingInboxRef.current ?? savedInboxRef.current
       void run(async () => {
         if (unsaved) {
           // SAVE_AND_FLATTEN (MEU-104, D-693): save the current marks as Save does; a refused save stops here.
@@ -2371,6 +2512,10 @@ export function CapturePage() {
         const detail = await flattenCapture(id)
         setViewVariant('original')
         if (detail.id !== id) {
+          // INBOX_RESULT_BOUND (D-1425): a copy made as the saved inbox changed selects nothing.
+          if ((pendingInboxRef.current ?? savedInboxRef.current) !== startInbox) {
+            return
+          }
           // CONVERT_ON_APPLY: the new PNG copy becomes the selection; the original stays.
           setSelectedId(detail.id)
           setNotice({ shotId: detail.id, text: flattenStatus({ kind: 'convert', displayName: detail.display_name }) })
@@ -2649,7 +2794,7 @@ export function CapturePage() {
         void runImport(async () => entries).catch(() => undefined)
       }}
     >
-      <HelpCard feature="capture" tabKey="main" sections={CAPTURE_HELP_SECTIONS} />
+      <HelpCard feature="capture" tabKey="main" sections={helpSections} captureKey={captureKey} />
       <div data-testid="capture-header" className="flex flex-nowrap items-center gap-3">
         <Button
           data-testid="capture-region"
@@ -2697,8 +2842,9 @@ export function CapturePage() {
         <p className="min-w-0 truncate text-sm text-fg-muted">
           {shotCount} · inbox {settings.form.inbox_dir}
         </p>
-        {/* HEADER_STATUS: the in-use banner sits in the header row and is mounted only while it has text. */}
-        {hotkeyInUse ? (
+        {/* HEADER_STATUS: the in-use banner (or the unconfirmed notice) sits in the header row and is mounted
+            only while it has text. */}
+        {banner !== null ? (
           <p data-testid="capture-hotkey-banner" role="status" className="flex shrink-0 items-center gap-2 text-sm">
             <StatusChip label="Hotkey" tone="warning" />
             <span>{banner}</span>
@@ -2770,8 +2916,18 @@ export function CapturePage() {
               className={settings.saveClass}
               disabled={!settings.isDirty}
               onClick={() => {
+                // INBOX_SELECTION_LEFT: from the click until the saved answer changes, the new inbox is in force.
+                const target = settings.form.inbox_dir
+                if (savedInbox !== null && target !== savedInbox) {
+                  pendingInboxRef.current = target
+                }
                 void run(async () => {
-                  await settings.save()
+                  try {
+                    await settings.save()
+                  } catch (caught) {
+                    pendingInboxRef.current = null
+                    throw caught
+                  }
                 })
               }}
             >
@@ -2818,7 +2974,7 @@ export function CapturePage() {
               data-testid="capture-empty"
               className="flex min-h-[200px] flex-1 items-center justify-center rounded-[var(--radius-control)] border border-dashed border-border text-fg-muted"
             >
-              {EMPTY_STATE}
+              {captureKeyText(EMPTY_STATE, captureKey)}
             </p>
           }
           statusLine={

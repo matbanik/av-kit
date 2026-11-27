@@ -28,6 +28,7 @@ import { homedir, tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
+import { CAPTURE_KEY_DEFAULT, captureKeyText } from '../../src/renderer/src/features/capture/capture-key'
 import { CLIP_MAX_HEIGHT, CLIP_MAX_WIDTH, shotClip, type Rect, type TargetBox } from './clip'
 import { clipText, findPrivatePath, type TextItem } from './privacy'
 import { FEATURE_PAGES, HELP_FEATURES, STAGES, launchIsolated, type HelpFeature, type IsolatedApp } from './stage'
@@ -60,8 +61,11 @@ const QUICK_START = (JSON.parse(readFileSync(QUICK_START_FILE, 'utf8')) as { pag
 
 /** The same string as `quickStartHashInput(page)` in `quick-start.ts`, hashed by `node:crypto`. */
 function stepsHash(page: QuickStartPage): string {
+  // MEU-165: the default reading (CAPTURE_KEY_DEFAULT_READING), the page `QUICK_START` holds in the app.
+  const steps = page.steps.map((step) => ({ ...step, text: captureKeyText(step.text, CAPTURE_KEY_DEFAULT) }))
+  const shots = page.shots.map((shot) => ({ ...shot, alt: captureKeyText(shot.alt, CAPTURE_KEY_DEFAULT) }))
   return createHash('sha256')
-    .update(JSON.stringify({ steps: page.steps, shots: page.shots }))
+    .update(JSON.stringify({ steps, shots }))
     .digest('hex')
 }
 

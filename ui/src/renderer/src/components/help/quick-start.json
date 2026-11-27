@@ -151,7 +151,7 @@
       "intro": "Take a picture of part of your screen and put marks on it.",
       "steps": [
         {
-          "text": "Push F2 or click Capture region. Then drag a box on the screen.",
+          "text": "Push {captureKey} or click Capture region. Then drag a box on the screen.",
           "target": "capture-region"
         },
         {

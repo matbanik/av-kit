@@ -7,7 +7,7 @@ import {
 } from '../../features/settings/settings-commands'
 import { ariaKeyshortcuts } from '../../registry/shortcuts'
 import { shotSize, shotUrl } from './help-shots'
-import { QUICK_START, type QuickStartPage, type QuickStartShot } from './quick-start'
+import { QUICK_START, quickStartPage, type QuickStartPage, type QuickStartShot } from './quick-start'
 
 export type HelpSection = {
   id: string
@@ -21,6 +21,8 @@ type HelpCardProps = {
   feature: 'downloader' | 'transcript' | 'tts' | 'settings' | 'converter' | 'capture'
   tabKey: string
   sections: HelpSection[]
+  /** MEU-165: the saved capture key; with it the quick start names that key (`quickStartPage`). */
+  captureKey?: string
 }
 
 function storageKey(feature: string, tabKey: string): string {
@@ -107,11 +109,14 @@ function writeExpanded(feature: string, tabKey: string, expanded: boolean): void
   }
 }
 
-export function HelpCard({ feature, tabKey, sections }: HelpCardProps) {
+export function HelpCard({ feature, tabKey, sections, captureKey }: HelpCardProps) {
   const panelId = useId()
   const [expanded, setExpanded] = useState(() => readExpanded(feature, tabKey))
   const [query, setQuery] = useState('')
-  const page = QUICK_START[feature]
+  const page = useMemo(
+    () => (captureKey === undefined ? QUICK_START[feature] : quickStartPage(feature, captureKey)),
+    [captureKey, feature],
+  )
 
   useEffect(() => {
     writeExpanded(feature, tabKey, expanded)

@@ -42,7 +42,7 @@ import {
   type QualityWire,
 } from '../downloader/quality-options'
 import { SETTINGS_COMMANDS, SETTINGS_EVENTS } from './settings-commands'
-import { SETTINGS_HELP_SECTIONS } from './settings-help-content'
+import { settingsHelpSections } from './settings-help-content'
 import { SETTINGS_NAMESPACE_PATHS } from './settings-paths'
 import {
   CHECKBOX_COPY_SOURCES,
@@ -621,7 +621,7 @@ export function SettingsPage() {
       <SettingsRail sections={sections} rootRef={pageRef} dots={dots} onActiveChange={setCurrentSection} />
       <div className="flex min-w-0 flex-col gap-6">
         <h1 className="text-xl font-semibold">Settings</h1>
-        <HelpCard feature="settings" tabKey="main" sections={SETTINGS_HELP_SECTIONS} />
+        <HelpCard feature="settings" tabKey="main" sections={settingsHelpSections(capture.saved.hotkey)} />
 
         {settingsError ? (
           <p className="text-sm text-error" role="alert">

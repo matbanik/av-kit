@@ -278,7 +278,7 @@ A planner writes only inside its plan folder (and, for Session 105, the mockup).
 
 | Session | Slug | MEUs | Band | Status | Plan folder |
 |---------|------|------|------|--------|-------------|
-| 103 | `capture-key-inbox-scrollbars` | MEU-165, MEU-166, MEU-167 | P2 | plan approved (round 2) | `docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/` |
+| 103 | `capture-key-inbox-scrollbars` | MEU-165, MEU-166, MEU-167 | P2 | executed (Session 103) | `docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/` |
 | 104 | `ytdlp-challenge-and-cookie-test` | MEU-168, MEU-169, MEU-170 | P1 | executed (Session 104) | `docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test/` |
 | 105 | `entry-emphasis-and-advanced` | MEU-171, MEU-172 | P3 | plan approved (round 2) | `docs/execution/plans/2026-11-26-entry-emphasis-and-advanced/` |
 | 106 | `app-auto-update` | MEU-173, MEU-174 | P2 | plan approved (round 3) | `docs/execution/plans/2026-11-26-app-auto-update/` |

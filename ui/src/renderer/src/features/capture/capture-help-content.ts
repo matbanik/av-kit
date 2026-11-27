@@ -1,15 +1,17 @@
 import type { HelpSection } from '../../components/help/HelpCard'
+import { CAPTURE_KEY_DEFAULT, captureKeyText } from './capture-key'
 
-export const CAPTURE_HELP_SECTIONS: HelpSection[] = [
+/** The topics with the `{captureKey}` token (CAPTURE_KEY_TOKEN); the readers below resolve it. */
+const CAPTURE_HELP_TEMPLATES: HelpSection[] = [
   {
     id: 'what-capture-does',
     title: 'What Capture does',
-    body: 'Press F2 or click Capture region to take a region of the screen. Capture keeps the PNG files in your inbox, and you can mark them. Capture never uploads.',
+    body: 'Press {captureKey} or click Capture region to take a region of the screen. Capture keeps the PNG files in your inbox, and you can mark them. Capture never uploads.',
   },
   {
     id: 'f2-sharex',
-    title: 'When F2 is in use',
-    body: 'If ShareX or a different tool uses F2, Capture shows a banner. Quit ShareX or pick a different key.',
+    title: 'When {captureKey} is in use',
+    body: 'If ShareX or a different tool uses {captureKey}, Capture shows a banner. Quit ShareX or pick a different key.',
   },
   {
     id: 'inbox-folder',
@@ -33,8 +35,8 @@ export const CAPTURE_HELP_SECTIONS: HelpSection[] = [
   },
   {
     id: 'close-to-tray',
-    title: 'Close to tray keeps F2',
-    body: 'When Close to tray is on and you close the window, the window hides. F2 still works. Click Quit in the tray menu to stop the app.',
+    title: 'Close to tray keeps {captureKey}',
+    body: 'When Close to tray is on and you close the window, the window hides. {captureKey} still works. Click Quit in the tray menu to stop the app.',
   },
   {
     id: 'never-uploads',
@@ -42,3 +44,15 @@ export const CAPTURE_HELP_SECTIONS: HelpSection[] = [
     body: 'Capture stays on your computer. Nothing goes to YouTube.',
   },
 ]
+
+/** CAPTURE_KEY_DEFAULT_READING (MEU-165): the topics with the given capture key. */
+export function captureHelpSections(key: string): HelpSection[] {
+  return CAPTURE_HELP_TEMPLATES.map((section) => ({
+    ...section,
+    title: captureKeyText(section.title, key),
+    body: captureKeyText(section.body, key),
+  }))
+}
+
+/** The topics with the default key, as they read before MEU-165. */
+export const CAPTURE_HELP_SECTIONS: HelpSection[] = captureHelpSections(CAPTURE_KEY_DEFAULT)

@@ -1,0 +1,342 @@
+{
+  "ui/src/renderer/src/features/capture/capture-key.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/src/renderer/src/features/capture/useCaptureSettings.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 153,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 5890
+  },
+  "ui/src/renderer/src/features/capture/CapturePage.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 3007,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 109704
+  },
+  "ui/src/renderer/src/features/capture/capture-help-content.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 44,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 4727
+  },
+  "ui/src/renderer/src/features/settings/settings-help-content.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 29,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1344
+  },
+  "ui/src/renderer/src/components/help/quick-start.json": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 223,
+    "bom": false,
+    "bytes": 6503
+  },
+  "ui/src/renderer/src/components/help/quick-start.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 193,
+    "bom": false,
+    "bytes": 6649
+  },
+  "ui/src/renderer/src/components/help/HelpCard.tsx": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 227,
+    "bom": false,
+    "bytes": 7369
+  },
+  "ui/src/renderer/src/features/settings/SettingsPage.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1373,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 52968
+  },
+  "packages/core/src/avkit_core/services/capture.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 2424,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 101545
+  },
+  "ui/src/renderer/src/features/capture/capture-scroll-bars.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/src/renderer/src/features/capture/CaptureViewport.tsx": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1833,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 71365
+  },
+  "ui/tests/e2e/test-ids.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 540,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 28173
+  },
+  "ui/tests/unit/capture-key.test.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/tests/unit/capture-key.behavior.test.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/tests/unit/capture-inbox-scope.behavior.test.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/tests/unit/capture-scroll-bars.test.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/tests/unit/capture-scroll-bars.behavior.test.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/tests/unit/capture-page.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 644,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 29432
+  },
+  "ui/tests/unit/settings-page.test.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 885,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 33747
+  },
+  "tests/unit/test_capture_inbox_scope.py": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "tests/e2e/test_api_capture_inbox_scope.py": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/tests/e2e/capture-settings-draft.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 236,
+    "bom": false,
+    "bytes": 9573
+  },
+  "ui/tests/e2e/capture-inbox.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 3712,
+    "bom": false,
+    "bytes": 177183
+  },
+  "ui/tests/e2e/help-quick-start.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 164,
+    "bom": false,
+    "bytes": 6210
+  },
+  "ui/tests/help-shots/help-shots.shots.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 563,
+    "bom": false,
+    "bytes": 23845
+  },
+  "docs/build-plan/09-screenshot-capture.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1582,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 174001
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 6811,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 648615
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 42,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 3616
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4599,
+    "bom": false,
+    "bytes": 165889
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 270,
+    "bom": false,
+    "bytes": 60073
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false,
+    "bytes": 20617
+  },
+  ".agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 328,
+    "bom": false,
+    "bytes": 36359
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 266,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 112506
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 113,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 136494
+  },
+  "docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 699,
+    "bom": false,
+    "bytes": 94332
+  },
+  "docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 109,
+    "bom": false,
+    "bytes": 90316
+  },
+  ".agent/context/handoffs/2026-11-26-capture-key-inbox-scrollbars-plan-critical-review.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 132,
+    "bom": false,
+    "bytes": 20896
+  },
+  ".agent/context/handoffs/2026-11-26-capture-key-inbox-scrollbars-implementation-critical-review.md": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  ".agent/context/handoffs/2026-11-26-capture-key-inbox-scrollbars-MEU-165-handoff.md": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  ".agent/context/handoffs/2026-11-26-capture-key-inbox-scrollbars-MEU-166-handoff.md": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  ".agent/context/handoffs/2026-11-26-capture-key-inbox-scrollbars-MEU-167-handoff.md": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/src/renderer/src/features/capture/capture-fit-map.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 162,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 5156
+  },
+  "ui/src/renderer/src/features/capture/capture-zoom.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 147,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 5062
+  },
+  "ui/src/renderer/src/features/capture/useCaptureCatalog.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 87,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 2515
+  },
+  "packages/api/src/avkit_api/routes/captures.py": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 567,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 20050
+  },
+  "openapi.committed.json": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 8138,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 214459
+  },
+  "tools/e2e_remote.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 1612,
+    "bom": false,
+    "bytes": 59120
+  },
+  "tools/help_guide_ste.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 316,
+    "bom": false,
+    "bytes": 12446
+  }
+}

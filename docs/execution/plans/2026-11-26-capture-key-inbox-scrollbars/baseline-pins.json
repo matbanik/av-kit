@@ -1,0 +1,22 @@
+{
+  "files": {
+    "ui/tests/unit/capture-page.behavior.test.ts": "ce49c1a69f23d6d6dd909401e1397229d21480d99b70430515ad39e8348073b5",
+    "ui/tests/unit/capture-action-row.test.ts": "ac1714b93888c5ace3e52d3e2233de81ae5f8cb4a1b5b08ee5d39621baa959f2",
+    "ui/tests/unit/help-quick-start.test.tsx": "ef1714bf05089e2d366f1b72b7be15cd378ceaed92322b6507fd259d53333b67",
+    "ui/tests/unit/capture-help-content.test.ts": "c51a1f21b8258943b8db0af47e958245cfad447c87949fc27a4608e19b3bbdb7",
+    "ui/tests/unit/capture-tool-style.test.ts": "2d3cba0c09a129f1db6b5d109d909be9423354dca90a518873ac4198b34ad2b6",
+    "ui/tests/unit/capture-copy-image.behavior.test.ts": "ba9189e6fa88a46be1bc6b7701249a495e9ed0fcc3b9de338317852c29408f4c",
+    "ui/tests/unit/capture-redact.behavior.test.ts": "8a4c5fff9aeb760cfb2910b5868a121a239c942e05575417876166922293cb62",
+    "ui/tests/unit/failure-reason-copy.test.ts": "d73fc0f63bd1112351da4d44828de02e3dba7abaa942e4033e087b55d09db56b",
+    "ui/tests/unit/help-card.test.ts": "31abd2ee7af8059d902c78aa503bd62255bee96cfc3de1147ca331bb5869031d",
+    "ui/tests/unit/capture-zoom.test.ts": "978478925d9d878d847167f33cd80cbb5bf425f639adc16e7a7c48146e0aae4a",
+    "ui/tests/unit/capture-fit-map.test.ts": "8d9a4d5c8837a88611d214d943c5bf992d938650f0a21a7509985172ea842154",
+    "ui/tests/unit/e2e-pointer.test.ts": "678b2680206339eb0889cbdf7f71c6cfdbc0e5dbae45351850aae93d660342b2",
+    "ui/tests/unit/gui-actions-audit.test.ts": "73f13bbd6df61d98b5126570c24c16b6098e18a8583b51909962b318b671856c",
+    "tests/unit/test_capture_service.py": "97d33f7faa2686446848b0fb242830ec5d11ab5f7dbafb452f28f0b0c27dad35",
+    "tests/e2e/test_api_captures.py": "a7bad7e73b103cd4b28e3796b7f1d5b5ba6e69a96cff1c5e3562678f9999f294",
+    "tests/e2e/test_api_capture_crop.py": "1afbd7acb28d7bdeeb09f848a12f6073ae1f28a2bbb4c8f8110cee75f67c2926",
+    "tests/tooling/test_help_guide_ste.py": "11cb348270ddc6e52425312c470dba563fcac8f1473543da7816ad4babbaf5df",
+    "openapi.committed.json": "69c68fbb6ccb91fc4ff523296d73d3e89a7a932c1f19bc3103fd25fcdfb604c3"
+  }
+}

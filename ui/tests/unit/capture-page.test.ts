@@ -109,12 +109,12 @@ const WAVE9_EXTRA_TESTIDS = [
 const CAPTURE_PALETTE_IDS = ['nav:capture', 'capture:region', 'capture:save', 'capture:open_folder'] as const
 const HELP_TOPICS = [
   'What Capture does',
-  'When F2 is in use',
+  'When {captureKey} is in use',
   'inbox folder',
   'original vs .annotated.png',
   'annotation tools',
   'MCP sees the same shots',
-  'Close to tray keeps F2',
+  'Close to tray keeps {captureKey}',
   'never uploads',
 ] as const
 const TRAY_MENU = ['Show window', 'Capture region', 'Open inbox folder', 'Quit'] as const
@@ -325,7 +325,7 @@ describe('MEU-39 capture gui', () => {
   it('AC-39.13 empty state HelpCard G26 topics and collapse key', () => {
     const page = readRequired(pagePath)
     expect(page).toContain('capture-empty')
-    expect(page).toMatch(/Press F2 or Capture region/)
+    expect(page).toMatch(/Press \{captureKey\} or Capture region/)
     // No drop zone as the primary path; MEU-132's page-wide drop handler shows none (09 :115, :1099).
     expect(page).not.toMatch(/drop-?zone/i)
     expect(page).toMatch(/feature=["']capture["']|feature=\{?'capture'\}?/)
