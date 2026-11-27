@@ -536,3 +536,5 @@ export const HELP_QUICK_START_STEP = 'help-quick-start-step'
 export const HELP_QUICK_START_INTRO = 'help-quick-start-intro'
 export const HELP_QUICK_START_HINT = 'help-quick-start-hint'
 export const HELP_SHOT = 'help-shot'
+// MEU-169 cookie test result ID.
+export const COOKIE_TEST_RESULT = 'cookie-test-result'

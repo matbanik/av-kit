@@ -1,0 +1,398 @@
+{
+  "packages/infrastructure/pyproject.toml": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 33,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 704
+  },
+  "pyproject.toml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 48,
+    "bom": false,
+    "bytes": 1177
+  },
+  "uv.lock": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 3376,
+    "bom": false,
+    "bytes": 624334
+  },
+  "tests/unit/test_ytdlp_lock.py": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "packages/core/src/avkit_core/domain/enums.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 278,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 6437
+  },
+  "packages/core/src/avkit_core/domain/download.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 438,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 16039
+  },
+  "packages/infrastructure/src/avkit_infra/youtube/adapter.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 853,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 34636
+  },
+  "packages/core/src/avkit_core/services/download.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 910,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 36581
+  },
+  "packages/api/src/avkit_api/schemas/downloads.py": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 112,
+    "bom": false,
+    "bytes": 2106
+  },
+  "packages/api/src/avkit_api/routes/downloads.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 249,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 8084
+  },
+  "openapi.committed.json": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 8105,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 213567
+  },
+  "mcp-server/src/toolsets/download.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 105,
+    "bom": false,
+    "bytes": 4437
+  },
+  "mcp-server/tests/download-cookies-test.test.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/src/renderer/src/features/downloader/cookie-test-result.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/src/renderer/src/features/downloader/DownloaderPage.tsx": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 761,
+    "bare_lf": 226,
+    "bom": false,
+    "bytes": 35498
+  },
+  "ui/src/renderer/src/features/downloader/sabr-panel.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 35,
+    "bom": false,
+    "bytes": 1445
+  },
+  "ui/tests/e2e/test-ids.ts": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 538,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 28082
+  },
+  "ui/tests/e2e/downloader-cookie-test.test.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/tests/unit/cookie-test-result.test.ts": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/tests/unit/downloader-page.behavior.test.ts": {
+    "kind": "MIXED",
+    "expected": "MIXED",
+    "crlf": 2096,
+    "bare_lf": 623,
+    "bom": false,
+    "bytes": 112156
+  },
+  "ui/tests/unit/sabr-panel.test.ts": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 53,
+    "bom": false,
+    "bytes": 2461
+  },
+  "tests/unit/test_domain.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1717,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 58882
+  },
+  "tests/unit/test_services.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 3547,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 134887
+  },
+  "tests/integration/test_youtube_adapter.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1162,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 43597
+  },
+  "tests/e2e/test_api_downloads.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 814,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 33079
+  },
+  "tests/e2e/api_fakes.py": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 571,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 18829
+  },
+  "docs/build-plan/01-domain-layer.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 612,
+    "bom": false,
+    "bytes": 30762
+  },
+  "docs/build-plan/02-infrastructure.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 672,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 47760
+  },
+  "docs/build-plan/04-rest-api.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 512,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 26205
+  },
+  "docs/build-plan/06-gui.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 1754,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 158113
+  },
+  ".agent/context/known-issues.yaml": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 6811,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 646748
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 45,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 4062
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 4599,
+    "bom": false,
+    "bytes": 165637
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 270,
+    "bom": false,
+    "bytes": 60070
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 161,
+    "bom": false,
+    "bytes": 20620
+  },
+  ".agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 328,
+    "bom": false,
+    "bytes": 35435
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 263,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 110491
+  },
+  "docs/execution/metrics.md": {
+    "kind": "CRLF",
+    "expected": "CRLF",
+    "crlf": 112,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 134964
+  },
+  "docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test/implementation-plan.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 625,
+    "bom": false,
+    "bytes": 75272
+  },
+  "docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test/task.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 257,
+    "bom": false,
+    "bytes": 89955
+  },
+  ".agent/context/handoffs/2026-11-26-ytdlp-challenge-and-cookie-test-plan-critical-review.md": {
+    "kind": "LF",
+    "expected": "LF",
+    "crlf": 0,
+    "bare_lf": 138,
+    "bom": false,
+    "bytes": 19441
+  },
+  ".agent/context/handoffs/2026-11-26-ytdlp-challenge-and-cookie-test-implementation-critical-review.md": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  ".agent/context/handoffs/2026-11-26-ytdlp-challenge-and-cookie-test-MEU-168-handoff.md": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  ".agent/context/handoffs/2026-11-26-ytdlp-challenge-and-cookie-test-MEU-169-handoff.md": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  ".agent/context/handoffs/2026-11-26-ytdlp-challenge-and-cookie-test-MEU-170-handoff.md": {
+    "kind": "absent",
+    "expected": "absent"
+  },
+  "ui/tests/e2e/downloader-advanced-gap.test.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 370,
+    "bom": false,
+    "bytes": 14685
+  },
+  "tests/unit/test_fetch_deno.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 308,
+    "bom": false,
+    "bytes": 11293
+  },
+  "tests/integration/test_youtube_client_fallback.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 554,
+    "bom": false,
+    "bytes": 19599
+  },
+  "tests/unit/test_extract_options.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 370,
+    "bom": false,
+    "bytes": 14187
+  },
+  "tests/integration/test_js_runtime_wiring.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 307,
+    "bom": false,
+    "bytes": 11866
+  },
+  "packages/core/src/avkit_core/ports/youtube.py": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 43,
+    "bom": false,
+    "bytes": 1066
+  },
+  "ui/src/renderer/src/features/downloader/cookie-bar.ts": {
+    "kind": "LF",
+    "expected": null,
+    "crlf": 0,
+    "bare_lf": 84,
+    "bom": false,
+    "bytes": 1850
+  },
+  "ui/src/renderer/src/features/downloader/downloader-help-content.ts": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 29,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 1189
+  },
+  "docs/build-plan/gui-actions-index.md": {
+    "kind": "CRLF",
+    "expected": null,
+    "crlf": 141,
+    "bare_lf": 0,
+    "bom": false,
+    "bytes": 14248
+  }
+}

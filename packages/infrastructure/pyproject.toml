@@ -9,7 +9,7 @@ dependencies = [
     "certifi",
     "sqlalchemy>=2.0",
     "structlog",
-    "yt-dlp",
+    "yt-dlp>=2026.11.23",
     "yt-dlp-ejs==0.8.0",
     "youtube-transcript-api>=1.0",
     "kokoro",

@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 from avkit_api.main import create_app
 from avkit_api.wiring import AppServices
 from avkit_core.domain.enums import (
+    CookieTestOutcome,
     DeviceType,
     MediaFormat,
     ModelFormat,
@@ -480,7 +481,7 @@ class FakeDownload(_Lifecycle):
 
     def test_cookies(self, *args: object, **kwargs: object) -> SimpleNamespace:
         del args, kwargs
-        return SimpleNamespace(ok=True)
+        return SimpleNamespace(ok=True, outcome=CookieTestOutcome.ok, error_message=None)
 
 
 class FakeConversion(_Lifecycle):

@@ -408,6 +408,42 @@ MCP Guard / lock stays **deferred** ([06-gui.md](06-gui.md)).
 > - Gate: the `session-gate.ps1` record in the MEU-125 handoff. Under D-464 A, a run whose only finding is YouTube's caption block ends `INCOMPLETE VERIFICATION`, never a pass.
 > - Plan `docs/execution/plans/2026-11-08-release-rc2/`.
 
+## Residuals registered 2026-11-26
+
+Two residual MEUs from Mat's request of 2026-11-26 for an update from inside the app (triage D-1409; grouping `.agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md`, Session 106 `app-auto-update`). They replace the Auto-update row of [§Electron packaging](#electron-packaging-electron-builder), which called it optional. The design starts from Zorivest's planned updater (`P:/zorivest/docs/build-plan/18-first-install-ux.md` §18.12), which is another repository's plan and binds nothing here.
+
+<a id="update-feed-residual"></a>
+
+### Update feed (residual)
+
+> **MEU-173.** From `APP-NO-IN-APP-UPDATE` (triage D-1409, Mat's request). A release carries the installer and no update metadata: `electron-builder.yml` has no `publish` block, and `latest.yml` and the `.blockmap` are left out of the upload on purpose.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Feed files | A release build writes `latest.yml` and the installer's `.blockmap` beside the installer, and the release procedure uploads all three. The file name in the feed is the name of the uploaded installer. | Research-backed: electron-builder's auto-update documentation (www.electron.build/v26/docs/features/auto-update/, read 2026-11-26); Human-approved: triage D-1409 |
+| Feed address | `electron-builder.yml` names the GitHub provider and the public repository as the feed. Builds still run with `--publish never`. | Research-backed: www.electron.build/v26/docs/features/auto-update/; Local Canon: the release build script |
+| Which releases | Which releases the feed offers (every release marked Latest, or stable versions only) is a Decision Brief of the plan; today every release is a release candidate marked Latest. | Local Canon: D-1409; plan-time |
+| Check | A script compares the feed's SHA-512 and size with the built installer before the upload step. | Local Canon: [§Release candidate packaging (residual)](#release-candidate-packaging-residual) `BUILD_RECORD` |
+| Manual upload | No tool uploads. The upload stays Mat's step in the publish checklist, and the CI workflow still uploads nothing. | Local Canon: PROJECT-PROFILE E5; `tests/unit/test_ci_workflows.py` |
+| Tests | A unit test on the builder configuration and the checklist; the feed check script run against a real build. | Local Canon |
+
+<a id="in-app-update-residual"></a>
+
+### In-app update (residual)
+
+> **MEU-174.** From `APP-NO-IN-APP-UPDATE` (triage D-1409, Mat's request). The app has no updater: a user learns of a new version only on the release page, and installs it by hand.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Check | The packaged app checks the feed on the schedule of the Interval row. A development run never checks. Whether Settings also offers a check on request is a Decision Brief of the plan. | Human-approved: triage D-1409 (Mat, 2026-11-26), for the scheduled check; Local Canon: plan-time, for the development run and a check on request |
+| Interval | A setting holds how often the app checks: once a week or once a month. The default, and whether the user can turn the check off, are Decision Briefs of the plan. | Human-approved: D-1409 ("once a week or once a month"); plan-time |
+| Install | A newer version is downloaded and installed with no visit to the release page. When the download starts and when the app restarts are Decision Briefs of the plan. The app never restarts while a download, transcript, TTS or convert job runs unless the user chooses it. | Human-approved: D-1409; Local Canon: plan-time |
+| Trust | The installer is unsigned, so an update is checked by the feed's SHA-512 over HTTPS and by no publisher signature. The plan states this as a Decision Brief, and the release notes say it. | Local Canon: [§Electron packaging](#electron-packaging-electron-builder) Code signing row; plan-time |
+| Outbound | The check is a new outbound request, to GitHub. The works-offline statement of [§Goal](#goal) and the release notes are changed to name it. With no network the check fails quietly and the app works as before. | Local Canon: [§Goal](#goal); D-1409 |
+| Processes | The backend and the MCP server exit before the installer replaces files, and user data is kept. | Local Canon: [§Uninstall removes the installer copy (residual)](#uninstall-installer-copy-residual) |
+| Setting surface | The new setting is in every settings layer: the core registry, the API schema, the UI schema and the Settings page, the MCP settings tool and the settings table of 06. | Local Canon: [06 §Settings](06-gui.md#settings-page-settings) |
+| Tests | Unit: the schedule with a fake clock and the updater mocked. Electron E2E against a local feed. A real update from one built version to the next, run by script on the remote E2E host. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
 ---
 
 ## Platforms

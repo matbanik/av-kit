@@ -30,11 +30,11 @@ describe('MEU-138 sabrResultText', () => {
     }
     expect(shown).toEqual({
       checking: 'Checking…',
-      activeChecked: `${ACTIVE} · checked 09:05:07`,
+      activeChecked: `${ACTIVE} · checked 09:05:07 · Check SABR does not use cookies`,
       activeForced: `${ACTIVE} · forced 09:05:07`,
       activeNoTime: ACTIVE,
       activeBadTime: ACTIVE,
-      inactiveChecked: 'SABR inactive · checked 09:05:07',
+      inactiveChecked: 'SABR inactive · checked 09:05:07 · Check SABR does not use cookies',
       inactiveCleared: 'SABR inactive · cleared 09:05:07',
       inactiveNoTime: 'SABR not checked',
       inactiveBadTime: 'SABR not checked',
@@ -48,6 +48,40 @@ describe('MEU-138 sabrResultText', () => {
     expect([
       sabrResultText({ mode: 'inactive', source: 'detected', checked_at: early }),
       sabrResultText({ mode: 'active', source: 'forced', checked_at: late }),
-    ]).toEqual(['SABR inactive · checked 00:00:01', `${ACTIVE} · forced 23:59:59`])
+    ]).toEqual(['SABR inactive · checked 00:00:01 · Check SABR does not use cookies', `${ACTIVE} · forced 23:59:59`])
+  })
+})
+
+describe('MEU-170 sabrResultText says what Check SABR covers', () => {
+  // SABR_CHECK_SCOPE (AC-170.1): only a detected result with a time carries the clause.
+  const SCOPE = ' · Check SABR does not use cookies'
+
+  it('AC-170.1 a detected result says that Check SABR does not use cookies', () => {
+    expect([
+      sabrResultText({ mode: 'active', source: 'detected', checked_at: AT }),
+      sabrResultText({ mode: 'inactive', source: 'detected', checked_at: AT }),
+    ]).toEqual([`${ACTIVE} · checked 09:05:07${SCOPE}`, `SABR inactive · checked 09:05:07${SCOPE}`])
+  })
+
+  it("AC-170.1 the other snapshots keep today's text", () => {
+    const shown = [
+      sabrResultText(undefined),
+      sabrResultText({ mode: 'checking', source: null, checked_at: null }),
+      sabrResultText({ mode: 'active', source: 'forced', checked_at: AT }),
+      sabrResultText({ mode: 'inactive', source: null, checked_at: AT }),
+      sabrResultText({ mode: 'active', source: 'detected', checked_at: null }),
+      sabrResultText({ mode: 'inactive', source: 'detected', checked_at: null }),
+    ]
+    expect(shown).toEqual([
+      'SABR not checked',
+      'Checking…',
+      `${ACTIVE} · forced 09:05:07`,
+      'SABR inactive · cleared 09:05:07',
+      ACTIVE,
+      'SABR not checked',
+    ])
+    for (const text of shown) {
+      expect(text).not.toContain('Check SABR')
+    }
   })
 })

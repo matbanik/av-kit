@@ -1,0 +1,80 @@
+{
+  "packages/infrastructure/pyproject.toml": "f1d9297dceef7294030277f8dc920044ee677292b6ce8c969cb37e1c5d18e67c",
+  "pyproject.toml": "c2503e4b2a73bf9cc1c1dce87c9c131ddcf9ceb965b65d86705cfaf8a9931631",
+  "uv.lock": "cb1485c35ae6acf4cff28b3576b7b013c212120759a30e779ba9c2f5eafdfd76",
+  "packages/core/src/avkit_core/domain/enums.py": "60fe53693cdb600fabac2c7fcc438555b9905e28c297ef8f321b5f58620dedb0",
+  "packages/core/src/avkit_core/domain/download.py": "da9ac572c6ce8b4dfd0b7dd1ee905658681fe85ce0daa4bad068bd8d5cdaa49e",
+  "packages/infrastructure/src/avkit_infra/youtube/adapter.py": "bfbb75384645594db4c2ddd26ac97a79d3b2fb5974bc2497443933bbebf77181",
+  "packages/core/src/avkit_core/services/download.py": "0113e373aee090fc494d1acc5acf2185f82be10816ed576f840b60b801dd660e",
+  "packages/api/src/avkit_api/schemas/downloads.py": "9eaa1358c4988183feb1ce7fd72d2ad573e1548b414d008e8066c2f23a2934fd",
+  "packages/api/src/avkit_api/routes/downloads.py": "7c509596c922fe4c8eecb00dbda83c408618b8596a632aa0acf946777ad65389",
+  "openapi.committed.json": "54be5521a48ff9fb59cf507828ef4a32f35624c2d806e871800b4c82ce6a30f8",
+  "mcp-server/src/toolsets/download.ts": "4e71c44520973860c8511f7474e7a30ed5297575fc3f2162729ed1490fe944f5",
+  "ui/src/renderer/src/features/downloader/DownloaderPage.tsx": "c94be4f2d64472e160c3c5fea7a7c0df181560bee4936f947918b5d445d31b60",
+  "ui/src/renderer/src/features/downloader/sabr-panel.ts": "2b7f9a4a6633ae372f3795988be1976144a220816053a2214b0db89e2e203b1d",
+  "ui/tests/e2e/test-ids.ts": "cc233e56c72b696987877686bd6b4bb0c3435a4f919213c716f05cbc1b051388",
+  "ui/tests/unit/downloader-page.behavior.test.ts": "51d9f68a01ffab62ce0e6e0790b1c0e0fec8c106ce1a4548221aee759796d977",
+  "ui/tests/unit/sabr-panel.test.ts": "c3d775b6c13f9d1b685bd7bb863d262d41a6adfc73f30e55c2e20c8fad123fba",
+  "tests/unit/test_domain.py": "7f758d982ed0f4d6e92dea2f2830ece70365a077485c01bcc5f9dbce554b9563",
+  "tests/unit/test_services.py": "28b065e4c7fa690b78380860733a0dc79701e1063f2038cdb88b1b33108de964",
+  "tests/integration/test_youtube_adapter.py": "de6ef4d93d1ec872e99e071b74c73b98ce30c19ed46496a42eb82a672745a83b",
+  "tests/e2e/test_api_downloads.py": "73e4e44920d363941ff6a8852a0b475b4ad92ea8c4755287426122afc417a8c1",
+  "tests/e2e/api_fakes.py": "9c91095659ef876d09cd3d753fe886314c8272f8c5a3afbcd57d67d557aaee7f",
+  "docs/build-plan/01-domain-layer.md": "acb9f1187f2418af4ed727c07171fc309520bec3e21a8898e43b0a0a66790654",
+  "docs/build-plan/02-infrastructure.md": "ce13b8fffc7a22bccabcf6f36ee7247864784b12c561d75e9b7ff86c01ca58ff",
+  "docs/build-plan/04-rest-api.md": "2dfe007a7e235ba8cf1168b473c040c23d076a0f1f47cd813899b1fd7e5c19b9",
+  "docs/build-plan/06-gui.md": "9323e0d369365017be34200b00e291265d065ce8a49d089452129b9e46fcb764",
+  "docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test/implementation-plan.md": "17bfb28366522cd9656d283a5f9005b14ea8c1da9faa0caaf057e4694c25c0e4",
+  "docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test/task.md": "ad2757f26e75dd7d2cc02e1b8ba93eccb1b882b0a2299c883b00606d6bf4cf18",
+  ".agent/context/handoffs/2026-11-26-ytdlp-challenge-and-cookie-test-plan-critical-review.md": "d8c441f96a65ae480359e88fe31b63c4f42cffbe298806783e8a3cf0a0f47b23",
+  "tests/unit/test_ytdlp_lock.py": "absent",
+  "mcp-server/tests/download-cookies-test.test.ts": "absent",
+  "ui/src/renderer/src/features/downloader/cookie-test-result.ts": "absent",
+  "ui/tests/e2e/downloader-cookie-test.test.ts": "absent",
+  "ui/tests/unit/cookie-test-result.test.ts": "absent",
+  ".agent/context/handoffs/2026-11-26-ytdlp-challenge-and-cookie-test-implementation-critical-review.md": "absent",
+  ".agent/context/handoffs/2026-11-26-ytdlp-challenge-and-cookie-test-MEU-168-handoff.md": "absent",
+  ".agent/context/handoffs/2026-11-26-ytdlp-challenge-and-cookie-test-MEU-169-handoff.md": "absent",
+  ".agent/context/handoffs/2026-11-26-ytdlp-challenge-and-cookie-test-MEU-170-handoff.md": "absent",
+  "ui/tests/e2e/downloader-advanced-gap.test.ts": "89dff3d4ec0327ced020d69d4d345e66f6b6965fe9ee7d421babc480076f9fef",
+  "tests/unit/test_fetch_deno.py": "4c21f19756312883c62d2787ce31472c5f5a483afe585ca78fa8ee9701df9fbb",
+  "tests/integration/test_youtube_client_fallback.py": "9572369ec46986431e5532d354095b09690ea75748c75c1a474b9cf72355945a",
+  "tests/unit/test_extract_options.py": "13727cfa15066236815d7fc74c1acf36159764e0ee3c5203066688fd1db7a414",
+  "tests/integration/test_js_runtime_wiring.py": "bbfc6ccb4063e862f147eab8fcbb73fce1c8177af3d105450db1df6ce133d3f3",
+  "packages/core/src/avkit_core/ports/youtube.py": "bc6de473b046ab7e82c3559c73a4ae2f369bea13b4fc5460e0b16d26cd2681c1",
+  "ui/src/renderer/src/features/downloader/cookie-bar.ts": "5a6ea9799217a9baf6fc42bdc4dbc83e0c81371f8ec9c367f9bec3bb19e46e22",
+  "ui/src/renderer/src/features/downloader/downloader-help-content.ts": "873bd93f4766024d906b03be62144cf70889cf56f68fe956c7f7af174ca71808",
+  "docs/build-plan/gui-actions-index.md": "b2ef243c189c5a81c83953e6b02fe138ba76cf8a6f6f203bab85c0bea9b10450",
+  ".agent/context/known-issues.yaml": {
+    "kind": "shared",
+    "sha256": "19ce051cd1f82d86f1007c5bcdbabfe2f1f03840fdc81c5730578f718b11f124"
+  },
+  ".agent/context/known-issues.md": {
+    "kind": "shared",
+    "sha256": "6d2fbb788bdbcb1b2aa5fe0ef875190dcee732c26200c62767a24831584b8e90"
+  },
+  ".agent/context/meu-status.yaml": {
+    "kind": "shared",
+    "sha256": "6d59e51361ffcb2507d03b5a83df69651a4ea5543d0fc6f52b81884f93f1e9fd"
+  },
+  ".agent/context/meu-registry.md": {
+    "kind": "shared",
+    "sha256": "f1632623176480edf7fe26dab34235d1eab88f5ddf38fb74991c0fd01d12fb00"
+  },
+  "docs/BUILD_PLAN.md": {
+    "kind": "shared",
+    "sha256": "294bdc31847404422df8339c9cc5c40f4ecca557174717f78b0f6888296d1c03"
+  },
+  ".agent/context/current-focus.md": {
+    "kind": "shared",
+    "sha256": "5fdb1edfcd632d9007df15e79b975c02955a6e53d72ee1fc2d3c8ce7fd0a1ea7"
+  },
+  "docs/execution/metrics.md": {
+    "kind": "shared",
+    "sha256": "129e432f171b90686633f4160fdecbd83c368b8996842042cf99e79150312fec"
+  },
+  ".agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md": {
+    "kind": "shared",
+    "sha256": "1a97c1011f4ee5784e1859ae2942ef0dd3d5fedc180c4609c29dee04ec524b47"
+  }
+}

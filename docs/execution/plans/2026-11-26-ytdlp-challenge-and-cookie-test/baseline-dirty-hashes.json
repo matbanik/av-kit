@@ -1,0 +1,17 @@
+{
+  ".agent/context/handoffs/2026-11-26-app-auto-update-plan-critical-review.md": "55911a41f8d4f7ab3435d8c5346a612efc2b707119e41131e92943e144df3e95",
+  ".agent/context/handoffs/2026-11-26-capture-key-inbox-scrollbars-plan-critical-review.md": "1ab27c1602a0c3c687d3c91d64c86794eab90526525c1b4254b083aace275671",
+  ".agent/context/handoffs/2026-11-26-entry-emphasis-and-advanced-plan-critical-review.md": "18be23c85b5c82321780cb834606b0a9111738200520bb5321106a00ce90b1ac",
+  ".agent/context/triage-output.yaml": "6ed8d5aa777121f03f7d5c63ff679fd28d56a83f36b71bd9a39613c68f8ed62d",
+  "docs/build-plan/07-distribution.md": "0b2f0e225863e531ce49a722852af0c29f020b5e2cb2b5e4ac9e83b5419efb60",
+  "docs/build-plan/09-screenshot-capture.md": "0e654fe23eb6c4b16b25b6236b08f537ac992f24ce8b8d70b79c6dd7754b8ae3",
+  "docs/build-plan/11-page-layout.md": "ad9ad09013a17b0f5b51a5a23c411490b8b2b68d841f5100161ab9959f24be79",
+  "docs/build-plan/build-priority-matrix.md": "9787e1fa6114d283877cbc90f761a868ccb2b3426774f3a017ac88aa4ba5dfb3",
+  "docs/execution/plans/2026-11-26-app-auto-update/implementation-plan.md": "7c087b69a62442f322032fb374c14e7ea08222d84ce24508079fb9217b610ead",
+  "docs/execution/plans/2026-11-26-app-auto-update/task.md": "b40536eea102188858075b73ee19a0121bcf2f8f52798ab36b3b58b1720a5849",
+  "docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/implementation-plan.md": "c6be40849a942af6bebc71b93a6af39a6348a2328e35c12cb39def2b477ec855",
+  "docs/execution/plans/2026-11-26-capture-key-inbox-scrollbars/task.md": "1975900369788c0c08b5f7fdc2da2990575f5271cb5ef3634e6165a0ece38563",
+  "docs/execution/plans/2026-11-26-entry-emphasis-and-advanced/implementation-plan.md": "7f1e52625b636f706c922b1c7ca8a8e0bf8c4e967a56769baef53039ad3fe02a",
+  "docs/execution/plans/2026-11-26-entry-emphasis-and-advanced/task.md": "7a436fe5373977e6bd26d075819a43fab3d29019883ac2edfe716db91769f218",
+  "docs/proposals/2026-11-26-entry-emphasis-and-advanced-mockup.html": "9639dca6c04fbadc188d2c7c132a780fec2f852f8d786b5d0616edda6bc6be9c"
+}

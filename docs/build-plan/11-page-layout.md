@@ -195,6 +195,42 @@ One residual MEU from the 2026-11-17 triage. It removes empty space on the Downl
 > - The README screenshot is not retaken (D-1129).
 > - AC-159.1 to AC-159.7. Plan `docs/execution/plans/2026-11-17-ui-small-fixes/`.
 
+## Residuals registered 2026-11-26
+
+Two residual MEUs from Mat's report of 2026-11-26 (grouping `.agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md`, Session 105 `entry-emphasis-and-advanced`). No test id is removed or renamed.
+
+<a id="entry-section-emphasis-residual"></a>
+
+### Entry section emphasis (residual)
+
+> **MEU-171.** From `GUI-ENTRY-SECTIONS-NO-EMPHASIS` (triage D-1403, Mat's request). The URL row of the Download page, the channel row of the Transcript page and the How it works card sit on the page background like every other section, and `styles.css` has no emphasis token.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Proposal | Before any product code, a local HTML mockup in `docs/proposals/` shows the candidate emphasis colours on the two URL sections and the How it works card, in dark and light, each with deuteranopia, protanopia, tritanopia and greyscale views and its measured contrast ratios. Mat's go-ahead on the plan settles the colour. | Human-approved: triage D-1403 (Mat, 2026-11-26) |
+| Where | The Download page's URL section, the Transcript page's channel section and the How it works card on every page that has one. | Human-approved: D-1403 |
+| Tokens | The emphasis surface and its edge are new theme tokens in `styles.css`, set for both themes. No component holds a raw colour. | Local Canon: `.agent/docs/emerging-standards.md` G32 |
+| Not by hue alone | The emphasis shows by lightness and an edge, so it still reads in greyscale. | Local Canon: `.agent/docs/emerging-standards.md` G26 (WCAG 2.1 AA) |
+| Contrast | Text on the emphasis surface keeps 4.5:1 in both themes, and a unit test reads `styles.css` and computes it. | Local Canon: [06 §Light accent contrast (residual)](06-gui.md#light-accent-contrast-residual) |
+| Accent and status | The proposal is weighed against the single-accent rule and against the warning, pending and error hues. A colour that departs from the single-accent rule needs Mat's ruling. | Local Canon: `.agent/docs/emerging-standards.md` G31 |
+| Pins | The Downloader's queue scroll container, the test ids and the 16 px gap under the Advanced disclosure hold. | Local Canon: [§Queue scroll container rule](#queue-scroll-container-rule); [§Downloader Advanced gap (residual)](#downloader-advanced-gap-residual) |
+| Help images | The help images are taken again by script after the visual change. | Human-approved: [06 §Help quick start (residual)](06-gui.md#help-quick-start-residual) Images and Drift rows |
+| Tests | Unit: the token contrast, and no raw colour in the changed components. Electron E2E on the real app in both themes: each emphasis section's computed background differs from the page background and comes from the token. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
+<a id="downloader-advanced-affordance-residual"></a>
+
+### Downloader Advanced affordance (residual)
+
+> **MEU-172.** From `DOWNLOADER-ADVANCED-LOOKS-LIKE-TEXT` (triage D-1404, Mat's request) and `DOWNLOADER-COOKIE-PROFILE-UNLABELED` (triage D-1405, Mat's report). The Advanced trigger is a ghost button with no border and no chevron, its open panel has no surface of its own, and the browser profile field has no label.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Trigger | The Advanced trigger looks like a button: it has a visible border or background and a chevron that shows open and closed. The change is at the Downloader's call site; the `Disclosure` default stays. | Human-approved: triage D-1404 (Mat, 2026-11-26); Local Canon: `.agent/docs/emerging-standards.md` G1; [§Shared layout primitives](#shared-layout-primitives) |
+| Open panel | The open panel has a highlight surface that differs from the page background and from the other sections, built from the MEU-171 tokens. | Human-approved: D-1404 |
+| Profile | The browser profile field has a visible `Profile` label tied to the input and a hint that an empty field means the browser's default profile. Browser mode shows the "Close browser first" note. | Spec: [06 §Downloader Page](06-gui.md) (the `Profile:` label and the Test Cookies warning); triage D-1405 |
+| Kept | The panel's eight ids, their order, what each cookie mode shows, the status slot and the 16 px gap hold. | Local Canon: [§Downloader Advanced gap (residual)](#downloader-advanced-gap-residual) |
+| Tests | Unit: the trigger's variant and chevron, the label's tie to the input, and the note by mode. Electron E2E on the real app: the trigger has a border or background, the open panel's background differs from the page's, and the gap test still passes. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
 ## Supersession
 
 | Earlier source | Carry-forward owner | Binding rule |

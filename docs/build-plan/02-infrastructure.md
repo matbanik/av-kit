@@ -382,7 +382,7 @@ SABR-mode client fallback: attempt 1 sets no `extractor_args` in either cookie m
 
 ### Cookie test
 
-Implements Phase 1 `YouTubePort.test_cookies` → `CookieTestResult` (`ok`, `error_message`) **only**. “Close browser first” / browser locked / bad file → `{ ok: false, error_message }`. Do **not** raise `CookieTestError` from `test_cookies` (that type is for download-path cookie failures). No cookie material in the return value.
+Implements Phase 1 `YouTubePort.test_cookies` → `CookieTestResult` (`ok`, `error_message`, `outcome`) **only**; `outcome` follows [§Cookie test outcome (residual)](#cookie-test-outcome-residual). “Close browser first” / browser locked / bad file → `{ ok: false, outcome: unreadable, error_message }`. Do **not** raise `CookieTestError` from `test_cookies` (that type is for download-path cookie failures). No cookie material in the return value.
 
 ---
 
@@ -612,6 +612,67 @@ Do not hit live YouTube or Hugging Face in the default suite.
 > - `packages/infrastructure/pyproject.toml:13` pins `yt-dlp-ejs==0.8.0` (`SOLVER_DEP`), and `packaging/avkit-backend.spec:43` collects it (`SOLVER_SPEC`). `tools/fetch_deno_windows.ps1` fetches Deno 2.9.8 pinned by SHA-256, and `ui/electron-builder.yml:39` ships it as `resources/deno` (`DENO_BUNDLE`, D-649). Its MIT licence is in the licence list and `THIRD_PARTY_NOTICES.md` (`DENO_LICENCE`).
 > - `tools/smoke_packaged_runtime.py` passed on the onedir with source `bundled`, version 2.9.8 and the solver (`RUNTIME_SMOKE`). The installer size is in 07 §Deno (locked).
 > - AC-141.1 to AC-141.16. Plan `docs/execution/plans/2026-11-12-youtube-client-runtime/`.
+
+## Residuals registered 2026-11-26
+
+> Registered 2026-11-26 from Mat's report of the Downloader's Advanced panel and his backend console of that day (triage D-1406 to D-1408). Grouping: [`2026-11-26-ui-findings-and-auto-update-session-grouping.md`](../../.agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md), Session 104 `ytdlp-challenge-and-cookie-test`.
+
+<a id="ytdlp-challenge-solver-residual"></a>
+
+### yt-dlp challenge solver (residual)
+
+> **MEU-168.** From `YTDLP-CHALLENGE-SOLVE-FAILS` (triage D-1407). yt-dlp 2026.10.26 with yt-dlp-ejs 0.8.0 cannot solve the signature and n challenges of YouTube's current players (upstream issue 18123: `a.addOnDisposeCallback is not a function`), so extraction with the cookie clients and Test Cookies fail with YouTube's "The page needs to be reloaded".
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Version | The lock holds the yt-dlp stable release that fixes the solver (2026.11.23 or later). `yt-dlp-ejs` stays the version that release pins, and the test that fails when the two disagree still runs. While the release is younger than the 7-day hold, the lock uses the yt-dlp line that `docs/distribution/dependency-updates.md` §The 7-day hold documents. | Research-backed: github.com/yt-dlp/yt-dlp/issues/18123 (fixed in stable 2026.11.23) and PyPI metadata of 2026.11.23, read 2026-11-26; Human-approved: D-640 for the pin rule |
+| Proof | A script records one real extraction of the probe video with the cookie client list before the change (the challenge errors) and after it (none). A run that the network or YouTube blocks ends `INCOMPLETE VERIFICATION`, never a pass. The script prints no cookie value. | Local Canon: triage D-1407; D-464 A (a blocked run is not a pass) |
+| Fallback | If the new release still fails, the adapter passes the YouTube extractor argument `player_js_variant` `tv`, and the plan records which of the two was needed. | Research-backed: yt-dlp pull request 18124 (tv as the default variant); D-1407 |
+| Packaged | The packaged smoke still finds Deno and imports the solver, and the licence list is checked again for the new version. | Local Canon: [§yt-dlp JS runtime (residual)](#ytdlp-js-runtime-residual) `RUNTIME_SMOKE`; the licence gate |
+| Reach | Installed copies get the fix only with a new release. Nothing here tags, uploads or publishes. | Local Canon: D-1407; PROJECT-PROFILE E5 |
+| Tests | The adapter, client fallback and extract option suites pass on the new version. The real extraction is a recorded script, not a CI test. | Local Canon: [§SABR check result (residual)](#sabr-check-result-residual) Tests row (no live YouTube) |
+
+> **Delivered (Session 104).**
+> - The lock moved yt-dlp from 2026.10.26 to 2026.11.23 (D-1460; `tests/unit/test_ytdlp_lock.py`). The version was needed; the `player_js_variant` fallback was not (D-1461): yt-dlp 2026.11.23's own default variant is `tv`, and av-kit sets none.
+> - Proof (D-1462): the recorded before-run on 2026.10.26 ended `challenge-errors` with 0 formats; the after-run on 2026.11.23, same video, ended `clean` with 11 formats.
+> - `exclude-newer-package = { yt-dlp = false }` in the root `[tool.uv]` (D-1468) lets the release past the 7-day hold. Remove it and run `uv lock` again after 2026-11-30.
+> - The licence list names yt-dlp 2026.11.23; the runtime smoke solves with the bundled Deno 2.9.8.
+
+<a id="cookie-test-outcome-residual"></a>
+
+### Cookie test outcome (residual)
+
+> **MEU-169.** From `DOWNLOADER-COOKIE-TEST-SILENT` (triage D-1406, Mat's report). The renderer drops the reply of `POST /downloads/cookies/test`, and the reply is only `{ok}`: the route leaves out the adapter's `error_message`, and a cookie that could not be read looks the same as a YouTube failure.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Outcome | The reply names one of three outcomes: the cookies were read and YouTube answered; the cookies could not be read (a missing file, a locked or missing browser database, an unknown profile); the cookies were read but YouTube's check failed. `ok` stays: true for the first outcome and false for the other two. Mode None still replies without a probe, with `ok` true as today and no outcome. | Local Canon: triage D-1406 (Mat's report, 2026-11-26); [§Cookie test](#cookie-test) |
+| Reason | A failed outcome carries a short reason: yt-dlp's cleaned message, as a failed download shows it. No cookie value is ever in the reply or the log. | Local Canon: [§Cookie test](#cookie-test) ("No cookie material in the return value"); [§yt-dlp log detail (residual)](#ytdlp-log-detail-residual) |
+| Shown | The Downloader's Advanced panel shows the outcome and the reason beside Test Cookies, in words and not by colour alone. While the test runs, the button is disabled and shows that it is busy. | Local Canon: `.agent/docs/emerging-standards.md` G15 and G35; D-1406 |
+| Wire | `CookieTestOut` gains the fields, and the committed OpenAPI document and the MCP download tool's reply follow it. | Local Canon: [04 §Downloads](04-rest-api.md); the OpenAPI drift gate |
+| Tests | Adapter: each outcome from a stubbed yt-dlp. Route: the reply carries the reason (this replaces the assertion that it is absent). Renderer: each outcome and the busy state. Electron E2E through the API seam. No live YouTube. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
+> **Delivered (Session 104).**
+> - `CookieTestOutcome` (`ok`, `unreadable`, `check_failed`; D-1463) on `CookieTestResult.outcome`, None for Mode None. The adapter sets it, the service keeps the first line of `error_message` and scrubs it, and `POST /downloads/cookies/test` returns `200 { ok, outcome, error_message }`. The MCP tool description names the three outcomes.
+> - Test Cookies shows its result in `cookie-test-result`, one of four texts; the button is busy while the test runs, and a change to the cookie settings clears the line (D-1464).
+> - Tests: adapter, service, route, MCP, renderer and Electron E2E (`ui/tests/e2e/downloader-cookie-test.test.ts`). No live YouTube.
+
+<a id="sabr-check-and-cookies-residual"></a>
+
+### SABR check and cookies (residual)
+
+> **MEU-170.** From `SABR-CHECK-IGNORES-COOKIES` (triage D-1408). Check SABR probes with the `android`, `tv` and `ios` clients and no cookies, so its result cannot depend on the cookie settings. A user who sets browser cookies and then reads "SABR detected" concludes that the cookies failed.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Choice | The plan researches whether a signed-in client gets other formats, and chooses between a check that also probes with the saved cookies and a check that stays as it is with a panel text that says what it covers. Doing nothing stays an option in that brief. | Local Canon: triage D-1408 |
+| Said | Whichever is chosen, the SABR status says what the check measured, so it cannot be read as a cookie result. | Local Canon: D-1408; [§SABR check result (residual)](#sabr-check-result-residual) Shown row |
+| Kept | The phrase set, Force SABR, Clear SABR and their log lines are unchanged. | Local Canon: [§SABR check result (residual)](#sabr-check-result-residual) |
+| Tests | Unit tests for the option the plan chooses and for the status text. No live YouTube. | Local Canon |
+
+> **Delivered (Session 104).**
+> - Option B (D-1465): Check SABR still probes without cookies, and a detected status ends ` · Check SABR does not use cookies` (D-1466; `SABR_CHECK_SCOPE`). A forced status has no clause.
+> - The phrase set, Force SABR, Clear SABR, their log lines and `SABRStatusOut` are unchanged.
 
 ---
 

@@ -7,6 +7,7 @@ from typing import Literal
 from pydantic import Field
 
 from avkit_api.schemas.common import ApiModel, QueueRuntimeOut
+from avkit_core.domain.enums import CookieTestOutcome
 
 QualityWire = Literal[
     "best",
@@ -93,9 +94,11 @@ class CookieTestIn(ApiModel):
 
 
 class CookieTestOut(ApiModel):
-    """Cookie probe result without cookie bytes."""
+    """Cookie probe result without cookie bytes (`COOKIE_TEST_WIRE`)."""
 
     ok: bool
+    outcome: CookieTestOutcome | None
+    error_message: str | None
 
 
 class SABRStatusOut(ApiModel):

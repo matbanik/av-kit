@@ -23,6 +23,7 @@ from avkit_core.domain.download import (
 )
 from avkit_core.domain.enums import (
     AudioFormat,
+    CookieTestOutcome,
     DownloadStatus,
     QualityPreset,
     QueueProcessorState,
@@ -653,6 +654,7 @@ class DownloadYouTube(FakeYouTube):
         self.in_flight = 0
         self.max_in_flight = 0
         self.cookie_error: CookieTestError | None = None
+        self.cookie_result: CookieTestResult | None = None
         self.download_result = DownloadResult(
             file_path=Path("out.mp4"),
             file_size=12,
@@ -731,7 +733,9 @@ class DownloadYouTube(FakeYouTube):
     ) -> CookieTestResult:
         if self.cookie_error is not None:
             raise self.cookie_error
-        return CookieTestResult(ok=True, error_message=None)
+        if self.cookie_result is not None:
+            return self.cookie_result
+        return CookieTestResult(ok=True, error_message=None, outcome=CookieTestOutcome.ok)
 
 
 def _download_stack() -> tuple[DownloadService, SettingsService, DownloadYouTube, FakeUnitOfWork]:
@@ -3545,3 +3549,37 @@ def test_ac_124_16_list_items_download_their_own_video() -> None:
     jobs = uow.downloads.list_ordered()
     assert youtube.download_urls == [job.url for job in jobs]
     assert [job.status for job in jobs] == [DownloadStatus.Done] * 3
+
+
+@pytest.mark.unit
+def test_ac_169_4_service_scrubs_the_message() -> None:
+    from avkit_core.services.download import scrub_line
+
+    service, _settings, youtube, _uow = _download_stack()
+    home = str(Path.home())
+    raw = f"could not read {home}\\AppData\\cookies.txt"
+    youtube.cookie_result = CookieTestResult(
+        ok=False, error_message=raw, outcome=CookieTestOutcome.unreadable
+    )
+    scrubbed = service.test_cookies("file", None, None, Path("cookies.txt"))
+    assert scrubbed.outcome is CookieTestOutcome.unreadable
+    assert scrubbed.error_message == scrub_line(raw)
+    assert home not in (scrubbed.error_message or "")
+
+    youtube.cookie_result = CookieTestResult(
+        ok=False, error_message=" \t ", outcome=CookieTestOutcome.check_failed
+    )
+    empty = service.test_cookies("file", None, None, Path("cookies.txt"))
+    assert empty == CookieTestResult(
+        ok=False, error_message="cookie probe failed", outcome=CookieTestOutcome.check_failed
+    )
+    youtube.cookie_result = CookieTestResult(
+        ok=False, error_message="  ", outcome=CookieTestOutcome.unreadable
+    )
+    blank = service.test_cookies("browser", "chrome", None, None)
+    assert blank == CookieTestResult(
+        ok=False, error_message="cookie source unreadable", outcome=CookieTestOutcome.unreadable
+    )
+    youtube.cookie_result = None
+    passed = service.test_cookies("browser", "chrome", None, None)
+    assert passed == CookieTestResult(ok=True, error_message=None, outcome=CookieTestOutcome.ok)

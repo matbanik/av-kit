@@ -31,6 +31,9 @@
 | 2.7 | MEU-139 | `infra-ytdlp-log-detail` | [02 §yt-dlp log detail (residual)](02-infrastructure.md#ytdlp-log-detail-residual) | MEU-6, MEU-13, MEU-23, MEU-115 |
 | 2.8 | MEU-140 | `infra-youtube-client-fallback` | [02 §YouTube client fallback (residual)](02-infrastructure.md#youtube-client-fallback-residual) | MEU-6, MEU-124, MEU-137 |
 | 2.9 | MEU-141 | `infra-ytdlp-js-runtime` | [02 §yt-dlp JS runtime (residual)](02-infrastructure.md#ytdlp-js-runtime-residual) | MEU-6, MEU-13, MEU-140 |
+| 2.10 | MEU-168 | `infra-ytdlp-challenge-solver` | [02 §yt-dlp challenge solver (residual)](02-infrastructure.md#ytdlp-challenge-solver-residual) | MEU-6, MEU-140, MEU-141 |
+| 2.11 | MEU-169 | `cookie-test-outcome` | [02 §Cookie test outcome (residual)](02-infrastructure.md#cookie-test-outcome-residual) | MEU-6, MEU-10, MEU-20, MEU-137 |
+| 2.12 | MEU-170 | `infra-sabr-check-cookie-scope` | [02 §SABR check and cookies (residual)](02-infrastructure.md#sabr-check-and-cookies-residual) | MEU-138 |
 | 3.1 | MEU-10 | `svc-download` | [03 §DownloadService](03-service-layer.md#downloadservice) | MEU-5, MEU-6, MEU-8 |
 | 3.2 | MEU-11 | `svc-transcript` | [03 §TranscriptService](03-service-layer.md#transcriptservice) | MEU-5, MEU-6, MEU-7, MEU-8 |
 | 3.3 | MEU-12 | `svc-tts-models` | [03 §TTSService](03-service-layer.md#ttsservice) + Prepare + Models | MEU-5, MEU-8, MEU-9 |
@@ -97,6 +100,8 @@
 | 7.7 | MEU-113 | `dist-fetch-exit-codes` | [07 §Fetch script exit codes (residual)](07-distribution.md#fetch-exit-codes-residual) | MEU-25, MEU-110 |
 | 7.8 | MEU-114 | `dist-uninstall-installer-copy` | [07 §Uninstall removes the installer copy (residual)](07-distribution.md#uninstall-installer-copy-residual) | MEU-25 |
 | 7.9 | MEU-125 | `dist-release-candidate-2` | [07 §Second release candidate (residual)](07-distribution.md#second-release-candidate-residual) | MEU-110, MEU-113, MEU-114, MEU-115, MEU-116, MEU-117, MEU-118, MEU-119, MEU-120, MEU-121 |
+| 7.10 | MEU-173 | `dist-update-feed` | [07 §Update feed (residual)](07-distribution.md#update-feed-residual) | MEU-25, MEU-110 |
+| 7.11 | MEU-174 | `app-in-app-update` | [07 §In-app update (residual)](07-distribution.md#in-app-update-residual) | MEU-173, MEU-13, MEU-19, MEU-23, MEU-114 |
 | 8.1 | MEU-28 | `domain-conversion` | [08 §Domain](08-video-conversion.md#domain) | MEU-4 |
 | 8.2 | MEU-29 | `infra-conversion` | [08 §Infrastructure](08-video-conversion.md#infrastructure) | MEU-28, MEU-5, MEU-8 |
 | 8.3 | MEU-30 | `svc-conversion` | [08 §Service layer](08-video-conversion.md#service-layer) | MEU-29 |
@@ -156,6 +161,9 @@
 | 9.45 | MEU-160 | `capture-video-tail-packet-read` | [09 §Video tail packet read](09-screenshot-capture.md#video-tail-packet-read) | MEU-134 |
 | 9.46 | MEU-161 | `capture-text-plate-metrics` | [09 §Text plate metrics](09-screenshot-capture.md#text-plate-metrics) | MEU-82, MEU-102 |
 | 9.47 | MEU-164 | `gui-tray-double-click-show` | [09 §Tray double-click](09-screenshot-capture.md#tray-double-click) | MEU-39 |
+| 9.48 | MEU-165 | `gui-capture-key-text` | [09 §Capture key in texts](09-screenshot-capture.md#capture-key-in-texts) | MEU-39, MEU-57, MEU-162 |
+| 9.49 | MEU-166 | `svc-capture-inbox-scope` | [09 §Catalog follows the inbox folder](09-screenshot-capture.md#catalog-follows-the-inbox-folder) | MEU-36, MEU-37, MEU-39 |
+| 9.50 | MEU-167 | `gui-capture-zoom-scrollbars` | [09 §Viewport scroll bars](09-screenshot-capture.md#viewport-scroll-bars) | MEU-66 |
 | 10.1 | MEU-41 | `canon-queue-cards` | [10 §Scope and non-goals](10-queue-card-ui.md#scope-and-non-goals) | MEU-39 |
 | 10.2 | MEU-42 | `svc-requeue-widening` | [10 §Re-queue contract](10-queue-card-ui.md#re-queue-contract) | MEU-41 |
 | 10.3 | MEU-43 | `gui-queue-primitives` | [10 §Status token table](10-queue-card-ui.md#status-token-table) | MEU-41 |
@@ -182,6 +190,8 @@
 | 11.12 | MEU-70 | `gui-settings-section-emphasis` | [11 §Settings section emphasis (residual)](11-page-layout.md#settings-section-emphasis-residual) | MEU-58 |
 | 11.13 | MEU-79 | `gui-tts-voice-panel-layout` | [11 §TTS voice panel alignment (residual)](11-page-layout.md#tts-voice-panel-alignment-residual) | MEU-63, MEU-75 |
 | 11.14 | MEU-159 | `gui-downloader-advanced-gap` | [11 §Downloader Advanced gap (residual)](11-page-layout.md#downloader-advanced-gap-residual) | MEU-53 |
+| 11.15 | MEU-171 | `gui-entry-emphasis` | [11 §Entry section emphasis (residual)](11-page-layout.md#entry-section-emphasis-residual) | MEU-20, MEU-21, MEU-23, MEU-126, MEU-162 |
+| 11.16 | MEU-172 | `gui-downloader-advanced-affordance` | [11 §Downloader Advanced affordance (residual)](11-page-layout.md#downloader-advanced-affordance-residual) | MEU-171, MEU-53, MEU-159 |
 
 Phase 0 ([00-overview.md](00-overview.md)) is a summary only — no MEU.
 

@@ -22,6 +22,7 @@ from avkit_core.domain.download import (
 )
 from avkit_core.domain.enums import (
     AudioFormat,
+    CookieTestOutcome,
     DownloadFailureCause,
     QualityPreset,
     SABRMode,
@@ -539,7 +540,9 @@ def test_ac_6_13_test_cookies_never_raises_cookie_error(
     from avkit_infra.youtube.adapter import YouTubeAdapter
 
     missing = YouTubeAdapter().test_cookies("file", None, None, tmp_path / "missing.txt")
-    assert missing == CookieTestResult(ok=False, error_message=missing.error_message)
+    assert missing == CookieTestResult(
+        ok=False, error_message=missing.error_message, outcome=CookieTestOutcome.unreadable
+    )
     assert missing.error_message
     assert "Netscape" not in (missing.error_message or "")
 
@@ -547,14 +550,15 @@ def test_ac_6_13_test_cookies_never_raises_cookie_error(
     locked = YouTubeAdapter().test_cookies("browser", "chrome", None, None)
     assert locked.ok is False
     assert locked.error_message
+    assert locked.outcome is CookieTestOutcome.unreadable
 
     cookie = tmp_path / "cookies.txt"
     cookie.write_text("# Netscape HTTP Cookie File\nsecret=1\n", encoding="utf-8")
     _patch_ydl(monkeypatch, info=_video_info_payload())
     ok = YouTubeAdapter().test_cookies("file", None, None, cookie)
-    assert ok == CookieTestResult(ok=True, error_message=None)
+    assert ok == CookieTestResult(ok=True, error_message=None, outcome=CookieTestOutcome.ok)
     none_mode = YouTubeAdapter().test_cookies("none", None, None, None)
-    assert none_mode == CookieTestResult(ok=True, error_message=None)
+    assert none_mode == CookieTestResult(ok=True, error_message=None, outcome=None)
 
 
 @pytest.mark.integration
@@ -1160,3 +1164,191 @@ def test_ac_124_11_tab_url_lists_its_videos_unchanged(monkeypatch: pytest.Monkey
     assert extracted == PlaylistInfo(
         playlist_id="UCchan", title="Chan - Videos", video_ids=["v1", "v2", "v3"]
     )
+
+
+def _patch_cookie_steps(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    load_error: BaseException | None = None,
+    probe_error: BaseException | None = None,
+) -> dict[str, int]:
+    """A stubbed yt-dlp for the cookie test (MEU-169): counts builds, jar loads and probes."""
+    counts = {"built": 0, "loaded": 0, "probed": 0}
+
+    class CookieYDL:
+        def __init__(self, opts: dict[str, Any]) -> None:
+            counts["built"] += 1
+            self.opts = opts
+
+        def __enter__(self) -> CookieYDL:
+            return self
+
+        def __exit__(self, *args: object) -> bool:
+            return False
+
+        def extract_info(self, url: str, download: bool = False) -> dict[str, Any]:
+            counts["probed"] += 1
+            if probe_error is not None:
+                raise probe_error
+            return _video_info_payload()
+
+    def load_jar(cookie_file: object, browser: object, ydl: object) -> object:
+        counts["loaded"] += 1
+        if load_error is not None:
+            raise load_error
+        return object()
+
+    monkeypatch.setattr("avkit_infra.youtube.adapter.YoutubeDL", CookieYDL)
+    monkeypatch.setattr("avkit_infra.youtube.adapter.load_cookies", load_jar, raising=False)
+    return counts
+
+
+def _record_offline(monkeypatch: pytest.MonkeyPatch) -> tuple[list[str], list[object]]:
+    """Patch the real yt-dlp's `extract_info` and the socket so that each only records a call."""
+    import socket
+
+    from yt_dlp import YoutubeDL
+
+    probes: list[str] = []
+    connects: list[object] = []
+
+    def record_probe(self: object, url: str, *args: object, **kwargs: object) -> dict[str, Any]:
+        probes.append(url)
+        return _video_info_payload()
+
+    def record_connect(*args: object, **kwargs: object) -> None:
+        connects.append(args)
+
+    monkeypatch.setattr(YoutubeDL, "extract_info", record_probe)
+    monkeypatch.setattr(socket.socket, "connect", record_connect)
+    monkeypatch.setattr(socket, "create_connection", record_connect)
+    return probes, connects
+
+
+@pytest.mark.integration
+def test_ac_169_2_outcome_follows_the_failing_step(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from yt_dlp.cookies import CookieLoadError
+    from yt_dlp.utils import DownloadError, YoutubeDLError
+
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    cookie = tmp_path / "cookies.txt"
+    cookie.write_text("# Netscape HTTP Cookie File\n", encoding="utf-8")
+
+    counts = _patch_cookie_steps(monkeypatch)
+    none_mode = YouTubeAdapter().test_cookies("none", None, None, None)
+    missing = YouTubeAdapter().test_cookies("file", None, None, tmp_path / "missing.txt")
+    unknown = YouTubeAdapter().test_cookies("bytes", None, None, None)
+    assert none_mode == CookieTestResult(ok=True, error_message=None, outcome=None)
+    assert missing == CookieTestResult(
+        ok=False, error_message="cookie file is missing", outcome=CookieTestOutcome.unreadable
+    )
+    assert unknown == CookieTestResult(
+        ok=False, error_message="unknown cookie mode", outcome=CookieTestOutcome.unreadable
+    )
+    assert counts == {"built": 0, "loaded": 0, "probed": 0}
+
+    load_errors: list[tuple[BaseException, str]] = [
+        (CookieLoadError("jar line one\njar line two"), "jar line one"),
+        (DownloadError("ERROR: could not copy the database\nmore"), "could not copy the database"),
+        (OSError(""), "cookie source unreadable"),
+        (YoutubeDLError("another yt-dlp error"), "another yt-dlp error"),
+        (DomainError("a domain error"), "a domain error"),
+    ]
+    sources: list[tuple[str, str | None, Path | None]] = [
+        ("file", None, cookie),
+        ("browser", "chrome", None),
+    ]
+    for mode, browser, path in sources:
+        for error, message in load_errors:
+            counts = _patch_cookie_steps(monkeypatch, load_error=error)
+            result = YouTubeAdapter().test_cookies(mode, browser, None, path)
+            assert result == CookieTestResult(
+                ok=False, error_message=message, outcome=CookieTestOutcome.unreadable
+            ), (mode, repr(error))
+            assert counts == {"built": 1, "loaded": 1, "probed": 0}, (mode, repr(error))
+
+        counts = _patch_cookie_steps(
+            monkeypatch, probe_error=DownloadError("ERROR: Sign in to confirm\nmore")
+        )
+        probed = YouTubeAdapter().test_cookies(mode, browser, None, path)
+        assert probed == CookieTestResult(
+            ok=False, error_message="Sign in to confirm", outcome=CookieTestOutcome.check_failed
+        )
+        assert counts == {"built": 1, "loaded": 1, "probed": 1}
+
+        counts = _patch_cookie_steps(monkeypatch, probe_error=DownloadError(""))
+        bare = YouTubeAdapter().test_cookies(mode, browser, None, path)
+        assert bare == CookieTestResult(
+            ok=False, error_message="cookie probe failed", outcome=CookieTestOutcome.check_failed
+        )
+        assert counts == {"built": 1, "loaded": 1, "probed": 1}
+
+        counts = _patch_cookie_steps(monkeypatch)
+        passed = YouTubeAdapter().test_cookies(mode, browser, None, path)
+        assert passed == CookieTestResult(ok=True, error_message=None, outcome=CookieTestOutcome.ok)
+        assert counts == {"built": 1, "loaded": 1, "probed": 1}
+
+
+@pytest.mark.integration
+def test_ac_169_3_malformed_cookie_file_is_unreadable_without_a_request(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    probes, connects = _record_offline(monkeypatch)
+    cookie = tmp_path / "cookies.txt"
+    cookie.write_text('[{"name": "made-up", "value": "not-a-cookie"}]\n', encoding="utf-8")
+    result = YouTubeAdapter().test_cookies("file", None, None, cookie)
+    assert result.outcome is CookieTestOutcome.unreadable
+    assert result.ok is False
+    assert result.error_message
+    assert probes == []
+    assert connects == []
+
+
+@pytest.mark.integration
+def test_ac_169_4_adapter_message_is_the_first_line(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import logging
+
+    from yt_dlp.utils import DownloadError
+
+    from avkit_infra.youtube.adapter import YouTubeAdapter
+
+    cookie = tmp_path / "cookies.txt"
+    cookie.write_text("# Netscape HTTP Cookie File\n", encoding="utf-8")
+    _patch_cookie_steps(
+        monkeypatch, load_error=DownloadError("ERROR: the first line\nthe second line")
+    )
+    loaded = YouTubeAdapter().test_cookies("file", None, None, cookie)
+    assert loaded.error_message == "the first line"
+    _patch_cookie_steps(
+        monkeypatch,
+        probe_error=DownloadError("\nERROR:  Sign in to confirm you are not a bot\nUse --cookies"),
+    )
+    probed = YouTubeAdapter().test_cookies("file", None, None, cookie)
+    assert probed.error_message == "Sign in to confirm you are not a bot"
+
+    monkeypatch.undo()
+    caplog.set_level(logging.DEBUG)
+    probes, connects = _record_offline(monkeypatch)
+    marker = "MADE-UP-MARKER-169-4"
+    leak = tmp_path / "leak.txt"
+    leak.write_text(f'[{{"name": "{marker}", "value": "{marker}"}}]\n', encoding="utf-8")
+    result = YouTubeAdapter().test_cookies("file", None, None, leak)
+    assert result.outcome is CookieTestOutcome.unreadable
+    assert result.error_message
+    for value in (result.ok, result.outcome, result.error_message):
+        assert marker not in str(value)
+    assert marker not in caplog.text
+    captured = capsys.readouterr()
+    assert marker not in captured.out + captured.err
+    assert probes == []
+    assert connects == []

@@ -7,6 +7,7 @@ export type SabrSnapshot = {
 }
 
 const ACTIVE_TEXT = 'SABR active — quality limited to 360p'
+const CHECK_SCOPE = ' · Check SABR does not use cookies'
 
 /** `HH:MM:SS` in the app's local clock, or null when `value` doesn't parse. */
 function localTime(value: string | null | undefined): string | null {
@@ -22,12 +23,14 @@ export function sabrResultText(snapshot: SabrSnapshot | undefined): string {
   if (snapshot === undefined) return 'SABR not checked'
   if (snapshot.mode === 'checking') return 'Checking…'
   const time = localTime(snapshot.checked_at)
+  // MEU-170 (SABR_CHECK_SCOPE): a detected result says what Check SABR covers.
+  const scope = snapshot.source === 'detected' ? CHECK_SCOPE : ''
   if (snapshot.mode === 'active') {
     if (time === null) return ACTIVE_TEXT
-    return `${ACTIVE_TEXT} · ${snapshot.source === 'forced' ? 'forced' : 'checked'} ${time}`
+    return `${ACTIVE_TEXT} · ${snapshot.source === 'forced' ? 'forced' : 'checked'} ${time}${scope}`
   }
   if (time === null) return 'SABR not checked'
-  return snapshot.source === 'detected' ? `SABR inactive · checked ${time}` : `SABR inactive · cleared ${time}`
+  return snapshot.source === 'detected' ? `SABR inactive · checked ${time}${scope}` : `SABR inactive · cleared ${time}`
 }
 
 export async function fetchSabr(): Promise<SabrSnapshot> {

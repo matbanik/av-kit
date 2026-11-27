@@ -35,6 +35,7 @@ import {
   COOKIE_MODES,
   type CookieMode,
 } from './cookie-bar'
+import { cookieTestResultText, type CookieTestReply } from './cookie-test-result'
 import {
   buildReorderBody,
   controlEnabled,
@@ -228,6 +229,11 @@ export function DownloaderPage() {
   const [addStatus, setAddStatus] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [busy, setBusy] = useState(false)
+  // MEU-169 (COOKIE_TEST_SHOWN, COOKIE_TEST_BUSY; D-1499): the last Test Cookies reply, shown
+  // until a new test starts or a cookie setting changes, and the button's own pending state.
+  const [cookieTestReply, setCookieTestReply] = useState<CookieTestReply | null>(null)
+  const [cookieTesting, setCookieTesting] = useState(false)
+  const cookieTestRound = useRef(0)
   const [confirm, setConfirm] = useState<DownloadConfirm>(null)
 
   const items = useMemo(() => queue.data?.items ?? [], [queue.data?.items])
@@ -396,6 +402,11 @@ export function DownloaderPage() {
       ...body,
     }))
     await queryClient.invalidateQueries({ queryKey: DOWNLOADER_SETTINGS_KEY })
+  }
+
+  function clearCookieTest(): void {
+    cookieTestRound.current += 1
+    setCookieTestReply(null)
   }
 
   async function run(action: () => Promise<unknown>): Promise<void> {
@@ -706,6 +717,7 @@ export function DownloaderPage() {
             if (mode === undefined) return
             cookieSettingsTouched.current = true
             setCookieMode(mode)
+            clearCookieTest()
             void run(async () => {
               await persistCookies({
                 cookie_mode: mode,
@@ -726,6 +738,7 @@ export function DownloaderPage() {
               const next = event.target.value as (typeof COOKIE_BROWSERS)[number]
               cookieSettingsTouched.current = true
               setCookieBrowser(next)
+              clearCookieTest()
               void run(async () => {
                 await persistCookies({
                   cookie_mode: cookieMode,
@@ -751,6 +764,7 @@ export function DownloaderPage() {
           onChange={(event) => {
             cookieSettingsTouched.current = true
             setCookieProfile(event.target.value)
+            clearCookieTest()
           }}
           onBlur={() => {
             void run(async () => {
@@ -781,6 +795,7 @@ export function DownloaderPage() {
                 }
                 cookieSettingsTouched.current = true
                 setCookieFile(picked)
+                clearCookieTest()
                 await persistCookies({
                   cookie_mode: cookieMode,
                   cookie_browser: cookieBrowser,
@@ -793,24 +808,41 @@ export function DownloaderPage() {
             Browse
           </Button>
         </div>
-        <Button
-          data-testid="cookie-test-btn"
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            void run(async () => {
-              const body =
-                cookieMode === 'browser'
-                  ? cookieTestBody({ mode: cookieMode, browser: cookieBrowser, profile: cookieProfile })
-                  : cookieMode === 'file'
-                    ? cookieTestBody({ mode: cookieMode, cookie_file: cookieFile })
-                    : cookieTestBody({ mode: cookieMode })
-              await apiFetch('/downloads/cookies/test', { method: 'POST', body: JSON.stringify(body) })
-            })
-          }}
-        >
-          Test Cookies
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            data-testid="cookie-test-btn"
+            variant="secondary"
+            size="sm"
+            loading={cookieTesting}
+            onClick={() => {
+              clearCookieTest()
+              const round = cookieTestRound.current
+              setCookieTesting(true)
+              void run(async () => {
+                const body =
+                  cookieMode === 'browser'
+                    ? cookieTestBody({ mode: cookieMode, browser: cookieBrowser, profile: cookieProfile })
+                    : cookieMode === 'file'
+                      ? cookieTestBody({ mode: cookieMode, cookie_file: cookieFile })
+                      : cookieTestBody({ mode: cookieMode })
+                const reply: CookieTestReply | undefined = await apiFetch('/downloads/cookies/test', {
+                  method: 'POST',
+                  body: JSON.stringify(body),
+                })
+                if (cookieTestRound.current === round && reply !== undefined) setCookieTestReply(reply)
+              }).finally(() => {
+                setCookieTesting(false)
+              })
+            }}
+          >
+            Test Cookies
+          </Button>
+          {cookieTestReply !== null ? (
+            <p data-testid="cookie-test-result" role="status" className="text-sm text-fg-muted">
+              {cookieTestResultText(cookieTestReply)}
+            </p>
+          ) : null}
+        </div>
         </div>
         </Disclosure>
       </form>

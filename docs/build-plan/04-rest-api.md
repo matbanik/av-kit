@@ -174,7 +174,7 @@ Static paths first.
 | `POST` | `/downloads/sabr/check` | `check_sabr` | 200 `SABRStatusOut` | Test extract |
 | `POST` | `/downloads/sabr/force` | `force_sabr` | 200 | |
 | `POST` | `/downloads/sabr/clear` | `clear_sabr` | 200 | |
-| `POST` | `/downloads/cookies/test` | `test_cookies` | 200 `{ ok: true }` | Body: mode, browser?, profile?, cookie_file? — no cookie bytes back |
+| `POST` | `/downloads/cookies/test` | `test_cookies` | 200 `{ ok, outcome, error_message }` | Body: mode, browser?, profile?, cookie_file? — no cookie bytes back; `outcome` is `ok`, `unreadable`, `check_failed`, or null for mode none (MEU-169) |
 | `POST` | `/downloads/start` | `start_processing` | 202 | 409 if already Processing |
 | `POST` | `/downloads/pause` | `pause_processing` | 202 | **Added** (was GUI-only) |
 | `POST` | `/downloads/resume` | `resume_processing` | 202 | **Added** |

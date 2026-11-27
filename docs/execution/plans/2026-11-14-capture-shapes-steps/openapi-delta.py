@@ -17,6 +17,10 @@ It reads the base from ``git show 5db3623:openapi.committed.json`` and the new d
    ``step`` value, and nowhere else;
 4. removes every addition and requires what is left to equal the base exactly.
 
+Two later changes are set back before step 4: the release ``info.version`` (rc4 row 7) and
+Session 104's cookie test shapes (``COOKIE_TEST_SHAPES``, D-1600), which must be exactly the
+base's or exactly that session's committed shapes.
+
 A pydantic split into ``-Input`` and ``-Output`` names fails step 4, and is a departure (S7).
 ``--selftest`` builds the expected document from the base and checks that it passes, and that
 the base itself, an extra property, a missing addition, a renamed schema, a changed
@@ -46,6 +50,31 @@ ADDED_PROPERTIES = (
     ("SettingsPutIn", "step_color", None),
     ("SettingsPutIn", "step_size", None),
 )
+#: Session 104 (MEU-169, AC-169.5 and AC-169.6, 2026-11-27, D-1600): the cookie test reply gains
+#: ``outcome`` and ``error_message``, and the ``CookieTestOutcome`` enum is new. Like the release
+#: bump below, it is outside the capture shapes this AC pins. The two schemas must be either both
+#: the base's or both exactly these shapes; they are then set back to the base's before the
+#: compare, so any other change to them is still refused.
+COOKIE_TEST_SHAPES: dict[str, dict[str, Any]] = {
+    "CookieTestOut": {
+        "additionalProperties": False,
+        "description": "Cookie probe result without cookie bytes (`COOKIE_TEST_WIRE`).",
+        "properties": {
+            "error_message": {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Error Message"},
+            "ok": {"title": "Ok", "type": "boolean"},
+            "outcome": {"anyOf": [{"$ref": "#/components/schemas/CookieTestOutcome"}, {"type": "null"}]},
+        },
+        "required": ["ok", "outcome", "error_message"],
+        "title": "CookieTestOut",
+        "type": "object",
+    },
+    "CookieTestOutcome": {
+        "description": "Where a cookie test stopped (`COOKIE_TEST_OUTCOME`, MEU-169). Wire values are lowercase.",
+        "enum": ["ok", "unreadable", "check_failed"],
+        "title": "CookieTestOutcome",
+        "type": "string",
+    },
+}
 
 
 def union_items(doc: dict[str, Any], name: str) -> dict[str, Any]:
@@ -134,6 +163,10 @@ def check(base: dict[str, Any], new: dict[str, Any]) -> list[str]:
     stray = sorted(set(refs_to_step(new)) - set(expected_refs))
     for path in stray:
         problems.append(f"a reference to {STEP} outside the mark unions: {path}")
+    cookie_now = tuple(schemas.get(name) for name in COOKIE_TEST_SHAPES)
+    cookie_base = tuple(base_schemas.get(name) for name in COOKIE_TEST_SHAPES)
+    if cookie_now not in (cookie_base, tuple(COOKIE_TEST_SHAPES.values())):
+        problems.append("CookieTestOut and CookieTestOutcome are neither the base's nor Session 104's shapes")
     if problems:
         return problems
     stripped = copy.deepcopy(new)
@@ -148,6 +181,11 @@ def check(base: dict[str, Any], new: dict[str, Any]) -> list[str]:
     # A release bump changes info.version (0.1.0-rc.4, 2026-11-21); it is release metadata, not
     # the API shape this AC pins, so it is set back to the base's value before the compare.
     stripped["info"]["version"] = base["info"]["version"]
+    for name in COOKIE_TEST_SHAPES:
+        if name in base_schemas:
+            stripped_schemas[name] = copy.deepcopy(base_schemas[name])
+        else:
+            stripped_schemas.pop(name, None)
     diff = first_difference(stripped, base)
     if diff:
         problems.append(f"a change AC-106.5 doesn't name: {diff}")
@@ -206,9 +244,15 @@ def selftest() -> int:
 
     bumped = copy.deepcopy(good)
     bumped["info"]["version"] = "0.0.0-selftest"
+    cookie = copy.deepcopy(good)
+    cookie["components"]["schemas"].update(copy.deepcopy(COOKIE_TEST_SHAPES))
+    other_cookie = copy.deepcopy(cookie)
+    other_cookie["components"]["schemas"]["CookieTestOutcome"]["enum"].append("expired")
     cases: list[tuple[str, dict[str, Any], bool]] = [
         ("expected", good, True),
         ("version bump only", bumped, True),
+        ("Session 104 cookie shape", cookie, True),
+        ("other cookie shape", other_cookie, False),
         ("base itself", copy.deepcopy(base), False),
     ]
     for label, mutate in (("extra property", extra), ("missing addition", missing), ("renamed schema", renamed),

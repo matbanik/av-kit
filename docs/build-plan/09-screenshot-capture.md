@@ -1373,6 +1373,54 @@ One residual MEU from the 2026-11-22 triage (grouping `.agent/context/grouping/2
 > - Tests: `ui/tests/unit/capture-tray.test.ts` (AC-164.1 to AC-164.3) and the Electron test `ui/tests/e2e/tray-double-click.test.ts` (AC-164.4 hidden, AC-164.5 minimized).
 > - The same session fixed two test baselines: AC-130.10 compares ICC profiles without their creation time (D-1367), and the closeout validator names a plan by its own folder only (D-1368). D-1365 to D-1368 are in the plan `docs/execution/plans/2026-11-22-tray-show-and-baseline-fixes/`.
 
+## Residuals registered 2026-11-26
+
+Three residual MEUs from Mat's report of 2026-11-26 (grouping `.agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md`, Session 103 `capture-key-inbox-scrollbars`). They change the Capture page's texts, the catalog's scope and the viewport of [§Viewport zoom](#viewport-zoom).
+
+<a id="capture-key-in-texts"></a>
+
+### Capture key in texts
+
+> **MEU-165.** From `CAPTURE-HOTKEY-TEXT-HARDCODED` (triage D-1400, Mat's report). The Capture empty state, the Capture help, the Settings startup help and the Capture quick start write the capture key as the literal `F2`, so after `capture.hotkey` is changed they name a key that no longer captures. The in-use banner and the key cap already show the set key.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Set key | Every in-app text that names the capture key shows the key set in `capture.hotkey`: the Capture empty state, the Capture help topics, the Settings startup help and the Capture quick start. | Local Canon: triage D-1400 (Mat's report, 2026-11-26); the in-use banner and key cap of [§Capture Page](#capture-page-capture) already do |
+| One source | The texts take the key from the value the key cap shows, through one formatter; no text restates the literal. | Local Canon: D-1400 |
+| Change | After the key is changed and saved, the texts show the new key with no restart. | Local Canon: D-1400 |
+| Default | `F2` stays the default of `capture.hotkey`, its fallbacks in code, the reserved chord and the README. With the default key every text reads as it does today. | Local Canon: `services/settings.py` `capture.hotkey`; D-1400 |
+| Help rules | The quick start step still passes the ASD-STE100 gate, and the help images are retaken only if a step's text or target changes. | Human-approved: [06 §Help quick start (residual)](06-gui.md#help-quick-start-residual) Style and Drift rows |
+| Tests | Unit: each text with another key shows that key and holds no `F2`; with the default it is unchanged. Electron E2E on the real app: the key is changed and the empty state names it. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
+<a id="catalog-follows-the-inbox-folder"></a>
+
+### Catalog follows the inbox folder
+
+> **MEU-166.** From `CAPTURE-INBOX-CHANGE-KEEPS-OLD-SHOTS` (triage D-1401, Mat's report). `scan_inbox` deletes a row only when its file is gone, and it and `list_shots` return every row, so after `capture.inbox_dir` is changed the list still holds the shots of the old folder.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Scope | `scan_inbox` and `list_shots` return only the shots whose `original_path` is directly inside the current `capture.inbox_dir` (resolved; non-recursive, as the scan is). | Spec: [§Service layer](#service-layer) `scan_inbox` lists `inbox_dir`; Local Canon: triage D-1401 (Mat's report, 2026-11-26) |
+| Rows kept | The scope removes no row. Rows of other folders stay in the catalog, and a change back to their folder lists them again with their sidecar links. | Local Canon: D-1401 |
+| By id | Whether a shot outside the current inbox stays reachable by id (the `/captures/{id}` routes and the MCP capture actions) is chosen at plan time against the rule that `original_path` must resolve inside `capture.inbox_dir`. | Local Canon: [§REST API](#rest-api); plan-time |
+| Refresh | After a settings save that changes the inbox folder, the Capture list refreshes at once, and a selection that left the list is cleared. | Local Canon: D-1401 |
+| Tests | Unit: shots in two folders, only the current folder's are listed, and a change back lists the first folder's again. API test for `GET /captures`. Electron E2E on the real app: the inbox is changed and the old shots leave the list. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
+<a id="viewport-scroll-bars"></a>
+
+### Viewport scroll bars
+
+> **MEU-167.** From `CAPTURE-ZOOM-NO-SCROLLBARS` (triage D-1402, Mat's request). The zoomed image sits in a fixed `overflow-hidden` frame with no scroll bars (Session 29 plan D-15), so nothing shows that the image continues past the frame or where the view is in it.
+
+| Rule | Contract | Source |
+|------|----------|--------|
+| Bars | On each axis where the zoomed image is larger than the frame, a scroll bar shows where the view is: at the bottom for the horizontal axis, at the right for the vertical. The thumb's length is the share of the image visible on that axis. At Fit, and on an axis where the image fits, no bar shows. | Human-approved: triage D-1402 (Mat, 2026-11-26) |
+| Move | Dragging a thumb moves the view on its axis inside the same clamp as Space+drag. | Human-approved: D-1402 |
+| Replaces | This replaces the words "with no scrollbars" in the Pan gestures row of [§Viewport zoom](#viewport-zoom) (Session 29 plan D-15); that row is rewritten when this is delivered. Wheel zoom, Space+drag, middle-button drag and the zoom levels keep their behaviour. | Human-approved: D-1402; Local Canon: §Viewport zoom |
+| Build | Whether the bars are drawn over the frame from the pan offset or come from a native scroll container is chosen at plan time. The pointer mapping of marks, crop and the letterbox rule does not change, and a bar drag creates no mark, history entry or sample. | Local Canon: D-1402; §Viewport zoom Pan gestures row |
+| Look | The bars use theme tokens only and can be seen in both themes. | Local Canon: `.agent/docs/emerging-standards.md` G32 |
+| Tests | Unit: thumb position and length from the view transform. Electron E2E on the real app: zoom in and the bars show; a thumb drag moves the view; Fit hides them. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
 ## Named deferrals (not this phase)
 
 | Feature | Why |
@@ -1444,6 +1492,9 @@ One residual MEU from the 2026-11-22 triage (grouping `.agent/context/grouping/2
 | MEU-160 | `capture-video-tail-packet-read` | [Video tail packet read](#video-tail-packet-read) | MEU-134 |
 | MEU-161 | `capture-text-plate-metrics` | [Text plate metrics](#text-plate-metrics) | MEU-82, MEU-102 |
 | MEU-164 | `gui-tray-double-click-show` | [Tray double-click](#tray-double-click) | MEU-39 |
+| MEU-165 | `gui-capture-key-text` | [Capture key in texts](#capture-key-in-texts) | MEU-39, MEU-57, MEU-162 |
+| MEU-166 | `svc-capture-inbox-scope` | [Catalog follows the inbox folder](#catalog-follows-the-inbox-folder) | MEU-36, MEU-37, MEU-39 |
+| MEU-167 | `gui-capture-zoom-scrollbars` | [Viewport scroll bars](#viewport-scroll-bars) | MEU-66 |
 
 ---
 

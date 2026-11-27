@@ -441,7 +441,7 @@ class YouTubePort(Protocol):
     def ytdlp_version(self) -> str | None: ...
 ```
 
-`DownloadResult` includes `sabr_detected: bool` (adapter observed SABR in this extract/download). `CookieTestResult` is `{ ok: bool, error_message: str | None }` — never cookie bytes.
+`DownloadResult` includes `sabr_detected: bool` (adapter observed SABR in this extract/download). `CookieTestResult` is `{ ok: bool, error_message: str | None, outcome: CookieTestOutcome | None }` — never cookie bytes. `CookieTestOutcome` is `ok`, `unreadable` or `check_failed` (MEU-169, D-1463). `outcome` is None for cookie Mode None; `ok` is true when `outcome` is `ok` or None, and a passed test carries no `error_message`.
 
 #### `ports/transcript.py`
 

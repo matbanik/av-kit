@@ -10,6 +10,7 @@ dependencies = []
 package = false
 required-version = ">=0.12.5"
 exclude-newer = "7 days"
+exclude-newer-package = { yt-dlp = false }
 
 [tool.uv.workspace]
 members = ["packages/core", "packages/infrastructure", "packages/api"]

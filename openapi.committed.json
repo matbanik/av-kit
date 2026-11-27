@@ -1967,18 +1967,51 @@
       },
       "CookieTestOut": {
         "additionalProperties": false,
-        "description": "Cookie probe result without cookie bytes.",
+        "description": "Cookie probe result without cookie bytes (`COOKIE_TEST_WIRE`).",
         "properties": {
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
           "ok": {
             "title": "Ok",
             "type": "boolean"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CookieTestOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
-          "ok"
+          "ok",
+          "outcome",
+          "error_message"
         ],
         "title": "CookieTestOut",
         "type": "object"
+      },
+      "CookieTestOutcome": {
+        "description": "Where a cookie test stopped (`COOKIE_TEST_OUTCOME`, MEU-169). Wire values are lowercase.",
+        "enum": [
+          "ok",
+          "unreadable",
+          "check_failed"
+        ],
+        "title": "CookieTestOutcome",
+        "type": "string"
       },
       "DependenciesOut": {
         "additionalProperties": false,

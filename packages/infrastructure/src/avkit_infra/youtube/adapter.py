@@ -12,7 +12,8 @@ from typing import Any, TypeVar, cast
 
 import structlog
 from yt_dlp import YoutubeDL
-from yt_dlp.utils import DownloadError
+from yt_dlp.cookies import CookieLoadError, load_cookies
+from yt_dlp.utils import DownloadError, YoutubeDLError
 
 from avkit_core.domain.download import (
     ANSI_CSI,
@@ -29,6 +30,7 @@ from avkit_core.domain.download import (
 )
 from avkit_core.domain.enums import (
     AudioFormat,
+    CookieTestOutcome,
     DownloadFailureCause,
     QualityPreset,
     SABRMode,
@@ -43,7 +45,7 @@ from avkit_core.domain.errors import (
     ExtractError,
     ValidationError,
 )
-from avkit_core.services.download import first_line, scrub_line
+from avkit_core.services.download import COOKIE_TEST_FALLBACK, first_line, scrub_line
 from avkit_infra.youtube.js_runtime import JsRuntime
 
 log = structlog.get_logger(module="youtube")
@@ -303,6 +305,15 @@ def _playlist_from_info(info: dict[str, object]) -> PlaylistInfo:
         title=title,
         video_ids=_unique_preserve_ids(_flat_entries(info.get("entries"))),
     )
+
+
+def _cookie_reason(exc: BaseException, outcome: CookieTestOutcome) -> str:
+    """The first line of the error, without yt-dlp's `ERROR:` (`COOKIE_TEST_REASON`)."""
+    cause = exc.__context__ if isinstance(exc, CookieLoadError) and exc.__context__ else exc
+    line = first_line(str(cause)).strip()
+    if line.startswith("ERROR:"):
+        line = line.removeprefix("ERROR:").strip()
+    return line or COOKIE_TEST_FALLBACK[outcome]
 
 
 def _ydl(opts: dict[str, object]) -> YoutubeDL:
@@ -816,13 +827,19 @@ class YouTubeAdapter:
         profile: str | None,
         cookie_file: Path | None,
     ) -> CookieTestResult:
+        unreadable = CookieTestOutcome.unreadable
         if mode not in COOKIE_MODES:
-            return CookieTestResult(ok=False, error_message="unknown cookie mode")
+            return CookieTestResult(
+                ok=False, error_message="unknown cookie mode", outcome=unreadable
+            )
         if mode == "none":
-            return CookieTestResult(ok=True, error_message=None)
+            return CookieTestResult(ok=True, error_message=None, outcome=None)
         if mode == "file":
             if cookie_file is None or not cookie_file.is_file():
-                return CookieTestResult(ok=False, error_message="cookie file is missing")
+                return CookieTestResult(
+                    ok=False, error_message="cookie file is missing", outcome=unreadable
+                )
+        outcome = unreadable
         try:
             options = DownloadOptions(
                 quality=QualityPreset.P144,
@@ -838,16 +855,20 @@ class YouTubeAdapter:
             opts = self._base_opts(logger)
             opts.update(self._cookie_opts(options))
             with _ydl(opts) as ydl:
+                # COOKIE_TEST_STEPS: load the jar on its own first, then probe once. The stubs
+                # type the browser as a str; at runtime it is the (browser, profile) tuple.
+                ydl.cookiejar = load_cookies(
+                    cast(Any, opts.get("cookiefile")),
+                    cast(Any, opts.get("cookiesfrombrowser")),
+                    ydl,
+                )
+                outcome = CookieTestOutcome.check_failed
                 ydl.extract_info(SABR_PROBE_URL, download=False)
-        except CookieTestError as exc:
-            return CookieTestResult(ok=False, error_message=str(exc))
-        except OSError as exc:
-            return CookieTestResult(ok=False, error_message=str(exc) or "cookie source unreadable")
-        except DownloadError as exc:
-            return CookieTestResult(ok=False, error_message=str(exc) or "cookie probe failed")
-        except DomainError as exc:
-            return CookieTestResult(ok=False, error_message=str(exc))
-        return CookieTestResult(ok=True, error_message=None)
+        except (CookieTestError, OSError, YoutubeDLError, DomainError) as exc:
+            return CookieTestResult(
+                ok=False, error_message=_cookie_reason(exc, outcome), outcome=outcome
+            )
+        return CookieTestResult(ok=True, error_message=None, outcome=CookieTestOutcome.ok)
 
     def ytdlp_version(self) -> str | None:
         return _read_ytdlp_version()

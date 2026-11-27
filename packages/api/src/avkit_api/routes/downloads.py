@@ -138,7 +138,7 @@ def test_cookies(
     """Probe cookies and return `{ok}` only."""
     path = None if body.cookie_file is None else Path(body.cookie_file)
     result = download.test_cookies(body.mode, body.browser, body.profile, path)
-    return CookieTestOut(ok=result.ok)
+    return CookieTestOut(ok=result.ok, outcome=result.outcome, error_message=result.error_message)
 
 
 @router.post("/start", status_code=202)

@@ -15,6 +15,7 @@ from avkit_api.wiring import AppServices
 from avkit_core.domain.download import CookieTestResult, DownloadJob, SABRStatus
 from avkit_core.domain.enums import (
     AudioFormat,
+    CookieTestOutcome,
     DownloadStatus,
     QualityPreset,
     QueueProcessorState,
@@ -62,6 +63,7 @@ class FakeDownload(_Lifecycle):
         self.clear_queue_calls = 0
         self.archive_cleared = False
         self.cookie_error: CookieTestError | None = None
+        self.cookie_result: CookieTestResult | None = None
         self.last_cookie: tuple[object, ...] | None = None
         self.apply_updated = 2
         self.last_reorder: list[str] = []
@@ -170,7 +172,9 @@ class FakeDownload(_Lifecycle):
         self.last_cookie = (mode, browser, profile, cookie_file)
         if self.cookie_error is not None:
             raise self.cookie_error
-        return CookieTestResult(ok=True, error_message=None)
+        if self.cookie_result is not None:
+            return self.cookie_result
+        return CookieTestResult(ok=True, error_message=None, outcome=CookieTestOutcome.ok)
 
 
 def _app(download: FakeDownload | None = None) -> tuple[TestClient, FakeDownload]:
@@ -298,6 +302,14 @@ def test_ac_15_7_cookie_test_envelope() -> None:
         headers=AUTH,
         json={"mode": "browser", "browser": "chrome"},
     )
+    fake.cookie_result = CookieTestResult(
+        ok=False, error_message="Sign in to confirm", outcome=CookieTestOutcome.check_failed
+    )
+    check = client.post(
+        "/api/v1/downloads/cookies/test",
+        headers=AUTH,
+        json={"mode": "browser", "browser": "chrome"},
+    )
     fake.cookie_error = CookieTestError("unreadable")
     failed = client.post(
         "/api/v1/downloads/cookies/test",
@@ -305,8 +317,12 @@ def test_ac_15_7_cookie_test_envelope() -> None:
         json={"mode": "file", "cookie_file": "C:/cookies.txt"},
     )
     assert ok.status_code == 200
-    assert ok.json() == {"ok": True}
-    assert "error_message" not in ok.json()
+    assert ok.json() == {"ok": True, "outcome": "ok", "error_message": None}
+    assert check.json() == {
+        "ok": False,
+        "outcome": "check_failed",
+        "error_message": "Sign in to confirm",
+    }
     assert "HTTP_COOKIE" not in ok.text
     assert failed.status_code == 422
     assert "cookie" not in failed.text.lower() or "unreadable" in failed.json()["error"]["message"]
@@ -812,3 +828,47 @@ def test_ac_124_9_list_items_carry_received_height() -> None:
     other = by_id[fake.jobs[1].id]
     assert "received_height" in other
     assert other["received_height"] is None
+
+
+def test_ac_169_5_reply_carries_each_outcome() -> None:
+    client, fake = _app()
+    cases: list[tuple[CookieTestResult, dict[str, object]]] = [
+        (
+            CookieTestResult(ok=True, error_message=None, outcome=CookieTestOutcome.ok),
+            {"ok": True, "outcome": "ok", "error_message": None},
+        ),
+        (
+            CookieTestResult(
+                ok=False, error_message="could not read", outcome=CookieTestOutcome.unreadable
+            ),
+            {"ok": False, "outcome": "unreadable", "error_message": "could not read"},
+        ),
+        (
+            CookieTestResult(
+                ok=False, error_message="Sign in to confirm", outcome=CookieTestOutcome.check_failed
+            ),
+            {"ok": False, "outcome": "check_failed", "error_message": "Sign in to confirm"},
+        ),
+        (
+            CookieTestResult(ok=True, error_message=None, outcome=None),
+            {"ok": True, "outcome": None, "error_message": None},
+        ),
+    ]
+    for result, reply in cases:
+        fake.cookie_result = result
+        response = client.post(
+            "/api/v1/downloads/cookies/test",
+            headers=AUTH,
+            json={"mode": "browser", "browser": "chrome"},
+        )
+        assert response.status_code == 200
+        assert response.json() == reply
+        assert "HTTP_COOKIE" not in response.text
+    fake.cookie_error = CookieTestError("unreadable")
+    refused = client.post(
+        "/api/v1/downloads/cookies/test",
+        headers=AUTH,
+        json={"mode": "file", "cookie_file": "C:/cookies.txt"},
+    )
+    assert refused.status_code == 422
+    assert refused.json()["error"]["message"]

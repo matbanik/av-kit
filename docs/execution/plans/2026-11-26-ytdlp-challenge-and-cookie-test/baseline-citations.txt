@@ -1,0 +1,10 @@
+anchor tests/e2e/test_api_downloads.py:294 hits=1 :: def test_ac_15_7_cookie_test_envelope(
+anchor tests/e2e/test_api_downloads.py:310 hits=1 :: assert "HTTP_COOKIE" not in ok.text
+anchor tests/unit/test_domain.py:1287 hits=1 :: def test_ac_4_4_cookie_test_result_shape(
+anchor tests/unit/test_domain.py:1293 hits=1 :: assert "cookies" not in _field_names(CookieTestResult)
+anchor tests/integration/test_youtube_adapter.py:536 hits=1 :: def test_ac_6_13_test_cookies_never_raises_cookie_error(
+anchor tests/integration/test_youtube_adapter.py:544 hits=1 :: assert "Netscape" not in (missing.error_message or "")
+anchor packages/infrastructure/pyproject.toml:12 hits=1 :: "yt-dlp",
+anchor packages/core/src/avkit_core/domain/download.py:430 hits=1 :: class CookieTestResult
+anchor ui/tests/e2e/test-ids.ts:538 hits=1 :: export const HELP_SHOT = 'help-shot'
+anchor uv.lock:3362 hits=1 :: version = "2026.10.26"

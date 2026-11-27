@@ -457,7 +457,7 @@ Each nav rail item maps to a single-page module. No internal tab routing — eac
   - `"forcing sabr"`, `"missing a url"` and `"sabr"`
   - `"require a gvs po token"`
   - the old `"android client sabr formats require"` and `"ios client sabr formats require"` still match, through `"sabr"`
-- **Manual check**: `Check SABR` button runs test extraction
+- **Manual check**: `Check SABR` button runs test extraction with the `android`, `tv` and `ios` clients and no cookies; a detected status ends ` · Check SABR does not use cookies` (MEU-170, D-1465, D-1466)
 - **Force mode**: `Force SABR` activates without detection
 
 ### URL Input Bar Fields
@@ -472,7 +472,7 @@ Each nav rail item maps to a single-page module. No internal tab routing — eac
 | Browser | `select` | `chrome` | Options: chrome, firefox, edge, brave, opera, vivaldi, chromium, whale, safari. Only visible when "From Browser" selected |
 | Browser Profile | `text` | `""` | Optional profile name for multi-profile browsers |
 | Cookie File | `file input` | `""` | Netscape-format cookies.txt path. Only visible when "From File" selected |
-| Test Cookies | `button` | — | `POST /api/v1/downloads/cookies/test` — `{ mode, browser?, profile?, cookie_file? }`. Paths only; never cookie bytes. Warning: "Close browser first!" ([§5](../../_inspiration/_downloader_pseudo_logic.md)) |
+| Test Cookies | `button` | — | `POST /api/v1/downloads/cookies/test` — `{ mode, browser?, profile?, cookie_file? }`. Paths only; never cookie bytes. Warning: "Close browser first!" ([§5](../../_inspiration/_downloader_pseudo_logic.md)). The result shows in `cookie-test-result`: "Cookies read. YouTube answered.", "Could not read the cookies: <reason>", "Cookies read, but YouTube's check failed: <reason>", or "Cookie mode is None. Nothing to test." The button is busy while the test runs; a cookie setting change clears the line (MEU-169, D-1464) |
 
 > **Quality/audio dropdown behavior under SABR**: When SABR mode activates, the quality dropdown options are dynamically restricted to `[360p]` and the audio format dropdown to `[standard_mp3, high_m4a]`. When SABR clears, full options restore ([_downloader_pseudo_logic.md §2](../../_inspiration/_downloader_pseudo_logic.md)).
 

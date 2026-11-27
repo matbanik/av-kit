@@ -4398,6 +4398,330 @@ actionable:
         A session of its own costs a plan and at least two Codex reviews (Session 102 used 23.7M tokens) and a whole-folder reformat of 15 files that came from the framework, whose source has the same errors.
         Grouping it now loses on cost for no user-visible change; closing it loses because plans still narrow their lint scope by hand. M items: none. Two-way.'
     decided_by: agent
+- id: CAPTURE-HOTKEY-TEXT-HARDCODED
+  title: Capture texts say F2 after the capture key is changed
+  severity: low
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-1400
+      stage: triage
+      question: The Capture empty state says F2 after the key is changed. How is it registered, and how far does the fix reach?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: 'Register CAPTURE-HOTKEY-TEXT-HARDCODED as MEU-NEW P3 (MEU-165). Every in-app text that names the capture key shows the configured key: the empty state, the Capture help, the Settings startup
+        help and the Capture quick start. README text and code defaults keep F2, the default.'
+      source_tag: Local Canon
+      precedents:
+      - 'CapturePage.tsx:106 and :2222: the in-use banner already substitutes the configured key'
+      - '09-screenshot-capture.md:115 and :122: the spec writes the empty state and the banner with F2 as the default key'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and
+        start building plans in parallel as orchestrator.''. Mat reported the defect: USER_EXPLICIT 2026-11-26 ''When Capture is opened and F2 key which is default is changed to like F3 the initial message
+        to make capture still says F2. It is hard coded.''. The page already shows the real key in two places, so the other texts are the defect, not the design. Fixing only the empty state would leave
+        the help beside it wrong. Doing nothing keeps a wrong instruction on screen. Low severity, standalone: P3. M items: none. Two-way.'
+- id: CAPTURE-INBOX-CHANGE-KEEPS-OLD-SHOTS
+  title: After the inbox folder is changed, the Capture list still shows the shots of the old folder
+  severity: medium
+  component: core
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-1401
+      stage: triage
+      question: Shots of the old inbox folder stay in the list after the folder is changed. How is it registered, and what happens to the old rows?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: Register CAPTURE-INBOX-CHANGE-KEEPS-OLD-SHOTS as MEU-NEW P2 (MEU-166). scan_inbox and list_shots return only the shots whose file is in the current inbox folder. Rows of other folders stay
+        in the catalog, so a switch back shows them with their marks.
+      source_tag: Local Canon
+      precedents:
+      - '09-screenshot-capture.md:480: scan_inbox lists inbox_dir, non-recursive, and deletes rows whose file vanished'
+      - '09-screenshot-capture.md:307: original_path must resolve inside capture.inbox_dir'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and
+        start building plans in parallel as orchestrator.''. Mat reported the defect: USER_EXPLICIT 2026-11-26 ''When Inbox is changed to new folder, images form previose folder are still loaded on the
+        left side selector.''. The spec defines the catalog as the contents of inbox_dir, so listing other folders contradicts it. Deleting the old rows would also fix the list, but it loses each row''s
+        sidecar link if the user switches back; filtering loses nothing. Doing nothing leaves two folders mixed in one list. Medium severity, wrong data on a main page: P2. M items: none (no file is deleted).
+        Two-way.'
+- id: CAPTURE-ZOOM-NO-SCROLLBARS
+  title: A zoomed Capture image has no scroll bars at the bottom and right
+  severity: low
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked:
+    - Should the zoomed Capture image have scroll bars?
+    answers:
+    - Yes. On each axis where the zoomed image is larger than the frame, a scroll bar at the bottom or the right shows where the view is and moves it. Space+drag, middle-drag and wheel zoom keep working.
+    decided_by: human
+    decision_log:
+    - id: D-1402
+      stage: triage
+      question: Should the zoomed Capture image have scroll bars?
+      resolution: human
+      class: product-preference
+      chosen: Yes. On each axis where the zoomed image is larger than the frame, a scroll bar at the bottom or the right shows where the view is and moves it. Space+drag, middle-drag and wheel zoom keep
+        working.
+      source_tag: Human-approved
+      precedents:
+      - '09-screenshot-capture.md:646 (Session 29 plan D-15): fixed overflow-hidden frame with no scrollbars; a planner''s choice, not Mat''s ruling'
+      - '09-screenshot-capture.md:645: the Pan row already says the image scrolls/drag-pans'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the bars. The no-scrollbars rule was a plan decision of Session 29, so his request replaces it. How the bars are built (drawn over the frame from the pan offset, or a native
+        scroll container) is the plan''s choice. P3: a usability gap with a workaround. Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-26 'When zooming in and out of the image the slide bars on the bottom and right side of hte image are missing.'
+- id: GUI-ENTRY-SECTIONS-NO-EMPHASIS
+  title: The URL entry of Download and Transcript and the How it works card look like every other section
+  severity: low
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked:
+    - Should the URL entry of Download and Transcript and the How it works card get their own background colour?
+    answers:
+    - Yes. Both URL sections and the How it works card get an emphasis surface from new theme tokens. The plan proposes the colour as a local mockup in dark and light with colour-blind simulations; Mat's
+      go-ahead on that plan settles the colour.
+    decided_by: human
+    decision_log:
+    - id: D-1403
+      stage: triage
+      question: Should the URL entry of Download and Transcript and the How it works card get their own background colour?
+      resolution: human
+      class: product-preference
+      chosen: Yes. Both URL sections and the How it works card get an emphasis surface from new theme tokens. The plan proposes the colour as a local mockup in dark and light with colour-blind simulations;
+        Mat's go-ahead on that plan settles the colour.
+      source_tag: Human-approved
+      precedents:
+      - '11-page-layout.md §Settings section emphasis: current section uses bg-bg-elevated/40 and border-accent (Human-approved 2026-09-30)'
+      - .agent/docs/emerging-standards.md G31 (single accent) and G32 (tokens only, no raw hex)
+      - '06-gui.md §Light accent contrast: 4.5:1 floor, checked by ui/tests/unit/light-accent-contrast.test.ts'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for the emphasis and for a proposed colour. The working recommendation is a tint of the existing accent (cyan in dark, dark cyan in light) with an accent edge, because blue-cyan
+        stays distinct for the common colour-vision types and the mark does not rely on hue alone; the plan tests that against the alternatives in the mockup. P3: a clarity change with no functional effect.
+        Two-way.'
+      human_message_reference: USER_EXPLICIT 2026-11-26 'Download and transcript pages need to have section where URL is being inserted in diffrent background color to guide the users eye to it and mark
+        it by importance. Consider the color scheme and propose color blind neatural color that still grabs attention but is not too jarring. The same goes for "How it works" section.'
+- id: DOWNLOADER-ADVANCED-LOOKS-LIKE-TEXT
+  title: The Downloader's Advanced control looks like plain text, and its open panel looks like the rest of the page
+  severity: low
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked:
+    - How should the Downloader's Advanced control and its open panel look?
+    answers:
+    - The trigger looks like a button (border or background, and a chevron that shows open and closed). The open panel has a highlight background different from the other sections.
+    decided_by: human
+    decision_log:
+    - id: D-1404
+      stage: triage
+      question: How should the Downloader's Advanced control and its open panel look?
+      resolution: human
+      class: product-preference
+      chosen: The trigger looks like a button (border or background, and a chevron that shows open and closed). The open panel has a highlight background different from the other sections.
+      source_tag: Human-approved
+      precedents:
+      - '.agent/docs/emerging-standards.md G1: buttons need a visible border or background'
+      - 'CapturePage.tsx:2707-2712: the Capture Options disclosure passes variant=secondary, an icon and chevron'
+      research:
+        engine: none
+        sources: []
+      reasoning: Mat asked for both. The Capture page already shows the button form, so the Downloader follows it. The panel surface uses the emphasis tokens of MEU-171, so the two changes are planned together.
+        P3. Two-way.
+      human_message_reference: USER_EXPLICIT 2026-11-26 'For Downloader page Advanced button. It is not clear that advanced button expands since it looks like just a text not a button. Once expanded it
+        also should have highlight backgroud diffrent from others to make it unique enough for user to udnerstand what it does.'
+- id: DOWNLOADER-COOKIE-PROFILE-UNLABELED
+  title: The browser profile field under the Browser select has no label
+  severity: low
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-1405
+      stage: triage
+      question: The field under the Browser select has no label. How is it registered?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: 'Register DOWNLOADER-COOKIE-PROFILE-UNLABELED as MEU-NEW P3, fixed inside MEU-172: a visible Profile label with a hint that empty means the browser''s default profile, and the Close browser
+        first note the spec asks for.'
+      source_tag: Local Canon
+      precedents:
+      - '06-gui.md:403-404 and :476: Profile label and Close browser first warning'
+      - '.agent/docs/emerging-standards.md G26: WCAG 2.1 AA for help and form patterns'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and
+        start building plans in parallel as orchestrator.''. Mat reported it: USER_EXPLICIT 2026-11-26 ''When picking browser there is input field that has not label and no idication of what it does.''.
+        The spec already names the label, so nothing is open. It shares the panel with the Advanced change, so it rides in that MEU instead of a session of its own. Doing nothing leaves an unnamed input.
+        M items: none. Two-way.'
+- id: DOWNLOADER-COOKIE-TEST-SILENT
+  title: 'Test Cookies shows nothing: no success, no failure, no reason'
+  severity: medium
+  component: ui
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-1406
+      stage: triage
+      question: Test Cookies gives no result in the interface. How is it registered, and how far does the fix reach?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: Register DOWNLOADER-COOKIE-TEST-SILENT as MEU-NEW P2 (MEU-169). The API reply says which of three things happened (cookies read and YouTube answered; cookies could not be read; cookies read
+        but YouTube's check failed) with a short reason, and the panel shows it beside the button with a busy state.
+      source_tag: Local Canon
+      precedents:
+      - '.agent/docs/emerging-standards.md G15: errors must surface in the UI; G35 feedback tier'
+      - '02-infrastructure.md:385: locked or missing cookies give {ok:false, error_message}'
+      - 'known-issues DOWNLOAD-FAILED-NO-REASON (MEU-137): a failed download shows its reason'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and
+        start building plans in parallel as orchestrator.''. Mat reported it: USER_EXPLICIT 2026-11-26 ''Also test cookies does not appear to do anything. There is no message in the inteface.''. A renderer-only
+        fix could say only passed or failed, and on 2026-11-26 it would have said failed for a fault that was not the cookies'' (YTDLP-CHALLENGE-SOLVE-FAILS), so the reason has to come from the backend.
+        Doing nothing keeps the control mute. Medium severity on a main page: P2. M items: none (a read-only local API field; no cookie value leaves the adapter). Two-way.'
+- id: YTDLP-CHALLENGE-SOLVE-FAILS
+  title: 'yt-dlp 2026.10.26 cannot solve YouTube''s current player challenges: ''a.addOnDisposeCallback is not a function'', then ''The page needs to be reloaded'''
+  severity: high
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P1
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-1407
+      stage: triage
+      question: Mat's console shows yt-dlp failing the signature and n challenges under Deno, then 'The page needs to be reloaded'. What is it, and how is it registered?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: 'Register YTDLP-CHALLENGE-SOLVE-FAILS as MEU-NEW P1 (MEU-168): an upstream yt-dlp bug against YouTube''s current players. Lock yt-dlp 2026.11.23 (yt-dlp-ejs stays 0.8.0) and prove one real
+        extraction with the cookie clients; if it still fails, set the extractor argument player_js_variant tv.'
+      source_tag: Research-backed
+      precedents:
+      - 'known-issues YTDLP-NO-JS-RUNTIME (MEU-141): Deno 2.9.8 and yt-dlp-ejs 0.8.0 bundled'
+      - 'known-issues DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT (MEU-140): ''page needs to be reloaded'' from pinned clients'
+      research:
+        engine: WebSearch and WebFetch (read-only investigator, 2026-11-26)
+        sources:
+        - 'https://github.com/yt-dlp/yt-dlp/issues/18123 - n challenge solving failed: a.addOnDisposeCallback is not a function; fixed in stable 2026.11.23'
+        - https://github.com/yt-dlp/ejs/issues/79 - modifyPlayer drops top-level inheritance calls; closed 2026-11-25, no ejs release yet
+        - https://pypi.org/pypi/yt-dlp/2026.11.23/json - 2026.11.23 still requires yt-dlp-ejs 0.8.0
+        - https://github.com/dennissoftman/ytmini/issues/6 - one report of the same error on 2026.11.23
+      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and
+        start building plans in parallel as orchestrator.''. The installed versions (yt-dlp 2026.10.26, ejs 0.8.0, Deno 2.9.8) are exactly those of the upstream report, and the error text is the same, so
+        this is the upstream bug and not Mat''s cookies or Deno. Upstream names the fixed release. Waiting for an ejs release instead is open-ended (none is published). Doing nothing leaves cookie-mode
+        downloads broken. It breaks a main function in the shipped build: P1. M items: none (a patch-level dependency update inside the existing lock; no new destination). Two-way.'
+- id: SABR-CHECK-IGNORES-COOKIES
+  title: Check SABR never uses the cookie settings, so 'SABR detected' looks like the cookies were not picked up
+  severity: low
+  component: core
+  status: open
+  category: MEU-NEW
+  priority: P3
+  enrichment:
+    questions_asked: []
+    answers: []
+    decided_by: agent
+    decision_log:
+    - id: D-1408
+      stage: triage
+      question: Mat set Firefox cookies and still saw SABR detected. Is that a cookie failure, and how is it registered?
+      resolution: autonomous
+      class: two-way
+      mandatory: none
+      chosen: 'It is not a cookie failure: the SABR check never uses cookies. Register SABR-CHECK-IGNORES-COOKIES as MEU-NEW P3 (MEU-170); the session''s plan chooses, with research, between a check that
+        uses the saved cookies and a panel text that states what the check covers.'
+      source_tag: Local Canon
+      precedents:
+      - '02-infrastructure.md:373 §SABR and MEU-138 (matrix 2.6): the check and its phrases'
+      - known-issues SABR-CHECK-MISSES-CURRENT-MESSAGES (MEU-138, resolved)
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and
+        start building plans in parallel as orchestrator.''. The code shows the probe is built without cookies, so its result cannot depend on them. Which fix is right depends on whether YouTube serves
+        different formats to signed-in clients, which the plan must research before it writes acceptance criteria. Registering it separately from the silent test keeps the two causes apart. Doing nothing
+        leaves a status that misleads. Low severity: P3. M items: none. Two-way.'
+- id: APP-NO-IN-APP-UPDATE
+  title: 'The app cannot update itself: a new version means a manual download from GitHub Releases'
+  severity: medium
+  component: infrastructure
+  status: open
+  category: MEU-NEW
+  priority: P2
+  enrichment:
+    questions_asked:
+    - Should av-kit update itself from inside the app?
+    answers:
+    - Yes. The app checks GitHub Releases on a schedule the user sets (once a week or once a month), and downloads and installs a newer version without a visit to the release page. The design starts from
+      Zorivest's MEU-504 (electron-updater with the GitHub provider).
+    decided_by: human
+    decision_log:
+    - id: D-1409
+      stage: triage
+      question: Should av-kit update itself from inside the app?
+      resolution: human
+      class: product-preference
+      chosen: Yes. The app checks GitHub Releases on a schedule the user sets (once a week or once a month), and downloads and installs a newer version without a visit to the release page. The design starts
+        from Zorivest's MEU-504 (electron-updater with the GitHub provider).
+      source_tag: Human-approved
+      precedents:
+      - '07-distribution.md:195: auto-update is optional and must not block ship'
+      - 'P:/zorivest docs/build-plan/18-first-install-ux.md §18.12 (MEU-504): electron-updater, GitHub provider, unsigned; U-1 (Mat, 2026-10-23): silent install with relaunch on the user''s click'
+      - 'known-issues UNINSTALL-LEAVES-INSTALLER-COPY (MEU-114): the uninstall macro already skips an in-place update'
+      research:
+        engine: none
+        sources: []
+      reasoning: 'Mat asked for it, with the two intervals. av-kit''s case is simpler than Zorivest''s: one public repository, a per-user install with no elevation and no service. The open design points
+        (what automatic means while jobs run, an off choice, the unsigned trust model, the feed files in the release procedure) are the plan''s Decision Briefs. P2: it is how every later fix reaches users.
+        Two-way until a release ships with it.'
+      human_message_reference: USER_EXPLICIT 2026-11-26 'Create addtional plan for integration of update feature from within the app so the user does not have to go to github realease to download and run
+        the update but it happens automaticly. Also have setting to check updates once a week or once a month.'
 deferred:
 - id: CAPTURE-JOURNAL-VOLATILE
   title: Interactive capture completion journal is in-memory only
@@ -4573,4 +4897,32 @@ deferred:
         list of every FFmpeg dependency and no change. Whether naming it changes legal exposure was not assessed; this is not legal advice.
       human_message_reference: USER_EXPLICIT 2026-11-05 'all recommendations are accpeted, proceed'
     decided_by: human
-proposed_batches: []
+proposed_batches:
+- slug: ui-capture-hotkey-text-hardcoded-capture-zoom-no-scrollbars-gui-entry-sections-no-emphasis
+  issues:
+  - CAPTURE-HOTKEY-TEXT-HARDCODED
+  - CAPTURE-ZOOM-NO-SCROLLBARS
+  - GUI-ENTRY-SECTIONS-NO-EMPHASIS
+  - DOWNLOADER-ADVANCED-LOOKS-LIKE-TEXT
+  - DOWNLOADER-COOKIE-PROFILE-UNLABELED
+  - DOWNLOADER-COOKIE-TEST-SILENT
+  component: ui
+  priority_band: P2
+  complexity: L
+  has_duplicates: true
+- slug: core-capture-inbox-change-keeps-old-shots-sabr-check-ignores-cookies
+  issues:
+  - CAPTURE-INBOX-CHANGE-KEEPS-OLD-SHOTS
+  - SABR-CHECK-IGNORES-COOKIES
+  component: core
+  priority_band: P2
+  complexity: M
+  has_duplicates: false
+- slug: infrastructure-ytdlp-challenge-solve-fails-app-no-in-app-update
+  issues:
+  - YTDLP-CHALLENGE-SOLVE-FAILS
+  - APP-NO-IN-APP-UPDATE
+  component: infrastructure
+  priority_band: P1
+  complexity: M
+  has_duplicates: false

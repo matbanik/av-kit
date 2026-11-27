@@ -125,7 +125,7 @@ describe('MEU-20 downloader behavior (exec r1 F1–F5)', () => {
           return new Response(JSON.stringify(parsed ?? {}), { status: 200 })
         }
         if (url.includes('/downloads/cookies/test')) {
-          return new Response(JSON.stringify({ ok: true }), { status: 200 })
+          return new Response(JSON.stringify({ ok: true, outcome: 'ok', error_message: null }), { status: 200 })
         }
         if (/\/downloads\/?$/.test(new URL(url).pathname) && method === 'POST') {
           if (holdPost !== null) {
@@ -1543,13 +1543,13 @@ describe('MEU-46 DownloaderPage queue surface', () => {
 
     await user.click(within(host).getByTestId('sabr-check-btn'))
     await vi.waitFor(() => expect(requests('/downloads/sabr/check', 'POST')).toHaveLength(1))
-    await vi.waitFor(() => expect(shown()).toBe('SABR inactive · checked 09:05:07'))
+    await vi.waitFor(() => expect(shown()).toBe('SABR inactive · checked 09:05:07 · Check SABR does not use cookies'))
     expect(within(host).getByTestId('sabr-status')).toBeVisible()
 
     state.next = { mode: 'active', source: 'detected', checked_at: at }
     await user.click(within(host).getByTestId('sabr-check-btn'))
     await vi.waitFor(() => expect(requests('/downloads/sabr/check', 'POST')).toHaveLength(2))
-    await vi.waitFor(() => expect(shown()).toBe('SABR active — quality limited to 360p · checked 09:05:07'))
+    await vi.waitFor(() => expect(shown()).toBe('SABR active — quality limited to 360p · checked 09:05:07 · Check SABR does not use cookies'))
     expect(within(host).getByTestId('sabr-status')).toBeVisible()
   })
 })
@@ -2715,5 +2715,268 @@ describe('MEU-49 DownloaderPage drag reorder', () => {
       )
       expect(manifest.dependencies?.[name], name + ' is test-only').toBeUndefined()
     }
+  })
+})
+
+describe('MEU-169 DownloaderPage Test Cookies result line and busy state', () => {
+  // COOKIE_TEST_SHOWN and COOKIE_TEST_BUSY (AC-169.9, AC-169.10). The cookies/test route answers
+  // from `replies` and can be held open. After a reply has settled, each read is a non-waiting
+  // query, so a missing element fails by `expect` and not by a timeout.
+  let user: ReturnType<typeof userEvent.setup>
+  let host: HTMLElement
+  const fetches: Array<{ url: string; method: string; body?: unknown }> = []
+  let saved: Record<string, string> = {}
+  let replies: Array<{ status: number; body: unknown }> = []
+  let picks: string[] = []
+  let hold: Promise<void> | null = null
+  let release: (() => void) | null = null
+
+  const OK_REPLY = { ok: true, outcome: 'ok', error_message: null }
+  const OK_TEXT = 'Cookies read. YouTube answered.'
+
+  beforeEach(() => {
+    user = userEvent.setup()
+    fetches.length = 0
+    saved = {
+      cookie_mode: 'none',
+      cookie_browser: 'chrome',
+      cookie_browser_profile: 'Default',
+      cookie_file_path: '',
+    }
+    replies = []
+    picks = ['C:/cookies/first.txt', 'C:/cookies/second.txt']
+    hold = null
+    release = null
+    queryClient.clear()
+    mockApi()
+    window.api.showFileDialog = async () => picks.shift()
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input)
+        const method = (init?.method ?? 'GET').toUpperCase()
+        const body =
+          typeof init?.body === 'string' && init.body.length > 0 ? (JSON.parse(init.body) as unknown) : undefined
+        fetches.push({ url, method, body })
+        const path = new URL(url).pathname.replace(/\/$/, '')
+        if (path.endsWith('/downloads/cookies/test') && method === 'POST') {
+          const gate = hold
+          if (gate !== null) {
+            await gate
+          }
+          const next = replies.shift() ?? { status: 200, body: OK_REPLY }
+          return new Response(JSON.stringify(next.body), { status: next.status })
+        }
+        if (path.endsWith('/downloads/sabr')) {
+          return new Response(JSON.stringify({ mode: 'inactive', source: null, checked_at: null }), { status: 200 })
+        }
+        if (path.endsWith('/settings/downloader')) {
+          if (method === 'PUT') {
+            saved = { ...saved, ...(body as Record<string, string>) }
+            return new Response(null, { status: 204 })
+          }
+          return new Response(
+            JSON.stringify({
+              path: 'C:/Downloads/av-kit',
+              quality: '1080p',
+              audio_only: false,
+              audio_format: 'default',
+              ...saved,
+              archive_tracking: true,
+              yt_dlp_debug: false,
+              ffmpeg_path: 'C:/bin/ffmpeg.exe',
+            }),
+            { status: 200 },
+          )
+        }
+        if (path.endsWith('/downloads') && method === 'GET') {
+          return new Response(JSON.stringify({ items: [], processor: { state: 'Idle', current_job_id: null } }), {
+            status: 200,
+          })
+        }
+        return new Response(null, { status: 204 })
+      }),
+    )
+  })
+
+  afterEach(() => {
+    release?.()
+    vi.unstubAllGlobals()
+    queryClient.clear()
+  })
+
+  function cookieTests(): Array<{ url: string; method: string; body?: unknown }> {
+    return fetches.filter(
+      (entry) => entry.method === 'POST' && new URL(entry.url).pathname.replace(/\/$/, '').endsWith('/downloads/cookies/test'),
+    )
+  }
+
+  /** Holds every cookie test reply until the returned function is called. */
+  function holdReplies(): () => void {
+    let open: () => void = () => undefined
+    hold = new Promise<void>((done) => {
+      open = done
+    })
+    release = () => {
+      hold = null
+      open()
+    }
+    return release
+  }
+
+  async function settle(): Promise<void> {
+    await act(async () => {
+      for (let i = 0; i < 10; i += 1) {
+        await new Promise((done) => setTimeout(done, 0))
+      }
+    })
+  }
+
+  async function renderAdvanced(): Promise<void> {
+    await act(async () => {
+      host = render(
+        createElement(QueryClientProvider, { client: queryClient }, createElement(DownloaderPage)),
+      ).container
+    })
+    const toggle = within(host).getByTestId('add-advanced-toggle')
+    if (saved.cookie_mode === 'none') {
+      await user.click(toggle)
+    }
+    await vi.waitFor(() => expect(toggle).toHaveAttribute('aria-expanded', 'true'))
+    await settle()
+  }
+
+  function button(): HTMLElement {
+    return within(host).getByTestId('cookie-test-btn')
+  }
+
+  function result(): HTMLElement | null {
+    return within(host).queryByTestId('cookie-test-result')
+  }
+
+  function resultText(): string | null {
+    const el = result()
+    return el === null ? null : (el.textContent ?? '').replace(/\s+/g, ' ').trim()
+  }
+
+  async function testCookies(count: number): Promise<void> {
+    await user.click(button())
+    await vi.waitFor(() => expect(cookieTests()).toHaveLength(count))
+    await settle()
+  }
+
+  it('AC-169.9 no result line before a test', async () => {
+    await renderAdvanced()
+    expect(button()).toBeVisible()
+    expect(result()).toBeNull()
+  })
+
+  it('AC-169.9 each outcome shows its text with role status', async () => {
+    replies = [
+      { status: 200, body: OK_REPLY },
+      { status: 200, body: { ok: false, outcome: 'unreadable', error_message: 'cookie file is missing' } },
+      { status: 200, body: { ok: false, outcome: 'check_failed', error_message: 'Sign in to confirm you are not a bot' } },
+      { status: 200, body: { ok: true, outcome: null, error_message: null } },
+    ]
+    const expected = [
+      OK_TEXT,
+      'Could not read the cookies: cookie file is missing',
+      "Cookies read, but YouTube's check failed: Sign in to confirm you are not a bot",
+      'Cookie mode is None. Nothing to test.',
+    ]
+    await renderAdvanced()
+    for (const [index, text] of expected.entries()) {
+      await testCookies(index + 1)
+      expect(resultText()).toBe(text)
+      const el = result()
+      expect(el?.getAttribute('role')).toBe('status')
+      expect(el?.className).toBe('text-sm text-fg-muted')
+      expect(el?.parentElement?.contains(button())).toBe(true)
+    }
+  })
+
+  it('AC-169.9 a new test and a changed cookie setting remove the result', async () => {
+    saved.cookie_mode = 'browser'
+    await renderAdvanced()
+    await testCookies(1)
+    expect(resultText()).toBe(OK_TEXT)
+
+    const open = holdReplies()
+    await user.click(button())
+    await vi.waitFor(() => expect(cookieTests()).toHaveLength(2))
+    await settle()
+    expect(result()).toBeNull()
+    open()
+    await settle()
+    expect(resultText()).toBe(OK_TEXT)
+
+    await user.selectOptions(within(host).getByTestId('cookie-browser'), 'firefox')
+    await settle()
+    expect(result()).toBeNull()
+    await testCookies(3)
+    expect(resultText()).toBe(OK_TEXT)
+
+    await user.type(within(host).getByTestId('cookie-profile'), 'x')
+    await settle()
+    expect(result()).toBeNull()
+    await testCookies(4)
+    expect(resultText()).toBe(OK_TEXT)
+
+    await user.click(within(host).getByTestId('cookie-mode-file'))
+    await settle()
+    expect(result()).toBeNull()
+    const fileRow = within(host).getByTestId('cookie-file').parentElement as HTMLElement
+    await user.click(within(fileRow).getByRole('button', { name: 'Browse' }))
+    await settle()
+    expect(within(host).getByTestId('cookie-file')).toHaveValue('C:/cookies/first.txt')
+    await testCookies(5)
+    expect(resultText()).toBe(OK_TEXT)
+
+    await user.click(within(fileRow).getByRole('button', { name: 'Browse' }))
+    await settle()
+    expect(within(host).getByTestId('cookie-file')).toHaveValue('C:/cookies/second.txt')
+    expect(result()).toBeNull()
+  })
+
+  it('AC-169.9 a refused request shows the error banner and no result line', async () => {
+    replies = [
+      {
+        status: 422,
+        body: { error: { code: 'validation_error', message: 'unknown cookie mode', details: null } },
+      },
+    ]
+    await renderAdvanced()
+    await testCookies(1)
+    expect(within(host).getByTestId('error-banner')).toHaveTextContent('unknown cookie mode')
+    expect(result()).toBeNull()
+  })
+
+  it('AC-169.10 the button is busy while the request is pending', async () => {
+    await renderAdvanced()
+    const open = holdReplies()
+    await user.click(button())
+    await vi.waitFor(() => expect(cookieTests()).toHaveLength(1))
+    await settle()
+    expect(button()).toBeDisabled()
+    expect(button()).toHaveAttribute('aria-busy', 'true')
+    open()
+    await settle()
+    expect(button()).toBeEnabled()
+    expect(button()).toHaveAttribute('aria-busy', 'false')
+    expect(resultText()).toBe(OK_TEXT)
+  })
+
+  it('AC-169.10 a second click while pending sends no second request', async () => {
+    await renderAdvanced()
+    const open = holdReplies()
+    await user.click(button())
+    await vi.waitFor(() => expect(cookieTests()).toHaveLength(1))
+    await settle()
+    await user.click(button())
+    await settle()
+    expect(cookieTests()).toHaveLength(1)
+    open()
+    await settle()
+    expect(cookieTests()).toHaveLength(1)
   })
 })

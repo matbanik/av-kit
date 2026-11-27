@@ -276,3 +276,11 @@ class AnnotationType(StrEnum):
 SABR_RESTRICTED_AUDIO: frozenset[AudioFormat] = frozenset(
     {AudioFormat.StandardMp3, AudioFormat.HighM4a}
 )
+
+
+class CookieTestOutcome(StrEnum):
+    """Where a cookie test stopped (`COOKIE_TEST_OUTCOME`, MEU-169). Wire values are lowercase."""
+
+    ok = "ok"
+    unreadable = "unreadable"
+    check_failed = "check_failed"

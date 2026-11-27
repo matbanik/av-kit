@@ -8,6 +8,7 @@ import threading
 import time
 import unicodedata
 from collections.abc import Callable
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
@@ -31,6 +32,7 @@ from avkit_core.domain.download import (
 from avkit_core.domain.enums import (
     SABR_RESTRICTED_AUDIO,
     AudioFormat,
+    CookieTestOutcome,
     DownloadFailureCause,
     DownloadStatus,
     QualityPreset,
@@ -148,6 +150,13 @@ def scrub_line(text: str) -> str:
 
 
 _LINE_BREAKS = re.compile(r"\r\n|\r|\n")
+
+
+# COOKIE_TEST_REASON: the fixed text when scrubbing leaves nothing of the message.
+COOKIE_TEST_FALLBACK: dict[CookieTestOutcome, str] = {
+    CookieTestOutcome.unreadable: "cookie source unreadable",
+    CookieTestOutcome.check_failed: "cookie probe failed",
+}
 
 
 def first_line(text: str) -> str:
@@ -621,11 +630,17 @@ class DownloadService:
         if mode not in COOKIE_MODE_WIRES:
             raise ValidationError("cookie mode is not a known wire value")
         try:
-            return self._youtube.test_cookies(mode, browser, profile, cookie_file)
+            result = self._youtube.test_cookies(mode, browser, profile, cookie_file)
         except CookieTestError:
             raise
         except OSError as exc:
             raise CookieTestError(str(exc) or "cookie test failed") from exc
+        if result.error_message is None:
+            return result
+        reason = scrub_line(result.error_message) or COOKIE_TEST_FALLBACK.get(
+            result.outcome or CookieTestOutcome.unreadable, "cookie test failed"
+        )
+        return replace(result, error_message=reason)
 
     def _options_from(self, job: DownloadJob) -> DownloadOptions:
         return self._download_options(job.quality, job.audio_only, job.audio_format)

@@ -6369,3 +6369,443 @@ issues:
             sources: []
           reasoning: 'Mat asked for it in those words. Double-click to reopen is the usual Windows tray behaviour, and the window is otherwise reachable only through the right-click menu. P3: Mat asked for it now; standalone. Two-way.'
           human_message_reference: USER_EXPLICIT 2026-11-22 'add an issue where if icon in system tray is double clicked the "Show window" action needs to be executed. Than proceed with you recommendations'
+  - id: CAPTURE-HOTKEY-TEXT-HARDCODED
+    title: Capture texts say F2 after the capture key is changed
+    severity: low
+    component: ui
+    status: open
+    discovered: '2026-11-26'
+    root_cause: ui/src/renderer/src/features/capture/CapturePage.tsx:107 holds the literal 'Press F2 or Capture region' and renders it as the empty state (:2821). The same literal key is in capture-help-content.ts (:7, :11-12, :36-37), settings-help-content.ts:27 and components/help/quick-start.json:154. The setting is capture.hotkey (packages/core/src/avkit_core/services/settings.py:102, default F2); only the in-use banner ({accelerator}, CapturePage.tsx:106) and the key cap (status.accelerator, :856-860) read the real key. 09-screenshot-capture.md:115 writes the empty state with the literal too.
+    blast_radius: 'Capture page and its help, the Settings startup help and the Capture quick start: after the key is changed (for example to F3) the page tells the user to press a key that no longer captures. No data effect.'
+    verification:
+      last_checked: '2026-11-26'
+      method: read of CapturePage.tsx, capture-help-content.ts, settings-help-content.ts, quick-start.json and settings.py by a read-only investigator (2026-11-26)
+      result: six user-facing F2 literals; two places already show the configured key
+    resolution_path: 'Session 103 `capture-key-inbox-scrollbars`, MEU-165: every in-app text that names the capture key shows the configured key.'
+    category: MEU-NEW
+    priority: P3
+    related:
+      - capture
+      - hotkey
+      - help
+    meu_links:
+      - MEU-165
+    notes: 'Triage 2026-11-26 (D-1400): MEU-NEW P3, Mat''s report. Tests that pin the literal: capture-page.behavior.test.ts AC-57.9, capture-page.test.ts, capture-action-row.test.ts, and E2E capture-inbox.test.ts W9-3, AC-57.10, AC-81.11. Grouping: .agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: agent
+      decision_log:
+        - id: D-1400
+          stage: triage
+          question: The Capture empty state says F2 after the key is changed. How is it registered, and how far does the fix reach?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: 'Register CAPTURE-HOTKEY-TEXT-HARDCODED as MEU-NEW P3 (MEU-165). Every in-app text that names the capture key shows the configured key: the empty state, the Capture help, the Settings startup help and the Capture quick start. README text and code defaults keep F2, the default.'
+          source_tag: Local Canon
+          precedents:
+            - 'CapturePage.tsx:106 and :2222: the in-use banner already substitutes the configured key'
+            - '09-screenshot-capture.md:115 and :122: the spec writes the empty state and the banner with F2 as the default key'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and start building plans in parallel as orchestrator.''. Mat reported the defect: USER_EXPLICIT 2026-11-26 ''When Capture is opened and F2 key which is default is changed to like F3 the initial message to make capture still says F2. It is hard coded.''. The page already shows the real key in two places, so the other texts are the defect, not the design. Fixing only the empty state would leave the help beside it wrong. Doing nothing keeps a wrong instruction on screen. Low severity, standalone: P3. M items: none. Two-way.'
+  - id: CAPTURE-INBOX-CHANGE-KEEPS-OLD-SHOTS
+    title: After the inbox folder is changed, the Capture list still shows the shots of the old folder
+    severity: medium
+    component: core
+    status: open
+    discovered: '2026-11-26'
+    root_cause: CaptureService.scan_inbox (packages/core/src/avkit_core/services/capture.py:651-746) adds rows for the files of the current inbox and deletes a row only when its file is gone (:706-709), then returns every row (:746). list_shots (:862-871) lists every row too, and SqlAlchemyCaptureShotRepository.list() (repositories.py:443-447) has no filter. A shot whose file still exists in the old folder therefore stays in GET /captures. 09-screenshot-capture.md:480 defines the catalog as the files in inbox_dir. The renderer refetches every 5 s and is not the cause; a capture settings save does not invalidate the ['captures'] query.
+    blast_radius: 'Capture page list and MCP capture list: shots from a folder the user left stay in the list and stay selectable and editable, mixed with the new folder''s shots. Files are not touched.'
+    verification:
+      last_checked: '2026-11-26'
+      method: read of capture.py, repositories.py, routes/captures.py, useCaptureCatalog.ts and CapturePage.tsx by a read-only investigator (2026-11-26)
+      result: no code path limits the catalog to the current inbox; no test changes the inbox folder
+    resolution_path: 'Session 103 `capture-key-inbox-scrollbars`, MEU-166: the catalog lists only shots whose file is in the current inbox folder; rows of other folders are kept, not deleted, so their marks return when the user switches back.'
+    category: MEU-NEW
+    priority: P2
+    related:
+      - capture
+      - inbox
+      - settings
+    meu_links:
+      - MEU-166
+    notes: 'Triage 2026-11-26 (D-1401): MEU-NEW P2, Mat''s report. Tests near it: tests/unit/test_capture_service.py AC-36.2, tests/e2e/test_api_captures.py, E2E capture-inbox.test.ts W9-3. Grouping: .agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: agent
+      decision_log:
+        - id: D-1401
+          stage: triage
+          question: Shots of the old inbox folder stay in the list after the folder is changed. How is it registered, and what happens to the old rows?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: Register CAPTURE-INBOX-CHANGE-KEEPS-OLD-SHOTS as MEU-NEW P2 (MEU-166). scan_inbox and list_shots return only the shots whose file is in the current inbox folder. Rows of other folders stay in the catalog, so a switch back shows them with their marks.
+          source_tag: Local Canon
+          precedents:
+            - '09-screenshot-capture.md:480: scan_inbox lists inbox_dir, non-recursive, and deletes rows whose file vanished'
+            - '09-screenshot-capture.md:307: original_path must resolve inside capture.inbox_dir'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and start building plans in parallel as orchestrator.''. Mat reported the defect: USER_EXPLICIT 2026-11-26 ''When Inbox is changed to new folder, images form previose folder are still loaded on the left side selector.''. The spec defines the catalog as the contents of inbox_dir, so listing other folders contradicts it. Deleting the old rows would also fix the list, but it loses each row''s sidecar link if the user switches back; filtering loses nothing. Doing nothing leaves two folders mixed in one list. Medium severity, wrong data on a main page: P2. M items: none (no file is deleted). Two-way.'
+  - id: CAPTURE-ZOOM-NO-SCROLLBARS
+    title: A zoomed Capture image has no scroll bars at the bottom and right
+    severity: low
+    component: ui
+    status: open
+    discovered: '2026-11-26'
+    root_cause: 'By design of MEU-66: 09-screenshot-capture.md:646 (Session 29 plan D-15) says pan moves a clamped offset inside a fixed, overflow-hidden frame with no scrollbars. CaptureViewport.tsx:1499 is `relative overflow-hidden`; zoom sets the image box position and size from viewTransform (capture-fit-map.ts:85-98); panning is Space+drag or middle-drag only (:868-905), and every wheel event zooms (:1007-1013). The only on-screen hint of panning is the zoom readout tooltip.'
+    blast_radius: 'Capture page viewport at any zoom above Fit: nothing shows that the image continues past the frame or where the view sits in it, and a user who does not know Space+drag cannot move the view.'
+    verification:
+      last_checked: '2026-11-26'
+      method: read of CaptureViewport.tsx, capture-fit-map.ts, capture-zoom.ts and 09 §Viewport zoom by a read-only investigator (2026-11-26)
+      result: no scroll bar exists; the spec row forbids one
+    resolution_path: 'Session 103 `capture-key-inbox-scrollbars`, MEU-167: a horizontal and a vertical scroll bar show the view''s position and move it, on each axis where the image is larger than the frame.'
+    category: MEU-NEW
+    priority: P3
+    related:
+      - capture
+      - zoom
+      - viewport
+    meu_links:
+      - MEU-167
+    notes: 'Triage 2026-11-26 (D-1402): MEU-NEW P3, Mat''s request; it replaces the no-scrollbars half of Session 29 plan D-15. E2E near it: capture-inbox.test.ts AC-66.12 to AC-66.19 and AC-81.14; no test asserts that scroll bars are absent. Grouping: .agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md.'
+    enrichment:
+      questions_asked:
+        - Should the zoomed Capture image have scroll bars?
+      answers:
+        - Yes. On each axis where the zoomed image is larger than the frame, a scroll bar at the bottom or the right shows where the view is and moves it. Space+drag, middle-drag and wheel zoom keep working.
+      decided_by: human
+      decision_log:
+        - id: D-1402
+          stage: triage
+          question: Should the zoomed Capture image have scroll bars?
+          resolution: human
+          class: product-preference
+          chosen: Yes. On each axis where the zoomed image is larger than the frame, a scroll bar at the bottom or the right shows where the view is and moves it. Space+drag, middle-drag and wheel zoom keep working.
+          source_tag: Human-approved
+          precedents:
+            - '09-screenshot-capture.md:646 (Session 29 plan D-15): fixed overflow-hidden frame with no scrollbars; a planner''s choice, not Mat''s ruling'
+            - '09-screenshot-capture.md:645: the Pan row already says the image scrolls/drag-pans'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for the bars. The no-scrollbars rule was a plan decision of Session 29, so his request replaces it. How the bars are built (drawn over the frame from the pan offset, or a native scroll container) is the plan''s choice. P3: a usability gap with a workaround. Two-way.'
+          human_message_reference: USER_EXPLICIT 2026-11-26 'When zooming in and out of the image the slide bars on the bottom and right side of hte image are missing.'
+  - id: GUI-ENTRY-SECTIONS-NO-EMPHASIS
+    title: The URL entry of Download and Transcript and the How it works card look like every other section
+    severity: low
+    component: ui
+    status: open
+    discovered: '2026-11-26'
+    root_cause: ui/src/renderer/src/features/downloader/DownloaderPage.tsx:582-607 (URL row) and features/transcript/TranscriptPage.tsx:497-523 (channel row) set no background of their own, so they sit on the page background like the rows around them; the two rows also differ (bg-bg-elevated with a URL label against bg-bg with a placeholder). components/help/HelpCard.tsx:172, shared by six pages, is a bordered frame with no background. styles.css has no emphasis, callout or raised-surface token; the only emphasis precedent is the Settings current section (bg-bg-elevated/40 plus border-accent, 11-page-layout.md §Settings section emphasis).
+    blast_radius: 'Download and Transcript pages, and the How it works card on all six pages: the first control a new user needs does not stand out. No functional effect.'
+    verification:
+      last_checked: '2026-11-26'
+      method: read of DownloaderPage.tsx, TranscriptPage.tsx, HelpCard.tsx and styles.css by a read-only investigator (2026-11-26)
+      result: no section-level background on either URL row or on the help card; no emphasis token
+    resolution_path: 'Session 105 `entry-emphasis-and-advanced`, MEU-171: a colour proposal as a local mockup (dark and light, with colour-blind simulations), then emphasis tokens and their use on the two URL sections and the How it works card.'
+    category: MEU-NEW
+    priority: P3
+    related:
+      - downloader
+      - transcript
+      - help
+      - design-tokens
+      - accessibility
+    meu_links:
+      - MEU-171
+    notes: 'Triage 2026-11-26 (D-1403): MEU-NEW P3, Mat''s request. Constraints: G31 single accent, G32 tokens only, the 4.5:1 floor of 06-gui.md §Light accent contrast, light-accent-contrast.test.ts, the pinned class strings of downloader-page.test.ts QUEUE_SCROLL_CONTAINER_RULE, the 16 px gap of downloader-advanced-gap.test.ts, and the help screenshots. Grouping: .agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md.'
+    enrichment:
+      questions_asked:
+        - Should the URL entry of Download and Transcript and the How it works card get their own background colour?
+      answers:
+        - Yes. Both URL sections and the How it works card get an emphasis surface from new theme tokens. The plan proposes the colour as a local mockup in dark and light with colour-blind simulations; Mat's go-ahead on that plan settles the colour.
+      decided_by: human
+      decision_log:
+        - id: D-1403
+          stage: triage
+          question: Should the URL entry of Download and Transcript and the How it works card get their own background colour?
+          resolution: human
+          class: product-preference
+          chosen: Yes. Both URL sections and the How it works card get an emphasis surface from new theme tokens. The plan proposes the colour as a local mockup in dark and light with colour-blind simulations; Mat's go-ahead on that plan settles the colour.
+          source_tag: Human-approved
+          precedents:
+            - '11-page-layout.md §Settings section emphasis: current section uses bg-bg-elevated/40 and border-accent (Human-approved 2026-09-30)'
+            - .agent/docs/emerging-standards.md G31 (single accent) and G32 (tokens only, no raw hex)
+            - '06-gui.md §Light accent contrast: 4.5:1 floor, checked by ui/tests/unit/light-accent-contrast.test.ts'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for the emphasis and for a proposed colour. The working recommendation is a tint of the existing accent (cyan in dark, dark cyan in light) with an accent edge, because blue-cyan stays distinct for the common colour-vision types and the mark does not rely on hue alone; the plan tests that against the alternatives in the mockup. P3: a clarity change with no functional effect. Two-way.'
+          human_message_reference: USER_EXPLICIT 2026-11-26 'Download and transcript pages need to have section where URL is being inserted in diffrent background color to guide the users eye to it and mark it by importance. Consider the color scheme and propose color blind neatural color that still grabs attention but is not too jarring. The same goes for "How it works" section.'
+  - id: DOWNLOADER-ADVANCED-LOOKS-LIKE-TEXT
+    title: The Downloader's Advanced control looks like plain text, and its open panel looks like the rest of the page
+    severity: low
+    component: ui
+    status: open
+    discovered: '2026-11-26'
+    root_cause: 'DownloaderPage.tsx:668-815 uses the Disclosure primitive (components/ui/Disclosure.tsx) with its defaults: the trigger is a ghost Button (bg-transparent, no border) with no chevron and no icon, so only the word Advanced shows, against G1 (a button needs a visible border or background). The panel (Disclosure.tsx:44, inner `flex flex-col gap-3 pt-2`) has no background. Capture already passes variant=secondary, an icon and chevron (CapturePage.tsx:2707-2712). The segmented control''s name, Cookie Authentication, is only an aria-label, so the panel has no visible heading either.'
+    blast_radius: 'Downloader page: a user does not see that Advanced opens anything, and once open cannot tell where the Advanced area starts and ends. Cookies and SABR controls are found late or not at all.'
+    verification:
+      last_checked: '2026-11-26'
+      method: read of DownloaderPage.tsx, Disclosure.tsx, Button.tsx and CapturePage.tsx by a read-only investigator (2026-11-26); Mat's screenshot of the open panel
+      result: ghost trigger with no chevron; no panel background; no visible heading
+    resolution_path: 'Session 105 `entry-emphasis-and-advanced`, MEU-172: the trigger is a bordered button with a chevron that turns when open; the open panel has its own highlight surface from the MEU-171 tokens.'
+    category: MEU-NEW
+    priority: P3
+    related:
+      - downloader
+      - advanced
+      - disclosure
+    meu_links:
+      - MEU-172
+    notes: 'Triage 2026-11-26 (D-1404): MEU-NEW P3, Mat''s request. layout-primitives.test.ts AC-65.6 pins the Disclosure default (ghost, no chevron), so the change is at the call site. E2E downloader-advanced-gap.test.ts pins the panel''s DOM order, the status slot and the 16 px gap. Grouping: .agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md.'
+    enrichment:
+      questions_asked:
+        - How should the Downloader's Advanced control and its open panel look?
+      answers:
+        - The trigger looks like a button (border or background, and a chevron that shows open and closed). The open panel has a highlight background different from the other sections.
+      decided_by: human
+      decision_log:
+        - id: D-1404
+          stage: triage
+          question: How should the Downloader's Advanced control and its open panel look?
+          resolution: human
+          class: product-preference
+          chosen: The trigger looks like a button (border or background, and a chevron that shows open and closed). The open panel has a highlight background different from the other sections.
+          source_tag: Human-approved
+          precedents:
+            - '.agent/docs/emerging-standards.md G1: buttons need a visible border or background'
+            - 'CapturePage.tsx:2707-2712: the Capture Options disclosure passes variant=secondary, an icon and chevron'
+          research:
+            engine: none
+            sources: []
+          reasoning: Mat asked for both. The Capture page already shows the button form, so the Downloader follows it. The panel surface uses the emphasis tokens of MEU-171, so the two changes are planned together. P3. Two-way.
+          human_message_reference: USER_EXPLICIT 2026-11-26 'For Downloader page Advanced button. It is not clear that advanced button expands since it looks like just a text not a button. Once expanded it also should have highlight backgroud diffrent from others to make it unique enough for user to udnerstand what it does.'
+  - id: DOWNLOADER-COOKIE-PROFILE-UNLABELED
+    title: The browser profile field under the Browser select has no label
+    severity: low
+    component: ui
+    status: open
+    discovered: '2026-11-26'
+    root_cause: 'DownloaderPage.tsx:746-765 renders an input (data-testid cookie-profile) with no label, placeholder, aria-label or title. It is the browser profile name: bound to cookieProfile, saved on blur as downloader.cookie_browser_profile and passed to yt-dlp as the second element of cookiesfrombrowser (avkit_infra/youtube/adapter.py:567). 06-gui.md:403-404 and :476 ask for a Profile label and a Close browser first warning; neither was built.'
+    blast_radius: 'Downloader Advanced panel in Browser cookie mode: the user cannot tell what the field is for, and a screen reader announces an unnamed edit box. Left empty it works (yt-dlp takes the newest profile).'
+    verification:
+      last_checked: '2026-11-26'
+      method: read of DownloaderPage.tsx, schemas/downloads.py and adapter.py by a read-only investigator (2026-11-26); Mat's screenshot
+      result: an input with no accessible name; the spec's label and warning are missing
+    resolution_path: 'Session 105 `entry-emphasis-and-advanced`, MEU-172: a visible Profile label, a hint that empty means the default profile, and the spec''s close-the-browser note.'
+    category: MEU-NEW
+    priority: P3
+    related:
+      - downloader
+      - cookies
+      - accessibility
+    meu_links:
+      - MEU-172
+    notes: 'Triage 2026-11-26 (D-1405): MEU-NEW P3 inside MEU-172, Mat''s report. The spec already asks for the label, so this is a conformance fix. Grouping: .agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: agent
+      decision_log:
+        - id: D-1405
+          stage: triage
+          question: The field under the Browser select has no label. How is it registered?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: 'Register DOWNLOADER-COOKIE-PROFILE-UNLABELED as MEU-NEW P3, fixed inside MEU-172: a visible Profile label with a hint that empty means the browser''s default profile, and the Close browser first note the spec asks for.'
+          source_tag: Local Canon
+          precedents:
+            - '06-gui.md:403-404 and :476: Profile label and Close browser first warning'
+            - '.agent/docs/emerging-standards.md G26: WCAG 2.1 AA for help and form patterns'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and start building plans in parallel as orchestrator.''. Mat reported it: USER_EXPLICIT 2026-11-26 ''When picking browser there is input field that has not label and no idication of what it does.''. The spec already names the label, so nothing is open. It shares the panel with the Advanced change, so it rides in that MEU instead of a session of its own. Doing nothing leaves an unnamed input. M items: none. Two-way.'
+  - id: DOWNLOADER-COOKIE-TEST-SILENT
+    title: 'Test Cookies shows nothing: no success, no failure, no reason'
+    severity: medium
+    component: ui
+    status: resolved
+    discovered: '2026-11-26'
+    root_cause: 'Two layers. The renderer awaits POST /downloads/cookies/test and drops the reply (DownloaderPage.tsx:796-813); run() (:401-412) shows a message only when the call throws. The API answers a failed probe with HTTP 200 and only {ok:false}: the adapter turns every error into CookieTestResult(ok=False, error_message=...) (avkit_infra/youtube/adapter.py:812-850), and the route returns CookieTestOut(ok=result.ok) without the message (routes/downloads.py:133-141; schemas/downloads.py:95-98; tests/e2e/test_api_downloads.py:294-311 asserts the message is absent). The button has no loading state. A cookie-load failure and a YouTube extraction failure are both DownloadError and look the same.'
+    blast_radius: 'Downloader Advanced panel: the user cannot learn whether the browser''s cookies were read. A failure is visible only in the backend console. Against G15 (errors must surface in the UI).'
+    verification:
+      last_checked: '2026-11-27'
+      method: Session 104 receipts ycc-row8-green.txt (pytest domain, service, adapter and route tests), ycc-row8-browser-probe.txt, ycc-row10b-tests.txt (MCP Vitest), ycc-row13-green.txt (UI Vitest), and Electron E2E on mini-air run r20261127T133531Z-b2f78f8 (ycc-row16-e2e.txt, ycc-row17-result.txt)
+      result: pytest 239 passed; browser probe 62 passed with no hits; MCP Vitest 40 files, 557 passed; UI Vitest 3 files, 69 passed; Electron E2E 256 tests, 256 expected, 0 unexpected; row-check e2e-result 0 problems
+    resolution_path: 'Fixed in Session 104 on 2026-11-27 (plan docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test): COOKIE_TEST_OUTCOME adds CookieTestOutcome (ok, unreadable, check_failed) to CookieTestResult, set by the adapter and scrubbed to one line by the service; POST /downloads/cookies/test returns 200 { ok, outcome, error_message }; COOKIE_TEST_SHOWN shows the result in the Downloader''s cookie-test-result line with four texts, keeps Test Cookies busy while it runs, and clears the line when a cookie setting changes; the MCP tool description names the three outcomes'
+    category: MEU-NEW
+    priority: P2
+    related:
+      - downloader
+      - cookies
+      - feedback
+    meu_links:
+      - MEU-169
+    notes: 'Triage 2026-11-26 (D-1406): MEU-NEW P2, Mat''s report. It changes the CookieTestOut contract (OpenAPI) and the MCP download tool if it exposes the test. Never return or log cookie values. Grouping: .agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: agent
+      decision_log:
+        - id: D-1406
+          stage: triage
+          question: Test Cookies gives no result in the interface. How is it registered, and how far does the fix reach?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: Register DOWNLOADER-COOKIE-TEST-SILENT as MEU-NEW P2 (MEU-169). The API reply says which of three things happened (cookies read and YouTube answered; cookies could not be read; cookies read but YouTube's check failed) with a short reason, and the panel shows it beside the button with a busy state.
+          source_tag: Local Canon
+          precedents:
+            - '.agent/docs/emerging-standards.md G15: errors must surface in the UI; G35 feedback tier'
+            - '02-infrastructure.md:385: locked or missing cookies give {ok:false, error_message}'
+            - 'known-issues DOWNLOAD-FAILED-NO-REASON (MEU-137): a failed download shows its reason'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and start building plans in parallel as orchestrator.''. Mat reported it: USER_EXPLICIT 2026-11-26 ''Also test cookies does not appear to do anything. There is no message in the inteface.''. A renderer-only fix could say only passed or failed, and on 2026-11-26 it would have said failed for a fault that was not the cookies'' (YTDLP-CHALLENGE-SOLVE-FAILS), so the reason has to come from the backend. Doing nothing keeps the control mute. Medium severity on a main page: P2. M items: none (a read-only local API field; no cookie value leaves the adapter). Two-way.'
+  - id: YTDLP-CHALLENGE-SOLVE-FAILS
+    title: 'yt-dlp 2026.10.26 cannot solve YouTube''s current player challenges: ''a.addOnDisposeCallback is not a function'', then ''The page needs to be reloaded'''
+    severity: high
+    component: infrastructure
+    status: resolved
+    discovered: '2026-11-26'
+    root_cause: 'Upstream bug yt-dlp #18123 (opened 2026-11-23): YouTube''s current players (05a4ffc0, b485e332, b17b74e6, 92eef845) break the n and signature challenge solver of yt-dlp 2026.10.26 with yt-dlp-ejs 0.8.0, under Deno and Node alike. uv.lock:3361-3375 locks exactly yt-dlp 2026.10.26 and yt-dlp-ejs 0.8.0, and the bundled Deno is 2.9.8 (tools/fetch_deno_windows.ps1). Upstream fixed it in stable 2026.11.23 (PR #18124, tv as the default player_js_variant), which still requires yt-dlp-ejs 0.8.0. The cookie clients (tv, web_safari, web; adapter.py:77-81) all need the solver, so Test Cookies and cookie-mode extraction fail. packages/infrastructure/pyproject.toml leaves yt-dlp unpinned; the lock holds it.'
+    blast_radius: 'Every install of 0.1.0-rc.5 and the dev tree: with cookies on, formats go missing or extraction fails with YouTube''s ''The page needs to be reloaded''; Test Cookies fails whatever the cookies are. The released installer freezes yt-dlp, so users get the fix only with a new release.'
+    verification:
+      last_checked: '2026-11-27'
+      method: Session 104 receipts ycc-row3-green.txt and ycc-row3-lock.txt (pytest tests/unit/test_ytdlp_lock.py, the lock), ycc-row4-suites.txt (adapter, client fallback, extract option, Deno and runtime wiring suites), ycc-proof-pair.txt and ycc-row5c-verdict.txt (the recorded before-run and after-run on one video), ycc-row6-smoke.txt and ycc-row6-licence-tests.txt
+      result: 'lock pytest 3 passed; uv.lock holds yt-dlp 2026.11.23 and yt-dlp-ejs 0.8.0, hold-override: yes; suites 139 passed; before-run yt-dlp 2026.10.26 verdict challenge-errors with 0 formats, after-run yt-dlp 2026.11.23 variant tv verdict clean with 11 formats, pair proved; the player_js_variant fallback not needed; smoke-runtime PASS with bundled Deno 2.9.8 and the solver; licence tests 64 passed'
+    resolution_path: 'Fixed in Session 104 on 2026-11-27 (plan docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test): YTDLP_LOCK moves yt-dlp from 2026.10.26 to 2026.11.23 (packages/infrastructure/pyproject.toml yt-dlp>=2026.11.23 and uv.lock), which solves the n and signature challenges; the version was needed, the PLAYER_JS_FALLBACK was not (yt-dlp 2026.11.23 defaults to the tv player variant and av-kit sets none); HOLD_OVERRIDE adds exclude-newer-package = { yt-dlp = false } to the root [tool.uv]. Follow-up: remove that hold line and run uv lock again after 2026-11-30'
+    category: MEU-NEW
+    priority: P1
+    related:
+      - downloader
+      - yt-dlp
+      - deno
+      - upstream
+    meu_links:
+      - MEU-168
+    notes: 'Triage 2026-11-26 (D-1407): MEU-NEW P1. Earlier related fixes, all resolved: YTDLP-NO-JS-RUNTIME (MEU-141), DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT (MEU-140). The fix reaches users only through a new release. Grouping: .agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: agent
+      decision_log:
+        - id: D-1407
+          stage: triage
+          question: Mat's console shows yt-dlp failing the signature and n challenges under Deno, then 'The page needs to be reloaded'. What is it, and how is it registered?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: 'Register YTDLP-CHALLENGE-SOLVE-FAILS as MEU-NEW P1 (MEU-168): an upstream yt-dlp bug against YouTube''s current players. Lock yt-dlp 2026.11.23 (yt-dlp-ejs stays 0.8.0) and prove one real extraction with the cookie clients; if it still fails, set the extractor argument player_js_variant tv.'
+          source_tag: Research-backed
+          precedents:
+            - 'known-issues YTDLP-NO-JS-RUNTIME (MEU-141): Deno 2.9.8 and yt-dlp-ejs 0.8.0 bundled'
+            - 'known-issues DOWNLOAD-CLIENT-PIN-MISSES-WORKING-CLIENT (MEU-140): ''page needs to be reloaded'' from pinned clients'
+          research:
+            engine: WebSearch and WebFetch (read-only investigator, 2026-11-26)
+            sources:
+              - 'https://github.com/yt-dlp/yt-dlp/issues/18123 - n challenge solving failed: a.addOnDisposeCallback is not a function; fixed in stable 2026.11.23'
+              - https://github.com/yt-dlp/ejs/issues/79 - modifyPlayer drops top-level inheritance calls; closed 2026-11-25, no ejs release yet
+              - https://pypi.org/pypi/yt-dlp/2026.11.23/json - 2026.11.23 still requires yt-dlp-ejs 0.8.0
+              - https://github.com/dennissoftman/ytmini/issues/6 - one report of the same error on 2026.11.23
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and start building plans in parallel as orchestrator.''. The installed versions (yt-dlp 2026.10.26, ejs 0.8.0, Deno 2.9.8) are exactly those of the upstream report, and the error text is the same, so this is the upstream bug and not Mat''s cookies or Deno. Upstream names the fixed release. Waiting for an ejs release instead is open-ended (none is published). Doing nothing leaves cookie-mode downloads broken. It breaks a main function in the shipped build: P1. M items: none (a patch-level dependency update inside the existing lock; no new destination). Two-way.'
+  - id: SABR-CHECK-IGNORES-COOKIES
+    title: Check SABR never uses the cookie settings, so 'SABR detected' looks like the cookies were not picked up
+    severity: low
+    component: core
+    status: resolved
+    discovered: '2026-11-26'
+    root_cause: check_sabr_status (avkit_infra/youtube/adapter.py:798-810) probes with clients android, tv, ios and no cookies (:82-90); the saved downloader.cookie_* settings reach downloads, the add-time extract and Test Cookies only. SABRStatus lives in the service session (services/download.py:278) and stays Active until Clear SABR or a restart. The web clients' 'forcing SABR streaming' line goes through yt-dlp's write_debug, so it is seen only with yt_dlp_debug on (adapter.py:532-533). The panel text (sabr-panel.ts:21-31) does not say what the check covers.
+    blast_radius: 'Downloader Advanced panel: a user who sets browser cookies and still reads SABR detected concludes the cookies failed. The cookie setting itself works for downloads.'
+    verification:
+      last_checked: '2026-11-27'
+      method: Session 104 receipts ycc-row13-green.txt (UI Vitest sabr-panel and Downloader page tests), ycc-row14-kept.txt and ycc-row14-sabr.txt (the SABR routes and service unchanged), and Electron E2E on mini-air run r20261127T133531Z-b2f78f8 (ycc-row16-e2e.txt, ycc-row17-result.txt)
+      result: UI Vitest 3 files, 69 passed; kept ok for check_sabr, force_sabr and clear_sabr, openapi SABRStatusOut unchanged, 4 SABR paths; SABR pytest 4 passed; Electron E2E 256 tests, 256 expected, 0 unexpected; row-check e2e-result 0 problems
+    resolution_path: 'Fixed in Session 104 on 2026-11-27 (plan docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test): option B, Check SABR still probes with the android, tv and ios clients and no cookies; SABR_CHECK_SCOPE makes a detected status end '' · Check SABR does not use cookies'', so it cannot be read as a cookie result; a forced status has no clause, and the phrase set, Force SABR, Clear SABR and their log lines are unchanged'
+    category: MEU-NEW
+    priority: P3
+    related:
+      - downloader
+      - sabr
+      - cookies
+    meu_links:
+      - MEU-170
+    notes: 'Triage 2026-11-26 (D-1408): MEU-NEW P3. Mat''s words: ''AlsoI picked firefox but I don''t think it picked up the youtube cookies since it still detected sabr.''. Firefox cookies were very likely read on 2026-11-26: a load failure would have stopped yt-dlp before the player request, and the log reached the challenge step. Grouping: .agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md.'
+    enrichment:
+      questions_asked: []
+      answers: []
+      decided_by: agent
+      decision_log:
+        - id: D-1408
+          stage: triage
+          question: Mat set Firefox cookies and still saw SABR detected. Is that a cookie failure, and how is it registered?
+          resolution: autonomous
+          class: two-way
+          mandatory: none
+          chosen: 'It is not a cookie failure: the SABR check never uses cookies. Register SABR-CHECK-IGNORES-COOKIES as MEU-NEW P3 (MEU-170); the session''s plan chooses, with research, between a check that uses the saved cookies and a panel text that states what the check covers.'
+          source_tag: Local Canon
+          precedents:
+            - '02-infrastructure.md:373 §SABR and MEU-138 (matrix 2.6): the check and its phrases'
+            - known-issues SABR-CHECK-MISSES-CURRENT-MESSAGES (MEU-138, resolved)
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Handed to the agent: USER_EXPLICIT 2026-11-18 ''make the decisions always the recommenations'', continuing USER_EXPLICIT 2026-11-26 ''Register these issues, create session grouping and start building plans in parallel as orchestrator.''. The code shows the probe is built without cookies, so its result cannot depend on them. Which fix is right depends on whether YouTube serves different formats to signed-in clients, which the plan must research before it writes acceptance criteria. Registering it separately from the silent test keeps the two causes apart. Doing nothing leaves a status that misleads. Low severity: P3. M items: none. Two-way.'
+  - id: APP-NO-IN-APP-UPDATE
+    title: 'The app cannot update itself: a new version means a manual download from GitHub Releases'
+    severity: medium
+    component: infrastructure
+    status: open
+    discovered: '2026-11-26'
+    root_cause: No updater exists. ui/package.json has no electron-updater; ui/electron-builder.yml has no publish block; releases are built locally with --publish never and uploaded by hand with gh release create, and latest.yml and the .blockmap are deliberately left out (docs/releases/publish-checklist-v0.1.0-rc.1.md:101-103). 07-distribution.md:195 calls auto-update optional. docs/releases/v0.1.0-rc.5.md:29 says av-kit doesn't update itself. Zorivest's planned design (P:/zorivest docs/build-plan/18-first-install-ux.md §18.12, MEU-504, not built) uses electron-updater with the GitHub provider, unsigned, with a manual check.
+    blast_radius: 'Every installed copy: fixes such as YTDLP-CHALLENGE-SOLVE-FAILS reach a user only if they visit the release page and run the installer. No in-app notice says a newer version exists.'
+    verification:
+      last_checked: '2026-11-26'
+      method: read of both repositories by a read-only investigator (2026-11-26); gh repo view and gh release list (the repository is public; rc.5 is Latest)
+      result: no updater code, dependency, feed file or setting in av-kit
+    resolution_path: Session 106 `app-auto-update`, MEU-173 (release feed) and MEU-174 (in-app update with a check interval setting).
+    category: MEU-NEW
+    priority: P2
+    related:
+      - distribution
+      - update
+      - settings
+      - release
+    meu_links:
+      - MEU-173
+      - MEU-174
+    notes: 'Triage 2026-11-26 (D-1409): MEU-NEW P2, Mat''s request. M items the plan must carry as Decision Briefs: a new outbound destination (GitHub) against the works-offline statements of 07-distribution.md:9, the unsigned-update trust model, and the release procedure change. Grouping: .agent/context/grouping/2026-11-26-ui-findings-and-auto-update-session-grouping.md.'
+    enrichment:
+      questions_asked:
+        - Should av-kit update itself from inside the app?
+      answers:
+        - Yes. The app checks GitHub Releases on a schedule the user sets (once a week or once a month), and downloads and installs a newer version without a visit to the release page. The design starts from Zorivest's MEU-504 (electron-updater with the GitHub provider).
+      decided_by: human
+      decision_log:
+        - id: D-1409
+          stage: triage
+          question: Should av-kit update itself from inside the app?
+          resolution: human
+          class: product-preference
+          chosen: Yes. The app checks GitHub Releases on a schedule the user sets (once a week or once a month), and downloads and installs a newer version without a visit to the release page. The design starts from Zorivest's MEU-504 (electron-updater with the GitHub provider).
+          source_tag: Human-approved
+          precedents:
+            - '07-distribution.md:195: auto-update is optional and must not block ship'
+            - 'P:/zorivest docs/build-plan/18-first-install-ux.md §18.12 (MEU-504): electron-updater, GitHub provider, unsigned; U-1 (Mat, 2026-10-23): silent install with relaunch on the user''s click'
+            - 'known-issues UNINSTALL-LEAVES-INSTALLER-COPY (MEU-114): the uninstall macro already skips an in-place update'
+          research:
+            engine: none
+            sources: []
+          reasoning: 'Mat asked for it, with the two intervals. av-kit''s case is simpler than Zorivest''s: one public repository, a per-user install with no elevation and no service. The open design points (what automatic means while jobs run, an off choice, the unsigned trust model, the feed files in the release procedure) are the plan''s Decision Briefs. P2: it is how every later fix reaches users. Two-way until a release ships with it.'
+          human_message_reference: USER_EXPLICIT 2026-11-26 'Create addtional plan for integration of update feature from within the app so the user does not have to go to github realease to download and run the update but it happens automaticly. Also have setting to check updates once a week or once a month.'

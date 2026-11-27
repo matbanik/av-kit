@@ -1288,7 +1288,7 @@ def test_ac_4_4_cookie_test_result_shape() -> None:
     from avkit_core.domain.download import CookieTestResult
 
     result = CookieTestResult(ok=True, error_message=None)
-    assert _field_names(CookieTestResult) == ("ok", "error_message")
+    assert _field_names(CookieTestResult) == ("ok", "error_message", "outcome")
     assert result.ok is True
     assert "cookies" not in _field_names(CookieTestResult)
 
@@ -1715,3 +1715,40 @@ def test_ac_124_1_received_height_defaults_to_none_and_is_checked() -> None:
             _download_job(received_height=bad)
         with pytest.raises(ValidationError):
             _result(height=bad)
+
+
+@pytest.mark.unit
+def test_ac_169_1_cookie_test_outcome_values() -> None:
+    from avkit_core.domain.enums import CookieTestOutcome
+
+    members = tuple((member.name, member.value) for member in CookieTestOutcome)
+    assert members == (
+        ("ok", "ok"),
+        ("unreadable", "unreadable"),
+        ("check_failed", "check_failed"),
+    )
+
+
+@pytest.mark.unit
+def test_ac_169_1_result_refuses_a_mismatched_outcome() -> None:
+    from avkit_core.domain.download import CookieTestResult
+    from avkit_core.domain.enums import CookieTestOutcome
+    from avkit_core.domain.errors import ValidationError
+
+    assert CookieTestResult(ok=True, error_message=None, outcome=None).ok is True
+    assert CookieTestResult(ok=True, error_message=None, outcome=CookieTestOutcome.ok).ok is True
+    failed = CookieTestResult(ok=False, error_message="bad", outcome=CookieTestOutcome.check_failed)
+    assert failed.outcome is CookieTestOutcome.check_failed
+    refused: list[tuple[bool, str | None, CookieTestOutcome | None]] = [
+        (True, None, CookieTestOutcome.unreadable),
+        (True, None, CookieTestOutcome.check_failed),
+        (False, "bad", CookieTestOutcome.ok),
+        (False, "bad", None),
+        (False, None, CookieTestOutcome.unreadable),
+        (False, "", CookieTestOutcome.check_failed),
+        (True, "noise", CookieTestOutcome.ok),
+        (True, "noise", None),
+    ]
+    for ok, message, outcome in refused:
+        with pytest.raises(ValidationError):
+            CookieTestResult(ok=ok, error_message=message, outcome=outcome)

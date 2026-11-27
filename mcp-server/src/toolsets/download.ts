@@ -53,7 +53,13 @@ export const downloadDescriptions: Record<string, string> = {
   "avkit_download.sabr_check": desc("sabr_check", "POST", "/downloads/sabr/check"),
   "avkit_download.sabr_force": desc("sabr_force", "POST", "/downloads/sabr/force"),
   "avkit_download.sabr_clear": desc("sabr_clear", "POST", "/downloads/sabr/clear"),
-  "avkit_download.cookies_test": desc("cookies_test", "POST", "/downloads/cookies/test"),
+  // MEU-169 (AC-169.7; COOKIE_TEST_WIRE): the reply names where the test stopped.
+  "avkit_download.cookies_test": [
+    "Workflow: call avkit_download cookies_test to POST /downloads/cookies/test; it reads the cookie source, then makes one YouTube check.",
+    "Prerequisite: backend running and MCP token; cookies via avkit_settings if needed.",
+    "Returns: JSON {ok, outcome, error_message}. outcome is ok, unreadable (the cookies could not be read) or check_failed (the cookies were read, but YouTube's check failed), and null for mode none; error_message is the reason, never a cookie value.",
+    "Errors: TOOL_ERROR with envelope code and message; extra keys rejected before fetch.",
+  ].join(" "),
   "avkit_download.apply_defaults": desc("apply_defaults", "POST", "/downloads/apply-defaults"),
 };
 

@@ -26,8 +26,9 @@ phases:
   execution_plans:
   - docs/execution/plans/2026-08-19-p2-persistence-io/
   - docs/execution/plans/2026-08-19-p2-external-adapters/
-  last_updated: '2026-11-10'
+  last_updated: '2026-11-26'
   note: MEU-5+8 persistence-io approved; MEU-6/7/9 external-adapters approved. MEU-138–141 residuals (SABR check result, yt-dlp log detail, YouTube client fallback, yt-dlp JS runtime) registered 2026-11-10.
+    MEU-168/169/170 residuals (yt-dlp challenge solver, cookie test outcome, SABR check and cookies) registered 2026-11-26.
 - id: '3'
   name: Service layer
   band: P1
@@ -86,9 +87,9 @@ phases:
   - docs/build-plan/07-distribution.md
   execution_plans:
   - docs/execution/plans/2026-08-24-p7-distribution/
-  last_updated: '2026-11-04'
+  last_updated: '2026-11-26'
   note: MEU-24–25 bound to p7-distribution. MEU-71/72 residuals (MCP setup prompt, packaged ONNX TTS runtime) registered 2026-10-09. MEU-110 residual (release candidate packaging) registered 2026-11-03.
-    MEU-113/114/125 residuals (fetch exit codes, uninstall installer copy, second release candidate) registered 2026-11-04.
+    MEU-113/114/125 residuals (fetch exit codes, uninstall installer copy, second release candidate) registered 2026-11-04. MEU-173/174 residuals (update feed, in-app update) registered 2026-11-26.
 - id: '8'
   name: Video conversion
   band: P2
@@ -113,14 +114,15 @@ phases:
   - docs/execution/plans/2026-08-27-p9-capture-native-picker/
   - docs/execution/plans/2026-09-19-p9-capture-annotate-arrow-text/
   - docs/execution/plans/2026-09-20-p9-capture-annotate-edit/
-  last_updated: '2026-11-15'
+  last_updated: '2026-11-26'
   note: MEU-34–36 bound to p9-capture-engine. MEU-37–38 bound to p9-capture-api-mcp. MEU-39 bound to p9-capture-gui. MEU-40 bound to p9-capture-native-picker. MEU-59 bound to p9-capture-annotate-arrow-text
     (arrow+text geometry residual). MEU-60 bound to p9-capture-annotate-edit (edit-until-Save residual). Session 8c / MEU-27 approved. MEU-65–67 residuals (toolbar icons, zoom, flatten-with-backup) registered
     2026-09-30. MEU-80–91 residuals (icon hints, action row, text baseline, arrow geometry, file sync, size scrub, swatches, tool lock, filmstrip menu/multi-select, pixelate, eraser) registered 2026-10-09.
     MEU-82–84 bound to capture-render-fidelity. MEU-85–87 bound to capture-editor-options. MEU-90–91 bound to capture-new-marks. MEU-99–107 residuals (canvas history chords, resize handles, text re-edit,
     multi-line text, redact, copy image, style and tool flow, line and ellipse, step mark) registered 2026-10-29. MEU-111 residual (image size limit over MCP) registered 2026-11-03. MEU-128–132 residuals
     (region view, image import, crop to a new shot, crop tool, GUI image import) registered 2026-11-08. MEU-134–136 residuals (video frames, video sheet, export copy) registered 2026-11-09. MEU-145/146
-    residuals (scan skips unreadable files, EXIF orientation on scan) registered 2026-11-15.
+    residuals (scan skips unreadable files, EXIF orientation on scan) registered 2026-11-15. MEU-165/166/167 residuals (capture key in texts, catalog follows the inbox folder, viewport scroll bars) registered
+    2026-11-26.
 - id: '10'
   name: Queue card UI
   band: P2
@@ -141,10 +143,10 @@ phases:
   execution_plans:
   - docs/execution/plans/2026-09-26-p11-layout-canon/
   - docs/execution/plans/2026-09-26-p11-queue-pages/
-  last_updated: '2026-10-09'
+  last_updated: '2026-11-26'
   note: MEU-50–51 approved in Session 23 p11-layout-canon; MEU-52–54 approved in Session 24 p11-queue-pages after independent Round 3 review; Sessions 25–26 remain pending for MEU-55–58. Spec doc authored
     by MEU-50. MEU-63/64/70 residuals (TTS model manager, TTS text panel, Settings section emphasis) registered 2026-09-30. MEU-79 residual (TTS voice panel alignment) registered 2026-10-09; spec section
-    and delivery by Session 35 tts-voice-panel.
+    and delivery by Session 35 tts-voice-panel. MEU-171/172 residuals (entry section emphasis, Downloader Advanced affordance) registered 2026-11-26.
 meus:
 - row_key: MEU-1
   id: MEU-1
@@ -4311,6 +4313,274 @@ meus:
   updated: '2026-11-22'
   closed_reason: null
   note: Registered 2026-11-22 from TRAY-DOUBLE-CLICK-NO-SHOW (triage D-1363, Mat's request; grouping D-1364), Session 102.
+- row_key: MEU-165
+  id: MEU-165
+  slug: gui-capture-key-text
+  phase: '9'
+  band: P2
+  matrix_item: '9.48'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: capture-key-in-texts
+    text: Phase 9 §Capture key in texts
+  description: Every in-app text that names the capture key (the Capture empty state, the Capture help, the Settings startup help and the Capture quick start) shows the key set in capture.hotkey; F2 stays
+    the default.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-39, MEU-57, MEU-162
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-39
+  - MEU-57
+  - MEU-162
+  execution_plan: null
+  updated: '2026-11-26'
+  closed_reason: null
+  note: Registered 2026-11-26 from CAPTURE-HOTKEY-TEXT-HARDCODED (triage D-1400, Mat's report; grouping D-1410), Session 103.
+- row_key: MEU-166
+  id: MEU-166
+  slug: svc-capture-inbox-scope
+  phase: '9'
+  band: P2
+  matrix_item: '9.49'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: catalog-follows-the-inbox-folder
+    text: Phase 9 §Catalog follows the inbox folder
+  description: The capture catalog lists only the shots whose file is in the current inbox folder; rows of other folders are kept, not deleted, and the Capture list refreshes when the inbox folder is changed.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-36, MEU-37, MEU-39
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-36
+  - MEU-37
+  - MEU-39
+  execution_plan: null
+  updated: '2026-11-26'
+  closed_reason: null
+  note: Registered 2026-11-26 from CAPTURE-INBOX-CHANGE-KEEPS-OLD-SHOTS (triage D-1401, Mat's report; grouping D-1410), Session 103.
+- row_key: MEU-167
+  id: MEU-167
+  slug: gui-capture-zoom-scrollbars
+  phase: '9'
+  band: P2
+  matrix_item: '9.50'
+  build_ref:
+    path: build-plan/09-screenshot-capture.md
+    anchor: viewport-scroll-bars
+    text: Phase 9 §Viewport scroll bars
+  description: A zoomed Capture image has a horizontal and a vertical scroll bar on each axis where it is larger than the frame; a bar shows where the view is and moves it, and the pan and zoom gestures
+    are unchanged.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-66
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-66
+  execution_plan: null
+  updated: '2026-11-26'
+  closed_reason: null
+  note: Registered 2026-11-26 from CAPTURE-ZOOM-NO-SCROLLBARS (triage D-1402, Mat's request; grouping D-1410), Session 103.
+- row_key: MEU-168
+  id: MEU-168
+  slug: infra-ytdlp-challenge-solver
+  phase: '2'
+  band: P2
+  matrix_item: '2.10'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: ytdlp-challenge-solver-residual
+    text: Phase 2 §yt-dlp challenge solver (residual)
+  description: The lock moves to the yt-dlp release that fixes the signature and n challenge solver for YouTube's current players, a recorded real extraction with the cookie clients proves it, and the tv
+    player variant is the fallback.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-6, MEU-140, MEU-141
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-6
+  - MEU-140
+  - MEU-141
+  execution_plan: docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test/implementation-plan.md
+  updated: '2026-11-27'
+  closed_reason: null
+  note: Registered 2026-11-26 from YTDLP-CHALLENGE-SOLVE-FAILS (triage D-1407; grouping D-1410), Session 104.
+- row_key: MEU-169
+  id: MEU-169
+  slug: cookie-test-outcome
+  phase: '2'
+  band: P2
+  matrix_item: '2.11'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: cookie-test-outcome-residual
+    text: Phase 2 §Cookie test outcome (residual)
+  description: The cookie test reply says whether the cookies were read and whether YouTube answered, with a short reason, and the Downloader's Advanced panel shows that result beside Test Cookies with
+    a busy state.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-6, MEU-10, MEU-20, MEU-137
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-6
+  - MEU-10
+  - MEU-20
+  - MEU-137
+  execution_plan: docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test/implementation-plan.md
+  updated: '2026-11-27'
+  closed_reason: null
+  note: Registered 2026-11-26 from DOWNLOADER-COOKIE-TEST-SILENT (triage D-1406, Mat's report; grouping D-1410), Session 104.
+- row_key: MEU-170
+  id: MEU-170
+  slug: infra-sabr-check-cookie-scope
+  phase: '2'
+  band: P2
+  matrix_item: '2.12'
+  build_ref:
+    path: build-plan/02-infrastructure.md
+    anchor: sabr-check-and-cookies-residual
+    text: Phase 2 §SABR check and cookies (residual)
+  description: The SABR status says what the check measured, so it cannot be read as a cookie result; the plan chooses, with research, between a check that uses the saved cookies and a panel text that says
+    the check does not.
+  status: approved
+  status_labels:
+    registry: ✅ approved
+    build_plan: ✅
+  surface_overrides: null
+  dependencies_raw: MEU-138
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-138
+  execution_plan: docs/execution/plans/2026-11-26-ytdlp-challenge-and-cookie-test/implementation-plan.md
+  updated: '2026-11-27'
+  closed_reason: null
+  note: Registered 2026-11-26 from SABR-CHECK-IGNORES-COOKIES (triage D-1408; grouping D-1410), Session 104.
+- row_key: MEU-171
+  id: MEU-171
+  slug: gui-entry-emphasis
+  phase: '11'
+  band: P2
+  matrix_item: '11.15'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: entry-section-emphasis-residual
+    text: Phase 11 §Entry section emphasis (residual)
+  description: The URL section of the Download and Transcript pages and the How it works card get an emphasis surface from new theme tokens, proposed first as a local mockup in dark and light with colour-blind
+    simulations.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-20, MEU-21, MEU-23, MEU-126, MEU-162
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-20
+  - MEU-21
+  - MEU-23
+  - MEU-126
+  - MEU-162
+  execution_plan: null
+  updated: '2026-11-26'
+  closed_reason: null
+  note: Registered 2026-11-26 from GUI-ENTRY-SECTIONS-NO-EMPHASIS (triage D-1403, Mat's request; grouping D-1410), Session 105.
+- row_key: MEU-172
+  id: MEU-172
+  slug: gui-downloader-advanced-affordance
+  phase: '11'
+  band: P2
+  matrix_item: '11.16'
+  build_ref:
+    path: build-plan/11-page-layout.md
+    anchor: downloader-advanced-affordance-residual
+    text: Phase 11 §Downloader Advanced affordance (residual)
+  description: The Downloader's Advanced control looks like a button with a chevron, its open panel has its own highlight surface, and the browser profile field has a visible label, a default-profile hint
+    and the close-the-browser note.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-171, MEU-53, MEU-159
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-171
+  - MEU-53
+  - MEU-159
+  execution_plan: null
+  updated: '2026-11-26'
+  closed_reason: null
+  note: Registered 2026-11-26 from DOWNLOADER-ADVANCED-LOOKS-LIKE-TEXT and DOWNLOADER-COOKIE-PROFILE-UNLABELED (triage D-1404 and D-1405, Mat's request and report; grouping D-1410), Session 105.
+- row_key: MEU-173
+  id: MEU-173
+  slug: dist-update-feed
+  phase: '7'
+  band: P2
+  matrix_item: '7.10'
+  build_ref:
+    path: build-plan/07-distribution.md
+    anchor: update-feed-residual
+    text: Phase 7 §Update feed (residual)
+  description: A release build writes the update feed files (latest.yml and the installer's blockmap), electron-builder names GitHub as the feed, and the release procedure uploads and checks them; nothing
+    is published by a tool.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-25, MEU-110
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-25
+  - MEU-110
+  execution_plan: null
+  updated: '2026-11-26'
+  closed_reason: null
+  note: Registered 2026-11-26 from APP-NO-IN-APP-UPDATE (triage D-1409, Mat's request; grouping D-1410), Session 106.
+- row_key: MEU-174
+  id: MEU-174
+  slug: app-in-app-update
+  phase: '7'
+  band: P2
+  matrix_item: '7.11'
+  build_ref:
+    path: build-plan/07-distribution.md
+    anchor: in-app-update-residual
+    text: Phase 7 §In-app update (residual)
+  description: The app checks GitHub Releases for a newer version on a schedule the user sets (once a week or once a month), then downloads and installs it without a visit to the release page.
+  status: pending
+  status_labels:
+    registry: ⬜ pending
+    build_plan: ⬜
+  surface_overrides: null
+  dependencies_raw: MEU-173, MEU-13, MEU-19, MEU-23, MEU-114
+  dependency_parse_status: parsed
+  depends_on:
+  - MEU-173
+  - MEU-13
+  - MEU-19
+  - MEU-23
+  - MEU-114
+  execution_plan: null
+  updated: '2026-11-26'
+  closed_reason: null
+  note: Registered 2026-11-26 from APP-NO-IN-APP-UPDATE (triage D-1409, Mat's request; grouping D-1410), Session 106.
 summary_bands:
 - key: P0
   label: P0
@@ -4320,9 +4590,10 @@ summary_bands:
   range: MEU-5–13 (Phases 2–3)
 - key: P2
   label: P2
-  range: MEU-14–164 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
+  range: MEU-14–174 (Phases 4–11 + Phase 9 annotation residuals + Phase 6 login-item residual + 2026-09-30 walkthrough residuals MEU-62–70; 2026-10-09 triage residuals MEU-71–91; Session 31b MEU-92; 2026-10-17
     triage residuals MEU-93–98; 2026-10-29 capture editor residuals MEU-99–107; 2026-11-03 release candidate residuals MEU-108–112; 2026-11-04 rc.2 triage residuals MEU-113–126; Session 52 follow-up MEU-127;
     2026-11-08 capture crop residuals MEU-128–132; 2026-11-09 video stills residuals MEU-133–136; 2026-11-10 download reliability residuals MEU-137–142; 2026-11-13 capture style split MEU-143; 2026-11-15
     post-rc.3 triage residuals MEU-145–154, with MEU-144 registered in Session 74; 2026-11-17 queue pause feedback MEU-155; 2026-11-17 triage residuals MEU-156–157; 2026-11-17 value triage residuals MEU-158–159;
-    2026-11-17 Session 93 residual MEU-160; 2026-11-19 Session 97 residual MEU-161; 2026-11-20 Session 99 residual MEU-162; 2026-11-21 transcript job resume MEU-163; 2026-11-22 tray double-click MEU-164)
+    2026-11-17 Session 93 residual MEU-160; 2026-11-19 Session 97 residual MEU-161; 2026-11-20 Session 99 residual MEU-162; 2026-11-21 transcript job resume MEU-163; 2026-11-22 tray double-click MEU-164;
+    2026-11-26 UI findings and in-app update MEU-165–174)
 narrative_sections: []

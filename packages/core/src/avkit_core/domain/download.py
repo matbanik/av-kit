@@ -10,6 +10,7 @@ from pathlib import Path
 
 from avkit_core.domain.enums import (
     AudioFormat,
+    CookieTestOutcome,
     DownloadFailureCause,
     DownloadStatus,
     QualityPreset,
@@ -432,7 +433,17 @@ class CookieTestResult:
 
     ok: bool
     error_message: str | None
+    outcome: CookieTestOutcome | None = None
 
     def __post_init__(self) -> None:
         require_bool(self.ok, "ok")
         require_optional_str(self.error_message, "error_message")
+        if self.outcome is not None:
+            require_enum(self.outcome, CookieTestOutcome, "outcome")
+        passed = self.outcome is None or self.outcome is CookieTestOutcome.ok
+        if self.ok is not passed:
+            raise ValidationError("ok must match the cookie test outcome")
+        if passed and self.error_message is not None:
+            raise ValidationError("a passed cookie test carries no message")
+        if not passed and not self.error_message:
+            raise ValidationError("a failed cookie test needs a message")
