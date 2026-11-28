@@ -19,7 +19,8 @@ It reads the base from ``git show 5db3623:openapi.committed.json`` and the new d
 
 Two later changes are set back before step 4: the release ``info.version`` (rc4 row 7) and
 Session 104's cookie test shapes (``COOKIE_TEST_SHAPES``, D-1600), which must be exactly the
-base's or exactly that session's committed shapes.
+base's or exactly that session's committed shapes; and Session 106's ``update_interval``
+in ``SettingsPutIn`` (``UPDATE_INTERVAL``), which must be absent or exactly that shape.
 
 A pydantic split into ``-Input`` and ``-Output`` names fails step 4, and is a departure (S7).
 ``--selftest`` builds the expected document from the base and checks that it passes, and that
@@ -75,6 +76,16 @@ COOKIE_TEST_SHAPES: dict[str, dict[str, Any]] = {
         "type": "string",
     },
 }
+
+#: Session 106 (MEU-174, AC-174.10, 2026-11-28): the settings request gains the
+#: ``update_interval`` leaf. Like the cookie shapes above, it is outside the capture shapes this AC
+#: pins. It must be absent or exactly this shape, and it is removed before the compare, so any
+#: other change to ``SettingsPutIn`` is still refused.
+UPDATE_INTERVAL: tuple[str, str, dict[str, Any]] = (
+    "SettingsPutIn",
+    "update_interval",
+    {"anyOf": [{"type": "string"}, {"type": "null"}], "title": "Update Interval"},
+)
 
 
 def union_items(doc: dict[str, Any], name: str) -> dict[str, Any]:
@@ -167,6 +178,14 @@ def check(base: dict[str, Any], new: dict[str, Any]) -> list[str]:
     cookie_base = tuple(base_schemas.get(name) for name in COOKIE_TEST_SHAPES)
     if cookie_now not in (cookie_base, tuple(COOKIE_TEST_SHAPES.values())):
         problems.append("CookieTestOut and CookieTestOutcome are neither the base's nor Session 104's shapes")
+    ui_schema, ui_prop, ui_shape = UPDATE_INTERVAL
+    if ui_prop in base_schemas.get(ui_schema, {}).get("properties", {}):
+        problems.append(f"the base already holds {ui_schema}.{ui_prop}")
+    ui_now = schemas.get(ui_schema, {}).get("properties", {}).get(ui_prop)
+    if ui_now is not None and ui_now != ui_shape:
+        problems.append(f"{ui_schema}.{ui_prop} is not Session 106's shape")
+    if ui_prop in schemas.get(ui_schema, {}).get("required", []):
+        problems.append(f"{ui_schema}.{ui_prop} is required")
     if problems:
         return problems
     stripped = copy.deepcopy(new)
@@ -186,6 +205,7 @@ def check(base: dict[str, Any], new: dict[str, Any]) -> list[str]:
             stripped_schemas[name] = copy.deepcopy(base_schemas[name])
         else:
             stripped_schemas.pop(name, None)
+    stripped_schemas[ui_schema]["properties"].pop(ui_prop, None)
     diff = first_difference(stripped, base)
     if diff:
         problems.append(f"a change AC-106.5 doesn't name: {diff}")
@@ -248,11 +268,18 @@ def selftest() -> int:
     cookie["components"]["schemas"].update(copy.deepcopy(COOKIE_TEST_SHAPES))
     other_cookie = copy.deepcopy(cookie)
     other_cookie["components"]["schemas"]["CookieTestOutcome"]["enum"].append("expired")
+    ui_schema, ui_prop, ui_shape = UPDATE_INTERVAL
+    interval = copy.deepcopy(good)
+    interval["components"]["schemas"][ui_schema]["properties"][ui_prop] = copy.deepcopy(ui_shape)
+    other_interval = copy.deepcopy(interval)
+    other_interval["components"]["schemas"][ui_schema]["properties"][ui_prop]["default"] = "weekly"
     cases: list[tuple[str, dict[str, Any], bool]] = [
         ("expected", good, True),
         ("version bump only", bumped, True),
         ("Session 104 cookie shape", cookie, True),
         ("other cookie shape", other_cookie, False),
+        ("Session 106 update interval", interval, True),
+        ("other update interval shape", other_interval, False),
         ("base itself", copy.deepcopy(base), False),
     ]
     for label, mutate in (("extra property", extra), ("missing addition", missing), ("renamed schema", renamed),

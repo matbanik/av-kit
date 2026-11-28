@@ -83,6 +83,10 @@ declare global {
             minimized: false
           }
       >
+      updateGetState?: () => Promise<unknown>
+      updateCheck?: () => Promise<unknown>
+      updateInstall?: () => Promise<unknown>
+      onUpdateState?: (cb: (state: unknown) => void) => () => void
     }
   }
 }

@@ -25,6 +25,9 @@ const VALID_PAYLOAD: Record<string, unknown> = {
   'write-clipboard-image': { png: Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]) },
   'get-mcp-setup-prompt': { client: 'codex', scope: 'user' },
   'capture-paste-image': {},
+  'update-get-state': {},
+  'update-check': {},
+  'update-install': {},
 }
 
 const TYPE_FAIL: Record<string, unknown> = {
@@ -50,12 +53,15 @@ const TYPE_FAIL: Record<string, unknown> = {
   'write-clipboard-image': { png: 'iVBORw0KGgo=' },
   'get-mcp-setup-prompt': { client: 4, scope: 'user' },
   'capture-paste-image': { extra: true },
+  'update-get-state': { extra: true },
+  'update-check': { extra: true },
+  'update-install': { extra: true },
 }
 
 describe('AC-19.21 IPC_STRICT_CENSUS', () => {
   it('rejects extra keys and wrong types before any side effect', async () => {
     const { handleIpc } = await import('../../src/main/ipc')
-    expect(RENDERER_TO_MAIN_CHANNELS).toHaveLength(22)
+    expect(RENDERER_TO_MAIN_CHANNELS).toHaveLength(25)
     for (const channel of RENDERER_TO_MAIN_CHANNELS) {
       const extraPayload =
         VALID_PAYLOAD[channel] === undefined ||

@@ -3,7 +3,7 @@
 Usage::
 
     uv run python tools/e2e_remote.py check [--config F] [--out FILE]
-    uv run python tools/e2e_remote.py run COMMIT [--config F] [--receipts DIR]
+    uv run python tools/e2e_remote.py run COMMIT [--config F] [--receipts DIR] [--payload DIR]
     uv run python tools/e2e_remote.py collect RUN_ID [--config F] [--receipts DIR]
     uv run python tools/e2e_remote.py release RUN_ID [--config F]
     uv run python tools/e2e_remote.py summarize REPORT --label L [--specs FILE] [--known FILE]
@@ -52,6 +52,7 @@ REASONS: dict[str, int] = {
     "ok": 0,
     "released": 0,
     "usage": 2,
+    "payload-invalid": 2,
     "config-missing": 2,
     "config-invalid": 2,
     "ssh-failed": 10,
@@ -68,6 +69,7 @@ REASONS: dict[str, int] = {
     "commit-unknown": 26,
     "commit-mismatch": 26,
     "upload-mismatch": 26,
+    "payload-mismatch": 26,
     "build-stale": 27,
     "build-failed": 28,
     "request-missing": 29,
@@ -82,6 +84,7 @@ REASONS: dict[str, int] = {
     "receipt-exists": 33,
     "receipt-write-failed": 34,
     "new-failures": 40,
+    "install-failures": 41,
 }
 
 #: The ``prerequisite-missing`` ids, in the order they are reported.
@@ -137,6 +140,10 @@ STUB_NAMES = (
 TEST_PROCS = ("node", "electron", "python", "pytest", "vitest")
 ORPHAN_PROCS = ("node", "electron")
 STATUSES = ("expected", "unexpected", "flaky", "skipped")
+#: ``HOST_PAYLOAD`` (Session 106): a flat folder of ``payload.json`` and at most five files.
+PAYLOAD_MAX_FILES = 5
+PAYLOAD_MAX_BYTES = 1_200_000_000
+PAYLOAD_NAME_RE = re.compile(r"[A-Za-z0-9._-]{1,100}")
 STAGES = ("verify", "extract", "build", "stale")
 DONE_MAP = {
     95: "request-missing",
@@ -617,6 +624,9 @@ def fact_lines(f: dict) -> list[str]:
             f"session-probe: state={probe.get('state')} reason={probe.get('reason')} "
             f"rustdesk={probe.get('rustdesk_version') or '-'}"
         )
+    if "smart_app_control" in f:
+        # A fact for the install stage (Session 106): 0 off, 1 on, 2 evaluation.
+        lines.append(f"smart-app-control: state={f.get('smart_app_control') or '-'}")
     return lines
 
 
@@ -784,6 +794,65 @@ def _report_rows(report_path: Path) -> tuple[dict, list[dict], dict[str, int]]:
     if off:
         raise Refusal("report-inconsistent", "; ".join(off))
     return data, rows, counts
+
+
+def read_payload(folder: Path) -> list[tuple[Path, dict]]:
+    """``HOST_PAYLOAD``: the payload files and their request entries; a bad folder raises 2."""
+    if not folder.is_dir():
+        raise Refusal("payload-invalid", f"{folder} is not a folder")
+    found: list[tuple[Path, dict]] = []
+    total = 0
+    for p in sorted(folder.iterdir(), key=lambda q: q.name):
+        if not p.is_file() or p.is_symlink():
+            raise Refusal("payload-invalid", f"{p.name} is not a plain file (the folder is flat)")
+        if not PAYLOAD_NAME_RE.fullmatch(p.name):
+            raise Refusal("payload-invalid", f"{p.name!r} is not a plain file name")
+        size = p.stat().st_size
+        total += size
+        found.append((p, {"name": p.name, "size": size, "sha256": sha256_file(p)}))
+    names = [e["name"] for _, e in found]
+    if "payload.json" not in names:
+        raise Refusal("payload-invalid", "no payload.json")
+    if len(names) - 1 > PAYLOAD_MAX_FILES:
+        raise Refusal(
+            "payload-invalid",
+            f"{len(names) - 1} files besides payload.json, at most {PAYLOAD_MAX_FILES}",
+        )
+    if total > PAYLOAD_MAX_BYTES:
+        raise Refusal("payload-invalid", f"{total} bytes, at most {PAYLOAD_MAX_BYTES}")
+    try:
+        json.loads((folder / "payload.json").read_text(encoding="utf-8-sig"))
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise Refusal("payload-invalid", "payload.json is not JSON") from exc
+    return found
+
+
+def install_block(folder: Path, has_payload: bool) -> dict:
+    """The summary's ``install`` block: ``not-run``, ``missing``, ``invalid`` or ``ran``."""
+    if not has_payload:
+        return {"state": "not-run"}
+    if not (folder / "report.json").is_file():
+        return {"state": "missing"}
+    try:
+        _, rows, counts = _report_rows(folder / "report.json")
+    except Refusal as exc:
+        return {"state": "invalid", "detail": f"{exc.reason}: {exc.detail}"}
+    return {
+        "state": "ran",
+        "tests": len(rows),
+        **counts,
+        "failed": [
+            {"file": r["file"], "title": r["title"], "status": r["status"]}
+            for r in rows
+            if r["status"] != "expected"
+        ],
+    }
+
+
+def install_passed(block: dict) -> bool:
+    return (
+        block.get("state") == "ran" and block["tests"] > 0 and block["expected"] == block["tests"]
+    )
 
 
 def build_summary(
@@ -1053,6 +1122,18 @@ def summary_lines(s: dict) -> list[str]:
             for n in g["voided_failures"]
         ]
         lines += [f"gated detail: {d}" for d in g["detail"]]
+    ib = s.get("install")
+    if ib:
+        if ib["state"] == "ran":
+            lines.append(
+                f"install: state=ran tests={ib['tests']} "
+                + " ".join(f"{k}={ib[k]}" for k in STATUSES)
+            )
+            lines += [
+                f"install failed: {n['file']} [{n['status']}] {n['title']}" for n in ib["failed"]
+            ]
+        else:
+            lines.append(f"install: state={ib['state']} {ib.get('detail', '')}".rstrip())
     lines.append(f"result: {s['result']} exit={s['exit']}")
     return lines
 
@@ -1075,6 +1156,14 @@ def _summary_refusal(s: dict) -> Refusal | None:
         new = s["new"] + ((s.get("gated") or {}).get("new") or [])
         names = "; ".join(f"{n['file']}: {n['title']}" for n in new)
         return Refusal("new-failures", f"{len(new)} new: {names}")
+    if s["result"] == "install-failures":
+        ib = s.get("install") or {}
+        if ib.get("state") != "ran":
+            return Refusal("install-failures", f"install stage {ib.get('state')}")
+        if not ib["tests"]:
+            return Refusal("install-failures", "the install stage ran no test")
+        names = "; ".join(f"[{n['status']}] {n['title']}" for n in ib["failed"])
+        return Refusal("install-failures", f"{len(ib['failed'])} not passed: {names}")
     return None
 
 
@@ -1297,6 +1386,11 @@ def _collect_and_summarize(cfg: dict, st: RunState, status: dict) -> int:
         if gated["new"] and s["result"] == "ok":
             s["result"] = "new-failures"
             s["exit"] = REASONS["new-failures"]
+    # HOST_PAYLOAD (Session 106): the install stage's block; a main-stage reason comes first.
+    s["install"] = install_block(rd / "host" / "install", "payload" in req)
+    if "payload" in req and s["result"] == "ok" and not install_passed(s["install"]):
+        s["result"] = "install-failures"
+        s["exit"] = REASONS["install-failures"]
     for line in summary_lines(s):
         say(line)
     if s["overlap"]:
@@ -1317,6 +1411,8 @@ def _run(args: argparse.Namespace, st: RunState) -> int:
     cfg = load_config(config_path(args.config))
     st.cfg = cfg
     receipts = Path(args.receipts) if args.receipts else Path(RECEIPTS)
+    # HOST_PAYLOAD: a bad folder is refused before any receipt, lock or upload.
+    payload = read_payload(Path(args.payload)) if getattr(args, "payload", None) else None
     sha = resolve_commit(args.commit)
     epoch = int(git("log", "-1", "--format=%ct", sha).strip())
     major = node_major_of(sha)
@@ -1383,6 +1479,13 @@ def _run(args: argparse.Namespace, st: RunState) -> int:
         "user": cfg["user"],
         "created_utc": iso(utcnow()),
     }
+    if payload is not None:
+        (up / "payload").mkdir()
+        for src, entry in payload:
+            shutil.copyfile(src, up / "payload" / entry["name"])
+            if sha256_file(up / "payload" / entry["name"]) != entry["sha256"]:
+                raise Refusal("payload-invalid", f"{entry['name']} changed while copying")
+        request["payload"] = [e for _, e in payload]
     write_atomic(up / "request.json", _json_bytes(request))
     st.progress(f"archive {zip_sha}")
     st.set_id = stage(cfg, rd)
@@ -1571,6 +1674,7 @@ def _parser() -> argparse.ArgumentParser:
     r.add_argument("commit")
     r.add_argument("--config")
     r.add_argument("--receipts")
+    r.add_argument("--payload", help="a flat folder of payload.json and installers (Session 106)")
     k = sub.add_parser("collect", help="collect and summarize a run that timed out")
     k.add_argument("run_id")
     k.add_argument("--config")

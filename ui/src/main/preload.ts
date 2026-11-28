@@ -25,6 +25,10 @@ const API_KEYS = [
   'loginItemSet',
   'writeClipboardImage',
   'getMcpSetupPrompt',
+  'updateGetState',
+  'updateCheck',
+  'updateInstall',
+  'onUpdateState',
   'pasteCaptureImage',
 ] as const
 
@@ -84,6 +88,18 @@ export function exposePreload(): void {
       ipcRenderer.on('captures:inbox-changed', listener)
       return () => {
         ipcRenderer.removeListener('captures:inbox-changed', listener)
+      }
+    },
+    updateGetState: () => ipcRenderer.invoke('update-get-state'),
+    updateCheck: () => ipcRenderer.invoke('update-check'),
+    updateInstall: () => ipcRenderer.invoke('update-install'),
+    onUpdateState: (cb: (state: unknown) => void) => {
+      const listener = (_event: unknown, state: unknown) => {
+        cb(state)
+      }
+      ipcRenderer.on('update-state-changed', listener)
+      return () => {
+        ipcRenderer.removeListener('update-state-changed', listener)
       }
     },
   })

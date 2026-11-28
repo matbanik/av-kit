@@ -6,7 +6,7 @@
 
 ## Goal
 
-Ship a Windows-first desktop installer that starts the Electron shell, a localhost FastAPI backend, and (optionally) an MCP stdio server — without bundling Kokoro weights. After install, everything except YouTube / Hugging Face calls and the one-time pinned spaCy model wheel (`github.com/explosion/spacy-models` releases; [03 §TTS runtime assets](03-service-layer.md#tts-runtime-assets-residual)) works offline.
+Ship a Windows-first desktop installer that starts the Electron shell, a localhost FastAPI backend, and (optionally) an MCP stdio server — without bundling Kokoro weights. After install, everything except YouTube / Hugging Face calls, the one-time pinned spaCy model wheel (`github.com/explosion/spacy-models` releases; [03 §TTS runtime assets](03-service-layer.md#tts-runtime-assets-residual)) and the update check works offline. The update check asks `github.com` for the newest release of the public repository on the schedule chosen in Settings (once a week by default, once a month, or never), at each start while a found update waits, and when the user clicks Check now. The request carries no identifier, only what any HTTPS request shows (the address and a user agent), and Never stops the scheduled request ([§In-app update (residual)](#in-app-update-residual); D-1544, the plan's recommendation while Mat's ruling is open).
 
 | Source | Decision |
 |--------|----------|
@@ -192,7 +192,7 @@ Missing after all three → yt-dlp runs without a JS runtime and `js_runtimes` i
 | Target | Windows **NSIS** (x64). macOS/Linux configs may exist but are not the Phase 7 exit gate |
 | `extraResources` | `avkit-backend/`, `ffmpeg/`, `mcp-server/`, `region-picker/` (self-contained .NET 8 `win-x64` publish of `native/region-picker`, built by `npm run build:picker` before `electron-builder`) |
 | Icon / metadata | av-kit name, version from `ui/package.json` |
-| Auto-update | `electron-updater` **optional**; do not block ship on it |
+| Auto-update | Delivered in Session 106. `electron-updater` 6.8.11 checks the public repository's GitHub releases (`publish` provider `github`; every build still runs `--publish never`) on the Settings interval, downloads a newer installer in the background, checks its SHA-512 and installs it on **Restart and update**. See [§Update feed (residual)](#update-feed-residual) and [§In-app update (residual)](#in-app-update-residual) |
 | Code signing | If certs exist, sign; if not, ship unsigned and document SmartScreen — not a domain change |
 | Login item (MEU-61) | Per-user Run key from Settings; **not** a Windows service. See below |
 
@@ -420,12 +420,19 @@ Two residual MEUs from Mat's request of 2026-11-26 for an update from inside the
 
 | Rule | Contract | Source |
 |------|----------|--------|
-| Feed files | A release build writes `latest.yml` and the installer's `.blockmap` beside the installer, and the release procedure uploads all three. The file name in the feed is the name of the uploaded installer. | Research-backed: electron-builder's auto-update documentation (www.electron.build/v26/docs/features/auto-update/, read 2026-11-26); Human-approved: triage D-1409 |
-| Feed address | `electron-builder.yml` names the GitHub provider and the public repository as the feed. Builds still run with `--publish never`. | Research-backed: www.electron.build/v26/docs/features/auto-update/; Local Canon: the release build script |
+| Feed files | A release build writes `latest.yml` and the installer's `.blockmap` beside the installer, and the release procedure uploads all three. The file name in the feed is the name of the uploaded installer. | Research-backed: electron-builder's auto-update documentation (https://www.electron.build/v26/docs/features/auto-update/, read 2026-11-26); Human-approved: triage D-1409 |
+| Feed address | `electron-builder.yml` names the GitHub provider and the public repository as the feed. Builds still run with `--publish never`. | Research-backed: https://www.electron.build/v26/docs/features/auto-update/; Local Canon: the release build script |
 | Which releases | Which releases the feed offers (every release marked Latest, or stable versions only) is a Decision Brief of the plan; today every release is a release candidate marked Latest. | Local Canon: D-1409; plan-time |
 | Check | A script compares the feed's SHA-512 and size with the built installer before the upload step. | Local Canon: [§Release candidate packaging (residual)](#release-candidate-packaging-residual) `BUILD_RECORD` |
 | Manual upload | No tool uploads. The upload stays Mat's step in the publish checklist, and the CI workflow still uploads nothing. | Local Canon: PROJECT-PROFILE E5; `tests/unit/test_ci_workflows.py` |
 | Tests | A unit test on the builder configuration and the checklist; the feed check script run against a real build. | Local Canon |
+
+> **Delivered (Session 106).**
+> - `FEED_BLOCK` and `DIST_NEVER_PUBLISHES`: `ui/electron-builder.yml` names the GitHub provider for `matbanik/av-kit` with no other key, and every build script still passes `--publish never`.
+> - `FEED_CHECK`: `tools/check_update_feed.py` compares `latest.yml` and the `.blockmap` with the built installer (file name, size, SHA-512) and with `resources/app-update.yml`. On a product build of this plan's snapshot it returned `feed-ok` for `av-kit-Setup-0.1.0-rc.5.exe` (371,756,740 B, blockmap 388,536 B), `feed-missing` without `latest.yml` and `sha512-mismatch` for one changed byte.
+> - `FEED_CHECKLIST`: `docs/releases/publish-checklist-update-feed.md` adds the two feed files to each release's upload. No tool uploads. The first release that carries them is Mat's step; users of rc.5 and earlier install that release by hand once.
+> - AC-173.1 to AC-173.5; plan decisions D-1540 to D-1554, and the execution decisions in the MEU-173 handoff.
+> - Plan `docs/execution/plans/2026-11-26-app-auto-update/`.
 
 <a id="in-app-update-residual"></a>
 
@@ -443,6 +450,15 @@ Two residual MEUs from Mat's request of 2026-11-26 for an update from inside the
 | Processes | The backend and the MCP server exit before the installer replaces files, and user data is kept. | Local Canon: [§Uninstall removes the installer copy (residual)](#uninstall-installer-copy-residual) |
 | Setting surface | The new setting is in every settings layer: the core registry, the API schema, the UI schema and the Settings page, the MCP settings tool and the settings table of 06. | Local Canon: [06 §Settings](06-gui.md#settings-page-settings) |
 | Tests | Unit: the schedule with a fake clock and the updater mocked. Electron E2E against a local feed. A real update from one built version to the next, run by script on the remote E2E host. | Local Canon; Mat, 2026-11-16 ("This should be done with framework and scripts!") |
+
+> **Delivered (Session 106).**
+> - `UPDATE_INTERVAL_LEAF`: `app.update_interval` (`weekly`, the default; `monthly`; `never`) in the core registry, the API model and the OpenAPI document, the UI schema, the Settings page and the MCP settings tool, and in [06 §Settings](06-gui.md#settings-page-settings).
+> - `UPDATE_SCHEDULE`, `UPDATER_CONFIG`, `UPDATE_TICK`, `UPDATE_STATE`, `UPDATE_QUIET_FAILURE` and `UPDATE_NOTICE_ONCE`: the packaged app checks on the interval (a found update is checked again at each start), downloads in the background, fails quietly with no network, and shows one notice per downloaded version. A development run never checks.
+> - `UPDATE_IPC` and `UPDATES_CARD`: Settings → Updates holds the interval, Check now, the status and **Restart and update**, and says that updates are checked by the release's SHA-512 and are not signed (D-1543, the plan's recommendation while Mat's ruling is open).
+> - `UPDATE_INSTALL_ORDER`, `APP_RUNNING_CHECK` and `UNINSTALL_CACHE_RECURSIVE`: the backend stops before the installer starts, the installer stops every process under the install folder (the MCP server too) and keeps user data, and an uninstall removes the updater's cache.
+> - `HOST_PAYLOAD`, `INSTALL_STAGE_RULES` and `ROUND_TRIP`: the installer pair and its feed passed on the dev PC (row 16: `pair-ok`). On the remote E2E host, run r20261128T024018Z-d7983df passed the main suite (266 of 266) and the install stage (2 of 2): an installed `0.0.901` found, downloaded and installed `0.0.902` from the local feed and kept its setting, marker file and sign-in value (AC-174.19), and the uninstall then removed the updater's cache and both sign-in values (AC-174.20). Three earlier runs failed at AC-174.19 because Windows reads Start at sign-in under the app's AppUserModelId, which was still Electron's default at startup; `boot()` now sets it to the appId before it reads the login item (D-1583).
+> - AC-174.1 to AC-174.21; plan decisions D-1540 to D-1554, and the execution decisions in the MEU-174 handoff. Users get the updater with the first release that carries the feed files, which is Mat's step.
+> - Plan `docs/execution/plans/2026-11-26-app-auto-update/`.
 
 ---
 

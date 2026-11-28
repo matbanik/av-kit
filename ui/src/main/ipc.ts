@@ -39,8 +39,14 @@ export const RENDERER_TO_MAIN_CHANNELS = [
   'login-item-set',
   'write-clipboard-image',
   'get-mcp-setup-prompt',
+  'update-get-state',
+  'update-check',
+  'update-install',
   'capture-paste-image',
 ] as const
+
+/** UPDATE_IPC's main-to-renderer push: the controller's state after each change. */
+export const UPDATE_STATE_CHANNEL = 'update-state-changed'
 
 export const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] as const
 export const COPY_IMAGE_MAX_BYTES = 64 * 1024 * 1024
@@ -110,6 +116,9 @@ const schemas: Record<(typeof RENDERER_TO_MAIN_CHANNELS)[number], z.ZodType> = {
     .strict(),
   'get-mcp-setup-prompt': z.object({ client: z.enum(MCP_CLIENTS), scope: z.enum(['user', 'project']) }).strict(),
   'capture-paste-image': noPayloadSchema,
+  'update-get-state': noPayloadSchema,
+  'update-check': noPayloadSchema,
+  'update-install': noPayloadSchema,
 }
 
 export type SideEffects = {
@@ -160,6 +169,7 @@ export type IpcDeps = {
   getHotkeyStatus?: () => Promise<{ accelerator: string; registered: boolean; inUse: boolean }>
   loginItem?: LoginItemDeps
   mcpServerLaunch?: { command: string; serverPath: string }
+  appUpdater?: { getState(): unknown; check(): Promise<unknown>; install(): Promise<unknown> }
 }
 
 export const BACKEND_READY_TIMEOUT_MS = 10_000
@@ -492,6 +502,19 @@ export async function handleIpc(
         // Nothing to add: the renderer's toast says the paste could not be saved.
       }
       return { ok: true, value: outcome }
+    }
+    // UPDATE_IPC: the controller answers; without one (tests, a failed start) the call fails.
+    case 'update-get-state': {
+      if (deps.appUpdater === undefined) return { ok: false, error: 'updates are unavailable' }
+      return { ok: true, value: deps.appUpdater.getState() }
+    }
+    case 'update-check': {
+      if (deps.appUpdater === undefined) return { ok: false, error: 'updates are unavailable' }
+      return { ok: true, value: await deps.appUpdater.check() }
+    }
+    case 'update-install': {
+      if (deps.appUpdater === undefined) return { ok: false, error: 'updates are unavailable' }
+      return { ok: true, value: await deps.appUpdater.install() }
     }
     default:
       return { ok: false, error: `unknown channel ${channel}` }

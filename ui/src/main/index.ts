@@ -4,9 +4,11 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 
 import Store from 'electron-store'
+import electronUpdater from 'electron-updater'
 import { app, BrowserWindow, clipboard, dialog, ipcMain, nativeImage, shell } from 'electron'
 
 import { appIconPath } from './app-icon'
+import { createAppUpdater, updateSeam, type AppUpdaterController, type UpdaterLike } from './app-updater'
 import { recordE2eShell } from './e2e-shell'
 import { writePngToClipboard } from './clipboard-image'
 import {
@@ -23,6 +25,7 @@ import {
   listRegisteredChannels,
   publishBackendReady,
   SHOW_FILES_PROPERTIES,
+  UPDATE_STATE_CHANNEL,
 } from './ipc'
 import {
   isPidRunning,
@@ -64,7 +67,8 @@ import {
 } from './capture-runtime'
 import { startInteractiveRequestLoop } from './capture-register'
 import { startCaptureTray } from './capture-tray'
-import { loginLaunchShouldHideWindow, type LoginItemDeps } from './login-item'
+import { LOGIN_ITEM_NAME, loginLaunchShouldHideWindow, type LoginItemDeps } from './login-item'
+import { notifyUser } from './notify-user'
 import { revealMainWindow } from './startup-mode'
 
 export const RENDERER_CSP =
@@ -112,6 +116,20 @@ export function applySingleInstance(
     }
   })
   return 'winner'
+}
+
+/**
+ * On Windows, getLoginItemSettings reads openAtLogin from the Run value named after the current
+ * AppUserModelId, and login-item.ts writes that value as LOGIN_ITEM_NAME, the appId the NSIS
+ * shortcut carries. The id must be set before the login item is read (D-1583, B-17).
+ */
+export function applyAppUserModelId(
+  target: { setAppUserModelId: (id: string) => void },
+  platform: NodeJS.Platform = process.platform,
+): void {
+  if (platform === 'win32') {
+    target.setAppUserModelId(LOGIN_ITEM_NAME)
+  }
 }
 
 export function restoreWindowBounds(store: { get: (key: string) => unknown }): {
@@ -204,6 +222,23 @@ function e2eBackend(ready: { apiBase: string; token: string }): { apiBase: strin
   return { ...ready, apiBase: override.trim() }
 }
 
+let stdoutGuarded = false
+
+/** One line on the main process's stdout; a missing or closed stream is ignored (D-1575). */
+function writeStdoutLine(line: string): void {
+  try {
+    if (!stdoutGuarded) {
+      stdoutGuarded = true
+      process.stdout.on('error', () => undefined)
+    }
+    if (process.stdout.writable) {
+      process.stdout.write(`${line}\n`)
+    }
+  } catch {
+    // No stream to write to: the line is still in the console view.
+  }
+}
+
 export async function boot(): Promise<void> {
   if (process.argv.includes(PICKER_PATH_PROBE_FLAG)) {
     // Row 9a asks the *installed* app where it would look for the sidecar, which is the only way
@@ -219,6 +254,8 @@ export async function boot(): Promise<void> {
   if (role === 'loser') {
     return
   }
+  // Before the login item is read and before any window, tray or toast (D-1583).
+  applyAppUserModelId(app)
   const appData = defaultAppData()
   mkdirSync(appData, { recursive: true })
   if (process.env.AVKIT_APP_DATA !== undefined && process.env.AVKIT_APP_DATA.trim() !== '') {
@@ -316,13 +353,11 @@ export async function boot(): Promise<void> {
       },
     })
   })
-  app.on('before-quit', (event) => {
-    setQuitIntent()
-    if (process.env.AVKIT_E2E === '1') {
-      return
-    }
-    event.preventDefault()
-    void shutdownOwned('quit', {
+  // One backend stop for a quit, shared by before-quit and UPDATE_INSTALL_ORDER: the update's
+  // quit reaches before-quit after the backend is already down and finds the stop done.
+  let quitShutdown: Promise<void> | null = null
+  const shutdownForQuit = (): Promise<void> => {
+    quitShutdown ??= shutdownOwned('quit', {
       ownedPid,
       signal: (pid) => {
         try {
@@ -340,7 +375,16 @@ export async function boot(): Promise<void> {
       waitPid: async (pid) => {
         await waitPidExit(pid, isPidRunning)
       },
-    }).finally(() => {
+    })
+    return quitShutdown
+  }
+  app.on('before-quit', (event) => {
+    setQuitIntent()
+    if (process.env.AVKIT_E2E === '1') {
+      return
+    }
+    event.preventDefault()
+    void shutdownForQuit().finally(() => {
       app.exit(0)
     })
   })
@@ -465,6 +509,8 @@ export async function boot(): Promise<void> {
         dirname: __dirname,
       }),
     },
+    // Set after app ready by startAppUpdater; until then the update channels answer unavailable.
+    appUpdater: undefined as AppUpdaterController | undefined,
   }
 
   for (const channel of listRegisteredChannels()) {
@@ -485,6 +531,16 @@ export async function boot(): Promise<void> {
 
   const uiStore = new Store({ cwd: appData, name: 'ui-state' })
   await app.whenReady()
+  deps.appUpdater = startAppUpdater({
+    appData,
+    log: (line) => {
+      forwardConsoleLines(mainWindow, [appendStdoutLog(line)])
+      // The main process's own stream as well, so the install stage reads the order of the
+      // updater's lines from the process it started (ROUND_TRIP step 7, D-1575).
+      writeStdoutLine(line)
+    },
+    shutdownBackend: process.env.AVKIT_E2E === '1' ? async () => undefined : shutdownForQuit,
+  })
   const window = new BrowserWindow({
     ...createWindowOptions(uiStore),
     show: false,
@@ -642,4 +698,82 @@ export async function boot(): Promise<void> {
 
 if (process.env.VITEST === undefined) {
   void boot()
+}
+
+// UPDATER_CONFIG wiring (MEU-174): the library's NSIS updater, the update-state store, the
+// interval from the backend, and the state pushed to every window. The controller starts its
+// timers once the backend is ready; UPDATE_E2E_SEAM swaps quitAndInstall for a recorder.
+function startAppUpdater(input: {
+  appData: string
+  log: (line: string) => void
+  shutdownBackend: () => Promise<void>
+}): AppUpdaterController {
+  const updater = electronUpdater.autoUpdater as unknown as UpdaterLike
+  const seam = updateSeam(process.env, existsSync)
+  const installCalls: Array<[boolean, boolean]> = []
+  if (seam !== null) {
+    updater.quitAndInstall = (isSilent = false, isForceRunAfter = false) => {
+      installCalls.push([isSilent, isForceRunAfter])
+    }
+  }
+  const controller = createAppUpdater({
+    updater,
+    isPackaged: app.isPackaged,
+    seam,
+    currentVersion: app.getVersion(),
+    now: () => Date.now(),
+    timers: {
+      setTimeout: (fn, ms) => setTimeout(fn, ms),
+      clearTimeout: (handle) => {
+        clearTimeout(handle as ReturnType<typeof setTimeout>)
+      },
+      setInterval: (fn, ms) => setInterval(fn, ms),
+      clearInterval: (handle) => {
+        clearInterval(handle as ReturnType<typeof setInterval>)
+      },
+    },
+    openStore: () =>
+      new Store<Record<string, unknown>>({ cwd: input.appData, name: 'update-state', clearInvalidConfig: true }),
+    readInterval: async () => {
+      const backend = getPublishedBackendReady()
+      if (backend === null) {
+        throw new Error('backend not ready')
+      }
+      const response = await fetch(`${backend.apiBase}/settings/app`, {
+        headers: { Authorization: `Bearer ${backend.token}` },
+      })
+      if (!response.ok) {
+        throw new Error(`settings answered ${String(response.status)}`)
+      }
+      const body = (await response.json()) as { update_interval?: unknown }
+      return typeof body.update_interval === 'string' ? body.update_interval : ''
+    },
+    notify: (notice) => {
+      notifyUser(notice)
+    },
+    log: input.log,
+    shutdownBackend: input.shutdownBackend,
+    setQuitIntent,
+    emitState: (state) => {
+      for (const window of BrowserWindow.getAllWindows()) {
+        if (!window.isDestroyed()) {
+          window.webContents.send(UPDATE_STATE_CHANNEL, state)
+        }
+      }
+    },
+  })
+  if (seam !== null) {
+    ;(globalThis as { __AVKIT_E2E_UPDATE__?: unknown }).__AVKIT_E2E_UPDATE__ = {
+      installCalls,
+      state: () => controller.getState(),
+    }
+  }
+  // UPDATE_TICK counts from the backend's ready: wait for it, then start the timers once.
+  const waitReady = setInterval(() => {
+    if (getPublishedBackendReady() !== null) {
+      clearInterval(waitReady)
+      controller.start()
+    }
+  }, 1000)
+  return controller
 }

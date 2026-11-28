@@ -54,7 +54,18 @@ av-kit does all of that in one window.
    click **Open file**.
 
 FFmpeg comes inside the installer. Text to speech needs a one-time voice model download,
-which you pick and start from inside the app; after that it works offline.
+which you pick and start from inside the app; after that it works offline, apart from the
+update check below.
+
+**Updates.** In-app updates are built but not yet in a release. Once they ship, av-kit
+asks GitHub once a week (or once a month, or never: **Settings → Updates**) for the newest
+release of this repository. The request carries no identifier, only
+what any web request shows (your address and a user agent). A newer version downloads in
+the background, and Settings offers **Restart and update** when it is ready. The installer
+is not code-signed, so an update is trusted because its SHA-512 matches the one in the
+release's `latest.yml`, fetched over HTTPS: whoever controls this repository's releases
+controls what installs. Updates start with the first release that carries these files;
+rc.5 and earlier need one more install by hand.
 
 ### Your first five minutes
 

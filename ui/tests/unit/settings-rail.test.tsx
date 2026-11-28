@@ -138,7 +138,7 @@ afterEach(() => {
 })
 
 describe('MEU-58 settings section table (single-statement contracts)', () => {
-  it('AC-58.2 SETTINGS_SECTION_SET lists the 11 live sections in DOM order with rail groups and save modes', () => {
+  it('AC-58.2 SETTINGS_SECTION_SET lists the 12 live sections in DOM order with rail groups and save modes', () => {
     expect(SETTINGS_SECTION_SET.map((s) => [s.key, s.testId, s.group, s.mode])).toEqual([
       ['download', 'download-settings', 'Pages', 'autosave'],
       ['transcript', 'transcript-settings', 'Pages', 'autosave'],
@@ -148,6 +148,7 @@ describe('MEU-58 settings section table (single-statement contracts)', () => {
       ['console', 'console-settings', 'App', 'autosave'],
       ['appearance', 'appearance-settings', 'App', 'immediate'],
       ['startup', 'start-at-sign-in-panel', 'App', 'immediate-os'],
+      ['updates', 'updates-settings', 'App', 'autosave'],
       ['dependencies', 'dependencies-section', 'Setup', 'none'],
       ['readiness', 'readiness-card', 'Setup', 'readiness-count'],
       ['mcp', 'mcp-access-card', 'Setup', 'none'],

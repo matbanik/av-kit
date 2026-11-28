@@ -26,7 +26,7 @@
     "help:shots": "playwright test -c playwright.help-shots.config.ts",
     "test:e2e:capture": "npx playwright test tests/e2e/capture-picker.test.ts --reporter=json",
     "dist:prep": "npm run clean:out && npm run build && npm run build:picker && npm --prefix ../mcp-server run bundle",
-    "dist": "npm run dist:prep && electron-builder --win nsis --x64"
+    "dist": "npm run dist:prep && electron-builder --win nsis --x64 --publish never"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -35,6 +35,7 @@
     "@tanstack/react-query": "^5.90.0",
     "@tanstack/react-router": "^1.166.0",
     "electron-store": "^8.2.0",
+    "electron-updater": "6.8.11",
     "fuse.js": "^7.0.0",
     "lucide-react": "^0.400.0",
     "react": "^19.2.0",

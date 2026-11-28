@@ -89,7 +89,8 @@ phases:
   - docs/execution/plans/2026-08-24-p7-distribution/
   last_updated: '2026-11-26'
   note: MEU-24–25 bound to p7-distribution. MEU-71/72 residuals (MCP setup prompt, packaged ONNX TTS runtime) registered 2026-10-09. MEU-110 residual (release candidate packaging) registered 2026-11-03.
-    MEU-113/114/125 residuals (fetch exit codes, uninstall installer copy, second release candidate) registered 2026-11-04. MEU-173/174 residuals (update feed, in-app update) registered 2026-11-26.
+    MEU-113/114/125 residuals (fetch exit codes, uninstall installer copy, second release candidate) registered 2026-11-04. MEU-173/174 residuals (update feed, in-app update) registered 2026-11-26; Session
+    106 delivered MEU-173 and MEU-174 (the installed round trip passed on the remote host, D-1583); the first feed release is Mat's.
 - id: '8'
   name: Video conversion
   band: P2
@@ -4539,18 +4540,18 @@ meus:
     text: Phase 7 §Update feed (residual)
   description: A release build writes the update feed files (latest.yml and the installer's blockmap), electron-builder names GitHub as the feed, and the release procedure uploads and checks them; nothing
     is published by a tool.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-25, MEU-110
   dependency_parse_status: parsed
   depends_on:
   - MEU-25
   - MEU-110
-  execution_plan: null
-  updated: '2026-11-26'
+  execution_plan: docs/execution/plans/2026-11-26-app-auto-update/implementation-plan.md
+  updated: '2026-11-28'
   closed_reason: null
   note: Registered 2026-11-26 from APP-NO-IN-APP-UPDATE (triage D-1409, Mat's request; grouping D-1410), Session 106.
 - row_key: MEU-174
@@ -4564,10 +4565,10 @@ meus:
     anchor: in-app-update-residual
     text: Phase 7 §In-app update (residual)
   description: The app checks GitHub Releases for a newer version on a schedule the user sets (once a week or once a month), then downloads and installs it without a visit to the release page.
-  status: pending
+  status: approved
   status_labels:
-    registry: ⬜ pending
-    build_plan: ⬜
+    registry: ✅ approved
+    build_plan: ✅
   surface_overrides: null
   dependencies_raw: MEU-173, MEU-13, MEU-19, MEU-23, MEU-114
   dependency_parse_status: parsed
@@ -4577,8 +4578,8 @@ meus:
   - MEU-19
   - MEU-23
   - MEU-114
-  execution_plan: null
-  updated: '2026-11-26'
+  execution_plan: docs/execution/plans/2026-11-26-app-auto-update/implementation-plan.md
+  updated: '2026-11-28'
   closed_reason: null
   note: Registered 2026-11-26 from APP-NO-IN-APP-UPDATE (triage D-1409, Mat's request; grouping D-1410), Session 106.
 summary_bands:

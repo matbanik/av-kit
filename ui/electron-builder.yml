@@ -21,6 +21,12 @@ nsis:
   installerIcon: build/icon.ico
   uninstallerIcon: build/icon.ico
   installerHeaderIcon: build/icon.ico
+# UPDATE_FEED (MEU-173, D-1540): the public repository's releases are the update feed.
+# Every build runs with --publish never; nothing here uploads.
+publish:
+  - provider: github
+    owner: matbanik
+    repo: av-kit
 extraResources:
   # app-icon.ts reads process.resourcesPath/icon.{png,ico} when packaged: `build/`
   # lives outside the asar, so without these entries the tray falls back to an

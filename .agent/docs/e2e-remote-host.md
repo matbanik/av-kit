@@ -29,7 +29,8 @@ account or folder of the real host. Those live only in the untracked local confi
    only, and releases the lock (`host-release.ps1`).
 
 The run id is `r<UTC yyyyMMddTHHmmssZ>-<sha7>`. The tool never stops a process, never installs
-anything and never registers, changes or removes the scheduled task.
+anything and never registers, changes or removes the scheduled task. The one exception to
+"never installs anything" is a `run --payload` (Session 106): see "The install stage" below.
 
 ## Host prerequisites
 
@@ -116,6 +117,7 @@ just before they act.
 | 0 | `ok` | The run passed: every failure is in the known list, or the check found nothing. |
 | 0 | `released` | `release` removed the lock, or there was none. |
 | 2 | `usage` | Bad arguments. |
+| 2 | `payload-invalid` | The `--payload` folder is not flat, has a name with a path part, more than five files besides `payload.json`, no `payload.json`, or more than 1.2 GB; refused before any upload. |
 | 2 | `config-missing` | No local config at the path. |
 | 2 | `config-invalid` | A key is missing, extra, of the wrong type or out of range. |
 | 10 | `ssh-failed` | `ssh` or `scp` failed, or three polls in a row failed. |
@@ -132,6 +134,7 @@ just before they act.
 | 26 | `commit-unknown` | The commit does not resolve in this repository. |
 | 26 | `commit-mismatch` | The zip comment, the request, the lock or the tree marker names another commit (launcher `DONE` 98). |
 | 26 | `upload-mismatch` | A SHA-256 on the host differs from the request, or the extract failed. |
+| 26 | `payload-mismatch` | A payload file on the host is missing, or its size or SHA-256 differs from the request. |
 | 27 | `build-stale` | The host tree's build is older than its sources (launcher `DONE` 99). |
 | 28 | `build-failed` | A host build step exited non-zero; the detail names it and its log. |
 | 29 | `request-missing` | The run's `request.json` is missing (launcher `DONE` 95), or `collect` found no run folder. |
@@ -146,6 +149,7 @@ just before they act.
 | 33 | `receipt-exists` | A receipt or host results folder already exists; nothing is overwritten. |
 | 34 | `receipt-write-failed` | A local receipt could not be written. While polling (`polls.jsonl`) the task may still run, so the lock is kept: `collect` or `release`. |
 | 40 | `new-failures` | A test failed, was flaky or was skipped and is not in the known list; each is named. |
+| 41 | `install-failures` | A payload run whose main stage passed, but whose install stage ran no test, has no report, or has a test that did not pass (a skip included). |
 
 The launcher's own `DONE` codes 96 and 97 map to `no-desktop-session` and `desktop-locked`; any
 other `DONE` is Playwright's exit code, and the summary decides the result.
@@ -311,6 +315,64 @@ or a direct `_electron.launch(` in `ui/tests/e2e`, outside the gated files that
 The `E2E-CLIPBOARD-PRIMER-EMPTY` tally (D-1301) counts a run only when its gated outcome is
 `run` and the capture file's two tests both pass; the copy file's tests never decide it
 (D-1314).
+
+## The install stage
+
+Session 106 (MEU-174) adds a third stage for the in-app update tests.
+
+**What a payload is.** `uv run python tools/e2e_remote.py run <commit> --payload <dir>` takes a
+flat folder: a `payload.json` and at most five other files (the installers and feed files), at
+most 1.2 GB together, each name of letters, digits, `.`, `_` and `-` only. The tool writes each
+file's name, size and SHA-256 into `request.json` under `payload` and uploads the files to
+`<root>\runs\<run-id>\payload\`. A bad folder is `payload-invalid` (2) before any upload;
+`host-prepare.ps1 -Stage verify` refuses a file whose size or hash differs as `payload-mismatch`
+(26). `payload.json` names its `mode`: `canary` (one installer: install, main window, uninstall)
+or `roundtrip` (the old and new builds and their feed).
+
+**What runs.** After the main and gated stages, `run-e2e.ps1` runs the specs of
+`ui/tests/e2e-install/` with `ui/playwright.install.config.ts`, with `AVKIT_E2E_PAYLOAD_DIR` set
+for that stage's process only, results under `results\<run-id>\install\`. Without `--payload`
+the request has no `payload`, the variable is removed and no install stage runs. The summary's
+`install` block holds the stage's counts, or `not-run`, `missing` or `invalid`. A payload run
+exits 0 only when the main stage passes by its own rule and every install-stage test passed,
+none skipped; otherwise `install-failures` (41). A main stage with new failures reports its own
+reason, and the `install` block still tells the install stage's result. The facts gain
+`smart_app_control` (`Get-MpComputerStatus`, field `SmartAppControlState`).
+
+**The exception to "never installs anything".** With a payload the stage installs av-kit for the
+E2E account under `<root>\runs\<run-id>\install`, which writes that account's uninstall entry,
+its shortcuts, the installer's key `HKCU\Software\c21620fd-8854-5989-9a80-a73c80a17704` and the
+app's data folders, and then removes them, proven by equal before and after snapshots (the
+uninstall entries, the installer's key, the HKCU `Run` and `StartupApproved\Run` values
+`com.avkit.app`, the Desktop and Start Menu `av-kit.lnk`, and the five folders
+`%LOCALAPPDATA%\Programs\av-kit`, `%LOCALAPPDATA%\av-kit`, `%APPDATA%\av-kit`,
+`%APPDATA%\av-kit-ui` and `%LOCALAPPDATA%\av-kit-ui-updater`). It starts one decoy, a copy of
+`PING.EXE` named `av-kit.exe` in `<root>\runs\<run-id>\install-sibling\`, requires it alive after
+every installer and uninstaller call, and stops it by its pid. It stops no process whose image
+path is outside the run's install folder, and it still registers, changes and removes no
+scheduled task.
+
+The stage refuses before any install, with a named reason, when the account already holds a
+trace: `install-folder-exists`, `uninstall-entry-exists`, `feed-port-taken`,
+`sign-in-value-exists`, `shortcut-exists`, `installer-key-exists`, or `install-quarantined` (an
+owner record from an earlier run). A start the host refuses is `installer-refused-by-host` or
+`app-refused-by-host`, with the Code Integrity event id when one is logged. These are test
+failures of the install stage, so the run ends `install-failures`.
+
+**The owner record and recovery.** Before its first change the stage writes
+`<root>\install-owner.json` (run id, install folder, the before snapshot, the decoy's pid) and
+deletes it only after the snapshots are equal. A run that cannot restore the account, a host
+reboot during the run included, leaves the record, and every later payload run refuses
+`install-quarantined` until Mat has recovered the account by hand:
+
+1. Read `<root>\install-owner.json`.
+2. Compare the E2E account with its `before` snapshot: the uninstall entries, the installer's
+   key, both sign-in values, both shortcuts and the five folders.
+3. Stop the decoy by the recorded pid if it still runs, uninstall av-kit from the recorded
+   install folder with `/S`, and remove whatever else the run made and the snapshot lacks.
+4. Delete the record.
+
+`release` frees the host lock only; it is never a restoration of the account.
 
 ## After `poll-timeout`, `launcher-ended` or a crash
 

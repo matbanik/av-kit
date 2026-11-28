@@ -102,26 +102,26 @@ describe('MEU-114 NSIS uninstall removes the installer copy', () => {
     const unguarded = [
       '!macro customUnInstall',
       `  ${DELETE_COPY}`,
-      '  RMDir "$LOCALAPPDATA\\av-kit-ui-updater"',
+      '  RMDir /r "$LOCALAPPDATA\\av-kit-ui-updater"',
       '!macroend',
     ].join('\n')
     expect(notUpdatedBlock(macroBody(unguarded, 'customUnInstall'))).toHaveLength(0)
 
     const block = notUpdatedBlock(macroBody(readFileSync(nshPath, 'utf8'), 'customUnInstall'))
     expect(block.filter((line) => line === DELETE_COPY)).toHaveLength(1)
-    expect(block.filter((line) => /^RMDir\s+"\$LOCALAPPDATA\\[^"]+"$/.test(line))).toHaveLength(1)
+    expect(block.filter((line) => /^RMDir\s+\/r\s+"\$LOCALAPPDATA\\[^"]+"$/.test(line))).toHaveLength(1)
   })
 
   it('AC-114.2 the folder RMDir removes is the package name plus -updater', () => {
     expect(updaterDir()).toBe('av-kit-ui-updater')
     const body = macroBody(readFileSync(nshPath, 'utf8'), 'customUnInstall')
     const rmdirs = body.filter((line) => /^RMDir\b/.test(line))
-    expect(rmdirs).toEqual([`RMDir "$LOCALAPPDATA\\${updaterDir()}"`])
+    expect(rmdirs).toEqual([`RMDir /r "$LOCALAPPDATA\\${updaterDir()}"`])
   })
 
-  it('AC-114.3 the two DeleteRegValue lines stay the only two and no RMDir is recursive', () => {
+  it('AC-114.3 the two DeleteRegValue lines stay the only two and the one recursive RMDir is the updater cache inside the not-updated guard', () => {
     const lines = nsisCodeLines(readFileSync(nshPath, 'utf8'))
     expect(lines.filter((line) => /^DeleteRegValue\b/.test(line))).toHaveLength(2)
-    expect(lines.filter((line) => /^RMDir\s+\/r\b/i.test(line))).toHaveLength(0)
+    expect({ file: lines.filter((line) => /^RMDir\s+\/r\b/i.test(line)), block: notUpdatedBlock(macroBody(readFileSync(nshPath, 'utf8'), 'customUnInstall')).filter((line) => /^RMDir\s+\/r\b/i.test(line)) }).toEqual({ file: [`RMDir /r "$LOCALAPPDATA\\${updaterDir()}"`], block: [`RMDir /r "$LOCALAPPDATA\\${updaterDir()}"`] })
   })
 })

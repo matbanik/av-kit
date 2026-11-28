@@ -49,16 +49,21 @@ function AvStale([string]$tree, [string]$commit) {
     return ''
 }
 
-function AvStage([string]$Dir, [string[]]$Specs, [switch]$Gated) {
+function AvStage([string]$Dir, [string[]]$Specs, [switch]$Gated, [string]$Config = '', [string]$PayloadDir = '') {
     # One Playwright stage: its specs, report, logs and pid.txt go to $Dir. Only the gated stage
-    # sets the clipboard gate for its own child (D-1282); every call is piped or assigned, so the
-    # function returns one int (L3).
+    # sets the clipboard gate for its own child (D-1282), and only the install stage sets
+    # AVKIT_E2E_PAYLOAD_DIR for its own child (Session 106); every call is piped or assigned, so
+    # the function returns one int (L3).
     New-Item -ItemType Directory -Force -Path $Dir | Out-Null
     Set-Content -LiteralPath (Join-Path $Dir 'specs.txt') -Value $Specs -Encoding ASCII
-    $argv = @('scripts\playwright-with-outputfile.mjs') + $Specs + @('--reporter=json', ('--outputFile=' + (Join-Path $Dir 'report.json')))
+    $argv = @('scripts\playwright-with-outputfile.mjs')
+    if ($Config) { $argv += @('--config', $Config) }
+    $argv += $Specs + @('--reporter=json', ('--outputFile=' + (Join-Path $Dir 'report.json')))
     if ($Gated) { $env:AVKIT_E2E_CLIPBOARD_GATED = '1' }
+    if ($PayloadDir) { $env:AVKIT_E2E_PAYLOAD_DIR = $PayloadDir }
     $p = Start-Process -FilePath $nodeExe -ArgumentList $argv -WorkingDirectory $ui -RedirectStandardOutput (Join-Path $Dir 'run.log') -RedirectStandardError (Join-Path $Dir 'run.err') -NoNewWindow -PassThru
     $env:AVKIT_E2E_CLIPBOARD_GATED = $null
+    $env:AVKIT_E2E_PAYLOAD_DIR = $null
     $null = $p.Handle
     Set-Content -LiteralPath (Join-Path $Dir 'pid.txt') -Value @([string]$p.Id, $p.StartTime.ToUniversalTime().ToString('o')) -Encoding ASCII
     $p.WaitForExit()
@@ -253,6 +258,7 @@ if (@(Get-Process -Name LogonUI -ErrorAction SilentlyContinue | Where-Object { $
 
 Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue
 Remove-Item Env:AVKIT_E2E_CLIPBOARD_GATED -ErrorAction SilentlyContinue
+Remove-Item Env:AVKIT_E2E_PAYLOAD_DIR -ErrorAction SilentlyContinue
 $nodeExe = [string]$req.node_exe
 $env:Path = (Split-Path -Parent $nodeExe) + ';' + [string]$req.ffmpeg_bin + ';' + $env:Path
 $diag = Join-Path $res 'diag'
@@ -265,25 +271,47 @@ $all = @(Get-ChildItem -LiteralPath (Join-Path $ui 'tests\e2e') -File | Where-Ob
 $specs = @($all | Where-Object { $gatedNames -notcontains $_ })
 $gspecs = @($all | Where-Object { $gatedNames -contains $_ })
 Add-Content -LiteralPath $meta -Value ('specs=' + $specs.Count + ' skip=' + ($skip -join ',') + ' gated=' + ($gspecs -join ',')) -Encoding ASCII
-Set-Content -LiteralPath (Join-Path $res 'stage.txt') -Value 'main' -Encoding ASCII
-$code = AvStage $res $specs
-Add-Content -LiteralPath $meta -Value ('exit=' + $code + ' end=' + [DateTime]::UtcNow.ToString('o')) -Encoding ASCII
-
-# The gated stage (D-1269): only when the request names gated files, and only when the probe
-# before it reads no remote session. DONE carries the main stage's exit; the tool judges the
-# gated stage from its files.
-$gatedExit = ''
-$before = ''
-$after = ''
-if ($gspecs.Count -gt 0) {
-    $pb = AvProbeWrite (Join-Path $res 'probe-before.json')
-    $before = [string]$pb.state + '/' + [string]$pb.reason
-    if ([string]$pb.state -eq 'none') {
-        Set-Content -LiteralPath (Join-Path $res 'stage.txt') -Value 'gated' -Encoding ASCII
-        $gatedExit = AvStage (Join-Path $res 'gated') $gspecs -Gated
-        $pa = AvProbeWrite (Join-Path $res 'probe-after.json')
-        $after = [string]$pa.state + '/' + [string]$pa.reason
+# The install stage (Session 106, HOST_PAYLOAD): only when the request names a payload, after
+# the main and gated stages, with the specs of tests\e2e-install and their own config. The main
+# stage and the install stage share the one ungated AvStage call (D-1565).
+$stageNames = @('main')
+if ($null -ne $req.payload -and @($req.payload).Count -gt 0) { $stageNames += 'install' }
+$installExit = ''
+$code = 1
+foreach ($sn in $stageNames) {
+    if ($sn -eq 'main') {
+        $sDir = $res; $sSpecs = $specs; $sConfig = ''; $sPayload = ''
+    } else {
+        $idir = Join-Path $ui 'tests\e2e-install'
+        $sSpecs = @(Get-ChildItem -LiteralPath $idir -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '*.test.ts' } | ForEach-Object { $_.Name } | Sort-Object)
+        $sDir = Join-Path $res 'install'; $sConfig = 'playwright.install.config.ts'; $sPayload = Join-Path $rd 'payload'
     }
+    Set-Content -LiteralPath (Join-Path $res 'stage.txt') -Value $sn -Encoding ASCII
+    $sExit = AvStage $sDir $sSpecs -Config $sConfig -PayloadDir $sPayload
+    if ($sn -ne 'main') {
+        $installExit = $sExit
+        Add-Content -LiteralPath $meta -Value ('install_exit=' + $installExit + ' end=' + [DateTime]::UtcNow.ToString('o')) -Encoding ASCII
+        continue
+    }
+    $code = $sExit
+    Add-Content -LiteralPath $meta -Value ('exit=' + $code + ' end=' + [DateTime]::UtcNow.ToString('o')) -Encoding ASCII
+
+    # The gated stage (D-1269): only when the request names gated files, and only when the probe
+    # before it reads no remote session. DONE carries the main stage's exit; the tool judges the
+    # gated and install stages from their files.
+    $gatedExit = ''
+    $before = ''
+    $after = ''
+    if ($gspecs.Count -gt 0) {
+        $pb = AvProbeWrite (Join-Path $res 'probe-before.json')
+        $before = [string]$pb.state + '/' + [string]$pb.reason
+        if ([string]$pb.state -eq 'none') {
+            Set-Content -LiteralPath (Join-Path $res 'stage.txt') -Value 'gated' -Encoding ASCII
+            $gatedExit = AvStage (Join-Path $res 'gated') $gspecs -Gated
+            $pa = AvProbeWrite (Join-Path $res 'probe-after.json')
+            $after = [string]$pa.state + '/' + [string]$pa.reason
+        }
+    }
+    Add-Content -LiteralPath $meta -Value @(('gated_exit=' + $gatedExit), ('probe_before=' + $before), ('probe_after=' + $after)) -Encoding ASCII
 }
-Add-Content -LiteralPath $meta -Value @(('gated_exit=' + $gatedExit), ('probe_before=' + $before), ('probe_after=' + $after)) -Encoding ASCII
 AvDone $res $code ''

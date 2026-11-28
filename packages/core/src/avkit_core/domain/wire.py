@@ -49,6 +49,8 @@ DEVICE_WIRE_MAP: dict[str, DeviceType] = {
 
 THEME_WIRES: frozenset[str] = frozenset({"dark", "light"})
 LOG_LEVEL_WIRES: frozenset[str] = frozenset({"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"})
+# UPDATE_INTERVAL_LEAF (Session 106, MEU-174): how often the installed app checks for an update.
+UPDATE_INTERVAL_WIRES: frozenset[str] = frozenset({"weekly", "monthly", "never"})
 OUTPUT_FORMAT_WIRES: frozenset[str] = frozenset({"MP3", "WAV"})
 COOKIE_MODE_WIRES: frozenset[str] = frozenset({"none", "browser", "file"})
 

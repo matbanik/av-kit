@@ -3746,6 +3746,17 @@
             ],
             "title": "Tool Lock"
           },
+          "update_interval": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Update Interval"
+          },
           "voice": {
             "anyOf": [
               {

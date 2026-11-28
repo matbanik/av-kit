@@ -370,6 +370,9 @@ try {
 }
 $shell = ''
 try { $shell = [string](Get-ItemProperty -Path 'HKLM:\SOFTWARE\OpenSSH' -Name DefaultShell -ErrorAction Stop).DefaultShell } catch { $shell = '' }
+# Session 106: Smart App Control decides whether the install stage's unsigned installer may run.
+$sac = ''
+try { $sac = [string](Get-MpComputerStatus -ErrorAction Stop).SmartAppControlState } catch { $sac = '' }
 $o = [ordered]@{
     reason = 'ok'
     schema = 1
@@ -396,6 +399,7 @@ $o = [ordered]@{
     tz_offset_min = [int][TimeZoneInfo]::Local.GetUtcOffset([DateTime]::UtcNow).TotalMinutes
     utc_now = [DateTime]::UtcNow.ToString('o')
     ssh_shell = $shell
+    smart_app_control = $sac
     session_probe = (AvSessionProbe)
 }
 AvOut $o 0

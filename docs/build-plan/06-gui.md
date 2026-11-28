@@ -1023,6 +1023,13 @@ Lazy route `/capture`, rail item below Convert, `Ctrl+5`. Inbox path + hotkey + 
 │  │  (hidden in unpackaged / Linux; not a Windows service)                           ││
 │  └──────────────────────────────────────────────────────────────────────────────────┘│
 │                                                                                      │
+│  ┌─ UPDATES ────────────────────────────────────────────────────────────────────────┐│
+│  │  Check for updates   [Once a week ▼]   once a month; never                       ││
+│  │  Status              Up to date · last checked     [Check now]                   ││
+│  │  Ready               Version x.y.z is ready        [Restart and update]          ││
+│  │  (installed app only; checked by the release's SHA-512, not signed)              ││
+│  └──────────────────────────────────────────────────────────────────────────────────┘│
+│                                                                                      │
 │  ┌─ DEPENDENCIES ───────────────────────────────────────────────────────────────────┐│
 │  │                                                                                  ││
 │  │  yt-dlp       v2026.05.15    ✅ Available                                        ││
@@ -1079,6 +1086,7 @@ Logical keys below are `namespace.leaf`. Persist with `PUT /api/v1/settings/{nam
 | `app.log_level` | `string` | `INFO` | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
 | `app.log_to_file` | `boolean` | `false` (errors always go to the file; true adds every other line) | [_shared_patterns.md §1](../../_inspiration/_shared_patterns.md) |
 | `app.console_visible` | `boolean` | `true` | [Downloader §8](../../_inspiration/_downloader_pseudo_logic.md) |
+| `app.update_interval` | `string` | `weekly` (`weekly`, `monthly` or `never`) | [07 §In-app update (residual)](07-distribution.md#in-app-update-residual) |
 | `ui.theme` | `string` | `dark` | — |
 | `ui.rail.collapsed` | `boolean` | `false` | — |
 | `ui.panel.console.visible` | `boolean` | `false` | — |

@@ -6,6 +6,8 @@ import { GPU_PREF_WIRES, PRESET_WIRES } from '../converter/convert-presets'
 
 const LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] as const
 const THEMES = ['dark', 'light'] as const
+/** UPDATE_INTERVAL_LEAF: the wires of `app.update_interval` (MEU-174). */
+export const UPDATE_INTERVALS = ['weekly', 'monthly', 'never'] as const
 
 export const downloaderPutSchema = z
   .object({
@@ -55,6 +57,7 @@ export const appPutSchema = z
     log_level: z.enum(LOG_LEVELS).nullable().optional(),
     log_to_file: z.boolean().nullable().optional(),
     console_visible: z.boolean().nullable().optional(),
+    update_interval: z.enum(UPDATE_INTERVALS).nullable().optional(),
   })
   .strict()
 

@@ -20,6 +20,9 @@ export const RENDERER_TO_MAIN_CHANNELS = [
   'login-item-set',
   'write-clipboard-image',
   'get-mcp-setup-prompt',
+  'update-get-state',
+  'update-check',
+  'update-install',
   'capture-paste-image',
 ] as const
 
@@ -43,4 +46,7 @@ export const IPC_NO_PAYLOAD = [
   'capture-region',
   'get-hotkey-status',
   'login-item-get',
+  'update-get-state',
+  'update-check',
+  'update-install',
 ] as const

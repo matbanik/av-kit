@@ -173,6 +173,7 @@ test('W4-2 section cards visible for WAVE4_TESTIDS', async () => {
   await expect(page.getByTestId('tts-settings')).toBeVisible()
   await expect(page.getByTestId('console-settings')).toBeVisible()
   await expect(page.getByTestId('appearance-settings')).toBeVisible()
+  await expect(page.getByTestId('updates-settings')).toBeVisible()
   await expect(page.getByTestId('dependencies-section')).toBeVisible()
   await expect(page.getByTestId('browse-download-path-btn')).toBeVisible()
   await expect(page.getByTestId('apply-defaults-btn')).toBeVisible()

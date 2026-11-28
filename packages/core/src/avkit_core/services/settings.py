@@ -21,6 +21,7 @@ from avkit_core.domain.wire import (
     OUTPUT_FORMAT_WIRES,
     QUALITY_WIRE_MAP,
     THEME_WIRES,
+    UPDATE_INTERVAL_WIRES,
 )
 from avkit_core.ports.storage import UnitOfWork
 
@@ -87,6 +88,7 @@ SETTINGS_KEY_TABLE: dict[tuple[str, str], SettingSpec] = {
     ("app", "log_level"): SettingSpec("string", "INFO", LOG_LEVEL_WIRES),
     ("app", "log_to_file"): SettingSpec("boolean", False),
     ("app", "console_visible"): SettingSpec("boolean", True),
+    ("app", "update_interval"): SettingSpec("string", "weekly", UPDATE_INTERVAL_WIRES),
     ("ui", "theme"): SettingSpec("string", "dark", THEME_WIRES),
     ("converter", "output_dir"): SettingSpec("string", "~/Videos/av-kit"),
     ("converter", "default_preset"): SettingSpec(

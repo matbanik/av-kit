@@ -11,6 +11,9 @@ type Leaf = { type: string; default: string | number | boolean; enum?: readonly 
 /** ANNOTATED_FORMATS (avkit_core.domain.capture): the Save overlay file format wires. */
 export const ANNOTATED_FORMATS = ["png", "jpeg", "webp"] as const;
 
+/** UPDATE_INTERVALS (avkit_core.domain.wire, Session 106): how often the installed app checks for an update. */
+export const UPDATE_INTERVALS = ["weekly", "monthly", "never"] as const;
+
 export const SETTINGS_SCHEMA: {
   namespaces: Record<string, Record<string, Leaf>>;
 } = {
@@ -54,6 +57,7 @@ export const SETTINGS_SCHEMA: {
       log_level: { type: "string", default: "INFO" },
       log_to_file: { type: "boolean", default: false },
       console_visible: { type: "boolean", default: true },
+      update_interval: { type: "string", default: "weekly", enum: UPDATE_INTERVALS },
     },
     ui: {
       theme: { type: "string", default: "dark" },
@@ -138,6 +142,7 @@ const settingsLeaves = {
   log_level: z.string().optional(),
   log_to_file: z.boolean().optional(),
   console_visible: z.boolean().optional(),
+  update_interval: z.enum(UPDATE_INTERVALS).optional(),
   theme: z.string().optional(),
   default_preset: z.string().optional(),
   skip_existing: z.boolean().optional(),

@@ -13,6 +13,7 @@ export type SettingsSectionKey =
   | 'console'
   | 'appearance'
   | 'startup'
+  | 'updates'
   | 'dependencies'
   | 'readiness'
   | 'mcp'
@@ -40,6 +41,7 @@ export const SETTINGS_SECTION_SET: readonly SettingsSection[] = [
   { key: 'console', testId: 'console-settings', label: 'Console & logging', group: 'App', mode: 'autosave' },
   { key: 'appearance', testId: 'appearance-settings', label: 'Appearance', group: 'App', mode: 'immediate' },
   { key: 'startup', testId: 'start-at-sign-in-panel', label: 'Startup', group: 'App', mode: 'immediate-os' },
+  { key: 'updates', testId: 'updates-settings', label: 'Updates', group: 'App', mode: 'autosave' },
   { key: 'dependencies', testId: 'dependencies-section', label: 'Dependencies', group: 'Setup', mode: 'none' },
   { key: 'readiness', testId: 'readiness-card', label: 'Readiness', group: 'Setup', mode: 'readiness-count' },
   { key: 'mcp', testId: 'mcp-access-card', label: 'MCP access', group: 'Setup', mode: 'none' },

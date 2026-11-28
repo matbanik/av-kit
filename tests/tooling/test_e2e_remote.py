@@ -3150,3 +3150,164 @@ def test_s100_ac_18_commands_names_the_guard():
     assert first.startswith("# ") and "AVKIT_E2E_CLIPBOARD_GATED=1" in first, first
     assert "CLIPBOARD_GUARD:" in first, first
     assert second.startswith("# ") and "tools/e2e_host/known-failures.json" in second, second
+
+
+# --- AC-174.17: the payload and the install stage (Session 106, HOST_PAYLOAD) ------------------
+# Each case asserts the payload names with ``hasattr`` first, so before Green it fails by
+# assertion; the guard ``test_ac_174_17_no_payload_request_is_unchanged`` passes before and after.
+
+PAYLOAD_NAMES = ("read_payload", "install_block", "PAYLOAD_MAX_FILES", "PAYLOAD_MAX_BYTES")
+REQUEST_KEYS = {
+    "run_id",
+    "commit",
+    "commit_epoch",
+    "zip_sha256",
+    "stub",
+    "skip",
+    "gated",
+    "node_exe",
+    "ffmpeg_bin",
+    "user",
+    "created_utc",
+}
+INSTALL_FILE = "update-roundtrip.test.ts"
+
+
+def _assert_payload_names(m: ModuleType) -> None:
+    for name in PAYLOAD_NAMES:
+        assert hasattr(m, name), f"tools/e2e_remote.py has no {name} yet"
+
+
+def _payload_dir(tmp: Path, extra: int = 1) -> Path:
+    d = tmp / "payload"
+    d.mkdir()
+    (d / "payload.json").write_text(
+        json.dumps({"mode": "canary", "installer": "inst-0.exe"}), encoding="utf-8"
+    )
+    for i in range(extra):
+        (d / f"inst-{i}.exe").write_bytes(b"MZ" + bytes([i]) * (100 + i))
+    return d
+
+
+def _install_report(fake: Fake, statuses: list[str]) -> None:
+    rows = [(INSTALL_FILE, f"AC-174.18 install case {i}", s) for i, s in enumerate(statuses)]
+    d = fake.host_results / "install"
+    d.mkdir()
+    (d / "report.json").write_text(json.dumps(report(rows)), encoding="utf-8")
+
+
+def test_ac_174_17_no_payload_request_is_unchanged(tmp_path, monkeypatch, capsys, env_clean):
+    fake = new_fake(monkeypatch, tmp_path)
+    assert fake.run() == 0, capsys.readouterr().out
+    up = fake.run_dir / "upload" / "runs" / fake.run_id
+    req = json.loads((up / "request.json").read_text(encoding="utf-8"))
+    assert set(req) == REQUEST_KEYS, sorted(req)
+    assert not (up / "payload").exists()
+
+
+def test_ac_174_17_payload_entries_reach_the_request(tmp_path, monkeypatch, capsys, env_clean):
+    fake = new_fake(monkeypatch, tmp_path)
+    _assert_payload_names(fake.m)
+    src = _payload_dir(tmp_path, extra=2)
+    _install_report(fake, ["expected"])
+    code = fake.run("--payload", str(src))
+    assert code == 0, capsys.readouterr().out
+    up = fake.run_dir / "upload" / "runs" / fake.run_id
+    req = json.loads((up / "request.json").read_text(encoding="utf-8"))
+    assert set(req) == REQUEST_KEYS | {"payload"}, sorted(req)
+    names = sorted(p.name for p in src.iterdir())
+    assert [e["name"] for e in req["payload"]] == names
+    for e in req["payload"]:
+        data = (src / e["name"]).read_bytes()
+        assert e["size"] == len(data)
+        assert e["sha256"] == hashlib.sha256(data).hexdigest()
+        assert (up / "payload" / e["name"]).read_bytes() == data
+    assert "scp-upload" in fake.scripts_called()
+
+
+@pytest.mark.parametrize("case", ["path-part", "seventh-file", "no-payload-json", "too-large"])
+def test_ac_174_17_bad_payload_folder_is_refused_before_upload(
+    tmp_path, monkeypatch, capsys, env_clean, case
+):
+    fake = new_fake(monkeypatch, tmp_path)
+    _assert_payload_names(fake.m)
+    assert fake.m.PAYLOAD_MAX_FILES == 5
+    assert fake.m.PAYLOAD_MAX_BYTES == 1_200_000_000
+    if case == "path-part":
+        src = _payload_dir(tmp_path)
+        (src / "sub").mkdir()
+        (src / "sub" / "inner.exe").write_bytes(b"x")
+    elif case == "seventh-file":
+        src = _payload_dir(tmp_path, extra=6)
+    elif case == "no-payload-json":
+        src = _payload_dir(tmp_path)
+        (src / "payload.json").unlink()
+    else:
+        src = _payload_dir(tmp_path)
+        monkeypatch.setattr(fake.m, "PAYLOAD_MAX_BYTES", 50)
+    code = fake.run("--payload", str(src))
+    out = capsys.readouterr().out
+    assert code == 2, out
+    assert out.strip().splitlines()[-1].startswith("e2e-remote: payload-invalid exit=2 "), out
+    called = fake.scripts_called()
+    assert "scp-upload" not in called and "host-lock.ps1" not in called, called
+
+
+def test_ac_174_17_summary_carries_the_install_block(tmp_path, monkeypatch, capsys, env_clean):
+    fake = new_fake(monkeypatch, tmp_path)
+    _assert_payload_names(fake.m)
+    _install_report(fake, ["expected", "expected"])
+    code = fake.run("--payload", str(_payload_dir(tmp_path)))
+    out = capsys.readouterr().out
+    assert code == 0, out
+    block = summary_of(fake.run_dir)["install"]
+    assert block["state"] == "ran", block
+    assert (block["tests"], block["expected"], block["unexpected"]) == (2, 2, 0), block
+    assert (block["flaky"], block["skipped"]) == (0, 0), block
+    assert "install: state=ran tests=2 expected=2" in out, out
+    other = tmp_path / "plain"
+    other.mkdir()
+    fake2 = Fake(fake.m, monkeypatch, other)
+    assert fake2.run() == 0
+    assert summary_of(fake2.run_dir)["install"] == {"state": "not-run"}
+    # A main stage with a new failure keeps its own reason; the block still tells the stage.
+    third = tmp_path / "main-fails"
+    third.mkdir()
+    fake3 = Fake(fake.m, monkeypatch, third)
+    rows = [(f, f"AC-900.{i} case", "expected") for i, f in enumerate(fake3.specs)]
+    rows.append((fake3.specs[0], "AC-901.1 known failure", "unexpected"))
+    rows.append((fake3.specs[0], "AC-902.1 a new failure", "unexpected"))
+    fake3.set_results(report(rows), "\n".join(fake3.specs) + "\n", "1")
+    _install_report(fake3, ["expected"])
+    assert fake3.run("--payload", str(_payload_dir(third))) == 40
+    block = summary_of(fake3.run_dir)["install"]
+    assert (block["state"], block["expected"]) == ("ran", 1), block
+
+
+@pytest.mark.parametrize("statuses", [["expected", "unexpected"], ["expected", "skipped"], []])
+def test_ac_174_17_install_failure_or_skip_is_not_exit_0(
+    tmp_path, monkeypatch, capsys, env_clean, statuses
+):
+    fake = new_fake(monkeypatch, tmp_path)
+    _assert_payload_names(fake.m)
+    assert fake.m.REASONS.get("install-failures") == 41
+    if statuses:
+        _install_report(fake, statuses)
+    code = fake.run("--payload", str(_payload_dir(tmp_path)))
+    out = capsys.readouterr().out
+    assert code == 41, out
+    assert out.strip().splitlines()[-1].startswith("e2e-remote: install-failures exit=41 "), out
+    assert summary_of(fake.run_dir)["install"]["state"] == ("ran" if statuses else "missing")
+
+
+def test_ac_174_17_host_scripts_run_the_install_stage():
+    m = _load()
+    _assert_payload_names(m)
+    assert m.REASONS.get("payload-mismatch") == 26
+    run = (HOST / "run-e2e.ps1").read_text(encoding="utf-8")
+    assert "AVKIT_E2E_PAYLOAD_DIR" in run and "playwright.install.config.ts" in run
+    assert "install" in run and "e2e-install" in run
+    assert "payload-mismatch" in (HOST / "host-prepare.ps1").read_text(encoding="utf-8")
+    assert "SmartAppControlState" in (HOST / "host-facts.ps1").read_text(encoding="utf-8")
+    book = RUN_BOOK.read_text(encoding="utf-8")
+    assert "## The install stage" in book and "install-quarantined" in book

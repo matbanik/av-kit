@@ -1,0 +1,5 @@
+2026-11-28 C3: cell16 r6 pair-ok exit=0 (snapshot ac98b72). cell17 r5 started.
+2026-11-28 C4: cell17 r5 ok: run r20261128T062757Z-ac98b72 266/266, install 2/2, run-check 0 problems (6 overlap polls). gate r8 receipts archived -r8; gate r9 started.
+2026-11-28 C5: gate r9 failed line-endings (canonical review copy CRLF, 158 CR); D-1593 LF-normalized it (text unchanged); r9 receipts -r9; gate r10 started.
+2026-11-28 C6: gate r10 failed mcp-audit 93/104 (capture.capture internal_error); probe reproduced; cause: display powered off, every grab black (aau-c1-capture-probe.txt); D-1594 stop and report blocked; r11 waits for a non-black grab.
+2026-11-28 C7: display on (Mat); capture probe ok, non-black (aau-c1-capture-probe-2.txt); r10 receipts -r10 (58 + audit-gate, report); gate r11 started.

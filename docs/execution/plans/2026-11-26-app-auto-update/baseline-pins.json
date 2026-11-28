@@ -1,0 +1,178 @@
+{
+  "lists": {
+    "channels": 22,
+    "preload-keys": 25,
+    "sections": 11,
+    "app-leaves": 3
+  },
+  "files": {
+    ".agent/skills/mcp-tool-audit/resources/baseline-snapshot.json": {
+      "enumerates": true,
+      "kinds": [
+        "sections"
+      ],
+      "sha256": "0d98cb0502a403cb0c6fa1c143669203408f2d594428a55c1ab4347a8997d962"
+    },
+    "mcp-server/tests/m7-resource.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "sections"
+      ],
+      "sha256": "5fa00274394fd7c659f2df47048c68b7ae8f56b3b2d42319fae32875dc472370"
+    },
+    "mcp-server/tests/settings-runtime.test.ts": {
+      "enumerates": false,
+      "kinds": [],
+      "sha256": "9e3246a5a11cd1e5d5663a23f53be0ed9980ae13933834c6cf67059b83e2605a"
+    },
+    "tests/e2e/test_api_health_settings.py": {
+      "enumerates": true,
+      "kinds": [
+        "sections",
+        "app-leaves"
+      ],
+      "sha256": "4deeaae6e0cff4b037fc9e052a737fe10ad1520c7190fa13db6e29b7a82516de"
+    },
+    "tests/unit/test_ci_workflows.py": {
+      "enumerates": false,
+      "kinds": [],
+      "sha256": "1380c51325ed39122e4982a7da777f1d9d99acc33cb0313bd42dc31ef13bbc9c"
+    },
+    "tests/unit/test_services.py": {
+      "enumerates": true,
+      "kinds": [
+        "sections",
+        "app-leaves"
+      ],
+      "sha256": "ce64ff9d9e6d31f77c144ca9cbb94911d29df27176acb02cd31cc0b12236977b"
+    },
+    "ui/tests/e2e/electron-harness.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "launcher-allow-list"
+      ],
+      "sha256": "8f09525ecc40eac4b0109e6ea6befea4110be990d31c0626814a4e2edd677322"
+    },
+    "ui/tests/e2e/settings.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "sections",
+        "app-leaves"
+      ],
+      "sha256": "a71bf7ca57160b3a84beecac4d53f8df751df40786e505d9a336a876194409ce"
+    },
+    "ui/tests/e2e/test-ids.ts": {
+      "enumerates": true,
+      "kinds": [
+        "test-id-list"
+      ],
+      "sha256": "d907f4b0591c6c1fa2d33f40d905508ef3663d29e2471fbd95d04d16afa7cd5e"
+    },
+    "ui/tests/unit/app-shell-wiring.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "preload-keys",
+        "sections"
+      ],
+      "sha256": "9597fb86e11957887f5869cc789f47019dd423490040e30be480c6d0d53ca1d8"
+    },
+    "ui/tests/unit/capture-paste-main.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "channels"
+      ],
+      "sha256": "b63f10f1751a3be22468b6ced2c7644e4b3d89efedce7ac9ca849566466987f7"
+    },
+    "ui/tests/unit/clipboard-image-main.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "channel-count"
+      ],
+      "sha256": "a2df640193bd9bd1d3a600973e24b7daee8d5b2c85ebe6c84af952358ceeb667"
+    },
+    "ui/tests/unit/gui-actions-audit.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "channels",
+        "preload-keys",
+        "sections"
+      ],
+      "sha256": "73f13bbd6df61d98b5126570c24c16b6098e18a8583b51909962b318b671856c"
+    },
+    "ui/tests/unit/ipc-channels.ts": {
+      "enumerates": true,
+      "kinds": [
+        "channels"
+      ],
+      "sha256": "7fe2dac4fa61de0d1660efbe777da8c48e2d2c4ae3169adaae88612e5658f41a"
+    },
+    "ui/tests/unit/ipc-strict-census.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "channels"
+      ],
+      "sha256": "82ce3b28343cf79b269b5316da6765253c24b06a7adb57bdf00070d1859b1c4d"
+    },
+    "ui/tests/unit/login-item-ipc.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "channels",
+        "preload-keys"
+      ],
+      "sha256": "aa80905382602f8486efb4af1ff86c479db8d65108ac406395c3508104cde078"
+    },
+    "ui/tests/unit/login-item-nsh.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "installer-macro-lines"
+      ],
+      "sha256": "d29bb95e204196fd5a8eb5694b72a668e5ae5b711c3cd51d3182f8e3b9d79c1f"
+    },
+    "ui/tests/unit/mcp-prompt-ipc.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "channels"
+      ],
+      "sha256": "e821bb1ef5e247b0f6411e88e16de08397c0bbdb22d538399cca2fc5eab26dc6"
+    },
+    "ui/tests/unit/settings-page.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "preload-keys",
+        "sections",
+        "app-leaves"
+      ],
+      "sha256": "bde5629a71362d4e43f66afa3915b1f1c60d7d92fa2bb4f3c011bb3cffd7e17d"
+    },
+    "ui/tests/unit/settings-rail.test.tsx": {
+      "enumerates": true,
+      "kinds": [
+        "preload-keys",
+        "sections",
+        "app-leaves"
+      ],
+      "sha256": "c689761cce637964fbbb744f44a5cde6bdb1a439b005b00af5dddfe47d4429ce"
+    },
+    "ui/tests/unit/settings-runtime.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "preload-keys",
+        "sections",
+        "app-leaves"
+      ],
+      "sha256": "b4f03744614f04f4bfc66e36b5ef39438ede65642edad6be1b66120c2f507183"
+    },
+    "ui/tests/unit/shell-ipc-ledger.test.ts": {
+      "enumerates": true,
+      "kinds": [
+        "preload-keys"
+      ],
+      "sha256": "090965aaf674e6910180a16c87e7f477bdb2a4421859994e50e19610103f3eb2"
+    },
+    "ui/tests/unit/web-prefs-ipc.test.ts": {
+      "enumerates": false,
+      "kinds": [],
+      "sha256": "092d97d29d84f7bc7b40590fdfec37125af4bf79eda3728eb8e40db12b61b47b"
+    }
+  }
+}

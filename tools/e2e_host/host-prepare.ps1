@@ -164,6 +164,17 @@ if ($stage -eq 'verify') {
         if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { AvRefuse 'upload-mismatch' ($prop.Name + ' is missing') 1 }
         if ((AvHash $f) -ne [string]$prop.Value) { AvRefuse 'upload-mismatch' $prop.Name 1 }
     }
+    # HOST_PAYLOAD (Session 106): each payload entry by name, size and SHA-256.
+    if ($null -ne $req.payload) {
+        foreach ($e in @($req.payload)) {
+            $n = [string]$e.name
+            if ($n -notmatch '^[A-Za-z0-9._-]{1,100}$') { AvRefuse 'payload-mismatch' ('a bad payload name ' + $n) 1 }
+            $f = Join-Path $rd ('payload\' + $n)
+            if (-not (Test-Path -LiteralPath $f -PathType Leaf)) { AvRefuse 'payload-mismatch' ($n + ' is missing') 1 }
+            if ((Get-Item -LiteralPath $f).Length -ne [long]$e.size) { AvRefuse 'payload-mismatch' ($n + ' size') 1 }
+            if ((AvHash $f) -ne [string]$e.sha256) { AvRefuse 'payload-mismatch' $n 1 }
+        }
+    }
     $comment = AvZipComment $zip
     if ($comment -cne $commit) { AvRefuse 'commit-mismatch' ('the zip comment is ' + $comment) 1 }
     AvOut ([ordered]@{ reason = 'ok'; stage = $stage }) 0

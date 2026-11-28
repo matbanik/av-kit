@@ -47,6 +47,7 @@ class SettingsPutIn(ApiModel):
     log_level: str | None = None
     log_to_file: bool | None = None
     console_visible: bool | None = None
+    update_interval: str | None = None
     theme: str | None = None
     inbox_dir: str | None = None
     hotkey: str | None = None

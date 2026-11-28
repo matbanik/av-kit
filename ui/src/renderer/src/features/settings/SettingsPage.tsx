@@ -56,6 +56,7 @@ import {
 import { revealSection, SettingsRail } from './SettingsRail'
 import { sectionFrameProps } from './settings-section-frame'
 import { StartAtSignInControl } from './StartAtSignInControl'
+import { UpdatesCard } from './UpdatesCard'
 import { useTailSpacer } from './settings-tail-spacer'
 import { SETTINGS_ERROR_EVENT, useSettingsPage } from './useSettingsPage'
 
@@ -243,7 +244,7 @@ function SettingsSectionFrame({
 }
 
 /** Native select in the 168px label grid (G30 styling; one accessible label via FormRow). */
-function GridSelect({
+export function GridSelect({
   id,
   label,
   testId,
@@ -1185,6 +1186,12 @@ export function SettingsPage() {
         </SettingsSectionFrame>
 
         <StartAtSignInControl onAvailabilityChange={setStartupAvailable} current={currentSection === 'startup'} />
+
+        <UpdatesCard
+          interval={appSettings?.update_interval ?? 'weekly'}
+          schedulePut={schedulePut}
+          current={currentSection === 'updates'}
+        />
 
         <SettingsSectionFrame
           sectionKey="dependencies"
